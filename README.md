@@ -1,19 +1,15 @@
-An attempt to make a git fork of the afp repositories.
+A git fork of the afp repositories.
 
 Local repo configuration used for synching:
 
-* Uses https://github.com/mnauw/git-remote-hg to fork the Mercurial repo into git.
+* Uses https://github.com/mnauw/git-remote-hg to fork the Mercurial repo into git. (Install with `sudo pip3 install git-remote-hg`.)
 * Local repository is a clone of https://github.com/dominique-unruh/afp
 * Remotes configured using:
-  * `git remote add afp-devel hg::https://foss.heptapod.net/isa-afp/afp-devel`
+  * `git remote add XXX hg::https://foss.heptapod.net/isa-afp/XXX`
+    where XXX is afp-devel afp-2021-1 afp-2021 afp-2020 afp-2019
   * `git remote add afp-2021-1 hg::https://foss.heptapod.net/isa-afp/afp-2021-1`
 * Show mercurial ids in logs: `git config core.notesRef refs/notes/hg` (local effect only)
-# * Cloning afp-devel:
-#  * `git fetch afp-devel branches/default`
-#  * `git fetch afp-2021-1 branches/default`
-* SKIP Creating local branches for tracking upstream:
-  * SKIP `git branch afp-devel remotes/afp-devel/branches/default`
-  * SKIP `git branch afp-2021-1 remotes/afp-2021-1/branches/default`
+* After the first pull (below), run `git gc --aggressive`
 * Pulling new changes:
   * `git fetch XXX branches/default:XXX` for `XXX` being the different remotes (afp-devel, etc)
   * `git push origin XXX`
