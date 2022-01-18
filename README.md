@@ -7,7 +7,7 @@ Local repo configuration used for synching:
 * Remotes configured using:
   * `git remote add XXX hg::https://foss.heptapod.net/isa-afp/XXX`
     where XXX is afp-devel afp-2021-1 afp-2021 afp-2020 afp-2019
-* Show mercurial ids in logs: `git config core.notesRef refs/notes/hg` (local effect only)
+* Show mercurial ids in logs: `git config notes.displayRef refs/notes/hg` (local effect only)
 * After the first pull (below), run `git gc --aggressive`
 * Pulling new changes:
   * `git fetch XXX branches/default:XXX` for `XXX` being the different remotes (afp-devel, etc)
