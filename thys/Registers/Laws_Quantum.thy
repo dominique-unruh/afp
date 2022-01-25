@@ -303,6 +303,7 @@ lemmas compatible_ac_rules = swap_registers cblinfun_compose_assoc[symmetric] sw
 
 subsection \<open>Fst and Snd\<close>
 
+(* TODO: specify types *)
 definition Fst where \<open>Fst a = a \<otimes>\<^sub>u id_cblinfun\<close>
 definition Snd where \<open>Snd a = id_cblinfun \<otimes>\<^sub>u a\<close>
 

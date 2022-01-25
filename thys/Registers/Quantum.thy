@@ -79,6 +79,7 @@ subsubsection Hadamard
 definition "matrix_hadamard = mat_of_rows_list 2 [ [1/sqrt 2::complex, 1/sqrt 2], [1/sqrt 2, -1/sqrt 2] ]"
 definition hadamard :: \<open>(bit,bit) matrix\<close> where [code del]: "hadamard = cblinfun_of_mat matrix_hadamard"
 
+(* TODO add name *)
 lemma [simp, code]: "mat_of_cblinfun hadamard = matrix_hadamard"
   apply (auto simp add: hadamard_def matrix_hadamard_def)
   apply (subst cblinfun_of_mat_inverse)
@@ -93,11 +94,13 @@ subsubsection CNOT
 definition "matrix_CNOT = mat_of_rows_list 4 [ [1::complex,0,0,0], [0,1,0,0], [0,0,0,1], [0,0,1,0] ]"
 definition CNOT :: \<open>(bit*bit, bit*bit) matrix\<close> where [code del]: "CNOT = cblinfun_of_mat matrix_CNOT"
 
+(* TODO add name *)
 lemma [simp, code]: "mat_of_cblinfun CNOT = matrix_CNOT"
   apply (auto simp add: CNOT_def matrix_CNOT_def)
   apply (subst cblinfun_of_mat_inverse)
   by (auto)
 
+(* TODO add name *)
 lemma [simp]: "CNOT* = CNOT"
   by eval
 
