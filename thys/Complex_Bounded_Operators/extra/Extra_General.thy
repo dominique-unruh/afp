@@ -294,6 +294,26 @@ proof-
     by simp
 qed
 
+lemma on_closure_eqI:
+  fixes f g :: \<open>'a::topological_space \<Rightarrow> 'b::t2_space\<close>
+  assumes eq: \<open>\<And>x. x \<in> S \<Longrightarrow> f x = g x\<close>
+  assumes xS: \<open>x \<in> closure S\<close>
+  assumes cont: \<open>continuous_on UNIV f\<close> \<open>continuous_on UNIV g\<close>
+  shows \<open>f x = g x\<close>
+proof -
+  define X where \<open>X = {x. f x = g x}\<close>
+  have \<open>closed X\<close>
+    using cont by (simp add: X_def closed_Collect_eq)
+  moreover have \<open>S \<subseteq> X\<close>
+    by (simp add: X_def eq subsetI)
+  ultimately have \<open>closure S \<subseteq> X\<close>
+    using closure_minimal by blast
+  with xS have \<open>x \<in> X\<close>
+    by auto
+  then show ?thesis
+    using X_def by blast
+qed
+
 subsection \<open>Complex numbers\<close>
 
 lemma cmod_Re:

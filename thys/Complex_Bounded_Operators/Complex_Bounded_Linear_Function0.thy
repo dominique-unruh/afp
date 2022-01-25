@@ -744,6 +744,7 @@ lemma norm_blinfun_id_le:
 
 (* lemma blinfun_apply_snd_blinfun[simp]: "blinfun_apply snd_blinfun = snd" *)
 
+(* TODO: Different infixl-priority so that "a - b oCL c" parses as "a - (b oCL c)"? How is it with the blinfun_compose notation? *)
 lift_definition cblinfun_compose::
   "'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector \<Rightarrow>
     'c::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'a \<Rightarrow>

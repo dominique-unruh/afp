@@ -2816,17 +2816,28 @@ proof-
     by blast
 qed
 
-lemma cblinfun_extension_exists_bounded_dense:
+lemma cblinfun_extension_apply:
+  assumes "cblinfun_extension_exists S f"
+    and "v \<in> S"
+  shows "(cblinfun_extension S f) *\<^sub>V v = f v"
+  by (smt assms cblinfun_extension_def cblinfun_extension_exists_def tfl_some)
+
+lemma
   fixes f :: \<open>'a::complex_normed_vector \<Rightarrow> 'b::cbanach\<close>
   assumes \<open>csubspace S\<close>
   assumes \<open>closure S = UNIV\<close>
   assumes f_add: \<open>\<And>x y. x \<in> S \<Longrightarrow> y \<in> S \<Longrightarrow> f (x + y) = f x + f y\<close>
   assumes f_scale: \<open>\<And>c x y. x \<in> S \<Longrightarrow> f (c *\<^sub>C x) = c *\<^sub>C f x\<close>
   assumes bounded: \<open>\<And>x. x \<in> S \<Longrightarrow> norm (f x) \<le> B * norm x\<close>
-  shows \<open>cblinfun_extension_exists S f\<close>
+  shows cblinfun_extension_exists_bounded_dense: \<open>cblinfun_extension_exists S f\<close>
+    and cblinfun_extension_exists_norm: \<open>B \<ge> 0 \<Longrightarrow> norm (cblinfun_extension S f) \<le> B\<close>
 proof -
-  obtain B where bounded: \<open>\<And>x. x \<in> S \<Longrightarrow> norm (f x) \<le> B * norm x\<close> and \<open>B > 0\<close>
-    using bounded by (smt (z3) mult_mono norm_ge_zero)
+  define B' where \<open>B' = (if B\<le>0 then 1 else B)\<close>
+  then have bounded': \<open>\<And>x. x \<in> S \<Longrightarrow> norm (f x) \<le> B' * norm x\<close>
+    using bounded by (metis mult_1 mult_le_0_iff norm_ge_zero order_trans)
+  have \<open>B' > 0\<close>
+    by (simp add: B'_def)
+
   have \<open>\<exists>xi. (xi \<longlonglongrightarrow> x) \<and> (\<forall>i. xi i \<in> S)\<close> for x
     using assms(2) closure_sequential by blast
   then obtain seq :: \<open>'a \<Rightarrow> nat \<Rightarrow> 'a\<close> where seq_lim: \<open>seq x \<longlonglongrightarrow> x\<close> and seq_S: \<open>seq x i \<in> S\<close> for x i
@@ -2839,20 +2850,20 @@ proof -
     fix e :: real assume \<open>e > 0\<close>
     have \<open>Cauchy (seq x)\<close>
       using LIMSEQ_imp_Cauchy seq_lim by blast
-    then obtain M where less_eB: \<open>norm (seq x m - seq x n) < e/B\<close> if \<open>n \<ge> M\<close> and \<open>m \<ge> M\<close> for n m
-      apply atomize_elim by (meson CauchyD \<open>0 < B\<close> \<open>0 < e\<close> linordered_field_class.divide_pos_pos)
+    then obtain M where less_eB: \<open>norm (seq x m - seq x n) < e/B'\<close> if \<open>n \<ge> M\<close> and \<open>m \<ge> M\<close> for n m
+      apply atomize_elim by (meson CauchyD \<open>0 < B'\<close> \<open>0 < e\<close> linordered_field_class.divide_pos_pos)
     have \<open>norm (f (seq x m) - f (seq x n)) < e\<close> if \<open>n \<ge> M\<close> and \<open>m \<ge> M\<close> for n m
     proof -
       have \<open>norm (f (seq x m) - f (seq x n)) = norm (f (seq x m - seq x n))\<close>
         using f_add f_scale seq_S
         by (metis add_diff_cancel assms(1) complex_vector.subspace_diff diff_add_cancel)
-      also have \<open>\<dots> \<le> B * norm (seq x m - seq x n)\<close>
-        apply (rule bounded)
+      also have \<open>\<dots> \<le> B' * norm (seq x m - seq x n)\<close>
+        apply (rule bounded')
         by (simp add: assms(1) complex_vector.subspace_diff seq_S)
-      also from less_eB have \<open>\<dots> < B * (e/B)\<close>
-        by (meson \<open>0 < B\<close> linordered_semiring_strict_class.mult_strict_left_mono that)
+      also from less_eB have \<open>\<dots> < B' * (e/B')\<close>
+        by (meson \<open>0 < B'\<close> linordered_semiring_strict_class.mult_strict_left_mono that)
       also have \<open>\<dots> \<le> e\<close>
-        using \<open>0 < B\<close> by auto
+        using \<open>0 < B'\<close> by auto
       finally show ?thesis
         by -
     qed
@@ -2864,11 +2875,11 @@ proof -
   have f_xi_lim: \<open>(\<lambda>i. f (xi i)) \<longlonglongrightarrow> g x\<close> if \<open>xi \<longlonglongrightarrow> x\<close> and \<open>\<And>i. xi i \<in> S\<close> for xi x
   proof -
     from seq_lim that
-    have \<open>(\<lambda>i. B * norm (xi i - seq x i)) \<longlonglongrightarrow> 0\<close>
-      by (metis (no_types) \<open>0 < B\<close> cancel_comm_monoid_add_class.diff_cancel norm_not_less_zero norm_zero tendsto_diff tendsto_norm_zero_iff tendsto_zero_mult_left_iff)
+    have \<open>(\<lambda>i. B' * norm (xi i - seq x i)) \<longlonglongrightarrow> 0\<close>
+      by (metis (no_types) \<open>0 < B'\<close> cancel_comm_monoid_add_class.diff_cancel norm_not_less_zero norm_zero tendsto_diff tendsto_norm_zero_iff tendsto_zero_mult_left_iff)
     then have \<open>(\<lambda>i. f (xi i + (-1) *\<^sub>C seq x i)) \<longlonglongrightarrow> 0\<close>
       apply (rule Lim_null_comparison[rotated])
-      using bounded by (simp add: assms(1) complex_vector.subspace_diff seq_S that(2))
+      using bounded' by (simp add: assms(1) complex_vector.subspace_diff seq_S that(2))
     then have \<open>(\<lambda>i. f (xi i) - f (seq x i)) \<longlonglongrightarrow> 0\<close>
       apply (subst (asm) f_add)
         apply (auto simp: that \<open>csubspace S\<close> complex_vector.subspace_neg seq_S)[2]
@@ -2920,7 +2931,7 @@ proof -
       by (simp add: LIMSEQ_const_iff)
   qed
 
-  have g_bounded: \<open>norm (g x) \<le> B * norm x\<close> for x
+  have g_bounded: \<open>norm (g x) \<le> B' * norm x\<close> for x
   proof -
     obtain xi :: \<open>nat \<Rightarrow> 'a\<close> where \<open>xi \<longlonglongrightarrow> x\<close> and \<open>xi i \<in> S\<close> for i
       using seq_S seq_lim by auto
@@ -2928,15 +2939,15 @@ proof -
       using f_xi_lim by presburger
     then have \<open>(\<lambda>i. norm (f (xi i))) \<longlonglongrightarrow> norm (g x)\<close>
       by (metis tendsto_norm)
-    moreover have \<open>(\<lambda>i. B * norm (xi i)) \<longlonglongrightarrow> B * norm x\<close>
+    moreover have \<open>(\<lambda>i. B' * norm (xi i)) \<longlonglongrightarrow> B' * norm x\<close>
       by (simp add: \<open>xi \<longlonglongrightarrow> x\<close> tendsto_mult_left tendsto_norm)
-    ultimately show \<open>norm (g x) \<le> B * norm x\<close>
+    ultimately show \<open>norm (g x) \<le> B' * norm x\<close>
       apply (rule lim_mono[rotated])
-      using bounded using \<open>xi _ \<in> S\<close> by blast
+      using bounded' using \<open>xi _ \<in> S\<close> by blast
   qed
 
   have \<open>bounded_clinear g\<close>
-    using g_add g_scale apply (rule bounded_clinearI[where K=B])
+    using g_add g_scale apply (rule bounded_clinearI[where K=B'])
     using g_bounded by (simp add: ordered_field_class.sign_simps(5))
   then have [simp]: \<open>CBlinfun g *\<^sub>V x = g x\<close> for x
     by (subst CBlinfun_inverse, auto)
@@ -2944,13 +2955,131 @@ proof -
   show \<open>cblinfun_extension_exists S f\<close>
     apply (rule cblinfun_extension_existsI[where B=\<open>CBlinfun g\<close>])
     by auto
+
+  then have \<open>cblinfun_extension S f *\<^sub>V \<psi> = CBlinfun g *\<^sub>V \<psi>\<close> if \<open>\<psi> \<in> S\<close> for \<psi>
+    by (simp add: cblinfun_extension_apply that)
+
+  then have ext_is_g: \<open>(*\<^sub>V) (cblinfun_extension S f) = g\<close>
+    apply (rule_tac ext)
+    apply (rule on_closure_eqI[where S=S])
+    using  \<open>closure S = UNIV\<close> \<open>bounded_clinear g\<close>
+    by (auto simp add: continuous_at_imp_continuous_on clinear_continuous_within)
+
+  show \<open>norm (cblinfun_extension S f) \<le> B\<close> if \<open>B \<ge> 0\<close>
+  proof (cases \<open>B > 0\<close>)
+    case True
+    then have \<open>B = B'\<close>
+      unfolding B'_def
+      by auto
+    moreover have *: \<open>norm (cblinfun_extension S f) \<le> B'\<close>
+      by (metis ext_is_g \<open>0 < B'\<close> g_bounded norm_cblinfun_bound order_le_less)
+    ultimately show ?thesis
+      by simp
+  next
+    case False
+    with bounded have \<open>f x = 0\<close> if \<open>x \<in> S\<close> for x
+      by (smt (verit) mult_nonpos_nonneg norm_ge_zero norm_le_zero_iff that)
+    then have \<open>g x = (\<lambda>_. 0) x\<close> if \<open>x \<in> S\<close> for x
+      using that by simp
+    then have \<open>g x = 0\<close> for x
+      apply (rule on_closure_eqI[where S=S])
+      using \<open>closure S = UNIV\<close> \<open>bounded_clinear g\<close>
+      by (auto simp add: continuous_at_imp_continuous_on clinear_continuous_within)
+    with ext_is_g have \<open>cblinfun_extension S f = 0\<close>
+      by (simp add: cblinfun_eqI)
+    then show ?thesis
+      using that by simp
+  qed
 qed
 
-lemma cblinfun_extension_apply:
-  assumes "cblinfun_extension_exists S f"
-    and "v \<in> S"
-  shows "(cblinfun_extension S f) *\<^sub>V v = f v"
-  by (smt assms cblinfun_extension_def cblinfun_extension_exists_def tfl_some)
+lemma cblinfun_extension_cong:
+  assumes \<open>cspan A = cspan B\<close>
+  assumes \<open>B \<subseteq> A\<close>
+  assumes fg: \<open>\<And>x. x\<in>B \<Longrightarrow> f x = g x\<close>
+  assumes \<open>cblinfun_extension_exists A f\<close>
+  shows \<open>cblinfun_extension A f = cblinfun_extension B g\<close>
+proof -
+  from \<open>cblinfun_extension_exists A f\<close> fg \<open>B \<subseteq> A\<close>
+  have \<open>cblinfun_extension_exists B g\<close>
+    by (metis assms(2) cblinfun_extension_exists_def subset_eq)
+
+  have \<open>(\<forall>x\<in>A. C *\<^sub>V x = f x) \<longleftrightarrow> (\<forall>x\<in>B. C *\<^sub>V x = f x)\<close> for C
+    by (smt (verit, ccfv_SIG) assms(1) assms(2) assms(4) cblinfun_eq_on_span cblinfun_extension_exists_def complex_vector.span_eq subset_iff)
+  also from fg have \<open>\<dots> C \<longleftrightarrow> (\<forall>x\<in>B. C *\<^sub>V x = g x)\<close> for C
+    by auto
+  finally show \<open>cblinfun_extension A f = cblinfun_extension B g\<close>
+    unfolding cblinfun_extension_def
+    by auto
+qed
+
+(* TODO: use this to prove classical_operator_exists_inj *)
+lemma
+  fixes f :: \<open>'a::complex_inner \<Rightarrow> 'b::chilbert_space\<close> and S 
+  assumes \<open>is_ortho_set S\<close> and \<open>closure (cspan S) = UNIV\<close>
+  assumes ortho_f: \<open>\<And>x y. x\<in>S \<Longrightarrow> y\<in>S \<Longrightarrow> x\<noteq>y \<Longrightarrow> is_orthogonal (f x) (f y)\<close>
+  assumes bounded: \<open>\<And>x. x \<in> S \<Longrightarrow> norm (f x) \<le> B * norm x\<close>
+  shows cblinfun_extension_exists_ortho: \<open>cblinfun_extension_exists S f\<close>
+    and cblinfun_extension_exists_ortho_norm: \<open>B \<ge> 0 \<Longrightarrow> norm (cblinfun_extension S f) \<le> B\<close>
+proof -
+  define g where \<open>g = cconstruct S f\<close>
+  have \<open>cindependent S\<close>
+    using assms(1) is_ortho_set_cindependent by blast
+  have g_f: \<open>g x = f x\<close> if \<open>x\<in>S\<close> for x
+    unfolding g_def using \<open>cindependent S\<close> that by (rule complex_vector.construct_basis)
+  have [simp]: \<open>clinear g\<close>
+    unfolding g_def using \<open>cindependent S\<close> by (rule complex_vector.linear_construct)
+  then have g_add: \<open>g (x + y) = g x + g y\<close> if \<open>x \<in> cspan S\<close> and \<open>y \<in> cspan S\<close> for x y
+    using clinear_iff by blast
+  from \<open>clinear g\<close> have g_scale: \<open>g (c *\<^sub>C x) = c *\<^sub>C g x\<close> if \<open>x \<in> cspan S\<close> for x c
+    by (simp add: complex_vector.linear_scale)
+  moreover have g_bounded: \<open>norm (g x) \<le> abs B * norm x\<close> if \<open>x \<in> cspan S\<close> for x
+  proof -
+    from that obtain t r where x_sum: \<open>x = (\<Sum>a\<in>t. r a *\<^sub>C a)\<close> and \<open>finite t\<close> and \<open>t \<subseteq> S\<close>
+      unfolding complex_vector.span_explicit by auto
+    have \<open>(norm (g x))\<^sup>2 = (norm (\<Sum>a\<in>t. r a *\<^sub>C g a))\<^sup>2\<close>
+      by (simp add: x_sum complex_vector.linear_sum clinear.scaleC)
+    also have \<open>\<dots> = (norm (\<Sum>a\<in>t. r a *\<^sub>C f a))\<^sup>2\<close>
+      by (smt (verit) \<open>t \<subseteq> S\<close> g_f in_mono sum.cong)
+    also have \<open>\<dots> = (\<Sum>a\<in>t. (norm (r a *\<^sub>C f a))\<^sup>2)\<close>
+      using _ \<open>finite t\<close> apply (rule pythagorean_theorem_sum)
+      using \<open>t \<subseteq> S\<close> ortho_f in_mono by fastforce
+    also have \<open>\<dots> = (\<Sum>a\<in>t. (cmod (r a) * norm (f a))\<^sup>2)\<close>
+      by simp
+    also have \<open>\<dots> \<le> (\<Sum>a\<in>t. (cmod (r a) * B * norm a)\<^sup>2)\<close>
+      apply (rule sum_mono)
+      by (metis \<open>t \<subseteq> S\<close> assms(4) in_mono mult_left_mono mult_nonneg_nonneg norm_ge_zero power_mono vector_space_over_itself.scale_scale)
+    also have \<open>\<dots> = B\<^sup>2 * (\<Sum>a\<in>t. (norm (r a *\<^sub>C a))\<^sup>2)\<close>
+      by (simp add: sum_distrib_left mult.commute vector_space_over_itself.scale_left_commute flip: power_mult_distrib)
+    also have \<open>\<dots> = B\<^sup>2 * (norm (\<Sum>a\<in>t. (r a *\<^sub>C a)))\<^sup>2\<close>
+      apply (subst pythagorean_theorem_sum)
+      using \<open>finite t\<close> apply auto
+      by (meson \<open>t \<subseteq> S\<close> assms(1) is_ortho_set_def subsetD)
+    also have \<open>\<dots> = (abs B * norm x)\<^sup>2\<close>
+      by (simp add: power_mult_distrib x_sum)
+    finally show \<open>norm (g x) \<le> abs B * norm x\<close>
+      by auto
+  qed
+  
+  from g_add g_scale g_bounded
+  have extg_exists: \<open>cblinfun_extension_exists (cspan S) g\<close>
+    apply (rule_tac cblinfun_extension_exists_bounded_dense[where B=\<open>abs B\<close>])
+    using \<open>closure (cspan S) = UNIV\<close> by auto
+
+  then show \<open>cblinfun_extension_exists S f\<close>
+    by (metis (mono_tags, opaque_lifting) g_f cblinfun_extension_apply cblinfun_extension_existsI complex_vector.span_base)
+
+  have norm_extg: \<open>norm (cblinfun_extension (cspan S) g) \<le> B\<close> if \<open>B \<ge> 0\<close>
+    apply (rule cblinfun_extension_exists_norm)
+    using g_add g_scale g_bounded \<open>closure (cspan S) = UNIV\<close> that by auto
+
+  have extg_extf: \<open>cblinfun_extension (cspan S) g = cblinfun_extension S f\<close>
+    apply (rule cblinfun_extension_cong)
+    by (auto simp add: complex_vector.span_base g_f extg_exists)
+
+  from norm_extg extg_extf
+  show \<open>norm (cblinfun_extension S f) \<le> B\<close> if \<open>B \<ge> 0\<close>
+    using that by simp
+qed
 
 subsection \<open>Notation\<close>
 
