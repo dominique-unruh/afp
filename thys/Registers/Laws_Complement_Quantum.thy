@@ -35,7 +35,7 @@ proof (rule complementsI)
     using \<open>compatible G F\<close> iso_register_def pair_is_register by blast
 qed
 
-definition complement :: \<open>('a::finite update \<Rightarrow> 'b::finite update) \<Rightarrow> (('a,'b) complement_domain update \<Rightarrow> 'b update)\<close> where
+definition complement :: \<open>('a::type update \<Rightarrow> 'b::type update) \<Rightarrow> (('a,'b) complement_domain update \<Rightarrow> 'b update)\<close> where
   \<open>complement F = (SOME G :: ('a, 'b) complement_domain update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G))\<close>
 
 lemma register_complement[simp]: \<open>register (complement F)\<close> if \<open>register F\<close>
@@ -61,7 +61,7 @@ lemma complements_register_tensor:
   assumes [simp]: \<open>register F\<close> \<open>register G\<close>
   shows \<open>complements (F \<otimes>\<^sub>r G) (complement F \<otimes>\<^sub>r complement G)\<close>
 proof (rule complementsI)
-  have sep4: \<open>separating TYPE('z::finite) {(a \<otimes>\<^sub>u b) \<otimes>\<^sub>u (c \<otimes>\<^sub>u d) |a b c d. True}\<close>
+  have sep4: \<open>separating TYPE('z::type) {(a \<otimes>\<^sub>u b) \<otimes>\<^sub>u (c \<otimes>\<^sub>u d) |a b c d. True}\<close>
     apply (rule separating_tensor'[where A=\<open>{(a \<otimes>\<^sub>u b) |a b. True}\<close> and B=\<open>{(c \<otimes>\<^sub>u d) |c d. True}\<close>])
       apply (rule separating_tensor'[where A=UNIV and B=UNIV]) apply auto[3]
      apply (rule separating_tensor'[where A=UNIV and B=UNIV]) apply auto[3]
@@ -72,7 +72,7 @@ proof (rule complementsI)
   have [simp]: \<open>register ?reorder\<close>
     by auto
   have [simp]: \<open>?reorder ((a \<otimes>\<^sub>u b) \<otimes>\<^sub>u (c \<otimes>\<^sub>u d)) = ((a \<otimes>\<^sub>u c) \<otimes>\<^sub>u (b \<otimes>\<^sub>u d))\<close> 
-    for a::\<open>'t::finite update\<close> and b::\<open>'u::finite update\<close> and c::\<open>'v::finite update\<close> and d::\<open>'w::finite update\<close>
+    for a::\<open>'t::type update\<close> and b::\<open>'u::type update\<close> and c::\<open>'v::type update\<close> and d::\<open>'w::type update\<close>
     by (simp add: register_pair_apply Fst_def Snd_def comp_tensor_op)
   have [simp]: \<open>iso_register ?reorder\<close>
     apply (rule iso_registerI[of _ ?reorder]) apply auto[2]
@@ -181,8 +181,8 @@ proof -
 qed
 
 lemma unit_register_domains_isomorphic:
-  fixes F :: \<open>'a::finite update \<Rightarrow> 'c::finite update\<close>
-  fixes G :: \<open>'b::finite update \<Rightarrow> 'd::finite update\<close>
+  fixes F :: \<open>'a::type update \<Rightarrow> 'c::type update\<close>
+  fixes G :: \<open>'b::type update \<Rightarrow> 'd::type update\<close>
   assumes \<open>is_unit_register F\<close>
   assumes \<open>is_unit_register G\<close>
   shows \<open>\<exists>I :: 'a update \<Rightarrow> 'b update. iso_register I\<close>
@@ -202,9 +202,9 @@ lemma id_complement_is_unit_register[simp]: \<open>is_unit_register (complement 
   by (metis is_unit_register_def complement_is_complement complements_def complements_sym equivalent_registers_def id_comp register_id)
 
 type_synonym unit_register_domain = \<open>(unit, unit) complement_domain\<close>
-definition unit_register :: \<open>unit_register_domain update \<Rightarrow> 'a::finite update\<close> where \<open>unit_register = (SOME U. is_unit_register U)\<close>
+definition unit_register :: \<open>unit_register_domain update \<Rightarrow> 'a::type update\<close> where \<open>unit_register = (SOME U. is_unit_register U)\<close>
 
-lemma unit_register_is_unit_register[simp]: \<open>is_unit_register (unit_register :: unit_register_domain update \<Rightarrow> 'a::finite update)\<close>
+lemma unit_register_is_unit_register[simp]: \<open>is_unit_register (unit_register :: unit_register_domain update \<Rightarrow> 'a::type update)\<close>
 proof -
   let ?U0 = \<open>complement id :: unit_register_domain update \<Rightarrow> unit update\<close>
   let ?U1 = \<open>complement id :: ('a, 'a) complement_domain update \<Rightarrow> 'a update\<close>
@@ -219,9 +219,9 @@ proof -
 qed
 
 lemma unit_register_domain_tensor_unit:
-  fixes U :: \<open>'a::finite update \<Rightarrow> _\<close>
+  fixes U :: \<open>'a::type update \<Rightarrow> _\<close>
   assumes \<open>is_unit_register U\<close>
-  shows \<open>\<exists>I :: 'b::finite update \<Rightarrow> ('a*'b) update. iso_register I\<close>
+  shows \<open>\<exists>I :: 'b::type update \<Rightarrow> ('a*'b) update. iso_register I\<close>
   (* Can we show that I = (\<lambda>x. tensor_op id_cblinfun x) ? It would be nice but I do not see how to prove it. *)
 proof -
   have \<open>equivalent_registers (id :: 'b update \<Rightarrow> _) (complement id; id)\<close>

@@ -2,7 +2,9 @@ section \<open>Quantum mechanics basics\<close>
 
 theory Quantum
   imports
-    Finite_Tensor_Product
+    (* Finite_Tensor_Product *)
+    Misc
+    Tensor_Product.Hilbert_Space_Tensor_Product
     "HOL-Library.Z2"
     Jordan_Normal_Form.Matrix_Impl 
     Real_Impl.Real_Impl
@@ -133,11 +135,13 @@ lemma unitary_Uswap[simp]: "unitary Uswap"
 
 lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otimes>\<^sub>s s\<close>
   apply (rule clinear_equal_ket[where f=\<open>\<lambda>s. Uswap *\<^sub>V s \<otimes>\<^sub>s t\<close>, THEN fun_cong])
-    apply (simp add: cblinfun.add_right clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
-   apply (simp add: clinear_tensor_ell21)
+    apply (auto simp add: cblinfun.add_right tensor_ell2_add1 tensor_ell2_scaleC1
+      cblinfun.scaleC_right tensor_ell2_add2 tensor_ell2_scaleC2
+      intro!: clinearI)[2]
   apply (rule clinear_equal_ket[where f=\<open>\<lambda>t. Uswap *\<^sub>V _ \<otimes>\<^sub>s t\<close>, THEN fun_cong])
-    apply (simp add: cblinfun.add_right clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
-   apply (simp add: clinear_tensor_ell22)
+    apply (auto simp add: cblinfun.add_right tensor_ell2_add1 tensor_ell2_scaleC1
+      cblinfun.scaleC_right tensor_ell2_add2 tensor_ell2_scaleC2
+      intro!: clinearI)[2]
   apply (rule basis_enum_eq_vec_of_basis_enumI)
   apply (simp add: mat_of_cblinfun_cblinfun_apply vec_of_basis_enum_ket)
   by (case_tac i; case_tac ia; hypsubst_thin; normalization)

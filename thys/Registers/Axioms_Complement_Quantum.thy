@@ -1,7 +1,7 @@
 section \<open>Quantum instantiation of complements\<close>
 
 theory Axioms_Complement_Quantum
-  imports Laws_Quantum Finite_Tensor_Product Quantum_Extra
+  imports Laws_Quantum Quantum_Extra
 begin
 
 no_notation m_inv ("inv\<index> _" [81] 80)

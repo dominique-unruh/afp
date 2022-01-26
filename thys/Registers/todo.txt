@@ -1,0 +1,10 @@
+Needed theorems:
+- compatible register have a pair (for register_pair_apply, register_pair_is_register)
+- weak*-continuous bounded linear maps are uniquely determined on a\<otimes>b (for tensor_extensionality)
+- unitary sandwiches (spatial isomorphisms) are weak*-continuous (for unitary_sandwich_register)
+- left/right multiplication is weak*-continuous (for preregister_mult_right/left)
+- left/right tensor is weak*-continuous (for register_tensor_left/right)
+- tensor of unitaries is unitary (for sandwich_tensor, id_tensor_sandwich)
+- matrix representation of tensor products (like Finite_Tensor_Product_Matrices) (for Teleport)
+- register complements, in "dependent type" formalism
+
