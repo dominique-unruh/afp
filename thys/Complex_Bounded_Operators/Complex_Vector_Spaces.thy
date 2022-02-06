@@ -737,6 +737,9 @@ locale bounded_sesquilinear =
     and scaleC_right: "prod a (r *\<^sub>C b) = r *\<^sub>C (prod a b)"
     and bounded: "\<exists>K. \<forall>a b. norm (prod a b) \<le> norm a * norm b * K"
 
+(* TODO: this blocks interpretation. E.g., interpretation cinnerxxx: bounded_sesquilinear cinner sorry. 
+Replace by lemma (like bounded_cbilinear.bounded_bilinear), or (maybe) rename add_left etc.
+ *)
 sublocale bounded_sesquilinear \<subseteq> bounded_bilinear
   apply standard
   by (auto simp: add_left add_right scaleC_left scaleC_right bounded scaleR_scaleC)

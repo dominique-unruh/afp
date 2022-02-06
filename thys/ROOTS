@@ -9,6 +9,7 @@ Abstract-Hoare-Logics
 Abstract-Rewriting
 Abstract_Completeness
 Abstract_Soundness
+Actuarial_Mathematics
 Adaptive_State_Counting
 Affine_Arithmetic
 Aggregation_Algebras
@@ -180,6 +181,7 @@ FOL-Fitting
 FOL_Axiomatic
 FOL_Harrison
 FOL_Seq_Calc1
+FOL_Seq_Calc2
 Factor_Algebraic_Polynomial
 Factored_Transition_System_Bounding
 Falling_Factorial_Sum
@@ -283,12 +285,14 @@ InfPathElimination
 InformationFlowSlicing
 InformationFlowSlicing_Inter
 Integration
+Interpolation_Polynomials_HOL_Algebra
 Interpreter_Optimizations
 Interval_Arithmetic_Word32
 Intro_Dest_Elim
 Iptables_Semantics
 Irrational_Series_Erdos_Straus
 Irrationality_J_Hancl
+Irrationals_From_THEBOOK
 IsaGeoCoq
 Isabelle_C
 Isabelle_Marries_Dirac
@@ -372,6 +376,7 @@ Matrix
 Matrix_Tensor
 Matroids
 Max-Card-Matching
+Median_Method
 Median_Of_Medians_Selection
 Menger
 Mereology
