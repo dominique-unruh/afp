@@ -1,13 +1,14 @@
 section \<open>Quantum instantiation of complements\<close>
 
 theory Axioms_Complement_Quantum
-  imports Laws_Quantum Quantum_Extra
+  imports Laws_Quantum Tensor_Product.With_Type Quantum_Extra Tensor_Product.Weak_Star_Topology
 begin
 
 no_notation m_inv ("inv\<index> _" [81] 80)
 no_notation Lattice.join (infixl "\<squnion>\<index>" 65)
+no_notation elt_set_eq (infix "=o" 50)
 
-typedef ('a::finite,'b::finite) complement_domain = \<open>{..< if CARD('b) div CARD('a) \<noteq> 0 then CARD('b) div CARD('a) else 1}\<close>
+(* typedef ('a::finite,'b::finite) complement_domain = \<open>{..< if CARD('b) div CARD('a) \<noteq> 0 then CARD('b) div CARD('a) else 1}\<close>
   by auto
 
 instance complement_domain :: (finite, finite) finite
@@ -33,61 +34,348 @@ proof -
     using assms \<open>n > 0\<close> by simp
   ultimately show ?thesis
     by (metis card_image)
+qed *)
+
+(* lemma transfer_subset[transfer_rule]:
+  includes lifting_syntax
+  assumes \<open>bi_unique R\<close>
+  shows \<open>(rel_set R ===> rel_set R ===> (\<longleftrightarrow>)) (\<subseteq>) (\<subseteq>)\<close>
+  using assms apply (auto simp: rel_fun_def rel_set_def bi_unique_def)
+  by (metis in_mono)+ *)
+
+lemma Ex_iffI:
+  assumes \<open>\<And>x. P x \<Longrightarrow> Q (f x)\<close>
+  assumes \<open>\<And>x. Q x \<Longrightarrow> P (g x)\<close>
+  shows \<open>Ex P \<longleftrightarrow> Ex Q\<close>
+  using assms(1) assms(2) by auto
+
+lemma finite_subsets_at_top_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  shows \<open>(rel_set R ===> rel_filter (rel_set R)) finite_subsets_at_top finite_subsets_at_top\<close>
+proof -
+  have \<open>\<exists>Z. (\<forall>\<^sub>F (S', T') in Z. rel_set R S' T')
+          \<and> map_filter_on {(x, y). rel_set R x y} fst Z = finite_subsets_at_top S
+          \<and> map_filter_on {(x, y). rel_set R x y} snd Z = finite_subsets_at_top T\<close>
+    if \<open>rel_set R S T\<close> for S T
+  proof -
+    from that \<open>bi_unique R\<close>
+    obtain s2t where T_s2t_S: "T = s2t ` S" and "inj_on s2t S" and R_s2t: "\<forall>x\<in>S. R x (s2t x)"
+      using bi_unique_rel_set_lemma by blast
+    define Z where \<open>Z = filtermap (\<lambda>S. (S, s2t ` S)) (finite_subsets_at_top S)\<close>
+    have R_S2T: \<open>rel_set R S' (s2t ` S')\<close> if \<open>S' \<subseteq> S\<close> for S'
+      by (smt (verit, ccfv_threshold) R_s2t \<open>inj_on s2t S\<close> f_inv_into_f in_mono inj_on_image_mem_iff inv_into_into rel_setI that)
+    then have ev_R: \<open>\<forall>\<^sub>F (S', T') in Z. rel_set R S' T'\<close>
+      by (auto simp: Z_def eventually_filtermap intro!: eventually_finite_subsets_at_top_weakI)
+    have 1: \<open>map_filter_on {(x, y). rel_set R x y} fst Z = finite_subsets_at_top S\<close>
+      apply (simp add: filter_eq_iff eventually_map_filter_on ev_R)
+      by (simp add: Z_def eventually_filtermap R_S2T eventually_finite_subsets_at_top)
+    note More_List.no_leading_Cons[rule del]
+    have P_s2t: \<open>S' \<subseteq> S \<Longrightarrow> finite T' \<Longrightarrow> s2t ` S' \<subseteq> T' \<Longrightarrow> T' \<subseteq> T \<Longrightarrow> P T'\<close> 
+      if P: \<open>\<forall>S''. finite S'' \<and> S' \<subseteq> S'' \<and> S'' \<subseteq> S \<longrightarrow> P (s2t ` S'')\<close>
+      for S' P T'
+      using P[rule_format, of \<open>inv_into S s2t ` T'\<close>]
+      by (metis T_s2t_S \<open>inj_on s2t S\<close> equalityE finite_imageI image_inv_into_cancel image_mono inv_into_image_cancel)
+
+    have 2: \<open>map_filter_on {(x, y). rel_set R x y} snd Z = finite_subsets_at_top T\<close>
+      apply (simp add: filter_eq_iff eventually_map_filter_on ev_R)
+      apply (simp add: Z_def eventually_filtermap R_S2T eventually_finite_subsets_at_top)
+      apply (intro allI Ex_iffI[where f=\<open>image s2t\<close> and g=\<open>image (inv_into S s2t)\<close>])
+       apply (safe intro!: intro: P_s2t)
+        (* Sledgehammer proofs below *)
+           apply blast
+      using T_s2t_S apply blast
+         apply (metis P_s2t)
+        apply blast
+       apply (metis T_s2t_S in_mono inv_into_into)
+      by (metis T_s2t_S finite_imageI image_inv_into_cancel image_mono)
+
+    from ev_R 1 2
+    show ?thesis
+      by auto
+  qed
+  then show ?thesis
+    by (simp add: rel_filter.simps rel_funI)
+qed
+
+lemma sum_weak_star_transfer[transfer_rule]:
+  includes lifting_syntax
+  fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  shows \<open>((R ===> cr_cblinfun_weak_star) ===> rel_set R ===> cr_cblinfun_weak_star) sum sum\<close>
+proof (intro rel_funI, rename_tac f g A B)
+  fix f :: \<open>'a \<Rightarrow> 'c \<Rightarrow>\<^sub>C\<^sub>L 'd\<close> and g A B
+  assume Rfg[transfer_rule]: \<open>(R ===> cr_cblinfun_weak_star) f g\<close>
+  assume [transfer_rule]: \<open>rel_set R A B\<close>
+  with \<open>bi_unique R\<close>
+  obtain m where BFA: "B = m ` A" and inj: "inj_on m A" and Rf: "\<forall>x\<in>A. R x (m x)"
+    using bi_unique_rel_set_lemma by blast
+  show \<open>cr_cblinfun_weak_star (sum f A) (sum g B)\<close>
+    apply (subst BFA) using inj Rf
+  proof (induction A rule:infinite_finite_induct)
+    case (infinite A)
+    then show ?case
+      by (auto simp: zero_cblinfun_weak_star.transfer)
+  next
+    case empty
+    show ?case
+      by (auto simp: zero_cblinfun_weak_star.transfer)
+  next
+    case (insert x F)
+    have \<open>cr_cblinfun_weak_star (f x + a) (g y + b)\<close>
+      if [transfer_rule]: \<open>cr_cblinfun_weak_star a b\<close> and [transfer_rule]: \<open>R x y\<close> for a b y
+      by transfer_prover
+    with insert show ?case
+      by simp
+  qed
+qed
+
+definition \<open>has_sum_in T f A x \<longleftrightarrow> limitin T (sum f) x (finite_subsets_at_top A)\<close>
+
+lemma has_sum_weak_star_transfer[transfer_rule]:
+  includes lifting_syntax
+  fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  shows \<open>((R ===> cr_cblinfun_weak_star) ===> (rel_set R) ===> cr_cblinfun_weak_star ===> (\<longleftrightarrow>)) (has_sum_in weak_star_topology) has_sum\<close>
+  unfolding has_sum_def has_sum_in_def
+  apply transfer_prover_start
+      apply transfer_step+
+  by (simp add: filterlim_weak_star_topology)
+
+definition \<open>summable_on_in T f A \<longleftrightarrow> (\<exists>x. has_sum_in T f A x)\<close>
+
+lemma summable_on_weak_star_transfer[transfer_rule]:
+  includes lifting_syntax
+  fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  shows \<open>((R ===> cr_cblinfun_weak_star) ===> (rel_set R) ===> (\<longleftrightarrow>)) (summable_on_in weak_star_topology) Infinite_Sum.summable_on\<close>
+  unfolding summable_on_def summable_on_in_def
+  by transfer_prover
+
+definition \<open>infsum_in T f A = (if summable_on_in T f A then (THE l. has_sum_in T f A l) else 0)\<close>
+
+lemma has_sum_in_infsum_in: \<open>summable_on_in T f A \<Longrightarrow> has_sum_in T f A (infsum_in F f A)\<close>
+  sorry
+
+lemma infsum_weak_star_transfer[transfer_rule]:
+  includes lifting_syntax
+  fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  shows \<open>((R ===> cr_cblinfun_weak_star) ===> (rel_set R) ===> cr_cblinfun_weak_star) (infsum_in weak_star_topology) infsum\<close>
+proof (intro rel_funI, rename_tac f g A B)
+  fix f :: \<open>'a \<Rightarrow> 'c \<Rightarrow>\<^sub>C\<^sub>L 'd\<close> and g A B
+  assume [transfer_rule]: \<open>(R ===> cr_cblinfun_weak_star) f g\<close>
+  assume [transfer_rule]: \<open>rel_set R A B\<close>
+  show \<open>cr_cblinfun_weak_star (infsum_in Weak_Star_Topology.weak_star_topology f A) (infsum g B)\<close>
+  proof (cases \<open>g summable_on B\<close>)
+    case True
+    then have True': \<open>summable_on_in weak_star_topology f A\<close>
+      apply transfer by simp
+    define a b where \<open>a = infsum_in weak_star_topology f A\<close> and \<open>b = infsum g B\<close>
+    from True' have 1: \<open>has_sum_in weak_star_topology f A a\<close>
+      by (simp add: a_def has_sum_in_infsum_in)
+    from True have \<open>has_sum g B b\<close>
+      using b_def summable_iff_has_sum_infsum by blast
+    then have 2: \<open>b' = b\<close> if \<open>has_sum g B b'\<close> for b'
+      using infsumI that by blast
+    from 1 2 show \<open>cr_cblinfun_weak_star a b\<close>
+      unfolding cr_cblinfun_weak_star_def
+      apply transfer
+      by simp
+  next
+    case False
+    then have False': \<open>\<not> summable_on_in weak_star_topology f A\<close>
+      apply transfer by simp
+    then show ?thesis
+      by (simp add: infsum_def False infsum_in_def zero_cblinfun_weak_star.transfer)
+  qed
 qed
 
 
+(* ML Thm.rule_attribute
+attribute_setup forget_lifting = \<open>Scan.lift Args.name >> (fn name => Thm.declaration_attribute (fn _ => 
+  Context.map_proof (fn ctxt => Lifting_Setup.lifting_forget name ctxt)))\<close> *)
+
+definition \<open>register_decomposition_basis \<Phi> = (SOME B. B \<noteq> {} \<and> is_ortho_set B \<and> (\<forall>b\<in>B. norm b = 1) \<and> ccspan B = \<Phi> (selfbutterket undefined) *\<^sub>S \<top>)\<close> 
+  for \<Phi> :: \<open>'a update \<Rightarrow> 'b update\<close>
+
+(* attribute_setup filtered = \<open>Args.context -- Scan.lift Parse.term >> (fn (ctxt,t) => let
+  val no_thm = @{lemma True by simp}
+  (* From Find_Theorems *)
+  fun matches_subterm ctxt (pat, obj) =
+    let
+      val thy = Proof_Context.theory_of ctxt;
+      fun matches obj ctxt' = Pattern.matches thy (pat, obj) orelse
+        (case obj of
+          Abs (_, T, t) =>
+            let val ((_, t'), ctxt'') = Variable.dest_abs obj ctxt'
+            in matches t' ctxt'' end
+        | t $ u => matches t ctxt' orelse matches u ctxt'
+        | _ => false);
+    in matches obj ctxt end;
+  val pat = Proof_Context.read_term_pattern ctxt t
+  fun filter context thm = let
+    val ctxt = Context.proof_of context
+    val match = matches_subterm ctxt (pat, Thm.prop_of thm)
+    val result = if match then thm else no_thm
+    in result end
+  in
+    Thm.rule_attribute [] filter end)\<close> *)
+
 lemma register_decomposition:
-  fixes \<Phi> :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
+  fixes \<Phi> :: \<open>'a update \<Rightarrow> 'b update\<close>
   assumes [simp]: \<open>register \<Phi>\<close>
-  shows \<open>\<exists>U :: ('a \<times> ('a, 'b) complement_domain) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
-              (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
+  shows \<open>\<forall>\<^sub>\<tau> 'c = register_decomposition_basis \<Phi>.
+         (\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
+              (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
   \<comment> \<open>Proof based on @{cite daws21unitalanswer}\<close>
-proof -
+proof (rule with_typeI)
   note [[simproc del: compatibility_warn]]
-  fix \<xi>0 :: 'a
+  define \<xi>0 :: 'a where \<open>\<xi>0 = undefined\<close>
 
-  have [simp]: \<open>clinear \<Phi>\<close>
+(*   define \<Phi>' where \<open>\<Phi>' = to_weak_star o \<Phi> o from_weak_star\<close>
+  have [transfer_rule]: \<open>(rel_fun cr_cblinfun_weak_star cr_cblinfun_weak_star) \<Phi> \<Phi>'\<close>
+    unfolding \<Phi>'_def
+    apply transfer_prover_start
+         apply transfer_step+
     by simp
+  have cont_\<Phi>': \<open>continuous_on UNIV \<Phi>'\<close>
+    unfolding continuous_map_iff_continuous2[symmetric]
+    apply transfer
+    using assms register_def by blast *)
 
-  define P where \<open>P i = Proj (ccspan {ket i})\<close> for i :: 'a
-  have P_butter: \<open>P i = selfbutterket i\<close> for i
-    by (simp add: P_def butterfly_eq_proj)
+  have [simp]: \<open>bounded_clinear \<Phi>\<close> (* TODO needed? *)
+    using assms register_def by blast
+  have [simp]: \<open>clinear \<Phi>\<close>
+    by (simp add: bounded_clinear.clinear)
+
+  define P where \<open>P i = selfbutterket i\<close> for i :: 'a
+
+  (* note [[forget_lifting "Complex_Bounded_Linear_Function0.cblinfun.lifting"]] *)
+  note blinfun_cblinfun_eq_bi_unique[transfer_rule del]
+  note cblinfun.bi_unique[transfer_rule del]
+  note cblinfun.left_unique[transfer_rule del]
+  note cblinfun.right_unique[transfer_rule del]
+  note cblinfun.right_total[transfer_rule del]
+  note id_cblinfun.transfer[transfer_rule del]
+  (* note transfer_raw[filtered pcr_cblinfun, transfer_rule del] *)
 
   define P' where \<open>P' i = \<Phi> (P i)\<close> for i :: 'a
   have proj_P': \<open>is_Proj (P' i)\<close> for i
-    by (simp add: P_def P'_def register_projector)
-  have \<open>(\<Sum>i\<in>UNIV. P i) = id_cblinfun\<close>
-    using sum_butterfly_ket P_butter by simp
-  then have sumP'id: \<open>(\<Sum>i\<in>UNIV. P' i) = id_cblinfun\<close>
-    unfolding P'_def 
-    apply (subst complex_vector.linear_sum[OF \<open>clinear \<Phi>\<close>, symmetric])
-    by auto
+    by (simp add: P_def P'_def butterfly_is_Proj register_projector)
+  have sumP'id: \<open>has_sum (\<lambda>i. to_weak_star (P' i)) UNIV id_weak_star\<close> (* TODO: alternatively, we could formulate this with has_sum_in *)
+  proof -
+    have *: \<open>has_sum (\<lambda>i. to_weak_star (P i)) UNIV id_weak_star\<close>
+      unfolding P_def sorry (* TODO: need thm for that *)
+    have \<open>has_sum (\<lambda>i. to_weak_star (P' i)) UNIV (to_weak_star (\<Phi> id_cblinfun))\<close>
+    proof (insert *, unfold P'_def, transfer fixing: \<Phi> P)
+      assume \<open>has_sum_in weak_star_topology P UNIV id_cblinfun\<close>
+      then have \<open>limitin weak_star_topology (sum P) id_cblinfun (finite_subsets_at_top UNIV)\<close>
+        using has_sum_in_def by blast
+      then have \<open>limitin weak_star_topology (\<Phi> o sum P) id_cblinfun (finite_subsets_at_top UNIV)\<close>
+        by (metis (no_types, lifting) assms continuous_map_limit register_def)
+      then have \<open>limitin weak_star_topology (\<lambda>F. (\<Sum>i\<in>F. \<Phi> (P i))) id_cblinfun (finite_subsets_at_top UNIV)\<close>
+        apply (rule limitin_transform_eventually[rotated])
+        apply (rule eventually_finite_subsets_at_top_weakI)
+        by (simp add: complex_vector.linear_sum)
+      then show \<open>has_sum_in weak_star_topology (\<lambda>i. \<Phi> (P i)) UNIV (\<Phi> id_cblinfun)\<close>
+        by (simp add: has_sum_in_def)
+    qed
+    also have \<open>to_weak_star (\<Phi> id_cblinfun) = to_weak_star id_cblinfun\<close>
+      by simp
+    also have \<open>\<dots> = id_weak_star\<close>
+      apply transfer by simp
+    finally show ?thesis
+      by -
+  qed
 
   define S where \<open>S i = P' i *\<^sub>S \<top>\<close> for i :: 'a
   have P'id: \<open>P' i *\<^sub>V \<psi> = \<psi>\<close> if \<open>\<psi> \<in> space_as_set (S i)\<close> for i \<psi>
     using S_def that proj_P'
     by (metis cblinfun_fixes_range is_Proj_algebraic)
 
-  obtain B0 where finiteB0: \<open>finite (B0 i)\<close> and cspanB0: \<open>cspan (B0 i) = space_as_set (S i)\<close> for i
-    apply atomize_elim apply (simp flip: all_conj_distrib) apply (rule choice)
-    by (meson cfinite_dim_finite_subspace_basis csubspace_space_as_set)
+  fix S_iso' :: \<open>'a \<Rightarrow> 'a \<Rightarrow> 'a update\<close> (* TODO: define, anything that is uni and maps ket i \<longrightarrow> ket j *)
+  have S_iso'_unitary: \<open>unitary (S_iso' i j)\<close> for i j
+    by -
+  have S_iso'_apply: \<open>S_iso' i j *\<^sub>V ket i = ket j\<close> for i j
+    by -
+  have S_iso'_id: \<open>S_iso' i i = id_cblinfun\<close> for i
+    by -
+  have S_iso'_adj_apply: \<open>(S_iso' i j)* *\<^sub>V ket j = ket i\<close> for i j
+    by (metis S_iso'_apply S_iso'_unitary cblinfun_apply_cblinfun_compose id_cblinfun_apply unitaryD1)
+  define S_iso where \<open>S_iso i j = \<Phi> (S_iso' i j)\<close> for i j
+  have uni_S_iso: \<open>unitary (S_iso i j)\<close> for i j
+    by (simp add: S_iso_def S_iso'_unitary register_unitary)
+  have S_iso_S: \<open>S_iso i j *\<^sub>S S i = S j\<close> for i j
+  proof -
+    have \<open>S_iso i j *\<^sub>S S i = S_iso i j *\<^sub>S P' i *\<^sub>S S_iso j i *\<^sub>S \<top>\<close>
+      by (simp add: S_def uni_S_iso)
+    also have \<open>\<dots> = S j\<close>
+      by (simp add: S_def P'_def S_iso_def P_def register_mult butterfly_comp_cblinfun cblinfun_comp_butterfly S_iso'_apply S_iso'_adj_apply
+        flip: cblinfun_compose_image)
+    finally show ?thesis
+      by -
+  qed
+  have S_iso_id[simp]: \<open>S_iso i i = id_cblinfun\<close> for i
+    by (simp add: S_iso'_id S_iso_def)
 
-  obtain B where orthoB: \<open>is_ortho_set (B i)\<close>
-    and normalB: \<open>\<And>b. b \<in> B i \<Longrightarrow> norm b = 1\<close>
-    and cspanB: \<open>cspan (B i) = cspan (B0 i)\<close>
-    and finiteB: \<open>finite (B i)\<close> for i
+(*   obtain B0 where finiteB0: \<open>finite (B0 i)\<close> and cspanB0: \<open>cspan (B0 i) = space_as_set (S i)\<close> for i
+    apply atomize_elim apply (simp flip: all_conj_distrib) apply (rule choice)
+    by (meson cfinite_dim_finite_subspace_basis csubspace_space_as_set) *)
+
+  obtain B\<^sub>0 where B\<^sub>0: \<open>is_ortho_set B\<^sub>0\<close> \<open>\<And>b. b \<in> B\<^sub>0 \<Longrightarrow> norm b = 1\<close> \<open>ccspan B\<^sub>0 = S \<xi>0\<close>
     apply atomize_elim apply (simp flip: all_conj_distrib) apply (rule choice)
     using orthonormal_basis_of_cspan[OF finiteB0] by blast
+  have B\<^sub>0_nonempty: \<open>B\<^sub>0 \<noteq> {}\<close> for i
+    by -
 
-  from cspanB cspanB0 have cspanB: \<open>cspan (B i) = space_as_set (S i)\<close> for i
+  have *: \<open>register_decomposition_basis \<Phi> \<noteq> {} \<and> is_ortho_set (register_decomposition_basis \<Phi>) \<and>
+       (\<forall>b\<in>register_decomposition_basis \<Phi>. norm b = 1) \<and>
+       ccspan (register_decomposition_basis \<Phi>) = S \<xi>0\<close>
+    unfolding register_decomposition_basis_def
+    apply (rule someI2[where a=B\<^sub>0])
+    using B\<^sub>0 B\<^sub>0_nonempty by (auto simp: S_def P'_def P_def \<xi>0_def)
+
+  then show \<open>register_decomposition_basis \<Phi> \<noteq> {}\<close>
+    by simp
+
+  define B where \<open>B i = S_iso \<xi>0 i ` register_decomposition_basis \<Phi>\<close> for i
+  have B\<xi>0: \<open>B \<xi>0 = register_decomposition_basis \<Phi>\<close>
+    using B_def by force
+  have orthoB: \<open>is_ortho_set (B i)\<close> for i
+    apply (auto simp add: B_def is_ortho_set_def)
+    apply (metis (no_types, lifting) "*" UNIV_I cblinfun_apply_cblinfun_compose cblinfun_fixes_range cinner_adj_left id_cblinfun_adjoint is_ortho_set_def top_ccsubspace.rep_eq uni_S_iso unitaryD1 unitary_id unitary_range)
+    by (metis "*" cinner_ket_same cinner_zero_left cnorm_eq_1 isometry_preserves_norm orthogonal_ket uni_S_iso unitary_isometry)
+  have normalB: \<open>\<And>b. b \<in> B i \<Longrightarrow> norm b = 1\<close> for i
+    by (metis (no_types, lifting) "*" B_def imageE isometry_preserves_norm uni_S_iso unitary_twosided_isometry)
+  have cspanB: \<open>ccspan (B i) = S i\<close> for i
+    by (simp add: B_def "*" B\<xi>0 S_iso_S flip: cblinfun_image_ccspan)
+
+
+(* (* TODO: simplify: we have iso between the S_i *)
+  obtain B where orthoB: \<open>is_ortho_set (B i)\<close>
+    and normalB: \<open>\<And>b. b \<in> B i \<Longrightarrow> norm b = 1\<close>
+    and cspanB: \<open>ccspan (B i) = S i\<close>
+    and B\<xi>0: \<open>B \<xi>0 = register_decomposition_basis \<Phi>\<close>
+    for i
+    apply atomize_elim apply (rule exI[where x=\<open>\<lambda>i. if i=\<xi>0 then register_decomposition_basis \<Phi> else B\<^sub>0 i\<close>])
+    using B\<^sub>0 * by auto *)
+
+  fix rep_c :: \<open>'c \<Rightarrow> 'b ell2\<close> and abs_c
+  assume typedef_c: \<open>type_definition rep_c abs_c (register_decomposition_basis \<Phi>)\<close>
+  then interpret type_definition rep_c abs_c \<open>register_decomposition_basis \<Phi>\<close> .
+
+(*   from cspanB cspanB0 have cspanB: \<open>cspan (B i) = space_as_set (S i)\<close> for i
     by simp
   then have ccspanB: \<open>ccspan (B i) = S i\<close> for i
-    by (metis ccspan.rep_eq closure_finite_cspan finiteB space_as_set_inject)
+    by (metis ccspan.rep_eq closure_finite_cspan finiteB space_as_set_inject) *)
   from orthoB have indepB: \<open>cindependent (B i)\<close> for i
     by (simp add: Complex_Inner_Product.is_ortho_set_cindependent)
 
   have orthoBiBj: \<open>is_orthogonal x y\<close> if \<open>x \<in> B i\<close> and \<open>y \<in> B j\<close> and \<open>i \<noteq> j\<close> for x y i j
-  proof -
+(* TODO need general thm: S ortho T \<longleftrightarrow> P_S ortho P_T *)
+    sorry
+(*   proof -
     from \<open>x \<in> B i\<close> obtain x' where x: \<open>x = P' i *\<^sub>V x'\<close>
       by (metis S_def cblinfun_fixes_range complex_vector.span_base cspanB is_Proj_idempotent proj_P')
     from \<open>y \<in> B j\<close> obtain y' where y: \<open>y = P' j *\<^sub>V y'\<close>
@@ -106,17 +394,21 @@ proof -
       by (simp add: complex_vector.linear_0)
     finally show ?thesis
       by -
-  qed
+  qed *)
 
 
   define B' where \<open>B' = (\<Union>i\<in>UNIV. B i)\<close>
 
   have P'B: \<open>P' i = Proj (ccspan (B i))\<close> for i
-    unfolding ccspanB S_def
+    unfolding cspanB S_def
     using proj_P' Proj_on_own_range'[symmetric] is_Proj_algebraic by blast
 
   have \<open>(\<Sum>i\<in>UNIV. P' i) = Proj (ccspan B')\<close>
-  proof (unfold B'_def, use finite[of UNIV] in induction)
+(* TODO: w.r.t weak* (?) *)
+(* TODO: needs new proof *)
+    sorry
+
+(*   proof (unfold B'_def, use finite[of UNIV] in induction)
     case empty
     show ?case by auto
   next
@@ -132,30 +424,34 @@ proof -
       by auto
     finally show ?case
       by simp
-  qed
+  qed *)
 
   with sumP'id 
   have ccspanB': \<open>ccspan B' = \<top>\<close>
-    by (metis Proj_range cblinfun_image_id)
-  hence cspanB': \<open>cspan B' = UNIV\<close>
-    by (metis B'_def finiteB ccspan.rep_eq finite_UN_I finite_class.finite_UNIV closure_finite_cspan top_ccsubspace.rep_eq)
+(* TODO possibly drop sumP'id and prove this one directly? Or new proof. *)
+    by (metis Proj_range cblinfun_image_id) x
+(*   hence cspanB': \<open>cspan B' = UNIV\<close>
+    by (metis B'_def finiteB ccspan.rep_eq finite_UN_I finite_class.finite_UNIV closure_finite_cspan top_ccsubspace.rep_eq) *)
 
   from orthoBiBj orthoB have orthoB': \<open>is_ortho_set B'\<close>
     unfolding B'_def is_ortho_set_def by blast
   then have indepB': \<open>cindependent B'\<close>
     using is_ortho_set_cindependent by blast
-  have cardB': \<open>card B' = CARD('b)\<close>
+(*   have cardB': \<open>card B' = CARD('b)\<close>
     apply (subst complex_vector.dim_span_eq_card_independent[symmetric])
      apply (rule indepB')
     apply (subst cspanB')
-    using cdim_UNIV_ell2 by auto
+    using cdim_UNIV_ell2 by auto *)
 
   from orthoBiBj orthoB
   have Bdisj: \<open>B i \<inter> B j = {}\<close> if \<open>i \<noteq> j\<close> for i j
     unfolding is_ortho_set_def
     apply auto by (metis cinner_eq_zero_iff that)
 
-  have cardBsame: \<open>card (B i) = card (B j)\<close> for i j
+(*   have cardBsame: \<open>|B i| =o |B j|\<close> for i j (* TODO needed? *)
+    sorry  *)
+
+(*   have cardBsame: \<open>card (B i) = card (B j)\<close> for i j
   proof -
     define Si_to_Sj where \<open>Si_to_Sj i j \<psi> = \<Phi> (butterket j i) *\<^sub>V \<psi>\<close> for i j \<psi>
     have S2S2S: \<open>Si_to_Sj j i (Si_to_Sj i j \<psi>) = \<psi>\<close> if \<open>\<psi> \<in> space_as_set (S i)\<close> for i j \<psi>
@@ -180,9 +476,9 @@ proof -
       by (metis complex_vector.span_span cspanB)
     then show ?thesis
       by (metis complex_vector.dim_span_eq_card_independent cspanB indepB)
-  qed
+  qed *)
 
-  have CARD'b: \<open>CARD('b) = card (B \<xi>0) * CARD('a)\<close>
+(*   have CARD'b: \<open>CARD('b) = card (B \<xi>0) * CARD('a)\<close>
   proof -
     have \<open>CARD('b) = card B'\<close>
       using cardB' by simp
@@ -194,76 +490,82 @@ proof -
     also have \<open>\<dots> = card (B \<xi>0) * CARD('a)\<close>
       by auto
     finally show ?thesis by -
-  qed
+  qed *)
 
-  obtain f where bij_f: \<open>bij_betw f (UNIV::('a,'b) complement_domain set) (B \<xi>0)\<close>
+  have bij_rep_c: \<open>bij_betw rep_c (UNIV :: 'c set) (B \<xi>0)\<close>
+    unfolding B\<xi>0
+    apply (rule bij_betwI[where g=abs_c])
+    using Rep Rep_inverse Abs_inverse by blast+
+
+(*   obtain rep_c where bij_f: \<open>bij_betw rep_c (UNIV::('a,'b) complement_domain set) (B \<xi>0)\<close>
     apply atomize_elim apply (rule finite_same_card_bij)
-    using finiteB CARD_complement_domain[OF CARD'b] by auto
+    using finiteB CARD_complement_domain[OF CARD'b] by auto *)
 
-  define u where \<open>u = (\<lambda>(\<xi>,\<alpha>). \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>)\<close> for \<xi> :: 'a and \<alpha> :: \<open>('a,'b) complement_domain\<close>
-  obtain U where Uapply: \<open>U *\<^sub>V ket \<xi>\<alpha> = u \<xi>\<alpha>\<close> for \<xi>\<alpha>
+  define u where \<open>u = (\<lambda>(\<xi>,\<alpha>). \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>)\<close> for \<xi> :: 'a and \<alpha> :: \<open>('a,'b) complement_domain\<close>
+(*   obtain U where Uapply: \<open>U *\<^sub>V ket \<xi>\<alpha> = u \<xi>\<alpha>\<close> for \<xi>\<alpha>
     apply atomize_elim
     apply (rule exI[of _ \<open>cblinfun_extension (range ket) (\<lambda>k. u (inv ket k))\<close>])
     apply (subst cblinfun_extension_apply)
       apply (rule cblinfun_extension_exists_finite_dim)
-    by (auto simp add: inj_ket cindependent_ket)
+    by (auto simp add: inj_ket cindependent_ket) *)
 
-  define eqa where \<open>eqa a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: 'a
+(*   define eqa where \<open>eqa a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: 'a
   define eqc where \<open>eqc a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: \<open>('a,'b) complement_domain\<close>
-  define eqac where \<open>eqac a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: \<open>'a * ('a,'b) complement_domain\<close>
+  define eqac where \<open>eqac a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: \<open>'a * ('a,'b) complement_domain\<close> *)
 
-  have \<open>cinner (U *\<^sub>V ket \<xi>\<alpha>) (U *\<^sub>V ket \<xi>'\<alpha>') = eqac \<xi>\<alpha> \<xi>'\<alpha>'\<close> for \<xi>\<alpha> \<xi>'\<alpha>'
+  have cinner_u: \<open>cinner (u \<xi>\<alpha>) (u \<xi>'\<alpha>') = of_bool (\<xi>\<alpha> = \<xi>'\<alpha>')\<close> for \<xi>\<alpha> \<xi>'\<alpha>'
   proof -
     obtain \<xi> \<alpha> \<xi>' \<alpha>' where \<xi>\<alpha>: \<open>\<xi>\<alpha> = (\<xi>,\<alpha>)\<close> and \<xi>'\<alpha>': \<open>\<xi>'\<alpha>' = (\<xi>',\<alpha>')\<close>
       apply atomize_elim by auto
-    have \<open>cinner (U *\<^sub>V ket (\<xi>,\<alpha>)) (U *\<^sub>V ket (\<xi>', \<alpha>')) = cinner (\<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (\<Phi> (butterket \<xi>' \<xi>0) *\<^sub>V f \<alpha>')\<close>
-      unfolding Uapply u_def by simp
-    also have \<open>\<dots> = cinner ((\<Phi> (butterket \<xi>' \<xi>0))* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
+    have \<open>cinner (u (\<xi>,\<alpha>)) (u (\<xi>', \<alpha>')) = cinner (\<Phi> (butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>) (\<Phi> (butterket \<xi>' \<xi>0) *\<^sub>V rep_c \<alpha>')\<close>
+      unfolding u_def by simp
+    also have \<open>\<dots> = cinner ((\<Phi> (butterket \<xi>' \<xi>0))* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
       by (simp add: cinner_adj_left)
-    also have \<open>\<dots> = cinner (\<Phi> (butterket \<xi>' \<xi>0 *) *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
+    also have \<open>\<dots> = cinner (\<Phi> (butterket \<xi>' \<xi>0 *) *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
       by (metis (no_types, lifting) assms register_def)
-    also have \<open>\<dots> = cinner (\<Phi> (butterket \<xi>0 \<xi>' o\<^sub>C\<^sub>L butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
+    also have \<open>\<dots> = cinner (\<Phi> (butterket \<xi>0 \<xi>' o\<^sub>C\<^sub>L butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
       by (simp add: register_mult cblinfun_apply_cblinfun_compose[symmetric])
-    also have \<open>\<dots> = cinner (\<Phi> (eqa \<xi>' \<xi> *\<^sub>C selfbutterket \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
-      apply simp by (metis eqa_def cinner_ket)
-    also have \<open>\<dots> = eqa \<xi>' \<xi> * cinner (\<Phi> (selfbutterket \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
-      by (smt (verit, ccfv_threshold) \<open>clinear \<Phi>\<close> eqa_def cblinfun.scaleC_left cinner_commute 
-              cinner_scaleC_left cinner_zero_right complex_cnj_one complex_vector.linear_scale)
-    also have \<open>\<dots> = eqa \<xi>' \<xi> * cinner (P' \<xi>0 *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
-      using P_butter P'_def by simp
-    also have \<open>\<dots> = eqa \<xi>' \<xi> * cinner (f \<alpha>) (f \<alpha>')\<close>
+    also have \<open>\<dots> = cinner (\<Phi> (of_bool (\<xi>'=\<xi>) *\<^sub>C selfbutterket \<xi>0) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
+      by (simp add: cinner_ket_left ket.rep_eq)
+    also have \<open>\<dots> = of_bool (\<xi>'=\<xi>) * cinner (\<Phi> (selfbutterket \<xi>0) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
+      by (simp add: complex_vector.linear_0)
+    also have \<open>\<dots> = of_bool (\<xi>'=\<xi>) * cinner (P' \<xi>0 *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
+      using P_def P'_def by simp
+    also have \<open>\<dots> = of_bool (\<xi>'=\<xi>) * cinner (rep_c \<alpha>) (rep_c \<alpha>')\<close>
       apply (subst P'id)
-       apply (metis bij_betw_imp_surj_on bij_f complex_vector.span_base cspanB rangeI)
+      apply (metis B\<xi>0 Rep ccspan_superset cspanB in_mono)
       by simp
-    also have \<open>\<dots> = eqa \<xi>' \<xi> * eqc \<alpha> \<alpha>'\<close>
-      using bij_f orthoB normalB unfolding is_ortho_set_def eqc_def apply auto
-       apply (metis bij_betw_imp_surj_on cnorm_eq_1 rangeI)
-      by (smt (z3) bij_betw_iff_bijections iso_tuple_UNIV_I)
+    also have \<open>\<dots> = of_bool (\<xi>'=\<xi>) * of_bool (\<alpha>=\<alpha>')\<close>
+      using bij_rep_c orthoB normalB unfolding is_ortho_set_def
+      by (smt (verit, best) B\<xi>0 Rep Rep_inject cnorm_eq_1 of_bool_eq(1) of_bool_eq(2))
     finally show ?thesis
-      by (simp add: eqa_def eqac_def eqc_def \<xi>'\<alpha>' \<xi>\<alpha>)
+      by (simp add: \<xi>'\<alpha>' \<xi>\<alpha>)
   qed
-  then have \<open>isometry U\<close>
+  define U where \<open>U = cblinfun_extension (range ket) (u o inv ket)\<close>
+  have Uapply: \<open>U *\<^sub>V ket \<xi>\<alpha> = u \<xi>\<alpha>\<close> for \<xi>\<alpha>
+    by -
+  have \<open>isometry U\<close>
     apply (rule_tac orthogonal_on_basis_is_isometry[where B=\<open>range ket\<close>])
-    using eqac_def by auto
-
+    by (auto simp: Uapply cinner_u)
+  
   have \<open>U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U = butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun\<close> for \<xi> \<eta>
   proof (rule equal_ket, rename_tac \<xi>1\<alpha>)
-    fix \<xi>1\<alpha> obtain \<xi>1 :: 'a and \<alpha> :: \<open>('a,'b) complement_domain\<close> where \<xi>1\<alpha>: \<open>\<xi>1\<alpha> = (\<xi>1,\<alpha>)\<close> 
+    fix \<xi>1\<alpha> obtain \<xi>1 :: 'a and \<alpha> :: \<open>'c\<close> where \<xi>1\<alpha>: \<open>\<xi>1\<alpha> = (\<xi>1,\<alpha>)\<close> 
       apply atomize_elim by auto
-    have \<open>(U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U) *\<^sub>V ket \<xi>1\<alpha> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta>) *\<^sub>V \<Phi> (butterket \<xi>1 \<xi>0) *\<^sub>V f \<alpha>\<close>
+    have \<open>(U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U) *\<^sub>V ket \<xi>1\<alpha> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta>) *\<^sub>V \<Phi> (butterket \<xi>1 \<xi>0) *\<^sub>V rep_c \<alpha>\<close>
       unfolding cblinfun_apply_cblinfun_compose \<xi>1\<alpha> Uapply u_def by simp
-    also have \<open>\<dots> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta> o\<^sub>C\<^sub>L butterket \<xi>1 \<xi>0) *\<^sub>V f \<alpha>\<close>
+    also have \<open>\<dots> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta> o\<^sub>C\<^sub>L butterket \<xi>1 \<xi>0) *\<^sub>V rep_c \<alpha>\<close>
       by (metis (no_types, lifting) assms butterfly_comp_butterfly lift_cblinfun_comp(4) register_mult)
-    also have \<open>\<dots> = U* *\<^sub>V \<Phi> (eqa \<eta> \<xi>1 *\<^sub>C butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>\<close>
-      by (simp add: eqa_def cinner_ket)
-    also have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C U* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>\<close>
+    also have \<open>\<dots> = U* *\<^sub>V \<Phi> (of_bool (\<eta>=\<xi>1) *\<^sub>C butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>\<close>
+      by (simp add: cinner_ket)
+    also have \<open>\<dots> = of_bool (\<eta>=\<xi>1) *\<^sub>C U* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>\<close>
       by (simp add: complex_vector.linear_scale)
-    also have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C U* *\<^sub>V U *\<^sub>V ket (\<xi>, \<alpha>)\<close>
+    also have \<open>\<dots> = of_bool (\<eta>=\<xi>1) *\<^sub>C U* *\<^sub>V U *\<^sub>V ket (\<xi>, \<alpha>)\<close>
       unfolding Uapply u_def by simp
-    also from \<open>isometry U\<close> have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C ket (\<xi>, \<alpha>)\<close>
+    also from \<open>isometry U\<close> have \<open>\<dots> = of_bool (\<eta>=\<xi>1) *\<^sub>C ket (\<xi>, \<alpha>)\<close>
       unfolding cblinfun_apply_cblinfun_compose[symmetric] by simp
     also have \<open>\<dots> = (butterket \<xi> \<eta> *\<^sub>V ket \<xi>1) \<otimes>\<^sub>s ket \<alpha>\<close>
-      by (simp add: eqa_def tensor_ell2_scaleC1)
+      by (simp add: tensor_ell2_scaleC1)
     also have \<open>\<dots> = (butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
       by (simp add: \<xi>1\<alpha> tensor_op_ket)
     finally show \<open>(U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U) *\<^sub>V ket \<xi>1\<alpha> = (butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
@@ -278,8 +580,8 @@ proof -
     have \<open>\<Phi> (butterket \<xi> \<xi>1) *\<^sub>S \<top> \<le> U *\<^sub>S \<top>\<close> for \<xi> \<xi>1
     proof -
       have *: \<open>\<Phi> (butterket \<xi> \<xi>0) *\<^sub>V b \<in> space_as_set (U *\<^sub>S \<top>)\<close> if \<open>b \<in> B \<xi>0\<close> for b
-        apply (subst asm_rl[of \<open>\<Phi> (butterket \<xi> \<xi>0) *\<^sub>V b = u (\<xi>, inv f b)\<close>])
-         apply (simp add: u_def, metis bij_betw_inv_into_right bij_f that)
+        apply (subst asm_rl[of \<open>\<Phi> (butterket \<xi> \<xi>0) *\<^sub>V b = u (\<xi>, inv rep_c b)\<close>])
+         apply (simp add: u_def, metis bij_betw_inv_into_right bij_rep_c that)
         by (metis Uapply cblinfun_apply_in_image)
 
       have \<open>\<Phi> (butterket \<xi> \<xi>1) *\<^sub>S \<top> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>1) *\<^sub>S \<top>\<close>
@@ -288,9 +590,9 @@ proof -
       also have \<open>\<dots> \<le> \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>0) *\<^sub>S \<top>\<close>
         by (meson cblinfun_image_mono top_greatest)
       also have \<open>\<dots> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S S \<xi>0\<close>
-        by (simp add: S_def P'_def P_butter)
+        by (simp add: S_def P'_def P_def)
       also have \<open>\<dots> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S ccspan (B \<xi>0)\<close>
-        by (simp add: ccspanB)
+        by (simp add: cspanB)
       also have \<open>\<dots> = ccspan (\<Phi> (butterket \<xi> \<xi>0) ` B \<xi>0)\<close>
         by (meson cblinfun_image_ccspan)
       also have \<open>\<dots> \<le> U *\<^sub>S \<top>\<close>
@@ -298,9 +600,10 @@ proof -
       finally show ?thesis by -
     qed
     moreover have \<open>\<Phi> id_cblinfun *\<^sub>S \<top> \<le> (SUP \<xi>\<in>UNIV. \<Phi> (selfbutterket \<xi>) *\<^sub>S \<top>)\<close>
-      unfolding sum_butterfly_ket[symmetric]
+(*       unfolding sum_butterfly_ket[symmetric]
       apply (subst complex_vector.linear_sum, simp)
-      by (rule cblinfun_sum_image_distr)
+      by (rule cblinfun_sum_image_distr) *)
+      by - (* TODO *)
     ultimately have \<open>\<Phi> id_cblinfun *\<^sub>S \<top> \<le> U *\<^sub>S \<top>\<close>
       apply auto by (meson SUP_le_iff order.trans)
     then have \<open>U *\<^sub>S \<top> = \<top>\<close>
@@ -323,7 +626,7 @@ proof -
       by -
   qed
 
-  with \<open>unitary U\<close> show ?thesis
+  with \<open>unitary U\<close> show \<open>\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> (\<forall>\<theta>. \<Phi> \<theta> = Misc.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
     by (auto simp: sandwich_def)
 qed
 

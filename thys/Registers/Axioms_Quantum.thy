@@ -29,6 +29,7 @@ theory Axioms_Quantum
           Complex_Bounded_Operators.Complex_L2
           (* Finite_Tensor_Product *)
           Tensor_Product.Hilbert_Space_Tensor_Product
+          Tensor_Product.Weak_Star_Topology
 begin
 
 
@@ -36,10 +37,6 @@ unbundle cblinfun_notation
 no_notation m_inv ("inv\<index> _" [81] 80)
 
 type_synonym 'a update = \<open>('a ell2, 'a ell2) cblinfun\<close>
-
-(* TODO define *)
-(* TODO: is it meaningful for non-square operators? *)
-axiomatization weak_star_topology :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a::chilbert_space) topology\<close>
 
 definition preregister :: \<open>('a update \<Rightarrow> 'b update) \<Rightarrow> bool\<close> where
   \<open>preregister F \<longleftrightarrow> bounded_clinear F \<and> continuous_map weak_star_topology weak_star_topology F\<close>
