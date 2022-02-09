@@ -363,10 +363,6 @@ proof (rule with_typeI)
   have S_iso_id[simp]: \<open>S_iso i i = id_cblinfun\<close> for i
     by (simp add: S_iso'_id S_iso_def)
 
-(*   obtain B0 where finiteB0: \<open>finite (B0 i)\<close> and cspanB0: \<open>cspan (B0 i) = space_as_set (S i)\<close> for i
-    apply atomize_elim apply (simp flip: all_conj_distrib) apply (rule choice)
-    by (meson cfinite_dim_finite_subspace_basis csubspace_space_as_set) *)
-
   obtain B\<^sub>0 where B\<^sub>0: \<open>is_ortho_set B\<^sub>0\<close> \<open>\<And>b. b \<in> B\<^sub>0 \<Longrightarrow> norm b = 1\<close> \<open>ccspan B\<^sub>0 = S \<xi>0\<close>
     by (meson emptyE is_ortho_set_empty orthonormal_subspace_basis_exists) x
   have B\<^sub>0_nonempty: \<open>B\<^sub>0 \<noteq> {}\<close>
@@ -394,24 +390,10 @@ proof (rule with_typeI)
   have cspanB: \<open>ccspan (B i) = S i\<close> for i
     by (simp add: B_def "*" B\<xi>0 S_iso_S flip: cblinfun_image_ccspan)
 
-
-(* (* TODO: simplify: we have iso between the S_i *)
-  obtain B where orthoB: \<open>is_ortho_set (B i)\<close>
-    and normalB: \<open>\<And>b. b \<in> B i \<Longrightarrow> norm b = 1\<close>
-    and cspanB: \<open>ccspan (B i) = S i\<close>
-    and B\<xi>0: \<open>B \<xi>0 = register_decomposition_basis \<Phi>\<close>
-    for i
-    apply atomize_elim apply (rule exI[where x=\<open>\<lambda>i. if i=\<xi>0 then register_decomposition_basis \<Phi> else B\<^sub>0 i\<close>])
-    using B\<^sub>0 * by auto *)
-
   fix rep_c :: \<open>'c \<Rightarrow> 'b ell2\<close> and abs_c
   assume typedef_c: \<open>type_definition rep_c abs_c (register_decomposition_basis \<Phi>)\<close>
   then interpret type_definition rep_c abs_c \<open>register_decomposition_basis \<Phi>\<close> .
 
-(*   from cspanB cspanB0 have cspanB: \<open>cspan (B i) = space_as_set (S i)\<close> for i
-    by simp
-  then have ccspanB: \<open>ccspan (B i) = S i\<close> for i
-    by (metis ccspan.rep_eq closure_finite_cspan finiteB space_as_set_inject) *)
   from orthoB have indepB: \<open>cindependent (B i)\<close> for i
     by (simp add: Complex_Inner_Product.is_ortho_set_cindependent)
 
@@ -426,27 +408,6 @@ proof (rule with_typeI)
     then show \<open>is_orthogonal x y\<close>
       by (meson orthogonal_projectors_orthogonal_spaces that(1) that(2))
   qed
-(*   proof -
-    from \<open>x \<in> B i\<close> obtain x' where x: \<open>x = P' i *\<^sub>V x'\<close>
-      by (metis S_def cblinfun_fixes_range complex_vector.span_base cspanB is_Proj_idempotent proj_P')
-    from \<open>y \<in> B j\<close> obtain y' where y: \<open>y = P' j *\<^sub>V y'\<close>
-      by (metis S_def cblinfun_fixes_range complex_vector.span_base cspanB is_Proj_idempotent proj_P')
-    have \<open>cinner x y = cinner (P' i *\<^sub>V x') (P' j *\<^sub>V  y')\<close>
-      using x y by simp
-    also have \<open>\<dots> = cinner (P' j *\<^sub>V P' i *\<^sub>V x') y'\<close>
-      by (metis cinner_adj_left is_Proj_algebraic proj_P')
-    also have \<open>\<dots> = cinner (\<Phi> (P j o\<^sub>C\<^sub>L P i) *\<^sub>V x') y'\<close>
-      unfolding P'_def register_mult[OF \<open>register \<Phi>\<close>, symmetric] by simp
-    also have \<open>\<dots> = cinner (\<Phi> (selfbutterket j o\<^sub>C\<^sub>L selfbutterket i) *\<^sub>V x') y'\<close>
-      unfolding P_butter by simp
-    also have \<open>\<dots> = cinner (\<Phi> 0 *\<^sub>V x') y'\<close>
-      by (metis butterfly_comp_butterfly complex_vector.scale_eq_0_iff orthogonal_ket that(3))
-    also have \<open>\<dots> = 0\<close>
-      by (simp add: complex_vector.linear_0)
-    finally show ?thesis
-      by -
-  qed *)
-
 
   define B' where \<open>B' = (\<Union>i\<in>UNIV. B i)\<close>
 
@@ -481,88 +442,23 @@ proof (rule with_typeI)
   have ccspanB': \<open>ccspan B' = \<top>\<close>
 (* TODO possibly drop sumP'id and prove this one directly? Or new proof. *)
     by (metis Proj_range cblinfun_image_id) x
-(*   hence cspanB': \<open>cspan B' = UNIV\<close>
-    by (metis B'_def finiteB ccspan.rep_eq finite_UN_I finite_class.finite_UNIV closure_finite_cspan top_ccsubspace.rep_eq) *)
 
   from orthoBiBj orthoB have orthoB': \<open>is_ortho_set B'\<close>
     unfolding B'_def is_ortho_set_def by blast
   then have indepB': \<open>cindependent B'\<close>
     using is_ortho_set_cindependent by blast
-(*   have cardB': \<open>card B' = CARD('b)\<close>
-    apply (subst complex_vector.dim_span_eq_card_independent[symmetric])
-     apply (rule indepB')
-    apply (subst cspanB')
-    using cdim_UNIV_ell2 by auto *)
 
   from orthoBiBj orthoB
   have Bdisj: \<open>B i \<inter> B j = {}\<close> if \<open>i \<noteq> j\<close> for i j
     unfolding is_ortho_set_def
     apply auto by (metis cinner_eq_zero_iff that)
 
-(*   have cardBsame: \<open>|B i| =o |B j|\<close> for i j (* TODO needed? *)
-    sorry  *)
-
-(*   have cardBsame: \<open>card (B i) = card (B j)\<close> for i j
-  proof -
-    define Si_to_Sj where \<open>Si_to_Sj i j \<psi> = \<Phi> (butterket j i) *\<^sub>V \<psi>\<close> for i j \<psi>
-    have S2S2S: \<open>Si_to_Sj j i (Si_to_Sj i j \<psi>) = \<psi>\<close> if \<open>\<psi> \<in> space_as_set (S i)\<close> for i j \<psi>
-      using that P'id
-      by (simp add: Si_to_Sj_def cblinfun_apply_cblinfun_compose[symmetric] register_mult P_butter P'_def)
-    also have lin[simp]: \<open>clinear (Si_to_Sj i j)\<close> for i j
-      unfolding Si_to_Sj_def by simp
-    have S2S: \<open>Si_to_Sj i j x \<in> space_as_set (S j)\<close> for i j x
-    proof -
-      have \<open>Si_to_Sj i j x = P' j *\<^sub>V Si_to_Sj i j x\<close>
-        by (simp add: Si_to_Sj_def cblinfun_apply_cblinfun_compose[symmetric] register_mult P_butter P'_def)
-      also have \<open>P' j *\<^sub>V Si_to_Sj i j x \<in> space_as_set (S j)\<close>
-        by (simp add: S_def)
-      finally show ?thesis by -
-    qed
-    have bij: \<open>bij_betw (Si_to_Sj i j) (space_as_set (S i)) (space_as_set (S j))\<close>
-      apply (rule bij_betwI[where g=\<open>Si_to_Sj j i\<close>])
-      using S2S S2S2S by (auto intro!: funcsetI)
-    have \<open>cdim (space_as_set (S i)) = cdim (space_as_set (S j))\<close>
-      using lin apply (rule isomorphic_equal_cdim[where f=\<open>Si_to_Sj i j\<close>])
-      using bij apply (auto simp: bij_betw_def)
-      by (metis complex_vector.span_span cspanB)
-    then show ?thesis
-      by (metis complex_vector.dim_span_eq_card_independent cspanB indepB)
-  qed *)
-
-(*   have CARD'b: \<open>CARD('b) = card (B \<xi>0) * CARD('a)\<close>
-  proof -
-    have \<open>CARD('b) = card B'\<close>
-      using cardB' by simp
-    also have \<open>\<dots> = (\<Sum>i\<in>UNIV. card (B i))\<close>
-      unfolding B'_def apply (rule card_UN_disjoint)
-      using finiteB Bdisj by auto
-    also have \<open>\<dots> = (\<Sum>(i::'a)\<in>UNIV. card (B \<xi>0))\<close>
-      using cardBsame by metis
-    also have \<open>\<dots> = card (B \<xi>0) * CARD('a)\<close>
-      by auto
-    finally show ?thesis by -
-  qed *)
-
   have bij_rep_c: \<open>bij_betw rep_c (UNIV :: 'c set) (B \<xi>0)\<close>
     unfolding B\<xi>0
     apply (rule bij_betwI[where g=abs_c])
     using Rep Rep_inverse Abs_inverse by blast+
 
-(*   obtain rep_c where bij_f: \<open>bij_betw rep_c (UNIV::('a,'b) complement_domain set) (B \<xi>0)\<close>
-    apply atomize_elim apply (rule finite_same_card_bij)
-    using finiteB CARD_complement_domain[OF CARD'b] by auto *)
-
   define u where \<open>u = (\<lambda>(\<xi>,\<alpha>). \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>)\<close> for \<xi> :: 'a and \<alpha> :: \<open>'c\<close>
-(*   obtain U where Uapply: \<open>U *\<^sub>V ket \<xi>\<alpha> = u \<xi>\<alpha>\<close> for \<xi>\<alpha>
-    apply atomize_elim
-    apply (rule exI[of _ \<open>cblinfun_extension (range ket) (\<lambda>k. u (inv ket k))\<close>])
-    apply (subst cblinfun_extension_apply)
-      apply (rule cblinfun_extension_exists_finite_dim)
-    by (auto simp add: inj_ket cindependent_ket) *)
-
-(*   define eqa where \<open>eqa a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: 'a
-  define eqc where \<open>eqc a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: \<open>('a,'b) complement_domain\<close>
-  define eqac where \<open>eqac a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: \<open>'a * ('a,'b) complement_domain\<close> *)
 
   have cinner_u: \<open>cinner (u \<xi>\<alpha>) (u \<xi>'\<alpha>') = of_bool (\<xi>\<alpha> = \<xi>'\<alpha>')\<close> for \<xi>\<alpha> \<xi>'\<alpha>'
   proof -
