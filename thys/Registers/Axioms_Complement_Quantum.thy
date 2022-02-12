@@ -9,41 +9,6 @@ no_notation Lattice.join (infixl "\<squnion>\<index>" 65)
 no_notation elt_set_eq (infix "=o" 50)
 no_notation eq_closure_of ("closure'_of\<index>")
 
-(* typedef ('a::finite,'b::finite) complement_domain = \<open>{..< if CARD('b) div CARD('a) \<noteq> 0 then CARD('b) div CARD('a) else 1}\<close>
-  by auto
-
-instance complement_domain :: (finite, finite) finite
-proof intro_classes
-  have \<open>inj Rep_complement_domain\<close>
-    by (simp add: Rep_complement_domain_inject inj_on_def)
-  moreover have \<open>finite (range Rep_complement_domain)\<close>
-    by (metis finite_lessThan type_definition.Rep_range type_definition_complement_domain)
-  ultimately show \<open>finite (UNIV :: ('a,'b) complement_domain set)\<close>
-    using finite_image_iff by blast
-qed
-
-lemma CARD_complement_domain: 
-  assumes \<open>CARD('b::finite) = n * CARD('a::finite)\<close>
-  shows \<open>CARD(('a,'b) complement_domain) = n\<close>
-proof -
-  from assms have \<open>n > 0\<close>
-    by (metis zero_less_card_finite zero_less_mult_pos2)
-  have *: \<open>inj Rep_complement_domain\<close>
-    by (simp add: Rep_complement_domain_inject inj_on_def)
-  moreover have \<open>card (range (Rep_complement_domain :: ('a,'b) complement_domain \<Rightarrow> _)) = n\<close>
-    apply (subst type_definition.Rep_range[OF type_definition_complement_domain])
-    using assms \<open>n > 0\<close> by simp
-  ultimately show ?thesis
-    by (metis card_image)
-qed *)
-
-(* lemma transfer_subset[transfer_rule]:
-  includes lifting_syntax
-  assumes \<open>bi_unique R\<close>
-  shows \<open>(rel_set R ===> rel_set R ===> (\<longleftrightarrow>)) (\<subseteq>) (\<subseteq>)\<close>
-  using assms apply (auto simp: rel_fun_def rel_set_def bi_unique_def)
-  by (metis in_mono)+ *)
-
 lemma Ex_iffI:
   assumes \<open>\<And>x. P x \<Longrightarrow> Q (f x)\<close>
   assumes \<open>\<And>x. Q x \<Longrightarrow> P (g x)\<close>
@@ -192,36 +157,8 @@ proof (intro rel_funI, rename_tac f g A B)
   qed
 qed
 
-
-(* ML Thm.rule_attribute
-attribute_setup forget_lifting = \<open>Scan.lift Args.name >> (fn name => Thm.declaration_attribute (fn _ => 
-  Context.map_proof (fn ctxt => Lifting_Setup.lifting_forget name ctxt)))\<close> *)
-
 definition \<open>register_decomposition_basis \<Phi> = (SOME B. is_ortho_set B \<and> (\<forall>b\<in>B. norm b = 1) \<and> ccspan B = \<Phi> (selfbutterket undefined) *\<^sub>S \<top>)\<close> 
   for \<Phi> :: \<open>'a update \<Rightarrow> 'b update\<close>
-
-(* attribute_setup filtered = \<open>Args.context -- Scan.lift Parse.term >> (fn (ctxt,t) => let
-  val no_thm = @{lemma True by simp}
-  (* From Find_Theorems *)
-  fun matches_subterm ctxt (pat, obj) =
-    let
-      val thy = Proof_Context.theory_of ctxt;
-      fun matches obj ctxt' = Pattern.matches thy (pat, obj) orelse
-        (case obj of
-          Abs (_, T, t) =>
-            let val ((_, t'), ctxt'') = Variable.dest_abs obj ctxt'
-            in matches t' ctxt'' end
-        | t $ u => matches t ctxt' orelse matches u ctxt'
-        | _ => false);
-    in matches obj ctxt end;
-  val pat = Proof_Context.read_term_pattern ctxt t
-  fun filter context thm = let
-    val ctxt = Context.proof_of context
-    val match = matches_subterm ctxt (pat, Thm.prop_of thm)
-    val result = if match then thm else no_thm
-    in result end
-  in
-    Thm.rule_attribute [] filter end)\<close> *)
 
 lemma bounded_clinear_cblinfun_compose_left: \<open>bounded_clinear (\<lambda>x. x o\<^sub>C\<^sub>L y)\<close>
   by (simp add: bounded_cbilinear.bounded_clinear_left bounded_cbilinear_cblinfun_compose)
@@ -300,12 +237,6 @@ proof (rule iffI, rule ccontr)
     by simp
 qed simp
 
-(* lemma register_inj:
-  assumes \<open>register F\<close>
-  shows \<open>inj F\<close>
-(* TODO: is there a proof that does not use register_decomposition? *)
-  by - *)
-
 (* TODO move *)
 lemma closed_space_as_set[simp]: \<open>closed (space_as_set S)\<close>
   apply transfer by (simp add: closed_csubspace.closed)
@@ -379,17 +310,6 @@ proof (rule with_typeI)
   note [[simproc del: compatibility_warn]]
   define \<xi>0 :: 'a where \<open>\<xi>0 = undefined\<close>
 
-(*   define \<Phi>' where \<open>\<Phi>' = to_weak_star o \<Phi> o from_weak_star\<close>
-  have [transfer_rule]: \<open>(rel_fun cr_cblinfun_weak_star cr_cblinfun_weak_star) \<Phi> \<Phi>'\<close>
-    unfolding \<Phi>'_def
-    apply transfer_prover_start
-         apply transfer_step+
-    by simp
-  have cont_\<Phi>': \<open>continuous_on UNIV \<Phi>'\<close>
-    unfolding continuous_map_iff_continuous2[symmetric]
-    apply transfer
-    using assms register_def by blast *)
-
   have [simp]: \<open>bounded_clinear \<Phi>\<close> (* TODO needed? *)
     using assms register_def by blast
   have [simp]: \<open>clinear \<Phi>\<close>
@@ -397,43 +317,16 @@ proof (rule with_typeI)
 
   define P where \<open>P i = selfbutterket i\<close> for i :: 'a
 
-  (* note [[forget_lifting "Complex_Bounded_Linear_Function0.cblinfun.lifting"]] *)
   note blinfun_cblinfun_eq_bi_unique[transfer_rule del]
   note cblinfun.bi_unique[transfer_rule del]
   note cblinfun.left_unique[transfer_rule del]
   note cblinfun.right_unique[transfer_rule del]
   note cblinfun.right_total[transfer_rule del]
   note id_cblinfun.transfer[transfer_rule del]
-  (* note transfer_raw[filtered pcr_cblinfun, transfer_rule del] *)
 
   define P' where \<open>P' i = \<Phi> (P i)\<close> for i :: 'a
   have proj_P': \<open>is_Proj (P' i)\<close> for i
     by (simp add: P_def P'_def butterfly_is_Proj register_projector)
-(*   have sumP'id: \<open>has_sum (\<lambda>i. to_weak_star (P' i)) UNIV id_weak_star\<close> (* TODO: alternatively, we could formulate this with has_sum_in *)
-  proof -
-    have *: \<open>has_sum (\<lambda>i. to_weak_star (P i)) UNIV id_weak_star\<close>
-      unfolding P_def sorry (* TODO: need thm for that *)
-    have \<open>has_sum (\<lambda>i. to_weak_star (P' i)) UNIV (to_weak_star (\<Phi> id_cblinfun))\<close>
-    proof (insert *, unfold P'_def, transfer fixing: \<Phi> P)
-      assume \<open>has_sum_in weak_star_topology P UNIV id_cblinfun\<close>
-      then have \<open>limitin weak_star_topology (sum P) id_cblinfun (finite_subsets_at_top UNIV)\<close>
-        using has_sum_in_def by blast
-      then have \<open>limitin weak_star_topology (\<Phi> o sum P) id_cblinfun (finite_subsets_at_top UNIV)\<close>
-        by (metis (no_types, lifting) assms continuous_map_limit register_def)
-      then have \<open>limitin weak_star_topology (\<lambda>F. (\<Sum>i\<in>F. \<Phi> (P i))) id_cblinfun (finite_subsets_at_top UNIV)\<close>
-        apply (rule limitin_transform_eventually[rotated])
-        apply (rule eventually_finite_subsets_at_top_weakI)
-        by (simp add: complex_vector.linear_sum)
-      then show \<open>has_sum_in weak_star_topology (\<lambda>i. \<Phi> (P i)) UNIV (\<Phi> id_cblinfun)\<close>
-        by (simp add: has_sum_in_def)
-    qed
-    also have \<open>to_weak_star (\<Phi> id_cblinfun) = to_weak_star id_cblinfun\<close>
-      by simp
-    also have \<open>\<dots> = id_weak_star\<close>
-      apply transfer by simp
-    finally show ?thesis
-      by -
-  qed *)
   have sumP'id2: \<open>has_sum_in weak_star_topology (\<lambda>i. P' i) UNIV id_cblinfun\<close> (* TODO: we use this one *)
   proof -
     from infsum_butterfly_ket
@@ -477,19 +370,6 @@ proof (rule with_typeI)
   obtain B\<^sub>0 where B\<^sub>0: \<open>is_ortho_set B\<^sub>0\<close> \<open>\<And>b. b \<in> B\<^sub>0 \<Longrightarrow> norm b = 1\<close> \<open>ccspan B\<^sub>0 = S \<xi>0\<close>
     using orthonormal_subspace_basis_exists[where S="{}" and V=\<open>S \<xi>0\<close>]
     apply atomize_elim by auto
-(*   have B\<^sub>0_nonempty: \<open>B\<^sub>0 \<noteq> {}\<close>
-  proof -
-    have \<open>P \<xi>0 \<noteq> 0\<close>
-      by (metis P_def class_field.zero_not_one divisors_zero norm_butterfly norm_eq_zero norm_ket)
-    then have \<open>P' \<xi>0 \<noteq> 0\<close>
-      unfolding P'_def using register_inj[OF \<open>register \<Phi>\<close>]
-      using \<open>clinear \<Phi>\<close> complex_vector.linear_inj_iff_eq_0 by blast
-    then have \<open>S \<xi>0 \<noteq> 0\<close>
-      by (simp add: S_def)
-    then show \<open>B\<^sub>0 \<noteq> {}\<close>
-      using \<open>ccspan B\<^sub>0 = S \<xi>0\<close>[symmetric]
-      by auto
-  qed *)
 
   have register_decomposition_basis_\<Phi>: \<open>is_ortho_set (register_decomposition_basis \<Phi>) \<and>
        (\<forall>b\<in>register_decomposition_basis \<Phi>. norm b = 1) \<and>
@@ -530,34 +410,6 @@ proof (rule with_typeI)
   have P'B: \<open>P' i = Proj (ccspan (B i))\<close> for i
     unfolding cspanB S_def
     using proj_P' Proj_on_own_range'[symmetric] is_Proj_algebraic by blast
-
-(*   have \<open>(\<Sum>i\<in>UNIV. P' i) = Proj (ccspan B')\<close> (* TODO used? *)
-(* TODO: w.r.t weak* (?) *)
-(* TODO: needs new proof *)
-    by - *)
-
-(*   proof (unfold B'_def, use finite[of UNIV] in induction)
-    case empty
-    show ?case by auto
-  next
-    case (insert j M)
-    have \<open>(\<Sum>i\<in>insert j M. P' i) = P' j + (\<Sum>i\<in>M. P' i)\<close>
-      by (meson insert.hyps(1) insert.hyps(2) sum.insert)
-    also have \<open>\<dots> = Proj (ccspan (B j)) + Proj (ccspan (\<Union>i\<in>M. B i))\<close>
-      unfolding P'B insert.IH[symmetric] by simp
-    also have \<open>\<dots> = Proj (ccspan (B j \<union> (\<Union>i\<in>M. B i)))\<close>
-      apply (rule Proj_orthog_ccspan_union[symmetric])
-      using orthoBiBj insert.hyps(2) by auto
-    also have \<open>\<dots> = Proj (ccspan (\<Union>i\<in>insert j M. B i))\<close>
-      by auto
-    finally show ?case
-      by simp
-  qed *)
-
-(*   with sumP'id 
-  have ccspanB': \<open>ccspan B' = \<top>\<close>  (* TODO used? *)
-(* TODO possibly drop sumP'id and prove this one directly? Or new proof. *)
-    by (metis Proj_range cblinfun_image_id) x *)
 
   show \<open>register_decomposition_basis \<Phi> \<noteq> {}\<close>
   proof (rule ccontr, simp)
