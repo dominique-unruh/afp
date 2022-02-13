@@ -120,8 +120,90 @@ lemma summable_on_weak_star_transfer[transfer_rule]:
 
 definition \<open>infsum_in T f A = (if summable_on_in T f A then (THE l. has_sum_in T f A l) else 0)\<close>
 
-lemma has_sum_in_infsum_in: \<open>summable_on_in T f A \<Longrightarrow> has_sum_in T f A (infsum_in F f A)\<close>
-  sorry
+definition hausdorff where \<open>hausdorff T \<longleftrightarrow> (\<forall>x \<in> topspace T. \<forall>y \<in> topspace T. x \<noteq> y \<longrightarrow> (\<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
+
+lemma limitin_unique:
+  assumes \<open>hausdorff T\<close>
+  assumes \<open>F \<noteq> \<bottom>\<close>
+  assumes lim: \<open>limitin T f l F\<close>
+  assumes lim': \<open>limitin T f l' F\<close>
+  shows \<open>l = l'\<close>
+proof (rule ccontr)
+  assume "l \<noteq> l'"
+  have \<open>l \<in> topspace T\<close> \<open>l' \<in> topspace T\<close>
+    by (meson lim lim' limitin_def)+
+  obtain U V where "openin T U" "openin T V" "l \<in> U" "l' \<in> V" "U \<inter> V = {}"
+    using \<open>hausdorff T\<close> \<open>l \<noteq> l'\<close> unfolding hausdorff_def
+    by (meson \<open>l \<in> topspace T\<close> \<open>l' \<in> topspace T\<close>)
+  have "eventually (\<lambda>x. f x \<in> U) F"
+    using lim \<open>openin T U\<close> \<open>l \<in> U\<close>
+    by (simp add: limitin_def)
+  moreover
+  have "eventually (\<lambda>x. f x \<in> V) F"
+    using lim' \<open>openin T V\<close> \<open>l' \<in> V\<close>
+    by (simp add: limitin_def)
+  ultimately
+  have "eventually (\<lambda>x. False) F"
+  proof eventually_elim
+    case (elim x)
+    then have "f x \<in> U \<inter> V" by simp
+    with \<open>U \<inter> V = {}\<close> show ?case by simp
+  qed
+  with \<open>\<not> trivial_limit F\<close> show "False"
+    by (simp add: trivial_limit_def)
+qed
+
+
+lemma has_sum_in_unique:
+  assumes \<open>hausdorff T\<close>
+  assumes \<open>has_sum_in T f A l\<close>
+  assumes \<open>has_sum_in T f A l'\<close>
+  shows \<open>l = l'\<close>
+  using assms(1) _ assms(2,3)[unfolded has_sum_in_def] 
+  apply (rule limitin_unique)
+  by simp
+
+lemma has_sum_in_infsum_in: 
+  assumes \<open>hausdorff T\<close> and summable: \<open>summable_on_in T f A\<close>
+  shows \<open>has_sum_in T f A (infsum_in T f A)\<close>
+  apply (simp add: infsum_in_def summable)
+  apply (rule theI'[of \<open>has_sum_in T f A\<close>])
+  using has_sum_in_unique[OF \<open>hausdorff T\<close>, of f A] summable
+  by (meson summable_on_in_def)
+
+lemma hausdorff_weak_star[simp]: \<open>hausdorff weak_star_topology\<close>
+proof (unfold hausdorff_def, intro ballI impI)
+  fix x y :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> assume \<open>x \<noteq> y\<close>
+  then obtain a b where \<open>a \<bullet>\<^sub>C (x *\<^sub>V b) \<noteq> a \<bullet>\<^sub>C (y *\<^sub>V b)\<close>
+    by (meson cblinfun_eqI cinner_extensionality)
+  then have \<open>trace (butterfly b a o\<^sub>C\<^sub>L x) \<noteq> trace (butterfly b a o\<^sub>C\<^sub>L y)\<close>
+    by (simp add: trace_butterfly_comp)
+  then obtain U' V' where U': \<open>trace (butterfly b a o\<^sub>C\<^sub>L x) \<in> U'\<close> and V': \<open>trace (butterfly b a o\<^sub>C\<^sub>L y) \<in> V'\<close> 
+    and \<open>open U'\<close> and \<open>open V'\<close> and \<open>U' \<inter> V' = {}\<close>
+    by (meson separation_t2)
+  define U'' V'' where \<open>U'' = {f. \<forall>i\<in>{butterfly b a}. f i \<in> U'}\<close> and \<open>V'' = {f. \<forall>i\<in>{butterfly b a}. f i \<in> V'}\<close>
+  have \<open>open U''\<close>
+    unfolding U''_def apply (rule product_topology_basis')
+    using \<open>open U'\<close> by auto
+  have \<open>open V''\<close>
+    unfolding V''_def apply (rule product_topology_basis')
+    using \<open>open V'\<close> by auto
+  define U V where \<open>U = (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` U''\<close> and
+    \<open>V = (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` V''\<close>
+  have openU: \<open>openin weak_star_topology U\<close>
+    using U_def \<open>open U''\<close> openin_weak_star_topology by blast
+  have openV: \<open>openin weak_star_topology V\<close>
+    using V_def \<open>open V''\<close> openin_weak_star_topology by blast
+  have \<open>x \<in> U\<close>
+    by (auto simp: U_def U''_def U')
+  have \<open>y \<in> V\<close>
+    by (auto simp: V_def V''_def V')
+  have \<open>U \<inter> V = {}\<close>
+    using \<open>U' \<inter> V' = {}\<close> by (auto simp: U_def V_def U''_def V''_def)
+  show \<open>\<exists>U V. openin weak_star_topology U \<and> openin weak_star_topology V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}\<close>
+    apply (rule exI[of _ U], rule exI[of _ V])
+    using \<open>x \<in> U\<close> \<open>y \<in> V\<close> openU openV \<open>U \<inter> V = {}\<close> by auto
+qed
 
 lemma infsum_weak_star_transfer[transfer_rule]:
   includes lifting_syntax
@@ -169,38 +251,16 @@ lemma clinear_cblinfun_compose_left: \<open>clinear (\<lambda>x. x o\<^sub>C\<^s
 lemma clinear_cblinfun_compose_right: \<open>clinear (\<lambda>y. x o\<^sub>C\<^sub>L y)\<close>
   by (simp add: bounded_clinear.clinear bounded_clinear_cblinfun_compose_right)
 
-definition hausdorff where \<open>hausdorff T \<longleftrightarrow> (\<forall>x \<in> topspace T. \<forall>y \<in> topspace T. x \<noteq> y \<longrightarrow> (\<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
-
-lemma hausdorff_weak_star[simp]: \<open>hausdorff weak_star_topology\<close>
-  sorry
-
 lemma closure_of_eqI:
-  fixes f g :: \<open>'a \<Rightarrow> 'b::t2_space\<close> and T :: \<open>'a topology\<close> and U :: \<open>'b topology\<close>
-  assumes haus: \<open>hausdorff T\<close>
+  fixes f g :: \<open>'a \<Rightarrow> 'b\<close> and T :: \<open>'a topology\<close> and U :: \<open>'b topology\<close>
+  assumes haus: \<open>hausdorff U\<close>
   assumes eq: \<open>\<And>x. x \<in> S \<Longrightarrow> f x = g x\<close>
   assumes xS: \<open>x \<in> T closure_of S\<close>
   assumes cont: \<open>continuous_map T U f\<close> \<open>continuous_map T U g\<close>
   shows \<open>f x = g x\<close>
     (* Like on_closure_eqI *)
+  thm on_closure_eqI
   sorry
-
-lemma limitin_unique:
-  assumes \<open>hausdorff T\<close>
-  assumes \<open>F \<noteq> \<bottom>\<close>
-  assumes \<open>limitin T f l F\<close>
-  assumes \<open>limitin T f l' F\<close>
-  shows \<open>l = l'\<close>
-  sorry
-
-lemma has_sum_in_unique:
-  assumes \<open>hausdorff T\<close>
-  assumes \<open>has_sum_in T f A l\<close>
-  assumes \<open>has_sum_in T f A l'\<close>
-  shows \<open>l = l'\<close>
-  using assms(1) _ assms(2,3)[unfolded has_sum_in_def] 
-  apply (rule limitin_unique)
-  by simp
-
 
 lemma orthonormal_subspace_basis_exists:
   fixes S :: \<open>'a::chilbert_space set\<close>
@@ -294,9 +354,13 @@ lemma butterkets_weak_star_dense:
   sorry
 
 (* TODO move *)
-lemma amplification_weak_star_cont:
+lemma amplification_weak_star_cont[simp]:
   \<open>continuous_map weak_star_topology weak_star_topology (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)\<close>
 (* TODO: How is this proven? *)
+  sorry
+
+lemma sandwich_weak_star_cont[simp]:
+  \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
   sorry
 
 lemma register_decomposition:
@@ -630,6 +694,30 @@ proof -
     by -
 qed
 
+
+lemma weak_star_clinear_eq_butterfly_ketI:
+  fixes F G :: \<open>('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2) \<Rightarrow> 'c::complex_vector\<close>
+  assumes "clinear F" and "clinear G"
+    and \<open>continuous_map weak_star_topology T F\<close> and \<open>continuous_map weak_star_topology T G\<close>
+    and \<open>hausdorff T\<close>
+  assumes "\<And>i j. F (butterfly (ket i) (ket j)) = G (butterfly (ket i) (ket j))"
+  shows "F = G"
+proof -
+  have FG: \<open>F x = G x\<close> if \<open>x \<in> cspan {butterket i j |i j. True}\<close> for x
+    by (smt (verit, ccfv_threshold) assms(1) assms(2) assms(6) complex_vector.linear_eq_on mem_Collect_eq that)
+  show ?thesis
+    apply (rule ext)
+    using \<open>hausdorff T\<close> FG
+    apply (rule closure_of_eqI[where f=F and g=G and S=\<open>cspan {butterket i j| i j. True}\<close>])
+    using assms butterkets_weak_star_dense by auto
+qed
+
+lemma clinear_register: \<open>register F \<Longrightarrow> clinear F\<close>
+  using bounded_clinear.clinear register_bounded_clinear by blast
+
+lemma weak_star_cont_register: \<open>register F \<Longrightarrow> continuous_map weak_star_topology weak_star_topology F\<close>
+  using register_def by blast
+
 lemma iso_register_decomposition:
   assumes [simp]: \<open>iso_register F\<close>
   shows \<open>\<exists>U. unitary U \<and> F = sandwich U\<close>
@@ -679,13 +767,12 @@ proof -
       unfolding T_def
       apply (subst bounded_clinear_CBlinfun_apply)
       by (auto intro!: bounded_clinear_tensor_ell22)
-    have sandwich_T: \<open>sandwich T a = a \<otimes>\<^sub>o ?ida\<close> for a
-      apply (rule fun_cong[where x=a])
-        (* Need something like *) thm clinear_eq_butterfly_ketI (* but without ::finite and for weak* continuous functions *)
-        (*     apply (rule clinear_eq_butterfly_ketI)
-      apply auto
-    by (metis (no_types, opaque_lifting) Misc.sandwich_def T \<gamma> \<open>\<gamma> = 1\<close> adj_cblinfun_compose butterfly_adjoint cblinfun_comp_butterfly scaleC_one tensor_butterfly)x *)
-      sorry
+    have \<open>sandwich T (butterket i j) = butterket i j \<otimes>\<^sub>o id_cblinfun\<close> for i j
+      by (simp add: T sandwich_def cblinfun_comp_butterfly butterfly_comp_cblinfun \<gamma> \<open>\<gamma> = 1\<close>)
+    then have sandwich_T: \<open>sandwich T a = a \<otimes>\<^sub>o ?ida\<close> for a
+      apply (rule_tac fun_cong[where x=a])
+      apply (rule weak_star_clinear_eq_butterfly_ketI[where T=weak_star_topology])
+      by auto
 
     have \<open>F (butterfly x y) = V o\<^sub>C\<^sub>L (butterfly x y \<otimes>\<^sub>o ?ida) o\<^sub>C\<^sub>L V*\<close> for x y
       by (simp add: Misc.sandwich_def FV)
@@ -695,11 +782,8 @@ proof -
       by (simp add: U_def butterfly_comp_cblinfun cblinfun_comp_butterfly)
     finally have F_rep:  \<open>F a = U o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L U*\<close> for a
       apply (rule_tac fun_cong[where x=a])
-        (* Need something like *) thm clinear_eq_butterfly_ketI (* but without ::finite and for weak* continuous functions *)
-        (*     apply (rule_tac clinear_eq_butterfly_ketI)
-      apply auto
-    by (metis (no_types, lifting) cblinfun_apply_clinear clinear_iff sandwich_apply) *)
-      sorry
+      apply (rule weak_star_clinear_eq_butterfly_ketI[where T=weak_star_topology])
+      by (auto simp: clinear_register weak_star_cont_register simp flip: sandwich_def)
 
     have \<open>isometry T\<close>
       apply (rule orthogonal_on_basis_is_isometry[where B=\<open>range ket\<close>])
@@ -796,6 +880,9 @@ qed
 
 definition \<open>commutant F = {x. \<forall>y\<in>F. x o\<^sub>C\<^sub>L y = y o\<^sub>C\<^sub>L x}\<close>
 
+lemma register_norm: \<open>norm (F a) = norm a\<close> if \<open>register F\<close>
+  sorry
+
 lemma commutant_exchange:
   fixes F :: \<open>'a update \<Rightarrow> 'b update\<close>
   assumes \<open>iso_register F\<close>
@@ -857,7 +944,7 @@ proof (rule Set.set_eqI, rule iffI)
     also have \<open>\<dots> = cinner (ket (\<gamma>,j)) (x *\<^sub>V (butterket \<gamma> i \<otimes>\<^sub>o id_cblinfun o\<^sub>C\<^sub>L butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
       unfolding comm by (simp add: cblinfun_apply_cblinfun_compose)
     also have \<open>\<dots> = cinner (ket i) (ket k) * cinner (ket (\<gamma>,j)) (x *\<^sub>V ket (\<gamma>,l))\<close>
-      by (simp add: comp_tensor_op tensor_op_ket tensor_op_scaleC_left)
+      by (simp add: comp_tensor_op tensor_op_ket tensor_op_scaleC_left cinner_ket)
     also have \<open>\<dots> = cinner (ket i) (ket k) * cinner (ket j) (x' *\<^sub>V ket l)\<close>
       by (simp add: x')
     also have \<open>\<dots> = cinner (ket (i,j)) ((id_cblinfun \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close>
@@ -971,13 +1058,23 @@ proof -
     apply (subst register_adjoint[OF \<open>register G\<close>])
     apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)+
     using assms(1) register_adjoint by blast
+  have normI: \<open>norm (I a) = norm a\<close> for a
+    unfolding I_def
+    by (metis G_rangeF assms(1) assms(2) f_inv_into_f register_norm)
+  have normJ: \<open>norm (J a) = norm a\<close> for a
+    unfolding J_def
+    by (metis F_rangeG assms(1) assms(2) f_inv_into_f register_norm)
+  have weak_star_I: \<open>continuous_map weak_star_topology weak_star_topology I\<close>
+    by -
+  have weak_star_J: \<open>continuous_map weak_star_topology weak_star_topology J\<close>
+    by -
 
-  from addI scaleI unitalI multI adjI
+  from addI scaleI unitalI multI adjI normI weak_star_I
   have \<open>register I\<close>
-    unfolding register_def by (auto intro!: clinearI)
-  from addJ scaleJ unitalJ multJ adjJ
+    unfolding register_def by (auto intro!: bounded_clinearI[where K=1])
+  from addJ scaleJ unitalJ multJ adjJ normJ weak_star_J
   have \<open>register J\<close>
-    unfolding register_def by (auto intro!: clinearI)
+    unfolding register_def by (auto intro!: bounded_clinearI[where K=1])
 
   have \<open>I o J = id\<close>
     unfolding I_def J_def o_def
