@@ -96,8 +96,6 @@ proof (intro rel_funI, rename_tac f g A B)
   qed
 qed
 
-definition \<open>has_sum_in T f A x \<longleftrightarrow> limitin T (sum f) x (finite_subsets_at_top A)\<close>
-
 lemma has_sum_weak_star_transfer[transfer_rule]:
   includes lifting_syntax
   fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
@@ -108,8 +106,6 @@ lemma has_sum_weak_star_transfer[transfer_rule]:
       apply transfer_step+
   by (simp add: filterlim_weak_star_topology)
 
-definition \<open>summable_on_in T f A \<longleftrightarrow> (\<exists>x. has_sum_in T f A x)\<close>
-
 lemma summable_on_weak_star_transfer[transfer_rule]:
   includes lifting_syntax
   fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
@@ -118,58 +114,6 @@ lemma summable_on_weak_star_transfer[transfer_rule]:
   unfolding summable_on_def summable_on_in_def
   by transfer_prover
 
-definition \<open>infsum_in T f A = (if summable_on_in T f A then (THE l. has_sum_in T f A l) else 0)\<close>
-
-definition hausdorff where \<open>hausdorff T \<longleftrightarrow> (\<forall>x \<in> topspace T. \<forall>y \<in> topspace T. x \<noteq> y \<longrightarrow> (\<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
-
-lemma limitin_unique:
-  assumes \<open>hausdorff T\<close>
-  assumes \<open>F \<noteq> \<bottom>\<close>
-  assumes lim: \<open>limitin T f l F\<close>
-  assumes lim': \<open>limitin T f l' F\<close>
-  shows \<open>l = l'\<close>
-proof (rule ccontr)
-  assume "l \<noteq> l'"
-  have \<open>l \<in> topspace T\<close> \<open>l' \<in> topspace T\<close>
-    by (meson lim lim' limitin_def)+
-  obtain U V where "openin T U" "openin T V" "l \<in> U" "l' \<in> V" "U \<inter> V = {}"
-    using \<open>hausdorff T\<close> \<open>l \<noteq> l'\<close> unfolding hausdorff_def
-    by (meson \<open>l \<in> topspace T\<close> \<open>l' \<in> topspace T\<close>)
-  have "eventually (\<lambda>x. f x \<in> U) F"
-    using lim \<open>openin T U\<close> \<open>l \<in> U\<close>
-    by (simp add: limitin_def)
-  moreover
-  have "eventually (\<lambda>x. f x \<in> V) F"
-    using lim' \<open>openin T V\<close> \<open>l' \<in> V\<close>
-    by (simp add: limitin_def)
-  ultimately
-  have "eventually (\<lambda>x. False) F"
-  proof eventually_elim
-    case (elim x)
-    then have "f x \<in> U \<inter> V" by simp
-    with \<open>U \<inter> V = {}\<close> show ?case by simp
-  qed
-  with \<open>\<not> trivial_limit F\<close> show "False"
-    by (simp add: trivial_limit_def)
-qed
-
-
-lemma has_sum_in_unique:
-  assumes \<open>hausdorff T\<close>
-  assumes \<open>has_sum_in T f A l\<close>
-  assumes \<open>has_sum_in T f A l'\<close>
-  shows \<open>l = l'\<close>
-  using assms(1) _ assms(2,3)[unfolded has_sum_in_def] 
-  apply (rule limitin_unique)
-  by simp
-
-lemma has_sum_in_infsum_in: 
-  assumes \<open>hausdorff T\<close> and summable: \<open>summable_on_in T f A\<close>
-  shows \<open>has_sum_in T f A (infsum_in T f A)\<close>
-  apply (simp add: infsum_in_def summable)
-  apply (rule theI'[of \<open>has_sum_in T f A\<close>])
-  using has_sum_in_unique[OF \<open>hausdorff T\<close>, of f A] summable
-  by (meson summable_on_in_def)
 
 lemma hausdorff_weak_star[simp]: \<open>hausdorff weak_star_topology\<close>
 proof (unfold hausdorff_def, intro ballI impI)
@@ -316,6 +260,7 @@ lemma has_sum_in_comm_additive:
   sorry
 
 (* TODO move *)
+(* TODO: change name or generalize *)
 lemma has_sum_in_0[simp]: \<open>has_sum_in weak_star_topology (\<lambda>_. 0) A 0\<close>
   sorry
 
@@ -366,11 +311,16 @@ lemma sandwich_weak_star_cont[simp]:
 lemma register_decomposition:
   fixes \<Phi> :: \<open>'a update \<Rightarrow> 'b update\<close>
   assumes [simp]: \<open>register \<Phi>\<close>
-  shows \<open>\<forall>\<^sub>\<tau> 'c = register_decomposition_basis \<Phi>.
+  shows \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis \<Phi>.
          (\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
               (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
   \<comment> \<open>Proof based on @{cite daws21unitalanswer}\<close>
-proof (rule with_typeI)
+proof (rule with_typeI; unfold fst_conv snd_conv)
+  show \<open>fst with_type_class_type (register_decomposition_basis \<Phi>) ()\<close>
+    by (simp add: with_type_class_type_def)
+  show \<open>with_type_compat_rel (fst with_type_class_type) (register_decomposition_basis \<Phi>) (snd with_type_class_type)\<close>
+    using with_type_compat_rel_type by blast
+
   note [[simproc del: compatibility_warn]]
   define \<xi>0 :: 'a where \<open>\<xi>0 = undefined\<close>
 
@@ -672,7 +622,7 @@ lemma register_decomposition_converse:
 
 lemma register_inj: \<open>inj F\<close> if [simp]: \<open>register F\<close>
 proof -
-  have \<open>\<forall>\<^sub>\<tau> 'c = register_decomposition_basis F. inj F\<close>
+  have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F. inj F\<close>
     using register_decomposition[OF \<open>register F\<close>] 
   proof (rule with_type_mp)
     fix rep :: \<open>'c \<Rightarrow> 'd\<close> and abs and S
@@ -722,9 +672,10 @@ lemma iso_register_decomposition:
   assumes [simp]: \<open>iso_register F\<close>
   shows \<open>\<exists>U. unitary U \<and> F = sandwich U\<close>
 proof -
-  have \<open>\<forall>\<^sub>\<tau> 'c = register_decomposition_basis F.
+  from register_decomposition
+  have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
         \<exists>U. unitary U \<and> F = sandwich U\<close>
-  proof (use register_decomposition in \<open>rule with_type_mp\<close>)
+  proof (rule with_type_mp)
     show [simp]: \<open>register F\<close>
       using assms iso_register_is_register by blast 
 
@@ -831,9 +782,9 @@ proof -
 qed
 
 lemma complement_exists:
-  fixes F :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
+  fixes F :: \<open>'a update \<Rightarrow> 'b update\<close>
   assumes \<open>register F\<close>
-  shows \<open>\<forall>\<^sub>\<tau> 'c = register_decomposition_basis F.
+  shows \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
          \<exists>G :: 'c update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
 proof (use register_decomposition[OF \<open>register F\<close>] in \<open>rule with_type_mp\<close>)
   note [[simproc del: Laws_Quantum.compatibility_warn]]
@@ -916,23 +867,13 @@ proof (rule Set.set_eqI, rule iffI)
   then have comm: \<open>(a \<otimes>\<^sub>o id_cblinfun) *\<^sub>V x *\<^sub>V \<psi> = x *\<^sub>V (a \<otimes>\<^sub>o id_cblinfun) *\<^sub>V \<psi>\<close> for a \<psi>
     by (metis (mono_tags, lifting) commutant_def mem_Collect_eq rangeI cblinfun_apply_cblinfun_compose)
 
-  obtain x' where x': \<open>cinner (ket j) (x' *\<^sub>V ket l) = cinner (ket (\<gamma>,j)) (x *\<^sub>V ket (\<gamma>,l))\<close> for j l
-  proof atomize_elim
-    obtain \<psi> where \<psi>: \<open>cinner (ket j) (\<psi> l) = cinner (ket (\<gamma>, j)) (x *\<^sub>V ket (\<gamma>, l))\<close> for l j
-      apply (atomize_elim, rule choice, rule allI)
-      apply (rule_tac x=\<open>Abs_ell2 (\<lambda>j. cinner (ket (\<gamma>, j)) (x *\<^sub>V ket (\<gamma>, l)))\<close> in exI)
-      by (simp add: cinner_ket_left Abs_ell2_inverse)
-    obtain x' where \<open>x' *\<^sub>V ket l = \<psi> l\<close> for l
-      apply atomize_elim
-      apply (rule exI[of _ \<open>cblinfun_extension (range ket) (\<lambda>l. \<psi> (inv ket l))\<close>])
-      apply (subst cblinfun_extension_apply)
-        apply (rule cblinfun_extension_exists_finite_dim)
-      by (auto simp add: inj_ket cindependent_ket)
-    with \<psi> have \<open>cinner (ket j) (x' *\<^sub>V ket l) = cinner (ket (\<gamma>, j)) (x *\<^sub>V ket (\<gamma>, l))\<close> for j l
-      by auto
-    then show \<open>\<exists>x'. \<forall>j l. cinner (ket j) (x' *\<^sub>V ket l) = cinner (ket (\<gamma>, j)) (x *\<^sub>V ket (\<gamma>, l))\<close>
-      by auto
-  qed
+  define op where \<open>op = classical_operator (\<lambda>i. Some (\<gamma>,i::'b))\<close>
+  have [simp]: \<open>classical_operator_exists (\<lambda>i. Some (\<gamma>,i))\<close>
+    apply (rule classical_operator_exists_inj)
+    using inj_map_def by blast
+  define x' where \<open>x' = op* o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L op\<close>
+  have x': \<open>cinner (ket j) (x' *\<^sub>V ket l) = cinner (ket (\<gamma>,j)) (x *\<^sub>V ket (\<gamma>,l))\<close> for j l
+    by (simp add: x'_def op_def classical_operator_ket cinner_adj_right)
 
   have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l)) = cinner (ket (i,j)) ((id_cblinfun \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close> for i j k l
   proof -

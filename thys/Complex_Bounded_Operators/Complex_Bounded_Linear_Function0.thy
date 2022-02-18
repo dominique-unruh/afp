@@ -731,6 +731,7 @@ lemma norm_cblinfun_id[simp]:
    apply standard[1]
   by simp
 
+(* TODO blinfun \<rightarrow> cblinfun *)
 lemma norm_blinfun_id_le:
   "norm (id_cblinfun::'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'a) \<le> 1"
   by transfer (auto simp: onorm_id_le)

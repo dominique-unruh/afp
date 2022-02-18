@@ -61,7 +61,7 @@ lemma (in clinear) linear:
 lemma bounded_clinearI:
   assumes \<open>\<And>b1 b2. f (b1 + b2) = f b1 + f b2\<close>
   assumes \<open>\<And>r b. f (r *\<^sub>C b) = r *\<^sub>C f b\<close>
-  assumes \<open>\<forall>x. norm (f x) \<le> norm x * K\<close>
+  assumes \<open>\<forall>x. norm (f x) \<le> norm x * K\<close> (* TODO: Should have \<And>x *)
   shows "bounded_clinear f"
   using assms by (auto intro!: exI bounded_clinear.intro clinearI simp: bounded_clinear_axioms_def)
 
