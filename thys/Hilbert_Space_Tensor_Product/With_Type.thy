@@ -1,5 +1,5 @@
 theory With_Type
-  imports "HOL-Types_To_Sets.Types_To_Sets"
+  imports "HOL-Types_To_Sets.Types_To_Sets" Misc_With_Type
 begin
 
 definition with_type_compat_rel where \<open>with_type_compat_rel C S R \<longleftrightarrow> (\<forall>r rp. bi_unique r \<longrightarrow> right_total r \<longrightarrow> S = Collect (Domainp r) \<longrightarrow> C S rp \<longrightarrow> (Domainp (R r) rp))\<close>
@@ -83,34 +83,12 @@ proof -
     by (auto simp: with_type_def case_prod_beta S_def p_def R_def)
 qed
 
-lemma Domainp_rel_fun_iff:
+lemma Domainp_rel_fun_iff: (* TODO: use Domainp_pred_fun_eq instead *)
   includes lifting_syntax
   assumes \<open>left_unique R\<close>
   shows \<open>Domainp (R ===> S) p \<longleftrightarrow> (\<forall>x. Domainp R x \<longrightarrow> Domainp S (p x))\<close>
-proof 
-  show \<open>Domainp (R ===> S) p \<Longrightarrow> \<forall>x. Domainp R x \<longrightarrow> Domainp S (p x)\<close>
-    by (auto simp add: Domainp_iff rel_fun_def)
-  assume asm: \<open>\<forall>x. Domainp R x \<longrightarrow> Domainp S (p x)\<close>
-  show \<open>Domainp (R ===> S) p\<close>
-  proof (intro DomainPI rel_funI)
-    fix x y assume \<open>R x y\<close>
-    then have \<open>Domainp R x\<close>
-      by (simp add: DomainPI)
-    then have \<open>Domainp S (p x)\<close>
-      by (simp add: asm)
-    from \<open>R x y\<close>
-    have \<open>R (SOME x. R x y) y\<close>
-      by (metis verit_sko_ex')
-    with \<open>left_unique R\<close> \<open>R x y\<close>
-    have x_some: \<open>x = (SOME x. R x y)\<close>
-      by (auto simp: left_unique_def)
-    from \<open>Domainp S (p x)\<close>
-    have \<open>S (p x) (SOME y. S (p x) y)\<close>
-      by (metis DomainpE verit_sko_ex')
-    then show \<open>S (p x) (SOME y'. S (p (SOME x. R x y)) y')\<close>
-      unfolding x_some by simp
-  qed
-qed
+  using Domainp_pred_fun_eq[OF assms, of S]
+  by auto
 
 lemma with_type_split_aux:
   includes lifting_syntax
@@ -120,6 +98,8 @@ lemma with_type_split_aux:
   by (smt (verit) DomainPI assms(1) assms(2) rel_fun_def)
 
 lemma bi_unique_left_unique: \<open>bi_unique R \<Longrightarrow> left_unique R\<close>
+  by (simp add: bi_unique_alt_def)
+lemma bi_unique_right_unique: \<open>bi_unique R \<Longrightarrow> right_unique R\<close>
   by (simp add: bi_unique_alt_def)
 
 lemma with_type_class_axioms:
@@ -173,6 +153,10 @@ qed
 
 ML_file "with_type.ML"
 
+attribute_setup cancel_with_type = 
+  \<open>Thm.rule_attribute [] (With_Type.with_type_cancel o Context.proof_of) |> Scan.succeed\<close>
+  \<open>Transforms (\<forall>\<^sub>\<tau> 't=\<dots>. P) into P\<close>
+
 setup \<open>
 With_Type.add_with_type_info_global {
   class = \<^class>\<open>type\<close>,
@@ -192,5 +176,198 @@ parse_translation \<open>[
 
 term \<open>\<forall>\<^sub>\<tau>'t::type = N. (rep_t = rep_t)\<close>
 (* term \<open>\<forall>\<^sub>\<tau>'t::type = N with pls. (rep_t = rep_t)\<close> *)
+
+
+subsection \<open>Automatic configuration of new class\<close>
+
+ML \<open>
+fun dest_args args (t $ u) = dest_args (u :: args) t
+  | dest_args args _ = args
+\<close>
+
+
+ML \<open>
+fun get_params_of_class thy class = let
+val params_ordered = Class.rules thy class |> fst |> the |> Thm.prop_of |> HOLogic.dest_Trueprop |> dest_args []
+val class_params = Class.these_params thy [class]
+in
+  params_ordered |> map (fn Const (const,T) => 
+    get_first (fn (name,(_,(const',_))) => if const=const' then SOME (name,const,T) else NONE) class_params |> the)
+end
+;;
+get_params_of_class \<^theory> \<^class>\<open>semigroup_add\<close>
+\<close>
+
+
+definition \<open>with_type_compat_xxx R RR \<longleftrightarrow> (\<forall>r. right_unique r \<longrightarrow> right_total r \<longrightarrow>
+  right_unique (R r) \<and> right_total (R r) \<and> rel_square (R r) = RR (rel_square r))\<close>
+
+definition \<open>with_type_has_domain R D \<longleftrightarrow> (\<forall>r. bi_unique r \<longrightarrow> right_total r \<longrightarrow>
+  Domainp (R r) = D (Collect (Domainp r)))\<close>
+
+definition \<open>equal_onp A x y \<longleftrightarrow> (x = y \<and> x\<in>A)\<close>
+
+lemma equal_onp_Domainp: 
+  assumes \<open>left_unique r\<close>
+  shows \<open>equal_onp (Collect (Domainp r)) = rel_square r\<close>
+  using assms 
+  by (auto intro!: ext simp: equal_onp_def Domainp_iff rel_square_def left_unique_def)
+
+lemma with_type_has_domain_xxx:
+  assumes \<open>with_type_compat_xxx R RR\<close>
+  shows \<open>with_type_has_domain R (\<lambda>D. Domainp (RR (equal_onp D)))\<close>
+  using assms
+  apply (auto simp add: with_type_has_domain_def with_type_compat_xxx_def equal_onp_Domainp
+      bi_unique_left_unique bi_unique_right_unique)
+  by (metis Domainp_rel_square bi_unique_right_unique)
+
+
+named_theorems with_type_compat_xxx
+
+lemma with_type_compat_xxx_prodI[with_type_compat_xxx]:
+  assumes \<open>with_type_compat_xxx R1 RR1\<close>
+  assumes \<open>with_type_compat_xxx R2 RR2\<close>
+  shows \<open>with_type_compat_xxx (\<lambda>r. rel_prod (R1 r) (R2 r)) (\<lambda>rr. rel_prod (RR1 rr) (RR2 rr))\<close>
+  using assms unfolding with_type_compat_xxx_def
+  by (auto simp add: prod.right_unique_rel prod.right_total_rel rel_square_def 
+      simp flip: prod.rel_compp prod.rel_conversep)
+
+lemma rel_square_rel_fun:
+  includes lifting_syntax
+  assumes \<open>right_unique b\<close> \<open>right_total b\<close>
+  shows \<open>rel_square (a ===> b) = rel_square a ===> rel_square b\<close>
+proof (intro ext iffI)
+  fix f g
+  assume \<open>rel_square (a ===> b) f g\<close>
+  then show \<open>(rel_square a ===> rel_square b) f g\<close>
+    by (smt (verit, del_insts) OO_def conversep_iff rel_fun_def rel_square_def)
+next
+  fix f g
+  assume ab2_fg: \<open>(rel_square a ===> rel_square b) f g\<close>
+  have \<open>\<exists>z. \<forall>x. a x y \<longrightarrow> b (f x) z \<and> b (g x) z\<close> for y
+  proof (cases \<open>\<exists>x. a x y\<close>)
+    case True
+    then obtain x0 where \<open>a x0 y\<close>
+      by auto
+    with ab2_fg obtain z where \<open>b (f x0) z\<close> and \<open>b (g x0) z\<close>
+      by (metis (mono_tags, opaque_lifting) OO_def apply_rsp' conversep_iff rel_square_def)
+    have \<open>b (f x) z\<close> and \<open>b (g x) z\<close> if \<open>a x y\<close> for x
+    proof -
+      have \<open>rel_square a x x0\<close>
+        by (metis \<open>a x0 y\<close> conversepI rel_square_def relcomppI that)
+      then have \<open>rel_square b (f x) (g x0)\<close>
+        by (meson ab2_fg rel_fun_def)
+      with \<open>b (g x0) z\<close>
+      have \<open>(rel_square b OO b) (f x) z\<close>
+        by auto
+      with \<open>right_unique b\<close> \<open>right_total b\<close> show \<open>b (f x) z\<close>
+        by (metis (no_types, opaque_lifting) OO_eq antisym rel_square_def relcompp_assoc right_total_alt_def right_unique_alt_def)
+
+      have \<open>rel_square a x0 x\<close>
+        by (metis \<open>a x0 y\<close> conversepI rel_square_def relcomppI that)
+      then have \<open>rel_square b (f x0) (g x)\<close>
+        by (meson ab2_fg rel_fun_def)
+      with \<open>right_unique b\<close> \<open>right_total b\<close> have \<open>rel_square b (g x) (f x0)\<close>
+        by (metis converse_relcompp conversepI conversep_conversep rel_square_def)
+      with \<open>b (f x0) z\<close>
+      have \<open>(rel_square b OO b) (g x) z\<close>
+        by blast
+      with \<open>right_unique b\<close> \<open>right_total b\<close> show \<open>b (g x) z\<close>
+        by (metis (no_types, opaque_lifting) OO_eq antisym rel_square_def relcompp_assoc right_total_alt_def right_unique_alt_def)
+    qed
+    then show ?thesis
+      by blast
+  next
+    case False
+    then show ?thesis 
+      by auto
+  qed
+  then show \<open>rel_square (a ===> b) f g\<close>
+    by (metis (mono_tags, opaque_lifting) conversep_iff rel_fun_def rel_square_def relcomppI)
+qed
+
+
+lemma with_type_compat_xxx_funI[with_type_compat_xxx]:
+  fixes R1 :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> _\<close>
+    and R2 :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> _\<close>
+  assumes \<open>with_type_compat_xxx R1 RR1\<close>
+  assumes \<open>with_type_compat_xxx R2 RR2\<close>
+  shows \<open>with_type_compat_xxx (\<lambda>r. rel_fun (R1 r) (R2 r)) (\<lambda>rr. rel_fun (RR1 rr) (RR2 rr))\<close>
+  using assms by (auto simp: with_type_compat_xxx_def rel_square_rel_fun intro: right_unique_fun right_total_fun)
+
+
+lemma rel_square_rel_set: \<open>rel_square (rel_set a) = rel_set (rel_square a)\<close>
+  by (auto simp: rel_square_def simp flip: rel_set_conversep rel_set_OO)
+
+lemma with_type_compat_xxx_setI[with_type_compat_xxx]:
+  fixes R1 :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> _\<close>
+    and R2 :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> _\<close>
+  assumes \<open>with_type_compat_xxx R RR\<close>
+  shows \<open>with_type_compat_xxx (\<lambda>r. rel_set (R r)) (\<lambda>rr. rel_set (RR rr))\<close>
+  using assms 
+  by (auto simp: with_type_compat_xxx_def rel_square_rel_set intro: right_unique_rel_set right_total_rel_set)
+
+
+lemma with_type_compat_xxx_idI[with_type_compat_xxx]:
+  \<open>with_type_compat_xxx (\<lambda>r. r) (\<lambda>rr. rr)\<close>
+  by (simp add: with_type_compat_xxx_def)
+
+lemma with_type_compat_xxx_eq:
+  \<open>with_type_compat_xxx (\<lambda>_::'rep\<Rightarrow>'abs\<Rightarrow>bool. ((=) :: 'a \<Rightarrow> 'a \<Rightarrow> bool)) (\<lambda>_. (=))\<close>
+  by (simp add: with_type_compat_xxx_def right_total_eq right_unique_eq)
+
+lemma rel_square_rel_filter[with_type_compat_xxx]: 
+  assumes \<open>right_unique r\<close> and \<open>right_total r\<close>
+  shows \<open>rel_square (rel_filter r) = rel_filter (rel_square r)\<close>
+  by (simp add: rel_square_def flip: rel_filter_conversep rel_filter_distr)
+
+lemma with_type_compat_xxx_filterI[with_type_compat_xxx]:
+  assumes \<open>with_type_compat_xxx R RR\<close>
+  shows \<open>with_type_compat_xxx (\<lambda>r. rel_filter (R r)) (\<lambda>rr. rel_filter (RR rr))\<close>
+  using assms 
+  by (auto simp: with_type_compat_xxx_def rel_square_rel_filter intro: right_unique_rel_filter right_total_rel_filter)
+
+ML \<open>
+fun get_relation_thm ctxt class = let
+  fun has_tvar (TVar _) = true
+    | has_tvar (Type (_,Ts)) = exists has_tvar Ts
+    | has_tvar _ = false
+  val rep_paramT0 = get_params_of_class (Proof_Context.theory_of ctxt) class |> map (fn (_,_,T) => T) |> HOLogic.mk_tupleT
+  val repT = TFree("'rep",\<^sort>\<open>type\<close>)
+  val rep_paramT = TVar(("'rep_param",0),\<^sort>\<open>type\<close>)
+  val absT = TFree("'abs",\<^sort>\<open>type\<close>)
+  val abs_paramT = typ_subst_TVars [(("'a",0), absT)] rep_paramT0
+(*   val goal = \<^Const>\<open>with_type_compat_xxx repT absT rep_paramT abs_paramT\<close>
+        $ Var(("R",0), (repT --> absT --> HOLogic.boolT) --> (rep_paramT --> abs_paramT --> HOLogic.boolT))
+        $ Var(("RR",0), (repT --> repT --> HOLogic.boolT) --> (rep_paramT --> rep_paramT --> HOLogic.boolT))
+      |> HOLogic.mk_Trueprop *)
+  val goal = \<^Const>\<open>with_type_has_domain repT absT rep_paramT abs_paramT\<close>
+                $ Var(("R",0), (repT --> absT --> HOLogic.boolT) --> (rep_paramT --> abs_paramT --> HOLogic.boolT))
+                $ Var(("D",0), HOLogic.mk_setT repT --> rep_paramT --> HOLogic.boolT)
+      |> HOLogic.mk_Trueprop
+  val thms =  Named_Theorems.get ctxt \<^named_theorems>\<open>with_type_compat_xxx\<close>
+  fun dest_with_type_compat_xxx (\<^Const_>\<open>Trueprop\<close> $ 
+               (\<^Const_>\<open>with_type_compat_xxx \<open>TFree _\<close> \<open>TFree _\<close> \<open>TVar _\<close> T\<close> $ Var _ $ Var _)) 
+          = T
+    | dest_with_type_compat_xxx t = raise TERM ("get_relation_thm", [t])
+  fun dest_with_type_has_domain (\<^Const_>\<open>Trueprop\<close> $ 
+               (\<^Const_>\<open>with_type_has_domain \<open>TVar _\<close> \<open>TVar _\<close> T _\<close> $ R $ D)) 
+          = (T,R,D)
+    | dest_with_type_has_domain t = raise TERM ("get_relation_thm/dest_with_type_has_domain", [t])
+  fun tac0 ctxt = SUBGOAL (fn (t,i) => 
+      let val T = dest_with_type_compat_xxx t in
+      if not (exists_subtype (fn subT => subT = absT) T) then
+        resolve_tac ctxt @{thms with_type_compat_xxx_eq} i
+      else
+        ((resolve_tac ctxt thms ORELSE' (fn _ => fn _ => raise TYPE ("get_relation_thm", [T], [t])))
+        THEN_ALL_NEW tac0 ctxt) i end)
+  fun tac ctxt = resolve_tac ctxt @{thms with_type_has_domain_xxx} 1 THEN tac0 ctxt 1
+  val thm = Goal.prove ctxt [] [] goal (fn {context,...} => tac context)
+  val (T,R,D) = dest_with_type_has_domain (Thm.prop_of thm)
+in
+  (T,R,D,thm)
+end
+\<close>
+
 
 end

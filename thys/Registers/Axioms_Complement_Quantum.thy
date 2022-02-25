@@ -210,6 +210,14 @@ lemma orthonormal_subspace_basis_exists:
   fixes S :: \<open>'a::chilbert_space set\<close>
   assumes \<open>is_ortho_set S\<close> and \<open>\<And>x. x\<in>S \<Longrightarrow> norm x = 1\<close> and \<open>S \<subseteq> space_as_set V\<close>
   shows \<open>\<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
+proof -
+  have \<open>\<forall>\<^sub>\<tau> 's::ccsubspace = S. \<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
+  proof (rule with_typeI)
+    show \<open>\<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
+      apply transfer
+      by -
+  qed
+  from this[
   sorry (* By transferring orthonormal_basis_exists? *)
 
 lemma orthogonal_projectors_orthogonal_spaces:

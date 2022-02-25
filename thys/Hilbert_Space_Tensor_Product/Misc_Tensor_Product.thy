@@ -791,6 +791,7 @@ lemma nhdsin_mono:
   unfolding nhdsin_def 
   by (auto intro!: INF_superset_mono)
 
+
 unbundle no_cblinfun_notation
 
 end
