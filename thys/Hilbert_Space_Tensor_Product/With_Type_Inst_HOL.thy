@@ -30,12 +30,173 @@ With_Type.add_with_type_info_global {
 
 subsection \<open>Semigroup, additive\<close>
 
+subsection \<open>XXX\<close>
+
+local_setup \<open>
+  define_stuff \<^here> \<^class>\<open>semigroup_add\<close>
+\<close>
+print_theorems
+
+(* ML \<open>val (relationT, relationR, relationD, relationThm) = get_relation_thm \<^context> \<^class>\<open>semigroup_add\<close>\<close> *)
+
+(* abbreviation \<open>with_type_semigroup_add_class_rel \<equiv> with_type_semigroup_add_class_rel\<close> *)
+
+(* local_setup \<open>local_def \<^binding>\<open>with_type_semigroup_add_class_rel\<close> (Type.legacy_freeze relationR)\<close> *)
+(* thm with_type_semigroup_add_class_rel_def *)
+
+(* local_setup \<open>local_note \<^binding>\<open>with_type_semigroup_add_class_has_dom\<close> relationThm\<close> *)
+
+ML \<open>
+fun antiquotation_Term range src ctxt = let
+  val (source,ctxt) = Token.syntax (Scan.lift Parse.embedded_input) src ctxt
+  val symbols = source |> Input.source_explode
+  fun symbol_pos_list_to_string syms = 
+      Input.source true (Symbol_Pos.implode syms) (Symbol_Pos.range syms)
+      |> Syntax.implode_input
+  fun replace [] map _ result = (map, rev result |> symbol_pos_list_to_string)
+    | replace (sym::syms) map counter result =
+        if Symbol_Pos.symbol sym = Symbol.open_
+        then let val (cartouche,rest) = Symbol_Pos.scan_cartouche "XXXXX" (sym::syms)
+                 val varname = "\<XX>" ^ string_of_int counter ^ "\<YY>"
+                 val ml = ML_Lex.read_symbols (Symbol_Pos.cartouche_content cartouche)
+                 val map = Symtab.insert (K true) (varname, ml) map
+                 val var = "?" ^ varname ^ " " |> Symbol_Pos.explode0
+                 val pad_length = length cartouche - length var
+                 val _ = pad_length >= 0 orelse 
+                            error ("ML fragment " ^ symbol_pos_list_to_string cartouche ^ Position.here (snd sym) ^ " too short. Please pad (e.g., with spaces)")
+                 val var = var @ replicate pad_length (" ", Position.none)
+             in replace rest map (counter+1) (rev var @ result) end
+        else replace syms map counter (sym::result)
+  val (ml_map,str) = replace symbols Symtab.empty 0 []
+  val term = Proof_Context.read_term_pattern ctxt str
+  val ml_term = ML_Syntax.atomic (ML_Syntax.print_term term)
+  val (map_antiquot,ctxt) = fold_map (fn (name,ml) => fn ctxt => let val (decl,ctxt) = ML_Context.expand_antiquotes ml ctxt in ((name,decl),ctxt) end)
+                              (Symtab.dest ml_map) ctxt
+  fun decl ctxt = let
+    val map_antiquot' = map_antiquot |> map (fn (name,decl) => (name, decl ctxt))
+    val ml_subst = ML_Syntax.print_list  
+        (fn (name,(_,inline)) => ML_Syntax.print_pair (ML_Syntax.print_pair ML_Syntax.print_string ML_Syntax.print_int) ML_Lex.flatten ((name,0),inline))
+        map_antiquot'
+(* TODO: we convert the term to cterm each time. Should be done once using the env *)
+(* TODO: use own function for instantiating more quickly? (By preprocessing which vars have which types and hence instantiating without having to go through the whole thm-instantiate stuff) *)
+    val ml_code = "(fn ctxt => fn inst => fn t => Thm.reflexive (Thm.cterm_of ctxt t) |> infer_instantiate ctxt (map (apsnd (Thm.cterm_of ctxt)) inst) |> Thm.rhs_of |> Thm.term_of) " 
+        ^ ML_Context.struct_name ctxt ^ ".ML_context " ^ ml_subst ^ " " ^ ml_term
+        |> ML_Syntax.atomic |> ML_Lex.tokenize_range range
+    val env = map_antiquot' |> map (fn (_,(env,_)) => env) |> flat
+    in (env, ml_code) end
+in (decl, ctxt) end
+\<close>
+
+setup \<open>
+ML_Context.add_antiquotation \<^binding>\<open>Term\<close> true antiquotation_Term
+\<close>
+
+ML \<open>
+\<^Term>\<open>1 + \<open>Free("a",\<^typ>\<open>int\<close>)\<close>\<close>
+|> Thm.cterm_of \<^context>
+\<close>
+
+ML \<open>
+local
+val ctxt = \<^context>
+val class = \<^class>\<open>semigroup_add\<close>
+val thy = Proof_Context.theory_of ctxt
+val (class_const, _) = get_params_of_class thy class
+val class_const = subst_TVars [(("'a",0), TVar(("'abs",0),\<^sort>\<open>type\<close>))] class_const
+val rel = \<^Const>\<open>with_type_semigroup_add_class_rel \<open>TVar(("'rep",0),\<^sort>\<open>type\<close>)\<close> \<open>TVar(("'abs",0),\<^sort>\<open>type\<close>)\<close>\<close>
+val (rT,(rep_paramT,_)) = rel |> fastype_of |> dest_funT |> apsnd dest_funT
+fun tac {context=ctxt, prems} = all_tac
+val goal = mk_rel_fun (rel $ (Free("r",rT))) \<^term>\<open>(\<longleftrightarrow>)\<close>
+               $ (Var(("X",0), rep_paramT --> HOLogic.boolT)) $ class_const
+      |> HOLogic.mk_Trueprop
+in
+val _ = goal |> Thm.cterm_of ctxt |>\<^print>
+val thm = Goal.prove ctxt ["r"] [] goal tac
+end
+\<close>
+
+ML \<open>
+HOLogic.mk_case_prod \<^term>\<open>(\<lambda>x y z. undefined)\<close>
+\<close>
+
+
+schematic_goal with_type_semigroup_add_class_transfer0:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique r\<close> \<open>right_total r\<close> 
+  assumes [transfer_domain_rule]: \<open>Domainp r = (\<lambda>x. x \<in> S)\<close>
+  shows \<open>(with_type_semigroup_add_class_rel r ===> (\<longleftrightarrow>)) ?X (\<lambda>plus. class.semigroup_add plus)\<close>
+  unfolding fst_conv snd_conv class.semigroup_add_def
+  unfolding with_type_semigroup_add_class_rel_def
+  by transfer_prover
+thm with_type_semigroup_add_class_transfer0[of r S]
+
+ML \<open>
+val transferred = @{thm with_type_semigroup_add_class_transfer0} 
+  |> Thm.concl_of |> HOLogic.dest_Trueprop
+  |> dest_comb |> fst |> dest_comb |> snd
+  |> lambda (Var(("S",0),HOLogic.mk_setT (TVar(("'a",0),\<^sort>\<open>type\<close>))))
+  (* |> Thm.cterm_of \<^context>  *)
+\<close>
+
+local_setup \<open>local_def \<^binding>\<open>with_type_semigroup_add_class_pred'\<close> (Type.legacy_freeze transferred) #> snd\<close>
+thm with_type_semigroup_add_class_pred'_def
+
+definition \<open>with_type_semigroup_add_class_pred == (\<lambda>S p. with_type_semigroup_add_class_dom S p \<and> with_type_semigroup_add_class_pred' S p)\<close>
+
+definition with_type_semigroup_add_class where
+  \<open>with_type_semigroup_add_class \<equiv> (with_type_semigroup_add_class_pred,
+                                     with_type_semigroup_add_class_rel)\<close>
+
+lemma with_type_semigroup_add_class_transfer:
+  includes lifting_syntax
+  assumes \<open>bi_unique r\<close> \<open>right_total r\<close> 
+  shows \<open>(snd with_type_semigroup_add_class r ===> (\<longleftrightarrow>)) (fst with_type_semigroup_add_class (Collect (Domainp r))) (\<lambda>plus. class.semigroup_add plus)\<close>
+  unfolding with_type_semigroup_add_class_def with_type_semigroup_add_class_pred_def fst_conv
+  apply (rule with_type_split_aux)
+  subgoal
+    using with_type_semigroup_add_class_transfer0[OF assms, of \<open>Collect (Domainp r)\<close>]
+    by (simp add: with_type_semigroup_add_class_pred'_def)
+  subgoal
+    using with_type_semigroup_add_class_has_dom
+    using assms apply (simp add: with_type_has_domain_def)
+    by (smt (verit, del_insts) with_type_semigroup_add_class_dom_def with_type_semigroup_add_class_has_dom with_type_semigroup_add_class_rel_def with_type_has_domain_def)
+  by -
+
+lemma xxxxx:
+  assumes has_dom: \<open>with_type_has_domain class2R D\<close>
+  assumes class1_def: \<open>class1 == (class1P, class1R)\<close>
+  assumes class2_def: \<open>class2 == (class2P, class2R)\<close>
+  assumes class1P_def: \<open>class1P \<equiv> \<lambda>S p. D S p \<and> pred' S p\<close>
+  shows \<open>with_type_compat_rel (fst class1) S (snd class2)\<close>
+  using has_dom
+  by (simp add: with_type_has_domain_def with_type_compat_rel_def class1_def class2_def class1P_def)
+
+lemma with_type_compat_rel_semigroup_on':
+  shows \<open>with_type_compat_rel (fst with_type_semigroup_add_class) S (snd with_type_semigroup_add_class)\<close>
+  apply (rule xxxxx)
+  apply (rule with_type_semigroup_add_class_has_dom)
+    apply (rule with_type_semigroup_add_class_def)
+    apply (rule with_type_semigroup_add_class_def)
+  by (rule with_type_semigroup_add_class_pred_def)
+
+setup \<open>
+  With_Type.add_with_type_info_global {
+    class = \<^class>\<open>semigroup_add\<close>,
+    rep_class_data = \<^const_name>\<open>with_type_semigroup_add_class\<close>,
+    with_type_compat_rel = @{thm with_type_compat_rel_semigroup_on'},
+    rep_class_data_thm = NONE,
+    transfer = SOME @{thm with_type_semigroup_add_class_transfer}
+  }
+\<close>
+
+(* subsection \<open>Semigroup, additive\<close>
+
 definition semigroup_on :: \<open>'rep set \<Rightarrow> ('rep\<Rightarrow>'rep\<Rightarrow>'rep) \<Rightarrow> bool\<close> where
   \<open>semigroup_on S p \<longleftrightarrow> (\<forall>x\<in>S. \<forall>y\<in>S. p x y \<in> S) \<and> 
       (\<forall>x\<in>S. \<forall>y\<in>S. \<forall>z\<in>S. p (p x y) z = p x (p y z))\<close>
 
-definition with_type_class_semigroup_add where
-  \<open>with_type_class_semigroup_add = (semigroup_on, \<lambda>r. rel_fun r (rel_fun r r))\<close>
+definition with_type_semigroup_add_class where
+  \<open>with_type_semigroup_add_class = (semigroup_on, \<lambda>r. rel_fun r (rel_fun r r))\<close>
 
 lemma semigroup_on_transfer: 
   includes lifting_syntax
@@ -55,21 +216,22 @@ lemma with_type_compat_rel_semigroup_on:
 
 lemma semigroup_on_transfer': 
   includes lifting_syntax
-  shows \<open>bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (snd with_type_class_semigroup_add r ===> (\<longleftrightarrow>)) (fst with_type_class_semigroup_add (Collect (Domainp r))) class.semigroup_add\<close>
-  by (auto simp add: with_type_class_semigroup_add_def intro!: semigroup_on_transfer)
+  shows \<open>bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (snd with_type_semigroup_add_class r ===> (\<longleftrightarrow>)) (fst with_type_semigroup_add_class (Collect (Domainp r))) class.semigroup_add\<close>
+  by (auto simp add: with_type_semigroup_add_class_def intro!: semigroup_on_transfer)
 
-lemma with_type_compat_rel_semigroup_on': \<open>with_type_compat_rel (fst with_type_class_semigroup_add) S (snd with_type_class_semigroup_add)\<close>
-  by (simp add: with_type_compat_rel_semigroup_on with_type_class_semigroup_add_def)
+lemma with_type_compat_rel_semigroup_on': \<open>with_type_compat_rel (fst with_type_semigroup_add_class) S (snd with_type_semigroup_add_class)\<close>
+  by (simp add: with_type_compat_rel_semigroup_on with_type_semigroup_add_class_def)
 
 setup \<open>
   With_Type.add_with_type_info_global {
     class = \<^class>\<open>semigroup_add\<close>,
-    rep_class_data = \<^const_name>\<open>with_type_class_semigroup_add\<close>,
+    rep_class_data = \<^const_name>\<open>with_type_semigroup_add_class\<close>,
     with_type_compat_rel = @{thm with_type_compat_rel_semigroup_on'},
     rep_class_data_thm = NONE,
     transfer = SOME @{thm semigroup_on_transfer'}
   }
 \<close>
+ *)
 
 subsection \<open>Example\<close>
 
@@ -82,16 +244,17 @@ definition carrier_plus :: \<open>int \<Rightarrow> int \<Rightarrow> int\<close
 lemma carrier_nonempty: \<open>carrier \<noteq> {}\<close>
   by (simp add: carrier_def)
 
-lemma carrier_semigroup: \<open>semigroup_on carrier carrier_plus\<close>
-  by (auto simp: semigroup_on_def carrier_def carrier_plus_def)
+lemma carrier_semigroup: \<open>with_type_semigroup_add_class_pred carrier carrier_plus\<close>
+  by (auto simp: with_type_semigroup_add_class_pred_def
+      with_type_semigroup_add_class_dom_def with_type_semigroup_add_class_pred'_def carrier_def carrier_plus_def)
 
 lemma example_semigroup2:
   shows \<open>\<forall>\<^sub>\<tau> 'abs::semigroup_add = carrier with carrier_plus. undefined (3::nat)\<close>
   apply (rule with_typeI)
-  apply (simp_all add: with_type_class_semigroup_add_def)
+  apply (simp_all add: with_type_semigroup_add_class_def)
      apply (rule carrier_nonempty)
     apply (rule carrier_semigroup)
-   apply (rule with_type_compat_rel_semigroup_on)
+   apply (metis fst_conv snd_conv with_type_semigroup_add_class_def with_type_compat_rel_semigroup_on')
 proof -
   include lifting_syntax
   fix Rep :: \<open>'abs \<Rightarrow> int\<close> and Abs and pls
@@ -101,7 +264,9 @@ proof -
     using \<open>type_definition Rep Abs carrier\<close> bi_unique_def r_def type_definition.Rep_inject by fastforce
   have [transfer_rule]: \<open>right_total r\<close>
     by (simp add: r_def right_total_def)
-  assume [transfer_rule]: \<open>(r ===> r ===> r) carrier_plus pls\<close>
+  assume \<open>with_type_semigroup_add_class_rel (\<lambda>x y. x = Rep y) carrier_plus pls\<close>
+  then have [transfer_rule]: \<open>(r ===> r ===> r) carrier_plus pls\<close>
+    by (simp add: r_def with_type_semigroup_add_class_rel_def)
   have \<open>pls x y = pls y x\<close> for x y
     apply transfer
     sorry

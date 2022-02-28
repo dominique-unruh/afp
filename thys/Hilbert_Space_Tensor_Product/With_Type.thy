@@ -182,20 +182,43 @@ subsection \<open>Automatic configuration of new class\<close>
 
 ML \<open>
 fun dest_args args (t $ u) = dest_args (u :: args) t
-  | dest_args args _ = args
+  | dest_args args hd = (hd,args)
 \<close>
 
+ML \<open>
+fun curry_term [] t = Abs("", \<^typ>\<open>unit\<close>, t)
+  | curry_term [_] t = t
+  | curry_term args t = let
+    fun add_args 0 t = t
+      | add_args n t = add_args (n-1) (t $ Bound (n-1))
+    fun curry [] t = error "unreachable code"
+      | curry [(name,T)] t = Abs (name, T, t)
+      | curry ((name,T)::args) t = HOLogic.mk_case_prod (Abs (name, T, curry args t))
+    val result = curry args (add_args (length args) t) |> \<^print>
+    in result end
+;;
+curry_term [("i",\<^typ>\<open>int\<close>), ("n",\<^typ>\<open>nat\<close>), ("b", \<^typ>\<open>bool\<close>)] \<^term>\<open>undefined :: int \<Rightarrow> nat \<Rightarrow> bool \<Rightarrow> string\<close>
+|> Thm.cterm_of \<^context>
+\<close>
+
+ML \<open>
+\<^term>\<open>(\<lambda>(x,y,z). undefined x y z)\<close>
+\<close>
+
+term \<open>(\<lambda>(x,y,z). undefined x y)\<close>
 
 ML \<open>
 fun get_params_of_class thy class = let
-val params_ordered = Class.rules thy class |> fst |> the |> Thm.prop_of |> HOLogic.dest_Trueprop |> dest_args []
+val (const,params_ordered) = Class.rules thy class |> fst |> the |> Thm.prop_of |> HOLogic.dest_Trueprop |> dest_args []
 val class_params = Class.these_params thy [class]
-in
-  params_ordered |> map (fn Const (const,T) => 
+val final_params = params_ordered |> map (fn Const (const,T) => 
     get_first (fn (name,(_,(const',_))) => if const=const' then SOME (name,const,T) else NONE) class_params |> the)
+val const_curried = curry_term (map (fn (n,_,T) => (n,T)) final_params) const
+in
+  (const_curried,final_params)
 end
 ;;
-get_params_of_class \<^theory> \<^class>\<open>semigroup_add\<close>
+get_params_of_class \<^theory> \<^class>\<open>group_add\<close> |> fst |> Thm.cterm_of \<^context>
 \<close>
 
 
@@ -327,12 +350,28 @@ lemma with_type_compat_xxx_filterI[with_type_compat_xxx]:
   using assms 
   by (auto simp: with_type_compat_xxx_def rel_square_rel_filter intro: right_unique_rel_filter right_total_rel_filter)
 
+lemma Domainp_equal_onp[simp]: \<open>Domainp (equal_onp S) = (\<lambda>x. x\<in>S)\<close>
+  by (auto intro!: ext simp: Domainp_iff equal_onp_def)
+
+lemma Domainp_rel_fun_equal_onp: 
+  includes lifting_syntax
+  shows \<open>Domainp (equal_onp S ===> r) f = (\<forall>x\<in>S. Domainp r (f x))\<close>
+  by (auto simp add: Domainp_pred_fun_eq equal_onp_def left_unique_def)
+
 ML \<open>
+(* Returns (T,R,D,thm) where:
+  T is the type of the type of parameters of the type representation
+  R (term) is a function that maps a relation between representation and abstract type
+    into a relation between representation parameters and abstract parameters
+  D (term) is a function that maps a representation domain to the set of representation parameters 
+  thm says "with_type_has_domain R D"
+*)
 fun get_relation_thm ctxt class = let
+  open Conv
   fun has_tvar (TVar _) = true
     | has_tvar (Type (_,Ts)) = exists has_tvar Ts
     | has_tvar _ = false
-  val rep_paramT0 = get_params_of_class (Proof_Context.theory_of ctxt) class |> map (fn (_,_,T) => T) |> HOLogic.mk_tupleT
+  val rep_paramT0 = get_params_of_class (Proof_Context.theory_of ctxt) class |> snd |> map (fn (_,_,T) => T) |> HOLogic.mk_tupleT
   val repT = TFree("'rep",\<^sort>\<open>type\<close>)
   val rep_paramT = TVar(("'rep_param",0),\<^sort>\<open>type\<close>)
   val absT = TFree("'abs",\<^sort>\<open>type\<close>)
@@ -363,9 +402,34 @@ fun get_relation_thm ctxt class = let
         THEN_ALL_NEW tac0 ctxt) i end)
   fun tac ctxt = resolve_tac ctxt @{thms with_type_has_domain_xxx} 1 THEN tac0 ctxt 1
   val thm = Goal.prove ctxt [] [] goal (fn {context,...} => tac context)
+  val simp_rules = @{thms Domainp_rel_fun_equal_onp[abs_def] Domainp_equal_onp}
+  val thm = thm |> fconv_rule (Simplifier.rewrite ((clear_simpset ctxt) addsimps simp_rules)
+                               |> arg_conv(*Trueprop*) |> arg_conv)
   val (T,R,D) = dest_with_type_has_domain (Thm.prop_of thm)
 in
   (T,R,D,thm)
+end
+\<close>
+
+ML \<open>fun local_def binding t = Local_Theory.define ((binding, Mixfix.NoSyn), ((Binding.suffix_name "_def" binding, []), t))
+ #> (fn ((_,(_,thm)),lthy) => (thm,lthy))\<close>
+
+ML \<open>fun local_note binding thm = Local_Theory.note ((binding,[]), [thm]) #> snd\<close>
+
+ML \<open>
+
+fun define_stuff pos class lthy = let
+  open Conv
+  val (T,R,D,thm) = get_relation_thm lthy class
+  val binding = Binding.make ("with_type_" ^ Class.class_prefix class, pos)
+  val (rel_def,lthy) = local_def (Binding.suffix_name "_rel" binding) (Type.legacy_freeze R) lthy
+  val (dom_def,lthy) = local_def (Binding.suffix_name "_dom" binding) (Type.legacy_freeze D) lthy
+  fun gen_sym_thm thm = Morphism.thm (Local_Theory.target_morphism lthy) thm |> Thm.symmetric
+  val thm' = thm |> fconv_rule (rewr_conv (gen_sym_thm rel_def) |> arg1_conv(*r*) |> arg_conv(*Trueprop*))
+                 |> fconv_rule (rewr_conv (gen_sym_thm dom_def) |> arg_conv(*d*) |> arg_conv(*Trueprop*))
+  val lthy = local_note (Binding.suffix_name "_has_dom" binding) thm' lthy
+in
+  lthy
 end
 \<close>
 

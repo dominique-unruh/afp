@@ -19,7 +19,8 @@ type with_type_info = {
   class: class,
   rep_class_data: string,
   rep_class_data_thm: thm option, (* Of the form \<open>rep_class_axioms = (const,const)\<close> *)
-  with_type_compat_rel: thm, (* with_type_compat_rel (fst rep_class_data) S (snd rep_class_data) *)
+  with_type_compat_rel: thm, (* with_type_compat_rel (fst rep_class_data) S (snd rep_class_data)
+                                The two occurrences of rep_class_data must have different ?'abs *)
   transfer: thm option (* bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (snd rep_class_data r ===> (\<longleftrightarrow>)) (fst rep_class_data (Collect (Domainp r))) class.class *)
 }
 
@@ -67,14 +68,14 @@ fun with_type_cancel ctxt thm = let
         |> (Tactic.assume_tac ctxt 1  THEN  Tactic.assume_tac ctxt 1) |> Seq.hd |> SOME
     | NONE => NONE
   
-  (* class.name (\<dots> using ?'abs) \<Longrightarrow> with_type CR Sp (\<lambda>_ _. P) *)
+  (* class.name (\<dots> using ?'abs::type) \<Longrightarrow> with_type CR Sp (\<lambda>_ _. P) *)
   (* class.name part may be absent for some type classes *)
   val unoverloaded = Unoverload_Type.unoverload_type (Context.Proof ctxt) [abs_type_name] thm
-  
+
   (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> \<exists>x::?'abs_params2. class.name x *)
   (* May be NONE *)
   val ex_class = Option.map (fn th => th OF [thm]) with_type_class_axioms
-  
+
   (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> class.name (SOME \<dots>) *)
   (* May be NONE *)
   val class_some = Option.map (fn thm => @{thm someI_ex} OF [thm]) ex_class
@@ -87,7 +88,7 @@ fun with_type_cancel ctxt thm = let
   
   (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> P *)
   val no_repetition = Tactic.distinct_subgoals_tac no_with_type |> Seq.hd
-  
+
   (* fst Sp \<noteq> {} \<Longrightarrow> P *)
   val removed_abs_type = Local_Typedef.cancel_type_definition no_repetition
   
