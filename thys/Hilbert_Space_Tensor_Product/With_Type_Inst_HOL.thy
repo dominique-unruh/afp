@@ -47,6 +47,44 @@ print_theorems
 (* local_setup \<open>local_note \<^binding>\<open>with_type_semigroup_add_class_has_dom\<close> relationThm\<close> *)
 
 ML \<open>
+(* Reads term.
+- unspecified types are made into tvars
+- vars and tvars are allowed (and stay what they are) 
+- Edge case: if there are explicitly specified tvars with index \<ge> 1, and no unspecified types, then things are muddled up
+*)
+(* fun read_term_schematic' ctxt str = let
+  val t = Proof_Context.read_term_pattern ctxt str
+  val idx = Term.maxidx_of_term t
+  fun map_tvar (T as TVar((n,i),s)) = if i=idx then TFree(n,s) else T
+    | map_tvar T = T
+  val t' = t |> map_types (map_atyps map_tvar)
+in (idx,t' |> Thm.cterm_of ctxt) end *)
+\<close>
+
+ML \<open>
+fun read_term_schematic' ctxt str = let
+  val t = Syntax.parse_term ctxt str
+  val tfrees = Term.add_tfrees t [] |> map fst |> filter (String.isPrefix "'")
+  val t = Syntax.check_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt) t
+  val idx = Term.maxidx_of_term t + 1
+  fun map_tfree (T as TFree(n,s)) = if List.exists (fn n' => n=n') tfrees then T else TVar((n,idx),s)
+    | map_tfree T = T
+  val t = map_types (map_atyps map_tfree) t
+in t end
+\<close>
+
+ML Syntax.read_term
+
+declare[[show_types]]
+
+ML \<open>
+read_term_schematic' \<^context> "(X, ?X3 :: 'a \<times> 'b \<times> ?'c \<times> ?'b1)"
+;;
+Proof_Context.read_term_schematic \<^context> "(X, ?X3 :: 'a \<times> 'b \<times> ?'c \<times> ?'b1)"
+\<close>
+
+
+ML \<open>
 fun antiquotation_Term range src ctxt = let
   val (source,ctxt) = Token.syntax (Scan.lift Parse.embedded_input) src ctxt
   val symbols = source |> Input.source_explode
@@ -68,7 +106,7 @@ fun antiquotation_Term range src ctxt = let
              in replace rest map (counter+1) (rev var @ result) end
         else replace syms map counter (sym::result)
   val (ml_map,str) = replace symbols Symtab.empty 0 []
-  val term = Proof_Context.read_term_pattern ctxt str
+  val term = read_term_schematic' ctxt str
   val ml_term = ML_Syntax.atomic (ML_Syntax.print_term term)
   val (map_antiquot,ctxt) = fold_map (fn (name,ml) => fn ctxt => let val (decl,ctxt) = ML_Context.expand_antiquotes ml ctxt in ((name,decl),ctxt) end)
                               (Symtab.dest ml_map) ctxt
@@ -92,40 +130,66 @@ ML_Context.add_antiquotation \<^binding>\<open>Term\<close> true antiquotation_T
 \<close>
 
 ML \<open>
-\<^Term>\<open>1 + \<open>Free("a",\<^typ>\<open>int\<close>)\<close>\<close>
+\<^Term>\<open>(1) + \<open>Free("a",\<^typ>\<open>int\<close>)\<close>\<close>
 |> Thm.cterm_of \<^context>
 \<close>
 
 ML \<open>
-local
-val ctxt = \<^context>
-val class = \<^class>\<open>semigroup_add\<close>
-val thy = Proof_Context.theory_of ctxt
-val (class_const, _) = get_params_of_class thy class
-val class_const = subst_TVars [(("'a",0), TVar(("'abs",0),\<^sort>\<open>type\<close>))] class_const
-val rel = \<^Const>\<open>with_type_semigroup_add_class_rel \<open>TVar(("'rep",0),\<^sort>\<open>type\<close>)\<close> \<open>TVar(("'abs",0),\<^sort>\<open>type\<close>)\<close>\<close>
-val (rT,(rep_paramT,_)) = rel |> fastype_of |> dest_funT |> apsnd dest_funT
-fun tac {context=ctxt, prems} = all_tac
-val goal = mk_rel_fun (rel $ (Free("r",rT))) \<^term>\<open>(\<longleftrightarrow>)\<close>
-               $ (Var(("X",0), rep_paramT --> HOLogic.boolT)) $ class_const
-      |> HOLogic.mk_Trueprop
-in
-val _ = goal |> Thm.cterm_of ctxt |>\<^print>
-val thm = Goal.prove ctxt ["r"] [] goal tac
-end
+Drule.abs_def
 \<close>
+
+
+ML \<open>
+fun create_transfer_thm ctxt class rel_const rel_const_def_thm = let
+  val thy = Proof_Context.theory_of ctxt
+  val (class_const, _) = get_params_of_class thy class
+  val class_const_def_thm = Proof_Context.get_thm ctxt ((class_const |> dest_Const |> fst) ^ "_def") |> Drule.abs_def
+  val class_const = subst_TVars [(("'a",0), TFree("'abs",\<^sort>\<open>type\<close>))] class_const
+  val goal = \<^Term>\<open>Trueprop ((rel_fun (\<open>rel_const\<close> r) (\<longleftrightarrow>)) ?X \<open>class_const\<close>)\<close>
+  val bi_unique = \<^prop>\<open>bi_unique (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool)\<close>
+  val right_total = \<^prop>\<open>right_total (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool)\<close>
+  val domain_r = \<^prop>\<open>Domainp (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool) = (\<lambda>x. x \<in> S)\<close>
+  val _ = goal |> Thm.cterm_of ctxt
+  open Conv
+  fun tac {context=ctxt, prems=[bi_unique, right_total, domain_r]} =
+    Raw_Simplifier.rewrite_goal_tac ctxt [rel_const_def_thm, class_const_def_thm] 1
+    THEN 
+    Transfer.transfer_prover_tac (ctxt |> Thm.proof_attributes [Transfer.transfer_add] bi_unique |> snd
+                                       |> Thm.proof_attributes [Transfer.transfer_add] right_total |> snd
+                                       |> Thm.proof_attributes [Transfer.transfer_domain_add] domain_r |> snd) 1
+    | tac _ = raise Match (* Should not happen *)
+  val thm = Goal.prove ctxt ["r","S"] [bi_unique, right_total, domain_r] goal tac
+  val transferred = thm
+    |> Thm.concl_of |> HOLogic.dest_Trueprop
+    |> dest_comb |> fst |> dest_comb |> snd
+    |> lambda (Var(("S",0),HOLogic.mk_setT (TVar(("'rep",0),\<^sort>\<open>type\<close>))))
+  in
+    (transferred, thm)
+  end
+;;
+val (transferred,thm) = create_transfer_thm \<^context> \<^class>\<open>semigroup_add\<close>
+   \<^Const>\<open>with_type_semigroup_add_class_rel \<open>TFree("'rep",\<^sort>\<open>type\<close>)\<close> \<open>TFree("'abs",\<^sort>\<open>type\<close>)\<close>\<close>
+   @{thm with_type_semigroup_add_class_rel_def}
+\<close>
+
+thm class.semigroup_add_def[abs_def]
+
+ML \<open>
+Proof_Context.read_term_pattern \<^context> "(X, ?X :: 'a \<times> 'b \<times> ?'c \<times> ?'b1)"
+\<close>
+
 
 ML \<open>
 HOLogic.mk_case_prod \<^term>\<open>(\<lambda>x y z. undefined)\<close>
 \<close>
 
 
-schematic_goal with_type_semigroup_add_class_transfer0:
+(* schematic_goal with_type_semigroup_add_class_transfer0:
   includes lifting_syntax
   assumes [transfer_rule]: \<open>bi_unique r\<close> \<open>right_total r\<close> 
   assumes [transfer_domain_rule]: \<open>Domainp r = (\<lambda>x. x \<in> S)\<close>
   shows \<open>(with_type_semigroup_add_class_rel r ===> (\<longleftrightarrow>)) ?X (\<lambda>plus. class.semigroup_add plus)\<close>
-  unfolding fst_conv snd_conv class.semigroup_add_def
+  unfolding class.semigroup_add_def
   unfolding with_type_semigroup_add_class_rel_def
   by transfer_prover
 thm with_type_semigroup_add_class_transfer0[of r S]
@@ -136,7 +200,7 @@ val transferred = @{thm with_type_semigroup_add_class_transfer0}
   |> dest_comb |> fst |> dest_comb |> snd
   |> lambda (Var(("S",0),HOLogic.mk_setT (TVar(("'a",0),\<^sort>\<open>type\<close>))))
   (* |> Thm.cterm_of \<^context>  *)
-\<close>
+\<close> *)
 
 local_setup \<open>local_def \<^binding>\<open>with_type_semigroup_add_class_pred'\<close> (Type.legacy_freeze transferred) #> snd\<close>
 thm with_type_semigroup_add_class_pred'_def
@@ -144,23 +208,69 @@ thm with_type_semigroup_add_class_pred'_def
 definition \<open>with_type_semigroup_add_class_pred == (\<lambda>S p. with_type_semigroup_add_class_dom S p \<and> with_type_semigroup_add_class_pred' S p)\<close>
 
 definition with_type_semigroup_add_class where
-  \<open>with_type_semigroup_add_class \<equiv> (with_type_semigroup_add_class_pred,
-                                     with_type_semigroup_add_class_rel)\<close>
+  \<open>with_type_semigroup_add_class \<equiv> (with_type_semigroup_add_class_pred, with_type_semigroup_add_class_rel)\<close>
 
-lemma with_type_semigroup_add_class_transfer:
+local_setup \<open>
+local_note \<^binding>\<open>with_type_semigroup_add_class_transfer0\<close> thm
+\<close>
+
+lemma aux: 
   includes lifting_syntax
-  assumes \<open>bi_unique r\<close> \<open>right_total r\<close> 
-  shows \<open>(snd with_type_semigroup_add_class r ===> (\<longleftrightarrow>)) (fst with_type_semigroup_add_class (Collect (Domainp r))) (\<lambda>plus. class.semigroup_add plus)\<close>
-  unfolding with_type_semigroup_add_class_def with_type_semigroup_add_class_pred_def fst_conv
+  assumes class1_def: \<open>class1 == (class1P, class1R)\<close>
+  assumes class2_def: \<open>class2 == (class2P, class2R)\<close>
+  assumes class2P_def: \<open>class2P \<equiv> \<lambda>S p. D S p \<and> pred' S p\<close>
+  assumes pred'_def: \<open>pred' \<equiv> pred''\<close>
+  assumes wthd: \<open>with_type_has_domain class1R D\<close>
+  assumes 1: \<open>\<And>S. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> Domainp r = (\<lambda>x. x \<in> S) \<Longrightarrow>
+               (class1R r ===> (=)) (pred'' S) class_const\<close>
+  assumes r_assms: \<open>bi_unique r\<close> \<open>right_total r\<close>
+  shows \<open>(snd class1 r ===> (\<longleftrightarrow>)) (fst class2 (Collect (Domainp r))) class_const\<close>
+  unfolding class1_def class2_def fst_conv snd_conv class2P_def pred'_def
   apply (rule with_type_split_aux)
-  subgoal
-    using with_type_semigroup_add_class_transfer0[OF assms, of \<open>Collect (Domainp r)\<close>]
-    by (simp add: with_type_semigroup_add_class_pred'_def)
-  subgoal
-    using with_type_semigroup_add_class_has_dom
-    using assms apply (simp add: with_type_has_domain_def)
-    by (smt (verit, del_insts) with_type_semigroup_add_class_dom_def with_type_semigroup_add_class_has_dom with_type_semigroup_add_class_rel_def with_type_has_domain_def)
+   apply (rule 1)
+     apply (rule r_assms)
+     apply (rule r_assms)
+   apply auto[1]
+  using wthd
+  by (simp add: r_assms(1) r_assms(2) with_type_has_domain_def)
+
+ML \<open>
+val with_type_semigroup_add_class_transfer = 
+(@{thm aux} OF @{thms
+with_type_semigroup_add_class_def with_type_semigroup_add_class_def
+with_type_semigroup_add_class_pred_def with_type_semigroup_add_class_pred'_def
+with_type_semigroup_add_class_has_dom}
+OF @{thms with_type_semigroup_add_class_transfer0})
+|> Thm.eq_assumption 1
+|> Thm.eq_assumption 1
+|> Thm.eq_assumption 1
+
+\<close>
+
+local_setup \<open>local_note \<^binding>\<open>with_type_semigroup_add_class_transfer\<close> with_type_semigroup_add_class_transfer\<close>
+
+(* lemma with_type_semigroup_add_class_transfer:
+  includes lifting_syntax
+  fixes r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
+  assumes \<open>bi_unique r\<close> \<open>right_total r\<close> 
+  defines \<open>(C1 :: (('rep set \<Rightarrow> ('rep \<Rightarrow> 'rep \<Rightarrow> 'rep) \<Rightarrow> bool) \<times> _)) == with_type_semigroup_add_class\<close>
+  defines \<open>(C2 :: _ \<times> (('rep \<Rightarrow> 'abs' \<Rightarrow> bool) \<Rightarrow> ('rep \<Rightarrow> 'rep \<Rightarrow> 'rep) \<Rightarrow> ('abs' \<Rightarrow> 'abs' \<Rightarrow> 'abs') \<Rightarrow> bool)) == with_type_semigroup_add_class\<close>
+  shows \<open>(snd C1 r ===> (\<longleftrightarrow>)) (fst C2 (Collect (Domainp r))) (\<lambda>plus. class.semigroup_add plus)\<close>
+  unfolding C1_def C2_def
+  apply (rule aux)
+         apply (rule with_type_semigroup_add_class_def)
+        apply (rule with_type_semigroup_add_class_def)
+       apply (rule with_type_semigroup_add_class_pred_def)
+      apply (rule with_type_semigroup_add_class_pred'_def)
+     apply (rule with_type_semigroup_add_class_has_dom)
+    apply (rule with_type_semigroup_add_class_transfer0)
+       apply assumption
+      apply assumption
+     apply assumption
+   apply (rule assms)
+  apply (rule assms)
   by -
+ *)
 
 lemma xxxxx:
   assumes has_dom: \<open>with_type_has_domain class2R D\<close>

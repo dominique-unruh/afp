@@ -412,7 +412,7 @@ end
 \<close>
 
 ML \<open>fun local_def binding t = Local_Theory.define ((binding, Mixfix.NoSyn), ((Binding.suffix_name "_def" binding, []), t))
- #> (fn ((_,(_,thm)),lthy) => (thm,lthy))\<close>
+#> \<^print> #> (fn ((_,(_,thm)),lthy) => (thm,lthy))\<close>
 
 ML \<open>fun local_note binding thm = Local_Theory.note ((binding,[]), [thm]) #> snd\<close>
 
@@ -420,7 +420,7 @@ ML \<open>
 
 fun define_stuff pos class lthy = let
   open Conv
-  val (T,R,D,thm) = get_relation_thm lthy class
+  val (_,R,D,thm) = get_relation_thm lthy class |> \<^print>
   val binding = Binding.make ("with_type_" ^ Class.class_prefix class, pos)
   val (rel_def,lthy) = local_def (Binding.suffix_name "_rel" binding) (Type.legacy_freeze R) lthy
   val (dom_def,lthy) = local_def (Binding.suffix_name "_dom" binding) (Type.legacy_freeze D) lthy
