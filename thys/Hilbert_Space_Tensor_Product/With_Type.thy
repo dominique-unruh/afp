@@ -1,5 +1,5 @@
 theory With_Type
-  imports "HOL-Types_To_Sets.Types_To_Sets" Misc_With_Type
+  imports "HOL-Types_To_Sets.Types_To_Sets" Misc_With_Type Instantiate_Term_Antiquotation
 begin
 
 definition with_type_compat_rel where \<open>with_type_compat_rel C S R \<longleftrightarrow> (\<forall>r rp. bi_unique r \<longrightarrow> right_total r \<longrightarrow> S = Collect (Domainp r) \<longrightarrow> C S rp \<longrightarrow> (Domainp (R r) rp))\<close>
@@ -412,22 +412,94 @@ end
 \<close>
 
 ML \<open>fun local_def binding t = Local_Theory.define ((binding, Mixfix.NoSyn), ((Binding.suffix_name "_def" binding, []), t))
-#> \<^print> #> (fn ((_,(_,thm)),lthy) => (thm,lthy))\<close>
+     #> (fn ((const,(_,thm)),lthy) => (const,thm,lthy))\<close>
 
 ML \<open>fun local_note binding thm = Local_Theory.note ((binding,[]), [thm]) #> snd\<close>
+     (* #> (fn ((_,[thm]), lthy) => (thm,lthy))\<close> *)
+
+ML \<open>
+(* rel_const must use 'rep, 'abs *)
+fun create_transfer_thm ctxt class rel_const rel_const_def_thm = let
+  val thy = Proof_Context.theory_of ctxt
+  val (class_const, _) = get_params_of_class thy class
+  val class_const_def_thm = Proof_Context.get_thm ctxt ((class_const |> dest_Const |> fst) ^ "_def") |> Drule.abs_def
+  val class_const = subst_TVars [(("'a",0), TFree("'abs",\<^sort>\<open>type\<close>))] class_const
+  val goal = \<^Term>\<open>Trueprop ((rel_fun (\<open>rel_const\<close> r) (\<longleftrightarrow>)) ?X \<open>class_const\<close>)\<close> ctxt
+  val bi_unique = \<^prop>\<open>bi_unique (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool)\<close>
+  val right_total = \<^prop>\<open>right_total (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool)\<close>
+  val domain_r = \<^prop>\<open>Domainp (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool) = (\<lambda>x. x \<in> S)\<close>
+  val _ = goal |> Thm.cterm_of ctxt
+  open Conv
+  fun tac {context=ctxt, prems=[bi_unique, right_total, domain_r]} =
+    Raw_Simplifier.rewrite_goal_tac ctxt [rel_const_def_thm, class_const_def_thm] 1
+    THEN 
+    Transfer.transfer_prover_tac (ctxt |> Thm.proof_attributes [Transfer.transfer_add] bi_unique |> snd
+                                       |> Thm.proof_attributes [Transfer.transfer_add] right_total |> snd
+                                       |> Thm.proof_attributes [Transfer.transfer_domain_add] domain_r |> snd) 1
+    | tac _ = raise Match (* Should not happen *)
+  val thm = Goal.prove ctxt ["r","S"] [bi_unique, right_total, domain_r] goal tac
+  val transferred = thm
+    |> Thm.concl_of |> HOLogic.dest_Trueprop
+    |> dest_comb |> fst |> dest_comb |> snd
+    |> lambda (Var(("S",0),HOLogic.mk_setT (TFree("'rep",\<^sort>\<open>type\<close>))))
+  in
+    (transferred, thm)
+  end
+
+\<close>
+
+lemma aux: 
+  includes lifting_syntax
+  assumes class1_def: \<open>class1 == (class1P, class1R)\<close>
+  assumes class2_def: \<open>class2 == (class2P, class2R)\<close>
+  assumes class2P_def: \<open>class2P \<equiv> \<lambda>S p. D S p \<and> pred' S p\<close>
+  assumes pred'_def: \<open>pred' \<equiv> pred''\<close>
+  assumes wthd: \<open>with_type_has_domain class1R D\<close>
+  assumes 1: \<open>\<And>S. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> Domainp r = (\<lambda>x. x \<in> S) \<Longrightarrow>
+               (class1R r ===> (=)) (pred'' S) class_const\<close>
+  assumes r_assms: \<open>bi_unique r\<close> \<open>right_total r\<close>
+  shows \<open>(snd class1 r ===> (\<longleftrightarrow>)) (fst class2 (Collect (Domainp r))) class_const\<close>
+  unfolding class1_def class2_def fst_conv snd_conv class2P_def pred'_def
+  apply (rule with_type_split_aux)
+   apply (rule 1)
+     apply (rule r_assms)
+     apply (rule r_assms)
+   apply auto[1]
+  using wthd
+  by (simp add: r_assms(1) r_assms(2) with_type_has_domain_def)
+
+
 
 ML \<open>
 
 fun define_stuff pos class lthy = let
   open Conv
-  val (_,R,D,thm) = get_relation_thm lthy class |> \<^print>
+  val (_,R,D,rel_thm) = get_relation_thm lthy class
   val binding = Binding.make ("with_type_" ^ Class.class_prefix class, pos)
-  val (rel_def,lthy) = local_def (Binding.suffix_name "_rel" binding) (Type.legacy_freeze R) lthy
-  val (dom_def,lthy) = local_def (Binding.suffix_name "_dom" binding) (Type.legacy_freeze D) lthy
-  fun gen_sym_thm thm = Morphism.thm (Local_Theory.target_morphism lthy) thm |> Thm.symmetric
-  val thm' = thm |> fconv_rule (rewr_conv (gen_sym_thm rel_def) |> arg1_conv(*r*) |> arg_conv(*Trueprop*))
-                 |> fconv_rule (rewr_conv (gen_sym_thm dom_def) |> arg_conv(*d*) |> arg_conv(*Trueprop*))
-  val lthy = local_note (Binding.suffix_name "_has_dom" binding) thm' lthy
+  val (rel_const,rel_def,lthy) = local_def (Binding.suffix_name "_rel" binding) (Type.legacy_freeze R) lthy
+  val (dom_const,dom_def,lthy) = local_def (Binding.suffix_name "_dom" binding) (Type.legacy_freeze D) lthy
+  fun gen_thm lthy = Morphism.thm (Local_Theory.target_morphism lthy)
+  fun gen_sym_thm lthy thm = gen_thm lthy thm |> Thm.symmetric
+  val rel_thm' = rel_thm |> fconv_rule (rewr_conv (gen_sym_thm lthy rel_def) |> arg1_conv(*r*) |> arg_conv(*Trueprop*))
+                 |> fconv_rule (rewr_conv (gen_sym_thm lthy dom_def) |> arg_conv(*d*) |> arg_conv(*Trueprop*))
+  val ((* rel_thm'', *)lthy) = local_note (Binding.suffix_name "_has_dom" binding) rel_thm' lthy
+  val (transferred,transfer_thm) = create_transfer_thm lthy class rel_const rel_def
+  val (pred'_const,pred'_def,lthy) = local_def (Binding.suffix_name "_pred'" binding) (Type.legacy_freeze transferred) lthy
+  val (pred_const,pred_def,lthy) = local_def (Binding.suffix_name "_pred" binding) 
+        (\<^Term>\<open>(\<lambda>S p. \<open>dom_const\<close> S p \<and> \<open>pred'_const\<close> S p)\<close> lthy) lthy
+  val (wt_class_const,wt_class_def,lthy) = local_def binding (HOLogic.mk_prod (pred_const, rel_const)) lthy
+(*   \<open>with_type_semigroup_add_class \<equiv> (with_type_semigroup_add_class_pred, with_type_semigroup_add_class_rel)\<close>
+ *)
+(*   val transfer_thm' = 
+      (@{thm aux} OF [wt_class_def, wt_class_def, pred_def, pred'_def, thm'] OF [transfer_thm])
+      |> Thm.eq_assumption 1
+      |> Thm.eq_assumption 1
+      |> Thm.eq_assumption 1 *)
+  val transfer_thm' = (@{thm aux} OF [gen_thm lthy wt_class_def, gen_thm lthy wt_class_def,
+      gen_thm lthy pred_def, gen_thm lthy pred'_def, rel_thm'] OF [gen_thm lthy transfer_thm])
+        |> Thm.eq_assumption 1 |> Thm.eq_assumption 1 |> Thm.eq_assumption 1
+  val ((* transfer_thm'', *)lthy) = local_note (Binding.suffix_name "_transfer" binding) transfer_thm' lthy
+(* val _ = transfer_thm''  |> \<^print> *)
 in
   lthy
 end
