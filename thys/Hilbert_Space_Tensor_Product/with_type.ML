@@ -10,10 +10,16 @@ type with_type_info = {
 }
 
 val add_with_type_info_global : with_type_info -> theory -> theory
+val add_with_type_info_generic : with_type_info -> Context.generic -> Context.generic
+
+val morphism : Morphism.morphism -> with_type_info -> with_type_info
 
 val with_type_cancel : Proof.context -> thm -> thm
 
 val with_type_parse_translation : Proof.context -> term list -> term
+
+(* Debug only *)
+val get_all_type_info : Proof.context -> { by_class: with_type_info Symtab.table, by_const: with_type_info Symtab.table }
 
 end = struct
 
@@ -24,6 +30,12 @@ type with_type_info = {
   with_type_compat_rel: thm, 
   transfer: thm option
 }
+
+fun morphism m ({class, rep_class_data, rep_class_data_thm, with_type_compat_rel, transfer} : with_type_info) : with_type_info =
+  {class=class, rep_class_data=rep_class_data, 
+    rep_class_data_thm = Option.map (Morphism.thm m) rep_class_data_thm,
+    with_type_compat_rel = Morphism.thm m with_type_compat_rel,
+    transfer = Option.map (Morphism.thm m) transfer}
 
 structure With_Type_Data = Generic_Data (
   type T = { by_class: with_type_info Symtab.table, by_const: with_type_info Symtab.table }
@@ -49,6 +61,8 @@ val get_with_type_info_by_const = get_with_type_info_by_const_generic o Context.
 fun get_with_type_info_by_class_generic context class = 
   Symtab.lookup (With_Type_Data.get context |> #by_class) class
 val get_with_type_info_by_class = get_with_type_info_by_class_generic o Context.Proof
+
+fun get_all_type_info ctxt = With_Type_Data.get (Context.Proof ctxt)
 
 fun with_type_cancel ctxt thm = let
   val (const, abs_type) = case Thm.prop_of thm of

@@ -36,6 +36,11 @@ local_setup \<open>
   define_stuff \<^here> \<^class>\<open>semigroup_add\<close>
 \<close>
 
+ML \<open>
+With_Type.get_all_type_info \<^context> |> #by_class |> Symtab.keys
+\<close>
+
+
 (* ML \<open>
 val (_,thm) = create_transfer_thm \<^context> \<^class>\<open>semigroup_add\<close>
    \<^Const>\<open>with_type_semigroup_add_class_rel \<open>TFree("'rep",\<^sort>\<open>type\<close>)\<close> \<open>TFree("'abs",\<^sort>\<open>type\<close>)\<close>\<close>
@@ -71,34 +76,35 @@ OF @{thms with_type_semigroup_add_class_transfer0})
 (* local_setup \<open>local_note \<^binding>\<open>with_type_semigroup_add_class_transfer\<close> with_type_semigroup_add_class_transfer\<close> *)
 thm with_type_semigroup_add_class_transfer
 
-lemma xxxxx:
-  assumes has_dom: \<open>with_type_has_domain class2R D\<close>
-  assumes class1_def: \<open>class1 == (class1P, class1R)\<close>
-  assumes class2_def: \<open>class2 == (class2P, class2R)\<close>
-  assumes class1P_def: \<open>class1P \<equiv> \<lambda>S p. D S p \<and> pred' S p\<close>
-  shows \<open>with_type_compat_rel (fst class1) S (snd class2)\<close>
-  using has_dom
-  by (simp add: with_type_has_domain_def with_type_compat_rel_def class1_def class2_def class1P_def)
+(* ML \<open>
+val with_compat_rel_thm = @{thm xxxxx} OF @{thms with_type_semigroup_add_class_has_dom with_type_semigroup_add_class_def with_type_semigroup_add_class_def with_type_semigroup_add_class_pred_def}
+\<close>
 
-(* TODO: integrate in define_stuff *)
+local_setup\<open>
+local_note \<^binding>\<open>with_type_semigroup_add_class_rel_compat\<close> with_compat_rel_thm
+\<close> *)
+thm with_type_semigroup_add_class_rel_compat
+
+
+(* (* TODO: integrate in define_stuff *)
 lemma with_type_compat_rel_semigroup_on':
   shows \<open>with_type_compat_rel (fst with_type_semigroup_add_class) S (snd with_type_semigroup_add_class)\<close>
   apply (rule xxxxx)
   apply (rule with_type_semigroup_add_class_has_dom)
     apply (rule with_type_semigroup_add_class_def)
     apply (rule with_type_semigroup_add_class_def)
-  by (rule with_type_semigroup_add_class_pred_def)
+  by (rule with_type_semigroup_add_class_pred_def) *)
 
 (* TODO: integrate in define_stuff *)
-setup \<open>
+(* setup \<open>
   With_Type.add_with_type_info_global {
     class = \<^class>\<open>semigroup_add\<close>,
     rep_class_data = \<^const_name>\<open>with_type_semigroup_add_class\<close>,
-    with_type_compat_rel = @{thm with_type_compat_rel_semigroup_on'},
+    with_type_compat_rel = @{thm with_type_semigroup_add_class_rel_compat},
     rep_class_data_thm = NONE,
     transfer = SOME @{thm with_type_semigroup_add_class_transfer}
   }
-\<close>
+\<close> *)
 
 (* subsection \<open>Semigroup, additive\<close>
 
@@ -165,7 +171,7 @@ lemma example_semigroup2:
   apply (simp_all add: with_type_semigroup_add_class_def)
      apply (rule carrier_nonempty)
     apply (rule carrier_semigroup)
-   apply (metis fst_conv snd_conv with_type_semigroup_add_class_def with_type_compat_rel_semigroup_on')
+   apply (metis fst_conv snd_conv with_type_semigroup_add_class_def with_type_semigroup_add_class_rel_compat)
 proof -
   include lifting_syntax
   fix Rep :: \<open>'abs \<Rightarrow> int\<close> and Abs and pls

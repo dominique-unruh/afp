@@ -468,38 +468,52 @@ lemma aux:
   using wthd
   by (simp add: r_assms(1) r_assms(2) with_type_has_domain_def)
 
+lemma xxxxx:
+  assumes has_dom: \<open>with_type_has_domain class2R D\<close>
+  assumes class1_def: \<open>class1 \<equiv> (class1P, class1R)\<close>
+  assumes class2_def: \<open>class2 \<equiv> (class2P, class2R)\<close>
+  assumes class1P_def: \<open>class1P \<equiv> \<lambda>S p. D S p \<and> pred' S p\<close>
+  shows \<open>with_type_compat_rel (fst class1) S (snd class2)\<close>
+  using has_dom
+  by (simp add: with_type_has_domain_def with_type_compat_rel_def class1_def class2_def class1P_def)
+
 
 
 ML \<open>
 
 fun define_stuff pos class lthy = let
   open Conv
-  val (_,R,D,rel_thm) = get_relation_thm lthy class
+  val (_,R,D,has_dom_thm) = get_relation_thm lthy class
   val binding = Binding.make ("with_type_" ^ Class.class_prefix class, pos)
   val (rel_const,rel_def,lthy) = local_def (Binding.suffix_name "_rel" binding) (Type.legacy_freeze R) lthy
   val (dom_const,dom_def,lthy) = local_def (Binding.suffix_name "_dom" binding) (Type.legacy_freeze D) lthy
   fun gen_thm lthy = Morphism.thm (Local_Theory.target_morphism lthy)
+  fun gen_term lthy = Morphism.term (Local_Theory.target_morphism lthy)
   fun gen_sym_thm lthy thm = gen_thm lthy thm |> Thm.symmetric
-  val rel_thm' = rel_thm |> fconv_rule (rewr_conv (gen_sym_thm lthy rel_def) |> arg1_conv(*r*) |> arg_conv(*Trueprop*))
+  val has_dom_thm' = has_dom_thm |> fconv_rule (rewr_conv (gen_sym_thm lthy rel_def) |> arg1_conv(*r*) |> arg_conv(*Trueprop*))
                  |> fconv_rule (rewr_conv (gen_sym_thm lthy dom_def) |> arg_conv(*d*) |> arg_conv(*Trueprop*))
-  val ((* rel_thm'', *)lthy) = local_note (Binding.suffix_name "_has_dom" binding) rel_thm' lthy
+  val ((* has_dom_thm'', *)lthy) = local_note (Binding.suffix_name "_has_dom" binding) has_dom_thm' lthy
   val (transferred,transfer_thm) = create_transfer_thm lthy class rel_const rel_def
   val (pred'_const,pred'_def,lthy) = local_def (Binding.suffix_name "_pred'" binding) (Type.legacy_freeze transferred) lthy
   val (pred_const,pred_def,lthy) = local_def (Binding.suffix_name "_pred" binding) 
         (\<^Term>\<open>(\<lambda>S p. \<open>dom_const\<close> S p \<and> \<open>pred'_const\<close> S p)\<close> lthy) lthy
   val (wt_class_const,wt_class_def,lthy) = local_def binding (HOLogic.mk_prod (pred_const, rel_const)) lthy
-(*   \<open>with_type_semigroup_add_class \<equiv> (with_type_semigroup_add_class_pred, with_type_semigroup_add_class_rel)\<close>
- *)
-(*   val transfer_thm' = 
-      (@{thm aux} OF [wt_class_def, wt_class_def, pred_def, pred'_def, thm'] OF [transfer_thm])
-      |> Thm.eq_assumption 1
-      |> Thm.eq_assumption 1
-      |> Thm.eq_assumption 1 *)
   val transfer_thm' = (@{thm aux} OF [gen_thm lthy wt_class_def, gen_thm lthy wt_class_def,
-      gen_thm lthy pred_def, gen_thm lthy pred'_def, rel_thm'] OF [gen_thm lthy transfer_thm])
+      gen_thm lthy pred_def, gen_thm lthy pred'_def, has_dom_thm'] OF [gen_thm lthy transfer_thm])
         |> Thm.eq_assumption 1 |> Thm.eq_assumption 1 |> Thm.eq_assumption 1
   val ((* transfer_thm'', *)lthy) = local_note (Binding.suffix_name "_transfer" binding) transfer_thm' lthy
-(* val _ = transfer_thm''  |> \<^print> *)
+  val with_compat_rel_thm = @{thm xxxxx} OF (map (gen_thm lthy) [has_dom_thm', wt_class_def, wt_class_def, pred_def])
+  val lthy = local_note (Binding.suffix_name "_rel_compat" binding) with_compat_rel_thm lthy
+val _ = wt_class_const |> gen_term lthy |> dest_Const |> fst |> \<^print>
+  val info : With_Type.with_type_info = {
+    class = class,
+    rep_class_data = wt_class_const |> gen_term lthy |> dest_Const |> fst,
+    with_type_compat_rel = gen_thm lthy with_compat_rel_thm,
+    rep_class_data_thm = NONE, (* TODO put something here? *)
+    transfer = SOME (gen_thm lthy transfer_thm')
+  }
+  val lthy = Local_Theory.declaration {syntax=false, pervasive=true} (fn m => fn context =>
+    With_Type.add_with_type_info_generic (With_Type.morphism m info) context) lthy 
 in
   lthy
 end
