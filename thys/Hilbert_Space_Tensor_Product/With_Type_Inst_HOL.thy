@@ -2,39 +2,10 @@ theory With_Type_Inst_HOL
   imports With_Type
 begin
 
-subsection \<open>Finite\<close>
-
-definition with_type_class_finite :: \<open>('a set \<Rightarrow> unit \<Rightarrow> bool) \<times> (('a \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> (unit \<Rightarrow> unit \<Rightarrow> bool))\<close>
-  where \<open>with_type_class_finite = (\<lambda>F _. finite F, \<lambda>_. (=))\<close>
-
-lemma finite_transfer'[unfolded case_prod_unfold]:
-  includes lifting_syntax
-  fixes r :: \<open>'rep\<Rightarrow>'abs\<Rightarrow>bool\<close>
-  assumes [transfer_rule]: \<open>bi_unique r\<close> \<open>right_total r\<close>
-  shows \<open>(snd with_type_class_finite r ===> (\<longleftrightarrow>)) (fst with_type_class_finite (Collect (Domainp r))) (\<lambda>_::unit. class.finite TYPE('abs))\<close>
-  unfolding class.finite_def with_type_class_finite_def fst_conv
-  by transfer_prover
-
-lemma with_type_compat_rel_finite': \<open>with_type_compat_rel (fst with_type_class_finite) S (snd with_type_class_finite)\<close>
-  by (auto simp: with_type_class_finite_def with_type_compat_rel_def)
-
-setup \<open>
-With_Type.add_with_type_info_global {
-  class = \<^class>\<open>finite\<close>,
-  rep_class_data = \<^const_name>\<open>with_type_class_finite\<close>,
-  with_type_compat_rel = @{thm with_type_compat_rel_finite'},
-  rep_class_data_thm = NONE,
-  transfer = SOME @{thm finite_transfer'}
-}
-\<close>
-
-subsection \<open>Semigroup, additive\<close>
-
-subsection \<open>XXX\<close>
-
+local_setup \<open>define_stuff \<^here> \<^class>\<open>finite\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>semigroup_add\<close>\<close>
 
-(* local_setup \<open>define_stuff \<^here> \<^class>\<open>ab_semigroup_add\<close>\<close> *)
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ab_semigroup_add\<close>\<close>
 
 subsection \<open>Example\<close>
 
@@ -79,18 +50,18 @@ qed
 
 lemma example_type:
   includes lifting_syntax
-  shows \<open>with_type with_type_class_type undefined
+  shows \<open>with_type with_type_type_class undefined
       (\<lambda>Rep (Abs::int \<Rightarrow> 'abs). undefined (3::nat))\<close>
   sorry
 
 lemma example_finite:
   includes lifting_syntax
-  shows \<open>with_type with_type_class_finite undefined
+  shows \<open>with_type with_type_finite_class undefined
       (\<lambda>Rep (Abs::int \<Rightarrow> 'abs::finite). undefined (3::nat))\<close>
   sorry
 
 ML \<open>
-With_Type.with_type_cancel \<^context> @{thm example_semigroup2}
+With_Type.with_type_cancel \<^context> @{thm example_finite}
 \<close>
 
 end (* experiment *)

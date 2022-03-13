@@ -27,14 +27,14 @@ definition \<open>with_type = (\<lambda>(C,R) (S,rep_ops) P. S\<noteq>{} \<and> 
   and R :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool)\<close>
   and C :: \<open>'rep set \<Rightarrow> 'rep_ops \<Rightarrow> bool\<close> and rep_ops :: \<open>'rep_ops\<close>
 
-definition with_type_class_type where \<open>with_type_class_type = ((\<lambda>_ (_::unit). True), (\<lambda>_. (=)))\<close>
+definition with_type_type_class where \<open>with_type_type_class = ((\<lambda>_ (_::unit). True), (\<lambda>_. (=)))\<close>
 
-lemma with_type_compat_rel_type: \<open>with_type_compat_rel (fst with_type_class_type) S (snd with_type_class_type)\<close>
-  by (simp add: with_type_class_type_def with_type_compat_rel_def Domainp_iff)
+lemma with_type_compat_rel_type: \<open>with_type_compat_rel (fst with_type_type_class) S (snd with_type_type_class)\<close>
+  by (simp add: with_type_type_class_def with_type_compat_rel_def Domainp_iff)
 
 (* Demonstration *)
-lemma \<open>with_type with_type_class_type (S,()) P \<longleftrightarrow> S\<noteq>{} \<and> (\<forall>Rep Abs. type_definition Rep Abs S \<longrightarrow> P Rep Abs)\<close>
-  by (auto simp: with_type_def with_type_class_type_def with_type_compat_rel_def)
+lemma \<open>with_type with_type_type_class (S,()) P \<longleftrightarrow> S\<noteq>{} \<and> (\<forall>Rep Abs. type_definition Rep Abs S \<longrightarrow> P Rep Abs)\<close>
+  by (auto simp: with_type_def with_type_type_class_def with_type_compat_rel_def)
 
 lemma with_typeI:
   fixes Sp :: \<open>'a set \<times> 'c\<close> and CR
@@ -160,7 +160,7 @@ attribute_setup cancel_with_type =
 setup \<open>
 With_Type.add_with_type_info_global {
   class = \<^class>\<open>type\<close>,
-  rep_class_data = \<^const_name>\<open>with_type_class_type\<close>,
+  rep_class_data = \<^const_name>\<open>with_type_type_class\<close>,
   with_type_compat_rel = @{thm with_type_compat_rel_type},
   rep_class_data_thm = NONE,
   transfer = NONE
@@ -209,16 +209,21 @@ term \<open>(\<lambda>(x,y,z). undefined x y)\<close>
 
 ML \<open>
 fun get_params_of_class thy class = let
-val (const,params_ordered) = Class.rules thy class |> fst |> the |> Thm.prop_of |> HOLogic.dest_Trueprop |> dest_args []
-val class_params = Class.these_params thy [class]
-val final_params = params_ordered |> map (fn Const (const,T) => 
-    get_first (fn (name,(_,(const',_))) => if const=const' then SOME (name,const,T) else NONE) class_params |> the)
-val const_curried = curry_term (map (fn (n,_,T) => (n,T)) final_params) const
+  val (const,params_ordered) = Class.rules thy class |> fst |> the |> Thm.prop_of |> HOLogic.dest_Trueprop |> dest_args []
+  val class_params = Class.these_params thy [class]
+  val no_params = null class_params
+  val final_params = 
+    if no_params then []
+    else params_ordered |> map (fn Const (const,T) =>
+      get_first (fn (name,(_,(const',_))) => if const=const' then SOME (name,const,T) else NONE) class_params |> the)
+  val const_curried = 
+    if no_params then Abs("", \<^typ>\<open>unit\<close>, const $ Logic.mk_type (TVar(("'a",0),\<^sort>\<open>type\<close>)))
+    else curry_term (map (fn (n,_,T) => (n,T)) final_params) const
 in
-  (const_curried,final_params)
+  (const,const_curried,final_params)
 end
 ;;
-get_params_of_class \<^theory> \<^class>\<open>group_add\<close> |> fst |> Thm.cterm_of \<^context>
+get_params_of_class \<^theory> \<^class>\<open>group_add\<close> |> #2 |> Thm.cterm_of \<^context>
 \<close>
 
 
@@ -371,7 +376,7 @@ fun get_relation_thm ctxt class = let
   fun has_tvar (TVar _) = true
     | has_tvar (Type (_,Ts)) = exists has_tvar Ts
     | has_tvar _ = false
-  val rep_paramT0 = get_params_of_class (Proof_Context.theory_of ctxt) class |> snd |> map (fn (_,_,T) => T) |> HOLogic.mk_tupleT
+  val rep_paramT0 = get_params_of_class (Proof_Context.theory_of ctxt) class |> #3 |> map (fn (_,_,T) => T) |> HOLogic.mk_tupleT
   val repT = TFree("'rep",\<^sort>\<open>type\<close>)
   val rep_paramT = TVar(("'rep_param",0),\<^sort>\<open>type\<close>)
   val absT = TFree("'abs",\<^sort>\<open>type\<close>)
@@ -417,13 +422,22 @@ ML \<open>fun local_def binding t = Local_Theory.define ((binding, Mixfix.NoSyn)
 ML \<open>fun local_note binding thm = Local_Theory.note ((binding,[]), [thm]) #> snd\<close>
      (* #> (fn ((_,[thm]), lthy) => (thm,lthy))\<close> *)
 
+
+
+lemma aux1: 
+  fixes r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
+  assumes \<open>right_total r\<close>
+  assumes \<open>Domainp r = (\<lambda>x. x \<in> S)\<close>
+  shows \<open>(rel_set r) S (UNIV :: 'abs set)\<close>
+  using assms right_total_UNIV_transfer by fastforce
+
 ML \<open>
 (* rel_const must use 'rep, 'abs *)
 fun create_transfer_thm ctxt class rel_const rel_const_def_thm = let
   val thy = Proof_Context.theory_of ctxt
-  val (class_const, _) = get_params_of_class thy class
+  val (class_const, class_const_curried, _) = get_params_of_class thy class
   val class_const_def_thm = Proof_Context.get_thm ctxt ((class_const |> dest_Const |> fst) ^ "_def") |> Drule.abs_def
-  val class_const = subst_TVars [(("'a",0), TFree("'abs",\<^sort>\<open>type\<close>))] class_const
+  val class_const = subst_TVars [(("'a",0), TFree("'abs",\<^sort>\<open>type\<close>))] class_const_curried
   val goal = \<^Term>\<open>Trueprop ((rel_fun (\<open>rel_const\<close> r) (\<longleftrightarrow>)) ?X \<open>class_const\<close>)\<close> ctxt
   val bi_unique = \<^prop>\<open>bi_unique (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool)\<close>
   val right_total = \<^prop>\<open>right_total (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool)\<close>
@@ -433,15 +447,22 @@ fun create_transfer_thm ctxt class rel_const rel_const_def_thm = let
   fun tac {context=ctxt, prems=[bi_unique, right_total, domain_r]} =
     Raw_Simplifier.rewrite_goal_tac ctxt [rel_const_def_thm, class_const_def_thm] 1
     THEN 
-    Transfer.transfer_prover_tac (ctxt |> Thm.proof_attributes [Transfer.transfer_add] bi_unique |> snd
-                                       |> Thm.proof_attributes [Transfer.transfer_add] right_total |> snd
-                                       |> Thm.proof_attributes [Transfer.transfer_domain_add] domain_r |> snd) 1
+    Transfer.transfer_prover_tac (ctxt 
+      |> Thm.proof_attributes [Transfer.transfer_add] bi_unique |> snd
+      |> Thm.proof_attributes [Transfer.transfer_add] right_total |> snd
+      |> Thm.proof_attributes [Transfer.transfer_add] (@{thm aux1} OF [right_total, domain_r]) |> snd
+      |> Thm.proof_attributes [Transfer.transfer_domain_add] domain_r |> snd
+              ) 1
     | tac _ = raise Match (* Should not happen *)
   val thm = Goal.prove ctxt ["r","S"] [bi_unique, right_total, domain_r] goal tac
   val transferred = thm
     |> Thm.concl_of |> HOLogic.dest_Trueprop
     |> dest_comb |> fst |> dest_comb |> snd
     |> lambda (Var(("S",0),HOLogic.mk_setT (TFree("'rep",\<^sort>\<open>type\<close>))))
+  (* Check if all is right: *)
+  val tfrees = Term.add_tfrees transferred []
+  val _ = tfrees = [("'rep",\<^sort>\<open>type\<close>)]
+            orelse raise TERM ("create_transfer_thm: transferred term contains type variables besides 'rep", [transferred, Thm.prop_of thm])
   in
     (transferred, thm)
   end
@@ -494,6 +515,7 @@ fun define_stuff pos class lthy = let
                  |> fconv_rule (rewr_conv (gen_sym_thm lthy dom_def) |> arg_conv(*d*) |> arg_conv(*Trueprop*))
   val ((* has_dom_thm'', *)lthy) = local_note (Binding.suffix_name "_has_dom" binding) has_dom_thm' lthy
   val (transferred,transfer_thm) = create_transfer_thm lthy class rel_const rel_def
+val _ = \<^print> (transfer_thm,transferred)
   val (pred'_const,pred'_def,lthy) = local_def (Binding.suffix_name "_pred'" binding) (Type.legacy_freeze transferred) lthy
   val (pred_const,pred_def,lthy) = local_def (Binding.suffix_name "_pred" binding) 
         (\<^Term>\<open>(\<lambda>S p. \<open>dom_const\<close> S p \<and> \<open>pred'_const\<close> S p)\<close> lthy) lthy
