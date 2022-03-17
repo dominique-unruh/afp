@@ -2,6 +2,81 @@ theory With_Type_Inst_Complex_Bounded_Operators
   imports With_Type_Inst_HOL Complex_Bounded_Operators.Complex_Bounded_Linear_Function
 begin
 
+declare fun_eq_iff[with_type_simps]
+
+local_setup \<open>define_stuff \<^here> \<^class>\<open>scaleC\<close>\<close>
+
+lemmas with_type_ab_group_add_class_transfer'[transfer_rule] = with_type_ab_group_add_class_transfer[
+    unfolded with_type_ab_group_add_class_def fst_conv snd_conv with_type_ab_group_add_class_rel_def,
+    THEN tmp4]
+lemmas with_type_scaleC_class_transfer'[transfer_rule] = with_type_scaleC_class_transfer[
+    unfolded with_type_scaleC_class_def fst_conv snd_conv with_type_scaleC_class_rel_def,
+    THEN tmp]
+declare class.complex_vector_axioms_def[with_type_simps]
+
+(* schematic_goal
+  assumes [transfer_rule]: \<open>bi_unique r\<close> \<open>right_total r\<close> \<open>rel_set r S UNIV\<close>
+  assumes [transfer_domain_rule]: \<open>Domainp r = (\<lambda>x. x \<in> S)\<close>
+  shows \<open>rel_fun
+          (rel_prod (rel_fun (=) (rel_fun r r))
+            (rel_prod (rel_fun (=) (rel_fun r r))
+              (rel_prod (rel_fun r (rel_fun r r))
+                (rel_prod r (rel_prod (rel_fun r (rel_fun r r)) (rel_fun r r))))))
+          (=) ?X
+          (\<lambda>(scaleR, scaleCa, plusa, zero, minus, uminus).
+              class.scaleC scaleR scaleCa \<and>
+              class.ab_group_add plusa zero minus uminus \<and>
+              ((\<forall>a x y. scaleCa a (plusa x y) = plusa (scaleCa a x) (scaleCa a y)) \<and>
+               (\<forall>a b x. scaleCa (a + b) x = plusa (scaleCa a x) (scaleCa b x))) \<and>
+              (\<forall>a b x. scaleCa a (scaleCa b x) = scaleCa (a * b) x) \<and> (\<forall>x. scaleCa 1 x = x))\<close>
+  apply transfer_prover_start
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+          apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+                      apply transfer_step
+          apply transfer_step
+  apply transfer_prover_end
+ *)
+
+local_setup \<open>define_stuff \<^here> \<^class>\<open>complex_vector\<close>\<close>
+
+(* class complex_inner = complex_vector + sgn_div_norm + dist_norm + uniformity_dist + open_uniformity + *)
+(* class chilbert_space =  complex_inner + complete_space *)
+
+
+
+
+
+
+ML \<open>
+  \<^class>\<open>chilbert_space\<close>
+\<close>
+
+
 ML \<open>Class.rules \<^theory> \<^class>\<open>complex_vector\<close> |> fst\<close>
 
 ML \<open>val (relationT, relationR, relationD, relationThm) = get_relation_thm \<^context> \<^class>\<open>complex_vector\<close>\<close>
