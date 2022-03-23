@@ -47,7 +47,7 @@ fun antiquotation_Term range src ctxt = let
         map_antiquot'
 (* TODO: we convert the term to cterm each time. Should be done once using the env *)
 (* TODO: use own function for instantiating more quickly? (By preprocessing which vars have which types and hence instantiating without having to go through the whole thm-instantiate stuff) *)
-    val ml_code = "(fn inst => fn t => fn ctxt => Thm.reflexive (Thm.cterm_of ctxt t) |> infer_instantiate ctxt (map (apsnd (Thm.cterm_of ctxt)) inst) |> Thm.rhs_of |> Thm.term_of) " 
+    val ml_code = "(fn inst => fn t => fn ctxt => Thm.reflexive (Thm.cterm_of ctxt t) |> Drule.infer_instantiate ctxt (List.map (Library.apsnd (Thm.cterm_of ctxt)) inst) |> Thm.rhs_of |> Thm.term_of) " 
         (* ^ ML_Context.struct_name ctxt ^ ".ML_context " -- Cannot use this context because the terms we put in must be checked with a current context *) ^ ml_subst ^ " " ^ ml_term
         |> ML_Syntax.atomic |> ML_Lex.tokenize_range range
     val env = map_antiquot' |> map (fn (_,(env,_)) => env) |> flat

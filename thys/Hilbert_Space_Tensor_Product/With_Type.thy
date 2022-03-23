@@ -209,7 +209,9 @@ term \<open>(\<lambda>(x,y,z). undefined x y)\<close>
 
 ML \<open>
 fun get_params_of_class thy class = let
-  val (const,params_ordered) = Class.rules thy class |> fst |> the |> Thm.prop_of |> HOLogic.dest_Trueprop |> dest_args []
+  val (const,params_ordered) = Class.rules thy class |> fst |> the |> Thm.prop_of
+      |> map_types (map_type_tvar (fn (ni,_) => TVar (ni,\<^sort>\<open>type\<close>)))
+      |> HOLogic.dest_Trueprop |> dest_args []
   val class_params = Class.these_params thy [class]
   val no_params = null class_params
   val final_params = 
@@ -366,6 +368,24 @@ lemma Domainp_rel_fun_equal_onp:
 named_theorems with_type_simps
 
 ML \<open>
+fun has_tvar (TVar _) = true
+  | has_tvar (Type (_,Ts)) = exists has_tvar Ts
+  | has_tvar _ = false
+fun has_var_tvar (t$u) = has_var_tvar t orelse has_var_tvar u
+  | has_var_tvar (Abs(_,T,body)) = has_tvar T orelse has_var_tvar body
+  | has_var_tvar (Const(_,T)) = has_tvar T
+  | has_var_tvar (Free(_,T)) = has_tvar T
+  | has_var_tvar (Var(_,T)) = true
+  | has_var_tvar (Bound _) = false
+fun has_tvar' (t$u) = has_var_tvar t orelse has_var_tvar u
+  | has_tvar' (Abs(_,T,body)) = has_tvar T orelse has_var_tvar body
+  | has_tvar' (Const(_,T)) = has_tvar T
+  | has_tvar' (Free(_,T)) = has_tvar T
+  | has_tvar' (Var(_,T)) = has_tvar T
+  | has_tvar' (Bound _) = false
+\<close>
+
+ML \<open>
 (* Returns (T,R,D,thm) where:
   T is the type of the type of parameters of the type representation
   R (term) is a function that maps a relation between representation and abstract type
@@ -375,9 +395,6 @@ ML \<open>
 *)
 fun get_relation_thm ctxt class = let
   open Conv
-  fun has_tvar (TVar _) = true
-    | has_tvar (Type (_,Ts)) = exists has_tvar Ts
-    | has_tvar _ = false
   val rep_paramT0 = get_params_of_class (Proof_Context.theory_of ctxt) class |> #3 |> map (fn (_,_,T) => T) |> HOLogic.mk_tupleT
   val repT = TFree("'rep",\<^sort>\<open>type\<close>)
   val rep_paramT = TVar(("'rep_param",0),\<^sort>\<open>type\<close>)
@@ -460,11 +477,13 @@ fun has_tfree (TFree _) = true
 
 ML \<open>
 (* TODO extensible *)
-fun mk_relation_for_type ctxt (T:typ) = if not (has_tfree T) then HOLogic.eq_const T
-    else case T of
+fun mk_relation_for_type ctxt (T:typ) = (* if not (has_tfree T) then HOLogic.eq_const T
+    else *) case T of
     TFree(n,s) => Free("r"^n, TFree("'abs"^n,s) --> TFree(n,s) --> HOLogic.boolT)
     | \<^Type>\<open>fun T U\<close> => \<^Term>\<open>rel_fun \<open>mk_relation_for_type ctxt T\<close> \<open>mk_relation_for_type ctxt U\<close>\<close> ctxt
     | \<^Type>\<open>prod T U\<close> => \<^Term>\<open>rel_prod \<open>mk_relation_for_type ctxt T\<close> \<open>mk_relation_for_type ctxt U\<close>\<close> ctxt
+    | \<^Type>\<open>set T\<close> => \<^Term>\<open>rel_set \<open>mk_relation_for_type ctxt T\<close>\<close> ctxt
+    | Type(_, []) => HOLogic.eq_const T
     | T => raise TYPE("mk_relation_for_type", [T], [])
 \<close>
 
@@ -478,6 +497,11 @@ in thm end
 unvarify_sortify \<^context> (get_raw_definition \<^context> \<^const_name>\<open>fst\<close>)
 \<close>
 
+ML \<open>
+val unvarify_sortify' = map_types (map_type_tvar (fn ((n,0),s) => TFree (n,\<^class>\<open>type\<close> :: s)))
+\<close>
+
+
 lemma RelI:
   assumes \<open>R X Y\<close>
   shows \<open>Transfer.Rel R X Y\<close>
@@ -485,22 +509,24 @@ lemma RelI:
 
 named_theorems with_type_transfer_rules
 
-declare eq_transfer[with_type_transfer_rules]
-declare case_prod_transfer[with_type_transfer_rules]
-declare Pair_transfer[with_type_transfer_rules]
-declare prod.bi_unique_rel[with_type_transfer_rules]
-
 lemma [with_type_transfer_rules]:
   includes lifting_syntax
-  shows \<open>((\<longleftrightarrow>) ===> (\<longleftrightarrow>) ===> (\<longleftrightarrow>)) (\<and>) (\<and>)\<close>
-  by auto
+  shows \<open>Transfer.Rel ((\<longleftrightarrow>) ===> (\<longleftrightarrow>) ===> (\<longleftrightarrow>)) (\<and>) (\<and>)\<close>
+  by (simp add: Rel_eq_refl rel_fun_eq)
 
-lemma [with_type_transfer_rules]:
+lemma with_type_transfer_Ex[with_type_transfer_rules]:
   includes lifting_syntax
   assumes \<open>right_total A\<close>
   assumes \<open>Domainp A = S\<close>
-  shows \<open>rel_fun (rel_fun A (=)) (=) (Bex (Collect S)) Ex\<close>
-  using assms(1) assms(2) right_total_Ex_transfer by blast
+  shows \<open>Transfer.Rel (rel_fun (rel_fun A (=)) (=)) (Bex (Collect S)) Ex\<close>
+  by (metis Rel_def assms(1) assms(2) right_total_Ex_transfer)
+
+lemma with_type_transfer_Collect[with_type_transfer_rules]:
+  includes lifting_syntax
+  assumes \<open>right_total A\<close>
+  assumes \<open>Domainp A = S\<close>
+  shows \<open>Transfer.Rel (rel_fun (rel_fun A (=)) (rel_set A)) (\<lambda>P. {x. P x \<and> S x}) Collect\<close>
+  by (smt (verit, best) Collect_cong Rel_abs Rel_app Rel_def assms(1) assms(2) right_total_Collect_transfer)
 
 ML \<open>
   infix 1 THEN_ALL_BUT_FIRST_NEW
@@ -515,49 +541,120 @@ fun error_tac ctxt msg i = SUBGOAL (fn (t,_) => error (msg (Syntax.string_of_ter
 \<close>
 
 
-
-
 ML \<open>
-fun create_transfer_for_const ctxt (const_name:string) = let
+fun create_transfer_for_term ctxt (term:term) = let
   open Conv
+  (* val _ = has_var_tvar term andalso raise TERM ("create_transfer_for_term: contains schematic (term/type) variables", [term]) *)
+  val _ = has_tvar' term andalso raise TERM ("create_transfer_for_term: contains schematic type variables", [term])
   val rules = Proof_Context.get_thms ctxt \<^named_theorems>\<open>with_type_transfer_rules\<close>
-
-  val def = get_raw_definition ctxt const_name |> unvarify_sortify ctxt
-  val const = def |> Thm.lhs_of |> Thm.term_of
-  val rel = mk_relation_for_type ctxt (fastype_of const)
-  val basic_rels = Term.add_frees rel [] |> \<^print>
+  val rel = mk_relation_for_type ctxt (fastype_of term)
+  val basic_rels = Term.add_frees rel []
   fun S_of_r (r,T) = Free("S" ^ r, domain_type T |> HOLogic.mk_setT)
   val assms = basic_rels |> map (fn r =>
       [\<^Term>\<open>Trueprop (bi_unique \<open>Free r\<close>)\<close> ctxt, \<^Term>\<open>Trueprop (right_total \<open>Free r\<close>)\<close> ctxt,
         \<^Term>\<open>Trueprop (Domainp \<open>Free r\<close> = (\<lambda>x. x \<in> \<open>S_of_r r\<close>))\<close> ctxt]) |> flat
-  val goal = \<^Term>\<open>Trueprop (\<open>rel\<close> ?X \<open>const\<close>)\<close> ctxt
+  val goal = \<^Term>\<open>Trueprop (Transfer.Rel \<open>rel\<close> ?X \<open>term\<close>)\<close> ctxt
   fun step_premise_tac ctxt prems i = 
     ((resolve_tac ctxt (prems @ rules) THEN_ALL_NEW step_premise_tac ctxt prems) ORELSE' error_tac ctxt (fn t => "NYI: "^t)) i
   fun step_tac ctxt prems i = 
-    print_tac ctxt "AAA"
-    THEN
     ((resolve_tac ctxt rules
-      ORELSE' (resolve_tac ctxt @{thms RelI} THEN' resolve_tac ctxt rules)
+      (* ORELSE' (resolve_tac ctxt @{thms RelI} THEN' resolve_tac ctxt rules) *)
       ORELSE' error_tac ctxt (fn t => "No transfer rule found for " ^ t))
      THEN_ALL_NEW step_premise_tac ctxt prems) i
-    THEN
-    print_tac ctxt "ZZZ"
   fun tac {context=ctxt, prems, ...} = 
-    (CONVERSION (rewr_conv def |> arg_conv |> arg_conv)
-    THEN'
-    (Transfer.transfer_prover_start_tac ctxt
-     THEN_ALL_BUT_FIRST_NEW
-     step_tac ctxt prems)
-    THEN'
-    resolve_tac ctxt @{thms refl}
-    THEN'
-    K (print_tac ctxt "YYY")) 1
-  val thm = Goal.prove ctxt [](* TODO *) assms goal tac
-val _ = goal |> Thm.cterm_of ctxt|> \<^print>
+    (resolve_tac ctxt @{thms RelI}
+     THEN'
+     (Transfer.transfer_prover_start_tac ctxt
+       THEN_ALL_BUT_FIRST_NEW
+       step_tac ctxt prems)
+      THEN'
+      resolve_tac ctxt @{thms refl}) 1
+  val thm = Goal.prove ctxt (map fst basic_rels @ map (fn s => "S" ^ fst s) basic_rels)(* TODO *) assms goal tac
+in thm end
+\<close>
+
+lemmas RelI' = RelI[of \<open>rel_fun _ _\<close>]
+
+declare eq_transfer[THEN RelI', with_type_transfer_rules]
+declare case_prod_transfer[THEN RelI', with_type_transfer_rules]
+(* declare Pair_transfer[with_type_transfer_rules] *)
+declare prod.bi_unique_rel[with_type_transfer_rules]
+
+ML \<open>
+fun create_transfer_for_const ctxt (const_name:string) = let
+  open Conv
+  val def = get_raw_definition ctxt const_name(*  |> unvarify_sortify lthy *)
+  (* val const = def |> Thm.lhs_of |> Thm.term_of *)
+  val term = def |> Thm.rhs_of |> Thm.term_of |> unvarify_sortify'
+  val thm = create_transfer_for_term ctxt term
+  val thm = thm |> fconv_rule (rewr_conv (Thm.symmetric def) |> arg_conv |> arg_conv |> concl_conv ~1)
   in thm end
 ;;
-create_transfer_for_const \<^context> \<^const_name>\<open>case_prod\<close>
+create_transfer_for_const \<^context> \<^const_name>\<open>fst\<close>
 \<close>
+
+ML \<open>
+fun bind_transfer_for_const pos (const_name:string) lthy = let
+  val thm = create_transfer_for_const lthy const_name |> \<^print>
+  val binding = Binding.make ("with_type_transfer_" ^ String.translate (fn #"." => "_" | c => String.str c) const_name, pos) |> \<^print>
+  val (_,lthy) = Local_Theory.note ((binding, @{attributes [with_type_transfer_rules]}), [thm]) lthy
+in lthy end
+\<close>
+
+lemma [with_type_transfer_rules]:
+  includes lifting_syntax
+  shows \<open>Transfer.Rel ((=) ===> (=) ===> (=)) implies implies\<close>
+  by (simp add: Rel_eq_refl rel_fun_eq)
+
+declare Lifting_Set.member_transfer[THEN RelI', with_type_transfer_rules]
+
+declare right_total_All_transfer[THEN RelI', with_type_transfer_rules]
+
+declare right_total_eq[with_type_transfer_rules]
+declare bi_unique_rel_set[with_type_transfer_rules]
+declare right_total_rel_set[with_type_transfer_rules]
+
+lemma [with_type_transfer_rules]: \<open>Domainp T = DT1 \<Longrightarrow> Domainp (rel_set T) = (\<lambda>A. Ball A DT1)\<close>
+  using Domainp_set by auto
+
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>fst\<close>\<close>
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>disj\<close>\<close>
+thm with_type_transfer_HOL_disj
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>insert\<close>\<close>
+thm with_type_transfer_rules
+thm finite_def
+
+declare Lifting_Set.empty_transfer[THEN RelI[of \<open>rel_set _\<close>], with_type_transfer_rules]
+declare Lifting_Set.finite_transfer[THEN RelI', with_type_transfer_rules]
+
+schematic_goal 
+  includes lifting_syntax
+  assumes \<open>bi_unique r\<close> \<open>right_total r\<close> \<open>Domainp r = (\<lambda>x. x \<in> S)\<close>
+  shows \<open>(rel_set r ===> (=)) ?X (lfp (\<lambda>p x. x = {} \<or> (\<exists>A a. x = insert a A \<and> p A)))\<close>
+  apply transfer_prover_start
+  apply (rule with_type_transfer_rules)
+  apply (rule assms)
+  apply (rule assms)
+  apply (rule assms)
+             apply (rule with_type_transfer_rules)
+  apply (rule with_type_transfer_rules)
+  apply (rule assms)
+  apply (rule with_type_transfer_rules)
+  apply (rule with_type_transfer_rules)
+  apply (rule assms)
+  apply (rule assms)
+  apply (rule with_type_transfer_rules)
+  apply (rule with_type_transfer_rules)
+  apply (rule assms)
+  apply (rule with_type_transfer_rules)
+  apply (rule assms)
+  apply (rule with_type_transfer_rules)
+(* DANGEROUS GOAL! UNIFIES WITH EVERYTHING! *)
+  oops
+
+
+
+(* local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>finite\<close>\<close> *)
 
 
 ML \<open>
@@ -565,9 +662,9 @@ ML \<open>
 fun create_transfer_thm ctxt class rel_const rel_const_def_thm = let
   val thy = Proof_Context.theory_of ctxt
   val (class_const, class_const_curried, _) = get_params_of_class thy class
-  val class_const_def_thm = Proof_Context.get_thm ctxt ((class_const |> dest_Const |> fst) ^ "_def") |> Drule.abs_def
-  val class_const = subst_TVars [(("'a",0), TFree("'abs",\<^sort>\<open>type\<close>))] class_const_curried
-  val goal = \<^Term>\<open>Trueprop ((rel_fun (\<open>rel_const\<close> r) (\<longleftrightarrow>)) ?X \<open>class_const\<close>)\<close> ctxt
+  (* val class_const_def_thm = Proof_Context.get_thm ctxt ((class_const |> dest_Const |> fst) ^ "_def") |> Drule.abs_def *)
+  val class_const_curried = subst_TVars [(("'a",0), TFree("'abs",\<^sort>\<open>type\<close>))] class_const_curried
+(*   val goal = \<^Term>\<open>Trueprop ((rel_fun (\<open>rel_const\<close> r) (\<longleftrightarrow>)) ?X \<open>class_const\<close>)\<close> ctxt
   val bi_unique = \<^prop>\<open>bi_unique (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool)\<close>
   val right_total = \<^prop>\<open>right_total (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool)\<close>
   val domain_r = \<^prop>\<open>Domainp (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool) = (\<lambda>x. x \<in> S)\<close>
@@ -608,7 +705,10 @@ fun create_transfer_thm ctxt class rel_const rel_const_def_thm = let
       resolve_tac ctxt @{thms reflexive} 1
     end
     | tac _ = raise Match (* Should not happen *)
-  val thm = Goal.prove ctxt ["r","S"] [bi_unique, right_total, domain_r] goal tac
+  val thm = Goal.prove ctxt ["r","S"] [bi_unique, right_total, domain_r] goal tac *)
+val _ = \<^print>(1,class_const_curried)
+  val thm = create_transfer_for_term ctxt class_const_curried
+val _ = \<^print>2
   val transferred = thm
     |> Thm.concl_of |> HOLogic.dest_Trueprop
     |> dest_comb |> fst |> dest_comb |> snd

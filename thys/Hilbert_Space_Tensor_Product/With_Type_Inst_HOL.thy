@@ -2,6 +2,18 @@ theory With_Type_Inst_HOL
   imports With_Type HOL.Real_Vector_Spaces
 begin
 
+
+ML \<open>
+Class.rules \<^theory> \<^class>\<open>finite\<close>
+\<close>
+
+lemma [with_type_transfer_rules]:
+  \<open>Transfer.Rel top TYPE('a) TYPE('b)\<close>
+  by (simp add: RelI)
+
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.finite\<close>\<close>
+
+
 local_setup \<open>define_stuff \<^here> \<^class>\<open>finite\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>semigroup_add\<close>\<close>
 
