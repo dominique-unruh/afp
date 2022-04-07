@@ -7,14 +7,44 @@ ML \<open>
 Class.rules \<^theory> \<^class>\<open>finite\<close>
 \<close>
 
-lemma [with_type_transfer_rules]:
-  \<open>Transfer.Rel top TYPE('a) TYPE('b)\<close>
-  by (simp add: RelI)
+lemma itself_transfer[with_type_transfer_rules]:
+  \<open>Transfer.Rel rel_itself TYPE('a) TYPE('b)\<close>
+  by (simp add: RelI rel_itself.simps)
+
+
+ML \<open>
+Thm.all_axioms_of \<^theory> |> filter (fn (n,th) => String.isSubstring "finite" n andalso String.isSubstring "class" n)
+\<close>
 
 local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.finite\<close>\<close>
+thm with_type_transfer_Finite_Set_class_finite
+(* TODO: should not be for an applied class.finite *)
 
+lemma aux3:
+  includes lifting_syntax
+  assumes \<open>Transfer.Rel R A (B TYPE('a))\<close>
+  shows \<open>Transfer.Rel (rel_itself ===> R) (\<lambda>_. A) B\<close>
+  by (metis Rel_def assms rel_funI rel_itself.cases)
+
+declare with_type_transfer_Finite_Set_class_finite[THEN aux3[where B=\<open>class.finite\<close>], with_type_transfer_rules]
+
+schematic_goal xx:
+\<open>(bi_unique (?r::?'b \<Rightarrow> ?'c \<Rightarrow> bool) \<Longrightarrow> right_total ?r \<Longrightarrow> Domainp ?r = (\<lambda>x. x \<in> S) \<Longrightarrow> 
+  bi_unique ((?r7))) \<Longrightarrow> True\<close>
+  by simp
+
+ML \<open>
+Thm.assumption NONE 1
+@{thm xx}
+\<close>
 
 local_setup \<open>define_stuff \<^here> \<^class>\<open>finite\<close>\<close>
+
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.semigroup_add\<close>\<close>
+thm with_type_transfer_Groups_class_semigroup_add
+
+thm with_type_transfer_rules
+
 local_setup \<open>define_stuff \<^here> \<^class>\<open>semigroup_add\<close>\<close>
 
 (*   shows \<open>rel_fun (rel_fun r (rel_fun r r)) (=) ?X
@@ -27,12 +57,18 @@ declare with_type_semigroup_add_class_transfer[
     transfer_rule]
 declare class.ab_semigroup_add_axioms_def[with_type_simps]
 
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.ab_semigroup_add_axioms\<close>\<close>
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.ab_semigroup_add\<close>\<close>
+
 local_setup \<open>define_stuff \<^here> \<^class>\<open>ab_semigroup_add\<close>\<close>
 
 declare with_type_ab_semigroup_add_class_transfer[
     unfolded with_type_ab_semigroup_add_class_def fst_conv snd_conv with_type_ab_semigroup_add_class_rel_def,
     transfer_rule]
 declare class.comm_monoid_add_axioms_def[with_type_simps]
+
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.comm_monoid_add_axioms\<close>\<close>
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.comm_monoid_add\<close>\<close>
 
 local_setup \<open>define_stuff \<^here> \<^class>\<open>comm_monoid_add\<close>\<close>
 
@@ -60,6 +96,8 @@ lemmas with_type_comm_monoid_add_class_transfer'[transfer_rule] = with_type_comm
     THEN tmp]
 declare class.ab_group_add_axioms_def[with_type_simps]
 
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.ab_group_add_axioms\<close>\<close>
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.ab_group_add\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>ab_group_add\<close>\<close>
 
 
@@ -71,6 +109,25 @@ local_setup \<open>define_stuff \<^here> \<^class>\<open>ab_group_add\<close>\<c
 (* local_setup \<open>define_stuff \<^here> \<^class>\<open>open\<close>\<close> *)
 (* local_setup \<open>define_stuff \<^here> \<^class>\<open>uniformity\<close>\<close> *)
 
+ML \<open>
+Thm.all_axioms_of \<^theory> |> filter (fn (name,thm) => 
+    case Thm.prop_of thm of
+      Const(\<^const_name>\<open>Pure.eq\<close>,_) $ lhs $ _ => 
+         (case head_of lhs of Const(n,_) => n=\<^const_name>\<open>inverse\<close>
+                               | _ => false)
+     | _ => false)
+\<close>
+
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>inverse_rat_inst.inverse_rat\<close>\<close>
+
+ML \<open>
+get_raw_definition \<^context> \<^const_name>\<open>inverse\<close>
+\<close>
+
+  by ERROR: "inverse is overloaded, where do we get the right def?"
+
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>inverse\<close>\<close>
+local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.sgn_div_norm\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>sgn_div_norm\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>dist_norm\<close>\<close>
 

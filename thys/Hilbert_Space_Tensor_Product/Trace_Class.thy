@@ -837,7 +837,7 @@ lemma cblinfun_power_Suc: \<open>cblinfun_power A (Suc n) = cblinfun_power A n o
   by (auto simp: cblinfun_power_Suc' simp flip:  cblinfun_compose_assoc)
 
 lemma cinner_pos_if_pos: \<open>f \<bullet>\<^sub>C (A *\<^sub>V f) \<ge> 0\<close> if \<open>A \<ge> 0\<close>
-  by auto
+  using less_eq_cblinfun_def that by force
 
 (* Proof follows https://link.springer.com/article/10.1007%2FBF01448052 *)
 lemma TODO_name:
