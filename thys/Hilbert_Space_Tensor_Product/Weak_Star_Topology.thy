@@ -241,7 +241,24 @@ qed
 lemma continuous_map_right_comp_weak_star: 
   \<open>continuous_map weak_star_topology weak_star_topology (\<lambda>b::'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L _. b o\<^sub>C\<^sub>L a)\<close> 
   for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
-  sorry
+proof -
+  define f and g where \<open>f x t = (if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0)\<close>
+    and \<open>g f' t' = (if trace_class t' then f' (a o\<^sub>C\<^sub>L t') else 0)\<close> 
+      for x :: \<open>'b \<Rightarrow>\<^sub>C\<^sub>L 'c\<close> and t :: \<open>'c \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> and f' :: \<open>'c \<Rightarrow>\<^sub>C\<^sub>L 'b \<Rightarrow> complex\<close> and t' :: \<open>'c \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
+  have gf: \<open>((\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) \<circ> (\<lambda>b. b o\<^sub>C\<^sub>L a)) = g o f\<close>
+    apply (auto intro!: ext simp add: o_def trace_class_comp_right f_def g_def)
+    by (metis cblinfun_compose_assoc circularity_of_trace trace_class_comp_left)
+  have cont: \<open>continuous_on UNIV (\<lambda>x. g x t)\<close> for t
+    apply (cases \<open>trace_class t\<close>) by (auto simp: g_def)
+  have \<open>continuous_map euclidean euclidean g\<close>
+   by (auto intro!: continuous_on_coordinatewise_then_product cont)
+  then have \<open>continuous_map (pullback_topology UNIV f euclidean) euclidean (g \<circ> f)\<close>
+    by (rule continuous_map_pullback)
+  then show ?thesis
+    unfolding weak_star_topology_def gf[symmetric] f_def
+    apply (rule continuous_map_pullback')
+    by auto
+qed
 
 lemma continuous_map_scaleC_weak_star: \<open>continuous_map weak_star_topology weak_star_topology (scaleC c)\<close>
   apply (subst asm_rl[of \<open>scaleC c = (o\<^sub>C\<^sub>L) (c *\<^sub>C id_cblinfun)\<close>])

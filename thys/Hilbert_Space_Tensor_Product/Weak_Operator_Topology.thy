@@ -371,7 +371,29 @@ proof -
 qed
 
 lemma hausdorff_cweak_operator_topology[simp]: \<open>hausdorff cweak_operator_topology\<close>
-  sorry
+proof (rule hausdorffI)
+  fix A B :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> assume \<open>A \<noteq> B\<close>
+  then obtain y where \<open>A *\<^sub>V y \<noteq> B *\<^sub>V y\<close>
+    by (meson cblinfun_eqI)
+  then obtain x where \<open>x \<bullet>\<^sub>C (A *\<^sub>V y) \<noteq> x \<bullet>\<^sub>C (B *\<^sub>V y)\<close>
+    using cinner_extensionality by blast
+  then obtain U' V' where \<open>open U'\<close> \<open>open V'\<close> and inside: \<open>x \<bullet>\<^sub>C (A *\<^sub>V y) \<in> U'\<close> \<open>x \<bullet>\<^sub>C (B *\<^sub>V y) \<in> V'\<close> and disj: \<open>U' \<inter> V' = {}\<close>
+    by (meson separation_t2)
+  define U'' V'' where \<open>U'' = Pi\<^sub>E UNIV (\<lambda>i. if i=(x,y) then U' else UNIV)\<close> and \<open>V'' = Pi\<^sub>E UNIV (\<lambda>i. if i=(x,y) then V' else UNIV)\<close>
+  from \<open>open U'\<close> \<open>open V'\<close>
+  have \<open>open U''\<close> and \<open>open V''\<close>
+    by (auto simp: U''_def V''_def open_fun_def intro!: product_topology_basis)
+  define U V :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close> where \<open>U = (\<lambda>A (x, y). x \<bullet>\<^sub>C (A *\<^sub>V y)) -` U''\<close> and \<open>V = (\<lambda>a (x, y). x \<bullet>\<^sub>C (a *\<^sub>V y)) -` V''\<close>
+  have openin: \<open>openin cweak_operator_topology U\<close> \<open>openin cweak_operator_topology V\<close>
+    using U_def V_def \<open>open U''\<close> \<open>open V''\<close> openin_cweak_operator_topology by blast+
+  have \<open>A \<in> U\<close> \<open>B \<in> V\<close>
+    using inside by (auto simp: U_def V_def U''_def V''_def)
+  have \<open>U \<inter> V = {}\<close>
+    using disj apply (auto simp: U_def V_def U''_def V''_def PiE_def Pi_iff)
+    by (metis disjoint_iff)
+  show \<open>\<exists>U V. openin cweak_operator_topology U \<and> openin cweak_operator_topology V \<and> A \<in> U \<and> B \<in> V \<and> U \<inter> V = {}\<close>
+    using \<open>A \<in> U\<close> \<open>B \<in> V\<close> \<open>U \<inter> V = {}\<close> openin by blast
+qed
 
 lemma hermitian_limit_hermitian_wot:
   assumes \<open>F \<noteq> \<bottom>\<close>

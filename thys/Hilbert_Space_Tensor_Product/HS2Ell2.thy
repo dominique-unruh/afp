@@ -21,6 +21,13 @@ lemma ccspan_some_chilbert_basis[simp]: \<open>ccspan some_chilbert_basis = \<to
 lemma span_some_chilbert_basis[simp]: \<open>closure (cspan some_chilbert_basis) = UNIV\<close>
   by (metis ccspan.rep_eq ccspan_some_chilbert_basis top_ccsubspace.rep_eq)
 
+lemma cindependent_some_chilbert_basis[simp]: \<open>cindependent some_chilbert_basis\<close>
+  using is_ortho_set_cindependent is_ortho_set_some_chilbert_basis by blast
+
+lemma finite_some_chilbert_basis[simp]: \<open>finite (some_chilbert_basis :: 'a :: {chilbert_space, cfinite_dim} set)\<close>
+  apply (rule cindependent_cfinite_dim_finite)
+  by simp
+
 lemma some_chilbert_basis_nonempty: \<open>(some_chilbert_basis :: 'a::{chilbert_space, not_singleton} set) \<noteq> {}\<close>
 proof (rule ccontr, simp)
   define B :: \<open>'a set\<close> where \<open>B = some_chilbert_basis\<close>

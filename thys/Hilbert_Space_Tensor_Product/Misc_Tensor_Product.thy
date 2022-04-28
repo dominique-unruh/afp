@@ -730,6 +730,11 @@ definition \<open>infsum_in T f A = (if summable_on_in T f A then (THE l. has_su
 
 definition hausdorff where \<open>hausdorff T \<longleftrightarrow> (\<forall>x \<in> topspace T. \<forall>y \<in> topspace T. x \<noteq> y \<longrightarrow> (\<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
 
+lemma hausdorffI: 
+  assumes \<open>\<And>x y. x \<in> topspace T \<Longrightarrow> y \<in> topspace T \<Longrightarrow> x \<noteq> y \<Longrightarrow> \<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}\<close>
+  shows \<open>hausdorff T\<close>
+  using assms by (auto simp: hausdorff_def)
+
 lemma limitin_unique:
   assumes \<open>hausdorff T\<close>
   assumes \<open>F \<noteq> \<bottom>\<close>
