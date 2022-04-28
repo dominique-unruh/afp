@@ -471,7 +471,7 @@ def_ext @{thm class.comm_monoid_add_def}
 
 
 ML \<open>
-(* Returns the definition of constant `const`, in the following form (if possible):
+(* Returns the definitions of constant `const`, in the following form (if possible):
 
   `const` TYPE(?'a) ... TYPE(?'n) == stuff
 
@@ -479,22 +479,23 @@ ML \<open>
 
   and with no sort constraints.
  *)
-fun get_raw_definition ctxt (const:string) = let
+fun get_raw_definitions ctxt (const:string) = let
   val thy = Proof_Context.theory_of ctxt
-  val def' = Thm.all_axioms_of thy |> find_first (fn (name,thm) => 
+  val defs = Thm.all_axioms_of thy |> filter (fn (name,thm) => 
     case Thm.prop_of thm of
       Const(\<^const_name>\<open>Pure.eq\<close>,_) $ lhs $ _ => 
          (case head_of lhs of Const(n,_) => n=const
                                | _ => false)
      | _ => false)
-  val def = case def' of SOME (_,def) => def
-             | NONE => error ("Could not find definition of " ^ const)
-  val def = def_ext def
-in def end;;
-get_raw_definition \<^context> \<^const_name>\<open>fst\<close>
+    |> map snd
+  val _ = null defs andalso error ("Could not find definition of " ^ const)
+  val defs = map def_ext defs
+in defs end;;
+get_raw_definitions \<^context> \<^const_name>\<open>fst\<close>
 ;;
-get_raw_definition \<^context> \<^const_name>\<open>class.semigroup_add\<close>
+get_raw_definitions \<^context> \<^const_name>\<open>class.semigroup_add\<close>
 ;;
+get_raw_definitions \<^context> \<^const_name>\<open>inverse\<close>
 \<close>
 
 ML \<open>
@@ -532,7 +533,7 @@ fun unvarify_sortify ctxt thm = let
   val thm = Thm.instantiate (inst, Vars.empty) thm
 in thm end
 ;;
-unvarify_sortify \<^context> (get_raw_definition \<^context> \<^const_name>\<open>fst\<close>)
+unvarify_sortify \<^context> (get_raw_definitions \<^context> \<^const_name>\<open>fst\<close> |> hd)
 \<close>
 
 ML \<open>
@@ -582,6 +583,18 @@ lemma with_type_transfer_UNIV[with_type_transfer_rules]:
   by (metis Rel_def assms(1) assms(2) right_total_UNIV_transfer)
 
 ML \<open>
+fun trace_tac ctxt str tac i st = let
+  val _ = tracing (str ^ " " ^ string_of_int i ^ " " ^ (Thm.cprem_of st i |> Thm.term_of |> Syntax.string_of_term ctxt))
+  fun after st' = let
+    val new_goals = Thm.prems_of st' |> drop (i-1) |> take (Thm.nprems_of st' - Thm.nprems_of st + 1)
+             |> map (Syntax.string_of_term ctxt)
+    val _ = tracing (str ^ " -> " ^ String.concatWith "\n" new_goals)
+    in Seq.single st end
+  in (tac i THEN after) st end
+\<close>
+
+
+ML \<open>
   infix 1 THEN_ALL_BUT_FIRST_NEW
   fun (tac1 THEN_ALL_BUT_FIRST_NEW tac2) i st =
     st |> (tac1 i THEN (fn st' =>
@@ -596,6 +609,7 @@ fun error_tac ctxt msg i = SUBGOAL (fn (t,_) => error (msg (Syntax.string_of_ter
 
 ML \<open>
 fun create_transfer_for_term ctxt name_fun (term:term) = let
+val _ = \<^print> (Thm.cterm_of ctxt term)
   open Conv
   val _ = has_var_tvar term andalso raise TERM ("create_transfer_for_term: contains schematic (term/type) variables", [term])
   (* val _ = has_tvar' term andalso raise TERM ("create_transfer_for_term: contains schematic type variables", [term]) *)
@@ -613,10 +627,10 @@ fun create_transfer_for_term ctxt name_fun (term:term) = let
   val goal = \<^Term>\<open>Trueprop (Transfer.Rel \<open>rel\<close> ?X \<open>term\<close>)\<close> ctxt
   fun step_premise_tac ctxt prems i = 
     ((resolve_tac ctxt (prems @ rules) THEN_ALL_NEW step_premise_tac ctxt prems) ORELSE' error_tac ctxt (fn t => "NYI: "^t)) i
-fun d s tac i = (print_tac ctxt (s^" "^string_of_int i^" start") THEN tac i THEN print_tac ctxt (s^" "^string_of_int i^" stop"))
+(* fun d s tac i = (print_i_tac ctxt (s^" "^string_of_int i^" start") i THEN tac i THEN print_i_tac ctxt (s^" "^string_of_int i^" stop") i) *)
   fun step_tac ctxt prems i =
     (
-     (resolve_tac ctxt rules
+     (trace_tac ctxt "resolve_tac" (resolve_tac ctxt rules)
       (* ORELSE' (resolve_tac ctxt @{thms RelI} THEN' resolve_tac ctxt rules) *)
       ORELSE' error_tac ctxt (fn t => "No transfer rule found for " ^ t))
      THEN_ALL_NEW step_premise_tac ctxt prems) i
@@ -640,24 +654,28 @@ declare case_prod_transfer[THEN RelI', with_type_transfer_rules]
 declare prod.bi_unique_rel[with_type_transfer_rules]
 
 ML \<open>
-fun create_transfer_for_const ctxt (const_name:string) = let
+fun create_transfers_for_const ctxt (const_name:string) = let
   open Conv
-  val def = get_raw_definition ctxt const_name (*  |> unvarify_sortify lthy *)
+  val defs = get_raw_definitions ctxt const_name (*  |> unvarify_sortify lthy *)
   (* val const = def |> Thm.lhs_of |> Thm.term_of *)
-  val term = def |> Thm.rhs_of |> Thm.term_of |> unvarify_sortify'
-  val thm = create_transfer_for_term ctxt (fn n => ("r"^n,"'rep"^n,"S"^n)) term
-  val thm = thm |> fconv_rule (rewr_conv (Thm.symmetric def) |> arg_conv |> arg_conv |> concl_conv ~1)
-  in thm end
+  fun do_one def = let
+    val term = def |> Thm.rhs_of |> Thm.term_of |> unvarify_sortify'
+    val thm = create_transfer_for_term ctxt (fn n => ("r"^n,"'rep"^n,"S"^n)) term
+    val thm = thm |> fconv_rule (rewr_conv (Thm.symmetric def) |> arg_conv |> arg_conv |> concl_conv ~1)
+    in thm end
+  in map do_one defs end
 ;;
-create_transfer_for_const \<^context> \<^const_name>\<open>fst\<close>
+create_transfers_for_const \<^context> \<^const_name>\<open>fst\<close>
 \<close>
 
 ML \<open>
-fun bind_transfer_for_const pos (const_name:string) lthy = let
-  val thm = create_transfer_for_const lthy const_name
-  val binding = Binding.make ("with_type_transfer_" ^ String.translate (fn #"." => "_" | c => String.str c) const_name, pos) |> \<^print>
-  val (_,lthy) = Local_Theory.note ((binding, @{attributes [with_type_transfer_rules]}), [thm]) lthy
-in lthy end
+fun bind_transfers_for_const pos (const_name:string) lthy = let
+  val thms = create_transfers_for_const lthy const_name
+  fun do_one thm lthy = let
+    val binding = Binding.make ("with_type_transfer_" ^ String.translate (fn #"." => "_" | c => String.str c) const_name, pos) |> \<^print>
+    val (_,lthy) = Local_Theory.note ((binding, @{attributes [with_type_transfer_rules]}), [thm]) lthy
+    in lthy end
+  in fold do_one thms lthy end
 \<close>
 
 lemma [with_type_transfer_rules]:
@@ -682,10 +700,27 @@ declare right_total_rel_set[with_type_transfer_rules]
 lemma [with_type_transfer_rules]: \<open>Domainp T = DT1 \<Longrightarrow> Domainp (rel_set T) = (\<lambda>A. Ball A DT1)\<close>
   using Domainp_set by auto
 
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>fst\<close>\<close>
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>disj\<close>\<close>
+(* TODO: Are these maybe dangerous because they can instantiate ?r to something we do not want? *)
+lemma [with_type_transfer_rules]: \<open>Domainp (=) = (\<lambda>_. True)\<close>
+  by auto
+lemma [with_type_transfer_rules]: \<open>Domainp (=) = (\<lambda>x. x \<in> UNIV)\<close>
+  by auto
+lemma [with_type_transfer_rules]: \<open>bi_unique (=)\<close>
+  by (rule bi_unique_eq)
+
+
+ML \<open>
+create_transfers_for_const \<^context> \<^const_name>\<open>disj\<close>
+\<close>
+
+lemma [with_type_transfer_rules]: \<open>Transfer.Rel (rel_fun A (rel_fun B (rel_prod A B))) Pair Pair\<close>
+  by (simp add: Pair_transfer RelI')
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>fst\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>snd\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>disj\<close>\<close> (* TODO: Should this even be transferred? There is no free type variable here! *)
 thm with_type_transfer_HOL_disj
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>insert\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>insert\<close>\<close>
 thm with_type_transfer_rules
 thm finite_def
 
@@ -719,7 +754,7 @@ schematic_goal
 
 
 
-(* local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>finite\<close>\<close> *)
+(* local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>finite\<close>\<close> *)
 
 
 ML \<open>

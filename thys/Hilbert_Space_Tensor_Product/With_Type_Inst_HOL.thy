@@ -16,7 +16,7 @@ ML \<open>
 Thm.all_axioms_of \<^theory> |> filter (fn (n,th) => String.isSubstring "finite" n andalso String.isSubstring "class" n)
 \<close>
 
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.finite\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.finite\<close>\<close>
 thm with_type_transfer_Finite_Set_class_finite
 (* TODO: should not be for an applied class.finite *)
 
@@ -40,7 +40,7 @@ Thm.assumption NONE 1
 
 local_setup \<open>define_stuff \<^here> \<^class>\<open>finite\<close>\<close>
 
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.semigroup_add\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semigroup_add\<close>\<close>
 thm with_type_transfer_Groups_class_semigroup_add
 
 thm with_type_transfer_rules
@@ -57,8 +57,8 @@ declare with_type_semigroup_add_class_transfer[
     transfer_rule]
 declare class.ab_semigroup_add_axioms_def[with_type_simps]
 
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.ab_semigroup_add_axioms\<close>\<close>
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.ab_semigroup_add\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ab_semigroup_add_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ab_semigroup_add\<close>\<close>
 
 local_setup \<open>define_stuff \<^here> \<^class>\<open>ab_semigroup_add\<close>\<close>
 
@@ -67,8 +67,8 @@ declare with_type_ab_semigroup_add_class_transfer[
     transfer_rule]
 declare class.comm_monoid_add_axioms_def[with_type_simps]
 
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.comm_monoid_add_axioms\<close>\<close>
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.comm_monoid_add\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_monoid_add_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_monoid_add\<close>\<close>
 
 local_setup \<open>define_stuff \<^here> \<^class>\<open>comm_monoid_add\<close>\<close>
 
@@ -96,8 +96,8 @@ lemmas with_type_comm_monoid_add_class_transfer'[transfer_rule] = with_type_comm
     THEN tmp]
 declare class.ab_group_add_axioms_def[with_type_simps]
 
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.ab_group_add_axioms\<close>\<close>
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.ab_group_add\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ab_group_add_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ab_group_add\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>ab_group_add\<close>\<close>
 
 
@@ -118,16 +118,36 @@ Thm.all_axioms_of \<^theory> |> filter (fn (name,thm) =>
      | _ => false)
 \<close>
 
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>inverse_rat_inst.inverse_rat\<close>\<close>
+ML \<open>
+get_raw_definitions \<^context> \<^const_name>\<open>inverse_rat_inst.inverse_rat\<close>\<close>
+
+lemma [with_type_transfer_rules]: \<open>Transfer.Rel (=) x x\<close>
+  by (simp add: Rel_eq_refl)
+
+lemma [with_type_transfer_rules]: \<open>Transfer.Rel (rel_fun (=) (rel_fun r (rel_fun r r))) If If\<close>
+  using If_transfer RelI' by blast
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>inverse_rat_inst.inverse_rat\<close>\<close>
+(* 
+Solve this by:
+- Applying bi_unique (=), right_total (=), Domainp (=) = ... whenever the rhs type has not typ vars
+ *)
 
 ML \<open>
-get_raw_definition \<^context> \<^const_name>\<open>inverse\<close>
+get_raw_definitions \<^context> \<^const_name>\<open>inverse\<close>
 \<close>
+
+ML \<open>
+val defs = Thm.all_axioms_of \<^theory> |> List.filter (fn (name,thm) => 
+    Thm.prop_of thm |> exists_Const (fn (c,_) => c=\<^const_name>\<open>inverse\<close>))
+
+\<close>
+
 
   by ERROR: "inverse is overloaded, where do we get the right def?"
 
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>inverse\<close>\<close>
-local_setup \<open>bind_transfer_for_const \<^here> \<^const_name>\<open>class.sgn_div_norm\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>inverse\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.sgn_div_norm\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>sgn_div_norm\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>dist_norm\<close>\<close>
 
