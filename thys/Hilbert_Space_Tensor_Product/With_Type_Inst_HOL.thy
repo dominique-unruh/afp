@@ -27,16 +27,42 @@ lemma aux3:
   by (metis Rel_def assms rel_funI rel_itself.cases)
 
 declare with_type_transfer_Finite_Set_class_finite[THEN aux3[where B=\<open>class.finite\<close>], with_type_transfer_rules]
-
-schematic_goal xx:
-\<open>(bi_unique (?r::?'b \<Rightarrow> ?'c \<Rightarrow> bool) \<Longrightarrow> right_total ?r \<Longrightarrow> Domainp ?r = (\<lambda>x. x \<in> S) \<Longrightarrow> 
-  bi_unique ((?r7))) \<Longrightarrow> True\<close>
-  by simp
+thm  with_type_transfer_Finite_Set_class_finite[THEN aux3[where B=\<open>class.finite\<close>], with_type_transfer_rules]
 
 ML \<open>
-Thm.assumption NONE 1
-@{thm xx}
+\<^term>\<open>OFCLASS('a,class.finite)\<close>
 \<close>
+
+ML \<open>
+fun name_fun "'abs" = ("r", "'rep", "S")
+\<close>
+
+ML \<open>
+;;
+create_transfer_for_term \<^context> name_fun \<^term>\<open>\<lambda>_::unit. OFCLASS('abs,class.finite)\<close>
+\<close>
+
+ML \<open>
+  fun instantiate_rel_tac ctxt = SUBGOAL (fn (t,i) => 
+      let val _ = \<^print> (Thm.cterm_of ctxt t,i)
+          val vars = case t of (\<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>Transfer.Rel _ _\<close> $ rel $ _ $ _)) => Term.add_vars rel [] |> \<^print>
+val _ = \<^print> ("preinst", map (fn (ni, T) => (ni, (T |> range_type |> domain_type) )) vars)
+          val inst = map (fn (ni, T) => (ni, mk_relation_for_type ctxt name_fun (T |> range_type |> domain_type) |> Thm.cterm_of ctxt)) vars
+val _ = \<^print> ("inst",inst)
+          val tac = infer_instantiate ctxt inst |> PRIMITIVE
+      in tac end)
+\<close>
+
+ML \<open>
+mk_relation_for_type \<^context> name_fun \<^typ>\<open>'abs itself\<close>
+\<close>
+
+
+schematic_goal "Transfer.Rel (rel_fun (=) (=)) ?X (\<lambda>_. class.finite TYPE('abs))"
+  apply (rule RelI)
+  apply transfer_prover_start
+    apply (tactic \<open>instantiate_rel_tac \<^context> 1\<close>)
+  oops
 
 local_setup \<open>define_stuff \<^here> \<^class>\<open>finite\<close>\<close>
 
@@ -96,11 +122,52 @@ lemmas with_type_comm_monoid_add_class_transfer'[transfer_rule] = with_type_comm
     THEN tmp]
 declare class.ab_group_add_axioms_def[with_type_simps]
 
+(* declare[[show_types]] *)
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ab_group_add_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ab_group_add\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>ab_group_add\<close>\<close>
 
+(* ML \<open>
+fun mk_equals_ct ctxt lhs rhs = let val T = Thm.typ_of_cterm lhs in
+  Thm.mk_binop (Thm.cterm_of ctxt (Const ("Pure.eq", T --> T --> propT))) lhs rhs end
+fun mk_equals_ct_error ctxt lhs rhs = mk_equals_ct ctxt lhs rhs
+  handle CTERM _ => error "mk_equals_ct_error" | TERM _ => error "mk_equals_ct_error" | TYPE _ => error "mk_equals_ct_error" | THM _ => error "mk_equals_ct_error"
+fun schematic_subst_conv f ctxt (ct:cterm) = (case Thm.term_of ct of
+  Var v => (case f v of
+              SOME ct' => (\<^print> (ct,ct'); mk_equals_ct_error ctxt ct ct' |> \<^print> |> Thm.assume)
+            | NONE => raise CTERM("schematic_subst_conv", [ct]))
+  | _ => raise CTERM("schematic_subst_conv", [ct]))
+;;
+fun schematic_subst_conv' f ctxt = schematic_subst_conv (Option.map (Thm.cterm_of ctxt) o f) ctxt
+;;
+val test = schematic_subst_conv' (fn ((n,0),T) => SOME (Const(\<^const_name>\<open>undefined\<close>, \<^typ>\<open>String.literal\<close> --> T) $ HOLogic.mk_literal n) | _ => NONE)
+val ctxt = \<^context>
+val ct = Syntax.read_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt) "?x + 5 = ?y" |> Thm.cterm_of ctxt
+val conv_result = Conv.top_sweep_conv test ctxt ct
+\<close> *)
 
+ML \<open>
+fun collect_rel_vars (\<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>Transfer.Rel _ _\<close> $ rel $ _ $ _)) = Term.add_vars rel
+\<close>
+
+
+(* 
+schematic_goal \<open>Transfer.Rel
+  (rel_fun (rel_fun (r'a::'rep'a \<Rightarrow> 'a \<Rightarrow> bool) (rel_fun r'a r'a))
+    (rel_fun r'a (rel_fun (rel_fun r'a (rel_fun r'a r'a)) (rel_fun (rel_fun r'a r'a) (=)))))
+  (?X::('rep'a \<Rightarrow> 'rep'a \<Rightarrow> 'rep'a) \<Rightarrow> 'rep'a \<Rightarrow> ('rep'a \<Rightarrow> 'rep'a \<Rightarrow> 'rep'a) \<Rightarrow> ('rep'a \<Rightarrow> 'rep'a) \<Rightarrow> bool)
+  (\<lambda>(plus::'a \<Rightarrow> 'a \<Rightarrow> 'a) (zero::'a) (minus::'a \<Rightarrow> 'a \<Rightarrow> 'a) uminus::'a \<Rightarrow> 'a.
+      (\<forall>a::'a. plus (uminus a) a = zero) \<and> (\<forall>(a::'a) b::'a. minus a b = plus a (uminus b)))\<close>
+  unfolding Rel_def
+  apply transfer_prover_start
+        apply (tactic \<open>CONVERSION Thm.eta_conversion |> ALLGOALS\<close>)
+ML \<open>
+Goal.prove
+Thm.biresolution
+\<close>
+
+  apply (rule rel_funI)+
+ *)
 
 (* local_setup \<open>define_stuff \<^here> \<^class>\<open>scaleR\<close>\<close> *)
 (* local_setup \<open>define_stuff \<^here> \<^class>\<open>norm\<close>\<close> *)
@@ -121,11 +188,23 @@ Thm.all_axioms_of \<^theory> |> filter (fn (name,thm) =>
 ML \<open>
 get_raw_definitions \<^context> \<^const_name>\<open>inverse_rat_inst.inverse_rat\<close>\<close>
 
-lemma [with_type_transfer_rules]: \<open>Transfer.Rel (=) x x\<close>
-  by (simp add: Rel_eq_refl)
+declare Rel_eq_refl[with_type_transfer_rules]
 
 lemma [with_type_transfer_rules]: \<open>Transfer.Rel (rel_fun (=) (rel_fun r (rel_fun r r))) If If\<close>
   using If_transfer RelI' by blast
+
+lemma xxxxx[with_type_transfer_rules]: \<open>Transfer.Rel (rel_fun (rel_fun A B) (rel_fun (rel_fun C D) (rel_fun (rel_fun B C) (rel_fun A D)))) map_fun map_fun\<close>
+  by (rule Transfer.transfer_raw)
+
+thm Transfer.transfer_raw(153)[no_vars]
+
+schematic_goal \<open>Transfer.Rel
+                            (rel_fun (=)
+                              (rel_fun (=) (rel_fun (rel_fun (rel_prod (=) (=)) (rel_prod (=) (=))) (rel_fun (=) (=)))))
+                            ?a20 map_fun\<close>
+  unfolding rel_fun_eq prod.rel_eq
+  apply (rule Rel_eq_refl)
+  oops
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>inverse_rat_inst.inverse_rat\<close>\<close>
 (* 

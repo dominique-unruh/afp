@@ -512,13 +512,17 @@ ML \<open>
 fun mk_relation_for_tfree name_fun (n,s) = 
   let val (r,rep,_) = name_fun n in (r, TFree(rep,s) --> TFree(n,s) --> HOLogic.boolT) end
   (* ("r"^n, TFree("'rep"^n,s) --> TFree(n,s) --> HOLogic.boolT) *)
+fun mk_relation_replaceT name_fun = 
+  map_type_tfree (fn (n,s) => let val (_,rep,_) = name_fun n in TFree(rep,s) end)
 fun mk_relation_for_type ctxt name_fun (T:typ) = let
   fun mk T = case T of
     TFree(n,s) => mk_relation_for_tfree name_fun (n,s) |> Free
     | \<^Type>\<open>fun T U\<close> => \<^Term>\<open>rel_fun \<open>mk T\<close> \<open>mk U\<close>\<close> ctxt
     | \<^Type>\<open>prod T U\<close> => \<^Term>\<open>rel_prod \<open>mk T\<close> \<open>mk U\<close>\<close> ctxt
     | \<^Type>\<open>set T\<close> => \<^Term>\<open>rel_set \<open>mk T\<close>\<close> ctxt
-    | \<^Type>\<open>itself T\<close> => \<^Term>\<open>rel_itself \<open>mk T\<close>\<close> ctxt
+    | \<^Type>\<open>itself T\<close> => 
+        let val T' = mk_relation_replaceT name_fun T
+        in \<^Const>\<open>rel_itself T' T\<close> end
     | Type(_, []) => HOLogic.eq_const T
     | T => raise TYPE("mk_relation_for_type", [T], [])
   in mk T end
@@ -609,7 +613,7 @@ fun error_tac ctxt msg i = SUBGOAL (fn (t,_) => error (msg (Syntax.string_of_ter
 
 ML \<open>
 fun create_transfer_for_term ctxt name_fun (term:term) = let
-val _ = \<^print> (Thm.cterm_of ctxt term)
+(* val _ = \<^print> (Thm.cterm_of ctxt term) *)
   open Conv
   val _ = has_var_tvar term andalso raise TERM ("create_transfer_for_term: contains schematic (term/type) variables", [term])
   (* val _ = has_tvar' term andalso raise TERM ("create_transfer_for_term: contains schematic type variables", [term]) *)
@@ -625,11 +629,22 @@ val _ = \<^print> (Thm.cterm_of ctxt term)
       [\<^Term>\<open>Trueprop (bi_unique \<open>Free r\<close>)\<close> ctxt, \<^Term>\<open>Trueprop (right_total \<open>Free r\<close>)\<close> ctxt,
         \<^Term>\<open>Trueprop (Domainp \<open>Free r\<close> = (\<lambda>x. x \<in> \<open>S_of_r r\<close>))\<close> ctxt]) |> flat
   val goal = \<^Term>\<open>Trueprop (Transfer.Rel \<open>rel\<close> ?X \<open>term\<close>)\<close> ctxt
+  val _ = goal |> Thm.cterm_of ctxt |> \<^print>
   fun step_premise_tac ctxt prems i = 
     ((resolve_tac ctxt (prems @ rules) THEN_ALL_NEW step_premise_tac ctxt prems) ORELSE' error_tac ctxt (fn t => "NYI: "^t)) i
-(* fun d s tac i = (print_i_tac ctxt (s^" "^string_of_int i^" start") i THEN tac i THEN print_i_tac ctxt (s^" "^string_of_int i^" stop") i) *)
+  (* val rel_simp_rules = @{thms rel_fun_eq[THEN eq_reflection] prod.rel_eq[THEN eq_reflection]} *)
+  fun instantiate_rel_tac ctxt = SUBGOAL (fn (t,i) => 
+      let val _ = \<^print> (Thm.cterm_of ctxt t,i)
+          val vars = case t of (\<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>Transfer.Rel _ _\<close> $ rel $ _ $ _)) => Term.add_vars rel [] |> \<^print>
+          val inst = map (fn (ni, T) => (ni, mk_relation_for_type ctxt name_fun (T |> range_type |> domain_type) |> Thm.cterm_of ctxt)) vars
+          val tac = infer_instantiate ctxt inst |> PRIMITIVE
+      in tac end)
   fun step_tac ctxt prems i =
-    (
+    (instantiate_rel_tac ctxt
+     THEN'
+     (* CONVERSION (Simplifier.rewrite ((clear_simpset ctxt) addsimps rel_simp_rules)
+                               |> arg_conv(*rel*) |> fun2_conv(*Rel rel*) |> arg_conv(*Trueprop*))
+     THEN' *)
      (trace_tac ctxt "resolve_tac" (resolve_tac ctxt rules)
       (* ORELSE' (resolve_tac ctxt @{thms RelI} THEN' resolve_tac ctxt rules) *)
       ORELSE' error_tac ctxt (fn t => "No transfer rule found for " ^ t))
@@ -642,6 +657,7 @@ val _ = \<^print> (Thm.cterm_of ctxt term)
        step_tac ctxt prems)
      THEN'
      resolve_tac ctxt @{thms refl}) 1
+(* val _ = \<^print> ((map fst basic_rels @ map (S_of_rT_name o snd) basic_rels), map (Thm.cterm_of ctxt) assms, Thm.cterm_of ctxt goal) *)
   val thm = Goal.prove ctxt (map fst basic_rels @ map (S_of_rT_name o snd) basic_rels) assms goal tac
 in thm end
 \<close>
@@ -759,55 +775,15 @@ schematic_goal
 
 ML \<open>
 (* rel_const must use 'rep, 'abs *)
-fun create_transfer_thm ctxt class rel_const rel_const_def_thm = let
+fun create_transfer_thm ctxt class (* rel_const rel_const_def_thm *) = let
   val thy = Proof_Context.theory_of ctxt
   val (class_const, class_const_curried, _) = get_params_of_class thy class
   (* val class_const_def_thm = Proof_Context.get_thm ctxt ((class_const |> dest_Const |> fst) ^ "_def") |> Drule.abs_def *)
   val class_const_curried = subst_TVars [(("'a",0), TFree("'abs",\<^sort>\<open>type\<close>))] class_const_curried
-(*   val goal = \<^Term>\<open>Trueprop ((rel_fun (\<open>rel_const\<close> r) (\<longleftrightarrow>)) ?X \<open>class_const\<close>)\<close> ctxt
-  val bi_unique = \<^prop>\<open>bi_unique (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool)\<close>
-  val right_total = \<^prop>\<open>right_total (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool)\<close>
-  val domain_r = \<^prop>\<open>Domainp (r :: 'rep \<Rightarrow> 'abs \<Rightarrow> bool) = (\<lambda>x. x \<in> S)\<close>
-  val _ = goal |> Thm.cterm_of ctxt
-  open Conv
-  val simp_rules = [rel_const_def_thm, class_const_def_thm] @ Proof_Context.get_thms ctxt \<^named_theorems>\<open>with_type_simps\<close>
-  fun error_message t = let 
-      val ctxt = (* TODO: print types *) ctxt
-      val s = Syntax.string_of_term ctxt 
-      val sT = Syntax.string_of_typ ctxt 
-      val st = Thm.prop_of #> s
-      val th = Thm.cterm_of ctxt #> Thm.assume
-    in
-      "schematic_goal\n" ^
-      "  fixes r :: \<open>" ^ sT \<^typ>\<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close> ^ "\<close>\n" ^
-      "  assumes [transfer_rule]: \<open>" ^ s bi_unique ^ "\<close> \<open>" ^ s right_total ^ "\<close> \<open>" ^ st (@{thm aux1} OF [th right_total, th domain_r])^ "\<close>\n" ^
-      "  assumes [transfer_domain_rule]: \<open>" ^ s domain_r ^ "\<close>\n" ^
-      "  shows \<open>" ^ s t ^ "\<close>"
-    end
-  fun tac {context=ctxt, prems=[bi_unique, right_total, domain_r]} = let
-    val simp_ctxt = (clear_simpset ctxt) addsimps (domain_r :: simp_rules)
-    in
-      simp_tac simp_ctxt 1
-      THEN
-      (SUBGOAL (fn (t,_) => (tracing (error_message t); all_tac))) 1
-      THEN
-      resolve_tac ctxt @{thms aux2} 1
-      THEN
-      (Transfer.transfer_prover_tac (ctxt 
-        |> Thm.proof_attributes [Transfer.transfer_add] bi_unique |> snd
-        |> Thm.proof_attributes [Transfer.transfer_add] right_total |> snd
-        |> Thm.proof_attributes [Transfer.transfer_add] (@{thm aux1} OF [right_total, domain_r]) |> snd
-        |> Thm.proof_attributes [Transfer.transfer_domain_add] domain_r |> snd  ) 1
-        ORELSE SUBGOAL (fn (t,_) => error ("transfer_prover failed to prove the following statement:\n" ^ error_message t)) 1)
-      THEN
-      CONVERSION (Simplifier.rewrite simp_ctxt |> arg_conv) 1 
-      THEN
-      resolve_tac ctxt @{thms reflexive} 1
-    end
-    | tac _ = raise Match (* Should not happen *)
-  val thm = Goal.prove ctxt ["r","S"] [bi_unique, right_total, domain_r] goal tac *)
   fun name_fun "'abs" = ("r", "'rep", "S")
+val _ = \<^print> (4, class, class_const_curried)
   val thm = create_transfer_for_term ctxt name_fun class_const_curried
+val _ = \<^print> (5, class, class_const_curried)
   val transferred = thm
     |> Thm.concl_of |> HOLogic.dest_Trueprop
     |> dest_comb |> fst |> dest_comb |> snd
@@ -868,8 +844,11 @@ fun define_stuff pos class lthy = let
   fun gen_sym_thm lthy thm = gen_thm lthy thm |> Thm.symmetric
   val has_dom_thm' = has_dom_thm |> fconv_rule (rewr_conv (gen_sym_thm lthy rel_def) |> arg1_conv(*r*) |> arg_conv(*Trueprop*))
                  |> fconv_rule (rewr_conv (gen_sym_thm lthy dom_def) |> arg_conv(*d*) |> arg_conv(*Trueprop*))
+val _ = \<^print> 1
   val ((* has_dom_thm'', *)lthy) = local_note (Binding.suffix_name "_has_dom" binding) has_dom_thm' lthy
-  val (transferred,transfer_thm) = create_transfer_thm lthy class rel_const rel_def
+val _ = \<^print> 2
+  val (transferred,transfer_thm) = create_transfer_thm lthy class (* rel_const rel_def *)
+val _ = \<^print> 3
  val _ = \<^print> (transfer_thm,transferred) 
   val (pred'_const,pred'_def,lthy) = local_def (Binding.suffix_name "_pred'" binding) (Type.legacy_freeze transferred) lthy
 val _ = \<^print> 11
