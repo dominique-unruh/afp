@@ -15,8 +15,15 @@ fun read_term_schematic' ctxt str = let
   val t = map_types (map_atyps map_tfree) t
 in t end
 
+fun instantiation_function pos inst t ctxt = let
+  val thm = Thm.reflexive (Thm.cterm_of ctxt t)
+  val thm' = Drule.infer_instantiate ctxt (List.map (Library.apsnd (Thm.cterm_of ctxt)) inst) thm
+             handle THM _ => raise TERM ("Term-antiquotation" ^ Position.here pos ^ ": invalid instantiation", inst |> map snd)
+  in thm' |> Thm.rhs_of |> Thm.term_of end
+
 fun antiquotation_Term range src ctxt = let
   val (source,ctxt) = Token.syntax (Scan.lift Parse.embedded_input) src ctxt
+  val pos = Token.name_of_src src |> snd
   val symbols = source |> Input.source_explode
   fun symbol_pos_list_to_string syms = 
       Input.source true (Symbol_Pos.implode syms) (Symbol_Pos.range syms)
@@ -47,12 +54,10 @@ fun antiquotation_Term range src ctxt = let
         map_antiquot'
 (* TODO: we convert the term to cterm each time. Should be done once using the env *)
 (* TODO: use own function for instantiating more quickly? (By preprocessing which vars have which types and hence instantiating without having to go through the whole thm-instantiate stuff) *)
-    val ml_code = "(fn inst => fn t => fn ctxt => Thm.reflexive (Thm.cterm_of ctxt t) |> Drule.infer_instantiate ctxt (List.map (Library.apsnd (Thm.cterm_of ctxt)) inst) |> Thm.rhs_of |> Thm.term_of) " 
-        (* ^ ML_Context.struct_name ctxt ^ ".ML_context " -- Cannot use this context because the terms we put in must be checked with a current context *) ^ ml_subst ^ " " ^ ml_term
+    val ml_code = "Instantiate_Term_Antiquotation.instantiation_function " ^ (pos |> ML_Syntax.print_position |> ML_Syntax.atomic) ^ " " ^ ml_subst ^ " " ^ ml_term
         |> ML_Syntax.atomic |> ML_Lex.tokenize_range range
     val env = map_antiquot' |> map (fn (_,(env,_)) => env) |> flat
     in (env, ml_code) end
 in (decl, ctxt) end
-
 
 end

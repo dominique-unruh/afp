@@ -18,8 +18,12 @@ val with_type_cancel : Proof.context -> thm -> thm
 
 val with_type_parse_translation : Proof.context -> term list -> term
 
+val add_relator_global : string -> (Proof.context -> (typ -> term) -> typ -> term) -> theory -> theory
+
+val get_relator : Proof.context -> string -> (Proof.context -> (typ -> term) -> typ -> term) option
+
 (* Debug only *)
-val get_all_type_info : Proof.context -> { by_class: with_type_info Symtab.table, by_const: with_type_info Symtab.table }
+val get_all_type_info : Proof.context -> { by_class: with_type_info Symtab.table, by_const: with_type_info Symtab.table, relators: (Proof.context -> (typ -> term) -> typ -> term) Symtab.table }
 
 end = struct
 
@@ -38,19 +42,22 @@ fun morphism m ({class, rep_class_data, rep_class_data_thm, with_type_compat_rel
     transfer = Option.map (Morphism.thm m) transfer}
 
 structure With_Type_Data = Generic_Data (
-  type T = { by_class: with_type_info Symtab.table, by_const: with_type_info Symtab.table }
-  val empty = { by_class = Symtab.empty, by_const = Symtab.empty }
-  fun merge ({by_class,by_const}, {by_class=by_class',by_const=by_const'}) =
+  type T = { by_class: with_type_info Symtab.table, by_const: with_type_info Symtab.table,
+             relators: (Proof.context -> (typ -> term) -> typ -> term) Symtab.table }
+  val empty = { by_class = Symtab.empty, by_const = Symtab.empty, relators = Symtab.empty }
+  fun merge ({by_class, by_const, relators}, {by_class=by_class', by_const=by_const', relators=relators'}) =
     {by_class = Symtab.merge (K true) (by_class, by_class'),
-     by_const = Symtab.merge (K true) (by_const, by_const') }
+     by_const = Symtab.merge (K true) (by_const, by_const'),
+     relators = Symtab.merge (K true) (relators, relators')}
 )
 
 fun check_with_type_info _ _ = ()
 
 fun add_with_type_info_generic data context = (check_with_type_info context data;
-  With_Type_Data.map (fn {by_class,by_const} => 
+  With_Type_Data.map (fn {by_class, by_const, relators} => 
     {by_class = Symtab.update (#class data, data) by_class,
-     by_const = Symtab.update (#rep_class_data data, data) by_const}) context
+     by_const = Symtab.update (#rep_class_data data, data) by_const,
+     relators = relators}) context
 )
 val add_with_type_info_global = Context.theory_map o add_with_type_info_generic
 
@@ -139,5 +146,17 @@ fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
 
   | with_type_parse_translation ctxt [typ_term, carrier, prop] = with_type_parse_translation ctxt [typ_term, carrier, \<^term>\<open>()\<close>, prop]
   | with_type_parse_translation _ Ts = raise TERM ("with_type_parse_translation: called with wrong number of arguments", Ts)
+
+fun map_relators_generic f = With_Type_Data.map (fn {by_class, by_const, relators} => 
+    {by_class = by_class, by_const = by_const, relators = f relators})
+
+val get_relators_generic = With_Type_Data.get #> #relators
+
+fun add_relator_generic typ_name f = map_relators_generic (Symtab.insert (K false) (typ_name, f))
+
+fun add_relator_global typ_name f = Context.theory_map (add_relator_generic typ_name f)
+
+fun get_relator_generic context typ_name = Symtab.lookup (get_relators_generic context) typ_name
+fun get_relator ctxt = get_relator_generic (Context.Proof ctxt)
 
 end
