@@ -1,5 +1,5 @@
 theory Strong_Operator_Topology
-  imports Misc_Tensor_Product
+  imports Misc_Tensor_Product_BO
 begin
 
 (* declare no_leading_Cons[rule del, simp del, iff] *)
