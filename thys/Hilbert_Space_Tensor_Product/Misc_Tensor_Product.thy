@@ -1,3 +1,5 @@
+section \<open>\<open>Misc_Tensor_Product\<close> -- Miscelleanous results missing from other theories\<close>
+
 theory Misc_Tensor_Product
   imports "HOL-Analysis.Elementary_Topology" "HOL-Analysis.Abstract_Topology"
     "HOL-Analysis.Abstract_Limits" "HOL-Analysis.Function_Topology" "HOL-Cardinals.Cardinals"

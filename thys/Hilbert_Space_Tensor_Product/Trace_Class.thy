@@ -1,3 +1,5 @@
+section \<open>\<open>Trace_Class\<close> -- Trace-class operators\<close>
+
 theory Trace_Class
   imports Complex_Bounded_Operators.Complex_L2 HS2Ell2
     Weak_Operator_Topology

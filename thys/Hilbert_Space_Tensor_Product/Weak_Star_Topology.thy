@@ -1,3 +1,5 @@
+section \<open>\<open>Weak_Star_Topology\<close> -- Weak* topology on complex bounded operators\<close>
+
 theory Weak_Star_Topology
   imports Trace_Class Weak_Operator_Topology
 begin

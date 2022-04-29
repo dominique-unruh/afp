@@ -1,3 +1,5 @@
+section \<open>\<open>Weak_Operator_Topology\<close> -- Weak operator topology on complex bounded operators\<close>
+
 theory Weak_Operator_Topology
   imports Misc_Tensor_Product Strong_Operator_Topology
 begin

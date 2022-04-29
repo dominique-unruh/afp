@@ -1,3 +1,5 @@
+section \<open>\<open>Strong_Operator_Topology\<close> -- Strong operator topology on complex bounded operators\<close>
+
 theory Strong_Operator_Topology
   imports Misc_Tensor_Product_BO
 begin

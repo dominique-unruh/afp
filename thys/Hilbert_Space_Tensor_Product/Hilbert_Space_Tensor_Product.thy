@@ -1,3 +1,5 @@
+section \<open>\<open>Hilbert_Space_Tensor_Product\<close> -- Tensor product of Hilbert Spaces\<close>
+
 theory Hilbert_Space_Tensor_Product
   imports Complex_Bounded_Operators.Complex_L2 (* Registers.Misc *) Misc_Tensor_Product
     Strong_Operator_Topology Polynomial_Interpolation.Ring_Hom
