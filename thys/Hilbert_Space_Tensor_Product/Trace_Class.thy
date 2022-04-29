@@ -1154,7 +1154,6 @@ lemma trace_class_minus[simp]: \<open>trace_class t \<Longrightarrow> trace_clas
 definition trace_norm where \<open>trace_norm A = (if trace_class A then (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e)) else 0)\<close>
 
 definition trace where \<open>trace A = (if trace_class A then (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. e \<bullet>\<^sub>C (A *\<^sub>V e)) else 0)\<close>
-(* TODO: switch sides of \<bullet>\<^sub>C !!!! *)
 
 lemma trace_0[simp]: \<open>trace 0 = 0\<close>
   unfolding trace_def by simp
@@ -1181,6 +1180,16 @@ lemma trace_norm_alt_def:
   assumes \<open>is_onb B\<close>
   shows \<open>trace_norm A = (if trace_class A then (\<Sum>\<^sub>\<infinity>e\<in>B. cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e)) else 0)\<close>
   by (metis (mono_tags, lifting) assms infsum_eqI' is_onb_some_chilbert_basis trace_norm_basis_invariance trace_norm_def)
+
+lemma trace_alt_def:
+  assumes \<open>is_onb B\<close>
+  shows \<open>trace A = (if trace_class A then (\<Sum>\<^sub>\<infinity>e\<in>B. e \<bullet>\<^sub>C (A *\<^sub>V e)) else 0)\<close>
+  sorry
+
+lemma trace_exists:
+  assumes \<open>is_onb B\<close> and \<open>trace_class A\<close>
+  shows \<open>(\<lambda>e. e \<bullet>\<^sub>C (A *\<^sub>V e)) summable_on B\<close>
+  sorry
 
 lemma abs_op_butterfly[simp]: \<open>abs_op (butterfly x y) = (norm x / norm y) *\<^sub>R selfbutter y\<close> for x :: \<open>'a::chilbert_space\<close> and y :: \<open>'b::chilbert_space\<close>
 proof (cases \<open>y=0\<close>)
@@ -1220,7 +1229,7 @@ lemma circularity_of_trace':
 lemma trace_class_comp_left: \<open>trace_class a \<Longrightarrow> trace_class (a o\<^sub>C\<^sub>L b)\<close>
   sorry
 
-lemma trace_class_comp_right: \<open>trace_class b \<Longrightarrow> trace_class (a o\<^sub>C\<^sub>L b)\<close>
+lemma trace_class_comp_right: \<open>trace_class (a o\<^sub>C\<^sub>L b)\<close> if \<open>trace_class b\<close>
   sorry
 
 lemma trace_norm_comp_left: \<open>trace_class a \<Longrightarrow> trace_norm (a o\<^sub>C\<^sub>L b) \<le> trace_norm a * norm b\<close>
@@ -1229,8 +1238,31 @@ lemma trace_norm_comp_left: \<open>trace_class a \<Longrightarrow> trace_norm (a
 lemma trace_norm_comp_right: \<open>trace_class b \<Longrightarrow> trace_norm (a o\<^sub>C\<^sub>L b) \<le> norm a * trace_norm b\<close>
   sorry
 
-lemma trace_plus: \<open>trace (a + b) = trace a + trace b\<close> if \<open>trace_class a\<close> \<open>trace_class b\<close>
-  sorry
+lemma trace_plus: 
+  assumes \<open>trace_class a\<close> \<open>trace_class b\<close>
+  shows \<open>trace (a + b) = trace a + trace b\<close> 
+  by (auto simp add: assms trace_exists infsum_add trace_def cblinfun.add_left cinner_add_right)
+
+lemma trace_scaleC: \<open>trace (c *\<^sub>C a) = c * trace a\<close>
+proof -
+  consider (trace_class) \<open>trace_class a\<close> | (c0) \<open>c = 0\<close> | (non_trace_class) \<open>\<not> trace_class a\<close> \<open>c \<noteq> 0\<close>
+    by auto
+  then show ?thesis
+  proof cases
+    case trace_class
+    then show ?thesis sorry
+  next
+    case c0
+    then show ?thesis 
+      by simp
+  next
+    case non_trace_class
+    then have \<open>\<not> trace_class (c *\<^sub>C a)\<close>
+      by (metis (no_types, opaque_lifting) cblinfun_compose_id_right cblinfun_compose_scaleC_right complex_vector.vector_space_assms(3) complex_vector.vector_space_assms(4) left_inverse trace_class_comp_left)
+    with non_trace_class show ?thesis
+      by (simp add: trace_def)
+  qed
+qed
 
 lemmas (in bounded_cbilinear) scaleR_right = bounded_bilinear.scaleR_right[OF bounded_bilinear]
 lemmas (in bounded_cbilinear) scaleR_left = bounded_bilinear.scaleR_left[OF bounded_bilinear]
@@ -1243,19 +1275,28 @@ lemma trace_class_alt_def:
   shows \<open>trace_class A \<longleftrightarrow> (\<lambda>e. cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e)) abs_summable_on B\<close>
   using assms trace_class_iff_summable by blast
 
-
 lemma trace_class_butterfly[simp]: \<open>trace_class (butterfly x y)\<close> for x :: \<open>'a::complex_inner\<close> and y :: \<open>'b::chilbert_space\<close>
   unfolding butterfly_def
   apply (rule trace_class_comp_left)
   by simp
 
 lemma trace_one_dim[simp]: \<open>trace A = one_dim_iso A\<close> for A :: \<open>'a::one_dim \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
-  sorry
+proof -
+  have onb: \<open>is_onb {1 :: 'a}\<close>
+    by auto
+  have \<open>trace A = 1 \<bullet>\<^sub>C (A *\<^sub>V 1)\<close>
+    apply (subst trace_alt_def)
+     apply (fact onb)
+    by simp
+  also have \<open>\<dots> = one_dim_iso A\<close>
+    by (simp add: cinner_cblinfun_def one_dim_iso_def)
+  finally show ?thesis
+    by -
+qed
 
 lemma one_dim_iso_cblinfun_comp: \<open>one_dim_iso (a o\<^sub>C\<^sub>L b) = of_complex (cinner (a* *\<^sub>V 1) (b *\<^sub>V 1))\<close>
   for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::one_dim\<close> and b :: \<open>'c::one_dim \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
-  apply simp
-  by auto
+  by (simp add: cinner_adj_left cinner_cblinfun_def one_dim_iso_def)
 
 lemma trace_butterfly_comp: \<open>trace (butterfly x y o\<^sub>C\<^sub>L a) = y \<bullet>\<^sub>C (a *\<^sub>V x)\<close>
 proof -
@@ -1271,8 +1312,28 @@ qed
 lemma trace_butterfly: \<open>trace (butterfly x y) = y \<bullet>\<^sub>C x\<close>
   using trace_butterfly_comp[where a=id_cblinfun] by auto
 
+lemma op_square_nondegenerate: \<open>a = 0\<close> if \<open>a* o\<^sub>C\<^sub>L a = 0\<close>
+proof (rule cblinfun_eq_0_on_UNIV_span[where basis=UNIV]; simp)
+  fix s
+  from that have \<open>s \<bullet>\<^sub>C ((a* o\<^sub>C\<^sub>L a) *\<^sub>V s) = 0\<close>
+    by simp
+  then have \<open>(a *\<^sub>V s) \<bullet>\<^sub>C (a *\<^sub>V s) = 0\<close>
+    by (simp add: cinner_adj_right)
+  then show \<open>a *\<^sub>V s = 0\<close>
+    by simp
+qed
+
 lemma abs_op_nondegenerate: \<open>a = 0\<close> if \<open>abs_op a = 0\<close>
-  sorry
+proof -
+  from that
+  have \<open>sqrt_op (a* o\<^sub>C\<^sub>L a) = 0\<close>
+    by (simp add: abs_op_def)
+  then have \<open>0* o\<^sub>C\<^sub>L 0 = (a* o\<^sub>C\<^sub>L a)\<close>
+    by (metis cblinfun_compose_zero_right positive_cblinfun_squareI sqrt_op_square)
+  then show \<open>a = 0\<close>
+    apply (rule_tac op_square_nondegenerate)
+    by simp
+qed
 
 lemma trace_norm_0[simp]: \<open>trace_norm 0 = 0\<close>
   by (metis abs_op_0 of_real_eq_0_iff trace_0 trace_abs_op)
@@ -1316,8 +1377,13 @@ lemma
   using assms apply (induction I rule:infinite_finite_induct)
   by (auto simp: trace_plus)
 
-lemma bounded_clinear_trace_duality: \<open>trace_class t \<Longrightarrow> bounded_clinear (\<lambda>a. trace (t o\<^sub>C\<^sub>L a))\<close>
+lemma trace_leq_trace_norm[simp]: \<open>cmod (trace a) \<le> trace_norm a\<close>
   sorry
+
+lemma bounded_clinear_trace_duality: \<open>trace_class t \<Longrightarrow> bounded_clinear (\<lambda>a. trace (t o\<^sub>C\<^sub>L a))\<close>
+  apply (rule bounded_clinearI[where K=\<open>trace_norm t\<close>])
+  apply (auto simp add: cblinfun_compose_add_right trace_class_comp_left trace_plus trace_scaleC)[2]
+  by (metis circularity_of_trace order_trans trace_leq_trace_norm trace_norm_comp_right)
 
 typedef (overloaded) 'a::chilbert_space trace_class = \<open>Collect trace_class :: ('a \<Rightarrow>\<^sub>C\<^sub>L 'a) set\<close>
   by (auto intro!: exI[of _ 0])

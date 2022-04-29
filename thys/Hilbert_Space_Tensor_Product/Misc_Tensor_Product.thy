@@ -797,6 +797,19 @@ lemma nhdsin_mono:
   by (auto intro!: INF_superset_mono)
 
 
+lemma is_ortho_set_singleton[simp]: \<open>is_ortho_set {x} \<longleftrightarrow> x \<noteq> 0\<close>
+  by (simp add: is_ortho_set_def)
+
+lemma ccspan_one_dim[simp]: \<open>x \<noteq> 0 \<Longrightarrow> ccspan {x} = \<top>\<close> for x :: \<open>_ :: one_dim\<close>
+  by (metis (mono_tags, opaque_lifting) cblinfun_image_id ccspan_singleton_scaleC id_cblinfun_eq_1
+      image_vector_to_cblinfun of_complex_def of_complex_one_dim_iso one_dim_iso_def 
+      one_dim_iso_of_one one_dim_iso_of_zero one_dim_iso_scaleC one_dim_scaleC_1 
+      vector_to_cblinfun_adj_apply vector_to_cblinfun_adj_comp_vector_to_cblinfun
+      vector_to_cblinfun_cblinfun_apply)
+
+lemma is_onb_one_dim[simp]: \<open>norm x = 1 \<Longrightarrow> is_onb {x}\<close> for x :: \<open>_ :: one_dim\<close>
+  by (auto simp: is_onb_def intro!: ccspan_one_dim)
+
 unbundle no_cblinfun_notation
 
 end
