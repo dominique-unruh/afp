@@ -377,10 +377,6 @@ proof -
     by simp
 qed
 
-
 unbundle no_cblinfun_notation
-
-
-
 
 end

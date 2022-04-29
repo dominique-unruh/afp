@@ -905,6 +905,103 @@ qed
 abbreviation "butterket i j \<equiv> butterfly (ket i) (ket j)"
 abbreviation "selfbutterket i \<equiv> butterfly (ket i) (ket i)"
 
+
+(* Should be in misc but depends on Complex_Vector_Spaces.finite_span_closed *)
+lemma summable_on_scaleR_left_converse:
+  fixes f :: \<open>'b \<Rightarrow> real\<close>
+    and c :: \<open>'a :: real_normed_vector\<close>
+  assumes \<open>c \<noteq> 0\<close>
+  assumes \<open>(\<lambda>x. f x *\<^sub>R c) summable_on A\<close>
+  shows \<open>f summable_on A\<close>
+proof -
+  define fromR toR T where \<open>fromR x = x *\<^sub>R c\<close> and \<open>toR = inv fromR\<close> and \<open>T = range fromR\<close> for x :: real
+  have \<open>additive fromR\<close>
+    by (simp add: fromR_def additive.intro scaleR_left_distrib)
+  have \<open>inj fromR\<close>
+    by (simp add: fromR_def \<open>c \<noteq> 0\<close> inj_def)
+  have toR_fromR: \<open>toR (fromR x) = x\<close> for x
+    by (simp add: \<open>inj fromR\<close> toR_def)
+  have fromR_toR: \<open>fromR (toR x) = x\<close> if \<open>x \<in> T\<close> for x
+    by (metis T_def f_inv_into_f that toR_def)
+
+  have 1: \<open>sum (toR \<circ> (fromR \<circ> f)) F = toR (sum (fromR \<circ> f) F)\<close> if \<open>finite F\<close> for F
+    by (simp add: o_def additive.sum[OF \<open>additive fromR\<close>, symmetric] toR_fromR)
+  have 2: \<open>sum (fromR \<circ> f) F \<in> T\<close> if \<open>finite F\<close> for F
+    by (simp add: o_def additive.sum[OF \<open>additive fromR\<close>, symmetric] T_def)
+  have 3: \<open>(toR \<longlongrightarrow> toR x) (at x within T)\<close> for x
+  proof (cases \<open>x \<in> T\<close>)
+    case True
+    have \<open>dist (toR y) (toR x) < e\<close> if \<open>y\<in>T\<close> \<open>e>0\<close> \<open>dist y x < e * norm c\<close> for e y
+    proof -
+      obtain x' y' where x: \<open>x = fromR x'\<close> and y: \<open>y = fromR y'\<close>
+        using T_def True \<open>y \<in> T\<close> by blast
+      have \<open>dist (toR y) (toR x) = dist (fromR (toR y)) (fromR (toR x)) / norm c\<close>
+        by (auto simp: dist_real_def fromR_def \<open>c \<noteq> 0\<close>)
+      also have \<open>\<dots> = dist y x / norm c\<close>
+        using \<open>x\<in>T\<close> \<open>y\<in>T\<close> by (simp add: fromR_toR)
+      also have \<open>\<dots> < e\<close>
+        using \<open>dist y x < e * norm c\<close>
+        by (simp add: divide_less_eq that(2))
+      finally show ?thesis
+        by (simp add: x y toR_fromR)
+    qed
+    then show ?thesis
+      apply (auto simp: tendsto_iff at_within_def eventually_inf_principal eventually_nhds_metric)
+      by (metis assms(1) div_0 divide_less_eq zero_less_norm_iff)
+  next
+    case False
+    have \<open>T = span {c}\<close>
+      by (simp add: T_def fromR_def span_singleton)
+    then have \<open>closed T\<close>
+      by simp
+    with False have \<open>x \<notin> closure T\<close>
+      by simp
+    then have \<open>(at x within T) = bot\<close>
+      by (rule not_in_closure_trivial_limitI)
+    then show ?thesis
+      by simp
+  qed
+  have 4: \<open>(fromR \<circ> f) summable_on A\<close>
+    by (simp add: assms(2) fromR_def summable_on_cong)
+
+  have \<open>(toR o (fromR o f)) summable_on A\<close>
+    using 1 2 3 4 
+    by (rule summable_on_comm_additive_general[where T=T])
+  with toR_fromR
+  show ?thesis
+    by (auto simp: o_def)
+qed
+
+
+(* strengthening of original *)
+(* Should be in misc but depends on Complex_Vector_Spaces.finite_span_closed *)
+thm infsum_scaleR_left
+lemma infsum_scaleR_left:
+  fixes c :: \<open>'a :: real_normed_vector\<close>
+  shows "infsum (\<lambda>x. f x *\<^sub>R c) A = infsum f A *\<^sub>R c"
+proof (cases \<open>f summable_on A\<close>)
+  case True
+  then show ?thesis 
+   apply (subst asm_rl[of \<open>(\<lambda>x. f x *\<^sub>R c) = (\<lambda>y. y *\<^sub>R c) o f\<close>], simp add: o_def)
+   apply (rule infsum_comm_additive)
+  using True by (auto simp add: scaleR_left.additive_axioms)
+next
+  case False
+  then have \<open>\<not> (\<lambda>x. f x *\<^sub>R c) summable_on A\<close> if \<open>c \<noteq> 0\<close>
+    using summable_on_scaleR_left_converse[where A=A and f=f and c=c]
+    using that by auto
+  with False show ?thesis
+    apply (cases \<open>c = 0\<close>)
+    by (auto simp add: infsum_not_exists)
+qed
+
+
+(* Should be in misc but depends on Complex_Vector_Spaces.finite_span_closed *)
+lemma infsum_of_real: 
+  shows \<open>(\<Sum>\<^sub>\<infinity>x\<in>A. of_real (f x) :: 'b::{real_normed_vector, real_algebra_1}) = of_real (\<Sum>\<^sub>\<infinity>x\<in>A. f x)\<close>
+  unfolding of_real_def
+  by (rule infsum_scaleR_left)
+
 unbundle no_cblinfun_notation
 
 end

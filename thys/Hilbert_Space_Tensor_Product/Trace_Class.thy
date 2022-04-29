@@ -154,43 +154,43 @@ qed
 (* TODO: conway op, 18.2 Corollary *)
 lemma trace_norm_basis_invariance:
   assumes \<open>is_onb E\<close> and \<open>is_onb F\<close>
-  shows \<open>has_sum (\<lambda>e. cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e)) E t \<longleftrightarrow> has_sum (\<lambda>f. cmod ((abs_op A *\<^sub>V f) \<bullet>\<^sub>C f)) F t\<close>
+  shows \<open>has_sum (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) E t \<longleftrightarrow> has_sum (\<lambda>f. cmod (f \<bullet>\<^sub>C (abs_op A *\<^sub>V f))) F t\<close>
 proof -
   define B where \<open>B = sqrt_op (abs_op A)\<close>
-  have \<open>complex_of_real (cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e)) = (B* *\<^sub>V B*\<^sub>V e) \<bullet>\<^sub>C e\<close> for e
+  have \<open>complex_of_real (cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) = (B* *\<^sub>V B*\<^sub>V e) \<bullet>\<^sub>C e\<close> for e
     apply (simp add: B_def flip: cblinfun_apply_cblinfun_compose)
     by (metis (no_types, lifting) abs_op_pos cblinfun.zero_left cinner_commute cinner_zero_right complex_cnj_complex_of_real complex_of_real_cmod less_eq_cblinfun_def)
   also have \<open>\<dots> e = complex_of_real ((norm (B *\<^sub>V e))\<^sup>2)\<close> for e
     apply (subst cdot_square_norm[symmetric])
     apply (subst cinner_adj_left[symmetric])
     by (simp add: B_def)
-  finally have *: \<open>cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e) = (norm (B *\<^sub>V e))\<^sup>2\<close> for e
+  finally have *: \<open>cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e)) = (norm (B *\<^sub>V e))\<^sup>2\<close> for e
     by (metis Re_complex_of_real)
 
-  have \<open>has_sum (\<lambda>e. cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e)) E t \<longleftrightarrow> has_sum (\<lambda>e. (norm (B *\<^sub>V e))\<^sup>2) E t\<close>
+  have \<open>has_sum (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) E t \<longleftrightarrow> has_sum (\<lambda>e. (norm (B *\<^sub>V e))\<^sup>2) E t\<close>
     by (simp add: *)
   also have \<open>\<dots> = has_sum (\<lambda>f. (norm (B* *\<^sub>V f))\<^sup>2) F t\<close>
     apply (subst TODO_name2[where F=F])
     by (simp_all add: assms)
   also have \<open>\<dots> = has_sum (\<lambda>f. (norm (B *\<^sub>V f))\<^sup>2) F t\<close>
     using TODO_name2 assms(2) by blast
-  also have \<open>\<dots> = has_sum (\<lambda>e. cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e)) F t\<close>
+  also have \<open>\<dots> = has_sum (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) F t\<close>
     by (simp add: *)
   finally show ?thesis
     by simp
 qed
 
 definition trace_class :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner) \<Rightarrow> bool\<close> 
-  where \<open>trace_class A \<longleftrightarrow> (\<exists>E. is_onb E \<and> (\<lambda>e. cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e)) abs_summable_on E)\<close>
+  where \<open>trace_class A \<longleftrightarrow> (\<exists>E. is_onb E \<and> (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) abs_summable_on E)\<close>
 
 lemma trace_classI:
-  assumes \<open>is_onb E\<close> and \<open>(\<lambda>e. cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e)) abs_summable_on E\<close>
+  assumes \<open>is_onb E\<close> and \<open>(\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) abs_summable_on E\<close>
   shows \<open>trace_class A\<close>
   using assms(1) assms(2) trace_class_def by blast
 
 lemma trace_class_iff_summable:
   assumes \<open>is_onb E\<close>
-  shows \<open>trace_class A \<longleftrightarrow> (\<lambda>e. cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e)) abs_summable_on E\<close>
+  shows \<open>trace_class A \<longleftrightarrow> (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) abs_summable_on E\<close>
   apply (auto intro!: trace_classI assms simp: trace_class_def)
   using assms summable_on_def trace_norm_basis_invariance by blast
 
@@ -210,7 +210,7 @@ lemma trace_class_uminus[simp]: \<open>trace_class t \<Longrightarrow> trace_cla
 lemma trace_class_minus[simp]: \<open>trace_class t \<Longrightarrow> trace_class u \<Longrightarrow> trace_class (t - u)\<close>
   by (metis trace_class_plus trace_class_uminus uminus_add_conv_diff)
 
-definition trace_norm where \<open>trace_norm A = (if trace_class A then (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e)) else 0)\<close>
+definition trace_norm where \<open>trace_norm A = (if trace_class A then (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) else 0)\<close>
 
 definition trace where \<open>trace A = (if trace_class A then (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. e \<bullet>\<^sub>C (A *\<^sub>V e)) else 0)\<close>
 
@@ -224,7 +224,21 @@ lemma trace_class_abs_op[simp]: \<open>trace_class (abs_op A) = trace_class A\<c
 lemma trace_abs_op[simp]: \<open>trace (abs_op A) = trace_norm A\<close>
 proof (cases \<open>trace_class A\<close>)
   case True
-  then show ?thesis sorry
+  have pos: \<open>e \<bullet>\<^sub>C (abs_op A *\<^sub>V e) \<ge> 0\<close> for e
+    by (simp add: cinner_pos_if_pos)
+  then have abs: \<open>e \<bullet>\<^sub>C (abs_op A *\<^sub>V e) = abs (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))\<close> for e
+    by (simp add: abs_pos)
+  
+  have \<open>trace (abs_op A) = (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))\<close>
+    by (simp add: trace_def True)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. complex_of_real (cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))))\<close>
+    using pos abs complex_of_real_cmod by presburger
+  also have \<open>\<dots> = complex_of_real (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e)))\<close>
+    by (simp add: infsum_of_real)
+  also have \<open>\<dots> = trace_norm A\<close>
+    by (simp add: trace_norm_def True)
+  finally show ?thesis
+    by -
 next
   case False
   then show ?thesis 
@@ -233,7 +247,7 @@ qed
 
 lemma trace_norm_alt_def:
   assumes \<open>is_onb B\<close>
-  shows \<open>trace_norm A = (if trace_class A then (\<Sum>\<^sub>\<infinity>e\<in>B. cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e)) else 0)\<close>
+  shows \<open>trace_norm A = (if trace_class A then (\<Sum>\<^sub>\<infinity>e\<in>B. cmod (e  \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) else 0)\<close>
   by (metis (mono_tags, lifting) assms infsum_eqI' is_onb_some_chilbert_basis trace_norm_basis_invariance trace_norm_def)
 
 lemma trace_alt_def:
@@ -303,7 +317,7 @@ qed
 (* TODO remove (duplicate of trace_class_iff_summable) *)
 lemma trace_class_alt_def:
   assumes \<open>is_onb B\<close>
-  shows \<open>trace_class A \<longleftrightarrow> (\<lambda>e. cmod ((abs_op A *\<^sub>V e) \<bullet>\<^sub>C e)) abs_summable_on B\<close>
+  shows \<open>trace_class A \<longleftrightarrow> (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) abs_summable_on B\<close>
   using assms trace_class_iff_summable by blast
 
 lemma trace_class_butterfly[simp]: \<open>trace_class (butterfly x y)\<close> for x :: \<open>'a::complex_inner\<close> and y :: \<open>'b::chilbert_space\<close>
@@ -358,14 +372,14 @@ proof (rule ccontr)
     using \<open>norm x \<noteq> 0\<close> by (auto simp: is_ortho_set_def sgn_div_norm)
 
   from \<open>is_onb B\<close> that
-  have summable: \<open>(\<lambda>e. (abs_op a *\<^sub>V e) \<bullet>\<^sub>C e) abs_summable_on B\<close>
+  have summable: \<open>(\<lambda>e. e \<bullet>\<^sub>C (abs_op a *\<^sub>V e)) abs_summable_on B\<close>
     using trace_class_iff_summable by fastforce
 
   from that have \<open>0 = trace_norm a\<close>
     by simp
-  also from \<open>is_onb B\<close> have \<open>trace_norm a = (\<Sum>\<^sub>\<infinity>e\<in>B. cmod ((abs_op a *\<^sub>V e) \<bullet>\<^sub>C e))\<close>
+  also from \<open>is_onb B\<close> have \<open>trace_norm a = (\<Sum>\<^sub>\<infinity>e\<in>B. cmod (e \<bullet>\<^sub>C (abs_op a *\<^sub>V e)))\<close>
     by (smt (verit, ccfv_SIG) abs_norm_cancel infsum_cong infsum_not_exists real_norm_def trace_class_def trace_norm_alt_def)
-  also have \<open>\<dots> \<ge> (\<Sum>\<^sub>\<infinity>e\<in>{sgn x}. cmod ((abs_op a *\<^sub>V e) \<bullet>\<^sub>C e))\<close> (is \<open>_ \<ge> \<dots>\<close>)
+  also have \<open>\<dots> \<ge> (\<Sum>\<^sub>\<infinity>e\<in>{sgn x}. cmod (e \<bullet>\<^sub>C (abs_op a *\<^sub>V e)))\<close> (is \<open>_ \<ge> \<dots>\<close>)
     apply (rule infsum_mono2)
     using summable sgnx_B by auto
   also from xax' have \<open>\<dots> > 0\<close>
