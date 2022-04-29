@@ -899,6 +899,9 @@ proof (rule cblinfun_eq_0_on_UNIV_span[where basis=UNIV]; simp)
     by simp
 qed
 
+(* TODO: remvoe these from Registers.Misc *)
+abbreviation "butterket i j \<equiv> butterfly (ket i) (ket j)"
+abbreviation "selfbutterket i \<equiv> butterfly (ket i) (ket i)"
 
 unbundle no_cblinfun_notation
 

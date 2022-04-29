@@ -127,7 +127,7 @@ next
     using abs1 sum1 by auto
 qed
 
-(* TODO: conway, op, 18.1 Proposition (2nd part) *)
+(* TODO: @{cite conway00operator}, op, 18.1 Proposition (2nd part) *)
 lemma TODO_name2:
   fixes E :: \<open>'a::chilbert_space set\<close> and F :: \<open>'b::chilbert_space set\<close>
   assumes \<open>is_onb E\<close> and \<open>is_onb F\<close>
@@ -253,15 +253,12 @@ lemma trace_class_finite_dim'[simp]: \<open>trace_class A\<close> for A :: \<ope
 
 lemma circularity_of_trace:
   assumes \<open>trace_class a\<close>
+    \<comment> \<open>Actually, \<^term>\<open>trace_class (a o\<^sub>C\<^sub>L b) \<and> trace_class (b o\<^sub>C\<^sub>L a)\<close> is sufficient here, 
+        see @{cite "mathoverflow-circ-trace2"} but the proof is more involved.
+        Only \<^term>\<open>trace_class (a o\<^sub>C\<^sub>L b)\<close> is not sufficient, 
+        see @{cite "mathoverflow-circ-trace1"}.\<close>
   shows \<open>trace (a o\<^sub>C\<^sub>L b) = trace (b o\<^sub>C\<^sub>L a)\<close>
   sorry
-
-(* (* The conditions are all necessary, see https://mathoverflow.net/questions/76386/trab-trba *)
-(* See https://mathoverflow.net/a/76389/101775 for a proof *)
-lemma circularity_of_trace':
-  assumes \<open>trace_class (a o\<^sub>C\<^sub>L b)\<close> \<open>trace_class (b o\<^sub>C\<^sub>L a)\<close>
-  shows \<open>trace (a o\<^sub>C\<^sub>L b) = trace (b o\<^sub>C\<^sub>L a)\<close>
-  sorry *)
 
 lemma trace_class_comp_left: \<open>trace_class a \<Longrightarrow> trace_class (a o\<^sub>C\<^sub>L b)\<close>
   sorry

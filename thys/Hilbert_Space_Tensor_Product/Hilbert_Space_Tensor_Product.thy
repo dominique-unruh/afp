@@ -1,12 +1,12 @@
 theory Hilbert_Space_Tensor_Product
-  imports Complex_Bounded_Operators.Complex_L2 Registers.Misc Misc_Tensor_Product
-    Strong_Operator_Topology
+  imports Complex_Bounded_Operators.Complex_L2 (* Registers.Misc *) Misc_Tensor_Product
+    Strong_Operator_Topology Polynomial_Interpolation.Ring_Hom
 begin
 
 unbundle cblinfun_notation
-no_notation Group.m_inv ("inv\<index> _" [81] 80)
-no_notation Congruence.eq_closure_of ("closure'_of\<index>")
-no_notation Order.bottom ("\<bottom>\<index>")
+(* no_notation Group.m_inv ("inv\<index> _" [81] 80) *)
+(* no_notation Congruence.eq_closure_of ("closure'_of\<index>") *)
+(* no_notation Order.bottom ("\<bottom>\<index>") *)
 
 subsection \<open>Tensor product on \<^typ>\<open>_ ell2\<close>\<close>
 
