@@ -2,6 +2,8 @@ theory With_Type_Inst_HOL
   imports With_Type HOL.Real_Vector_Spaces
 begin
 
+setup \<open>With_Type.add_relator_global \<^type_name>\<open>list\<close>
+  (fn ctxt => fn mk => fn \<^Type>\<open>filter T\<close> => \<^Term>\<open>list_all2 \<open>mk T\<close>\<close> ctxt)\<close>
 
 lemma itself_transfer[with_type_transfer_rules]:
   \<open>Transfer.Rel rel_itself TYPE('a) TYPE('b)\<close>
@@ -255,9 +257,166 @@ declare right_unique_eq [with_type_transfer_rules]
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_space_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_space\<close>\<close>
 
-(* declare [[show_types]] *)
-
-(* Contains "Domainp (\<lambda>a aa. ?r a aa)", needs eta-reducing somewhere before simplification *)
 local_setup \<open>define_stuff \<^here> \<^class>\<open>complete_space\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_vector_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_vector\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>real_vector\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_normed_vector_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_normed_vector\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>real_normed_vector\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semigroup_mult\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semigroup_mult\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ring\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.monoid_mult_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.monoid_mult\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>monoid_mult\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.zero_neq_one\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>zero_neq_one\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ring_1\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ring_1\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.division_ring_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.division_ring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>division_ring\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ab_semigroup_mult_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ab_semigroup_mult\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ab_semigroup_mult\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_semiring_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_semiring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>comm_semiring\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_ring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>comm_ring\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_monoid_mult_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_monoid_mult\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>comm_monoid_mult\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_ring_1\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>comm_ring_1\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.mult_zero\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>mult_zero\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_0\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_0\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_1\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_1\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.field_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.field\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>field\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.preorder\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>preorder\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.order_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.order\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>order\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_ab_semigroup_add_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_ab_semigroup_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_ab_semigroup_add\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_ab_group_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_ab_group_add\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_algebra_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_algebra\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>real_algebra\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_algebra_1\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>real_algebra_1\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_normed_algebra_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_normed_algebra\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>real_normed_algebra\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_normed_algebra_1_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_normed_algebra_1\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>real_normed_algebra_1\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.order_top_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.order_top\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>order_top\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.order_bot_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.order_bot\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>order_bot\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semilattice_sup_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semilattice_sup\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semilattice_sup\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semilattice_inf_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semilattice_inf\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semilattice_inf\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.lattice\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>lattice\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.bounded_lattice\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>bounded_lattice\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_lattice_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_lattice\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>complete_lattice\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.no_top_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.no_top\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>no_top\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.no_bot_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.no_bot\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>no_bot\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_comm_monoid_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_comm_monoid_add\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_semiring_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_semiring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_semiring\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.cancel_ab_semigroup_add_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.cancel_ab_semigroup_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>cancel_ab_semigroup_add\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_cancel_ab_semigroup_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_cancel_ab_semigroup_add\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_semiring_0\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>comm_semiring_0\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.zero_less_one_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.zero_less_one\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>zero_less_one\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_no_zero_divisors_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_no_zero_divisors\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_no_zero_divisors\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.idom\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>idom\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.idom_abs_sgn_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.idom_abs_sgn\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>idom_abs_sgn\<close>\<close>
+
 
 end (* theory *)

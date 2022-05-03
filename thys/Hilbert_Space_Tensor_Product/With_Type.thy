@@ -617,7 +617,8 @@ fun create_transfer_for_term ctxt name_fun (term:term) = let
   open Conv
   val _ = has_var_tvar term andalso raise TERM ("create_transfer_for_term: contains schematic (term/type) variables", [term])
   (* val _ = has_tvar' term andalso raise TERM ("create_transfer_for_term: contains schematic type variables", [term]) *)
-  val rules = Proof_Context.get_thms ctxt \<^named_theorems>\<open>with_type_transfer_rules\<close>
+  val rules = Proof_Context.get_thms ctxt \<^named_theorems>\<open>with_type_transfer_rules\<close> 
+                |> rev (* 'rev' has the effect that later rules take priority *)
   val rel = mk_relation_for_type ctxt name_fun (fastype_of term)
   val basic_rels = Term.add_tfrees term [] |> map (mk_relation_for_tfree name_fun)
   (* val basic_rels = Term.add_frees rel [] *)
@@ -636,12 +637,11 @@ fun create_transfer_for_term ctxt name_fun (term:term) = let
           val tac = infer_instantiate ctxt inst |> PRIMITIVE
       in tac end)
   fun step_tac ctxt prems i =
-    (instantiate_rel_tac ctxt
-(*      THEN'
-     CONVERSION (Simplifier.rewrite ((clear_simpset ctxt) addsimps rel_simp_rules)
-                               |> arg_conv(*rel*) |> fun2_conv(*Rel rel*) |> arg_conv(*Trueprop*)) *)
+    (CONVERSION Thm.eta_conversion
      THEN'
-     ((* trace_tac ctxt "resolve_tac" *) (resolve_tac ctxt rules)
+     instantiate_rel_tac ctxt
+     THEN'
+     (trace_tac ctxt "resolve_tac" (resolve_tac ctxt rules)
       (* ORELSE' (resolve_tac ctxt @{thms RelI} THEN' resolve_tac ctxt rules) *)
       ORELSE' error_tac ctxt (fn t => "No transfer rule found for " ^ t))
      THEN_ALL_NEW step_premise_tac ctxt prems) i
@@ -737,7 +737,7 @@ lemma [with_type_transfer_rules]: \<open>Domainp T = DT1 \<Longrightarrow> Domai
 lemma [with_type_transfer_rules]: \<open>Domainp T1 = DT1 \<Longrightarrow> Domainp T2 = DT2 \<Longrightarrow> Domainp (rel_prod T1 T2) = pred_prod DT1 DT2\<close>
   using prod.Domainp_rel by auto
 
-lemma [with_type_transfer_rules]: \<open>is_equality T1 \<Longrightarrow> Domainp T2 = DT2 \<Longrightarrow> Domainp (rel_fun T1 T2) = pred_fun (\<lambda>_. True) (Domainp T2)\<close>
+lemma [with_type_transfer_rules]: \<open>is_equality T1 \<Longrightarrow> Domainp T2 = DT2 \<Longrightarrow> Domainp (rel_fun T1 T2) = pred_fun (\<lambda>_. True) DT2\<close>
   using fun.Domainp_rel
   by (metis is_equality_def)
 
@@ -782,6 +782,7 @@ fun create_transfer_thm ctxt class (* rel_const rel_const_def_thm *) = let
   (* val class_const_def_thm = Proof_Context.get_thm ctxt ((class_const |> dest_Const |> fst) ^ "_def") |> Drule.abs_def *)
   val class_const_curried = subst_TVars [(("'a",0), TFree("'abs",\<^sort>\<open>type\<close>))] class_const_curried
   fun name_fun "'abs" = ("r", "'rep", "S")
+val _ = \<^print> (class_const_curried |> Thm.cterm_of ctxt)
   val thm = create_transfer_for_term ctxt name_fun class_const_curried
   val transferred = thm
     |> Thm.concl_of |> HOLogic.dest_Trueprop
@@ -789,7 +790,7 @@ fun create_transfer_thm ctxt class (* rel_const rel_const_def_thm *) = let
     |> unvarify_sortify'
     |> lambda (Var(("S",0), TFree("'rep",\<^sort>\<open>type\<close>) --> HOLogic.boolT))
   (* Check if all is right: *)
-  val tfrees = Term.add_tfrees transferred [] |> \<^print>
+  val tfrees = Term.add_tfrees transferred []
   val _ = tfrees = [("'rep",\<^sort>\<open>type\<close>)]
             orelse raise TERM ("create_transfer_thm: transferred term contains type variables besides 'rep", [transferred, Thm.prop_of thm])
   in
