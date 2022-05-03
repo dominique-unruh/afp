@@ -3,18 +3,10 @@ theory With_Type_Inst_HOL
 begin
 
 
-ML \<open>
-Class.rules \<^theory> \<^class>\<open>finite\<close>
-\<close>
-
 lemma itself_transfer[with_type_transfer_rules]:
   \<open>Transfer.Rel rel_itself TYPE('a) TYPE('b)\<close>
   by (simp add: RelI rel_itself.simps)
 
-
-ML \<open>
-Thm.all_axioms_of \<^theory> |> filter (fn (n,th) => String.isSubstring "finite" n andalso String.isSubstring "class" n)
-\<close>
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.finite\<close>\<close>
 thm with_type_transfer_Finite_Set_class_finite
@@ -27,61 +19,13 @@ lemma aux3:
   by (metis Rel_def assms rel_funI rel_itself.cases)
 
 declare with_type_transfer_Finite_Set_class_finite[THEN aux3[where B=\<open>class.finite\<close>], with_type_transfer_rules]
-thm  with_type_transfer_Finite_Set_class_finite[THEN aux3[where B=\<open>class.finite\<close>], with_type_transfer_rules]
-
-ML \<open>
-\<^term>\<open>OFCLASS('a,class.finite)\<close>
-\<close>
-
-ML \<open>
-fun name_fun "'abs" = ("r", "'rep", "S")
-\<close>
-
-ML \<open>
-;;
-create_transfer_for_term \<^context> name_fun \<^term>\<open>\<lambda>_::unit. OFCLASS('abs,class.finite)\<close>
-\<close>
-
-ML \<open>
-  fun instantiate_rel_tac ctxt = SUBGOAL (fn (t,i) => 
-      let val _ = \<^print> (Thm.cterm_of ctxt t,i)
-          val vars = case t of (\<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>Transfer.Rel _ _\<close> $ rel $ _ $ _)) => Term.add_vars rel [] |> \<^print>
-val _ = \<^print> ("preinst", map (fn (ni, T) => (ni, (T |> range_type |> domain_type) )) vars)
-          val inst = map (fn (ni, T) => (ni, mk_relation_for_type ctxt name_fun (T |> range_type |> domain_type) |> Thm.cterm_of ctxt)) vars
-val _ = \<^print> ("inst",inst)
-          val tac = infer_instantiate ctxt inst |> PRIMITIVE
-      in tac end)
-\<close>
-
-ML \<open>
-mk_relation_for_type \<^context> name_fun \<^typ>\<open>'abs itself\<close>
-\<close>
-
-
-schematic_goal "Transfer.Rel (rel_fun (=) (=)) ?X (\<lambda>_. class.finite TYPE('abs))"
-  apply (rule RelI)
-  apply transfer_prover_start
-    apply (tactic \<open>instantiate_rel_tac \<^context> 1\<close>)
-  oops
+thm with_type_transfer_Finite_Set_class_finite[THEN aux3[where B=\<open>class.finite\<close>], with_type_transfer_rules]
 
 local_setup \<open>define_stuff \<^here> \<^class>\<open>finite\<close>\<close>
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semigroup_add\<close>\<close>
-thm with_type_transfer_Groups_class_semigroup_add
-
-thm with_type_transfer_rules
 
 local_setup \<open>define_stuff \<^here> \<^class>\<open>semigroup_add\<close>\<close>
-
-(*   shows \<open>rel_fun (rel_fun r (rel_fun r r)) (=) ?X
-          (\<lambda>plus. \<forall>a b c. plus (plus a b) c = plus a (plus b c))\<close>  *)
-
-
-(* TODO: should not be needed *)
-declare with_type_semigroup_add_class_transfer[
-    unfolded with_type_semigroup_add_class_def fst_conv snd_conv with_type_semigroup_add_class_rel_def,
-    transfer_rule]
-declare class.ab_semigroup_add_axioms_def[with_type_simps]
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ab_semigroup_add_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ab_semigroup_add\<close>\<close>
@@ -128,101 +72,25 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.
 local_setup \<open>define_stuff \<^here> \<^class>\<open>ab_group_add\<close>\<close>
 
 (* ML \<open>
-fun mk_equals_ct ctxt lhs rhs = let val T = Thm.typ_of_cterm lhs in
-  Thm.mk_binop (Thm.cterm_of ctxt (Const ("Pure.eq", T --> T --> propT))) lhs rhs end
-fun mk_equals_ct_error ctxt lhs rhs = mk_equals_ct ctxt lhs rhs
-  handle CTERM _ => error "mk_equals_ct_error" | TERM _ => error "mk_equals_ct_error" | TYPE _ => error "mk_equals_ct_error" | THM _ => error "mk_equals_ct_error"
-fun schematic_subst_conv f ctxt (ct:cterm) = (case Thm.term_of ct of
-  Var v => (case f v of
-              SOME ct' => (\<^print> (ct,ct'); mk_equals_ct_error ctxt ct ct' |> \<^print> |> Thm.assume)
-            | NONE => raise CTERM("schematic_subst_conv", [ct]))
-  | _ => raise CTERM("schematic_subst_conv", [ct]))
-;;
-fun schematic_subst_conv' f ctxt = schematic_subst_conv (Option.map (Thm.cterm_of ctxt) o f) ctxt
-;;
-val test = schematic_subst_conv' (fn ((n,0),T) => SOME (Const(\<^const_name>\<open>undefined\<close>, \<^typ>\<open>String.literal\<close> --> T) $ HOLogic.mk_literal n) | _ => NONE)
-val ctxt = \<^context>
-val ct = Syntax.read_term (Proof_Context.set_mode Proof_Context.mode_schematic ctxt) "?x + 5 = ?y" |> Thm.cterm_of ctxt
-val conv_result = Conv.top_sweep_conv test ctxt ct
-\<close> *)
-
-ML \<open>
-fun collect_rel_vars (\<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>Transfer.Rel _ _\<close> $ rel $ _ $ _)) = Term.add_vars rel
-\<close>
-
-
-(* 
-schematic_goal \<open>Transfer.Rel
-  (rel_fun (rel_fun (r'a::'rep'a \<Rightarrow> 'a \<Rightarrow> bool) (rel_fun r'a r'a))
-    (rel_fun r'a (rel_fun (rel_fun r'a (rel_fun r'a r'a)) (rel_fun (rel_fun r'a r'a) (=)))))
-  (?X::('rep'a \<Rightarrow> 'rep'a \<Rightarrow> 'rep'a) \<Rightarrow> 'rep'a \<Rightarrow> ('rep'a \<Rightarrow> 'rep'a \<Rightarrow> 'rep'a) \<Rightarrow> ('rep'a \<Rightarrow> 'rep'a) \<Rightarrow> bool)
-  (\<lambda>(plus::'a \<Rightarrow> 'a \<Rightarrow> 'a) (zero::'a) (minus::'a \<Rightarrow> 'a \<Rightarrow> 'a) uminus::'a \<Rightarrow> 'a.
-      (\<forall>a::'a. plus (uminus a) a = zero) \<and> (\<forall>(a::'a) b::'a. minus a b = plus a (uminus b)))\<close>
-  unfolding Rel_def
-  apply transfer_prover_start
-        apply (tactic \<open>CONVERSION Thm.eta_conversion |> ALLGOALS\<close>)
-ML \<open>
-Goal.prove
-Thm.biresolution
-\<close>
-
-  apply (rule rel_funI)+
- *)
-
-(* local_setup \<open>define_stuff \<^here> \<^class>\<open>scaleR\<close>\<close> *)
-(* local_setup \<open>define_stuff \<^here> \<^class>\<open>norm\<close>\<close> *)
-(* local_setup \<open>define_stuff \<^here> \<^class>\<open>sgn\<close>\<close> *)
-(* local_setup \<open>define_stuff \<^here> \<^class>\<open>minus\<close>\<close> *)
-(* local_setup \<open>define_stuff \<^here> \<^class>\<open>open\<close>\<close> *)
-(* local_setup \<open>define_stuff \<^here> \<^class>\<open>uniformity\<close>\<close> *)
-
-ML \<open>
 Thm.all_axioms_of \<^theory> |> filter (fn (name,thm) => 
     case Thm.prop_of thm of
       Const(\<^const_name>\<open>Pure.eq\<close>,_) $ lhs $ _ => 
          (case head_of lhs of Const(n,_) => n=\<^const_name>\<open>inverse\<close>
                                | _ => false)
      | _ => false)
-\<close>
+\<close> *)
 
-ML \<open>
-get_raw_definitions \<^context> \<^const_name>\<open>inverse_rat_inst.inverse_rat\<close>\<close>
+(* ML \<open>
+get_raw_definitions \<^context> \<^const_name>\<open>inverse_rat_inst.inverse_rat\<close>\<close> *)
 
 
 lemma [with_type_transfer_rules]: \<open>Transfer.Rel (rel_fun (=) (rel_fun r (rel_fun r r))) If If\<close>
   using If_transfer RelI' by blast
 
-lemma xxxxx[with_type_transfer_rules]: \<open>Transfer.Rel (rel_fun (rel_fun A B) (rel_fun (rel_fun C D) (rel_fun (rel_fun B C) (rel_fun A D)))) map_fun map_fun\<close>
+lemma [with_type_transfer_rules]: \<open>Transfer.Rel (rel_fun (rel_fun A B) (rel_fun (rel_fun C D) (rel_fun (rel_fun B C) (rel_fun A D)))) map_fun map_fun\<close>
   by (rule Transfer.transfer_raw)
 
-thm Transfer.transfer_raw(153)[no_vars]
-
-schematic_goal \<open>Transfer.Rel
-                            (rel_fun (=)
-                              (rel_fun (=) (rel_fun (rel_fun (rel_prod (=) (=)) (rel_prod (=) (=))) (rel_fun (=) (=)))))
-                            ?a20 map_fun\<close>
-  unfolding rel_fun_eq prod.rel_eq
-  apply (rule Rel_eq_refl)
-  oops
-
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>inverse_rat_inst.inverse_rat\<close>\<close>
-(* 
-Solve this by:
-- Applying bi_unique (=), right_total (=), Domainp (=) = ... whenever the rhs type has not typ vars
- *)
-
-ML \<open>
-get_raw_definitions \<^context> \<^const_name>\<open>inverse\<close>
-\<close>
-
-ML \<open>
-val defs = Thm.all_axioms_of \<^theory> |> List.filter (fn (name,thm) => 
-    Thm.prop_of thm |> exists_Const (fn (c,_) => c=\<^const_name>\<open>inverse\<close>))
-
-\<close>
-
-
-  (* by ERROR: "inverse is overloaded, where do we get the right def?" *)
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>inverse\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.sgn_div_norm\<close>\<close>
@@ -346,31 +214,6 @@ lemma [with_type_transfer_rules]: \<open>Domainp (rel_filter R) = (\<lambda>F. F
 declare right_total_rel_filter [with_type_transfer_rules]
 declare bi_unique_rel_filter [with_type_transfer_rules]
 
-ML \<open>
-Transfer.prep_conv \<^cprop>\<open>(rel_fun (rel_set (rel_filter (rel_prod r'a r'a))) (rel_filter (rel_prod r'a r'a))) Inf Inf\<close>
-\<close>
-
-attribute_setup add_Rel = 
-  \<open>let val Rel_rule = Thm.symmetric @{thm Rel_def}
-       fun Rel_conv ct = let
-            val (cT, cT') = Thm.dest_funT (Thm.ctyp_of_cterm ct)
-            val (cU, _) = Thm.dest_funT cT'
-         in Thm.instantiate' [SOME cT, SOME cU] [SOME ct] Rel_rule end
-(*        fun nprems (Const(\<^const_name>\<open>implies\<close>, _) $ _ $ t) = nprems t + 1
-         | nprems _ = 0 
-       fun final_concl_conv conv ct = Conv.concl_conv (nprems (Thm.term_of ct)) conv ct *)
-       fun final_concl_conv conv ct = case Thm.term_of ct of
-         Const(\<^const_name>\<open>Pure.imp\<close>,_) $ _ $ _ => Conv.implies_concl_conv (final_concl_conv conv) ct
-         | _ => conv ct
-       (* val final_concl_conv = Conv.implies_concl_conv *)
-       val add_Rel = 
-          Rel_conv |> Conv.fun_conv |> Conv.fun_conv |> HOLogic.Trueprop_conv |> final_concl_conv
-            |> Conv.fconv_rule
-  in Thm.rule_attribute [] (fn _ => add_Rel) |> Scan.succeed end\<close>
-  \<open>Adds Transfer.Rel to a theorem (if possible)\<close>
-
-thm Inf_filter_parametric'[add_Rel]
-
 declare Inf_filter_parametric'[add_Rel, with_type_transfer_rules]
 
 declare eventually_parametric[add_Rel, with_type_transfer_rules]
@@ -385,82 +228,36 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.
 
 local_setup \<open>define_stuff \<^here> \<^class>\<open>open_uniformity\<close>\<close>
 
-(* lemmas with_type_uniformity_dist_class_transfer'[transfer_rule] = with_type_uniformity_dist_class_transfer[
-    unfolded with_type_uniformity_dist_class_def fst_conv snd_conv with_type_uniformity_dist_class_rel_def,
-    THEN tmp]
-lemmas with_type_open_uniformity_class_transfer'[transfer_rule] = with_type_open_uniformity_class_transfer[
-    unfolded with_type_open_uniformity_class_def fst_conv snd_conv with_type_open_uniformity_class_rel_def,
-    THEN tmp]
-declare class.metric_space_axioms_def[with_type_simps] *)
-
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.metric_space_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.metric_space\<close>\<close>
 
 local_setup \<open>define_stuff \<^here> \<^class>\<open>metric_space\<close>\<close>
 
-(* lemmas with_type_metric_space_class_transfer'[transfer_rule] = with_type_metric_space_class_transfer[
-    unfolded with_type_metric_space_class_def fst_conv snd_conv with_type_metric_space_class_rel_def,
-    THEN tmp3]
-declare class.complete_space_axioms_def[with_type_simps] *)
-
-(* local_setup \<open>
-local_note \<^binding>\<open>uniform_space_class_Cauchy_uniform_raw\<close>
-(Thm.axiom \<^theory> "Topological_Spaces.uniform_space.Cauchy_uniform_raw")
-\<close>
-
-local_setup \<open>
-local_note \<^binding>\<open>uniform_space_class_cauchy_filter_def_raw\<close>
-(Thm.axiom \<^theory> "Topological_Spaces.uniform_space.cauchy_filter_def_raw")
-\<close>
-
-term uniform_space.cauchy_filter *)
+declare prod_filter_parametric [add_Rel, with_type_transfer_rules]
+declare le_filter_parametric [add_Rel, with_type_transfer_rules]
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>uniform_space.cauchy_filter\<close>\<close>
 
+lemma [with_type_transfer_rules]: \<open>is_equality r \<Longrightarrow> is_equality (rel_filter r)\<close>
+  by (rule relator_eq_raw)
 
-lemma uniform_space_cauchy_filter_parametric[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique r\<close>
-  shows \<open>(rel_filter (rel_prod r r) ===> rel_filter r ===> (\<longleftrightarrow>)) uniform_space.cauchy_filter uniform_space.cauchy_filter\<close>
-  unfolding uniform_space_class_cauchy_filter_def_raw
-  by transfer_prover
+declare filtermap_parametric [add_Rel, with_type_transfer_rules]
 
-lemma uniform_space_Cauchy_parametric[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique r\<close>
-  shows \<open>(rel_filter (rel_prod r r) ===> ((=) ===> r) ===> (\<longleftrightarrow>)) uniform_space.Cauchy uniform_space.Cauchy\<close>
-  using filtermap_parametric[transfer_rule] apply fail?
-  unfolding uniform_space_class_Cauchy_uniform_raw
-  by transfer_prover
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>uniform_space.Cauchy\<close>\<close>
 
-local_setup \<open>
-local_note \<^binding>\<open>topological_space_nhds_def_raw\<close>
-(Thm.axiom \<^theory> "Topological_Spaces.topological_space.nhds_def_raw")
-\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>filterlim\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>topological_space.nhds\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>topological_space.convergent\<close>\<close>
 
-lemma topological_space_nhds_parametric[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique r\<close>
-  shows \<open>((rel_set r ===> (\<longleftrightarrow>)) ===> r ===> rel_filter r)  topological_space.nhds topological_space.nhds\<close>
-  by simp
+declare right_total_fun [with_type_transfer_rules]
+declare right_unique_eq [with_type_transfer_rules]
 
-local_setup \<open>
-local_note \<^binding>\<open>topological_space_convergent_def_raw\<close>
-(Thm.axiom \<^theory> "Topological_Spaces.topological_space.convergent_def_raw")
-\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_space_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_space\<close>\<close>
 
-lemma topological_space_convergent_parametric[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique r\<close>
-  shows \<open>((rel_set r ===> (\<longleftrightarrow>)) ===> ((=) ===> r) ===> (\<longleftrightarrow>))  topological_space.convergent topological_space.convergent\<close>
-  using filtermap_parametric[transfer_rule] apply fail?
-  unfolding topological_space_convergent_def_raw
-  apply transfer_prover_start
-     
-apply transfer_step+
-  by transfer_prover
-  term topological_space.convergent
+(* declare [[show_types]] *)
 
+(* Contains "Domainp (\<lambda>a aa. ?r a aa)", needs eta-reducing somewhere before simplification *)
 local_setup \<open>define_stuff \<^here> \<^class>\<open>complete_space\<close>\<close>
 
 end (* theory *)

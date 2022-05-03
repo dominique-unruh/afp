@@ -508,7 +508,6 @@ inductive rel_itself :: \<open>'a itself \<Rightarrow> 'b itself \<Rightarrow> b
   where \<open>rel_itself TYPE('a) TYPE('b)\<close>
 
 ML \<open>
-(* TODO extensible *)
 fun mk_relation_for_tfree name_fun (n,s) = 
   let val (r,rep,_) = name_fun n in (r, TFree(rep,s) --> TFree(n,s) --> HOLogic.boolT) end
   (* ("r"^n, TFree("'rep"^n,s) --> TFree(n,s) --> HOLogic.boolT) *)
@@ -565,11 +564,6 @@ lemma RelI:
   by (simp add: Rel_def assms)
 
 named_theorems with_type_transfer_rules
-
-lemma [with_type_transfer_rules]:
-  includes lifting_syntax
-  shows \<open>Transfer.Rel ((\<longleftrightarrow>) ===> (\<longleftrightarrow>) ===> (\<longleftrightarrow>)) (\<and>) (\<and>)\<close>
-  by (simp add: Rel_eq_refl rel_fun_eq)
 
 lemma with_type_transfer_Ex[with_type_transfer_rules]:
   includes lifting_syntax
@@ -636,8 +630,6 @@ fun create_transfer_for_term ctxt name_fun (term:term) = let
   val goal = \<^Term>\<open>Trueprop (Transfer.Rel \<open>rel\<close> ?X \<open>term\<close>)\<close> ctxt
   fun step_premise_tac ctxt prems i = 
     ((resolve_tac ctxt (prems @ rules) THEN_ALL_NEW step_premise_tac ctxt prems) ORELSE' error_tac ctxt (fn t => "NYI: "^t)) i (* TODO: do something about "NYI" *)
-(* TODO: extensible *)
-  (* val rel_simp_rules = @{thms rel_fun_eq[THEN eq_reflection] prod.rel_eq[THEN eq_reflection] rel_set_eq[THEN eq_reflection]} *)
   fun instantiate_rel_tac ctxt = SUBGOAL (fn (t,i) => 
       let val vars = case t of (\<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>Transfer.Rel _ _\<close> $ rel $ _ $ _)) => Term.add_vars rel []
           val inst = map (fn (ni, T) => (ni, mk_relation_for_type ctxt name_fun (T |> range_type |> domain_type) |> Thm.cterm_of ctxt)) vars
@@ -668,15 +660,39 @@ in thm end
 
 lemmas RelI' = RelI[of \<open>rel_fun _ _\<close>]
 
-declare eq_transfer[THEN RelI', with_type_transfer_rules]
-declare case_prod_transfer[THEN RelI', with_type_transfer_rules]
-(* declare Pair_transfer[with_type_transfer_rules] *)
-declare prod.bi_unique_rel[with_type_transfer_rules]
+
+attribute_setup add_Rel = 
+  \<open>let val Rel_rule = Thm.symmetric @{thm Rel_def}
+       fun Rel_conv ct = let
+            val (cT, cT') = Thm.dest_funT (Thm.ctyp_of_cterm ct)
+            val (cU, _) = Thm.dest_funT cT'
+         in Thm.instantiate' [SOME cT, SOME cU] [SOME ct] Rel_rule end
+(*        fun nprems (Const(\<^const_name>\<open>implies\<close>, _) $ _ $ t) = nprems t + 1
+         | nprems _ = 0 
+       fun final_concl_conv conv ct = Conv.concl_conv (nprems (Thm.term_of ct)) conv ct *)
+       fun final_concl_conv conv ct = case Thm.term_of ct of
+         Const(\<^const_name>\<open>Pure.imp\<close>,_) $ _ $ _ => Conv.implies_concl_conv (final_concl_conv conv) ct
+         | _ => conv ct
+       (* val final_concl_conv = Conv.implies_concl_conv *)
+       val add_Rel = 
+          Rel_conv |> Conv.fun_conv |> Conv.fun_conv |> HOLogic.Trueprop_conv |> final_concl_conv
+            |> Conv.fconv_rule
+       fun add_Rel' ctxt thm = let val thm' = add_Rel thm
+                                   val _ = tracing ("[add_Rel] rewrote to: " ^ (thm' |> Thm.prop_of |> Syntax.string_of_term ctxt))
+                               in thm' end
+  in Thm.rule_attribute [] (add_Rel' o Context.proof_of) |> Scan.succeed end\<close>
+  \<open>Adds Transfer.Rel to a theorem (if possible)\<close>
+
+declare eq_transfer[add_Rel, with_type_transfer_rules]
+declare case_prod_transfer[add_Rel, with_type_transfer_rules]
+declare prod.bi_unique_rel[with_type_transfer_rules] thm prod.bi_unique_rel
 
 ML \<open>
 fun create_transfers_for_const ctxt (const_name:string) = let
   open Conv
   val defs = get_raw_definitions ctxt const_name (*  |> unvarify_sortify lthy *)
+  val _ = tracing "Found raw definitions:"
+  val _ = List.app (fn thm => thm |> Thm.prop_of |> Syntax.string_of_term ctxt |> tracing) defs
   (* val const = def |> Thm.lhs_of |> Thm.term_of *)
   fun do_one def = let
     val term = def |> Thm.rhs_of |> Thm.term_of |> unvarify_sortify'
@@ -701,12 +717,7 @@ fun bind_transfers_for_const pos (const_name:string) lthy = let
   in fold_index do_one thms lthy end
 \<close>
 
-lemma [with_type_transfer_rules]:
-  includes lifting_syntax
-  shows \<open>Transfer.Rel ((=) ===> (=) ===> (=)) implies implies\<close>
-  by (simp add: Rel_eq_refl rel_fun_eq)
-
-declare Lifting_Set.member_transfer[THEN RelI', with_type_transfer_rules]
+declare Lifting_Set.member_transfer[add_Rel, with_type_transfer_rules] thm Lifting_Set.member_transfer
 
 lemma [with_type_transfer_rules]: 
   includes lifting_syntax
@@ -726,20 +737,22 @@ lemma [with_type_transfer_rules]: \<open>Domainp T = DT1 \<Longrightarrow> Domai
 lemma [with_type_transfer_rules]: \<open>Domainp T1 = DT1 \<Longrightarrow> Domainp T2 = DT2 \<Longrightarrow> Domainp (rel_prod T1 T2) = pred_prod DT1 DT2\<close>
   using prod.Domainp_rel by auto
 
-(* TODO: Are these maybe dangerous because they can instantiate ?r to something we do not want? *)
+lemma [with_type_transfer_rules]: \<open>is_equality T1 \<Longrightarrow> Domainp T2 = DT2 \<Longrightarrow> Domainp (rel_fun T1 T2) = pred_fun (\<lambda>_. True) (Domainp T2)\<close>
+  using fun.Domainp_rel
+  by (metis is_equality_def)
+
 lemma [with_type_transfer_rules]: \<open>Domainp (=) = (\<lambda>_. True)\<close>
   by auto
-lemma [with_type_transfer_rules]: \<open>Domainp (=) = (\<lambda>x. x \<in> UNIV)\<close>
-  by auto
-lemma [with_type_transfer_rules]: \<open>bi_unique (=)\<close>
-  by (rule bi_unique_eq)
+(* lemma [with_type_transfer_rules]: \<open>Domainp (=) = (\<lambda>x. x \<in> UNIV)\<close>
+  by auto *)
+declare bi_unique_eq [with_type_transfer_rules]
 
 (* declare Rel_eq_refl[with_type_transfer_rules] *)
 
 lemma is_equality_Rel_eq_refl[with_type_transfer_rules]: \<open>is_equality R \<Longrightarrow> Transfer.Rel R x x\<close>
   by (rule transfer_raw)
 
-ML \<open>create_transfers_for_const \<^context> \<^const_name>\<open>disj\<close>\<close>
+(* ML \<open>create_transfers_for_const \<^context> \<^const_name>\<open>disj\<close>\<close> *)
 
 lemma [with_type_transfer_rules]: \<open>Transfer.Rel (rel_fun A (rel_fun B (rel_prod A B))) Pair Pair\<close>
   by (simp add: Pair_transfer RelI')
@@ -753,67 +766,12 @@ declare is_equality_eq[with_type_transfer_rules]
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>fst\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>snd\<close>\<close>
-local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>disj\<close>\<close> (* TODO: Should this even be transferred? There is no free type variable here! *)
-thm with_type_transfer_HOL_disj
+(* local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>disj\<close>\<close> (* TODO: Should this even be transferred? There is no free type variable here! *) *)
+(* thm with_type_transfer_HOL_disj *)
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>insert\<close>\<close>
-thm with_type_transfer_rules
-thm finite_def
 
-declare Lifting_Set.empty_transfer[THEN RelI[of \<open>rel_set _\<close>], with_type_transfer_rules]
-declare Lifting_Set.finite_transfer[THEN RelI', with_type_transfer_rules]
-
-(* schematic_goal 
-  includes lifting_syntax
-  assumes \<open>bi_unique r\<close> \<open>right_total r\<close> \<open>Domainp r = (\<lambda>x. x \<in> S)\<close>
-  shows \<open>(rel_set r ===> (=)) ?X (lfp (\<lambda>p x. x = {} \<or> (\<exists>A a. x = insert a A \<and> p A)))\<close>
-  apply transfer_prover_start
-  apply (rule with_type_transfer_rules)+
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule assms)
-  apply (rule assms)
-  apply (rule assms)
-             apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule assms)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule assms)
-  apply (rule assms)
-  apply (rule with_type_transfer_rules)
-  apply (rule with_type_transfer_rules)
-  apply (rule assms)
-  apply (rule with_type_transfer_rules)
-  apply (rule assms)
-  apply (rule with_type_transfer_rules)
-(* DANGEROUS GOAL! UNIFIES WITH EVERYTHING! *)
-  oops *)
-
-
-
-(* local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>finite\<close>\<close> *)
+declare Lifting_Set.empty_transfer[add_Rel, with_type_transfer_rules]
+declare Lifting_Set.finite_transfer[add_Rel, with_type_transfer_rules]
 
 
 ML \<open>
@@ -824,9 +782,7 @@ fun create_transfer_thm ctxt class (* rel_const rel_const_def_thm *) = let
   (* val class_const_def_thm = Proof_Context.get_thm ctxt ((class_const |> dest_Const |> fst) ^ "_def") |> Drule.abs_def *)
   val class_const_curried = subst_TVars [(("'a",0), TFree("'abs",\<^sort>\<open>type\<close>))] class_const_curried
   fun name_fun "'abs" = ("r", "'rep", "S")
-val _ = \<^print> (4, class, class_const_curried)
   val thm = create_transfer_for_term ctxt name_fun class_const_curried
-val _ = \<^print> (5, class, class_const_curried)
   val transferred = thm
     |> Thm.concl_of |> HOLogic.dest_Trueprop
     |> dest_comb |> fst |> dest_comb |> snd
