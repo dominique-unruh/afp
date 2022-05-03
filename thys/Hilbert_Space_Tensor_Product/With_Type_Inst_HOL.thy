@@ -254,6 +254,8 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>topolo
 declare right_total_fun [with_type_transfer_rules]
 declare right_unique_eq [with_type_transfer_rules]
 
+declare left_unique_eq [with_type_transfer_rules]
+
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_space_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_space\<close>\<close>
 
@@ -417,6 +419,594 @@ local_setup \<open>define_stuff \<^here> \<^class>\<open>idom\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.idom_abs_sgn_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.idom_abs_sgn\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>idom_abs_sgn\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.dense_order_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.dense_order\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>dense_order\<close>\<close>
+
+(* local_setup \<open>define_stuff \<^here> \<^class>\<open>size\<close>\<close> (* TODO: better error. Probably from a Class.rules call *) *)
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.abs_if\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>abs_if\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.equal\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>equal\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.enum\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>enum\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linorder_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linorder\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linorder\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.wellorder_axioms\<close>\<close> (* TODO: insert left/right_unique into environment in transfer thm generation *)
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.wellorder\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>wellorder\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.numeral\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>numeral\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.monoid_add_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.monoid_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>monoid_add\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_numeral\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_numeral\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>comp\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>id\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>semiring_1.of_nat\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_char_0_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_char_0\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_char_0\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_semiring_1\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>comm_semiring_1\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.distrib_lattice_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.distrib_lattice\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>distrib_lattice\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.dense_linorder\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>dense_linorder\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>Complete_Partial_Order.chain\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ccpo_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ccpo\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ccpo\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.cancel_semigroup_add_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.cancel_semigroup_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>cancel_semigroup_add\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.group_add_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.group_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>group_add\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.neg_numeral\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>neg_numeral\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.cancel_comm_monoid_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>cancel_comm_monoid_add\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_monoid_diff_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_monoid_diff\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>comm_monoid_diff\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_0_cancel\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_0_cancel\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_1_cancel\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_1_cancel\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ring_char_0\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ring_char_0\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_semiring_0_cancel\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>comm_semiring_0_cancel\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_semiring_1_cancel_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_semiring_1_cancel\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>comm_semiring_1_cancel\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_modulo_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_modulo\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_modulo\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_parity_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_parity\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_parity\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ring_parity\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ring_parity\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_bits_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_bits\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_bits\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_semiring_0\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_semiring_0\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_comm_semiring_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_comm_semiring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_comm_semiring\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_cancel_semiring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_cancel_semiring\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.check_all\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>check_all\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_nonzero_semiring_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_nonzero_semiring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_nonzero_semiring\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_1_no_zero_divisors\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_1_no_zero_divisors\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semidom\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semidom\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_ab_semigroup_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_ab_semigroup_add\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unbounded_dense_linorder\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>unbounded_dense_linorder\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_cancel_comm_semiring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_cancel_comm_semiring\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.bounded_semilattice_inf_top\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>bounded_semilattice_inf_top\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.bounded_lattice_top\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>bounded_lattice_top\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.bounded_semilattice_sup_bot\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>bounded_semilattice_sup_bot\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.bounded_lattice_bot\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>bounded_lattice_bot\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.boolean_algebra_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.boolean_algebra\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>boolean_algebra\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.topological_space\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>topological_space\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.t0_space_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.t0_space\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>t0_space\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.t1_space_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.t1_space\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>t1_space\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.t2_space_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.t2_space\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>t2_space\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.t3_space_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.t3_space\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>t3_space\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.t4_space_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.t4_space\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>t4_space\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.perfect_space_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.perfect_space\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>perfect_space\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.order_topology_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.order_topology\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>order_topology\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.uniform_space_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.uniform_space\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>uniform_space\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.discrete_topology_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.discrete_topology\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>discrete_topology\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linorder_topology\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linorder_topology\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.canonically_ordered_monoid_add_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.canonically_ordered_monoid_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>canonically_ordered_monoid_add\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.dioid\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>dioid\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_bit_operations_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_bit_operations\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_bit_operations\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ring_bit_operations_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ring_bit_operations\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ring_bit_operations\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.strict_ordered_ab_semigroup_add_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.strict_ordered_ab_semigroup_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>strict_ordered_ab_semigroup_add\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.strict_ordered_comm_monoid_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>strict_ordered_comm_monoid_add\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_cancel_comm_monoid_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_cancel_comm_monoid_add\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_ab_semigroup_add_imp_le_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_ab_semigroup_add_imp_le\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_ab_semigroup_add_imp_le\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_cancel_comm_monoid_diff\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_cancel_comm_monoid_diff\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_no_zero_divisors_cancel_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_no_zero_divisors_cancel\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_no_zero_divisors_cancel\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semidom_divide_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semidom_divide\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semidom_divide\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.algebraic_semidom\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>algebraic_semidom\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semidom_modulo\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semidom_modulo\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ring_no_zero_divisors\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ring_no_zero_divisors\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ring_1_no_zero_divisors\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ring_1_no_zero_divisors\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semidom_divide_unit_factor_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semidom_divide_unit_factor\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semidom_divide_unit_factor\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.normalization_semidom_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.normalization_semidom\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>normalization_semidom\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_gcd_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_gcd\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_gcd\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ring_gcd\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ring_gcd\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_Gcd_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_Gcd\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_Gcd\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_div_algebra\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>real_div_algebra\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.euclidean_semiring_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.euclidean_semiring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>euclidean_semiring\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_cancel_ab_semigroup_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_cancel_ab_semigroup_add\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.normalization_semidom_multiplicative_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.normalization_semidom_multiplicative\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>normalization_semidom_multiplicative\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_gcd_mult_normalize\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_gcd_mult_normalize\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.first_countable_topology_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.first_countable_topology\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>first_countable_topology\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.banach\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>banach\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_normed_div_algebra_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_normed_div_algebra\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>real_normed_div_algebra\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.euclidean_semiring_cancel_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.euclidean_semiring_cancel\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>euclidean_semiring_cancel\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_semiring_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_semiring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>unique_euclidean_semiring\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_ab_semigroup_monoid_add_imp_le\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_ab_semigroup_monoid_add_imp_le\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_semiring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_semiring\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_ring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_ring\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_comm_ring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_comm_ring\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_semiring_1\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_semiring_1\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_ab_group_add\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_ab_group_add\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_ab_group_add_abs_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_ab_group_add_abs\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_ab_group_add_abs\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_ring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_ring\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_ring_abs_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_ring_abs\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_ring_abs\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_semiring_strict_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_semiring_strict\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_semiring_strict\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_ring_strict\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_ring_strict\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_semiring_1_strict\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_semiring_1_strict\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_comm_semiring_strict_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_comm_semiring_strict\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_comm_semiring_strict\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_semidom_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_semidom\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_semidom\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_real_vector_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_real_vector\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_real_vector\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_semiring_with_nat_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_semiring_with_nat\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>unique_euclidean_semiring_with_nat\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_semiring_numeral_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_semiring_numeral\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>unique_euclidean_semiring_numeral\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_ring_with_nat\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>unique_euclidean_ring_with_nat\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_semiring_1_cancel_crossproduct_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_semiring_1_cancel_crossproduct\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>comm_semiring_1_cancel_crossproduct\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.idom_divide\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>idom_divide\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.idom_modulo\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>idom_modulo\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.field_char_0\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>field_char_0\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.field_abs_sgn\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>field_abs_sgn\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_idom_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_idom\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_idom\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linordered_field\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linordered_field\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_field\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>real_field\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.euclidean_ring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>euclidean_ring\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.archimedean_field_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.archimedean_field\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>archimedean_field\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.floor_ceiling_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.floor_ceiling\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>floor_ceiling\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.real_normed_field\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>real_normed_field\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.euclidean_ring_cancel\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>euclidean_ring_cancel\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_ring_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_ring\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>unique_euclidean_ring\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_semiring_with_bit_operations\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>unique_euclidean_semiring_with_bit_operations\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.conditionally_complete_lattice_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.conditionally_complete_lattice\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>conditionally_complete_lattice\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.finite_lattice_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.finite_lattice\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>finite_lattice\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_distrib_lattice_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_distrib_lattice\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>complete_distrib_lattice\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.finite_distrib_lattice\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>finite_distrib_lattice\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_boolean_algebra\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>complete_boolean_algebra\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.conditionally_complete_linorder\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>conditionally_complete_linorder\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_linorder\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>complete_linorder\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linear_continuum_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linear_continuum\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linear_continuum\<close>\<close>
+
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linear_continuum_topology\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>linear_continuum_topology\<close>\<close>
+
+
+
+
+ML \<open>
+fun print_untransferred_classes ctxt except = let
+  val thy = Proof_Context.theory_of ctxt
+  val classes = Sign.all_classes thy
+  val untransferred = filter (fn class =>
+        is_none (With_Type.get_with_type_info_by_class ctxt class)  (* Not transferred_axioms *)
+        andalso not (is_none (fst (Class.rules thy class))) (* Not an axiomless class *)
+        andalso not (member (op=) except class) (* Not explicitly excluded *)
+      ) classes
+  val _ = tracing ("Total number of classes: " ^ string_of_int (length classes))
+  val _ = tracing ("Number of untransferred classes: " ^ string_of_int (length untransferred))
+  val _ = tracing ("Untransferred classes:\n")
+  val _ = List.app (fn class => tracing ("class " ^ Syntax.string_of_sort ctxt [class])) untransferred
+  in untransferred end
+\<close>
+
+
+ML \<open>
+print_untransferred_classes \<^context> []
+\<close>
 
 
 end (* theory *)

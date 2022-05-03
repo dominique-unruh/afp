@@ -129,18 +129,14 @@ local_setup \<open>define_stuff \<^here> \<^class>\<open>orthomodular_lattice\<c
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_orthomodular_lattice\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>complete_orthomodular_lattice\<close>\<close>
 
-
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unbounded_dense_order\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>unbounded_dense_order\<close>\<close>
-
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.partial_abs_if\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>partial_abs_if\<close>\<close>
 
-
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_semiring_1\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_semiring_1\<close>\<close>
-
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_semiring_strict_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_semiring_strict\<close>\<close>
@@ -173,5 +169,9 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.one_dim\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>one_dim\<close>\<close>
 
+
+ML \<open>
+print_untransferred_classes \<^context> []
+\<close>
 
 end

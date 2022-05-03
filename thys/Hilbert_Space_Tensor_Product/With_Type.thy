@@ -587,8 +587,8 @@ lemma with_type_transfer_UNIV[with_type_transfer_rules]:
   by (metis Rel_def assms(1) assms(2) right_total_UNIV_transfer)
 
 ML \<open>
-fun trace_tac ctxt str tac i st = let
-  val _ = tracing (str ^ " " ^ string_of_int i ^ " " ^ (Thm.cprem_of st i |> Thm.term_of |> Syntax.string_of_term ctxt))
+fun trace_tac ctxt pos str tac i st = let
+  val _ = tracing (str ^ Position.here pos ^ " " ^ string_of_int i ^ " " ^ (Thm.cprem_of st i |> Thm.term_of |> Syntax.string_of_term ctxt))
   fun after st' = let
     val new_goals = Thm.prems_of st' |> drop (i-1) |> take (Thm.nprems_of st' - Thm.nprems_of st + 1)
              |> map (Syntax.string_of_term ctxt)
@@ -641,7 +641,7 @@ fun create_transfer_for_term ctxt name_fun (term:term) = let
      THEN'
      instantiate_rel_tac ctxt
      THEN'
-     (trace_tac ctxt "resolve_tac" (resolve_tac ctxt rules)
+     (trace_tac ctxt \<^here> "resolve_tac" (resolve_tac ctxt rules)
       (* ORELSE' (resolve_tac ctxt @{thms RelI} THEN' resolve_tac ctxt rules) *)
       ORELSE' error_tac ctxt (fn t => "No transfer rule found for " ^ t))
      THEN_ALL_NEW step_premise_tac ctxt prems) i
@@ -737,9 +737,12 @@ lemma [with_type_transfer_rules]: \<open>Domainp T = DT1 \<Longrightarrow> Domai
 lemma [with_type_transfer_rules]: \<open>Domainp T1 = DT1 \<Longrightarrow> Domainp T2 = DT2 \<Longrightarrow> Domainp (rel_prod T1 T2) = pred_prod DT1 DT2\<close>
   using prod.Domainp_rel by auto
 
-lemma [with_type_transfer_rules]: \<open>is_equality T1 \<Longrightarrow> Domainp T2 = DT2 \<Longrightarrow> Domainp (rel_fun T1 T2) = pred_fun (\<lambda>_. True) DT2\<close>
+(* lemma [with_type_transfer_rules]: \<open>is_equality T1 \<Longrightarrow> Domainp T2 = DT2 \<Longrightarrow> Domainp (rel_fun T1 T2) = pred_fun (\<lambda>_. True) DT2\<close>
   using fun.Domainp_rel
-  by (metis is_equality_def)
+  by (metis is_equality_def) *)
+
+lemma [with_type_transfer_rules]: \<open>left_unique T \<Longrightarrow> Domainp T = DT \<Longrightarrow> Domainp S = DS \<Longrightarrow> Domainp (rel_fun T S) = pred_fun DT DS\<close>
+  using Domainp_pred_fun_eq by auto
 
 lemma [with_type_transfer_rules]: \<open>Domainp (=) = (\<lambda>_. True)\<close>
   by auto

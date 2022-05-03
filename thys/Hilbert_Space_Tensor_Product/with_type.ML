@@ -22,6 +22,8 @@ val add_relator_global : string -> (Proof.context -> (typ -> term) -> typ -> ter
 
 val get_relator : Proof.context -> string -> (Proof.context -> (typ -> term) -> typ -> term) option
 
+val get_with_type_info_by_class : Proof.context -> class -> with_type_info option
+
 (* Debug only *)
 val get_all_type_info : Proof.context -> { by_class: with_type_info Symtab.table, by_const: with_type_info Symtab.table, relators: (Proof.context -> (typ -> term) -> typ -> term) Symtab.table }
 
