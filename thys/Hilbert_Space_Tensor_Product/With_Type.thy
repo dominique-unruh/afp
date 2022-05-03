@@ -628,12 +628,11 @@ fun create_transfer_for_term ctxt name_fun (term:term) = let
   val basic_rels = Term.add_tfrees term [] |> map (mk_relation_for_tfree name_fun)
   (* val basic_rels = Term.add_frees rel [] *)
   fun S_of_rT_name T = T |> range_type |> domain_type |> dest_TFree |> fst |> name_fun |> #3
-  fun S_of_rT T  = Free(S_of_rT_name T,
-                          domain_type T |> HOLogic.mk_setT)
+  fun S_of_rT T  = Free(S_of_rT_name T, domain_type T --> HOLogic.boolT)
   fun S_of_r (_,T) = S_of_rT T
   val assms = basic_rels |> map (fn r =>
       [\<^Term>\<open>Trueprop (bi_unique \<open>Free r\<close>)\<close> ctxt, \<^Term>\<open>Trueprop (right_total \<open>Free r\<close>)\<close> ctxt,
-        \<^Term>\<open>Trueprop (Domainp \<open>Free r\<close> = (\<lambda>x. x \<in> \<open>S_of_r r\<close>))\<close> ctxt]) |> flat
+        \<^Term>\<open>Trueprop (Domainp \<open>Free r\<close> = \<open>S_of_r r\<close>)\<close> ctxt]) |> flat
   val goal = \<^Term>\<open>Trueprop (Transfer.Rel \<open>rel\<close> ?X \<open>term\<close>)\<close> ctxt
   fun step_premise_tac ctxt prems i = 
     ((resolve_tac ctxt (prems @ rules) THEN_ALL_NEW step_premise_tac ctxt prems) ORELSE' error_tac ctxt (fn t => "NYI: "^t)) i (* TODO: do something about "NYI" *)
@@ -763,7 +762,7 @@ thm finite_def
 declare Lifting_Set.empty_transfer[THEN RelI[of \<open>rel_set _\<close>], with_type_transfer_rules]
 declare Lifting_Set.finite_transfer[THEN RelI', with_type_transfer_rules]
 
-schematic_goal 
+(* schematic_goal 
   includes lifting_syntax
   assumes \<open>bi_unique r\<close> \<open>right_total r\<close> \<open>Domainp r = (\<lambda>x. x \<in> S)\<close>
   shows \<open>(rel_set r ===> (=)) ?X (lfp (\<lambda>p x. x = {} \<or> (\<exists>A a. x = insert a A \<and> p A)))\<close>
@@ -810,7 +809,7 @@ schematic_goal
   apply (rule assms)
   apply (rule with_type_transfer_rules)
 (* DANGEROUS GOAL! UNIFIES WITH EVERYTHING! *)
-  oops
+  oops *)
 
 
 
@@ -832,7 +831,7 @@ val _ = \<^print> (5, class, class_const_curried)
     |> Thm.concl_of |> HOLogic.dest_Trueprop
     |> dest_comb |> fst |> dest_comb |> snd
     |> unvarify_sortify'
-    |> lambda (Var(("S",0),HOLogic.mk_setT (TFree("'rep",\<^sort>\<open>type\<close>))))
+    |> lambda (Var(("S",0), TFree("'rep",\<^sort>\<open>type\<close>) --> HOLogic.boolT))
   (* Check if all is right: *)
   val tfrees = Term.add_tfrees transferred [] |> \<^print>
   val _ = tfrees = [("'rep",\<^sort>\<open>type\<close>)]
@@ -847,11 +846,11 @@ lemma aux:
   includes lifting_syntax
   assumes class1_def: \<open>class1 == (class1P, class1R)\<close>
   assumes class2_def: \<open>class2 == (class2P, class2R)\<close>
-  assumes class2P_def: \<open>class2P \<equiv> \<lambda>S p. D S p \<and> pred' S p\<close>
+  assumes class2P_def: \<open>class2P \<equiv> \<lambda>S p. D S p \<and> pred' (\<lambda>x. x \<in> S) p\<close>
   assumes pred'_def: \<open>pred' \<equiv> pred''\<close>
   assumes class1R_def: \<open>class1R \<equiv> class1R'\<close>
   assumes wthd: \<open>with_type_has_domain class1R D\<close>
-  assumes 1: \<open>\<And>S. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> Domainp r = (\<lambda>x. x \<in> S) \<Longrightarrow>
+  assumes 1: \<open>\<And>S. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> Domainp r = S \<Longrightarrow>
                Transfer.Rel (class1R' r ===> (=)) (pred'' S) class_const\<close>
   assumes r_assms: \<open>bi_unique r\<close> \<open>right_total r\<close>
   shows \<open>(snd class1 r ===> (\<longleftrightarrow>)) (fst class2 (Collect (Domainp r))) class_const\<close>
@@ -891,8 +890,8 @@ fun define_stuff pos class lthy = let
   val ((* has_dom_thm'', *)lthy) = local_note (Binding.suffix_name "_has_dom" binding) has_dom_thm' lthy
   val (transferred,transfer_thm) = create_transfer_thm lthy class (* rel_const rel_def *)
   val (pred'_const,pred'_def,lthy) = local_def (Binding.suffix_name "_pred'" binding) (Type.legacy_freeze transferred) lthy
-  val (pred_const,pred_def,lthy) = local_def (Binding.suffix_name "_pred" binding) 
-        (\<^Term>\<open>(\<lambda>S p. \<open>dom_const\<close> S p \<and> \<open>pred'_const\<close> S p)\<close> lthy) lthy
+  val (pred_const,pred_def, lthy) = local_def (Binding.suffix_name "_pred" binding) 
+        (\<^Term>\<open>(\<lambda>S p. \<open>dom_const\<close> S p \<and> \<open>pred'_const\<close> (\<lambda>x. x \<in> S) p)\<close> lthy) lthy
   val (wt_class_const,wt_class_def,lthy) = local_def binding (HOLogic.mk_prod (pred_const, rel_const)) lthy
   fun assumption thm i = Thm.assumption (SOME lthy) thm i |> Seq.hd
   val transfer_thm' = (@{thm aux} OF [gen_thm lthy wt_class_def, gen_thm lthy wt_class_def,

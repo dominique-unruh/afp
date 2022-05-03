@@ -339,33 +339,71 @@ lemma [with_type_transfer_rules]: \<open>Transfer.Rel (rel_fun (rel_set A) (rel_
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>Bex\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>image\<close>\<close>
 
-lemma [with_type_transfer_rules]: \<open>Domainp (rel_filter R) = (\<lambda>x. x \<in> {F. F \<le> principal {x. x \<in> S}})\<close> if \<open>Domainp R = (\<lambda>x. x \<in> S)\<close>
+lemma [with_type_transfer_rules]: \<open>Domainp (rel_filter R) = (\<lambda>F. F \<le> principal (Collect S))\<close> if \<open>Domainp R = S\<close>
   using Domainp_rel_filter[where r=R, OF that]
-  apply auto
   by presburger
+
+declare right_total_rel_filter [with_type_transfer_rules]
+declare bi_unique_rel_filter [with_type_transfer_rules]
+
+ML \<open>
+Transfer.prep_conv \<^cprop>\<open>(rel_fun (rel_set (rel_filter (rel_prod r'a r'a))) (rel_filter (rel_prod r'a r'a))) Inf Inf\<close>
+\<close>
+
+attribute_setup add_Rel = 
+  \<open>let val Rel_rule = Thm.symmetric @{thm Rel_def}
+       fun Rel_conv ct = let
+            val (cT, cT') = Thm.dest_funT (Thm.ctyp_of_cterm ct)
+            val (cU, _) = Thm.dest_funT cT'
+         in Thm.instantiate' [SOME cT, SOME cU] [SOME ct] Rel_rule end
+(*        fun nprems (Const(\<^const_name>\<open>implies\<close>, _) $ _ $ t) = nprems t + 1
+         | nprems _ = 0 
+       fun final_concl_conv conv ct = Conv.concl_conv (nprems (Thm.term_of ct)) conv ct *)
+       fun final_concl_conv conv ct = case Thm.term_of ct of
+         Const(\<^const_name>\<open>Pure.imp\<close>,_) $ _ $ _ => Conv.implies_concl_conv (final_concl_conv conv) ct
+         | _ => conv ct
+       (* val final_concl_conv = Conv.implies_concl_conv *)
+       val add_Rel = 
+          Rel_conv |> Conv.fun_conv |> Conv.fun_conv |> HOLogic.Trueprop_conv |> final_concl_conv
+            |> Conv.fconv_rule
+  in Thm.rule_attribute [] (fn _ => add_Rel) |> Scan.succeed end\<close>
+  \<open>Adds Transfer.Rel to a theorem (if possible)\<close>
+
+thm Inf_filter_parametric'[add_Rel]
+
+declare Inf_filter_parametric'[add_Rel, with_type_transfer_rules]
+
+declare eventually_parametric[add_Rel, with_type_transfer_rules]
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.uniformity_dist\<close>\<close>
 
 local_setup \<open>define_stuff \<^here> \<^class>\<open>uniformity_dist\<close>\<close>
+
+declare Ball_transfer[add_Rel, with_type_transfer_rules]
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.open_uniformity\<close>\<close>
+
 local_setup \<open>define_stuff \<^here> \<^class>\<open>open_uniformity\<close>\<close>
 
-lemmas with_type_uniformity_dist_class_transfer'[transfer_rule] = with_type_uniformity_dist_class_transfer[
+(* lemmas with_type_uniformity_dist_class_transfer'[transfer_rule] = with_type_uniformity_dist_class_transfer[
     unfolded with_type_uniformity_dist_class_def fst_conv snd_conv with_type_uniformity_dist_class_rel_def,
     THEN tmp]
 lemmas with_type_open_uniformity_class_transfer'[transfer_rule] = with_type_open_uniformity_class_transfer[
     unfolded with_type_open_uniformity_class_def fst_conv snd_conv with_type_open_uniformity_class_rel_def,
     THEN tmp]
-declare class.metric_space_axioms_def[with_type_simps]
+declare class.metric_space_axioms_def[with_type_simps] *)
 
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.metric_space_axioms\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.metric_space\<close>\<close>
 
 local_setup \<open>define_stuff \<^here> \<^class>\<open>metric_space\<close>\<close>
 
-lemmas with_type_metric_space_class_transfer'[transfer_rule] = with_type_metric_space_class_transfer[
+(* lemmas with_type_metric_space_class_transfer'[transfer_rule] = with_type_metric_space_class_transfer[
     unfolded with_type_metric_space_class_def fst_conv snd_conv with_type_metric_space_class_rel_def,
     THEN tmp3]
-declare class.complete_space_axioms_def[with_type_simps]
+declare class.complete_space_axioms_def[with_type_simps] *)
 
-local_setup \<open>
+(* local_setup \<open>
 local_note \<^binding>\<open>uniform_space_class_Cauchy_uniform_raw\<close>
 (Thm.axiom \<^theory> "Topological_Spaces.uniform_space.Cauchy_uniform_raw")
 \<close>
@@ -375,7 +413,10 @@ local_note \<^binding>\<open>uniform_space_class_cauchy_filter_def_raw\<close>
 (Thm.axiom \<^theory> "Topological_Spaces.uniform_space.cauchy_filter_def_raw")
 \<close>
 
-term uniform_space.cauchy_filter
+term uniform_space.cauchy_filter *)
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>uniform_space.cauchy_filter\<close>\<close>
+
 
 lemma uniform_space_cauchy_filter_parametric[transfer_rule]:
   includes lifting_syntax
