@@ -160,17 +160,36 @@ proof intro_classes
     apply transfer using wot_weaker_than_weak_star' by auto
 qed
 
+lemma Domainp_cr_cblinfun_weak_star[simp]: \<open>Domainp cr_cblinfun_weak_star = (\<lambda>_. True)\<close>
+  by (metis (no_types, opaque_lifting) DomainPI cblinfun_weak_star.left_total left_totalE)
+
+lemma Rangep_cr_cblinfun_weak_star[simp]: \<open>Rangep cr_cblinfun_weak_star = (\<lambda>_. True)\<close>
+  by (meson RangePI cr_cblinfun_weak_star_def)
+
+
 lemma transfer_euclidean_weak_star_topology[transfer_rule]:
   includes lifting_syntax
   shows \<open>(rel_topology cr_cblinfun_weak_star) weak_star_topology euclidean\<close>
-  apply (auto simp: rel_topology_def cr_cblinfun_weak_star_def rel_set_def
-intro!: rel_funI)
-   apply transfer
-   apply auto
-   apply (meson openin_subopen subsetI)
-  apply transfer
-  apply auto
-  by (meson openin_subopen subsetI)
+proof (unfold rel_topology_def, intro conjI allI impI)
+  show \<open>(rel_set cr_cblinfun_weak_star ===> (=)) (openin weak_star_topology) (openin euclidean)\<close>
+    apply (auto simp: rel_topology_def cr_cblinfun_weak_star_def rel_set_def intro!: rel_funI)
+     apply transfer
+     apply auto
+     apply (meson openin_subopen subsetI)
+    apply transfer
+    apply auto
+    by (meson openin_subopen subsetI)
+next
+  fix U :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close>
+  assume \<open>openin weak_star_topology U\<close>
+  show \<open>Domainp (rel_set cr_cblinfun_weak_star) U\<close>
+    by (simp add: Domainp_set)
+next
+  fix U :: \<open>('a, 'b) cblinfun_weak_star set\<close>
+  assume \<open>openin euclidean U\<close>
+  show \<open>Rangep (rel_set cr_cblinfun_weak_star) U\<close>
+    by (simp add: Rangep_set)
+qed
 
 lemma openin_weak_star_topology: \<open>openin weak_star_topology U \<longleftrightarrow> (\<exists>V. open V \<and> U = (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` V)\<close>
   by (simp add: weak_star_topology_def openin_pullback_topology)

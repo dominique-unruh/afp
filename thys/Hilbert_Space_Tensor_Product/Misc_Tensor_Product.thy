@@ -94,19 +94,61 @@ lemma filterlim_parametric[transfer_rule]:
 
 
 definition rel_topology :: \<open>('a \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('a topology \<Rightarrow> 'b topology \<Rightarrow> bool)\<close> where
-  \<open>rel_topology R S T \<longleftrightarrow> (rel_fun (rel_set R) (=)) (openin S) (openin T)\<close>
+  \<open>rel_topology R S T \<longleftrightarrow> (rel_fun (rel_set R) (=)) (openin S) (openin T)
+ \<and> (\<forall>U. openin S U \<longrightarrow> Domainp (rel_set R) U) \<and> (\<forall>U. openin T U \<longrightarrow> Rangep (rel_set R) U)\<close>
 
-lemma [transfer_rule]:
+lemma rel_topology_eq[relator_eq]: \<open>rel_topology (=) = (=)\<close>
+  unfolding rel_topology_def
+  apply (auto intro!: ext simp: rel_fun_eq rel_set_eq)
+  by (metis openin_inject)
+
+lemma Rangep_conversep[simp]: \<open>Rangep (R\<inverse>\<inverse>) = Domainp R\<close>
+  by blast
+
+lemma Domainp_conversep[simp]: \<open>Domainp (R\<inverse>\<inverse>) = Rangep R\<close>
+  by blast
+
+lemma rel_fun_conversep_eq[simp]: \<open>rel_fun (R\<inverse>\<inverse>) (=) = (rel_fun R (=))\<inverse>\<inverse>\<close>
+  by (auto intro!: ext simp: rel_fun_def)
+
+lemma rel_topology_conversep[simp]: \<open>rel_topology (R\<inverse>\<inverse>) = ((rel_topology R)\<inverse>\<inverse>)\<close>
+  by (auto simp add: rel_topology_def[abs_def])
+
+lemma openin_parametric[transfer_rule]:
   includes lifting_syntax
   shows \<open>(rel_topology R ===> rel_set R ===> (=)) openin openin\<close>
   by (auto simp add: rel_fun_def rel_topology_def)
 
-lemma [transfer_rule]:
+lemma topspace_parametric [transfer_rule]:
   includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_total R\<close>
   shows \<open>(rel_topology R ===> rel_set R) topspace topspace\<close>
-  unfolding topspace_def
-  by transfer_prover
+proof -
+  have *: \<open>\<exists>y\<in>topspace T'. R x y\<close> if \<open>rel_topology R T T'\<close> \<open>x \<in> topspace T\<close> for x T T' and R :: \<open>'q \<Rightarrow> 'r \<Rightarrow> bool\<close>
+  proof -
+    from that obtain U where \<open>openin T U\<close> and \<open>x \<in> U\<close>
+      unfolding topspace_def
+      by auto
+    from \<open>openin T U\<close>
+    have \<open>Domainp (rel_set R) U\<close>
+      using \<open>rel_topology R T T'\<close> rel_topology_def by blast
+    then obtain V where [transfer_rule]: \<open>rel_set R U V\<close>
+      by blast
+    with \<open>x \<in> U\<close> obtain y where \<open>R x y\<close> and \<open>y \<in> V\<close>
+      by (meson rel_set_def)
+    from \<open>rel_set R U V\<close> \<open>rel_topology R T T'\<close> \<open>openin T U\<close>
+    have \<open>openin T' V\<close>
+      by (simp add: rel_topology_def rel_fun_def)
+    with \<open>y \<in> V\<close> have \<open>y \<in> topspace T'\<close>
+      using openin_subset by auto
+    with \<open>R x y\<close> show \<open>\<exists>y\<in>topspace T'. R x y\<close>
+      by auto
+  qed
+
+  show ?thesis
+    using *[where ?R.1=R]
+    using *[where ?R.1=\<open>R\<inverse>\<inverse>\<close>]
+    by (auto intro!: rel_setI)
+qed
 
 lemma [transfer_rule]:
   includes lifting_syntax
@@ -307,7 +349,9 @@ definition \<open>has_sum_in T f A x \<longleftrightarrow> limitin T (sum f) x (
 
 definition \<open>summable_on_in T f A \<longleftrightarrow> (\<exists>x. has_sum_in T f A x)\<close>
 
-definition \<open>infsum_in T f A = (if summable_on_in T f A then (THE l. has_sum_in T f A l) else 0)\<close>
+definition \<open>infsum_in T f A = (let L = Collect (has_sum_in T f A) in if card L = 1 then the_elem L else 0)\<close>
+(* The reason why we return 0 also in the case that there are several solutions is to make sure infsum_in is parametric.
+(See lemma 'infsum_in_parametric' below. *)
 
 definition hausdorff where \<open>hausdorff T \<longleftrightarrow> (\<forall>x \<in> topspace T. \<forall>y \<in> topspace T. x \<noteq> y \<longrightarrow> (\<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
 
@@ -315,6 +359,10 @@ lemma hausdorffI:
   assumes \<open>\<And>x y. x \<in> topspace T \<Longrightarrow> y \<in> topspace T \<Longrightarrow> x \<noteq> y \<Longrightarrow> \<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}\<close>
   shows \<open>hausdorff T\<close>
   using assms by (auto simp: hausdorff_def)
+
+lemma hausdorff_euclidean[simp]: \<open>hausdorff (euclidean :: _::t2_space topology)\<close>
+  apply (rule hausdorffI)
+  by (metis (mono_tags, lifting) hausdorff open_openin)
 
 lemma limitin_unique:
   assumes \<open>hausdorff T\<close>
@@ -357,10 +405,30 @@ lemma has_sum_in_unique:
   apply (rule limitin_unique)
   by simp
 
+lemma infsum_in_def':
+  assumes \<open>hausdorff T\<close>
+  shows \<open>infsum_in T f A = (if summable_on_in T f A then (THE s. has_sum_in T f A s) else 0)\<close>
+proof (cases \<open>Collect (has_sum_in T f A) = {}\<close>)
+  case True
+  then show ?thesis 
+    apply (auto simp: infsum_in_def summable_on_in_def Let_def)
+    by (metis (no_types, lifting) One_nat_def True card.empty zero_neq_one)
+next
+  case False
+  then have \<open>summable_on_in T f A\<close>
+    by (metis (no_types, lifting) empty_Collect_eq summable_on_in_def)
+  from False \<open>hausdorff T\<close>
+  have \<open>card (Collect (has_sum_in T f A)) = 1\<close>
+    by (metis (mono_tags, opaque_lifting) has_sum_in_unique is_singletonI' is_singleton_altdef mem_Collect_eq)
+  then show ?thesis
+    using \<open>summable_on_in T f A\<close>
+    by (smt (verit, best) assms card_1_singletonE has_sum_in_unique infsum_in_def mem_Collect_eq singletonI the_elem_eq the_equality)
+qed
+
 lemma has_sum_in_infsum_in: 
   assumes \<open>hausdorff T\<close> and summable: \<open>summable_on_in T f A\<close>
   shows \<open>has_sum_in T f A (infsum_in T f A)\<close>
-  apply (simp add: infsum_in_def summable)
+  apply (simp add: infsum_in_def'[OF \<open>hausdorff T\<close>] summable)
   apply (rule theI'[of \<open>has_sum_in T f A\<close>])
   using has_sum_in_unique[OF \<open>hausdorff T\<close>, of f A] summable
   by (meson summable_on_in_def)
@@ -381,61 +449,417 @@ lemma countable_leq_natLeq: \<open>|X| \<le>o natLeq\<close> if \<open>countable
   using subset_range_from_nat_into[OF that]
   by (meson card_of_nat ordIso_iff_ordLeq ordLeq_transitive surj_imp_ordLeq)
 
-
-lemma infsum_transfer[transfer_rule]: 
-  includes lifting_syntax
-  assumes \<open>bi_unique R\<close>
-  shows \<open>((R ===> (=)) ===> (rel_set R) ===> (=)) infsum infsum\<close>
-proof (intro rel_funI, rename_tac f g A B)
-  fix f :: \<open>'a \<Rightarrow> 'c\<close> and g :: \<open>'b \<Rightarrow> 'c\<close> and A B
-  assume \<open>rel_set R A B\<close>
-  with \<open>bi_unique R\<close>
-  obtain m where \<open>B = m ` A\<close> and \<open>inj_on m A\<close> and Rm: \<open>\<forall>x\<in>A. R x (m x)\<close>
-    apply (rule bi_unique_rel_set_lemma)
-    by auto
-  then have bij_m: \<open>bij_betw m A B\<close>
-    by (simp add: inj_on_imp_bij_betw)
-
-  assume \<open>(R ===> (=)) f g\<close>
-  then have \<open>f x = g y\<close> if \<open>R x y\<close> for x y
-    thm rel_funD
-    using that by (rule rel_funD)
-  with Rm have fg: \<open>f x = g (m x)\<close> if \<open>x\<in>A\<close> for x
-    using that by blast
-
-  show \<open>infsum f A = infsum g B\<close>
-    apply (subst infsum_reindex_bij_betw[OF bij_m, symmetric])
-    apply (rule infsum_cong)
-    using fg by simp
+lemma has_sum_in_cong: 
+  assumes "\<And>x. x\<in>A \<Longrightarrow> f x = g x"
+  shows "has_sum_in T f A x \<longleftrightarrow> has_sum_in T g A x"
+proof -
+  have \<open>(\<forall>\<^sub>F x in finite_subsets_at_top A. sum f x \<in> U) \<longleftrightarrow> (\<forall>\<^sub>F x in finite_subsets_at_top A. sum g x \<in> U)\<close> for U
+    apply (rule eventually_subst)
+    apply (subst eventually_finite_subsets_at_top)
+    by (metis (mono_tags, lifting) assms empty_subsetI finite.emptyI subset_eq sum.cong)
+  then show ?thesis
+    by (simp add: has_sum_in_def limitin_def)
 qed
+
+lemma infsum_in_eqI':
+  fixes f g :: \<open>'a \<Rightarrow> 'b::comm_monoid_add\<close>
+  assumes \<open>\<And>x. has_sum_in T f A x \<longleftrightarrow> has_sum_in T g B x\<close>
+  shows \<open>infsum_in T f A = infsum_in T g B\<close>
+  by (simp add: infsum_in_def assms[abs_def] summable_on_in_def)
+
+lemma infsum_in_cong:
+  assumes "\<And>x. x\<in>A \<Longrightarrow> f x = g x"
+  shows "infsum_in T f A = infsum_in T g A"
+  using assms infsum_in_eqI' has_sum_in_cong by blast
+
+lemma limitin_cong: "limitin T f c F \<longleftrightarrow> limitin T g c F" if "eventually (\<lambda>x. f x = g x) F"
+  by (smt (verit, best) eventually_elim2 limitin_transform_eventually that)
+
+
+(* TODO: show has_sum_reindex as a corollary of this *)
+lemma has_sum_in_reindex:
+  assumes \<open>inj_on h A\<close>
+  shows \<open>has_sum_in T g (h ` A) x \<longleftrightarrow> has_sum_in T (g \<circ> h) A x\<close>
+proof -
+  have \<open>has_sum_in T g (h ` A) x \<longleftrightarrow> limitin T (sum g) x (finite_subsets_at_top (h ` A))\<close>
+    by (simp add: has_sum_in_def)
+  also have \<open>\<dots> \<longleftrightarrow> limitin T (\<lambda>F. sum g (h ` F)) x (finite_subsets_at_top A)\<close>
+    apply (subst filtermap_image_finite_subsets_at_top[symmetric])
+    by (simp_all add: assms eventually_filtermap limitin_def)
+  also have \<open>\<dots> \<longleftrightarrow> limitin T (sum (g \<circ> h)) x (finite_subsets_at_top A)\<close>
+    apply (rule limitin_cong)
+    apply (rule eventually_finite_subsets_at_top_weakI)
+    apply (rule sum.reindex)
+    using assms subset_inj_on by blast
+  also have \<open>\<dots> \<longleftrightarrow> has_sum_in T (g \<circ> h) A x\<close>
+    by (simp add: has_sum_in_def)
+  finally show ?thesis .
+qed
+
+lemma summable_on_in_reindex:
+  assumes \<open>inj_on h A\<close>
+  shows \<open>summable_on_in T g (h ` A) \<longleftrightarrow> summable_on_in T (g \<circ> h) A\<close>
+  by (simp add: assms summable_on_in_def has_sum_in_reindex)
+
+lemma infsum_in_reindex:
+  assumes \<open>inj_on h A\<close>
+  shows \<open>infsum_in T g (h ` A) = infsum_in T (g \<circ> h) A\<close>
+  sorry
+
+lemma has_sum_in_reindex_bij_betw:
+  assumes "bij_betw g A B"
+  shows   "has_sum_in T (\<lambda>x. f (g x)) A s \<longleftrightarrow> has_sum_in T f B s"
+proof -
+  have \<open>has_sum_in T (\<lambda>x. f (g x)) A s \<longleftrightarrow> has_sum_in T f (g ` A) s\<close>
+    by (metis (mono_tags, lifting) assms bij_betw_imp_inj_on has_sum_in_cong has_sum_in_reindex o_def)
+  also have \<open>\<dots> = has_sum_in T f B s\<close>
+    using assms bij_betw_imp_surj_on by blast
+  finally show ?thesis .
+qed
+
+
+(* TODO move *)
+lemma has_sum_euclidean_iff: \<open>has_sum_in euclidean f A s \<longleftrightarrow> has_sum f A s\<close>
+  by (simp add: has_sum_def has_sum_in_def)
+
+lemma summable_on_euclidean_eq: \<open>summable_on_in euclidean f A \<longleftrightarrow> f summable_on A\<close>
+  by (auto simp add: infsum_def infsum_in_def has_sum_euclidean_iff[abs_def] has_sum_def
+      t2_space_class.Lim_def summable_on_def summable_on_in_def)
+
+lemma infsum_euclidean_eq: \<open>infsum_in euclidean f A = infsum f A\<close>
+  by (auto simp add: infsum_def infsum_in_def' summable_on_euclidean_eq
+      has_sum_euclidean_iff[abs_def] has_sum_def t2_space_class.Lim_def)
+
+(* TODO: prove infsum_reindex_bij_betw from this *)
+lemma infsum_in_reindex_bij_betw:
+  assumes "bij_betw g A B"
+  shows   "infsum_in T (\<lambda>x. f (g x)) A = infsum_in T f B"
+proof -
+  have \<open>infsum_in T (\<lambda>x. f (g x)) A = infsum_in T f (g ` A)\<close>
+    by (metis (mono_tags, lifting) assms bij_betw_imp_inj_on infsum_in_cong infsum_in_reindex o_def)
+  also have \<open>\<dots> = infsum_in T f B\<close>
+    using assms bij_betw_imp_surj_on by blast
+  finally show ?thesis .
+qed
+
+lemma limitin_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique S\<close>
+  shows \<open>(rel_topology S ===> (R ===> S) ===> S ===> rel_filter R ===> (\<longleftrightarrow>)) limitin limitin\<close>
+proof (intro rel_funI, rename_tac T T' f f' l l' F F')
+  fix T T' f f' l l' F F'
+  assume [transfer_rule]: \<open>rel_topology S T T'\<close>
+  assume [transfer_rule]: \<open>(R ===> S) f f'\<close>
+  assume [transfer_rule]: \<open>S l l'\<close>
+  assume [transfer_rule]: \<open>rel_filter R F F'\<close>
+
+  have topspace: \<open>l \<in> topspace T \<longleftrightarrow> l' \<in> topspace T'\<close>
+    by transfer_prover
+
+  have open1: \<open>\<forall>\<^sub>F x in F. f x \<in> U\<close>
+    if \<open>openin T U\<close> and \<open>l \<in> U\<close> and lhs: \<open>(\<forall>V. openin T' V \<and> l' \<in> V \<longrightarrow> (\<forall>\<^sub>F x in F'. f' x \<in> V))\<close>
+    for U
+  proof -
+    from \<open>rel_topology S T T'\<close> \<open>openin T U\<close>
+    obtain V where \<open>openin T' V\<close> and [transfer_rule]: \<open>rel_set S U V\<close>
+      by (smt (verit, best) Domainp.cases rel_fun_def rel_topology_def)
+    with \<open>S l l'\<close> have \<open>l' \<in> V\<close>
+      by (metis (no_types, lifting) assms bi_uniqueDr rel_setD1 that(2))
+    with lhs \<open>openin T' V\<close>
+    have \<open>\<forall>\<^sub>F x in F'. f' x \<in> V\<close>
+      by auto
+    then show \<open>\<forall>\<^sub>F x in F. f x \<in> U\<close>
+      apply transfer by simp
+  qed
+
+  have open2: \<open>\<forall>\<^sub>F x in F'. f' x \<in> V\<close>
+    if \<open>openin T' V\<close> and \<open>l' \<in> V\<close> and lhs: \<open>(\<forall>U. openin T U \<and> l \<in> U \<longrightarrow> (\<forall>\<^sub>F x in F. f x \<in> U))\<close>
+    for V
+  proof -
+    from \<open>rel_topology S T T'\<close> \<open>openin T' V\<close>
+    obtain U where \<open>openin T U\<close> and [transfer_rule]: \<open>rel_set S U V\<close>
+      apply (auto simp: rel_topology_def)
+      by (metis (mono_tags, lifting) RangepE rel_fun_def)
+    with \<open>S l l'\<close> have \<open>l \<in> U\<close>
+      by (metis (full_types) assms bi_unique_def rel_setD2 that(2))
+    with lhs \<open>openin T U\<close>
+    have \<open>\<forall>\<^sub>F x in F. f x \<in> U\<close>
+      by auto
+    then show \<open>\<forall>\<^sub>F x in F'. f' x \<in> V\<close>
+      apply transfer by simp
+  qed
+
+  from topspace open1 open2
+  show \<open>limitin T f l F = limitin T' f' l' F'\<close>
+    unfolding limitin_def by auto
+qed
+
+lemma finite_subsets_at_top_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  shows \<open>(rel_set R ===> rel_filter (rel_set R)) finite_subsets_at_top finite_subsets_at_top\<close>
+proof (intro rel_funI)
+  fix A B assume \<open>rel_set R A B\<close>
+  from \<open>bi_unique R\<close> obtain f where Rf: \<open>R x (f x)\<close> if \<open>x \<in> A\<close> for x
+    by (metis (no_types, opaque_lifting) \<open>rel_set R A B\<close> rel_setD1)
+  have \<open>inj_on f A\<close>
+    by (metis (no_types, lifting) Rf assms bi_unique_def inj_onI)
+  have \<open>B = f ` A\<close>
+    by (metis (mono_tags, lifting) Rf \<open>rel_set R A B\<close> assms bi_uniqueDr bi_unique_rel_set_lemma image_cong)
+
+  have RfX: \<open>rel_set R X (f ` X)\<close> if \<open>X \<subseteq> A\<close> for X
+    apply (rule rel_setI)
+    apply (metis (no_types, lifting) Rf \<open>inj_on f A\<close> in_mono inj_on_image_mem_iff that)
+    by (metis (no_types, lifting) Rf imageE subsetD that)
+
+  have Piff: \<open>(\<exists>X. finite X \<and> X \<subseteq> A \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> A \<longrightarrow> P (f ` Y))) \<longleftrightarrow>
+              (\<exists>X. finite X \<and> X \<subseteq> B \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> B \<longrightarrow> P Y))\<close> for P
+  proof (rule iffI)
+    assume \<open>\<exists>X. finite X \<and> X \<subseteq> A \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> A \<longrightarrow> P (f ` Y))\<close>
+    then obtain X where \<open>finite X\<close> and \<open>X \<subseteq> A\<close> and XP: \<open>finite Y \<Longrightarrow> X \<subseteq> Y \<Longrightarrow> Y \<subseteq> A \<Longrightarrow> P (f ` Y)\<close> for Y
+      by auto
+    define X' where \<open>X' = f ` X\<close>
+    have \<open>finite X'\<close>
+      by (metis X'_def \<open>finite X\<close> finite_imageI)
+    have \<open>X' \<subseteq> B\<close>
+      by (smt (verit, best) Rf X'_def \<open>X \<subseteq> A\<close> \<open>rel_set R A B\<close> assms bi_uniqueDr image_subset_iff rel_setD1 subsetD)
+    have \<open>P Y'\<close> if \<open>finite Y'\<close> and \<open>X' \<subseteq> Y'\<close> and \<open>Y' \<subseteq> B\<close> for Y'
+    proof -
+      define Y where \<open>Y = (f -` Y') \<inter> A\<close>
+      have \<open>finite Y\<close>
+        by (metis Y_def \<open>inj_on f A\<close> finite_vimage_IntI that(1))
+      moreover have \<open>X \<subseteq> Y\<close>
+        by (metis (no_types, lifting) X'_def Y_def \<open>X \<subseteq> A\<close> image_subset_iff_subset_vimage le_inf_iff that(2))
+      moreover have \<open>Y \<subseteq> A\<close>
+        by (metis (no_types, lifting) Y_def inf_le2)
+      ultimately have \<open>P (f ` Y)\<close>
+        by (rule XP)
+      then show \<open>P Y'\<close>
+        by (metis (no_types, lifting) Int_greatest Y_def \<open>B = f ` A\<close> dual_order.refl image_subset_iff_subset_vimage inf_le1 subset_antisym subset_image_iff that(3))
+    qed
+    then show \<open>\<exists>X. finite X \<and> X \<subseteq> B \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> B \<longrightarrow> P Y)\<close>
+      by (metis (no_types, opaque_lifting) \<open>X' \<subseteq> B\<close> \<open>finite X'\<close>)
+  next
+    assume \<open>\<exists>X. finite X \<and> X \<subseteq> B \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> B \<longrightarrow> P Y)\<close>
+    then obtain X where \<open>finite X\<close> and \<open>X \<subseteq> B\<close> and XP: \<open>finite Y \<Longrightarrow> X \<subseteq> Y \<Longrightarrow> Y \<subseteq> B \<Longrightarrow> P Y\<close> for Y
+      by auto
+    define X' where \<open>X' = (f -` X) \<inter> A\<close>
+    have \<open>finite X'\<close>
+      by (simp add: X'_def \<open>finite X\<close> \<open>inj_on f A\<close> finite_vimage_IntI)
+    have \<open>X' \<subseteq> A\<close>
+      by (simp add: X'_def)
+    have \<open>P (f ` Y')\<close> if \<open>finite Y'\<close> and \<open>X' \<subseteq> Y'\<close> and \<open>Y' \<subseteq> A\<close> for Y'
+    proof -
+      define Y where \<open>Y = f ` Y'\<close>
+      have \<open>finite Y\<close>
+        by (metis Y_def finite_imageI that(1))
+      moreover have \<open>X \<subseteq> Y\<close>
+        using X'_def Y_def \<open>B = f ` A\<close> \<open>X \<subseteq> B\<close> that(2) by blast
+      moreover have \<open>Y \<subseteq> B\<close>
+        by (metis Y_def \<open>B = f ` A\<close> image_mono that(3))
+      ultimately have \<open>P Y\<close>
+        by (rule XP)
+      then show \<open>P (f ` Y')\<close>
+        by (smt (z3) Y_def \<open>B = f ` A\<close> imageE imageI subset_antisym subset_iff that(3) vimage_eq)
+    qed
+    then show \<open>\<exists>X. finite X \<and> X \<subseteq> A \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> A \<longrightarrow> P (f ` Y))\<close>
+      by (metis \<open>X' \<subseteq> A\<close> \<open>finite X'\<close>)
+  qed
+
+  define Z where \<open>Z = filtermap (\<lambda>M. (M, f`M)) (finite_subsets_at_top A)\<close>
+  have \<open>\<forall>\<^sub>F (x, y) in Z. rel_set R x y\<close>
+    by (auto intro!: eventually_finite_subsets_at_top_weakI simp add: Z_def eventually_filtermap RfX)
+  moreover have \<open>map_filter_on {(x, y). rel_set R x y} fst Z = finite_subsets_at_top A\<close>
+    apply (rule filter_eq_iff[THEN iffD2])
+    apply (subst eventually_map_filter_on)
+     apply (auto intro!: eventually_finite_subsets_at_top_weakI simp add: Z_def eventually_filtermap RfX)[1]
+    by (auto simp add: Z_def eventually_filtermap eventually_finite_subsets_at_top RfX)
+  moreover have \<open>map_filter_on {(x, y). rel_set R x y} snd Z = finite_subsets_at_top B\<close>
+    apply (rule filter_eq_iff[THEN iffD2])
+    apply (subst eventually_map_filter_on)
+     apply (auto intro!: eventually_finite_subsets_at_top_weakI simp add: Z_def eventually_filtermap RfX)[1]
+    by (simp add: Z_def eventually_filtermap eventually_finite_subsets_at_top RfX Piff)
+  ultimately show \<open>rel_filter (rel_set R) (finite_subsets_at_top A) (finite_subsets_at_top B)\<close>
+    by (rule rel_filter.intros[where Z=Z])
+qed
+
+lemma sum_parametric':
+  includes lifting_syntax
+  fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close> and S :: \<open>'c::comm_monoid_add \<Rightarrow> 'd::comm_monoid_add \<Rightarrow> bool\<close>
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  assumes [transfer_rule]: \<open>(S ===> S ===> S) (+) (+)\<close>
+  assumes [transfer_rule]: \<open>S 0 0\<close>
+  shows \<open>((R ===> S) ===> rel_set R ===> S) sum sum\<close>
+proof (intro rel_funI)
+  fix A B f g assume \<open>rel_set R A B\<close> and \<open>(R ===> S) f g\<close>
+  from \<open>bi_unique R\<close> obtain p where Rf: \<open>R x (p x)\<close> if \<open>x \<in> A\<close> for x
+    by (metis (no_types, opaque_lifting) \<open>rel_set R A B\<close> rel_setD1)
+  have \<open>inj_on p A\<close>
+    by (metis (no_types, lifting) Rf \<open>bi_unique R\<close> bi_unique_def inj_onI)
+  have \<open>B = p ` A\<close>
+    by (metis (mono_tags, lifting) Rf \<open>rel_set R A B\<close> \<open>bi_unique R\<close> bi_uniqueDr bi_unique_rel_set_lemma image_cong)
+
+  define A_copy where \<open>A_copy = A\<close>
+
+  have \<open>S (f x + sum f F) (g (p x) + sum g (p ` F))\<close>
+    if [transfer_rule]: \<open>S (sum f F) (sum g (p ` F))\<close> and [simp]: \<open>x \<in> A\<close> for x F
+    by (metis (no_types, opaque_lifting) Rf \<open>(R ===> S) f g\<close> assms(2) rel_fun_def that(1) that(2))
+  then have ind_step: \<open>S (sum f (insert x F)) (sum g (p ` insert x F))\<close> 
+    if [simp]: \<open>S (sum f F) (sum g (p ` F))\<close> \<open>x \<in> A\<close> \<open>x \<notin> F\<close> \<open>finite F\<close> \<open>F \<subseteq> A\<close> for x F
+    apply auto
+    apply (subst sum.insert)
+      apply (auto simp: that)
+    by (metis (no_types, lifting) \<open>inj_on p A\<close> in_mono inj_onD that(2) that(3) that(5))
+
+  have \<open>S (\<Sum>x\<in>A. f x) (\<Sum>x\<in>p ` A. g x)\<close>
+    apply (subgoal_tac \<open>A \<subseteq> A_copy\<close>)
+     apply (induction A rule:infinite_finite_induct)
+    unfolding A_copy_def
+       apply (metis (no_types, lifting) \<open>inj_on p A\<close> assms(3) finite_image_iff subset_inj_on sum.infinite)
+    using \<open>S 0 0\<close> ind_step by (auto simp: sum.insert)
+  also have \<open>\<dots> = (\<Sum>x\<in>B. g x)\<close>
+    by (metis (full_types) \<open>B = p ` A\<close>)
+  finally show \<open>S (\<Sum>x\<in>A. f x) (\<Sum>x\<in>B. g x)\<close>
+    by -
+qed
+
+
+lemma has_sum_in_parametric[transfer_rule]:
+  includes lifting_syntax
+  fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close> and S :: \<open>'c::comm_monoid_add \<Rightarrow> 'd::comm_monoid_add \<Rightarrow> bool\<close>
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  assumes [transfer_rule]: \<open>bi_unique S\<close>
+  assumes [transfer_rule]: \<open>(S ===> S ===> S) (+) (+)\<close>
+  assumes [transfer_rule]: \<open>S 0 0\<close>
+  shows \<open>(rel_topology S ===> (R ===> S) ===> (rel_set R) ===> S ===> (=)) has_sum_in has_sum_in\<close>
+proof -
+  note sum_parametric'[transfer_rule]
+  show ?thesis
+    unfolding has_sum_in_def
+    by transfer_prover
+qed
+
+(* lemma has_sum_in_transfer[transfer_rule]: 
+  includes lifting_syntax
+  fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  shows \<open>((=) ===> (R ===> (=)) ===> (rel_set R) ===> (=)) has_sum_in has_sum_in\<close>
+  by transfer_prover
+ *)
+
+lemma has_sum_in_topspace: \<open>has_sum_in T f A s \<Longrightarrow> s \<in> topspace T\<close>
+  by (metis has_sum_in_def limitin_def)
+
+lemma summable_on_in_parametric[transfer_rule]: 
+  includes lifting_syntax
+  fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  assumes [transfer_rule]: \<open>bi_unique S\<close>
+  assumes [transfer_rule]: \<open>(S ===> S ===> S) (+) (+)\<close>
+  assumes [transfer_rule]: \<open>S 0 0\<close>
+  shows \<open>(rel_topology S ===> (R ===> S) ===> (rel_set R) ===> (=)) summable_on_in summable_on_in\<close>
+proof (intro rel_funI)
+  fix T T' assume [transfer_rule]: \<open>rel_topology S T T'\<close>
+  fix f f' assume [transfer_rule]: \<open>(R ===> S) f f'\<close>
+  fix A A' assume [transfer_rule]: \<open>rel_set R A A'\<close>
+
+  define ExT ExT' where \<open>ExT P \<longleftrightarrow> (\<exists>x\<in>Collect (Domainp S). P x)\<close> and \<open>ExT' P' \<longleftrightarrow> (\<exists>x\<in>Collect (Rangep S). P' x)\<close> for P P'
+  have [transfer_rule]: \<open>((S ===> (\<longleftrightarrow>)) ===> (\<longleftrightarrow>)) ExT ExT'\<close>
+    by (smt (z3) Domainp_iff ExT'_def ExT_def RangePI Rangep.cases mem_Collect_eq rel_fun_def)
+  from \<open>rel_topology S T T'\<close> have top1: \<open>topspace T \<subseteq> Collect (Domainp S)\<close>
+    unfolding rel_topology_def
+    by (metis (no_types, lifting) Domainp_set mem_Collect_eq openin_topspace subsetI)
+  from \<open>rel_topology S T T'\<close> have top2: \<open>topspace T' \<subseteq> Collect (Rangep S)\<close>
+    unfolding rel_topology_def
+    by (metis (no_types, lifting) RangePI Rangep.cases mem_Collect_eq openin_topspace rel_setD2 subsetI)
+
+  have \<open>ExT (has_sum_in T f A) = ExT' (has_sum_in T' f' A')\<close>
+    by transfer_prover
+  with top1 top2 show \<open>summable_on_in T f A \<longleftrightarrow> summable_on_in T' f' A'\<close>
+    by (metis ExT'_def ExT_def has_sum_in_topspace in_mono summable_on_in_def)
+qed
+
+lemma not_summable_infsum_in_0: \<open>\<not> summable_on_in T f A \<Longrightarrow> infsum_in T f A = 0\<close>
+  by (smt (verit, del_insts) Collect_empty_eq card_eq_0_iff infsum_in_def summable_on_in_def zero_neq_one)
+
+lemma infsum_in_parametric[transfer_rule]: 
+  includes lifting_syntax
+  fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  assumes [transfer_rule]: \<open>bi_unique S\<close>
+  assumes [transfer_rule]: \<open>(S ===> S ===> S) (+) (+)\<close>
+  assumes [transfer_rule]: \<open>S 0 0\<close>
+  shows \<open>(rel_topology S ===> (R ===> S) ===> (rel_set R) ===> S) infsum_in infsum_in\<close>
+proof (intro rel_funI)
+  fix T T' assume [transfer_rule]: \<open>rel_topology S T T'\<close>
+  fix f f' assume [transfer_rule]: \<open>(R ===> S) f f'\<close>
+  fix A A' assume [transfer_rule]: \<open>rel_set R A A'\<close>
+  have S_has_sum: \<open>(S ===> (=)) (has_sum_in T f A) (has_sum_in T' f' A')\<close>
+    by transfer_prover
+
+  have sum_iff: \<open>summable_on_in T f A \<longleftrightarrow> summable_on_in T' f' A'\<close>
+    by transfer_prover
+
+  define L L' where \<open>L = Collect (has_sum_in T f A)\<close> and \<open>L' = Collect (has_sum_in T' f' A')\<close>
+
+  have LT: \<open>L \<subseteq> topspace T\<close>
+    by (metis (mono_tags, lifting) Ball_Collect L_def has_sum_in_topspace subset_iff)
+  have TS: \<open>topspace T \<subseteq> Collect (Domainp S)\<close>
+    by (metis (no_types, lifting) Ball_Collect Domainp_set \<open>rel_topology S T T'\<close> openin_topspace rel_topology_def)
+  have LT': \<open>L' \<subseteq> topspace T'\<close>
+    by (metis Ball_Collect L'_def has_sum_in_topspace subset_eq)
+  have T'S: \<open>topspace T' \<subseteq> Collect (Rangep S)\<close>
+    by (metis (mono_tags, opaque_lifting) Ball_Collect RangePI \<open>rel_topology S T T'\<close> rel_fun_def rel_setD2 topspace_parametric)
+  have Sss': \<open>S s s' \<Longrightarrow> has_sum_in T f A s \<longleftrightarrow> has_sum_in T' f' A' s'\<close> for s s'
+    using S_has_sum
+    by (metis (mono_tags, lifting) rel_funE)
+
+  have \<open>rel_set S L L'\<close>
+    by (smt (verit) Domainp.cases L'_def L_def Rangep.cases \<open>L \<subseteq> topspace T\<close> \<open>L' \<subseteq> topspace T'\<close> \<open>\<And>s' s. S s s' \<Longrightarrow> has_sum_in T f A s = has_sum_in T' f' A' s'\<close> \<open>topspace T \<subseteq> Collect (Domainp S)\<close> \<open>topspace T' \<subseteq> Collect (Rangep S)\<close> in_mono mem_Collect_eq rel_setI)
+
+  have cardLL': \<open>card L = 1 \<longleftrightarrow> card L' = 1\<close>
+    by (metis (no_types, lifting) \<open>rel_set S L L'\<close> assms(2) bi_unique_rel_set_lemma card_image)
+
+  have \<open>S (infsum_in T f A) (infsum_in T' f' A')\<close> if \<open>card L \<noteq> 1\<close>
+    using that cardLL' by (simp add: infsum_in_def L'_def L_def Let_def that \<open>S 0 0\<close> flip: sum_iff)
+
+  moreover have \<open>S (infsum_in T f A) (infsum_in T' f' A')\<close> if [simp]: \<open>card L = 1\<close>
+  proof -
+    have [simp]: \<open>card L' = 1\<close>
+      using that cardLL' by simp
+    have \<open>S (the_elem L) (the_elem L')\<close>
+      using \<open>rel_set S L L'\<close>
+      by (metis (no_types, opaque_lifting) \<open>card L' = 1\<close> is_singleton_altdef is_singleton_the_elem rel_setD1 singleton_iff that)
+    then show ?thesis
+      by (simp add: infsum_in_def flip: L'_def L_def)
+  qed
+
+  ultimately show \<open>S (infsum_in T f A) (infsum_in T' f' A')\<close>
+    by auto
+qed
+
+(* lemma infsum_in_parametric_same_topo[transfer_rule]: 
+  includes lifting_syntax
+  fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  shows \<open>((=) ===> (R ===> (=)) ===> (rel_set R) ===> (=)) infsum_in infsum_in\<close>
+  using infsum_in_parametric[where S=\<open>(=)\<close>]
+  apply simp
+  by - *)
+
+lemma infsum_parametric[transfer_rule]: 
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  shows \<open>((R ===> (=)) ===> (rel_set R) ===> (=)) infsum infsum\<close>
+  unfolding infsum_euclidean_eq[symmetric]
+  by transfer_prover
 
 lemma summable_on_transfer[transfer_rule]: 
   includes lifting_syntax
-  assumes \<open>bi_unique R\<close>
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
   shows \<open>((R ===> (=)) ===> (rel_set R) ===> (=)) Infinite_Sum.summable_on Infinite_Sum.summable_on\<close>
-proof (intro rel_funI, rename_tac f g A B)
-  fix f :: \<open>'a \<Rightarrow> 'c\<close> and g :: \<open>'b \<Rightarrow> 'c\<close> and A B
-  assume \<open>rel_set R A B\<close>
-  with \<open>bi_unique R\<close>
-  obtain m where \<open>B = m ` A\<close> and \<open>inj_on m A\<close> and Rm: \<open>\<forall>x\<in>A. R x (m x)\<close>
-    apply (rule bi_unique_rel_set_lemma)
-    by auto
-  then have bij_m: \<open>bij_betw m A B\<close>
-    by (simp add: inj_on_imp_bij_betw)
-
-  assume \<open>(R ===> (=)) f g\<close>
-  then have \<open>f x = g y\<close> if \<open>R x y\<close> for x y
-    thm rel_funD
-    using that by (rule rel_funD)
-  with Rm have fg: \<open>f x = g (m x)\<close> if \<open>x\<in>A\<close> for x
-    using that by blast
-
-  show \<open>(f summable_on A) = (g summable_on B)\<close>
-    apply (subst summable_on_reindex_bij_betw[OF bij_m, symmetric])
-    apply (rule summable_on_cong)
-    using fg by simp
-qed
-
+  unfolding summable_on_euclidean_eq[symmetric]
+  by transfer_prover
 
 (* TODO move *)
 lemma abs_gbinomial: \<open>abs (a gchoose n) = (-1)^(n - nat (ceiling a)) * (a gchoose n)\<close>
@@ -447,8 +871,6 @@ proof -
       by simp
   next
     case (Suc n)
-(*     then show ?case
-      apply (simp add: Suc) *)
     consider (geq) \<open>of_int n \<ge> a\<close> | (lt) \<open>of_int n < a\<close>
       by fastforce
     then show ?case
@@ -527,9 +949,11 @@ qed
 
 lemma abs_gbinomial_leq1:
   fixes a :: \<open>'a :: {linordered_field}\<close>
-  assumes \<open>-1 \<le> a\<close> and \<open>a \<le> 0\<close>
+  assumes \<open>abs a \<le> 1\<close>
   shows \<open>abs (a gchoose b) \<le> 1\<close>
 proof -
+  have *: \<open>-1 \<le> a\<close> \<open>a \<le> 1\<close>
+    using abs_le_D2 assms minus_le_iff abs_le_iff assms by auto
   have \<open>abs (a gchoose b) = abs ((\<Prod>i = 0..<b. a - of_nat i) / fact b)\<close>
     by (simp add: gbinomial_prod_rev)
   also have \<open>\<dots> = abs ((\<Prod>i=0..<b. a - of_nat i)) / fact b\<close>
@@ -541,7 +965,7 @@ proof -
     apply (rule divide_right_mono[rotated])
      apply simp
     apply (rule prod_mono)
-    using assms apply (auto simp: abs_if)
+    using * apply (auto simp: abs_if)
     using order_trans by fastforce
   also have \<open>\<dots> = fact b / fact b\<close>
     apply (subst (2) fact_prod_Suc)
@@ -552,8 +976,305 @@ proof -
     by -
 qed
 
+lemma gbinomial_summable_abs:
+  fixes a :: real
+  assumes \<open>a \<ge> 0\<close> and \<open>a \<le> 1\<close>
+  shows \<open>summable (\<lambda>n. abs (a gchoose n))\<close>
+proof -
+  define a' where \<open>a' = nat (ceiling a)\<close>
+  have a': \<open>a' = 0 \<or> a' = 1\<close>
+    by (metis One_nat_def a'_def assms(2) ceiling_le_one less_one nat_1 nat_mono order_le_less)
+  have aux1: \<open>abs x \<le> x' \<Longrightarrow> abs y \<le> y' \<Longrightarrow> abs z \<le> z' \<Longrightarrow> x - y + z \<le> x' + y' + z'\<close> for x y z x' y' z' :: real
+    by auto
+  have \<open>(\<Sum>i\<le>n. \<bar>a gchoose i\<bar>) = (- 1) ^ a' * ((- 1) ^ n * (a - 1 gchoose n)) -
+    (- 1) ^ a' * of_bool (0 < a') * ((- 1) ^ (a' - 1) * (a - 1 gchoose (a' - 1))) +
+    (\<Sum>k<a'. \<bar>a gchoose k\<bar>)\<close> for n
+    unfolding a'_def 
+    apply (rule gbinomial_sum_lower_abs)
+    using assms by fastforce
+  also have \<open>\<dots>n \<le> 1 + 1 + 1\<close> for n
+    apply (rule aux1)
+    using a' by (auto simp add: abs_mult abs_gbinomial_leq1 assms)
+  also have \<open>\<dots> = 3\<close>
+    by simp
+  finally show ?thesis
+    by (meson abs_ge_zero bounded_imp_summable)
+qed
 
-(* TODO move *)
+lemma harmonic_series_diverges: \<open>\<not> summable (\<lambda>n. c / n)\<close> if \<open>c \<noteq> 0\<close>
+  by -
+
+lemma summable_tendsto_times_n:
+  fixes f :: \<open>nat \<Rightarrow> real\<close>
+  assumes pos: \<open>\<And>n. f n \<ge> 0\<close>
+  assumes dec: \<open>decseq (\<lambda>n. (n+M) * f (n + M))\<close>
+  assumes sum: \<open>summable f\<close>
+  shows \<open>(\<lambda>n. n * f n) \<longlonglongrightarrow> 0\<close>
+proof (rule ccontr)
+  assume lim_not_0: \<open>\<not> (\<lambda>n. n * f n) \<longlonglongrightarrow> 0\<close>
+  obtain B where \<open>(\<lambda>n. (n+M) * f (n+M)) \<longlonglongrightarrow> B\<close> and nfB': \<open>(n+M) * f (n+M) \<ge> B\<close> for n
+    apply (rule decseq_convergent[where B=0, OF dec])
+    using pos that by auto
+  then have lim_B: \<open>(\<lambda>n. n * f n) \<longlonglongrightarrow> B\<close>
+    by (rule_tac LIMSEQ_offset)
+  have \<open>B \<ge> 0\<close>
+    apply (subgoal_tac \<open>\<And>n. n * f n \<ge> 0\<close>)
+    using Lim_bounded2 lim_B apply blast
+    by (simp add: pos)
+  moreover have \<open>B \<noteq> 0\<close>
+    using lim_B lim_not_0 by blast
+  ultimately have \<open>B > 0\<close>
+    by linarith
+
+  have \<open>f n \<ge> B / n\<close> if \<open>n \<ge> M\<close> for n
+    using nfB'[of \<open>n-M\<close>] that 
+    apply auto
+    by (smt (verit, best) \<open>0 \<le> B\<close> \<open>B \<noteq> 0\<close> divide_right_mono mult_nonpos_nonneg nonzero_mult_div_cancel_left pos)
+
+  with sum \<open>B > 0\<close> have \<open>summable (\<lambda>n. B / n)\<close>
+    apply (rule_tac summable_comparison_test'[where N=M])
+    by auto
+
+  moreover have \<open>\<not> summable (\<lambda>n. B / n)\<close>
+    by (simp add: \<open>B \<noteq> 0\<close> harmonic_series_diverges)
+
+  ultimately show False
+    by simp
+qed
+  
+
+
+lemma gbinomial_tendsto_0:
+  fixes a :: real
+  assumes \<open>a > -1\<close>
+  shows \<open>(\<lambda>n. (a gchoose n)) \<longlonglongrightarrow> 0\<close>
+proof -
+  have thesis1: \<open>(\<lambda>n. (a gchoose n)) \<longlonglongrightarrow> 0\<close> if \<open>a \<ge> 0\<close> for a :: real
+  proof -
+    define m where \<open>m = nat (floor a)\<close>
+    have m: \<open>a \<ge> real m\<close> \<open>a \<le> real m + 1\<close>
+      by (simp_all add: m_def that)
+    show ?thesis
+    proof (insert m, induction m arbitrary: a)
+      case 0
+      then have *: \<open>a \<ge> 0\<close> \<open>a \<le> 1\<close>
+        using assms by auto
+      show ?case
+        using gbinomial_summable_abs[OF *]
+        using summable_LIMSEQ_zero tendsto_rabs_zero_iff by blast
+    next
+      case (Suc m)
+      have 1: \<open>(\<lambda>n. (a-1 gchoose n)) \<longlonglongrightarrow> 0\<close>
+        apply (rule Suc.IH)
+        using Suc.prems by auto
+      then have \<open>(\<lambda>n. (a-1 gchoose Suc n)) \<longlonglongrightarrow> 0\<close>
+        using filterlim_sequentially_Suc by blast
+      with 1 have \<open>(\<lambda>n. (a-1 gchoose n) + (a-1 gchoose Suc n)) \<longlonglongrightarrow> 0\<close>
+        by (simp add: tendsto_add_zero)
+      then have \<open>(\<lambda>n. (a gchoose Suc n)) \<longlonglongrightarrow> 0\<close>
+        using gbinomial_Suc_Suc[of \<open>a-1\<close>] by simp
+      then show ?case
+        using filterlim_sequentially_Suc by blast
+    qed
+  qed
+
+  have thesis2: \<open>(\<lambda>n. (a gchoose n)) \<longlonglongrightarrow> 0\<close> if \<open>a > -1\<close> \<open>a \<le> 0\<close>
+  proof -
+    have decseq: \<open>decseq (\<lambda>n. abs (a gchoose n))\<close>
+      by simp
+    have abs_a1: \<open>abs (a+1) = a+1\<close>
+      using assms by auto
+
+    have \<open>0 \<le> \<bar>a + 1 gchoose n\<bar>\<close> for n
+      by simp
+    moreover have \<open>decseq (\<lambda>n. (n+1) * abs (a+1 gchoose (n+1)))\<close>
+      using decseq apply (simp add: gbinomial_rec abs_mult)
+      by (smt (verit, best) decseq_def mult.commute mult_left_mono)
+    moreover have \<open>summable (\<lambda>n. abs (a+1 gchoose n))\<close>
+      apply (rule gbinomial_summable_abs)
+      using that by auto
+    ultimately have \<open>(\<lambda>n. n * abs (a+1 gchoose n)) \<longlonglongrightarrow> 0\<close>
+      by (rule summable_tendsto_times_n)
+    then have \<open>(\<lambda>n. Suc n * abs (a+1 gchoose Suc n)) \<longlonglongrightarrow> 0\<close>
+      by (rule_tac LIMSEQ_ignore_initial_segment[where k=1 and a=0, simplified])
+    then have \<open>(\<lambda>n. abs (Suc n * (a+1 gchoose Suc n))) \<longlonglongrightarrow> 0\<close>
+      by (simp add: abs_mult)
+    then have \<open>(\<lambda>n. (a+1) * abs (a gchoose n)) \<longlonglongrightarrow> 0\<close>
+      apply (subst (asm) gbinomial_absorption)
+      by (simp add: abs_mult abs_a1)
+    then have \<open>(\<lambda>n. abs (a gchoose n)) \<longlonglongrightarrow> 0\<close>
+      using that(1) by force
+    then show \<open>(\<lambda>n. (a gchoose n)) \<longlonglongrightarrow> 0\<close>
+      by (rule tendsto_rabs_zero_cancel)
+  qed
+
+  from thesis1 thesis2 assms show ?thesis
+    using linorder_linear by blast
+qed
+
+
+(* lemma gbinomial_minus1[simp]: \<open>(-1 gchoose n) = (case n of 0 \<Rightarrow> 1 | _ \<Rightarrow> -1)\<close>
+  apply (cases n)
+   apply auto
+  unfolding gbinomial_prod_rev
+  apply auto
+  by auto *)
+
+lemma gbinomial_abs_sum:
+  fixes a :: real
+  assumes \<open>a > 0\<close> and \<open>a \<le> 1\<close>
+  shows \<open>(\<lambda>n. abs (a gchoose n)) sums 2\<close>
+proof -
+  define a' where \<open>a' = nat (ceiling a)\<close>
+  have \<open>a' = 1\<close>
+    using a'_def assms(1) assms(2) by linarith
+  have lim: \<open>(\<lambda>n. (a - 1 gchoose n)) \<longlonglongrightarrow> 0\<close>
+    by (simp add: assms(1) gbinomial_tendsto_0)
+  have \<open>(\<Sum>k\<le>n. abs (a gchoose k)) = (- 1) ^ a' * ((- 1) ^ n * (a - 1 gchoose n)) -
+    (- 1) ^ a' * of_bool (0 < a') * ((- 1) ^ (a'-1) * (a - 1 gchoose (a' - 1))) +
+    (\<Sum>k<a'. \<bar>a gchoose k\<bar>)\<close> for n
+    unfolding a'_def
+    apply (rule gbinomial_sum_lower_abs)
+    using assms(2) by linarith
+  also have \<open>\<dots>n = 2 - (- 1) ^ n * (a - 1 gchoose n)\<close> for n
+    using assms
+    by (auto simp add: \<open>a' = 1\<close>)
+  finally have \<open>(\<Sum>k\<le>n. abs (a gchoose k)) = 2 - (- 1) ^ n * (a - 1 gchoose n)\<close> for n
+    by -
+  moreover have \<open>(\<lambda>n. 2 - (- 1) ^ n * (a - 1 gchoose n)) \<longlonglongrightarrow> 2\<close>
+  proof -
+    from lim have \<open>(\<lambda>n. ((-1) ^ n * (a-1 gchoose n))) \<longlonglongrightarrow> 0\<close>
+      apply (rule_tac tendsto_rabs_zero_cancel)
+      by (simp add: abs_mult tendsto_rabs_zero_iff)
+    then have \<open>(\<lambda>n. 2 - (- 1) ^ n * (a - 1 gchoose n)) \<longlonglongrightarrow> 2 - 0\<close>
+      apply (rule tendsto_diff[rotated])
+      by simp
+    then show ?thesis
+      by simp
+  qed
+  ultimately have \<open>(\<lambda>n. \<Sum>k\<le>n. abs (a gchoose k)) \<longlonglongrightarrow> 2\<close>
+    by auto
+  then show ?thesis
+    using sums_def_le by blast
+qed
+
+lemma has_sumI_metric:
+  fixes l :: \<open>'a :: {metric_space, comm_monoid_add}\<close>
+  assumes \<open>\<And>e. e > 0 \<Longrightarrow> \<exists>X. finite X \<and> X \<subseteq> A \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> A \<longrightarrow> dist (sum f Y) l < e)\<close>
+  shows \<open>has_sum f A l\<close>
+  unfolding has_sum_def
+  apply (rule tendstoI)
+  unfolding eventually_finite_subsets_at_top
+  using assms
+  by simp
+
+lemma sums_has_sum:
+  fixes s :: \<open>'a :: banach\<close>
+  assumes sums: \<open>f sums s\<close>
+  assumes abs_sum: \<open>summable (\<lambda>n. norm (f n))\<close>
+  shows \<open>has_sum f UNIV s\<close>
+proof (rule has_sumI_metric)
+  fix e :: real assume \<open>0 < e\<close>
+  define e' where \<open>e' = e/2\<close>
+  then have \<open>e' > 0\<close>
+    using \<open>0 < e\<close> half_gt_zero by blast
+  from suminf_exist_split[where r=e', OF \<open>0<e'\<close> abs_sum]
+  obtain N where \<open>norm (\<Sum>i. norm (f (i + N))) < e'\<close>
+    by auto
+  then have N: \<open>(\<Sum>i. norm (f (i + N))) < e'\<close>
+    by auto
+  then have N': \<open>norm (\<Sum>i. f (i + N)) < e'\<close>
+    apply (rule dual_order.strict_trans2)
+    by (auto intro!: summable_norm summable_iff_shift[THEN iffD2] abs_sum)
+
+  define X where \<open>X = {..<N}\<close>
+  then have \<open>finite X\<close>
+    by auto
+  moreover have \<open>dist (sum f Y) s < e\<close> if \<open>finite Y\<close> and \<open>X \<subseteq> Y\<close> for Y
+  proof -
+    have \<open>dist (sum f Y) s = norm (s - sum f {..<N} - sum f (Y-{..<N}))\<close>
+      by (metis X_def diff_diff_eq2 dist_norm norm_minus_commute sum.subset_diff that(1) that(2))
+    also have \<open>\<dots> \<le> norm (s - sum f {..<N}) + norm (sum f (Y-{..<N}))\<close>
+      using norm_triangle_ineq4 by blast
+    also have \<open>\<dots> = norm (\<Sum>i. f (i + N)) + norm (sum f (Y-{..<N}))\<close>
+      apply (subst suminf_minus_initial_segment)
+      using sums sums_summable apply blast
+      using sums sums_unique by blast
+    also have \<open>\<dots> < e' + norm (sum f (Y-{..<N}))\<close>
+      using N' by simp
+    also have \<open>\<dots> \<le> e' + norm (\<Sum>i\<in>Y-{..<N}. norm (f i))\<close>
+      apply (rule add_left_mono)
+      by (smt (verit, best) real_norm_def sum_norm_le)
+    also have \<open>\<dots> \<le> e' + (\<Sum>i\<in>Y-{..<N}. norm (f i))\<close>
+      apply (rule add_left_mono)
+      by (simp add: sum_nonneg)
+    also have \<open>\<dots> = e' + (\<Sum>i|i+N\<in>Y. norm (f (i + N)))\<close>
+      apply (rule arg_cong[where f=\<open>\<lambda>x. e' + x\<close>])
+      apply (rule sum.reindex_cong[where l=\<open>\<lambda>i. i + N\<close>])
+      apply auto
+      by (smt (verit, best) add.commute image_iff le_iff_add linorder_not_le mem_Collect_eq)
+    also have \<open>\<dots> \<le> e' + (\<Sum>i. norm (f (i + N)))\<close>
+      by (auto intro!: add_left_mono sum_le_suminf summable_iff_shift[THEN iffD2] abs_sum finite_inverse_image \<open>finite Y\<close>)
+    also have \<open>\<dots> \<le> e' + e'\<close>
+      using N by simp
+    also have \<open>\<dots> = e\<close>
+      by (simp add: e'_def)
+    finally show ?thesis
+      by -
+  qed
+  ultimately show \<open>\<exists>X. finite X \<and> X \<subseteq> UNIV \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> UNIV \<longrightarrow> dist (sum f Y) s < e)\<close>
+    by auto
+qed
+
+lemma sums_has_sum_pos:
+  fixes s :: real
+  assumes \<open>f sums s\<close>
+  assumes \<open>\<And>n. f n \<ge> 0\<close>
+  shows \<open>has_sum f UNIV s\<close>
+  apply (rule sums_has_sum)
+  apply (simp add: assms(1))
+  using assms(1) assms(2) summable_def by auto
+
+lemma gbinomial_abs_has_sum:
+  fixes a :: real
+  assumes \<open>a > 0\<close> and \<open>a \<le> 1\<close>
+  shows \<open>has_sum (\<lambda>n. abs (a gchoose n)) UNIV 2\<close>
+  apply (rule sums_has_sum_pos)
+   apply (rule gbinomial_abs_sum)
+  using assms by auto
+
+lemma gbinomial_abs_has_sum_1:
+  fixes a :: real
+  assumes \<open>a > 0\<close> and \<open>a \<le> 1\<close>
+  shows \<open>has_sum (\<lambda>n. abs (a gchoose n)) (UNIV-{0}) 1\<close>
+proof -
+  have \<open>has_sum (\<lambda>n. abs (a gchoose n)) (UNIV-{0}) (2-(\<Sum>n\<in>{0}. abs (a gchoose n)))\<close>
+    apply (rule has_sum_Diff)
+      apply (rule gbinomial_abs_has_sum)
+    using assms apply auto[2]
+     apply (rule has_sum_finite)
+    by auto
+  then show ?thesis
+    by simp
+qed
+
+lemma summable_onI:
+  assumes \<open>has_sum f A s\<close>
+  shows \<open>f summable_on A\<close>
+  using assms summable_on_def by blast
+
+lemma gbinomial_abs_summable:
+  fixes a :: real
+  assumes \<open>a > 0\<close> and \<open>a \<le> 1\<close>
+  shows \<open>(\<lambda>n. (a gchoose n)) abs_summable_on UNIV\<close>
+  using assms by (auto intro!: summable_onI gbinomial_abs_has_sum)
+
+lemma gbinomial_abs_summable_1:
+  fixes a :: real
+  assumes \<open>a > 0\<close> and \<open>a \<le> 1\<close>
+  shows \<open>(\<lambda>n. (a gchoose n)) abs_summable_on UNIV-{0}\<close>
+  using assms by (auto intro!: summable_onI gbinomial_abs_has_sum_1)
+
 lemma has_sum_singleton[simp]: \<open>has_sum f {x} y \<longleftrightarrow> f x = y\<close> for y :: \<open>'a :: {comm_monoid_add, t2_space}\<close>
   using has_sum_finite[of \<open>{x}\<close>]
   apply auto

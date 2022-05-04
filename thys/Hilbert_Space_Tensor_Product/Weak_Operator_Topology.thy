@@ -168,17 +168,35 @@ proof intro_classes
   qed
 qed
 
+lemma Domainp_cr_cblinfun_wot[simp]: \<open>Domainp cr_cblinfun_wot = (\<lambda>_. True)\<close>
+  by (metis (no_types, opaque_lifting) DomainPI cblinfun_wot.left_total left_totalE)
+
+lemma Rangep_cr_cblinfun_wot[simp]: \<open>Rangep cr_cblinfun_wot = (\<lambda>_. True)\<close>
+  by (meson RangePI cr_cblinfun_wot_def)
+
 lemma transfer_euclidean_cweak_operator_topology[transfer_rule]:
   includes lifting_syntax
   shows \<open>(rel_topology cr_cblinfun_wot) cweak_operator_topology euclidean\<close>
-  apply (auto simp: rel_topology_def cr_cblinfun_wot_def rel_set_def
-      intro!: rel_funI)
-   apply transfer
-   apply auto
-   apply (meson openin_subopen subsetI)
-  apply transfer
-  apply auto
-  by (meson openin_subopen subsetI)
+proof (unfold rel_topology_def, intro conjI allI impI)
+  show \<open>(rel_set cr_cblinfun_wot ===> (=)) (openin cweak_operator_topology) (openin euclidean)\<close>
+    apply (auto simp: rel_topology_def cr_cblinfun_wot_def rel_set_def intro!: rel_funI)
+     apply transfer
+     apply auto
+     apply (meson openin_subopen subsetI)
+    apply transfer
+    apply auto
+    by (meson openin_subopen subsetI)
+next
+  fix U :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close>
+  assume \<open>openin cweak_operator_topology U\<close>
+  show \<open>Domainp (rel_set cr_cblinfun_wot) U\<close>
+    by (simp add: Domainp_set)
+next
+  fix U :: \<open>('a, 'b) cblinfun_wot set\<close>
+  assume \<open>openin euclidean U\<close>
+  show \<open>Rangep (rel_set cr_cblinfun_wot) U\<close>
+    by (simp add: Rangep_set)
+qed
 
 lemma openin_cweak_operator_topology: \<open>openin cweak_operator_topology U \<longleftrightarrow> (\<exists>V. open V \<and> U = (\<lambda>a (x,y). cinner x (a *\<^sub>V y)) -` V)\<close>
   by (simp add: cweak_operator_topology_def openin_pullback_topology)

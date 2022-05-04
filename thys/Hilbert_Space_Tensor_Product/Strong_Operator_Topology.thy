@@ -143,42 +143,68 @@ lemma limitin_cstrong_operator_topology:
 lemma filterlim_cstrong_operator_topology: \<open>filterlim f (nhdsin cstrong_operator_topology l) = limitin cstrong_operator_topology f l\<close>
   by (auto simp: cstrong_operator_topology_topspace simp flip: filterlim_nhdsin_iff_limitin)
 
+lemma hausdorff_sot[simp]: \<open>hausdorff cstrong_operator_topology\<close>
+proof (rule hausdorffI)
+  fix a b :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
+  assume \<open>a \<noteq> b\<close>
+  then obtain \<psi> where \<open>a *\<^sub>V \<psi> \<noteq> b *\<^sub>V \<psi>\<close>
+    by (meson cblinfun_eqI)
+  then obtain U' V' where \<open>open U'\<close> \<open>open V'\<close> \<open>a *\<^sub>V \<psi> \<in> U'\<close> \<open>b *\<^sub>V \<psi> \<in> V'\<close> \<open>U' \<inter> V' = {}\<close>
+    by (meson hausdorff)
+  define U V where \<open>U = {f. \<forall>i\<in>{()}. f *\<^sub>V \<psi> \<in> U'}\<close> and \<open>V = {f. \<forall>i\<in>{()}. f *\<^sub>V \<psi> \<in> V'}\<close>
+  have \<open>openin cstrong_operator_topology U\<close>
+    unfolding U_def apply (rule cstrong_operator_topology_basis)
+    using \<open>open U'\<close> by auto
+  moreover have \<open>openin cstrong_operator_topology V\<close>
+    unfolding V_def apply (rule cstrong_operator_topology_basis)
+    using \<open>open V'\<close> by auto
+  ultimately show \<open>\<exists>U V. openin cstrong_operator_topology U \<and> openin cstrong_operator_topology V \<and> a \<in> U \<and> b \<in> V \<and> U \<inter> V = {}\<close>
+    apply (rule_tac exI[of _ U])
+    apply (rule_tac exI[of _ V])
+    using  \<open>a *\<^sub>V \<psi> \<in> U'\<close> \<open>b *\<^sub>V \<psi> \<in> V'\<close> \<open>U' \<inter> V' = {}\<close> by (auto simp: U_def V_def)
+qed
+
 instance cblinfun_sot :: (complex_normed_vector, complex_normed_vector) t2_space
 proof intro_classes
   fix a b :: \<open>('a,'b) cblinfun_sot\<close>
   show \<open>a \<noteq> b \<Longrightarrow> \<exists>U V. open U \<and> open V \<and> a \<in> U \<and> b \<in> V \<and> U \<inter> V = {}\<close>
-  proof transfer
-    fix a b :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
-    assume \<open>a \<noteq> b\<close>
-    then obtain \<psi> where \<open>a *\<^sub>V \<psi> \<noteq> b *\<^sub>V \<psi>\<close>
-      by (meson cblinfun_eqI)
-    then obtain U' V' where \<open>open U'\<close> \<open>open V'\<close> \<open>a *\<^sub>V \<psi> \<in> U'\<close> \<open>b *\<^sub>V \<psi> \<in> V'\<close> \<open>U' \<inter> V' = {}\<close>
-      by (meson hausdorff)
-    define U V where \<open>U = {f. \<forall>i\<in>{()}. f *\<^sub>V \<psi> \<in> U'}\<close> and \<open>V = {f. \<forall>i\<in>{()}. f *\<^sub>V \<psi> \<in> V'}\<close>
-    have \<open>openin cstrong_operator_topology U\<close>
-      unfolding U_def apply (rule cstrong_operator_topology_basis)
-      using \<open>open U'\<close> by auto
-    moreover have \<open>openin cstrong_operator_topology V\<close>
-      unfolding V_def apply (rule cstrong_operator_topology_basis)
-      using \<open>open V'\<close> by auto
-    ultimately show \<open>\<exists>U V. openin cstrong_operator_topology U \<and> openin cstrong_operator_topology V \<and> a \<in> U \<and> b \<in> V \<and> U \<inter> V = {}\<close>
-      apply (rule_tac exI[of _ U])
-      apply (rule_tac exI[of _ V])
-      using  \<open>a *\<^sub>V \<psi> \<in> U'\<close> \<open>b *\<^sub>V \<psi> \<in> V'\<close> \<open>U' \<inter> V' = {}\<close> by (auto simp: U_def V_def)
-  qed
+    apply transfer using hausdorff_sot
+    by (metis UNIV_I cstrong_operator_topology_topspace hausdorff_def)
 qed
+
+lemma Domainp_cr_cblinfun_sot[simp]: \<open>Domainp cr_cblinfun_sot = (\<lambda>_. True)\<close>
+  by (metis (no_types, opaque_lifting) DomainPI cblinfun_sot.left_total left_totalE)
+
+lemma Rangep_cr_cblinfun_sot[simp]: \<open>Rangep cr_cblinfun_sot = (\<lambda>_. True)\<close>
+  by (meson RangePI cr_cblinfun_sot_def)
+
+lemma Rangep_set[relator_domain]: "Rangep (rel_set T) = (\<lambda>A. Ball A (Rangep T))"
+  by (metis (no_types, opaque_lifting) Domainp_conversep Domainp_set rel_set_conversep)
+
 
 lemma transfer_euclidean_cstrong_operator_topology[transfer_rule]:
   includes lifting_syntax
-  shows \<open>(rel_topology cr_cblinfun_sot) cstrong_operator_topology euclidean\<close>
-  apply (auto simp: rel_topology_def cr_cblinfun_sot_def rel_set_def
-intro!: rel_funI)
-   apply transfer
-   apply auto
-   apply (meson openin_subopen subsetI)
-  apply transfer
-  apply auto
-  by (meson openin_subopen subsetI)
+  shows \<open>(rel_topology cr_cblinfun_sot) cstrong_operator_topology euclidean\<close> 
+proof (unfold rel_topology_def, intro conjI allI impI)
+  show \<open>(rel_set cr_cblinfun_sot ===> (=)) (openin cstrong_operator_topology) (openin euclidean)\<close>
+    apply (auto simp: rel_topology_def cr_cblinfun_sot_def rel_set_def intro!: rel_funI)
+     apply transfer
+     apply auto
+     apply (meson openin_subopen subsetI)
+    apply transfer
+    apply auto
+    by (meson openin_subopen subsetI)
+next
+  fix U :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close>
+  assume \<open>openin cstrong_operator_topology U\<close>
+  show \<open>Domainp (rel_set cr_cblinfun_sot) U\<close>
+    by (simp add: Domainp_set)
+next
+  fix U :: \<open>('a, 'b) cblinfun_sot set\<close>
+  assume \<open>openin euclidean U\<close>
+  show \<open>Rangep (rel_set cr_cblinfun_sot) U\<close>
+    by (simp add: Rangep_set)
+qed
 
 lemma openin_cstrong_operator_topology: \<open>openin cstrong_operator_topology U \<longleftrightarrow> (\<exists>V. open V \<and> U = (*\<^sub>V) -` V)\<close>
   by (simp add: cstrong_operator_topology_def openin_pullback_topology)
@@ -238,6 +264,11 @@ proof -
      apply (rule continuous_map_pullback)
     using * by auto
 qed
+
+lemma continuous_map_right_comp_sot: 
+  \<open>continuous_map cstrong_operator_topology cstrong_operator_topology (\<lambda>a::_ \<Rightarrow>\<^sub>C\<^sub>L 'c::complex_normed_vector. a o\<^sub>C\<^sub>L b)\<close> 
+  for b :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
+  by (simp add: continuous_on_cstrong_operator_topo_iff_coordinatewise cstrong_operator_topology_continuous_evaluation)
 
 lemma continuous_map_scaleC_sot: \<open>continuous_map cstrong_operator_topology cstrong_operator_topology (scaleC c)\<close>
   apply (subst asm_rl[of \<open>scaleC c = (o\<^sub>C\<^sub>L) (c *\<^sub>C id_cblinfun)\<close>])
@@ -414,7 +445,45 @@ qed
 
 declare cstrong_operator_topology_topspace[simp]
 
-unbundle no_cblinfun_notation
+lift_definition cblinfun_compose_sot :: \<open>('a::complex_normed_vector,'b::complex_normed_vector) cblinfun_sot \<Rightarrow> ('c::complex_normed_vector,'a) cblinfun_sot \<Rightarrow> ('c,'b) cblinfun_sot\<close>
+  is cblinfun_compose .
 
+lemma isCont_cblinfun_compose_sot_right[simp]: \<open>isCont (\<lambda>F. cblinfun_compose_sot F G) x\<close>
+  apply (rule continuous_on_interior[where s=UNIV, rotated], simp)
+  apply (rule continuous_map_iff_continuous2[THEN iffD1])
+  apply transfer
+  by (simp add: continuous_map_right_comp_sot)
+
+lemma isCont_cblinfun_compose_sot_left[simp]: \<open>isCont (\<lambda>F. cblinfun_compose_sot G F) x\<close>
+  apply (rule continuous_on_interior[where s=UNIV, rotated], simp)
+  apply (rule continuous_map_iff_continuous2[THEN iffD1])
+  apply transfer
+  by (simp add: continuous_map_left_comp_sot)
+
+lemma additive_cblinfun_compose_sot_right[simp]: \<open>additive (\<lambda>F. cblinfun_compose_sot F G)\<close>
+  unfolding additive_def
+  apply transfer
+  by (simp add: cblinfun_compose_add_left)
+
+lemma additive_cblinfun_compose_sot_left[simp]: \<open>additive (\<lambda>F. cblinfun_compose_sot G F)\<close>
+  unfolding additive_def
+  apply transfer
+  by (simp add: cblinfun_compose_add_right)
+
+lemma transfer_infsum_sot[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  shows \<open>((R ===> cr_cblinfun_sot) ===> rel_set R ===> cr_cblinfun_sot) (infsum_in cstrong_operator_topology) infsum\<close>
+  apply (simp add: infsum_euclidean_eq[abs_def, symmetric])
+  by transfer_prover
+
+lemma transfer_summable_on_sot[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  shows \<open>((R ===> cr_cblinfun_sot) ===> rel_set R ===> (\<longleftrightarrow>)) (summable_on_in cstrong_operator_topology) (summable_on)\<close>
+  apply (simp add: summable_on_euclidean_eq[abs_def, symmetric])
+  by transfer_prover
+
+unbundle no_cblinfun_notation
 
 end

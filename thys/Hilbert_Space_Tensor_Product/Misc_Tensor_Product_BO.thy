@@ -853,6 +853,12 @@ lemma has_sum_cinner_left:
   by (metis assms cblinfun_cinner_right.rep_eq has_sum_cblinfun_apply)
 
 
+lemma summable_on_cinner_left:
+  assumes \<open>f summable_on I\<close>
+  shows \<open>(\<lambda>i. a \<bullet>\<^sub>C f i) summable_on I\<close>
+  by (metis assms has_sum_cinner_left summable_on_def)
+
+
 lemma infsum_cinner_left:
   assumes \<open>\<phi> summable_on I\<close>
   shows \<open>\<psi> \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>i\<in>I. \<phi> i) = (\<Sum>\<^sub>\<infinity>i\<in>I. \<psi> \<bullet>\<^sub>C \<phi> i)\<close>
