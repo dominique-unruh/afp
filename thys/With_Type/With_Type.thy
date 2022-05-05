@@ -522,7 +522,9 @@ fun mk_relation_for_type ctxt name_fun (T:typ) = let
         in \<^Const>\<open>rel_itself T' T\<close> end
     | Type(name, _) => (case With_Type.get_relator ctxt name of
                          NONE => raise TYPE("mk_relation_for_type: don't know how to handle type " ^ name, [T,T'], [])
-                        | SOME f => f ctxt mk T')
+                        | SOME f => f ctxt mk T'
+                                    handle e as TYPE _ => raise e
+                                         | e => raise TYPE("mk_relation_for_type: handler for type " ^ name ^ " failed with exception " ^ Runtime.exn_message e, [T,T'], []))
     | TVar _ => raise TYPE("mk_relation_for_type: encountered schematic type var", [T,T'], [])
   in mk T end
 \<close>
@@ -636,16 +638,24 @@ fun create_transfer_for_term ctxt name_fun (term:term) = let
           val inst = map (fn (ni, T) => (ni, mk_relation_for_type ctxt name_fun (T |> range_type |> domain_type) |> Thm.cterm_of ctxt)) vars
           val tac = infer_instantiate ctxt inst |> PRIMITIVE
       in tac end)
-  fun step_tac ctxt prems i =
-    (CONVERSION Thm.eta_conversion
+  fun step_tac ctxt prems =
+    CONVERSION Thm.eta_conversion
      THEN'
      instantiate_rel_tac ctxt
      THEN'
      (trace_tac ctxt \<^here> "resolve_tac" (resolve_tac ctxt rules)
       (* ORELSE' (resolve_tac ctxt @{thms RelI} THEN' resolve_tac ctxt rules) *)
       ORELSE' error_tac ctxt (fn t => "No transfer rule found for " ^ t))
-     THEN_ALL_NEW step_premise_tac ctxt prems) i
-  fun tac {context=ctxt, prems, ...} = 
+     THEN_ALL_NEW step_premise_tac ctxt prems
+  fun split3s [] = []
+    | split3s (x::y::z::rest) = (x,y,z) :: split3s rest
+    | split3s _ = raise Match (* Should not happen *)
+  fun tac {context=ctxt, prems, ...} = let
+      (* We add `left_unique r` and `right_unique r` to the premises because many rules have only one of them as premise *)
+    val prems = prems |> split3s |> map (fn (bi_unique, right_total, domain) =>
+      [bi_unique, right_total, domain, @{thm bi_unique_left_unique} OF [bi_unique], @{thm bi_unique_right_unique} OF [bi_unique]])
+      |> flat
+    in
     (resolve_tac ctxt @{thms RelI}
      THEN'
      ((Transfer.transfer_prover_start_tac ctxt)
@@ -653,6 +663,7 @@ fun create_transfer_for_term ctxt name_fun (term:term) = let
        step_tac ctxt prems)
      THEN'
      resolve_tac ctxt @{thms refl}) 1
+    end
 (* val _ = \<^print> ((map fst basic_rels @ map (S_of_rT_name o snd) basic_rels), map (Thm.cterm_of ctxt) assms, Thm.cterm_of ctxt goal) *)
   val thm = Goal.prove ctxt (map fst basic_rels @ map (S_of_rT_name o snd) basic_rels) assms goal tac
 in thm end
@@ -780,13 +791,14 @@ declare Lifting_Set.finite_transfer[add_Rel, with_type_transfer_rules]
 ML \<open>
 (* rel_const must use 'rep, 'abs *)
 fun create_transfer_thm ctxt class (* rel_const rel_const_def_thm *) = let
+val _ = \<^print> 0
   val thy = Proof_Context.theory_of ctxt
   val (class_const, class_const_curried, _) = get_params_of_class thy class
   (* val class_const_def_thm = Proof_Context.get_thm ctxt ((class_const |> dest_Const |> fst) ^ "_def") |> Drule.abs_def *)
   val class_const_curried = subst_TVars [(("'a",0), TFree("'abs",\<^sort>\<open>type\<close>))] class_const_curried
   fun name_fun "'abs" = ("r", "'rep", "S")
-val _ = \<^print> (class_const_curried |> Thm.cterm_of ctxt)
   val thm = create_transfer_for_term ctxt name_fun class_const_curried
+val _ = \<^print> 1
   val transferred = thm
     |> Thm.concl_of |> HOLogic.dest_Trueprop
     |> dest_comb |> fst |> dest_comb |> snd

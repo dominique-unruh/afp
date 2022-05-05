@@ -1,9 +1,20 @@
 theory With_Type_Inst_HOL
-  imports With_Type HOL.Real_Vector_Spaces
+  imports With_Type Complex_Main
 begin
 
 setup \<open>With_Type.add_relator_global \<^type_name>\<open>list\<close>
-  (fn ctxt => fn mk => fn \<^Type>\<open>filter T\<close> => \<^Term>\<open>list_all2 \<open>mk T\<close>\<close> ctxt)\<close>
+  (fn ctxt => fn mk => fn \<^Type>\<open>list T\<close> => \<^Term>\<open>list_all2 \<open>mk T\<close>\<close> ctxt)\<close>
+
+lemma rel_square_rel_list: \<open>rel_square (list_all2 a) = list_all2 (rel_square a)\<close>
+  by (simp add: list.rel_compp list.rel_conversep rel_square_def)
+
+lemma with_type_compat_xxx_setI[with_type_compat_xxx]:
+  fixes R1 :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> _\<close>
+    and R2 :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> _\<close>
+  assumes \<open>with_type_compat_xxx R RR\<close>
+  shows \<open>with_type_compat_xxx (\<lambda>r. list_all2 (R r)) (\<lambda>rr. list_all2 (RR rr))\<close>
+  using assms 
+  by (auto simp: with_type_compat_xxx_def rel_square_rel_list intro: list.right_unique_rel list.right_total_rel)
 
 lemma itself_transfer[with_type_transfer_rules]:
   \<open>Transfer.Rel rel_itself TYPE('a) TYPE('b)\<close>
@@ -434,14 +445,11 @@ local_setup \<open>define_stuff \<^here> \<^class>\<open>abs_if\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.equal\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>equal\<close>\<close>
 
-local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.enum\<close>\<close>
-local_setup \<open>define_stuff \<^here> \<^class>\<open>enum\<close>\<close>
-
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linorder_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linorder\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>linorder\<close>\<close>
 
-local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.wellorder_axioms\<close>\<close> (* TODO: insert left/right_unique into environment in transfer thm generation *)
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.wellorder_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.wellorder\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>wellorder\<close>\<close>
 
@@ -457,13 +465,17 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.
 local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_numeral\<close>\<close>
 
 
+
+
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>comp\<close>\<close>
-local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>id\<close>\<close>
+
+declare funpow_transfer[add_Rel, with_type_transfer_rules]
+declare inj_on_transfer[add_Rel, with_type_transfer_rules]
+
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>semiring_1.of_nat\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_char_0_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_char_0\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_char_0\<close>\<close>
-
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.comm_semiring_1\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>comm_semiring_1\<close>\<close>
@@ -532,20 +544,41 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_modulo\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_modulo\<close>\<close>
 
+declare distinct_transfer[add_Rel, with_type_transfer_rules]
+declare list.set_transfer[add_Rel, with_type_transfer_rules]
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.enum\<close>\<close>
+local_setup \<open>define_stuff \<^here> \<^class>\<open>enum\<close>\<close>
 
+declare num.rec_transfer[add_Rel, with_type_transfer_rules]
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>numeral.numeral\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>dvd.dvd\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_parity_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_parity\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_parity\<close>\<close>
 
+(* 
+Some notes for later write-up:
+
+Hints for creating this config:
+
+- To see whether there is already a rule for a given constant C, try searching "C rel_fun"
+- If so, add it with "declare rule[add_Rel, with_type_transfer_rules]"
+- Otherwise, use bind_transfers_for_const
+- Don't simplify names. E.g. don't replace "zero_neq_one.of_bool" by "of_bool".
+  These are often different names, the qualified ones being the parametric forms.
+  (The non-parametric ones will fail in 'bind_transfers_for_const'.)
+*)
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>zero_neq_one.of_bool\<close>\<close>
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ring_parity\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>ring_parity\<close>\<close>
 
-
+declare rec_nat_transfer[add_Rel, with_type_transfer_rules]
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>power.power\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_bits_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_bits\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_bits\<close>\<close>
-
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_semiring_0\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_semiring_0\<close>\<close>
@@ -609,7 +642,9 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.boolean_algebra\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>boolean_algebra\<close>\<close>
 
-
+declare Union_transfer[add_Rel, with_type_transfer_rules]
+declare Lifting_Set.inter_transfer[add_Rel, with_type_transfer_rules]
+declare Lifting_Set.union_transfer[add_Rel, with_type_transfer_rules]
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.topological_space\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>topological_space\<close>\<close>
 
@@ -628,7 +663,18 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.t2_space\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>t2_space\<close>\<close>
 
+(* declare Compl_transfer[add_Rel, with_type_transfer_rules] *) (* Cannot add this, has premise `bi_total A` *)
 
+lemma right_total_Compl_transfer' [with_type_transfer_rules]:
+  includes lifting_syntax
+  assumes [transfer_rule]: "bi_unique A" and [transfer_rule]: "right_total A" and \<open>Domainp A = D\<close>
+  shows "Transfer.Rel (rel_set A ===> rel_set A) (\<lambda>S. uminus S \<inter> Collect D) uminus"
+  by (metis RelI assms(1) assms(2) assms(3) right_total_Compl_transfer)
+
+(* declare right_total_Compl_transfer[add_Rel, with_type_transfer_rules] *)
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>topological_space.closed\<close>\<close>
+
+declare subset_transfer[add_Rel, with_type_transfer_rules]
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.t3_space_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.t3_space\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>t3_space\<close>\<close>
@@ -644,15 +690,19 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.
 local_setup \<open>define_stuff \<^here> \<^class>\<open>perfect_space\<close>\<close>
 
 
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>ord.greaterThan\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>ord.lessThan\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>HOL.induct_forall\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>generate_topology\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.order_topology_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.order_topology\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>order_topology\<close>\<close>
 
-
+declare prod.left_unique_rel[with_type_transfer_rules]
+declare prod.right_unique_rel[with_type_transfer_rules]
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.uniform_space_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.uniform_space\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>uniform_space\<close>\<close>
-
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.discrete_topology_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.discrete_topology\<close>\<close>
@@ -870,7 +920,7 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_semiring_with_nat\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>unique_euclidean_semiring_with_nat\<close>\<close>
 
-
+declare Let_transfer [add_Rel, with_type_transfer_rules]
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_semiring_numeral_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_semiring_numeral\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>unique_euclidean_semiring_numeral\<close>\<close>
@@ -917,6 +967,8 @@ local_setup \<open>define_stuff \<^here> \<^class>\<open>real_field\<close>\<clo
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.euclidean_ring\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>euclidean_ring\<close>\<close>
 
+declare id_transfer[add_Rel, with_type_transfer_rules]
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>ring_1.of_int\<close>\<close>
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.archimedean_field_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.archimedean_field\<close>\<close>
@@ -936,7 +988,6 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.
 local_setup \<open>define_stuff \<^here> \<^class>\<open>euclidean_ring_cancel\<close>\<close>
 
 
-local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_ring_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_ring\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>unique_euclidean_ring\<close>\<close>
 
@@ -944,6 +995,9 @@ local_setup \<open>define_stuff \<^here> \<^class>\<open>unique_euclidean_ring\<
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.unique_euclidean_semiring_with_bit_operations\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>unique_euclidean_semiring_with_bit_operations\<close>\<close>
 
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>preordering_bdd.bdd\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>preorder.bdd_above\<close>\<close>
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>preorder.bdd_below\<close>\<close>
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.conditionally_complete_lattice_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.conditionally_complete_lattice\<close>\<close>
@@ -954,7 +1008,8 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.finite_lattice\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>finite_lattice\<close>\<close>
 
-
+declare left_unique_rel_set[with_type_transfer_rules]
+declare right_unique_rel_set[with_type_transfer_rules]
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_distrib_lattice_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.complete_distrib_lattice\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>complete_distrib_lattice\<close>\<close>
@@ -977,6 +1032,7 @@ local_setup \<open>define_stuff \<^here> \<^class>\<open>complete_linorder\<clos
 
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linear_continuum_axioms\<close>\<close>
+(* Probably the same problem as with "finite" *)
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linear_continuum\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>linear_continuum\<close>\<close>
 

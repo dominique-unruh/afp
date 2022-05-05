@@ -5,10 +5,8 @@ begin
 lemma [with_type_transfer_rules]:
   includes lifting_syntax
   assumes \<open>Domainp r = S\<close>
-  (* assumes \<open>bi_unique r\<close> *)
   assumes \<open>right_total r\<close>
   assumes \<open>bi_unique s\<close>
-  (* assumes \<open>right_total s\<close> *)
   shows \<open>Transfer.Rel ((r ===> s) ===> (r ===> s) ===> (=)) (\<lambda>f g. \<forall>x. S x \<longrightarrow> f x = g x) (=)\<close>
   apply (rule RelI)
   apply (rule rel_funI)
@@ -41,6 +39,8 @@ local_setup \<open>define_stuff \<^here> \<^class>\<open>chilbert_space\<close>\
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ceuclidean_space_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ceuclidean_space\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>ceuclidean_space\<close>\<close>
+
+local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>is_ortho_set\<close>\<close>
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.onb_enum_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.onb_enum\<close>\<close>
@@ -164,6 +164,12 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.nice_ordered_field\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>nice_ordered_field\<close>\<close>
 
+lemma [with_type_transfer_rules]: \<open>Transfer.Rel (list_all2 R) [] []\<close>
+  by (simp add: Rel_def)
+
+lemma [with_type_transfer_rules]: \<open>Transfer.Rel (rel_fun R (rel_fun (list_all2 R) (list_all2 R))) (#) (#)\<close>
+  by (simp add: RelI' list.ctr_transfer(2))
+declare list.bi_unique_rel [with_type_transfer_rules]
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.one_dim_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.one_dim\<close>\<close>
