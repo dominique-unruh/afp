@@ -3,7 +3,7 @@ section \<open>\<open>Misc_Tensor_Product\<close> -- Miscelleanous results missi
 theory Misc_Tensor_Product
   imports "HOL-Analysis.Elementary_Topology" "HOL-Analysis.Abstract_Topology"
     "HOL-Analysis.Abstract_Limits" "HOL-Analysis.Function_Topology" "HOL-Cardinals.Cardinals"
-    "HOL-Analysis.Infinite_Sum"
+    "HOL-Analysis.Infinite_Sum" "HOL-Analysis.Harmonic_Numbers" 
 begin
 
 (* TODO move, explain *)
@@ -504,7 +504,7 @@ lemma summable_on_in_reindex:
 lemma infsum_in_reindex:
   assumes \<open>inj_on h A\<close>
   shows \<open>infsum_in T g (h ` A) = infsum_in T (g \<circ> h) A\<close>
-  sorry
+  by (metis Collect_cong assms has_sum_in_reindex infsum_in_def)
 
 lemma has_sum_in_reindex_bij_betw:
   assumes "bij_betw g A B"
@@ -1001,8 +1001,8 @@ proof -
     by (meson abs_ge_zero bounded_imp_summable)
 qed
 
-lemma harmonic_series_diverges: \<open>\<not> summable (\<lambda>n. c / n)\<close> if \<open>c \<noteq> 0\<close>
-  by -
+(* lemma harmonic_series_diverges: \<open>\<not> summable (\<lambda>n. c / n)\<close> if \<open>c \<noteq> 0\<close>
+  by - *)
 
 lemma summable_tendsto_times_n:
   fixes f :: \<open>nat \<Rightarrow> real\<close>
@@ -1036,7 +1036,25 @@ proof (rule ccontr)
     by auto
 
   moreover have \<open>\<not> summable (\<lambda>n. B / n)\<close>
-    by (simp add: \<open>B \<noteq> 0\<close> harmonic_series_diverges)
+  proof (rule ccontr)
+    define C where \<open>C = (\<Sum>n. 1 / real n)\<close>
+    assume \<open>\<not> \<not> summable (\<lambda>n. B / real n)\<close>
+    then have \<open>summable (\<lambda>n. inverse B * (B / real n))\<close>
+      using summable_mult by blast
+    then have \<open>summable (\<lambda>n. 1 / real n)\<close>
+      using \<open>B \<noteq> 0\<close> by auto
+    then have \<open>(\<Sum>n=1..m. 1 / real n) \<le> C\<close> for m
+      unfolding C_def apply (rule sum_le_suminf)
+      by auto
+    then have \<open>harm m \<le> C\<close> for m
+      by (simp add: harm_def inverse_eq_divide)
+    then have \<open>harm (nat (ceiling (exp C))) \<le> C\<close>
+      by -
+    then have \<open>ln (real (nat (ceiling (exp C))) + 1) \<le> C\<close>
+      by (smt (verit, best) ln_le_harm)
+    then show False
+      by (smt (z3) exp_ln ln_ge_iff of_nat_0_le_iff real_nat_ceiling_ge)
+  qed
 
   ultimately show False
     by simp
@@ -1081,7 +1099,16 @@ proof -
   have thesis2: \<open>(\<lambda>n. (a gchoose n)) \<longlonglongrightarrow> 0\<close> if \<open>a > -1\<close> \<open>a \<le> 0\<close>
   proof -
     have decseq: \<open>decseq (\<lambda>n. abs (a gchoose n))\<close>
-      by simp
+    proof (rule decseq_SucI)
+      fix n
+      have \<open>\<bar>a gchoose Suc n\<bar> = \<bar>a gchoose n\<bar> * (\<bar>a - real n\<bar> / (1 + n))\<close>
+        unfolding gbinomial_prod_rev by (simp add: abs_mult) 
+      also have \<open>\<dots> \<le> \<bar>a gchoose n\<bar>\<close>
+        apply (rule mult_left_le)
+        using assms that(2) by auto
+      finally show \<open>\<bar>a gchoose Suc n\<bar> \<le> \<bar>a gchoose n\<bar>\<close>
+        by -
+    qed
     have abs_a1: \<open>abs (a+1) = a+1\<close>
       using assms by auto
 

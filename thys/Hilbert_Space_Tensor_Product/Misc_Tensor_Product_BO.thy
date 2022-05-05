@@ -1008,6 +1008,13 @@ lemma infsum_of_real:
   unfolding of_real_def
   by (rule infsum_scaleR_left)
 
+
+(* TODO: Replace original positive_cblinfunI with this *)
+lemma positive_cblinfunI: \<open>A \<ge> 0\<close> if \<open>\<And>x. norm x = 1 \<Longrightarrow> cinner x (A *\<^sub>V x) \<ge> 0\<close>
+  apply (rule cblinfun_leI)
+  using that by simp
+
+
 unbundle no_cblinfun_notation
 
 end

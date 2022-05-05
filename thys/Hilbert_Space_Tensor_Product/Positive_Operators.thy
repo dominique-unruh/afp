@@ -9,14 +9,11 @@ no_notation Infinite_Set_Sum.abs_summable_on (infix "abs'_summable'_on" 50)
 
 unbundle cblinfun_notation
 
-(* TODO: Replace original positive_cblinfunI with this *)
-lemma positive_cblinfunI: \<open>A \<ge> 0\<close> if \<open>\<And>x. norm x = 1 \<Longrightarrow> cinner x (A *\<^sub>V x) \<ge> 0\<close>
-  sorry
-
 lemma cinner_pos_if_pos: \<open>f \<bullet>\<^sub>C (A *\<^sub>V f) \<ge> 0\<close> if \<open>A \<ge> 0\<close>
   using less_eq_cblinfun_def that by force
 
-definition sqrt_op :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'a)\<close> where \<open>sqrt_op a = (SOME b. b \<ge> 0 \<and> b* o\<^sub>C\<^sub>L b = a)\<close>
+definition sqrt_op :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'a)\<close> where
+  \<open>sqrt_op a = (SOME b. b \<ge> 0 \<and> b* o\<^sub>C\<^sub>L b = a)\<close>
 
 lemma norm_pos_op_mono:
   fixes A B :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
@@ -83,7 +80,6 @@ next
 
     then show ?thesis
     
-    sorry
 qed *)
 
 lemma generalized_Cauchy_Schwarz:
@@ -259,7 +255,7 @@ proof -
     (* TODO: can we add a cmod on the rhs? then we can use Cauchy_Schwarz_ineq2 a little more directly.
        Check how it is used below. *)
     thm Cauchy_Schwarz_ineq2
-    sorry *)
+     *)
   have fSnf: \<open>cmod (f \<bullet>\<^sub>C (cblinfun_power S n *\<^sub>V f)) \<le> cmod (f \<bullet>\<^sub>C f)\<close> for f n
     by (smt (verit, ccfv_SIG) Re_complex_of_real cinner_ge_zero complex_inner_class.Cauchy_Schwarz_ineq2 complex_of_real_cmod mult_left_mono norm_Snf norm_ge_zero power2_eq_square power2_norm_eq_cinner')
 (*   then have Sn_herm: \<open>(pow S n)* = pow S n\<close> for n
@@ -309,7 +305,7 @@ proof -
     by auto
   then have \<open>B = B*\<close>
     apply (rule hermitian_limit_hermitian_sot[symmetric])
-    sorry *)
+     *)
   have \<open>B0 \<ge> 0\<close>
   proof (rule positive_cblinfunI)
     fix f :: 'a assume [simp]: \<open>norm f = 1\<close>
