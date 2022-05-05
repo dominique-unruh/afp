@@ -775,78 +775,6 @@ lemma sum_cinner:
   shows "sum f A \<bullet>\<^sub>C sum g B = (\<Sum>i\<in>A. \<Sum>j\<in>B. f i \<bullet>\<^sub>C g j)"
   by (simp add: cinner_sum_right cinner_sum_left) (rule sum.swap)
 
-(* A copy of Series.Cauchy_product_sums with * replaced by \<bullet>\<^sub>C *)
-lemma Cauchy_cinner_product_sums:
-  fixes a b :: "nat \<Rightarrow> 'a::chilbert_space"
-  assumes a: "summable (\<lambda>k. norm (a k))"
-    and b: "summable (\<lambda>k. norm (b k))"
-  shows "(\<lambda>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k - i)) sums ((\<Sum>k. a k) \<bullet>\<^sub>C (\<Sum>k. b k))"
-proof -
-  let ?S1 = "\<lambda>n::nat. {..<n} \<times> {..<n}"
-  let ?S2 = "\<lambda>n::nat. {(i,j). i + j < n}"
-  have S1_mono: "\<And>m n. m \<le> n \<Longrightarrow> ?S1 m \<subseteq> ?S1 n" by auto
-  have S2_le_S1: "\<And>n. ?S2 n \<subseteq> ?S1 n" by auto
-  have S1_le_S2: "\<And>n. ?S1 (n div 2) \<subseteq> ?S2 n" by auto
-  have finite_S1: "\<And>n. finite (?S1 n)" by simp
-  with S2_le_S1 have finite_S2: "\<And>n. finite (?S2 n)" by (rule finite_subset)
-
-  let ?g = "\<lambda>(i,j). a i \<bullet>\<^sub>C b j"
-  let ?f = "\<lambda>(i,j). norm (a i) * norm (b j)"
-  have f_nonneg: "\<And>x. 0 \<le> ?f x" by auto
-  then have norm_sum_f: "\<And>A. norm (sum ?f A) = sum ?f A"
-    unfolding real_norm_def
-    by (simp only: abs_of_nonneg sum_nonneg [rule_format])
-
-  have "(\<lambda>n. (\<Sum>k<n. a k) \<bullet>\<^sub>C (\<Sum>k<n. b k)) \<longlonglongrightarrow> (\<Sum>k. a k) \<bullet>\<^sub>C (\<Sum>k. b k)"
-    by (simp add: a b summable_LIMSEQ summable_norm_cancel tendsto_cinner)
-  then have 1: "(\<lambda>n. sum ?g (?S1 n)) \<longlonglongrightarrow> (\<Sum>k. a k) \<bullet>\<^sub>C (\<Sum>k. b k)"
-    by (simp only: sum_cinner sum.Sigma [rule_format] finite_lessThan)
-
-  have "(\<lambda>n. (\<Sum>k<n. norm (a k)) * (\<Sum>k<n. norm (b k))) \<longlonglongrightarrow> (\<Sum>k. norm (a k)) * (\<Sum>k. norm (b k))"
-    using a b by (simp add: summable_LIMSEQ tendsto_mult)
-  then have "(\<lambda>n. sum ?f (?S1 n)) \<longlonglongrightarrow> (\<Sum>k. norm (a k)) * (\<Sum>k. norm (b k))"
-    by (simp only: sum_product sum.Sigma [rule_format] finite_lessThan)
-  then have "convergent (\<lambda>n. sum ?f (?S1 n))"
-    by (rule convergentI)
-  then have Cauchy: "Cauchy (\<lambda>n. sum ?f (?S1 n))"
-    by (rule convergent_Cauchy)
-  have "Zfun (\<lambda>n. sum ?f (?S1 n - ?S2 n)) sequentially"
-  proof (rule ZfunI, simp only: eventually_sequentially norm_sum_f)
-    fix r :: real
-    assume r: "0 < r"
-    from CauchyD [OF Cauchy r] obtain N
-      where "\<forall>m\<ge>N. \<forall>n\<ge>N. norm (sum ?f (?S1 m) - sum ?f (?S1 n)) < r" ..
-    then have "\<And>m n. N \<le> n \<Longrightarrow> n \<le> m \<Longrightarrow> norm (sum ?f (?S1 m - ?S1 n)) < r"
-      by (simp only: sum_diff finite_S1 S1_mono)
-    then have N: "\<And>m n. N \<le> n \<Longrightarrow> n \<le> m \<Longrightarrow> sum ?f (?S1 m - ?S1 n) < r"
-      by (simp only: norm_sum_f)
-    show "\<exists>N. \<forall>n\<ge>N. sum ?f (?S1 n - ?S2 n) < r"
-    proof (intro exI allI impI)
-      fix n
-      assume "2 * N \<le> n"
-      then have n: "N \<le> n div 2" by simp
-      have "sum ?f (?S1 n - ?S2 n) \<le> sum ?f (?S1 n - ?S1 (n div 2))"
-        by (intro sum_mono2 finite_Diff finite_S1 f_nonneg Diff_mono subset_refl S1_le_S2)
-      also have "\<dots> < r"
-        using n div_le_dividend by (rule N)
-      finally show "sum ?f (?S1 n - ?S2 n) < r" .
-    qed
-  qed
-  then have "Zfun (\<lambda>n. sum ?g (?S1 n - ?S2 n)) sequentially"
-    apply (rule Zfun_le [rule_format])
-    apply (simp only: norm_sum_f)
-    apply (rule order_trans [OF norm_sum sum_mono])
-    by (auto simp add: norm_mult_ineq complex_inner_class.Cauchy_Schwarz_ineq2)
-  then have 2: "(\<lambda>n. sum ?g (?S1 n) - sum ?g (?S2 n)) \<longlonglongrightarrow> 0"
-    unfolding tendsto_Zfun_iff diff_0_right
-    by (simp only: sum_diff finite_S1 S2_le_S1)
-  with 1 have "(\<lambda>n. sum ?g (?S2 n)) \<longlonglongrightarrow> (\<Sum>k. a k) \<bullet>\<^sub>C (\<Sum>k. b k)"
-    by (rule Lim_transform2)
-  then show ?thesis
-    by (simp only: sums_def sum.triangle_reindex)
-qed
-
-
 lemma has_sum_cinner_left:
   assumes \<open>has_sum f I x\<close>
   shows \<open>has_sum (\<lambda>i. a \<bullet>\<^sub>C f i) I (a \<bullet>\<^sub>C x)\<close>
@@ -863,6 +791,22 @@ lemma infsum_cinner_left:
   assumes \<open>\<phi> summable_on I\<close>
   shows \<open>\<psi> \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>i\<in>I. \<phi> i) = (\<Sum>\<^sub>\<infinity>i\<in>I. \<psi> \<bullet>\<^sub>C \<phi> i)\<close>
   by (metis assms has_sum_cinner_left has_sum_infsum infsumI)
+
+
+lemma has_sum_cinner_right:
+  assumes \<open>has_sum f I x\<close>
+  shows \<open>has_sum (\<lambda>i. f i \<bullet>\<^sub>C a) I (x \<bullet>\<^sub>C a)\<close>
+  sorry
+
+lemma summable_on_cinner_right:
+  assumes \<open>f summable_on I\<close>
+  shows \<open>(\<lambda>i. f i \<bullet>\<^sub>C a) summable_on I\<close>
+  by (metis assms has_sum_cinner_right summable_on_def)
+
+lemma infsum_cinner_right:
+  assumes \<open>\<phi> summable_on I\<close>
+  shows \<open>(\<Sum>\<^sub>\<infinity>i\<in>I. \<phi> i) \<bullet>\<^sub>C \<psi> = (\<Sum>\<^sub>\<infinity>i\<in>I. \<phi> i \<bullet>\<^sub>C \<psi>)\<close>
+  by (metis assms has_sum_cinner_right has_sum_infsum infsumI)
 
 
 lift_definition cblinfun_power :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'a \<Rightarrow> nat \<Rightarrow> 'a \<Rightarrow>\<^sub>C\<^sub>L 'a\<close> is
@@ -1013,6 +957,134 @@ lemma infsum_of_real:
 lemma positive_cblinfunI: \<open>A \<ge> 0\<close> if \<open>\<And>x. norm x = 1 \<Longrightarrow> cinner x (A *\<^sub>V x) \<ge> 0\<close>
   apply (rule cblinfun_leI)
   using that by simp
+
+
+text \<open>A variant of @{thm [source] Series.Cauchy_product_sums} with \<^term>\<open>(*)\<close> replaced by \<^term>\<open>(\<bullet>\<^sub>C)\<close>.
+   Differently from @{thm [source] Series.Cauchy_product_sums}, we do not require absolute summability
+   of \<^term>\<open>a\<close> and \<^term>\<open>b\<close> individually but only unconditional summability of \<^term>\<open>a\<close>, \<^term>\<open>b\<close>, and their product.
+   While on, e.g., reals, unconditional summability is equivalent to absolute summability, in
+   general unconditional summability is a weaker requirement.\<close>
+lemma Cauchy_cinner_product_infsum:
+  fixes a b :: "nat \<Rightarrow> 'a::chilbert_space"
+  assumes asum: \<open>a summable_on UNIV\<close>
+  assumes bsum: \<open>b summable_on UNIV\<close>
+  assumes absum: \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on UNIV\<close>
+(* TODO: Allow to alternatively provide sum_triangle instead.
+Or better give a separate lemma that shows equivalence of the two conditions. *)
+  shows \<open>(\<Sum>\<^sub>\<infinity>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k - i)) = (\<Sum>\<^sub>\<infinity>k. a k) \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>k. b k)\<close>
+proof -
+  have img: \<open>(\<lambda>(k::nat, i). (i, k - i)) ` {(k, i). i \<le> k} = UNIV\<close>
+    apply (auto simp: image_def)
+    by (metis add.commute add_diff_cancel_right' diff_le_self)
+  have inj: \<open>inj_on (\<lambda>(k::nat, i). (i, k - i)) {(k, i). i \<le> k}\<close>
+    by (smt (verit, del_insts) Pair_inject case_prodE case_prod_conv eq_diff_iff inj_onI mem_Collect_eq)
+  have sigma: \<open>(SIGMA k:UNIV. {i. i \<le> k}) = {(k, i). i \<le> k}\<close>
+    by auto
+
+  from absum
+  have \<open>(\<lambda>(k, l). a k \<bullet>\<^sub>C b l) summable_on (\<lambda>(k, i). (i, k - i)) ` {(k, i). i \<le> k}\<close>
+    by (simp only: img)
+  then have \<open>((\<lambda>(k, l). a k \<bullet>\<^sub>C b l) \<circ> (\<lambda>(k, i). (i, k - i))) summable_on {(k, i). i \<le> k}\<close>
+    using inj by (rule summable_on_reindex[THEN iffD1, rotated])
+  then have sum_triangle: \<open>(\<lambda>(x, y). a y \<bullet>\<^sub>C b (x - y)) summable_on {(k, i). i \<le> k}\<close>
+    by (simp add: o_def case_prod_unfold)
+
+  have \<open>(\<Sum>\<^sub>\<infinity>k. a k) \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>k. b k) = (\<Sum>\<^sub>\<infinity>k. \<Sum>\<^sub>\<infinity>l. a k \<bullet>\<^sub>C b l)\<close>
+    apply (subst infsum_cinner_right)
+     apply (rule asum)
+    apply (subst infsum_cinner_left)
+     apply (rule bsum)
+    by simp
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(k,l). a k \<bullet>\<^sub>C b l)\<close>
+    apply (subst infsum_Sigma'_banach)
+    using absum by auto
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(k, l)\<in>(\<lambda>(k, i). (i, k - i)) ` {(k, i). i \<le> k}. a k \<bullet>\<^sub>C b l)\<close>
+    by (simp only: img)
+  also have \<open>\<dots> = infsum ((\<lambda>(k, l). a k \<bullet>\<^sub>C b l) \<circ> (\<lambda>(k, i). (i, k - i))) {(k, i). i \<le> k}\<close>
+    using inj by (rule infsum_reindex)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(k,i)|i\<le>k. a i \<bullet>\<^sub>C b (k-i))\<close>
+    by (simp add: o_def case_prod_unfold)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>k. \<Sum>\<^sub>\<infinity>i|i\<le>k. a i \<bullet>\<^sub>C b (k-i))\<close>
+    apply (subst infsum_Sigma'_banach)
+    using sum_triangle by (auto simp: sigma)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k-i))\<close>
+    apply (subst infsum_finite[symmetric])
+    by (auto simp add: atMost_def)
+  finally show \<open>(\<Sum>\<^sub>\<infinity>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k - i)) = (\<Sum>\<^sub>\<infinity>k. a k) \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>k. b k)\<close>
+    by simp
+qed
+
+(* (* A copy of Series.Cauchy_product_sums with * replaced by \<bullet>\<^sub>C *)
+lemma Cauchy_cinner_product_sums:
+  fixes a b :: "nat \<Rightarrow> 'a::chilbert_space"
+  assumes a: "summable (\<lambda>k. norm (a k))"
+    and b: "summable (\<lambda>k. norm (b k))"
+  shows "(\<lambda>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k - i)) sums ((\<Sum>k. a k) \<bullet>\<^sub>C (\<Sum>k. b k))"
+proof -
+  let ?S1 = "\<lambda>n::nat. {..<n} \<times> {..<n}"
+  let ?S2 = "\<lambda>n::nat. {(i,j). i + j < n}"
+  have S1_mono: "\<And>m n. m \<le> n \<Longrightarrow> ?S1 m \<subseteq> ?S1 n" by auto
+  have S2_le_S1: "\<And>n. ?S2 n \<subseteq> ?S1 n" by auto
+  have S1_le_S2: "\<And>n. ?S1 (n div 2) \<subseteq> ?S2 n" by auto
+  have finite_S1: "\<And>n. finite (?S1 n)" by simp
+  with S2_le_S1 have finite_S2: "\<And>n. finite (?S2 n)" by (rule finite_subset)
+
+  let ?g = "\<lambda>(i,j). a i \<bullet>\<^sub>C b j"
+  let ?f = "\<lambda>(i,j). norm (a i) * norm (b j)"
+  have f_nonneg: "\<And>x. 0 \<le> ?f x" by auto
+  then have norm_sum_f: "\<And>A. norm (sum ?f A) = sum ?f A"
+    unfolding real_norm_def
+    by (simp only: abs_of_nonneg sum_nonneg [rule_format])
+
+  have "(\<lambda>n. (\<Sum>k<n. a k) \<bullet>\<^sub>C (\<Sum>k<n. b k)) \<longlonglongrightarrow> (\<Sum>k. a k) \<bullet>\<^sub>C (\<Sum>k. b k)"
+    by (simp add: a b summable_LIMSEQ summable_norm_cancel tendsto_cinner)
+  then have 1: "(\<lambda>n. sum ?g (?S1 n)) \<longlonglongrightarrow> (\<Sum>k. a k) \<bullet>\<^sub>C (\<Sum>k. b k)"
+    by (simp only: sum_cinner sum.Sigma [rule_format] finite_lessThan)
+
+  have "(\<lambda>n. (\<Sum>k<n. norm (a k)) * (\<Sum>k<n. norm (b k))) \<longlonglongrightarrow> (\<Sum>k. norm (a k)) * (\<Sum>k. norm (b k))"
+    using a b by (simp add: summable_LIMSEQ tendsto_mult)
+  then have "(\<lambda>n. sum ?f (?S1 n)) \<longlonglongrightarrow> (\<Sum>k. norm (a k)) * (\<Sum>k. norm (b k))"
+    by (simp only: sum_product sum.Sigma [rule_format] finite_lessThan)
+  then have "convergent (\<lambda>n. sum ?f (?S1 n))"
+    by (rule convergentI)
+  then have Cauchy: "Cauchy (\<lambda>n. sum ?f (?S1 n))"
+    by (rule convergent_Cauchy)
+  have "Zfun (\<lambda>n. sum ?f (?S1 n - ?S2 n)) sequentially"
+  proof (rule ZfunI, simp only: eventually_sequentially norm_sum_f)
+    fix r :: real
+    assume r: "0 < r"
+    from CauchyD [OF Cauchy r] obtain N
+      where "\<forall>m\<ge>N. \<forall>n\<ge>N. norm (sum ?f (?S1 m) - sum ?f (?S1 n)) < r" ..
+    then have "\<And>m n. N \<le> n \<Longrightarrow> n \<le> m \<Longrightarrow> norm (sum ?f (?S1 m - ?S1 n)) < r"
+      by (simp only: sum_diff finite_S1 S1_mono)
+    then have N: "\<And>m n. N \<le> n \<Longrightarrow> n \<le> m \<Longrightarrow> sum ?f (?S1 m - ?S1 n) < r"
+      by (simp only: norm_sum_f)
+    show "\<exists>N. \<forall>n\<ge>N. sum ?f (?S1 n - ?S2 n) < r"
+    proof (intro exI allI impI)
+      fix n
+      assume "2 * N \<le> n"
+      then have n: "N \<le> n div 2" by simp
+      have "sum ?f (?S1 n - ?S2 n) \<le> sum ?f (?S1 n - ?S1 (n div 2))"
+        by (intro sum_mono2 finite_Diff finite_S1 f_nonneg Diff_mono subset_refl S1_le_S2)
+      also have "\<dots> < r"
+        using n div_le_dividend by (rule N)
+      finally show "sum ?f (?S1 n - ?S2 n) < r" .
+    qed
+  qed
+  then have "Zfun (\<lambda>n. sum ?g (?S1 n - ?S2 n)) sequentially"
+    apply (rule Zfun_le [rule_format])
+    apply (simp only: norm_sum_f)
+    apply (rule order_trans [OF norm_sum sum_mono])
+    by (auto simp add: norm_mult_ineq complex_inner_class.Cauchy_Schwarz_ineq2)
+  then have 2: "(\<lambda>n. sum ?g (?S1 n) - sum ?g (?S2 n)) \<longlonglongrightarrow> 0"
+    unfolding tendsto_Zfun_iff diff_0_right
+    by (simp only: sum_diff finite_S1 S2_le_S1)
+  with 1 have "(\<lambda>n. sum ?g (?S2 n)) \<longlonglongrightarrow> (\<Sum>k. a k) \<bullet>\<^sub>C (\<Sum>k. b k)"
+    by (rule Lim_transform2)
+  then show ?thesis
+    by (simp only: sums_def sum.triangle_reindex)
+qed *)
+
 
 
 unbundle no_cblinfun_notation
