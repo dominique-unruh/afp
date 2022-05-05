@@ -2,12 +2,12 @@ section \<open>\<open>Trace_Class\<close> -- Trace-class operators\<close>
 
 theory Trace_Class
   imports Complex_Bounded_Operators.Complex_L2 HS2Ell2
-    Weak_Operator_Topology
-    "HOL-Computational_Algebra.Formal_Power_Series"
-    Positive_Operators
+    Weak_Operator_Topology Positive_Operators
 begin
 
 hide_fact (open) Infinite_Set_Sum.abs_summable_on_Sigma_iff
+hide_const (open) Determinants.trace
+hide_fact (open) Determinants.trace_def
 
 unbundle cblinfun_notation
 
@@ -154,10 +154,10 @@ proof -
     by -
 qed
 
-(* TODO: conway op, 18.2 Corollary *)
 lemma trace_norm_basis_invariance:
   assumes \<open>is_onb E\<close> and \<open>is_onb F\<close>
   shows \<open>has_sum (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) E t \<longleftrightarrow> has_sum (\<lambda>f. cmod (f \<bullet>\<^sub>C (abs_op A *\<^sub>V f))) F t\<close>
+    \<comment> \<open>@{cite "conway00operator"}, Corollary 18.2\<close>
 proof -
   define B where \<open>B = sqrt_op (abs_op A)\<close>
   have \<open>complex_of_real (cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) = (B* *\<^sub>V B*\<^sub>V e) \<bullet>\<^sub>C e\<close> for e
@@ -330,9 +330,15 @@ proof -
   qed
 qed
 
-lemma cmod_abs[simp]: \<open>cmod (abs x) = cmod x\<close>
-(* TODO: more general with norm? *)
-  by (simp add: abs_complex_def)
+lemma norm_abs[simp]: \<open>norm (abs x) = norm x\<close> for x :: \<open>'a :: {idom_abs_sgn, real_normed_div_algebra}\<close>
+proof -
+  have \<open>norm x = norm (sgn x * abs x)\<close>
+    by (simp add: sgn_mult_abs)
+  also have \<open>\<dots> = norm \<bar>x\<bar>\<close>
+    by (simp add: norm_mult norm_sgn)
+  finally show ?thesis
+    by simp
+qed
 
 lemma trace_norm_0[simp]: \<open>trace_norm 0 = 0\<close>
   by (auto simp: trace_norm_def)
