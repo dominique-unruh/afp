@@ -15,14 +15,6 @@ lemma cinner_pos_if_pos: \<open>f \<bullet>\<^sub>C (A *\<^sub>V f) \<ge> 0\<clo
 definition sqrt_op :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'a)\<close> where
   \<open>sqrt_op a = (SOME b. b \<ge> 0 \<and> b* o\<^sub>C\<^sub>L b = a)\<close>
 
-lemma norm_pos_op_mono:
-  fixes A B :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
-  assumes \<open>0 \<le> A\<close> and \<open>A \<le> B\<close>
-  shows \<open>norm A \<le> norm B\<close>
-(* Can probably be proved using abs_op below. Needed? *)
-  unfolding cinner_sup_norm_cblinfun
-  sorry
-
 lemma nonneg_quadratic_function_discriminant:
   fixes a b c :: real
   assumes \<open>a > 0\<close>
@@ -178,6 +170,12 @@ lemma summable_on_uminus[intro!]:
    apply simp
   using assms by (rule summable_on_scaleR_right)
 
+(* TODO move *)
+lemma cancel_apply_Proj:
+  assumes \<open>\<psi> \<in> space_as_set S\<close>
+  shows \<open>Proj S *\<^sub>V \<psi> = \<psi>\<close>
+  by (metis Proj_idempotent Proj_range assms cblinfun_fixes_range)
+
 (* Proof follows https://link.springer.com/article/10.1007%2FBF01448052,
       @{cite wecken35linearer} *)
 lemma TODO_name:
@@ -190,9 +188,77 @@ proof -
     \<open>\<exists>P. is_Proj P \<and> (\<forall>F. F o\<^sub>C\<^sub>L (W - T) = (W - T) o\<^sub>C\<^sub>L F \<longrightarrow> F o\<^sub>C\<^sub>L P = P o\<^sub>C\<^sub>L F)
        \<and> (\<forall>f. W f = 0 \<longrightarrow> P f = f)
        \<and> (W = (2 *\<^sub>C P - id_cblinfun) o\<^sub>C\<^sub>L T)\<close>
-    if \<open>W o\<^sub>C\<^sub>L T = T o\<^sub>C\<^sub>L W\<close> and \<open>W = W*\<close> and \<open>T = T*\<close> and \<open>W o\<^sub>C\<^sub>L W = T o\<^sub>C\<^sub>L T\<close>
+    if WT_comm: \<open>W o\<^sub>C\<^sub>L T = T o\<^sub>C\<^sub>L W\<close> and \<open>W = W*\<close> and \<open>T = T*\<close> 
+      and WW_TT: \<open>W o\<^sub>C\<^sub>L W = T o\<^sub>C\<^sub>L T\<close>
     for W T :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
-    sorry
+  proof (rule exI, intro conjI allI impI)
+    define P where \<open>P = Proj (kernel (W-T))\<close>
+    show \<open>is_Proj P\<close>
+      by (simp add: P_def)
+    show thesis1: \<open>F o\<^sub>C\<^sub>L P = P o\<^sub>C\<^sub>L F\<close> if \<open>F o\<^sub>C\<^sub>L W - T = W - T o\<^sub>C\<^sub>L F\<close> for F
+    proof -
+      have 1: \<open>F o\<^sub>C\<^sub>L P = P o\<^sub>C\<^sub>L F o\<^sub>C\<^sub>L P\<close> if \<open>F o\<^sub>C\<^sub>L W - T = W - T o\<^sub>C\<^sub>L F\<close> for F
+      proof (rule cblinfun_eqI)
+        fix \<psi>
+        have \<open>P *\<^sub>V \<psi> \<in> space_as_set (kernel (W - T))\<close>
+          by (metis P_def Proj_range cblinfun_apply_in_image)
+        then have \<open>(W - T) *\<^sub>V P *\<^sub>V \<psi> = 0\<close>
+          using kernel_memberD by blast
+        then have \<open>(W - T) *\<^sub>V F *\<^sub>V P *\<^sub>V \<psi> = 0\<close>
+          by (metis cblinfun.zero_right cblinfun_apply_cblinfun_compose that)
+        then have \<open>F *\<^sub>V P *\<^sub>V \<psi> \<in> space_as_set (kernel (W - T))\<close>
+          using kernel_memberI by blast
+        then have \<open>P *\<^sub>V (F *\<^sub>V P *\<^sub>V \<psi>) = F *\<^sub>V P *\<^sub>V \<psi>\<close>
+          using P_def cancel_apply_Proj by blast
+        then show \<open>(F o\<^sub>C\<^sub>L P) *\<^sub>V \<psi> = (P o\<^sub>C\<^sub>L F o\<^sub>C\<^sub>L P) *\<^sub>V \<psi>\<close>
+          by simp
+      qed
+      have 2: \<open>F* o\<^sub>C\<^sub>L W - T = W - T o\<^sub>C\<^sub>L F*\<close>
+        by (metis \<open>T = T*\<close> \<open>W = W*\<close> adj_cblinfun_compose adj_minus that)
+      have \<open>F o\<^sub>C\<^sub>L P = P o\<^sub>C\<^sub>L F o\<^sub>C\<^sub>L P\<close> and \<open>F* o\<^sub>C\<^sub>L P = P o\<^sub>C\<^sub>L F* o\<^sub>C\<^sub>L P\<close>
+        using 1[OF that] 1[OF 2] by auto
+      then show \<open>F o\<^sub>C\<^sub>L P = P o\<^sub>C\<^sub>L F\<close>
+        by (metis P_def adj_Proj adj_cblinfun_compose cblinfun_assoc_left(1) double_adj)
+    qed
+    show thesis2: \<open>P *\<^sub>V f = f\<close> if \<open>W *\<^sub>V f = 0\<close> for f
+    proof -
+      from that
+      have \<open>0 = (W *\<^sub>V f) \<bullet>\<^sub>C (W *\<^sub>V f)\<close>
+        by simp
+      also from \<open>W = W*\<close> have \<open>\<dots> = f \<bullet>\<^sub>C ((W o\<^sub>C\<^sub>L W) *\<^sub>V f)\<close>
+        by (simp add: that)
+      also from WW_TT have \<open>\<dots> = f \<bullet>\<^sub>C ((T o\<^sub>C\<^sub>L T) *\<^sub>V f)\<close>
+        by simp
+      also from \<open>T = T*\<close> have \<open>\<dots> = (T *\<^sub>V f) \<bullet>\<^sub>C (T *\<^sub>V f)\<close>
+        by (metis cblinfun_apply_cblinfun_compose cinner_adj_left)
+      finally have \<open>T *\<^sub>V f = 0\<close>
+        by simp
+      then have \<open>(W - T) *\<^sub>V f = 0\<close>
+        by (simp add: cblinfun.diff_left that)
+      then show \<open>P *\<^sub>V f = f\<close>
+        using P_def cancel_apply_Proj kernel_memberI by blast
+    qed
+    show thesis3: \<open>W = (2 *\<^sub>C P - id_cblinfun) o\<^sub>C\<^sub>L T\<close>
+    proof -
+      from WW_TT WT_comm have WT_binomial: \<open>(W - T) o\<^sub>C\<^sub>L (W + T) = 0\<close>
+        by (simp add: cblinfun_compose_add_right cblinfun_compose_minus_left)
+      have PWT: \<open>P o\<^sub>C\<^sub>L (W + T) = W + T\<close>
+      proof (rule cblinfun_eqI)
+        fix \<psi>
+        from WT_binomial have \<open>(W + T) *\<^sub>V \<psi> \<in> space_as_set (kernel (W-T))\<close>
+          by (metis cblinfun_apply_cblinfun_compose kernel_memberI zero_cblinfun.rep_eq)
+        then show \<open>(P o\<^sub>C\<^sub>L W + T) *\<^sub>V \<psi> = (W + T) *\<^sub>V \<psi>\<close>
+          by (metis P_def Proj_idempotent Proj_range cblinfun_apply_cblinfun_compose cblinfun_fixes_range)
+      qed
+      from P_def have \<open>(W - T) o\<^sub>C\<^sub>L P = 0\<close>
+        by (metis Proj_range thesis1 cblinfun_apply_cblinfun_compose cblinfun_apply_in_image
+            cblinfun_eqI kernel_memberD zero_cblinfun.rep_eq)
+      with PWT WT_comm thesis1 have \<open>2 *\<^sub>C T o\<^sub>C\<^sub>L P = W + T\<close>
+        by (metis (no_types, lifting) bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose cblinfun_compose_add_right cblinfun_compose_minus_left cblinfun_compose_minus_right eq_iff_diff_eq_0 scaleC_2)
+      with  that(2) that(3) show ?thesis
+        by (smt (verit, ccfv_threshold) P_def add_diff_cancel adj_Proj adj_cblinfun_compose adj_plus cblinfun_compose_id_right cblinfun_compose_minus_left cblinfun_compose_scaleC_left id_cblinfun_adjoint scaleC_2)
+    qed
+  qed
 
   define k S where \<open>k = norm A\<close> and \<open>S = (A o\<^sub>C\<^sub>L A) /\<^sub>R k\<^sup>2 - id_cblinfun\<close>
   have \<open>S \<le> 0\<close>
@@ -363,7 +429,7 @@ proof -
   qed
   then have \<open>B \<ge> 0\<close>
     by (simp add: B_def scaleR_nonneg_nonneg)
-  then have \<open>B = B*\<close> (* If B\<ge>0 need hermitian in the proof, uncomment the proof sketch of B=B* above *)
+  then have \<open>B = B*\<close>
     by (simp add: positive_hermitianI)
   have \<open>B o\<^sub>C\<^sub>L B = (norm A)\<^sup>2 *\<^sub>C (id_cblinfun + S)\<close>
 (* For S being a scalar, shown in q.s. p16.
@@ -516,5 +582,15 @@ proof -
     by simp
 qed
 
+lemma norm_pos_op_mono:
+  fixes A B :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
+  assumes \<open>0 \<le> A\<close> and \<open>A \<le> B\<close>
+  shows \<open>norm A \<le> norm B\<close>
+(* Can probably be proved using abs_op below. Needed? *)
+  unfolding cinner_sup_norm_cblinfun
+  sorry
+
+lemma abs_op_scaleC: \<open>abs_op (c *\<^sub>C a) = abs c *\<^sub>C abs_op a\<close>
+  sorry
 
 end

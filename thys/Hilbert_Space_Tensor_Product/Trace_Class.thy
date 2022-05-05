@@ -7,6 +7,8 @@ theory Trace_Class
     Positive_Operators
 begin
 
+hide_fact (open) Infinite_Set_Sum.abs_summable_on_Sigma_iff
+
 unbundle cblinfun_notation
 
 lemma parseval_infsum_aux1: 
@@ -98,6 +100,7 @@ proof
     apply (subst parseval_infsum)
     using assms(2) by auto
   have abs3: \<open>(\<lambda>(x, y). (cmod ((A *\<^sub>V x) \<bullet>\<^sub>C y))\<^sup>2) abs_summable_on E \<times> F\<close>
+    thm abs_summable_on_Sigma_iff
     apply (rule abs_summable_on_Sigma_iff[THEN iffD2], rule conjI)
     using abs2 apply (auto simp del: real_norm_def)
     using assms(2) parseval_abs_summable apply blast
@@ -280,6 +283,7 @@ lemma trace_class_comp_left: \<open>trace_class a \<Longrightarrow> trace_class 
   sorry
 
 lemma trace_class_comp_right: \<open>trace_class (a o\<^sub>C\<^sub>L b)\<close> if \<open>trace_class b\<close>
+  (* Follows from trace_class_comp_left via adjoint, but only if we restrict trace_class_comp_left/right to chilbert in domain  *)
   sorry
 
 lemma trace_norm_comp_left: \<open>trace_class a \<Longrightarrow> trace_norm (a o\<^sub>C\<^sub>L b) \<le> trace_norm a * norm b\<close>
@@ -293,6 +297,9 @@ lemma trace_plus:
   shows \<open>trace (a + b) = trace a + trace b\<close> 
   by (auto simp add: assms trace_exists infsum_add trace_def cblinfun.add_left cinner_add_right)
 
+lemma trace_class_scaleC: \<open>trace_class (c *\<^sub>C a)\<close> if \<open>trace_class a\<close>
+  by (metis cblinfun_compose_id_right cblinfun_compose_scaleC_right that trace_class_comp_left)
+
 lemma trace_scaleC: \<open>trace (c *\<^sub>C a) = c * trace a\<close>
 proof -
   consider (trace_class) \<open>trace_class a\<close> | (c0) \<open>c = 0\<close> | (non_trace_class) \<open>\<not> trace_class a\<close> \<open>c \<noteq> 0\<close>
@@ -300,7 +307,16 @@ proof -
   then show ?thesis
   proof cases
     case trace_class
-    then show ?thesis sorry
+    then have \<open>trace_class (c *\<^sub>C a)\<close>
+      by (rule trace_class_scaleC)
+    then have \<open>trace (c *\<^sub>C a) = (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. e \<bullet>\<^sub>C (c *\<^sub>C a *\<^sub>V e))\<close>
+      unfolding trace_def by simp
+    also have \<open>\<dots> = c * (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. e \<bullet>\<^sub>C (a *\<^sub>V e))\<close>
+      by (auto simp: infsum_cmult_right')
+    also from trace_class have \<open>\<dots> = c * trace a\<close>
+      by (simp add: Trace_Class.trace_def)
+    finally show ?thesis
+      by -
   next
     case c0
     then show ?thesis 
@@ -313,6 +329,44 @@ proof -
       by (simp add: trace_def)
   qed
 qed
+
+lemma cmod_abs[simp]: \<open>cmod (abs x) = cmod x\<close>
+(* TODO: more general with norm? *)
+  by (simp add: abs_complex_def)
+
+lemma trace_norm_0[simp]: \<open>trace_norm 0 = 0\<close>
+  by (auto simp: trace_norm_def)
+
+lemma trace_norm_scaleC: \<open>trace_norm (c *\<^sub>C a) = norm c * trace_norm a\<close>
+proof -
+  consider (trace_class) \<open>trace_class a\<close> | (c0) \<open>c = 0\<close> | (non_trace_class) \<open>\<not> trace_class a\<close> \<open>c \<noteq> 0\<close>
+    by auto
+  then show ?thesis
+  proof cases
+    case trace_class
+    then have \<open>trace_class (c *\<^sub>C a)\<close>
+      by (rule trace_class_scaleC)
+    then have \<open>trace_norm (c *\<^sub>C a) = (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. norm (e \<bullet>\<^sub>C (abs_op (c *\<^sub>C a) *\<^sub>V e)))\<close>
+      unfolding trace_norm_def by simp
+    also have \<open>\<dots> = norm c * (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. norm (e \<bullet>\<^sub>C (abs_op a *\<^sub>V e)))\<close>
+      by (auto simp: infsum_cmult_right' abs_op_scaleC norm_mult)
+    also from trace_class have \<open>\<dots> = norm c * trace_norm a\<close>
+      by (simp add: trace_norm_def)
+    finally show ?thesis
+      by -
+  next
+    case c0
+    then show ?thesis
+      by simp
+  next
+    case non_trace_class
+    then have \<open>\<not> trace_class (c *\<^sub>C a)\<close>
+      by (metis (no_types, opaque_lifting) cblinfun_compose_id_right cblinfun_compose_scaleC_right complex_vector.vector_space_assms(3) complex_vector.vector_space_assms(4) left_inverse trace_class_comp_left)
+    with non_trace_class show ?thesis
+      by (simp add: trace_norm_def)
+  qed
+qed
+
 
 (* TODO remove (duplicate of trace_class_iff_summable) *)
 lemma trace_class_alt_def:
@@ -352,9 +406,6 @@ qed
 
 lemma trace_butterfly: \<open>trace (butterfly x y) = y \<bullet>\<^sub>C x\<close>
   using trace_butterfly_comp[where a=id_cblinfun] by auto
-
-lemma trace_norm_0[simp]: \<open>trace_norm 0 = 0\<close>
-  by (metis abs_op_0 of_real_eq_0_iff trace_0 trace_abs_op)
 
 lemma trace_norm_nondegenerate: \<open>a = 0\<close> if \<open>trace_class a\<close> and \<open>trace_norm a = 0\<close>
 proof (rule ccontr)
@@ -396,6 +447,9 @@ lemma
   by (auto simp: trace_plus)
 
 lemma trace_leq_trace_norm[simp]: \<open>cmod (trace a) \<le> trace_norm a\<close>
+  sorry
+
+lemma trace_norm_triangle: \<open>trace_class a \<Longrightarrow> trace_class b \<Longrightarrow> trace_norm (a + b) \<le> trace_norm a + trace_norm b\<close>
   sorry
 
 lemma bounded_clinear_trace_duality: \<open>trace_class t \<Longrightarrow> bounded_clinear (\<lambda>a. trace (t o\<^sub>C\<^sub>L a))\<close>
@@ -466,12 +520,10 @@ proof standard
     by (auto simp add: trace_norm_nondegenerate)
   show \<open>norm (a + b) \<le> norm a + norm b\<close>
     apply transfer
-    apply auto
-    sorry
+    by (auto simp: trace_norm_triangle)
   show \<open>norm (r *\<^sub>C a) = cmod r * norm a\<close> for r
     apply transfer
-    apply auto
-    sorry
+    by (auto simp: trace_norm_scaleC)
   then show \<open>norm (r *\<^sub>R a) = \<bar>r\<bar> * norm a\<close> for r
     by (metis norm_of_real scaleR_scaleC)
   show \<open>sgn a = a /\<^sub>R norm a\<close>
