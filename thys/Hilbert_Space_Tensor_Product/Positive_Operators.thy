@@ -176,6 +176,11 @@ lemma cancel_apply_Proj:
   shows \<open>Proj S *\<^sub>V \<psi> = \<psi>\<close>
   by (metis Proj_idempotent Proj_range assms cblinfun_fixes_range)
 
+
+(* TODO move *)
+lemma cblinfun_power_compose[simp]: \<open>cblinfun_power A n o\<^sub>C\<^sub>L cblinfun_power A m = cblinfun_power A (n+m)\<close>
+  sorry
+
 (* Proof follows https://link.springer.com/article/10.1007%2FBF01448052,
       @{cite wecken35linearer} *)
 lemma TODO_name:
@@ -431,11 +436,40 @@ proof -
     by (simp add: B_def scaleR_nonneg_nonneg)
   then have \<open>B = B*\<close>
     by (simp add: positive_hermitianI)
-  have \<open>B o\<^sub>C\<^sub>L B = (norm A)\<^sup>2 *\<^sub>C (id_cblinfun + S)\<close>
+  have \<open>B0 o\<^sub>C\<^sub>L B0 = id_cblinfun + S\<close>
+  proof (rule cblinfun_cinner_eqI)
+    fix \<psi>
+    define s bb where \<open>s = \<psi> \<bullet>\<^sub>C ((B0 o\<^sub>C\<^sub>L B0) *\<^sub>V \<psi>)\<close> and \<open>bb k = (\<Sum>n\<le>k. (b n *\<^sub>V \<psi>) \<bullet>\<^sub>C (b (k - n) *\<^sub>V \<psi>))\<close> for k
+    
+    from has_sum_b have \<open>has_sum (\<lambda>n. b n *\<^sub>V \<psi>) UNIV (B0 *\<^sub>V \<psi>)\<close>
+      by (simp add: has_sum_in_cstrong_operator_topology)
+    then have \<open>(\<lambda>n. b n *\<^sub>V \<psi>) sums (B0 *\<^sub>V \<psi>)\<close>
+       sorry
+
+    have \<open>s = (B0 *\<^sub>V \<psi>) \<bullet>\<^sub>C (B0 *\<^sub>V \<psi>)\<close>
+      by (metis \<open>0 \<le> B0\<close> cblinfun_apply_cblinfun_compose cinner_adj_left positive_hermitianI s_def)
+    also have \<open>\<dots> = (\<Sum>n. b n *\<^sub>V \<psi>) \<bullet>\<^sub>C (\<Sum>n. b n *\<^sub>V \<psi>)\<close>
+      using \<open>(\<lambda>n. b n *\<^sub>V \<psi>) sums (B0 *\<^sub>V \<psi>)\<close> sums_unique by fastforce
+    finally have \<open>bb sums s\<close>
+      using Cauchy_cinner_product_sums
+      sorry
+    have \<open>bb k = (\<Sum>n\<le>k. complex_of_real ((1 / 2 gchoose (k - n)) * (1 / 2 gchoose n)) * (\<psi> \<bullet>\<^sub>C (cblinfun_power S k *\<^sub>V \<psi>)))\<close> for k
+      apply (simp add: bb_def[abs_def] b_def cblinfun.scaleR_left cblinfun_power_adj
+          flip: cinner_adj_right cblinfun_apply_cblinfun_compose)
+      by -
+    also have \<open>\<dots>k = (\<Sum>n\<le>k. complex_of_real ((1 / 2 gchoose (k - n)) * (1 / 2 gchoose n))) * (\<psi> \<bullet>\<^sub>C (cblinfun_power S k *\<^sub>V \<psi>))\<close> for k
+      by (simp add: sum_distrib_right)
+      sorry
+
 (* For S being a scalar, shown in q.s. p16.
 Here, sandwich B^2 in f's, and then 
 Use Cauchy_cinner_product_sums 
  *)
+    show \<open>s = \<psi> \<bullet>\<^sub>C ((id_cblinfun + S) *\<^sub>V \<psi>)\<close>
+      by -
+  qed
+  then have \<open>B o\<^sub>C\<^sub>L B = (norm A)\<^sup>2 *\<^sub>C (id_cblinfun + S)\<close>
+    by (simp add: B_def power2_eq_square scaleR_scaleC)
     sorry
   also have \<open>\<dots> = A o\<^sub>C\<^sub>L A\<close>
     by (metis (no_types, lifting) k_def S_def add.commute assms cancel_comm_monoid_add_class.diff_cancel diff_add_cancel norm_AAadj norm_eq_zero of_real_1 of_real_mult right_inverse scaleC_diff_right scaleC_one scaleC_scaleC scaleR_scaleC)
