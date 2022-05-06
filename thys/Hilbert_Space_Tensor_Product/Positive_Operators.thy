@@ -6,6 +6,8 @@ theory Positive_Operators
 begin
 
 no_notation Infinite_Set_Sum.abs_summable_on (infix "abs'_summable'_on" 50)
+hide_const (open) Infinite_Set_Sum.abs_summable_on
+hide_fact (open) Infinite_Set_Sum.abs_summable_on_Sigma_iff
 
 unbundle cblinfun_notation
 
@@ -43,9 +45,6 @@ proof (rule ccontr)
     by simp
 qed
 
-lemma cnj_sgn_sgn: \<open>x \<noteq> 0 \<Longrightarrow> cnj (sgn x) * sgn x = 1\<close>
-  oops
-
 (* lemma generalized_Cauchy_Schwarz:
   fixes inner A
   assumes Apos: \<open>A \<ge> 0\<close>
@@ -74,6 +73,7 @@ next
     
 qed *)
 
+(* TODO move *)
 lemma generalized_Cauchy_Schwarz:
   fixes inner A
   assumes Apos: \<open>A \<ge> 0\<close>
@@ -205,6 +205,27 @@ qed
 (* TODO move *)
 lemma has_sum_sums: \<open>f sums s\<close> if \<open>has_sum f UNIV s\<close>
   sorry
+
+lemma cblinfun_power_scaleC: \<open>cblinfun_power (c *\<^sub>C a) n = c^n *\<^sub>C cblinfun_power a n\<close>
+  apply (induction n)
+  by (auto simp: cblinfun_power_Suc)
+
+lemma cblinfun_power_scaleR: \<open>cblinfun_power (c *\<^sub>R a) n = c^n *\<^sub>R cblinfun_power a n\<close>
+  apply (induction n)
+  by (auto simp: cblinfun_power_Suc)
+
+lemma cblinfun_power_uminus: \<open>cblinfun_power (-a) n = (-1)^n *\<^sub>R cblinfun_power a n\<close>
+  apply (subst asm_rl[of \<open>-a = (-1) *\<^sub>R a\<close>])
+   apply simp
+  by (rule cblinfun_power_scaleR)
+
+lemma cblinfun_power_pos: \<open>cblinfun_power a n \<ge> 0\<close> if \<open>a \<ge> 0\<close>
+  sorry
+
+lemma gbinomial_a_Suc_n:
+  \<open>(a gchoose Suc n) = (a gchoose n) * (a-n) / Suc n\<close>
+  by (simp add: gbinomial_prod_rev)
+
 
 (* Proof follows https://link.springer.com/article/10.1007%2FBF01448052,
       @{cite wecken35linearer} *)
@@ -486,6 +507,90 @@ proof -
     from has_sum_b have b\<psi>_sum: \<open>(\<lambda>n. b n *\<^sub>V \<psi>) summable_on UNIV\<close>
       using has_sum_in_cstrong_operator_topology summable_on_def by blast
 
+
+(* 
+Idea: Prove that the summands \<open>(b x *\<^sub>V \<psi>) \<bullet>\<^sub>C (b y *\<^sub>V \<psi>)\<close>
+are all positive, and then derive (1) via abs-convergence reasoning.
+(abs_summable_on_Sigma_iff?)
+ *)
+    have b2_pos: \<open>(b i *\<^sub>V \<psi>) \<bullet>\<^sub>C (b j *\<^sub>V \<psi>) \<ge> 0\<close> if \<open>i\<noteq>0\<close> \<open>j\<noteq>0\<close> for i j
+    proof -
+      have gchoose_sign: \<open>(-1) ^ (i+1) * ((1/2 :: real) gchoose i) \<ge> 0\<close> if \<open>i\<noteq>0\<close> for i
+      proof -
+        obtain j where j: \<open>Suc j = i\<close>
+          using \<open>i \<noteq> 0\<close> not0_implies_Suc by blast
+        show ?thesis
+        proof (unfold j[symmetric], induction j)
+          case 0
+          then show ?case
+            by simp
+        next
+          case (Suc j)
+          have \<open>(- 1) ^ (Suc (Suc j) + 1) * (1 / 2 gchoose Suc (Suc j))
+               = ((- 1) ^ (Suc j + 1) * (1 / 2 gchoose Suc j)) * ((-1) * (1/2-Suc j) / (Suc (Suc j)))\<close>
+            apply (simp add: gbinomial_a_Suc_n)
+            by (smt (verit, ccfv_threshold) divide_divide_eq_left' divide_divide_eq_right minus_divide_right)
+          also have \<open>\<dots> \<ge> 0\<close>
+            apply (rule mult_nonneg_nonneg)
+             apply (rule Suc.IH)
+            apply (rule divide_nonneg_pos)
+             apply (rule mult_nonpos_nonpos)
+            by auto
+          finally show ?case
+            by -
+        qed
+      qed
+      from \<open>S \<le> 0\<close>
+      have Sn_sign: \<open>\<psi> \<bullet>\<^sub>C (cblinfun_power (- S) (i + j) *\<^sub>V \<psi>) \<ge> 0\<close>
+        by (auto intro!: cinner_pos_if_pos cblinfun_power_pos)
+      have *: \<open>(- 1) ^ (i + (j + (i + j))) = (1::complex)\<close>
+        by (metis Parity.ring_1_class.power_minus_even even_add power_one)
+
+      have \<open>(b i *\<^sub>V \<psi>) \<bullet>\<^sub>C (b j *\<^sub>V \<psi>)
+          = complex_of_real (1 / 2 gchoose i) * complex_of_real (1 / 2 gchoose j)
+             * (\<psi> \<bullet>\<^sub>C (cblinfun_power S (i + j) *\<^sub>V \<psi>))\<close>
+        by (simp add: b_def cblinfun.scaleR_right cblinfun.scaleR_left cblinfun_power_adj
+            flip: cinner_adj_right cblinfun_apply_cblinfun_compose)
+      also have \<open>\<dots> = complex_of_real ((-1)^(i+1) * (1 / 2 gchoose i)) * complex_of_real ((-1)^(j+1) * (1 / 2 gchoose j))
+             * (\<psi> \<bullet>\<^sub>C (cblinfun_power (-S) (i + j) *\<^sub>V \<psi>))\<close>
+        by (simp add: cblinfun.scaleR_left cblinfun_power_uminus * flip: power_add)
+      also have \<open>\<dots> \<ge> 0\<close>
+        apply (rule mult_nonneg_nonneg)
+        apply (rule mult_nonneg_nonneg)
+        using complex_of_real_nn_iff gchoose_sign that(1) apply blast
+        using complex_of_real_nn_iff gchoose_sign that(2) apply blast
+        by (fact Sn_sign)
+      finally show ?thesis
+        by -
+    qed
+
+(*     have TEST_REMOVE: \<open>(\<lambda>n. (norm (b n *\<^sub>V \<psi>))^2) summable_on UNIV\<close>
+      sledgehammer
+      by -
+    have TEST_REMOVE: \<open>(\<lambda>n. cinner (b n *\<^sub>V \<psi>) (b n *\<^sub>V \<psi>)) summable_on UNIV\<close>
+      sledgehammer
+      by - *)
+
+(*     from b\<psi>_sum
+    have \<open>(\<lambda>m. (b n *\<^sub>V \<psi>) \<bullet>\<^sub>C (b m *\<^sub>V \<psi>)) summable_on UNIV\<close> for n
+      using summable_on_cinner_left by blastx
+    then have sum1: \<open>(\<lambda>m. (b n *\<^sub>V \<psi>) \<bullet>\<^sub>C (b m *\<^sub>V \<psi>)) abs_summable_on UNIV\<close> for n
+      by (simp add: summable_on_iff_abs_summable_on_complex)
+(*     have \<open>(\<lambda>n. \<Sum>\<^sub>\<infinity>m. cmod ((b n *\<^sub>V \<psi>) \<bullet>\<^sub>C (b m *\<^sub>V \<psi>))) summable_on UNIV\<close>
+      by - *)
+    have \<open>(\<lambda>n. \<Sum>\<^sub>\<infinity>m. ((b n *\<^sub>V \<psi>) \<bullet>\<^sub>C (b m *\<^sub>V \<psi>))) abs_summable_on UNIV\<close>
+      by -
+    then have sum2: \<open>(\<lambda>n. \<Sum>\<^sub>\<infinity>m. cmod ((b n *\<^sub>V \<psi>) \<bullet>\<^sub>C (b m *\<^sub>V \<psi>))) abs_summable_on UNIV\<close>
+(* TODO: not sure how to prove this one... *)
+      by (metis \<open>(\<lambda>n. \<Sum>\<^sub>\<infinity>m. cmod ((b n *\<^sub>V \<psi>) \<bullet>\<^sub>C (b m *\<^sub>V \<psi>))) summable_on UNIV\<close> summable_on_iff_abs_summable_on_real)
+      by -
+    have \<open>(\<lambda>(n, m). (b n *\<^sub>V \<psi>) \<bullet>\<^sub>C (b m *\<^sub>V \<psi>)) abs_summable_on UNIV \<times> UNIV\<close>
+      apply (rule abs_summable_on_Sigma_iff[THEN iffD2])
+      using sum1 sum2 by simp
+    then have b2_sum: \<open>(\<lambda>(n, m). (b n *\<^sub>V \<psi>) \<bullet>\<^sub>C (b m *\<^sub>V \<psi>)) summable_on UNIV\<close>
+      using summable_on_iff_abs_summable_on_complex by auto
+ *)
+
     have \<open>s = (B0 *\<^sub>V \<psi>) \<bullet>\<^sub>C (B0 *\<^sub>V \<psi>)\<close>
       by (metis \<open>0 \<le> B0\<close> cblinfun_apply_cblinfun_compose cinner_adj_left positive_hermitianI s_def)
     also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>n. b n *\<^sub>V \<psi>) \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>n. b n *\<^sub>V \<psi>)\<close>
@@ -493,8 +598,37 @@ proof -
     also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>n. bb n)\<close>
       using b\<psi>_sum b\<psi>_sum unfolding bb_def
       apply (rule Cauchy_cinner_product_infsum[symmetric])
+      using b\<psi>_sum b\<psi>_sum
+      apply (rule Cauchy_cinner_summability[where X=\<open>{0}\<close> and Y=\<open>{0}\<close>])
+      using b2_pos by auto
+      (* Problem: that's still not the same...
+Idea: Prove that the summands \<open>(b x *\<^sub>V \<psi>) \<bullet>\<^sub>C (b y *\<^sub>V \<psi>)\<close>
+are all positive, and then derive (1) via abs-convergence reasoning.
+(abs_summable_on_Sigma_iff?)
+
+Or (easier?): On reals, abs-conv = conv.
+Thus conv of sum \<open>(b x *\<^sub>V \<psi>) \<bullet>\<^sub>C (b y *\<^sub>V \<psi>)\<close>
+equiv
+conv of abs-sum  \<open>(b x *\<^sub>V \<psi>) \<bullet>\<^sub>C (b y *\<^sub>V \<psi>)\<close>
+follows from
+conv of sum  \<open>norm (b x *\<^sub>V \<psi>) * norm (b y *\<^sub>V \<psi>)\<close>
+follows from(?) -- abs_summable_product
+conv of sum  \<open>norm (b x *\<^sub>V \<psi>) * norm (b x *\<^sub>V \<psi>)\<close>  (TEST_REMOVE above)
+follows from ?
+
+Or (easiest?):
+conv of sum \<open>(b x *\<^sub>V \<psi>) \<bullet>\<^sub>C (b y *\<^sub>V \<psi>)\<close>
+follows from
+abs-conv of sum \<open>(b x *\<^sub>V \<psi>) \<bullet>\<^sub>C (b y *\<^sub>V \<psi>)\<close>
+follows from
+abs-conv of sum \<open>(b x *\<^sub>V \<psi>) \<bullet>\<^sub>C const\<close> 
+   and of sum \<open>\<lambda>x. \<Sum>y. (b x *\<^sub>V \<psi>) \<bullet>\<^sub>C (b y *\<^sub>V \<psi>)\<close>
+          ==  \<open>\<lambda>x. (b x *\<^sub>V \<psi>) \<bullet>\<^sub>C const\<close>
+follows from normal-conv of the same sums (because over complex)
+follows from conv of \<open>\<lambda>x. (b x *\<^sub>V \<psi>)\<close> = b\<psi>_sum
+
+ *)
 (* TODO: change Cauchy_cinner_product_infsum *)
-      sorry
     also have \<open>\<dots> = bb 0 + bb 1\<close>
       apply (subst infsum_cong_neutral[where T=\<open>{..1}\<close> and g=bb])
       by (auto simp: bb_simp)
@@ -659,6 +793,27 @@ lemma norm_pos_op_mono:
   sorry
 
 lemma abs_op_scaleC: \<open>abs_op (c *\<^sub>C a) = abs c *\<^sub>C abs_op a\<close>
+  sorry
+
+definition polar_decomposition where
+  \<comment> \<open>@{cite conway00operator}, 3.9 Polar Decomposition\<close>
+  \<open>polar_decomposition A = cblinfun_extension (range (abs_op A)) (\<lambda>\<psi>. A *\<^sub>V inv (abs_op A) \<psi>) o\<^sub>C\<^sub>L Proj (abs_op A *\<^sub>S \<top>)\<close>
+    for A :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner\<close>
+
+lemma polar_decomposition_correct: \<open>polar_decomposition A o\<^sub>C\<^sub>L abs_op A = A\<close>
+  \<comment> \<open>@{cite conway00operator}, 3.9 Polar Decomposition\<close>
+  sorry
+
+lemma polar_decomposition_final_space: \<open>polar_decomposition A *\<^sub>S \<top> = A *\<^sub>S \<top>\<close>
+  \<comment> \<open>@{cite conway00operator}, 3.9 Polar Decomposition\<close>
+  sorry
+
+lemma polar_decomposition_initial_space: \<open>kernel (polar_decomposition A) = kernel A\<close>
+  \<comment> \<open>@{cite conway00operator}, 3.9 Polar Decomposition\<close>
+  sorry
+
+lemma polar_decomposition_partial_isometry: \<open>partial_isometry (polar_decomposition A)\<close>
+  \<comment> \<open>@{cite conway00operator}, 3.9 Polar Decomposition\<close>
   sorry
 
 end

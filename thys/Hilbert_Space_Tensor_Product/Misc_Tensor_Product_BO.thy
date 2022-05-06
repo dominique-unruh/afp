@@ -952,11 +952,214 @@ lemma infsum_of_real:
   unfolding of_real_def
   by (rule infsum_scaleR_left)
 
-
 (* TODO: Replace original positive_cblinfunI with this *)
 lemma positive_cblinfunI: \<open>A \<ge> 0\<close> if \<open>\<And>x. norm x = 1 \<Longrightarrow> cinner x (A *\<^sub>V x) \<ge> 0\<close>
   apply (rule cblinfun_leI)
   using that by simp
+
+definition partial_isometry where
+  \<open>partial_isometry A \<longleftrightarrow> (\<forall>h \<in> space_as_set (- kernel A). norm (A h) = norm h)\<close>
+
+lemma partial_isometryI: 
+  assumes \<open>\<And>h. h \<in> space_as_set (- kernel A) \<Longrightarrow> norm (A h) = norm h\<close>
+  shows \<open>partial_isometry A\<close>
+  using assms partial_isometry_def by blast
+
+lemma ccsubspace_eqI: 
+  assumes \<open>\<And>x. x \<in> space_as_set S \<longleftrightarrow> x \<in> space_as_set T\<close>
+  shows \<open>S = T\<close>
+  by (metis Abs_clinear_space_cases Abs_clinear_space_inverse antisym assms subsetI)
+
+lemma cancel_apply_Proj:
+  assumes \<open>\<psi> \<in> space_as_set S\<close>
+  shows \<open>Proj S *\<^sub>V \<psi> = \<psi>\<close>
+  by (metis Proj_idempotent Proj_range assms cblinfun_fixes_range)
+
+lemma kernel_Proj[simp]: \<open>kernel (Proj S) = - S\<close>
+  apply transfer
+  apply auto
+  apply (metis diff_0_right is_projection_on_iff_orthog projection_is_projection_on')
+  by (simp add: complex_vector.subspace_0 projection_eqI)
+
+lemma Proj_partial_isometry: \<open>partial_isometry (Proj S)\<close>
+  apply (rule partial_isometryI)
+  by (simp add: cancel_apply_Proj)
+
+lemma is_Proj_partial_isometry: \<open>is_Proj P \<Longrightarrow> partial_isometry P\<close>
+  by (metis Proj_on_own_range Proj_partial_isometry)
+
+lemma isometry_partial_isometry: \<open>isometry P \<Longrightarrow> partial_isometry P\<close>
+  by (simp add: isometry_preserves_norm partial_isometry_def)
+
+lemma unitary_partial_isometry: \<open>unitary P \<Longrightarrow> partial_isometry P\<close>
+  using isometry_partial_isometry unitary_isometry by blast
+
+lemma norm_partial_isometry: \<open>norm A = 1\<close> if \<open>partial_isometry A\<close> and \<open>A \<noteq> 0\<close>
+  sorry
+
+(* TODO: Do we want to keep this? Or inline in Cauchy_cinner_product_infsum *)
+lemma Cauchy_cinner_product_summable:
+  fixes a b :: "nat \<Rightarrow> 'a::complex_inner"
+  shows \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on UNIV \<longleftrightarrow> (\<lambda>(x, y). a y \<bullet>\<^sub>C b (x - y)) summable_on {(k, i). i \<le> k}\<close>
+proof -
+  have img: \<open>(\<lambda>(k::nat, i). (i, k - i)) ` {(k, i). i \<le> k} = UNIV\<close>
+    apply (auto simp: image_def)
+    by (metis add.commute add_diff_cancel_right' diff_le_self)
+  have inj: \<open>inj_on (\<lambda>(k::nat, i). (i, k - i)) {(k, i). i \<le> k}\<close>
+    by (smt (verit, del_insts) Pair_inject case_prodE case_prod_conv eq_diff_iff inj_onI mem_Collect_eq)
+
+  have \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on UNIV \<longleftrightarrow> (\<lambda>(k, l). a k \<bullet>\<^sub>C b l) summable_on (\<lambda>(k, i). (i, k - i)) ` {(k, i). i \<le> k}\<close>
+    by (simp only: img)
+  also have \<open>\<dots> \<longleftrightarrow> ((\<lambda>(k, l). a k \<bullet>\<^sub>C b l) \<circ> (\<lambda>(k, i). (i, k - i))) summable_on {(k, i). i \<le> k}\<close>
+    using inj by (rule summable_on_reindex)
+  also have \<open>\<dots> \<longleftrightarrow> (\<lambda>(x, y). a y \<bullet>\<^sub>C b (x - y)) summable_on {(k, i). i \<le> k}\<close>
+    by (simp add: o_def case_prod_unfold)
+  finally show ?thesis
+    by -
+qed
+
+lemma summable_on_product_finite_left:
+  fixes f :: \<open>'a\<times>'b \<Rightarrow> 'c::{topological_comm_monoid_add}\<close>
+  assumes sum: \<open>\<And>x. x\<in>X \<Longrightarrow> (\<lambda>y. f(x,y)) summable_on Y\<close>
+  assumes \<open>finite X\<close>
+  shows \<open>f summable_on (X\<times>Y)\<close>
+  using \<open>finite X\<close> subset_refl[of X]
+proof (induction rule: finite_subset_induct')
+  case empty
+  then show ?case
+    by simp
+next
+  case (insert x F)
+  have *: \<open>bij_betw (Pair x) Y ({x} \<times> Y)\<close>
+    apply (rule bij_betwI')
+    by auto
+  from sum[of x]
+  have \<open>f summable_on {x} \<times> Y\<close>
+    apply (rule summable_on_reindex_bij_betw[THEN iffD1, rotated])
+    by (simp_all add: * insert.hyps(2))
+  then have \<open>f summable_on {x} \<times> Y \<union> F \<times> Y\<close>
+    apply (rule summable_on_Un_disjoint)
+    using insert by auto
+  then show ?case
+    by (metis Sigma_Un_distrib1 insert_is_Un)
+qed
+
+lemma summable_on_product_finite_right:
+  fixes f :: \<open>'a\<times>'b \<Rightarrow> 'c::{topological_comm_monoid_add}\<close>
+  assumes sum: \<open>\<And>y. y\<in>Y \<Longrightarrow> (\<lambda>x. f(x,y)) summable_on X\<close>
+  assumes \<open>finite Y\<close>
+  shows \<open>f summable_on (X\<times>Y)\<close>
+proof -
+  have \<open>(\<lambda>(y,x). f(x,y)) summable_on (Y\<times>X)\<close>
+    apply (rule summable_on_product_finite_left)
+    using assms by auto
+  then show ?thesis
+    apply (subst summable_on_reindex_bij_betw[where g=prod.swap and A=\<open>Y\<times>X\<close>, symmetric])
+    apply (simp add: bij_betw_def product_swap)
+    by (metis (mono_tags, lifting) case_prod_unfold prod.swap_def summable_on_cong)
+qed
+
+lemma Cauchy_cinner_summability:
+  assumes asum: \<open>a summable_on UNIV\<close>
+  assumes bsum: \<open>b summable_on UNIV\<close>
+  assumes \<open>finite X\<close> \<open>finite Y\<close>
+  assumes pos: \<open>\<And>x y. x \<notin> X \<Longrightarrow> y \<notin> Y \<Longrightarrow> a x \<bullet>\<^sub>C b y \<ge> 0\<close>
+  shows absum: \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on UNIV\<close>
+proof -
+  have \<open>(\<Sum>(x,y)\<in>F. norm (a x \<bullet>\<^sub>C b y)) \<le> norm (infsum a (-X) \<bullet>\<^sub>C infsum b (-Y)) + norm (infsum a (-X)) + norm (infsum b (-Y)) + 1\<close> 
+    if \<open>finite F\<close> and \<open>F \<subseteq> (-X)\<times>(-Y)\<close> for F
+  proof -
+    from asum \<open>finite X\<close>
+    have \<open>a summable_on (-X)\<close>
+      by (simp add: Compl_eq_Diff_UNIV summable_on_cofin_subset)
+    then obtain MA where \<open>finite MA\<close> and \<open>MA \<subseteq> -X\<close>
+      and MA: \<open>G \<supseteq> MA \<Longrightarrow> G \<subseteq> -X \<Longrightarrow> finite G \<Longrightarrow> norm (sum a G - infsum a (-X)) \<le> 1\<close> for G
+      apply (simp add: summable_iff_has_sum_infsum has_sum_metric dist_norm)
+      by (meson less_eq_real_def zero_less_one)
+    
+    from bsum \<open>finite Y\<close>
+    have \<open>b summable_on (-Y)\<close>
+      by (simp add: Compl_eq_Diff_UNIV summable_on_cofin_subset)
+    then obtain MB where \<open>finite MB\<close> and \<open>MB \<subseteq> -Y\<close>
+      and MB: \<open>G \<supseteq> MB \<Longrightarrow> G \<subseteq> -Y \<Longrightarrow> finite G \<Longrightarrow> norm (sum b G - infsum b (-Y)) \<le> 1\<close> for G
+      apply (simp add: summable_iff_has_sum_infsum has_sum_metric dist_norm)
+      by (meson less_eq_real_def zero_less_one)
+
+    define F1 F2 where \<open>F1 = fst ` F \<union> MA\<close> and \<open>F2 = snd ` F \<union> MB\<close>
+    define t1 t2 where \<open>t1 = sum a F1 - infsum a (-X)\<close> and \<open>t2 = sum b F2 - infsum b (-Y)\<close>
+  
+    have [simp]: \<open>finite F1\<close> \<open>finite F2\<close>
+      using F1_def F2_def \<open>finite MA\<close> \<open>finite MB\<close> that by auto
+    have [simp]: \<open>F1 \<subseteq> -X\<close> \<open>F2 \<subseteq> -Y\<close>
+      using \<open>F \<subseteq> (-X)\<times>(-Y)\<close> \<open>MA \<subseteq> -X\<close> \<open>MB \<subseteq> -Y\<close>
+      by (auto simp: F1_def F2_def)
+    from MA[OF _ \<open>F1 \<subseteq> -X\<close> \<open>finite F1\<close>] have \<open>norm t1 \<le> 1\<close> 
+      by (auto simp: t1_def F1_def)
+    from MB[OF _ \<open>F2 \<subseteq> -Y\<close> \<open>finite F2\<close>] have \<open>norm t2 \<le> 1\<close> 
+      by (auto simp: t2_def F2_def)
+    have [simp]: \<open>F \<subseteq> F1 \<times> F2\<close>
+      apply (auto simp: F1_def F2_def image_def)
+      by force+
+    have \<open>(\<Sum>(x,y)\<in>F. norm (a x \<bullet>\<^sub>C b y)) \<le> (\<Sum>(x,y)\<in>F1\<times>F2. norm (a x \<bullet>\<^sub>C b y))\<close>
+      apply (rule sum_mono2)
+      by auto
+    also from pos have \<open>\<dots> = norm (\<Sum>(x,y)\<in>F1\<times>F2. a x \<bullet>\<^sub>C b y)\<close>
+      apply (auto intro!: of_real_eq_iff[THEN iffD1] simp: case_prod_beta)
+      apply (subst abs_complex_def[unfolded o_def, symmetric, THEN fun_cong])+
+      apply (subst (2) abs_pos)
+       apply (rule sum_nonneg)
+       apply (metis Compl_eq_Diff_UNIV Diff_iff SigmaE \<open>F1 \<subseteq> - X\<close> \<open>F2 \<subseteq> - Y\<close> fst_conv prod.sel(2) subsetD)
+      apply (rule sum.cong)
+      apply simp
+      by (metis Compl_iff SigmaE \<open>F1 \<subseteq> - X\<close> \<open>F2 \<subseteq> - Y\<close> abs_pos fst_conv prod.sel(2) subset_eq)
+    also have \<open>\<dots> = norm (sum a F1 \<bullet>\<^sub>C sum b F2)\<close>
+      by (simp add: sum.cartesian_product sum_cinner)
+    also have \<open>\<dots> = norm ((infsum a (-X) + t1) \<bullet>\<^sub>C (infsum b (-Y) + t2))\<close>
+      by (simp add: t1_def t2_def)
+    also have \<open>\<dots> \<le> norm (infsum a (-X) \<bullet>\<^sub>C infsum b (-Y)) + norm (infsum a (-X)) * norm t2 + norm t1 * norm (infsum b (-Y)) + norm t1 * norm t2\<close>
+      apply (simp add: cinner_add_right cinner_add_left)
+      by (smt (verit, del_insts) complex_inner_class.Cauchy_Schwarz_ineq2 norm_triangle_ineq)
+    also from \<open>norm t1 \<le> 1\<close> \<open>norm t2 \<le> 1\<close>
+    have \<open>\<dots> \<le> norm (infsum a (-X) \<bullet>\<^sub>C infsum b (-Y)) + norm (infsum a (-X)) + norm (infsum b (-Y)) + 1\<close>
+      by (auto intro!: add_mono mult_left_le mult_left_le_one_le mult_le_one)
+    finally show ?thesis
+      by -
+  qed
+
+  then have \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) abs_summable_on (-X)\<times>(-Y)\<close>
+    apply (rule_tac abs_summable_bdd_above[THEN iffD2])
+    apply (rule bdd_aboveI2)
+    by (auto simp: case_prod_unfold)
+  then have 1: \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on (-X)\<times>(-Y)\<close>
+    using abs_summable_summable by blast
+
+  from bsum
+  have \<open>(\<lambda>y. b y) summable_on (-Y)\<close>
+    by (simp add: Compl_eq_Diff_UNIV assms(4) summable_on_cofin_subset)
+  then have \<open>(\<lambda>y. a x \<bullet>\<^sub>C b y) summable_on (-Y)\<close> for x
+    using summable_on_cinner_left by blast
+  with \<open>finite X\<close> have 2: \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on X\<times>(-Y)\<close>
+    apply (rule_tac summable_on_product_finite_left)
+    by auto
+
+  from asum
+  have \<open>(\<lambda>x. a x) summable_on (-X)\<close>
+    by (simp add: Compl_eq_Diff_UNIV assms(3) summable_on_cofin_subset)
+  then have \<open>(\<lambda>x. a x \<bullet>\<^sub>C b y) summable_on (-X)\<close> for y
+    using summable_on_cinner_right by blast
+  with \<open>finite Y\<close> have 3: \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on (-X)\<times>Y\<close>
+    apply (rule_tac summable_on_product_finite_right)
+    by auto
+
+  have 4: \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on X\<times>Y\<close>
+    by (simp add: \<open>finite X\<close> \<open>finite Y\<close>)
+
+  show ?thesis
+    apply (subst asm_rl[of \<open>UNIV = (-X)\<times>(-Y) \<union> X\<times>(-Y) \<union> (-X)\<times>Y \<union> X\<times>Y\<close>])
+    using 1 2 3 4 by (auto intro!: summable_on_Un_disjoint)
+qed
+
+
 
 
 text \<open>A variant of @{thm [source] Series.Cauchy_product_sums} with \<^term>\<open>(*)\<close> replaced by \<^term>\<open>(\<bullet>\<^sub>C)\<close>.
@@ -965,13 +1168,13 @@ text \<open>A variant of @{thm [source] Series.Cauchy_product_sums} with \<^term
    While on, e.g., reals, unconditional summability is equivalent to absolute summability, in
    general unconditional summability is a weaker requirement.\<close>
 lemma Cauchy_cinner_product_infsum:
-  fixes a b :: "nat \<Rightarrow> 'a::chilbert_space"
+  fixes a b :: "nat \<Rightarrow> 'a::complex_inner"
   assumes asum: \<open>a summable_on UNIV\<close>
   assumes bsum: \<open>b summable_on UNIV\<close>
   assumes absum: \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on UNIV\<close>
-(* TODO: Allow to alternatively provide sum_triangle instead.
-Or better give a separate lemma that shows equivalence of the two conditions. *)
+    \<comment> \<open>See @{thm [source] Cauchy_cinner_product_summable} or @{thm [source] Cauchy_cinner_summability} for a way to rewrite this premise.\<close>
   shows \<open>(\<Sum>\<^sub>\<infinity>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k - i)) = (\<Sum>\<^sub>\<infinity>k. a k) \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>k. b k)\<close>
+(* TODO: Thm showing existence of the lhs *)
 proof -
   have img: \<open>(\<lambda>(k::nat, i). (i, k - i)) ` {(k, i). i \<le> k} = UNIV\<close>
     apply (auto simp: image_def)
@@ -980,14 +1183,6 @@ proof -
     by (smt (verit, del_insts) Pair_inject case_prodE case_prod_conv eq_diff_iff inj_onI mem_Collect_eq)
   have sigma: \<open>(SIGMA k:UNIV. {i. i \<le> k}) = {(k, i). i \<le> k}\<close>
     by auto
-
-  from absum
-  have \<open>(\<lambda>(k, l). a k \<bullet>\<^sub>C b l) summable_on (\<lambda>(k, i). (i, k - i)) ` {(k, i). i \<le> k}\<close>
-    by (simp only: img)
-  then have \<open>((\<lambda>(k, l). a k \<bullet>\<^sub>C b l) \<circ> (\<lambda>(k, i). (i, k - i))) summable_on {(k, i). i \<le> k}\<close>
-    using inj by (rule summable_on_reindex[THEN iffD1, rotated])
-  then have sum_triangle: \<open>(\<lambda>(x, y). a y \<bullet>\<^sub>C b (x - y)) summable_on {(k, i). i \<le> k}\<close>
-    by (simp add: o_def case_prod_unfold)
 
   have \<open>(\<Sum>\<^sub>\<infinity>k. a k) \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>k. b k) = (\<Sum>\<^sub>\<infinity>k. \<Sum>\<^sub>\<infinity>l. a k \<bullet>\<^sub>C b l)\<close>
     apply (subst infsum_cinner_right)
@@ -1006,7 +1201,7 @@ proof -
     by (simp add: o_def case_prod_unfold)
   also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>k. \<Sum>\<^sub>\<infinity>i|i\<le>k. a i \<bullet>\<^sub>C b (k-i))\<close>
     apply (subst infsum_Sigma'_banach)
-    using sum_triangle by (auto simp: sigma)
+    using absum by (auto simp: sigma Cauchy_cinner_product_summable)
   also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k-i))\<close>
     apply (subst infsum_finite[symmetric])
     by (auto simp add: atMost_def)
@@ -1085,6 +1280,67 @@ proof -
     by (simp only: sums_def sum.triangle_reindex)
 qed *)
 
+
+lemma summable_on_scaleC_left [intro]:
+  fixes c :: \<open>'a :: complex_normed_vector\<close>
+  assumes "c \<noteq> 0 \<Longrightarrow> f summable_on A"
+  shows   "(\<lambda>x. f x *\<^sub>C c) summable_on A"
+  apply (cases \<open>c \<noteq> 0\<close>)
+   apply (subst asm_rl[of \<open>(\<lambda>x. f x *\<^sub>C c) = (\<lambda>y. y *\<^sub>C c) o f\<close>], simp add: o_def)
+   apply (rule summable_on_comm_additive)
+  using assms by (auto simp add: scaleC_left.additive_axioms)
+
+
+lemma summable_on_scaleC_right [intro]:
+  fixes f :: \<open>'a \<Rightarrow> 'b :: complex_normed_vector\<close>
+  assumes "c \<noteq> 0 \<Longrightarrow> f summable_on A"
+  shows   "(\<lambda>x. c *\<^sub>C f x) summable_on A"
+  apply (cases \<open>c \<noteq> 0\<close>)
+   apply (subst asm_rl[of \<open>(\<lambda>x. c *\<^sub>C f x) = (\<lambda>y. c *\<^sub>C y) o f\<close>], simp add: o_def)
+   apply (rule summable_on_comm_additive)
+  using assms by (auto simp add: scaleC_right.additive_axioms)
+
+lemma infsum_scaleC_left:
+  fixes c :: \<open>'a :: complex_normed_vector\<close>
+  assumes "c \<noteq> 0 \<Longrightarrow> f summable_on A"
+  shows   "infsum (\<lambda>x. f x *\<^sub>C c) A = infsum f A *\<^sub>C c"
+  apply (cases \<open>c \<noteq> 0\<close>)
+   apply (subst asm_rl[of \<open>(\<lambda>x. f x *\<^sub>C c) = (\<lambda>y. y *\<^sub>C c) o f\<close>], simp add: o_def)
+   apply (rule infsum_comm_additive)
+  using assms by (auto simp add: scaleC_left.additive_axioms)
+
+lemma infsum_scaleC_right:
+  fixes f :: \<open>'a \<Rightarrow> 'b :: complex_normed_vector\<close>
+  shows   "infsum (\<lambda>x. c *\<^sub>C f x) A = c *\<^sub>C infsum f A"
+proof -
+  consider (summable) \<open>f summable_on A\<close> | (c0) \<open>c = 0\<close> | (not_summable) \<open>\<not> f summable_on A\<close> \<open>c \<noteq> 0\<close>
+    by auto
+  then show ?thesis
+  proof cases
+    case summable
+    then show ?thesis
+      apply (subst asm_rl[of \<open>(\<lambda>x. c *\<^sub>C f x) = (\<lambda>y. c *\<^sub>C y) o f\<close>], simp add: o_def)
+      apply (rule infsum_comm_additive)
+      using summable by (auto simp add: scaleC_right.additive_axioms)
+  next
+    case c0
+    then show ?thesis by auto
+  next
+    case not_summable
+    have \<open>\<not> (\<lambda>x. c *\<^sub>C f x) summable_on A\<close>
+    proof (rule notI)
+      assume \<open>(\<lambda>x. c *\<^sub>C f x) summable_on A\<close>
+      then have \<open>(\<lambda>x. inverse c *\<^sub>C c *\<^sub>C f x) summable_on A\<close>
+        using summable_on_scaleC_right by blast
+      then have \<open>f summable_on A\<close>
+        using not_summable by auto
+      with not_summable show False
+        by simp
+    qed
+    then show ?thesis
+      by (simp add: infsum_not_exists not_summable(1)) 
+  qed
+qed
 
 
 unbundle no_cblinfun_notation

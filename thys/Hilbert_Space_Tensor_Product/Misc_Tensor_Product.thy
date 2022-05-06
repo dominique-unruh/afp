@@ -1185,15 +1185,19 @@ proof -
     using sums_def_le by blast
 qed
 
+lemma has_sum_metric:
+  fixes l :: \<open>'a :: {metric_space, comm_monoid_add}\<close>
+  shows \<open>has_sum f A l \<longleftrightarrow> (\<forall>e. e > 0 \<longrightarrow> (\<exists>X. finite X \<and> X \<subseteq> A \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> A \<longrightarrow> dist (sum f Y) l < e)))\<close>
+  unfolding has_sum_def
+  apply (subst tendsto_iff)
+  unfolding eventually_finite_subsets_at_top
+  by simp
+
 lemma has_sumI_metric:
   fixes l :: \<open>'a :: {metric_space, comm_monoid_add}\<close>
   assumes \<open>\<And>e. e > 0 \<Longrightarrow> \<exists>X. finite X \<and> X \<subseteq> A \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> A \<longrightarrow> dist (sum f Y) l < e)\<close>
   shows \<open>has_sum f A l\<close>
-  unfolding has_sum_def
-  apply (rule tendstoI)
-  unfolding eventually_finite_subsets_at_top
-  using assms
-  by simp
+  unfolding has_sum_metric using assms by simp
 
 lemma sums_has_sum:
   fixes s :: \<open>'a :: banach\<close>
