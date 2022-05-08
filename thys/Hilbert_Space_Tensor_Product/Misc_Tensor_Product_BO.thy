@@ -244,34 +244,6 @@ lemma infsum_bounded_clinear:
   using assms cblinfun_apply_induct cblinfun.additive_right
   by (auto simp: clinear_continuous_within)
 
-(* TODO: bounded_linear is enough *)
-lemma has_sum_bounded_clinear: 
-  assumes \<open>bounded_clinear f\<close>
-  assumes \<open>has_sum g S x\<close>
-  shows \<open>has_sum (f o g) S (f x)\<close>
-  apply (rule has_sum_comm_additive)
-  using assms cblinfun_apply_induct cblinfun.additive_right apply auto
-  using clinear_continuous_within isCont_def by fastforce
-
-(* TODO: bounded_linear is enough *)
-lemma abs_summable_on_bounded_clinear:
-  assumes \<open>bounded_clinear f\<close>
-  assumes \<open>g abs_summable_on S\<close>
-  shows \<open>(f o g) abs_summable_on S\<close>
-proof -
-  have bound: \<open>norm (f (g x)) \<le> onorm f * norm (g x)\<close> for x
-    apply (rule onorm)
-    by (simp add: bounded_clinear.bounded_linear assms(1))
-
-  from assms(2) have \<open>(\<lambda>x. onorm f *\<^sub>C g x) abs_summable_on S\<close>
-    by (auto simp: norm_scaleC intro!: summable_on_cmult_right)
-  then have \<open>(\<lambda>x. f (g x)) abs_summable_on S\<close>
-    apply (rule abs_summable_on_comparison_test)
-    using bound by (auto simp: bounded_clinear.bounded_linear assms(1) onorm_pos_le)
-  then show ?thesis
-    by auto
-qed
-
 lemma infsum_cblinfun_apply:
   assumes \<open>g summable_on S\<close>
   shows \<open>infsum (\<lambda>x. A *\<^sub>V g x) S = A *\<^sub>V (infsum g S)\<close>
@@ -281,14 +253,14 @@ lemma infsum_cblinfun_apply:
 lemma has_sum_cblinfun_apply:
   assumes \<open>has_sum g S x\<close>
   shows \<open>has_sum (\<lambda>x. A *\<^sub>V g x) S (A *\<^sub>V x)\<close>
-  apply (rule has_sum_bounded_clinear[unfolded o_def, of \<open>cblinfun_apply A\<close>])
-  using assms by (auto simp add: bounded_cbilinear.bounded_clinear_right bounded_cbilinear_cblinfun_apply)
+  apply (rule has_sum_bounded_linear[unfolded o_def, of \<open>cblinfun_apply A\<close>])
+  using assms by (auto simp add: bounded_clinear.bounded_linear cblinfun.bounded_clinear_right)
 
 lemma abs_summable_on_cblinfun_apply:
   assumes \<open>g abs_summable_on S\<close>
   shows \<open>(\<lambda>x. A *\<^sub>V g x) abs_summable_on S\<close>
-  using cblinfun.bounded_clinear_right assms
-  by (rule abs_summable_on_bounded_clinear[unfolded o_def])
+  using bounded_clinear.bounded_linear[OF cblinfun.bounded_clinear_right] assms
+  by (rule abs_summable_on_bounded_linear[unfolded o_def])
 
 lemma trunc_ell2_UNIV[simp]: \<open>trunc_ell2 UNIV \<psi> = \<psi>\<close>
   apply transfer by simp
@@ -792,11 +764,19 @@ lemma infsum_cinner_left:
   shows \<open>\<psi> \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>i\<in>I. \<phi> i) = (\<Sum>\<^sub>\<infinity>i\<in>I. \<psi> \<bullet>\<^sub>C \<phi> i)\<close>
   by (metis assms has_sum_cinner_left has_sum_infsum infsumI)
 
+lemma has_sum_adj:
+  assumes \<open>has_sum f I x\<close>
+  shows \<open>has_sum (\<lambda>x. adj (f x)) I (adj x)\<close>
+  apply (rule has_sum_comm_additive[where f=adj, unfolded o_def])
+  apply (simp add: antilinear.axioms(1))
+  apply (metis (no_types, lifting) LIM_eq adj_plus adj_uminus norm_adj uminus_add_conv_diff)
+  by (simp add: assms)
 
 lemma has_sum_cinner_right:
   assumes \<open>has_sum f I x\<close>
   shows \<open>has_sum (\<lambda>i. f i \<bullet>\<^sub>C a) I (x \<bullet>\<^sub>C a)\<close>
-  sorry
+  apply (rule has_sum_bounded_linear[where f=\<open>\<lambda>x. x \<bullet>\<^sub>C a\<close>, unfolded o_def])
+  using assms by (simp_all add: bounded_antilinear.bounded_linear bounded_antilinear_cinner_left)
 
 lemma summable_on_cinner_right:
   assumes \<open>f summable_on I\<close>
@@ -994,28 +974,47 @@ lemma isometry_partial_isometry: \<open>isometry P \<Longrightarrow> partial_iso
 lemma unitary_partial_isometry: \<open>unitary P \<Longrightarrow> partial_isometry P\<close>
   using isometry_partial_isometry unitary_isometry by blast
 
-lemma norm_partial_isometry: \<open>norm A = 1\<close> if \<open>partial_isometry A\<close> and \<open>A \<noteq> 0\<close>
-  sorry
+(* lemma minus_zero_ccsubspace[simp]: \<open>- 0 = (\<top> :: _ ccsubspace)\<close>
+  by auto *)
 
-(* TODO: Do we want to keep this? Or inline in Cauchy_cinner_product_infsum *)
-lemma Cauchy_cinner_product_summable:
-  fixes a b :: "nat \<Rightarrow> 'a::complex_inner"
-  shows \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on UNIV \<longleftrightarrow> (\<lambda>(x, y). a y \<bullet>\<^sub>C b (x - y)) summable_on {(k, i). i \<le> k}\<close>
+lemma norm_partial_isometry:
+  fixes A :: \<open>'a :: chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
+  assumes \<open>partial_isometry A\<close> and \<open>A \<noteq> 0\<close>
+  shows \<open>norm A = 1\<close> 
 proof -
-  have img: \<open>(\<lambda>(k::nat, i). (i, k - i)) ` {(k, i). i \<le> k} = UNIV\<close>
-    apply (auto simp: image_def)
-    by (metis add.commute add_diff_cancel_right' diff_le_self)
-  have inj: \<open>inj_on (\<lambda>(k::nat, i). (i, k - i)) {(k, i). i \<le> k}\<close>
-    by (smt (verit, del_insts) Pair_inject case_prodE case_prod_conv eq_diff_iff inj_onI mem_Collect_eq)
+  from \<open>A \<noteq> 0\<close>
+  have \<open>- (kernel A) \<noteq> 0\<close>
+    by (metis cblinfun_eqI diff_zero id_cblinfun_apply kernel_id kernel_memberD ortho_involution orthog_proj_exists orthogonal_complement_closed_subspace uminus_ccsubspace.rep_eq zero_cblinfun.rep_eq)
+  then obtain h where \<open>h \<in> space_as_set (- kernel A)\<close> and \<open>h \<noteq> 0\<close>
+    by (metis cblinfun_id_cblinfun_apply ccsubspace_eqI closed_csubspace.subspace complex_vector.subspace_0 kernel_id kernel_memberD kernel_memberI orthogonal_complement_closed_subspace uminus_ccsubspace.rep_eq)
+  with \<open>partial_isometry A\<close>
+  have \<open>norm (A h) = norm h\<close>
+    using partial_isometry_def by blast
+  then have \<open>norm A \<ge> 1\<close>
+    by (smt (verit) \<open>h \<noteq> 0\<close> mult_cancel_right1 mult_left_le_one_le norm_cblinfun norm_eq_zero norm_ge_zero)
 
-  have \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on UNIV \<longleftrightarrow> (\<lambda>(k, l). a k \<bullet>\<^sub>C b l) summable_on (\<lambda>(k, i). (i, k - i)) ` {(k, i). i \<le> k}\<close>
-    by (simp only: img)
-  also have \<open>\<dots> \<longleftrightarrow> ((\<lambda>(k, l). a k \<bullet>\<^sub>C b l) \<circ> (\<lambda>(k, i). (i, k - i))) summable_on {(k, i). i \<le> k}\<close>
-    using inj by (rule summable_on_reindex)
-  also have \<open>\<dots> \<longleftrightarrow> (\<lambda>(x, y). a y \<bullet>\<^sub>C b (x - y)) summable_on {(k, i). i \<le> k}\<close>
-    by (simp add: o_def case_prod_unfold)
-  finally show ?thesis
-    by -
+  have \<open>norm A \<le> 1\<close>
+  proof (rule norm_cblinfun_bound)
+    show \<open>0 \<le> (1::real)\<close>
+      by simp
+    fix \<psi> :: 'a
+    define g h where \<open>g = Proj (kernel A) \<psi>\<close> and \<open>h = Proj (- kernel A) \<psi>\<close>
+    have \<open>A g = 0\<close>
+      by (metis Proj_range cblinfun_apply_in_image g_def kernel_memberD)
+    moreover from \<open>partial_isometry A\<close>
+    have \<open>norm (A h) = norm h\<close>
+      by (metis Proj_range cblinfun_apply_in_image h_def partial_isometry_def)
+    ultimately have \<open>norm (A \<psi>) = norm h\<close>
+      by (simp add: Proj_ortho_compl cblinfun.diff_left cblinfun.diff_right g_def h_def)
+    also have \<open>norm h \<le> norm \<psi>\<close>
+      by (smt (verit, del_insts) h_def mult_left_le_one_le norm_Proj_leq1 norm_cblinfun norm_ge_zero)
+    finally show \<open>norm (A *\<^sub>V \<psi>) \<le> 1 * norm \<psi>\<close>
+      by simp
+  qed
+
+  from \<open>norm A \<le> 1\<close> and \<open>norm A \<ge> 1\<close>
+  show \<open>norm A = 1\<close>
+    by auto
 qed
 
 lemma summable_on_product_finite_left:
@@ -1059,7 +1058,7 @@ proof -
     by (metis (mono_tags, lifting) case_prod_unfold prod.swap_def summable_on_cong)
 qed
 
-lemma Cauchy_cinner_summability:
+lemma Cauchy_cinner_product_summable:
   assumes asum: \<open>a summable_on UNIV\<close>
   assumes bsum: \<open>b summable_on UNIV\<close>
   assumes \<open>finite X\<close> \<open>finite Y\<close>
@@ -1159,6 +1158,26 @@ proof -
     using 1 2 3 4 by (auto intro!: summable_on_Un_disjoint)
 qed
 
+lemma Cauchy_cinner_product_summable':
+  fixes a b :: "nat \<Rightarrow> 'a::complex_inner"
+  shows \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on UNIV \<longleftrightarrow> (\<lambda>(x, y). a y \<bullet>\<^sub>C b (x - y)) summable_on {(k, i). i \<le> k}\<close>
+proof -
+  have img: \<open>(\<lambda>(k::nat, i). (i, k - i)) ` {(k, i). i \<le> k} = UNIV\<close>
+    apply (auto simp: image_def)
+    by (metis add.commute add_diff_cancel_right' diff_le_self)
+  have inj: \<open>inj_on (\<lambda>(k::nat, i). (i, k - i)) {(k, i). i \<le> k}\<close>
+    by (smt (verit, del_insts) Pair_inject case_prodE case_prod_conv eq_diff_iff inj_onI mem_Collect_eq)
+
+  have \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on UNIV \<longleftrightarrow> (\<lambda>(k, l). a k \<bullet>\<^sub>C b l) summable_on (\<lambda>(k, i). (i, k - i)) ` {(k, i). i \<le> k}\<close>
+    by (simp only: img)
+  also have \<open>\<dots> \<longleftrightarrow> ((\<lambda>(k, l). a k \<bullet>\<^sub>C b l) \<circ> (\<lambda>(k, i). (i, k - i))) summable_on {(k, i). i \<le> k}\<close>
+    using inj by (rule summable_on_reindex)
+  also have \<open>\<dots> \<longleftrightarrow> (\<lambda>(x, y). a y \<bullet>\<^sub>C b (x - y)) summable_on {(k, i). i \<le> k}\<close>
+    by (simp add: o_def case_prod_unfold)
+  finally show ?thesis
+    by -
+qed
+
 
 
 
@@ -1167,13 +1186,14 @@ text \<open>A variant of @{thm [source] Series.Cauchy_product_sums} with \<^term
    of \<^term>\<open>a\<close> and \<^term>\<open>b\<close> individually but only unconditional summability of \<^term>\<open>a\<close>, \<^term>\<open>b\<close>, and their product.
    While on, e.g., reals, unconditional summability is equivalent to absolute summability, in
    general unconditional summability is a weaker requirement.\<close>
-lemma Cauchy_cinner_product_infsum:
+lemma 
   fixes a b :: "nat \<Rightarrow> 'a::complex_inner"
   assumes asum: \<open>a summable_on UNIV\<close>
   assumes bsum: \<open>b summable_on UNIV\<close>
   assumes absum: \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on UNIV\<close>
-    \<comment> \<open>See @{thm [source] Cauchy_cinner_product_summable} or @{thm [source] Cauchy_cinner_summability} for a way to rewrite this premise.\<close>
-  shows \<open>(\<Sum>\<^sub>\<infinity>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k - i)) = (\<Sum>\<^sub>\<infinity>k. a k) \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>k. b k)\<close>
+    \<comment> \<open>See @{thm [source] Cauchy_cinner_product_summable} or @{thm [source] Cauchy_cinner_product_summable'} for a way to rewrite this premise.\<close>
+  shows Cauchy_cinner_product_infsum: \<open>(\<Sum>\<^sub>\<infinity>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k - i)) = (\<Sum>\<^sub>\<infinity>k. a k) \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>k. b k)\<close>
+    and Cauchy_cinner_product_infsum_exists: \<open>(\<lambda>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k - i)) summable_on UNIV\<close>
 (* TODO: Thm showing existence of the lhs *)
 proof -
   have img: \<open>(\<lambda>(k::nat, i). (i, k - i)) ` {(k, i). i \<le> k} = UNIV\<close>
@@ -1183,6 +1203,14 @@ proof -
     by (smt (verit, del_insts) Pair_inject case_prodE case_prod_conv eq_diff_iff inj_onI mem_Collect_eq)
   have sigma: \<open>(SIGMA k:UNIV. {i. i \<le> k}) = {(k, i). i \<le> k}\<close>
     by auto
+
+  from absum
+  have \<open>(\<lambda>(x, y). a y \<bullet>\<^sub>C b (x - y)) summable_on {(k, i). i \<le> k}\<close>
+    by (rule Cauchy_cinner_product_summable'[THEN iffD1])
+  then have \<open>(\<lambda>k. \<Sum>\<^sub>\<infinity>i|i\<le>k. a i \<bullet>\<^sub>C b (k-i)) summable_on UNIV\<close>
+    by (metis (mono_tags, lifting) sigma summable_on_Sigma_banach summable_on_cong)
+  then show \<open>(\<lambda>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k - i)) summable_on UNIV\<close>
+    by (metis (mono_tags, lifting) atMost_def finite_Collect_le_nat infsum_finite summable_on_cong)
 
   have \<open>(\<Sum>\<^sub>\<infinity>k. a k) \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>k. b k) = (\<Sum>\<^sub>\<infinity>k. \<Sum>\<^sub>\<infinity>l. a k \<bullet>\<^sub>C b l)\<close>
     apply (subst infsum_cinner_right)
@@ -1201,7 +1229,7 @@ proof -
     by (simp add: o_def case_prod_unfold)
   also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>k. \<Sum>\<^sub>\<infinity>i|i\<le>k. a i \<bullet>\<^sub>C b (k-i))\<close>
     apply (subst infsum_Sigma'_banach)
-    using absum by (auto simp: sigma Cauchy_cinner_product_summable)
+    using absum by (auto simp: sigma Cauchy_cinner_product_summable')
   also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k-i))\<close>
     apply (subst infsum_finite[symmetric])
     by (auto simp add: atMost_def)
@@ -1342,6 +1370,44 @@ proof -
   qed
 qed
 
+lemma cblinfun_power_compose[simp]: \<open>cblinfun_power A n o\<^sub>C\<^sub>L cblinfun_power A m = cblinfun_power A (n+m)\<close>
+  apply (induction n)
+  apply (auto simp: cblinfun_power_Suc')
+  by (metis cblinfun_assoc_left(1))
+
+
+lemma cblinfun_power_scaleC: \<open>cblinfun_power (c *\<^sub>C a) n = c^n *\<^sub>C cblinfun_power a n\<close>
+  apply (induction n)
+  by (auto simp: cblinfun_power_Suc)
+
+lemma cblinfun_power_scaleR: \<open>cblinfun_power (c *\<^sub>R a) n = c^n *\<^sub>R cblinfun_power a n\<close>
+  apply (induction n)
+  by (auto simp: cblinfun_power_Suc)
+
+lemma cblinfun_power_uminus: \<open>cblinfun_power (-a) n = (-1)^n *\<^sub>R cblinfun_power a n\<close>
+  apply (subst asm_rl[of \<open>-a = (-1) *\<^sub>R a\<close>])
+   apply simp
+  by (rule cblinfun_power_scaleR)
+
+
+lemma cblinfun_power_adj: \<open>(cblinfun_power S n)* = cblinfun_power (S*) n\<close>
+  apply (induction n)
+   apply simp
+  apply (subst cblinfun_power_Suc)
+  apply (subst cblinfun_power_Suc')
+  by auto
+
+lemma adj_minus: \<open>(A - B)* = (A*) - (B*)\<close>
+  by (metis add_implies_diff adj_plus diff_add_cancel)
+
+lemma complex_of_real_leq_1_iff[iff]: \<open>complex_of_real x \<le> 1 \<longleftrightarrow> x \<le> 1\<close>
+  by (metis complex_of_real_mono_iff of_real_1)
+
+lemma cinner_hermitian_real: \<open>x \<bullet>\<^sub>C (A *\<^sub>V x) \<in> \<real>\<close> if \<open>A* = A\<close>
+  by (metis Reals_cnj_iff cinner_adj_right cinner_commute' that)
+
+lemma x_cnj_x: \<open>c * cnj c = (abs c)\<^sup>2\<close>
+  by (metis cnj_x_x mult.commute)
 
 unbundle no_cblinfun_notation
 

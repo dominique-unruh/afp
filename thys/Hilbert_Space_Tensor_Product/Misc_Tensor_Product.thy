@@ -1369,7 +1369,6 @@ proof -
     using has_sum_def by blast 
 qed
 
-(* TODO move *)
 (* strengthening of original *)
 lemma summable_on_comm_additive_general:
   fixes g :: \<open>'a \<Rightarrow> 'b :: {comm_monoid_add,topological_space}\<close> and f :: \<open>'b \<Rightarrow> 'c :: {comm_monoid_add,topological_space}\<close>
@@ -1381,6 +1380,91 @@ lemma summable_on_comm_additive_general:
   assumes \<open>g summable_on S\<close>
   shows \<open>(f o g) summable_on S\<close>
   by (meson assms summable_on_def has_sum_comm_additive_general has_sum_def infsum_tendsto)
+
+lemma has_sum_bounded_linear: 
+  assumes \<open>bounded_linear f\<close>
+  assumes \<open>has_sum g S x\<close>
+  shows \<open>has_sum (f o g) S (f x)\<close>
+  apply (rule has_sum_comm_additive)
+  using assms blinfun_apply_induct blinfun.additive_right apply auto
+  using isCont_def linear_continuous_at by fastforce
+
+lemma abs_summable_on_bounded_linear:
+  assumes \<open>bounded_linear f\<close>
+  assumes \<open>g abs_summable_on S\<close>
+  shows \<open>(f o g) abs_summable_on S\<close>
+proof -
+  have bound: \<open>norm (f (g x)) \<le> onorm f * norm (g x)\<close> for x
+    apply (rule onorm)
+    by (simp add: assms(1))
+
+  from assms(2) have \<open>(\<lambda>x. onorm f *\<^sub>R g x) abs_summable_on S\<close>
+    by (auto intro!: summable_on_cmult_right)
+  then have \<open>(\<lambda>x. f (g x)) abs_summable_on S\<close>
+    apply (rule abs_summable_on_comparison_test)
+    using bound by (auto simp: assms(1) onorm_pos_le)
+  then show ?thesis
+    by auto
+qed
+
+lemma has_sum_sums: \<open>f sums s\<close> if \<open>has_sum f UNIV s\<close>
+proof -
+  have \<open>(\<lambda>n. sum f {..<n}) \<longlonglongrightarrow> s\<close>
+  proof (simp add: tendsto_def, intro allI impI)
+    fix S assume \<open>open S\<close> and \<open>s \<in> S\<close>
+    with \<open>has_sum f UNIV s\<close>
+    have \<open>\<forall>\<^sub>F F in finite_subsets_at_top UNIV. sum f F \<in> S\<close>
+      using has_sum_def tendsto_def by blast
+    then
+    show \<open>\<forall>\<^sub>F x in sequentially. sum f {..<x} \<in> S\<close>
+      using eventually_compose_filterlim filterlim_lessThan_at_top by blast
+  qed
+  then show ?thesis
+    by (simp add: sums_def)
+qed
+
+lemma The_eqI1:
+  assumes \<open>\<And>x y. F x \<Longrightarrow> F y \<Longrightarrow> x = y\<close>
+  assumes \<open>\<exists>z. F z\<close>
+  assumes \<open>\<And>x. F x \<Longrightarrow> P x = Q x\<close>
+  shows \<open>P (The F) = Q (The F)\<close>
+  by (metis assms(1) assms(2) assms(3) theI)
+
+lemma summable_on_uminus[intro!]: 
+  fixes f :: \<open>'a \<Rightarrow> 'b :: real_normed_vector\<close> (* Can probably be shown for a much wider type class. *)
+  assumes \<open>f summable_on A\<close>
+  shows \<open>(\<lambda>i. - f i) summable_on A\<close>
+  apply (subst asm_rl[of \<open>(\<lambda>i. - f i) = (\<lambda>i. (-1) *\<^sub>R f i)\<close>])
+   apply simp
+  using assms by (rule summable_on_scaleR_right)
+
+lemma gbinomial_1: \<open>(1 gchoose n) = of_bool (n\<le>1)\<close>
+proof -
+  consider (0) \<open>n=0\<close> | (1) \<open>n=1\<close> | (bigger) m where \<open>n=Suc (Suc m)\<close>
+    by (metis One_nat_def not0_implies_Suc)
+  then show ?thesis
+  proof cases
+    case 0
+    then show ?thesis
+      by simp
+  next
+    case 1
+    then show ?thesis
+      by simp
+  next
+    case bigger
+    then show ?thesis
+      using gbinomial_rec[where a=0 and k=\<open>Suc m\<close>]
+      by simp
+  qed
+qed
+
+
+
+lemma gbinomial_a_Suc_n:
+  \<open>(a gchoose Suc n) = (a gchoose n) * (a-n) / Suc n\<close>
+  by (simp add: gbinomial_prod_rev)
+
 
 
 end
