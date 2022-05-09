@@ -945,7 +945,7 @@ lemma partial_isometryI:
   shows \<open>partial_isometry A\<close>
   using assms partial_isometry_def by blast
 
-lemma ccsubspace_eqI: 
+lemma ccsubspace_eqI:
   assumes \<open>\<And>x. x \<in> space_as_set S \<longleftrightarrow> x \<in> space_as_set T\<close>
   shows \<open>S = T\<close>
   by (metis Abs_clinear_space_cases Abs_clinear_space_inverse antisym assms subsetI)
@@ -960,6 +960,26 @@ lemma kernel_Proj[simp]: \<open>kernel (Proj S) = - S\<close>
   apply auto
   apply (metis diff_0_right is_projection_on_iff_orthog projection_is_projection_on')
   by (simp add: complex_vector.subspace_0 projection_eqI)
+
+lemma
+  fixes A :: \<open>'a :: chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b :: complex_normed_vector\<close>
+  assumes iso: \<open>\<And>\<psi>. \<psi> \<in> space_as_set V \<Longrightarrow> norm (A *\<^sub>V \<psi>) = norm \<psi>\<close>
+  assumes zero: \<open>\<And>\<psi>. \<psi> \<in> space_as_set (- V) \<Longrightarrow> A *\<^sub>V \<psi> = 0\<close>
+  shows partial_isometryI': \<open>partial_isometry A\<close>
+    and partial_isometry_initial: \<open>kernel A = - V\<close>
+proof -
+  from zero
+  have \<open>- V \<le> kernel A\<close>
+    by (simp add: kernel_memberI less_eq_ccsubspace.rep_eq subsetI)
+  moreover have \<open>kernel A \<le> -V\<close>
+    by (smt (verit, ccfv_threshold) Proj_ortho_compl Proj_range assms(1) cblinfun.diff_left cblinfun.diff_right cblinfun_apply_in_image cblinfun_id_cblinfun_apply ccsubspace_leI kernel_Proj kernel_memberD kernel_memberI norm_eq_zero ortho_involution subsetI zero)
+  ultimately show kerA: \<open>kernel A = -V\<close>
+    by simp
+
+  show \<open>partial_isometry A\<close>
+    apply (rule partial_isometryI)
+    by (simp add: kerA iso)
+qed
 
 lemma Proj_partial_isometry: \<open>partial_isometry (Proj S)\<close>
   apply (rule partial_isometryI)
@@ -1408,6 +1428,88 @@ lemma cinner_hermitian_real: \<open>x \<bullet>\<^sub>C (A *\<^sub>V x) \<in> \<
 
 lemma x_cnj_x: \<open>c * cnj c = (abs c)\<^sup>2\<close>
   by (metis cnj_x_x mult.commute)
+
+thm cblinfun_extension_exists_bounded_dense
+term is_Proj
+
+lemma cblinfun_extension_exists_proj:
+  fixes f :: \<open>'a::complex_normed_vector \<Rightarrow> 'b::cbanach\<close>
+  assumes \<open>csubspace S\<close>
+  assumes \<open>\<exists>P. is_projection_on P (closure S) \<and> bounded_clinear P\<close> (* Maybe can be replaced by is_Proj if the latter's type class is widened *)
+  assumes f_add: \<open>\<And>x y. x \<in> S \<Longrightarrow> y \<in> S \<Longrightarrow> f (x + y) = f x + f y\<close>
+  assumes f_scale: \<open>\<And>c x y. x \<in> S \<Longrightarrow> f (c *\<^sub>C x) = c *\<^sub>C f x\<close>
+  assumes bounded: \<open>\<And>x. x \<in> S \<Longrightarrow> norm (f x) \<le> B * norm x\<close>
+  shows \<open>cblinfun_extension_exists S f\<close>
+proof (cases \<open>B \<ge> 0\<close>)
+  case True
+  note True[simp]
+  obtain P where P_proj: \<open>is_projection_on P (closure S)\<close> and P_blin[simp]: \<open>bounded_clinear P\<close>
+    using assms(2) by blast 
+  have P_lin[simp]: \<open>clinear P\<close>
+    by (simp add: bounded_clinear.clinear)
+  define f' S' where \<open>f' \<psi> = f (P \<psi>)\<close> and \<open>S' = S + (P -` {0})\<close> for \<psi>
+  have \<open>csubspace S'\<close>
+    by (simp add: S'_def assms(1) csubspace_set_plus)
+  moreover have \<open>closure S' = UNIV\<close>
+  proof auto
+    fix \<psi>
+    have \<open>\<psi> = P \<psi> + (id - P) \<psi>\<close>
+      by simp
+    also have \<open>\<dots> \<in> closure S + (P -` {0})\<close>
+      apply (rule set_plus_intro) 
+      using P_proj is_projection_on_in_image 
+      by (auto simp: complex_vector.linear_diff is_projection_on_fixes_image is_projection_on_in_image)
+    also have \<open>\<dots> \<subseteq> closure (closure S + (P -` {0}))\<close>
+      using closure_subset by blast
+    also have \<open>\<dots> = closure (S + (P -` {0}))\<close>
+      using closed_sum_closure_left closed_sum_def by blast
+    also have \<open>\<dots> = closure S'\<close>
+      using S'_def by fastforce
+    finally show \<open>\<psi> \<in> closure S'\<close>
+      by -
+  qed
+
+  moreover have \<open>f' (x + y) = f' x + f' y\<close> if \<open>x \<in> S'\<close> and \<open>y \<in> S'\<close> for x y
+    by (smt (z3) P_blin P_proj S'_def f'_def add.right_neutral bounded_clinear_CBlinfun_apply cblinfun.add_right closure_subset f_add is_projection_on_fixes_image set_plus_elim singletonD subset_eq that(1) that(2) vimageE)
+  moreover have \<open>f' (c *\<^sub>C x) = c *\<^sub>C f' x\<close> if \<open>x \<in> S'\<close> for c x
+    by (smt (verit, ccfv_SIG) P_blin P_proj S'_def f'_def add.right_neutral bounded_clinear_CBlinfun_apply cblinfun.add_right cblinfun.scaleC_right closure_subset f_scale is_projection_on_fixes_image set_plus_elim singletonD subset_eq that vimageE)
+
+  moreover 
+  from P_blin obtain B' where B': \<open>norm (P x) \<le> B' * norm x\<close> for x
+    by (metis bounded_clinear.bounded mult.commute)
+  have \<open>norm (f' x) \<le> (B * B') * norm x\<close> if \<open>x \<in> S'\<close> for x
+  proof -
+    have \<open>norm (f' x) \<le> B* norm (P x)\<close>
+      apply (auto simp: f'_def)
+      by (smt (verit) P_blin P_proj S'_def add.right_neutral bounded bounded_clinear_CBlinfun_apply cblinfun.add_right closure_subset is_projection_on_fixes_image set_plus_elim singletonD subset_eq that vimageE)
+    also have \<open>\<dots> \<le> B * B' * norm x\<close>
+      by (simp add: B' mult.assoc mult_mono)
+    finally show ?thesis
+      by auto
+  qed
+
+  ultimately have F_ex: \<open>cblinfun_extension_exists S' f'\<close>
+    by (rule cblinfun_extension_exists_bounded_dense)
+  define F where \<open>F = cblinfun_extension S' f'\<close>
+  from F_ex have *: \<open>F \<psi> = f' \<psi>\<close> if \<open>\<psi> \<in> S'\<close> for \<psi>
+    by (simp add: F_def cblinfun_extension_apply that)
+  then have \<open>F \<psi> = f \<psi>\<close> if \<open>\<psi> \<in> S\<close> for \<psi>
+    apply (auto simp: S'_def f'_def)
+    by (metis (no_types, lifting) P_lin P_proj add.right_neutral closure_subset complex_vector.linear_subspace_vimage complex_vector.subspace_0 complex_vector.subspace_single_0 is_projection_on_fixes_image set_plus_intro subset_eq that)
+  then show \<open>cblinfun_extension_exists S f\<close>
+    using cblinfun_extension_exists_def by blast
+next
+  case False
+  then have \<open>S \<subseteq> {0}\<close>
+    using bounded apply auto
+    by (meson norm_ge_zero norm_le_zero_iff order_trans zero_le_mult_iff)
+  then show \<open>cblinfun_extension_exists S f\<close>
+    apply (rule_tac cblinfun_extension_existsI[where B=0])
+    apply auto
+    using bounded by fastforce
+qed
+
+
 
 unbundle no_cblinfun_notation
 
