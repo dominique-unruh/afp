@@ -75,8 +75,7 @@ lemma register_id: \<open>register id\<close>
   by (simp add: register_def complex_vector.module_hom_id)
 
 lemma register_preregister: "register F \<Longrightarrow> preregister F"
-  unfolding register_def preregister_def apply auto
-  sorry
+  unfolding register_def preregister_def by auto
 
 lemma register_comp: "register F \<Longrightarrow> register G \<Longrightarrow> register (G \<circ> F)"
   using bounded_clinear_compose continuous_map_compose apply (auto simp: o_def register_def)
@@ -88,6 +87,7 @@ lemma register_mult: "register F \<Longrightarrow> cblinfun_compose (F a) (F b) 
 
 lemma register_tensor_left: \<open>register (\<lambda>a. tensor_op a id_cblinfun)\<close>
   apply (auto simp add: comp_tensor_op register_def tensor_op_cbilinear tensor_op_adjoint)
+  apply (metis eq_onp_def right_amplification.rsp)
   sorry
 
 lemma register_tensor_right: \<open>register (\<lambda>a. tensor_op id_cblinfun a)\<close>

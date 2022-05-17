@@ -683,7 +683,7 @@ proof (intro rel_funI)
     by (rule rel_filter.intros[where Z=Z])
 qed
 
-lemma sum_parametric':
+lemma sum_parametric'[transfer_rule]:
   includes lifting_syntax
   fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close> and S :: \<open>'c::comm_monoid_add \<Rightarrow> 'd::comm_monoid_add \<Rightarrow> bool\<close>
   assumes [transfer_rule]: \<open>bi_unique R\<close>
@@ -1464,6 +1464,9 @@ qed
 lemma gbinomial_a_Suc_n:
   \<open>(a gchoose Suc n) = (a gchoose n) * (a-n) / Suc n\<close>
   by (simp add: gbinomial_prod_rev)
+
+lemma has_sum_in_0[simp]: \<open>has_sum_in T (\<lambda>_. 0) A 0\<close> if [simp]: \<open>0 \<in> topspace T\<close>
+  by (simp add: has_sum_in_def sum.neutral_const[abs_def])
 
 
 

@@ -96,8 +96,7 @@ lemma bounded_clinear_tensor_ell22: "bounded_clinear (\<lambda>a. tensor_ell2 a 
   by (auto intro!: bounded_clinear.intro clinear_tensor_ell22
       simp: bounded_clinear_axioms_def tensor_ell2_norm)
 
-(* TODO: not simp *)
-lemma tensor_ell2_ket[simp]: "tensor_ell2 (ket i) (ket j) = ket (i,j)"
+lemma tensor_ell2_ket: "tensor_ell2 (ket i) (ket j) = ket (i,j)"
   apply transfer by auto
 
 lemma tensor_ell2_0_left[simp]: \<open>0 \<otimes>\<^sub>s x = 0\<close>
@@ -174,7 +173,7 @@ proof -
       using that bounded_clinear_compose bounded_clinear_tensor_ell22 that by blast+
     then show "F = G"
       apply (rule_tac bounded_clinear_equal_ket)
-      by auto
+      by (auto simp: tensor_ell2_ket)
   qed
   then show \<open>closure (cspan ST) = UNIV\<close>
     using separating_dense_span by blast
@@ -195,7 +194,7 @@ proof -
     bounded_clinear_compose[OF bounded_clinear_tensor_ell22]
     bounded_clinear_cblinfun_apply
   have \<open>assoc_ell2 *\<^sub>V ((ket a \<otimes>\<^sub>s ket b) \<otimes>\<^sub>s ket c) = (ket a \<otimes>\<^sub>s (ket b \<otimes>\<^sub>s ket c))\<close> for a :: 'a and b :: 'b and c :: 'c
-    by (simp add: inj_def assoc_ell2_def classical_operator_ket classical_operator_exists_inj)
+    by (simp add: inj_def assoc_ell2_def classical_operator_ket classical_operator_exists_inj tensor_ell2_ket)
   then have \<open>assoc_ell2 *\<^sub>V ((ket a \<otimes>\<^sub>s ket b) \<otimes>\<^sub>s c) = (ket a \<otimes>\<^sub>s (ket b \<otimes>\<^sub>s c))\<close> for a :: 'a and b :: 'b
     apply (rule_tac fun_cong[where x=c])
     apply (rule_tac bounded_clinear_equal_ket)
@@ -227,7 +226,7 @@ proof -
     bounded_clinear_compose[OF bounded_clinear_tensor_ell22]
     bounded_clinear_cblinfun_apply
   have \<open>swap_ell2 *\<^sub>V (ket a \<otimes>\<^sub>s ket b) = (ket b \<otimes>\<^sub>s ket a)\<close> for a :: 'a and b :: 'b
-    by (simp add: inj_def swap_ell2_def classical_operator_ket classical_operator_exists_inj)
+    by (simp add: inj_def swap_ell2_def classical_operator_ket classical_operator_exists_inj tensor_ell2_ket)
   then have \<open>swap_ell2 *\<^sub>V (ket a \<otimes>\<^sub>s b) = (b \<otimes>\<^sub>s ket a)\<close> for a :: 'a
     apply (rule_tac fun_cong[where x=b])
     apply (rule_tac bounded_clinear_equal_ket)
@@ -328,7 +327,7 @@ proof -
         have \<open>(\<Sum>y\<in>Y. \<xi> y \<otimes>\<^sub>s ket y) = (\<Sum>xy\<in>X \<times> Y. if ket xy \<in> t then r (ket xy) *\<^sub>C ket xy else 0)\<close>
           apply (simp add: \<xi>_def tensor_ell2_sum_left)
           apply (subst sum.swap)
-          by (auto simp: sum.cartesian_product tensor_ell2_scaleC1 intro!: sum.cong)
+          by (auto simp: sum.cartesian_product tensor_ell2_scaleC1 tensor_ell2_ket intro!: sum.cong)
         also have \<open>\<dots> = (\<Sum>xy\<in>ket ` (X \<times> Y). if xy \<in> t then r xy *\<^sub>C xy else 0)\<close>
           apply (subst sum.reindex)
           by (auto simp add: inj_on_def)
@@ -343,7 +342,7 @@ proof -
       have \<open>(norm (g1 \<psi>))\<^sup>2 = (norm (\<Sum>y\<in>Y. (M *\<^sub>V \<xi> y) \<otimes>\<^sub>s ket y))\<^sup>2\<close>
         by (auto simp: \<psi>\<xi> complex_vector.linear_sum \<xi>_def tensor_ell2_sum_left 
             complex_vector.linear_scale g1_ket tensor_ell2_scaleC1
-            complex_vector.linear_0
+            complex_vector.linear_0 tensor_ell2_ket
             intro!: sum.cong arg_cong[where f=norm])
       also have \<open>\<dots> = (\<Sum>y\<in>Y. (norm ((M *\<^sub>V \<xi> y) \<otimes>\<^sub>s ket y))\<^sup>2)\<close>
         apply (rule pythagorean_theorem_sum)
@@ -389,7 +388,7 @@ proof -
 
     have eq_ket: \<open>extg1 *\<^sub>V tensor_ell2 \<psi> (ket y) = tensor_ell2 (M *\<^sub>V \<psi>) (ket y)\<close> for y
       apply (rule bounded_clinear_eq_on[where t=\<psi> and G=\<open>range ket\<close>])
-      using 1 2 extg1_ket by auto
+      using 1 2 extg1_ket by (auto simp: tensor_ell2_ket)
     show ?thesis 
       apply (rule bounded_clinear_eq_on[where t=\<phi> and G=\<open>range ket\<close>])
       using 3 4 eq_ket by auto
@@ -427,7 +426,7 @@ proof -
       proof -
         have \<open>(\<Sum>x\<in>X. ket x \<otimes>\<^sub>s \<xi> x) = (\<Sum>xy\<in>X \<times> Y. if ket xy \<in> t then r (ket xy) *\<^sub>C ket xy else 0)\<close>
           apply (simp add: \<xi>_def tensor_ell2_sum_right)
-          by (auto simp: sum.cartesian_product tensor_ell2_scaleC2 intro!: sum.cong)
+          by (auto simp: sum.cartesian_product tensor_ell2_scaleC2 tensor_ell2_ket intro!: sum.cong)
         also have \<open>\<dots> = (\<Sum>xy\<in>ket ` (X \<times> Y). if xy \<in> t then r xy *\<^sub>C xy else 0)\<close>
           apply (subst sum.reindex)
           by (auto simp add: inj_on_def)
@@ -442,7 +441,7 @@ proof -
       have \<open>(norm (g2 \<psi>))\<^sup>2 = (norm (\<Sum>x\<in>X. ket x \<otimes>\<^sub>s (N *\<^sub>V \<xi> x)))\<^sup>2\<close>
         by (auto simp: \<psi>\<xi> complex_vector.linear_sum \<xi>_def tensor_ell2_sum_right
             complex_vector.linear_scale g2_ket tensor_ell2_scaleC2
-            complex_vector.linear_0
+            complex_vector.linear_0 tensor_ell2_ket
             intro!: sum.cong arg_cong[where f=norm])
       also have \<open>\<dots> = (\<Sum>x\<in>X. (norm (ket x \<otimes>\<^sub>s (N *\<^sub>V \<xi> x)))\<^sup>2)\<close>
         apply (rule pythagorean_theorem_sum)
@@ -488,7 +487,7 @@ proof -
 
     have eq_ket: \<open>extg2 *\<^sub>V (ket x \<otimes>\<^sub>s \<phi>) = ket x \<otimes>\<^sub>s (N *\<^sub>V \<phi>)\<close> for x
       apply (rule bounded_clinear_eq_on[where t=\<phi> and G=\<open>range ket\<close>])
-      using 1 2 extg2_ket by auto
+      using 1 2 extg2_ket by (auto simp: tensor_ell2_ket)
     show ?thesis 
       apply (rule bounded_clinear_eq_on[where t=\<psi> and G=\<open>range ket\<close>])
       using 3 4 eq_ket by auto
@@ -499,7 +498,7 @@ proof -
 
   have \<open>cblinfun_extension_exists (range ket) (\<lambda>k. case inv ket k of (x, y) \<Rightarrow> (M *\<^sub>V ket x) \<otimes>\<^sub>s (N *\<^sub>V ket y))\<close>
     apply (rule cblinfun_extension_existsI[where B=tensorMN])
-    using tensorMN_apply[of \<open>ket _\<close> \<open>ket _\<close>] by auto
+    using tensorMN_apply[of \<open>ket _\<close> \<open>ket _\<close>] by (auto simp: tensor_ell2_ket)
 
   then have otimes_ket: \<open>(M \<otimes>\<^sub>o N) *\<^sub>V (ket (a,c)) = (M *\<^sub>V ket a) \<otimes>\<^sub>s (N *\<^sub>V ket c)\<close> for a c
     by (simp add: tensor_op_def cblinfun_extension_apply)
@@ -507,7 +506,7 @@ proof -
   have tensorMN_otimes: \<open>M \<otimes>\<^sub>o N = tensorMN\<close>
     apply (rule_tac equal_ket) 
     using tensorMN_apply[of \<open>ket _\<close> \<open>ket _\<close>] 
-    by (auto simp: otimes_ket)
+    by (auto simp: otimes_ket tensor_ell2_ket)
 
   show otimes_apply: \<open>(M \<otimes>\<^sub>o N) *\<^sub>V (\<psi> \<otimes>\<^sub>s \<phi>) = (M *\<^sub>V \<psi>) \<otimes>\<^sub>s (N *\<^sub>V \<phi>)\<close> for \<psi> \<phi>
     by (simp add: tensorMN_apply tensorMN_otimes)
@@ -1081,7 +1080,7 @@ proof -
   then have [simp]: \<open>v *\<^sub>V x = ket undefined \<otimes>\<^sub>s x\<close> for x
     apply (rule_tac fun_cong[where x=x])
     apply (rule bounded_clinear_equal_ket)
-    by (auto simp add: bounded_clinear_tensor_ell21 cblinfun.bounded_clinear_right)
+    by (auto simp add: bounded_clinear_tensor_ell21 cblinfun.bounded_clinear_right tensor_ell2_ket)
   define a' :: complex where \<open>a' = one_dim_iso a\<close>
   from assms have \<open>a' \<noteq> 0\<close>
     using a'_def one_dim_iso_of_zero' by auto

@@ -163,4 +163,11 @@ lemma surj_from_comp:
 lemma double_exists: \<open>(\<exists>x y. Q x y) \<longleftrightarrow> (\<exists>z. Q (fst z) (snd z))\<close>
   by simp
 
+lemma Ex_iffI:
+  assumes \<open>\<And>x. P x \<Longrightarrow> Q (f x)\<close>
+  assumes \<open>\<And>x. Q x \<Longrightarrow> P (g x)\<close>
+  shows \<open>Ex P \<longleftrightarrow> Ex Q\<close>
+  using assms(1) assms(2) by auto
+
+
 end

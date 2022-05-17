@@ -1,7 +1,7 @@
 section \<open>Quantum instantiation of complements\<close>
 
 theory Axioms_Complement_Quantum
-  imports Laws_Quantum Tensor_Product.With_Type Quantum_Extra Tensor_Product.Weak_Star_Topology
+  imports Laws_Quantum With_Type.With_Type_Inst_Complex_Bounded_Operators Quantum_Extra Tensor_Product.Weak_Star_Topology
 begin
 
 no_notation m_inv ("inv\<index> _" [81] 80)
@@ -9,13 +9,7 @@ no_notation Lattice.join (infixl "\<squnion>\<index>" 65)
 no_notation elt_set_eq (infix "=o" 50)
 no_notation eq_closure_of ("closure'_of\<index>")
 
-lemma Ex_iffI:
-  assumes \<open>\<And>x. P x \<Longrightarrow> Q (f x)\<close>
-  assumes \<open>\<And>x. Q x \<Longrightarrow> P (g x)\<close>
-  shows \<open>Ex P \<longleftrightarrow> Ex Q\<close>
-  using assms(1) assms(2) by auto
-
-lemma finite_subsets_at_top_parametric[transfer_rule]:
+(* lemma finite_subsets_at_top_parametric[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: \<open>bi_unique R\<close>
   shows \<open>(rel_set R ===> rel_filter (rel_set R)) finite_subsets_at_top finite_subsets_at_top\<close>
@@ -62,14 +56,19 @@ proof -
   qed
   then show ?thesis
     by (simp add: rel_filter.simps rel_funI)
-qed
+qed *)
 
-lemma sum_weak_star_transfer[transfer_rule]:
+(* TODO: do we even need this, given sum_parametric'? *)
+(* lemma sum_weak_star_transfer[transfer_rule]:
   includes lifting_syntax
   fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
   assumes [transfer_rule]: \<open>bi_unique R\<close>
   shows \<open>((R ===> cr_cblinfun_weak_star) ===> rel_set R ===> cr_cblinfun_weak_star) sum sum\<close>
-proof (intro rel_funI, rename_tac f g A B)
+  apply (rule sum_parametric')
+    apply transfer_step
+    apply transfer_prover
+  by transfer_prover *)
+(* proof (intro rel_funI, rename_tac f g A B)
   fix f :: \<open>'a \<Rightarrow> 'c \<Rightarrow>\<^sub>C\<^sub>L 'd\<close> and g A B
   assume Rfg[transfer_rule]: \<open>(R ===> cr_cblinfun_weak_star) f g\<close>
   assume [transfer_rule]: \<open>rel_set R A B\<close>
@@ -94,66 +93,33 @@ proof (intro rel_funI, rename_tac f g A B)
     with insert show ?case
       by simp
   qed
-qed
+qed *)
 
+(* TODO: can we use a generic rule similar to sum_parametric' instead? *)
 lemma has_sum_weak_star_transfer[transfer_rule]:
   includes lifting_syntax
   fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
   assumes [transfer_rule]: \<open>bi_unique R\<close>
   shows \<open>((R ===> cr_cblinfun_weak_star) ===> (rel_set R) ===> cr_cblinfun_weak_star ===> (\<longleftrightarrow>)) (has_sum_in weak_star_topology) has_sum\<close>
-  unfolding has_sum_def has_sum_in_def
-  apply transfer_prover_start
-      apply transfer_step+
-  by (simp add: filterlim_weak_star_topology)
+  unfolding has_sum_euclidean_iff[symmetric]
+  by transfer_prover
 
 lemma summable_on_weak_star_transfer[transfer_rule]:
   includes lifting_syntax
   fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
   assumes [transfer_rule]: \<open>bi_unique R\<close>
   shows \<open>((R ===> cr_cblinfun_weak_star) ===> (rel_set R) ===> (\<longleftrightarrow>)) (summable_on_in weak_star_topology) Infinite_Sum.summable_on\<close>
+(* TODO: can we use a generic rule similar to sum_parametric' instead? *)
   unfolding summable_on_def summable_on_in_def
   by transfer_prover
 
-
-lemma hausdorff_weak_star[simp]: \<open>hausdorff weak_star_topology\<close>
-proof (unfold hausdorff_def, intro ballI impI)
-  fix x y :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> assume \<open>x \<noteq> y\<close>
-  then obtain a b where \<open>a \<bullet>\<^sub>C (x *\<^sub>V b) \<noteq> a \<bullet>\<^sub>C (y *\<^sub>V b)\<close>
-    by (meson cblinfun_eqI cinner_extensionality)
-  then have \<open>trace (butterfly b a o\<^sub>C\<^sub>L x) \<noteq> trace (butterfly b a o\<^sub>C\<^sub>L y)\<close>
-    by (simp add: trace_butterfly_comp)
-  then obtain U' V' where U': \<open>trace (butterfly b a o\<^sub>C\<^sub>L x) \<in> U'\<close> and V': \<open>trace (butterfly b a o\<^sub>C\<^sub>L y) \<in> V'\<close> 
-    and \<open>open U'\<close> and \<open>open V'\<close> and \<open>U' \<inter> V' = {}\<close>
-    by (meson separation_t2)
-  define U'' V'' where \<open>U'' = {f. \<forall>i\<in>{butterfly b a}. f i \<in> U'}\<close> and \<open>V'' = {f. \<forall>i\<in>{butterfly b a}. f i \<in> V'}\<close>
-  have \<open>open U''\<close>
-    unfolding U''_def apply (rule product_topology_basis')
-    using \<open>open U'\<close> by auto
-  have \<open>open V''\<close>
-    unfolding V''_def apply (rule product_topology_basis')
-    using \<open>open V'\<close> by auto
-  define U V where \<open>U = (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` U''\<close> and
-    \<open>V = (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` V''\<close>
-  have openU: \<open>openin weak_star_topology U\<close>
-    using U_def \<open>open U''\<close> openin_weak_star_topology by blast
-  have openV: \<open>openin weak_star_topology V\<close>
-    using V_def \<open>open V''\<close> openin_weak_star_topology by blast
-  have \<open>x \<in> U\<close>
-    by (auto simp: U_def U''_def U')
-  have \<open>y \<in> V\<close>
-    by (auto simp: V_def V''_def V')
-  have \<open>U \<inter> V = {}\<close>
-    using \<open>U' \<inter> V' = {}\<close> by (auto simp: U_def V_def U''_def V''_def)
-  show \<open>\<exists>U V. openin weak_star_topology U \<and> openin weak_star_topology V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}\<close>
-    apply (rule exI[of _ U], rule exI[of _ V])
-    using \<open>x \<in> U\<close> \<open>y \<in> V\<close> openU openV \<open>U \<inter> V = {}\<close> by auto
-qed
 
 lemma infsum_weak_star_transfer[transfer_rule]:
   includes lifting_syntax
   fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
   assumes [transfer_rule]: \<open>bi_unique R\<close>
   shows \<open>((R ===> cr_cblinfun_weak_star) ===> (rel_set R) ===> cr_cblinfun_weak_star) (infsum_in weak_star_topology) infsum\<close>
+(* TODO: can we use a generic rule similar to sum_parametric' instead? *)
 proof (intro rel_funI, rename_tac f g A B)
   fix f :: \<open>'a \<Rightarrow> 'c \<Rightarrow>\<^sub>C\<^sub>L 'd\<close> and g A B
   assume [transfer_rule]: \<open>(R ===> cr_cblinfun_weak_star) f g\<close>
@@ -179,7 +145,7 @@ proof (intro rel_funI, rename_tac f g A B)
     then have False': \<open>\<not> summable_on_in weak_star_topology f A\<close>
       apply transfer by simp
     then show ?thesis
-      by (simp add: infsum_def False infsum_in_def zero_cblinfun_weak_star.transfer)
+      by (simp add: False infsum_not_exists not_summable_infsum_in_0 zero_cblinfun_weak_star.transfer)
   qed
 qed
 
@@ -206,56 +172,33 @@ lemma closure_of_eqI:
   thm on_closure_eqI
   sorry
 
+(* 
+lemma xxx: \<open>\<forall>\<^sub>\<tau> 's::chilbert_space = closure (cspan S) with (scaleR, scaleC, plus, 0, minus, uminus, dist, norm, sgn, uniformity, open, cinner). 
+          \<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
+  by -
+thm xxx[cancel_with_type]
+ *)
+
 lemma orthonormal_subspace_basis_exists:
   fixes S :: \<open>'a::chilbert_space set\<close>
   assumes \<open>is_ortho_set S\<close> and \<open>\<And>x. x\<in>S \<Longrightarrow> norm x = 1\<close> and \<open>S \<subseteq> space_as_set V\<close>
   shows \<open>\<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
-proof -
-  have \<open>\<forall>\<^sub>\<tau> 's::ccsubspace = S. \<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
-  proof (rule with_typeI)
+(* proof -
+  (* TODO open and uniformity may need to be restricted! *)
+  have \<open>\<forall>\<^sub>\<tau> 's::chilbert_space = closure (cspan S) with (scaleR, scaleC, plus, 0, minus, uminus, dist, norm, sgn, uniformity, open, cinner). 
+          \<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
+(*   proof (rule with_typeI)
     show \<open>\<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
       apply transfer
       by -
-  qed
-  from this[
+  qed *)
+    by -
+  from this[cancel_with_type]
+  show ?thesis
   sorry (* By transferring orthonormal_basis_exists? *)
-
-lemma orthogonal_projectors_orthogonal_spaces:
-  fixes S T :: \<open>'a::chilbert_space set\<close>
-  shows \<open>(\<forall>x\<in>S. \<forall>y\<in>T. is_orthogonal x y) \<longleftrightarrow> Proj (ccspan S) o\<^sub>C\<^sub>L Proj (ccspan T) = 0\<close>
-proof (intro ballI iffI)
-  fix x y assume \<open>Proj (ccspan S) o\<^sub>C\<^sub>L Proj (ccspan T) = 0\<close> \<open>x \<in> S\<close> \<open>y \<in> T\<close>
-  then show \<open>is_orthogonal x y\<close>
-    by (smt (verit, del_insts) Proj_idempotent Proj_range adj_Proj cblinfun.zero_left cblinfun_apply_cblinfun_compose cblinfun_fixes_range ccspan_superset cinner_adj_right cinner_zero_right in_mono)
-next 
-  assume \<open>\<forall>x\<in>S. \<forall>y\<in>T. is_orthogonal x y\<close>
-  then show \<open>Proj (ccspan S) o\<^sub>C\<^sub>L Proj (ccspan T) = 0\<close>
-    sorry
 qed
-
-(* TODO move *)
-lemma cblinfun_image_bot_zero[simp]: \<open>A *\<^sub>S \<top> = \<bottom> \<longleftrightarrow> A = 0\<close>
-proof (rule iffI, rule ccontr)
-  assume Atopbot: \<open>A *\<^sub>S \<top> = \<bottom>\<close> and \<open>A \<noteq> 0\<close>
-  then obtain x where Ax: \<open>A *\<^sub>V x \<noteq> 0\<close>
-    by (metis cblinfun_eqI zero_cblinfun.rep_eq)
-  have \<open>A *\<^sub>V x \<in> space_as_set (A *\<^sub>S \<top>)\<close>
-    by auto
-  also have \<open>\<dots> = {0}\<close>
-    by (simp add: Atopbot)
-  finally have \<open>A *\<^sub>V x = 0\<close>
-    by simp
-  with Ax show False
-    by simp
-qed simp
-
-(* TODO move *)
-lemma closed_space_as_set[simp]: \<open>closed (space_as_set S)\<close>
-  apply transfer by (simp add: closed_csubspace.closed)
-
-(* TODO move *)
-lemma Proj_fixes_image: \<open>Proj S *\<^sub>V \<psi> = \<psi>\<close> if \<open>\<psi> \<in> space_as_set S\<close>
-  by (simp add: Proj.rep_eq closed_csubspace_def projection_fixes_image that)
+ *)
+  sorry
 
 (* TODO move *)
 lemma has_sum_in_comm_additive:
@@ -267,40 +210,6 @@ lemma has_sum_in_comm_additive:
   shows \<open>has_sum_in U (g o f) A (g l)\<close>
   sorry
 
-(* TODO move *)
-(* TODO: change name or generalize *)
-lemma has_sum_in_0[simp]: \<open>has_sum_in weak_star_topology (\<lambda>_. 0) A 0\<close>
-  sorry
-
-(* TODO move *)
-lemma trace_butterfly_comp': \<open>trace (a o\<^sub>C\<^sub>L butterfly x y) = y \<bullet>\<^sub>C (a *\<^sub>V x)\<close>
-  by (simp add: cblinfun_comp_butterfly trace_butterfly)
-
-(* TODO move *)
-lemma has_sum_in_weak_star:
-  \<open>has_sum_in weak_star_topology f A l \<longleftrightarrow> 
-     (\<forall>t. trace_class t \<longrightarrow> has_sum (\<lambda>i. trace (t o\<^sub>C\<^sub>L f i)) A (trace (t o\<^sub>C\<^sub>L l)))\<close>
-  apply (simp add: has_sum_def has_sum_in_def limitin_weak_star_topology)
-  sorry
-
-lemma trace_has_sum:
-  assumes \<open>is_onb E\<close>
-  assumes \<open>trace_class t\<close>
-  shows \<open>has_sum (\<lambda>e. e \<bullet>\<^sub>C (t *\<^sub>V e)) E (trace t)\<close>
-  sorry
-
-(* TODO move *)
-lemma infsum_butterfly_ket: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (ket i) (ket i)) UNIV id_cblinfun\<close>
-proof (rule has_sum_in_weak_star[THEN iffD2, rule_format])
-  fix t :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
-  assume [simp]: \<open>trace_class t\<close>
-  from trace_has_sum[OF is_onb_ket \<open>trace_class t\<close>]
-  have \<open>has_sum (\<lambda>i. ket i \<bullet>\<^sub>C (t *\<^sub>V ket i)) UNIV (trace t)\<close>
-    apply (subst (asm) has_sum_reindex)
-    by (auto simp: o_def)
-  then show \<open>has_sum (\<lambda>i. trace (t o\<^sub>C\<^sub>L selfbutterket i)) UNIV (trace (t o\<^sub>C\<^sub>L id_cblinfun))\<close>
-    by (simp add: trace_butterfly_comp')
-qed
 
 lemma butterkets_weak_star_dense:
   \<open>weak_star_topology closure_of cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True} = UNIV\<close>
@@ -309,7 +218,7 @@ lemma butterkets_weak_star_dense:
 (* TODO move *)
 lemma amplification_weak_star_cont[simp]:
   \<open>continuous_map weak_star_topology weak_star_topology (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)\<close>
-(* TODO: How is this proven? *)
+    (* TODO: How is this proven? *)
   sorry
 
 lemma sandwich_weak_star_cont[simp]:
@@ -324,17 +233,17 @@ lemma register_decomposition:
               (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
   \<comment> \<open>Proof based on @{cite daws21unitalanswer}\<close>
 proof (rule with_typeI; unfold fst_conv snd_conv)
-  show \<open>fst with_type_class_type (register_decomposition_basis \<Phi>) ()\<close>
-    by (simp add: with_type_class_type_def)
-  show \<open>with_type_compat_rel (fst with_type_class_type) (register_decomposition_basis \<Phi>) (snd with_type_class_type)\<close>
+  show \<open>fst with_type_type_class (register_decomposition_basis \<Phi>) ()\<close>
+    by (simp add: with_type_type_class_def)
+  show \<open>with_type_compat_rel (fst with_type_type_class) (register_decomposition_basis \<Phi>) (snd with_type_type_class)\<close>
     using with_type_compat_rel_type by blast
 
   note [[simproc del: compatibility_warn]]
   define \<xi>0 :: 'a where \<open>\<xi>0 = undefined\<close>
 
-  have [simp]: \<open>bounded_clinear \<Phi>\<close> (* TODO needed? *)
+  have \<open>bounded_clinear \<Phi>\<close>
     using assms register_def by blast
-  have [simp]: \<open>clinear \<Phi>\<close>
+  then have [simp]: \<open>clinear \<Phi>\<close>
     by (simp add: bounded_clinear.clinear)
 
   define P where \<open>P i = selfbutterket i\<close> for i :: 'a
@@ -443,9 +352,10 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
     then have \<open>P' i = 0\<close> for i
       by (simp add: P'B cspanB)
     with sumP'id2
-    have \<open>id_cblinfun = 0\<close>
-      apply simp
-      using has_sum_in_0 has_sum_in_unique hausdorff_weak_star id_cblinfun_not_0 by blast
+    have \<open>has_sum_in weak_star_topology (\<lambda>i. 0) UNIV id_cblinfun\<close>
+      by (metis (no_types, lifting) UNIV_I has_sum_in_0 has_sum_in_cong has_sum_in_unique hausdorff_weak_star id_cblinfun_not_0 weak_star_topology_topspace)
+    then have \<open>id_cblinfun = 0\<close>
+      using has_sum_in_0 has_sum_in_unique hausdorff_weak_star id_cblinfun_not_0 weak_star_topology_topspace by fastforce
     then show False
       using id_cblinfun_not_0 by blast
   qed
@@ -528,7 +438,7 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
       also from \<open>isometry U\<close> have \<open>\<dots> = of_bool (\<eta>=\<xi>1) *\<^sub>C ket (\<xi>, \<alpha>)\<close>
         unfolding cblinfun_apply_cblinfun_compose[symmetric] by simp
       also have \<open>\<dots> = (butterket \<xi> \<eta> *\<^sub>V ket \<xi>1) \<otimes>\<^sub>s ket \<alpha>\<close>
-        by (simp add: tensor_ell2_scaleC1)
+        by (simp add: tensor_ell2_scaleC1 tensor_ell2_ket)
       also have \<open>\<dots> = (butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
         by (simp add: \<xi>1\<alpha> tensor_op_ket)
       finally show \<open>(U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U) *\<^sub>V ket \<xi>1\<alpha> = (butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
@@ -708,7 +618,7 @@ proof -
       by (smt (verit, best) surjD)
 
     then have \<open>a \<noteq> 0\<close>
-      apply auto
+      apply (auto simp: tensor_ell2_ket)
       by (metis butterfly_apply cblinfun.zero_left complex_vector.scale_eq_0_iff ket_nonzero orthogonal_ket)
 
     obtain \<gamma> where \<gamma>: \<open>?ida = \<gamma> *\<^sub>C selfbutterket undefined\<close>
@@ -839,8 +749,37 @@ qed
 
 definition \<open>commutant F = {x. \<forall>y\<in>F. x o\<^sub>C\<^sub>L y = y o\<^sub>C\<^sub>L x}\<close>
 
+(* TODO move *)
+lemma norm_isometry_o: \<open>norm (U o\<^sub>C\<^sub>L A) = norm A\<close> if \<open>isometry U\<close>
+  by (smt (verit, del_insts) cblinfun_compose_id_left compatible_ac_rules(2) isometryD isometry_partial_isometry mult_cancel_left2 mult_cancel_right1 norm_adj norm_cblinfun_compose norm_eq_zero norm_le_zero_iff norm_partial_isometry that)
+
+(* TODO move *)
+lemma norm_isometry_o': \<open>norm (A o\<^sub>C\<^sub>L U) = norm A\<close> if \<open>isometry (U*)\<close>
+  by (smt (verit, ccfv_threshold) adj_0 cblinfun_assoc_right(1) cblinfun_compose_id_right cblinfun_compose_zero_right double_adj isometryD isometry_partial_isometry mult_cancel_left2 norm_adj norm_cblinfun_compose norm_partial_isometry norm_zero that)
+
 lemma register_norm: \<open>norm (F a) = norm a\<close> if \<open>register F\<close>
-  sorry
+proof -
+  have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
+         (\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
+              (\<forall>\<theta>. F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
+    (* using complement_exists that by blast *)
+    using register_decomposition that by blast
+  then have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
+         norm (F a) = norm a\<close>
+  proof (rule with_type_mp) 
+    fix Rep :: \<open>'c \<Rightarrow> 'b ell2\<close> and Abs
+    assume \<open>type_definition Rep Abs (register_decomposition_basis F)\<close>
+    assume \<open>(\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
+              (\<forall>\<theta>. F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
+    then obtain U :: \<open>('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> where \<open>unitary U\<close>
+      and FU: \<open>F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
+      by metis
+    show \<open>norm (F a) = norm a\<close>
+      using \<open>unitary U\<close> by (simp add: FU sandwich_def norm_isometry_o norm_isometry_o' tensor_op_norm)
+  qed
+  then show ?thesis
+    sorry
+qed
 
 lemma commutant_exchange:
   fixes F :: \<open>'a update \<Rightarrow> 'b update\<close>
@@ -887,13 +826,13 @@ proof (rule Set.set_eqI, rule iffI)
   proof -
     have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l))
         = cinner ((butterket i \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,j)) (x *\<^sub>V (butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
-      by (auto simp: tensor_op_ket)
+      by (auto simp: tensor_op_ket tensor_ell2_ket)
     also have \<open>\<dots> = cinner (ket (\<gamma>,j)) ((butterket \<gamma> i \<otimes>\<^sub>o id_cblinfun) *\<^sub>V x *\<^sub>V (butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
       by (metis (no_types, lifting) cinner_adj_left butterfly_adjoint id_cblinfun_adjoint tensor_op_adjoint)
     also have \<open>\<dots> = cinner (ket (\<gamma>,j)) (x *\<^sub>V (butterket \<gamma> i \<otimes>\<^sub>o id_cblinfun o\<^sub>C\<^sub>L butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
       unfolding comm by (simp add: cblinfun_apply_cblinfun_compose)
     also have \<open>\<dots> = cinner (ket i) (ket k) * cinner (ket (\<gamma>,j)) (x *\<^sub>V ket (\<gamma>,l))\<close>
-      by (simp add: comp_tensor_op tensor_op_ket tensor_op_scaleC_left cinner_ket)
+      by (simp add: comp_tensor_op tensor_op_ket tensor_op_scaleC_left cinner_ket tensor_ell2_ket)
     also have \<open>\<dots> = cinner (ket i) (ket k) * cinner (ket j) (x' *\<^sub>V ket l)\<close>
       by (simp add: x')
     also have \<open>\<dots> = cinner (ket (i,j)) ((id_cblinfun \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close>
@@ -929,6 +868,11 @@ proof -
   show \<open>range G = commutant (range F)\<close>
     by (simp add: commutant_exchange commutant_tensor1)
 qed
+
+lemma TMP: \<open>isCont f a \<longleftrightarrow> filterlim f (nhds a) (nhds (f a))\<close>
+  apply rule
+  defer
+  by -
 
 lemma same_range_equivalent:
   fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G :: \<open>'b update \<Rightarrow> 'c update\<close>
@@ -1014,9 +958,24 @@ proof -
     unfolding J_def
     by (metis F_rangeG assms(1) assms(2) f_inv_into_f register_norm)
   have weak_star_I: \<open>continuous_map weak_star_topology weak_star_topology I\<close>
-    by -
+  proof -
+    include lifting_syntax
+    define I' where \<open>I' = to_weak_star o I o from_weak_star\<close>
+    have [transfer_rule]: \<open>(cr_cblinfun_weak_star ===> cr_cblinfun_weak_star) I I'\<close>
+      by (metis (no_types, lifting) I'_def UNIV_I cr_cblinfun_weak_star_def o_def rel_funI to_weak_star_inverse)
+    have \<open>I' \<midarrow>a\<rightarrow> I' a\<close> for a
+      sorry
+    then have \<open>isCont I' a\<close> for a
+      by (simp add: continuous_within)
+    then have \<open>continuous_on UNIV I'\<close>
+      using continuous_at_imp_continuous_on by blast
+    then have \<open>continuous_map euclidean euclidean I'\<close>
+      using continuous_map_iff_continuous2 by blast
+    then show ?thesis
+      by transfer
+  qed
   have weak_star_J: \<open>continuous_map weak_star_topology weak_star_topology J\<close>
-    by -
+    sorry
 
   from addI scaleI unitalI multI adjI normI weak_star_I
   have \<open>register I\<close>

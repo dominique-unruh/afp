@@ -1509,7 +1509,43 @@ next
     using bounded by fastforce
 qed
 
+lemma closed_space_as_set[simp]: \<open>closed (space_as_set S)\<close>
+  apply transfer by (simp add: closed_csubspace.closed)
 
+
+lemma Proj_fixes_image: \<open>Proj S *\<^sub>V \<psi> = \<psi>\<close> if \<open>\<psi> \<in> space_as_set S\<close>
+  by (simp add: Proj.rep_eq closed_csubspace_def projection_fixes_image that)
+
+lemma orthogonal_projectors_orthogonal_spaces:
+  fixes S T :: \<open>'a::chilbert_space set\<close>
+  shows \<open>(\<forall>x\<in>S. \<forall>y\<in>T. is_orthogonal x y) \<longleftrightarrow> Proj (ccspan S) o\<^sub>C\<^sub>L Proj (ccspan T) = 0\<close>
+proof (intro ballI iffI)
+  fix x y assume \<open>Proj (ccspan S) o\<^sub>C\<^sub>L Proj (ccspan T) = 0\<close> \<open>x \<in> S\<close> \<open>y \<in> T\<close>
+  then show \<open>is_orthogonal x y\<close>
+    by (smt (verit, del_insts) Proj_idempotent Proj_range adj_Proj cblinfun.zero_left cblinfun_apply_cblinfun_compose cblinfun_fixes_range ccspan_superset cinner_adj_right cinner_zero_right in_mono)
+next 
+  assume \<open>\<forall>x\<in>S. \<forall>y\<in>T. is_orthogonal x y\<close>
+  then have \<open>ccspan S \<le> - ccspan T\<close>
+    by (simp add: ccspan_leq_ortho_ccspan)
+  then show \<open>Proj (ccspan S) o\<^sub>C\<^sub>L Proj (ccspan T) = 0\<close>
+    by (metis (no_types, opaque_lifting) Proj_range adj_Proj adj_cblinfun_compose basic_trans_rules(31) cblinfun.zero_left cblinfun_apply_cblinfun_compose cblinfun_apply_in_image cblinfun_eqI kernel_Proj kernel_memberD less_eq_ccsubspace.rep_eq)
+qed
+
+lemma cblinfun_image_bot_zero[simp]: \<open>A *\<^sub>S \<top> = \<bottom> \<longleftrightarrow> A = 0\<close>
+  by (metis Complex_Bounded_Linear_Function.zero_cblinfun_image bot_ccsubspace.rep_eq cblinfun_apply_in_image cblinfun_eqI empty_iff insert_iff zero_ccsubspace_def)
+(* proof (rule iffI, rule ccontr)
+  assume Atopbot: \<open>A *\<^sub>S \<top> = \<bottom>\<close> and \<open>A \<noteq> 0\<close>
+  then obtain x where Ax: \<open>A *\<^sub>V x \<noteq> 0\<close>
+    by (metis cblinfun_eqI zero_cblinfun.rep_eq)
+  have \<open>A *\<^sub>V x \<in> space_as_set (A *\<^sub>S \<top>)\<close>
+    by auto
+  also have \<open>\<dots> = {0}\<close>
+    by (simp add: Atopbot)
+  finally have \<open>A *\<^sub>V x = 0\<close>
+    by simp
+  with Ax show False
+    by simp
+qed simp *)
 
 unbundle no_cblinfun_notation
 

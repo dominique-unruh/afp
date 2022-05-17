@@ -148,17 +148,44 @@ lemma filterlim_weak_star_topology:
   \<open>filterlim f (nhdsin weak_star_topology l) = limitin weak_star_topology f l\<close>
   by (auto simp: weak_star_topology_topspace simp flip: filterlim_nhdsin_iff_limitin)
 
-instance cblinfun_weak_star :: (chilbert_space, chilbert_space) t2_space
-proof intro_classes
-  fix a b :: \<open>('a,'b) cblinfun_weak_star\<close>
-  assume \<open>a \<noteq> b\<close>
-  then have \<open>Abs_cblinfun_wot (from_weak_star a) \<noteq> Abs_cblinfun_wot (from_weak_star b)\<close>
-    by (simp add: Abs_cblinfun_wot_inject from_weak_star_inject)
-  from hausdorff[OF this]
+lemma openin_weak_star_topology: \<open>openin weak_star_topology U \<longleftrightarrow> (\<exists>V. open V \<and> U = (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` V)\<close>
+  by (simp add: weak_star_topology_def openin_pullback_topology)
 
-  show \<open>a \<noteq> b \<Longrightarrow> \<exists>U V. open U \<and> open V \<and> a \<in> U \<and> b \<in> V \<and> U \<inter> V = {}\<close>
-    apply transfer using wot_weaker_than_weak_star' by auto
-qed
+lemma hausdorff_weak_star[simp]: \<open>hausdorff weak_star_topology\<close>
+  by (metis cweak_operator_topology_topspace hausdorff_cweak_operator_topology hausdorff_def weak_star_topology_topspace wot_weaker_than_weak_star')
+(* proof (unfold hausdorff_def, intro ballI impI)
+  fix x y :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> assume \<open>x \<noteq> y\<close>
+  then obtain a b where \<open>a \<bullet>\<^sub>C (x *\<^sub>V b) \<noteq> a \<bullet>\<^sub>C (y *\<^sub>V b)\<close>
+    by (meson cblinfun_eqI cinner_extensionality)
+  then have \<open>trace (butterfly b a o\<^sub>C\<^sub>L x) \<noteq> trace (butterfly b a o\<^sub>C\<^sub>L y)\<close>
+    by (simp add: trace_butterfly_comp)
+  then obtain U' V' where U': \<open>trace (butterfly b a o\<^sub>C\<^sub>L x) \<in> U'\<close> and V': \<open>trace (butterfly b a o\<^sub>C\<^sub>L y) \<in> V'\<close> 
+    and \<open>open U'\<close> and \<open>open V'\<close> and \<open>U' \<inter> V' = {}\<close>
+    by (meson separation_t2)
+  define U'' V'' where \<open>U'' = {f. \<forall>i\<in>{butterfly b a}. f i \<in> U'}\<close> and \<open>V'' = {f. \<forall>i\<in>{butterfly b a}. f i \<in> V'}\<close>
+  have \<open>open U''\<close>
+    unfolding U''_def apply (rule product_topology_basis')
+    using \<open>open U'\<close> by auto
+  have \<open>open V''\<close>
+    unfolding V''_def apply (rule product_topology_basis')
+    using \<open>open V'\<close> by auto
+  define U V where \<open>U = (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` U''\<close> and
+    \<open>V = (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` V''\<close>
+  have openU: \<open>openin weak_star_topology U\<close>
+    using U_def \<open>open U''\<close> openin_weak_star_topology by blast
+  have openV: \<open>openin weak_star_topology V\<close>
+    using V_def \<open>open V''\<close> openin_weak_star_topology by blast
+  have \<open>x \<in> U\<close>
+    by (auto simp: U_def U''_def U')
+  have \<open>y \<in> V\<close>
+    by (auto simp: V_def V''_def V')
+  have \<open>U \<inter> V = {}\<close>
+    using \<open>U' \<inter> V' = {}\<close> by (auto simp: U_def V_def U''_def V''_def)
+  show \<open>\<exists>U V. openin weak_star_topology U \<and> openin weak_star_topology V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}\<close>
+    apply (rule exI[of _ U], rule exI[of _ V])
+    using \<open>x \<in> U\<close> \<open>y \<in> V\<close> openU openV \<open>U \<inter> V = {}\<close> by auto
+qed *)
+
 
 lemma Domainp_cr_cblinfun_weak_star[simp]: \<open>Domainp cr_cblinfun_weak_star = (\<lambda>_. True)\<close>
   by (metis (no_types, opaque_lifting) DomainPI cblinfun_weak_star.left_total left_totalE)
@@ -191,8 +218,69 @@ next
     by (simp add: Rangep_set)
 qed
 
-lemma openin_weak_star_topology: \<open>openin weak_star_topology U \<longleftrightarrow> (\<exists>V. open V \<and> U = (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` V)\<close>
-  by (simp add: weak_star_topology_def openin_pullback_topology)
+
+lemma hausdorff_OFCLASS_t2_space: \<open>OFCLASS('a::topological_space, t2_space_class)\<close> if \<open>hausdorff (euclidean :: 'a topology)\<close>
+proof intro_classes
+  fix a b :: 'a
+  assume \<open>a \<noteq> b\<close>
+  from that
+  show \<open>\<exists>U V. open U \<and> open V \<and> a \<in> U \<and> b \<in> V \<and> U \<inter> V = {}\<close>
+    unfolding hausdorff_def
+    using \<open>a \<noteq> b\<close> by auto
+qed
+
+(* TODO move *)
+definition \<open>opensets T = Collect (openin T)\<close>
+  \<comment> \<open>This behaves more nicely with the @{method transfer}-method (and friends) than \<^const>\<open>openin\<close>.
+      So rewriting a subgoal to use, e.g., \<^term>\<open>\<exists>U\<in>opensets T. xxx\<close> instead of \<^term>\<open>\<exists>U. openin T U \<longrightarrow> xxx\<close> can make @{method transfer} work better. \<close>
+
+(* TODO move *)
+lemma opensets_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes \<open>bi_unique R\<close>
+  shows \<open>(rel_topology R ===> rel_set (rel_set R)) opensets opensets\<close>
+proof (intro rel_funI rel_setI)
+  fix S T
+  assume rel_topo: \<open>rel_topology R S T\<close>
+  fix U
+  assume \<open>U \<in> opensets S\<close>
+  then show \<open>\<exists>V \<in> opensets T. rel_set R U V\<close>
+    by (smt (verit, del_insts) Domainp.cases mem_Collect_eq opensets_def rel_fun_def rel_topo rel_topology_def)
+next
+  fix S T assume rel_topo: \<open>rel_topology R S T\<close>
+  fix U assume \<open>U \<in> opensets T\<close>
+  then show \<open>\<exists>V \<in> opensets S. rel_set R V U\<close>
+    by (smt (verit) RangepE mem_Collect_eq opensets_def rel_fun_def rel_topo rel_topology_def)
+qed
+
+(* TODO move *)
+lemma hausdorff_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  shows \<open>(rel_topology R ===> (\<longleftrightarrow>)) hausdorff hausdorff\<close>
+proof -
+  have hausdorff_def': \<open>hausdorff T \<longleftrightarrow> (\<forall>x\<in>topspace T. \<forall>y\<in>topspace T. x \<noteq> y \<longrightarrow> (\<exists>U \<in> opensets T. \<exists>V \<in> opensets T. x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
+    for T :: \<open>'z topology\<close>
+    unfolding opensets_def hausdorff_def Bex_def by auto
+  show ?thesis
+    unfolding hausdorff_def'
+    by transfer_prover
+qed
+
+instance cblinfun_weak_star :: (chilbert_space, chilbert_space) t2_space
+  apply (rule hausdorff_OFCLASS_t2_space)
+  apply transfer
+  by (rule hausdorff_weak_star)
+(* proof intro_classes
+  fix a b :: \<open>('a,'b) cblinfun_weak_star\<close>
+  assume \<open>a \<noteq> b\<close>
+  then have \<open>Abs_cblinfun_wot (from_weak_star a) \<noteq> Abs_cblinfun_wot (from_weak_star b)\<close>
+    by (simp add: Abs_cblinfun_wot_inject from_weak_star_inject)
+  from hausdorff[OF this]
+
+  show \<open>a \<noteq> b \<Longrightarrow> \<exists>U V. open U \<and> open V \<and> a \<in> U \<and> b \<in> V \<and> U \<inter> V = {}\<close>
+    apply transfer using wot_weaker_than_weak_star' by auto
+qed *)
 
 lemma weak_star_topology_plus_cont: \<open>LIM (x,y) nhdsin weak_star_topology a \<times>\<^sub>F nhdsin weak_star_topology b.
             x + y :> nhdsin weak_star_topology (a + b)\<close>
@@ -394,6 +482,24 @@ proof -
   then show \<open>b \<in> A\<close>
     using 1 closed apply (rule limitin_closedin)
     by simp
+qed
+
+lemma has_sum_in_weak_star:
+  \<open>has_sum_in weak_star_topology f A l \<longleftrightarrow> 
+     (\<forall>t. trace_class t \<longrightarrow> has_sum (\<lambda>i. trace (t o\<^sub>C\<^sub>L f i)) A (trace (t o\<^sub>C\<^sub>L l)))\<close>
+  apply (simp add: has_sum_def has_sum_in_def limitin_weak_star_topology)
+  sorry
+
+lemma infsum_butterfly_ket: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (ket i) (ket i)) UNIV id_cblinfun\<close>
+proof (rule has_sum_in_weak_star[THEN iffD2, rule_format])
+  fix t :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
+  assume [simp]: \<open>trace_class t\<close>
+  from trace_has_sum[OF is_onb_ket \<open>trace_class t\<close>]
+  have \<open>has_sum (\<lambda>i. ket i \<bullet>\<^sub>C (t *\<^sub>V ket i)) UNIV (trace t)\<close>
+    apply (subst (asm) has_sum_reindex)
+    by (auto simp: o_def)
+  then show \<open>has_sum (\<lambda>i. trace (t o\<^sub>C\<^sub>L selfbutterket i)) UNIV (trace (t o\<^sub>C\<^sub>L id_cblinfun))\<close>
+    by (simp add: trace_butterfly_comp')
 qed
 
 unbundle no_cblinfun_notation

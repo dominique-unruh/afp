@@ -202,9 +202,11 @@ lemma trace_class_0[simp]: \<open>trace_class 0\<close>
   by (auto intro!: exI[of _ some_chilbert_basis] simp: is_onb_def is_normal_some_chilbert_basis)
 
 lemma trace_class_adj: \<open>trace_class a \<Longrightarrow> trace_class (a*)\<close>
+  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (f)\<close>
   sorry
 
 lemma trace_class_plus[simp]: \<open>trace_class t \<Longrightarrow> trace_class u \<Longrightarrow> trace_class (t + u)\<close>
+  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (a)\<close>
   sorry
 
 lemma trace_class_uminus[simp]: \<open>trace_class t \<Longrightarrow> trace_class (-t)\<close>
@@ -254,11 +256,13 @@ lemma trace_norm_alt_def:
   by (metis (mono_tags, lifting) assms infsum_eqI' is_onb_some_chilbert_basis trace_norm_basis_invariance trace_norm_def)
 
 lemma trace_alt_def:
+  \<comment> \<open>@{cite conway00operator}, Proposition 18.9\<close>
   assumes \<open>is_onb B\<close>
   shows \<open>trace A = (if trace_class A then (\<Sum>\<^sub>\<infinity>e\<in>B. e \<bullet>\<^sub>C (A *\<^sub>V e)) else 0)\<close>
   sorry
 
 lemma trace_exists:
+  \<comment> \<open>@{cite conway00operator}, Proposition 18.9\<close>
   assumes \<open>is_onb B\<close> and \<open>trace_class A\<close>
   shows \<open>(\<lambda>e. e \<bullet>\<^sub>C (A *\<^sub>V e)) summable_on B\<close>
   sorry
@@ -271,8 +275,9 @@ lemma trace_class_finite_dim'[simp]: \<open>trace_class A\<close> for A :: \<ope
   by (metis double_adj trace_class_adj trace_class_finite_dim)
 
 lemma circularity_of_trace:
+  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (e)\<close>
   assumes \<open>trace_class a\<close>
-    \<comment> \<open>Actually, \<^term>\<open>trace_class (a o\<^sub>C\<^sub>L b) \<and> trace_class (b o\<^sub>C\<^sub>L a)\<close> is sufficient here, 
+    \<comment> \<open>Actually, \<^term>\<open>trace_class (a o\<^sub>C\<^sub>L b) \<and> trace_class (b o\<^sub>C\<^sub>L a)\<close> is sufficient here,
         see @{cite "mathoverflow-circ-trace2"} but the proof is more involved.
         Only \<^term>\<open>trace_class (a o\<^sub>C\<^sub>L b)\<close> is not sufficient, 
         see @{cite "mathoverflow-circ-trace1"}.\<close>
@@ -280,16 +285,20 @@ lemma circularity_of_trace:
   sorry
 
 lemma trace_class_comp_left: \<open>trace_class a \<Longrightarrow> trace_class (a o\<^sub>C\<^sub>L b)\<close>
+  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (a)\<close>
   sorry
 
 lemma trace_class_comp_right: \<open>trace_class (a o\<^sub>C\<^sub>L b)\<close> if \<open>trace_class b\<close>
+  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (a)\<close>
   (* Follows from trace_class_comp_left via adjoint, but only if we restrict trace_class_comp_left/right to chilbert in domain  *)
   sorry
 
 lemma trace_norm_comp_left: \<open>trace_class a \<Longrightarrow> trace_norm (a o\<^sub>C\<^sub>L b) \<le> trace_norm a * norm b\<close>
+  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (g)\<close>
   sorry
 
 lemma trace_norm_comp_right: \<open>trace_class b \<Longrightarrow> trace_norm (a o\<^sub>C\<^sub>L b) \<le> norm a * trace_norm b\<close>
+  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (g)\<close>
   sorry
 
 lemma trace_plus: 
@@ -403,7 +412,7 @@ lemma trace_butterfly_comp: \<open>trace (butterfly x y o\<^sub>C\<^sub>L a) = y
 proof -
   have \<open>trace (butterfly x y o\<^sub>C\<^sub>L a) = trace (vector_to_cblinfun y* o\<^sub>C\<^sub>L (a o\<^sub>C\<^sub>L (vector_to_cblinfun x :: complex \<Rightarrow>\<^sub>C\<^sub>L _)))\<close>
     unfolding butterfly_def
-    by (metis butterfly_def_one_dim cblinfun_compose_assoc circularity_of_trace trace_class_finite_dim)
+    by (metis cblinfun_compose_assoc circularity_of_trace trace_class_finite_dim)
   also have \<open>\<dots> = y \<bullet>\<^sub>C (a *\<^sub>V x)\<close>
     by (simp add: one_dim_iso_cblinfun_comp)
   finally show ?thesis
@@ -453,9 +462,11 @@ lemma
   by (auto simp: trace_plus)
 
 lemma trace_leq_trace_norm[simp]: \<open>cmod (trace a) \<le> trace_norm a\<close>
+  \<comment> \<open>Special case of @{cite conway00operator}, Theorem 18.11 (e)\<close>
   sorry
 
 lemma trace_norm_triangle: \<open>trace_class a \<Longrightarrow> trace_class b \<Longrightarrow> trace_norm (a + b) \<le> trace_norm a + trace_norm b\<close>
+  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (a)\<close>
   sorry
 
 lemma bounded_clinear_trace_duality: \<open>trace_class t \<Longrightarrow> bounded_clinear (\<lambda>a. trace (t o\<^sub>C\<^sub>L a))\<close>
@@ -553,5 +564,14 @@ lift_definition zero_hilbert_schmidt :: \<open>('a,'b) hilbert_schmidt\<close> i
 lift_definition norm_hilbert_schmidt :: \<open>('a,'b) hilbert_schmidt \<Rightarrow> real\<close> is hilbert_schmidt_norm .
 instance..
 end
+
+lemma trace_butterfly_comp': \<open>trace (a o\<^sub>C\<^sub>L butterfly x y) = y \<bullet>\<^sub>C (a *\<^sub>V x)\<close>
+  by (simp add: cblinfun_comp_butterfly trace_butterfly)
+
+lemma trace_has_sum:
+  assumes \<open>is_onb E\<close>
+  assumes \<open>trace_class t\<close>
+  shows \<open>has_sum (\<lambda>e. e \<bullet>\<^sub>C (t *\<^sub>V e)) E (trace t)\<close>
+  using assms(1) assms(2) trace_alt_def trace_exists by fastforce
 
 end
