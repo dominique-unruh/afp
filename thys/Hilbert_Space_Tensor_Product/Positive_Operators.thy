@@ -880,4 +880,27 @@ proof -
     by - *)
 qed
 
+lemma polar_decomposition_correct': \<open>(polar_decomposition A)* o\<^sub>C\<^sub>L A = abs_op A\<close>
+  for A :: \<open>'a :: chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b :: chilbert_space\<close>
+  sorry
+
+lemma abs_op_adj: \<open>abs_op (a*) = sandwich (polar_decomposition a) (abs_op a)\<close>
+proof -
+  have pos: \<open>sandwich (polar_decomposition a) (abs_op a) \<ge> 0\<close>
+    by (simp add: sandwich_pos)
+  have \<open>(sandwich (polar_decomposition a) (abs_op a))* o\<^sub>C\<^sub>L (sandwich (polar_decomposition a) (abs_op a))
+     = polar_decomposition a o\<^sub>C\<^sub>L (abs_op a)* o\<^sub>C\<^sub>L abs_op a o\<^sub>C\<^sub>L (polar_decomposition a)*\<close>
+    apply (simp add: sandwich_apply)
+    by (metis (no_types, lifting) cblinfun_assoc_left(1) polar_decomposition_correct polar_decomposition_correct')
+  also have \<open>\<dots> = a o\<^sub>C\<^sub>L a*\<close>
+    by (metis abs_op_pos adj_cblinfun_compose cblinfun_assoc_left(1) polar_decomposition_correct positive_hermitianI)
+  finally have \<open>sandwich (polar_decomposition a) (abs_op a) = sqrt_op (a o\<^sub>C\<^sub>L a*)\<close>
+    using pos by (simp add: sqrt_op_unique)
+  also have \<open>\<dots> = abs_op (a*)\<close>
+    by (simp add: abs_op_def)
+  finally show ?thesis
+    by simp
+qed
+
+
 end

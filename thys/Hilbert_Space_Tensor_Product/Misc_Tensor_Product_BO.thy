@@ -1547,6 +1547,12 @@ lemma cblinfun_image_bot_zero[simp]: \<open>A *\<^sub>S \<top> = \<bottom> \<lon
     by simp
 qed simp *)
 
+instance prod :: (complex_normed_vector, complex_normed_vector) complex_normed_vector 
+  apply intro_classes
+  sorry
+
+instance prod :: (chilbert_space, chilbert_space) chilbert_space ..
+
 unbundle no_cblinfun_notation
 
 end

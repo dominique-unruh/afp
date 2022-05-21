@@ -1469,5 +1469,24 @@ lemma has_sum_in_0[simp]: \<open>has_sum_in T (\<lambda>_. 0) A 0\<close> if [si
   by (simp add: has_sum_in_def sum.neutral_const[abs_def])
 
 
+lemma has_sum_diff:
+  fixes f g :: "'a \<Rightarrow> 'b::{topological_ab_group_add}"
+  assumes \<open>has_sum f A a\<close>
+  assumes \<open>has_sum g A b\<close>
+  shows \<open>has_sum (\<lambda>x. f x - g x) A (a - b)\<close>
+  sorry
+
+lemma has_sum_of_real:
+  fixes f :: "'a \<Rightarrow> real"
+  assumes \<open>has_sum f A a\<close>
+  shows \<open>has_sum (\<lambda>x. of_real (f x)) A (of_real a)\<close>
+   sorry
+
+lemma summable_on_cdivide:
+  fixes f :: "'a \<Rightarrow> 'b :: {t2_space, topological_semigroup_mult, division_ring}"
+  assumes \<open>f summable_on A\<close>
+  shows "(\<lambda>x. f x / c) summable_on A"
+  apply (subst division_ring_class.divide_inverse)
+  using assms summable_on_cmult_left by blast
 
 end
