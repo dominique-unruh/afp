@@ -779,10 +779,49 @@ lemma trace_plus_prelim:
   by (auto simp add: assms infsum_add trace_def cblinfun.add_left cinner_add_right
       intro!: infsum_add trace_exists)
 
-lemma hs_times_hs_trace_class: \<open>trace_class (c o\<^sub>C\<^sub>L b)\<close> if \<open>hilbert_schmidt c\<close> and \<open>hilbert_schmidt b\<close>
-  \<comment> \<open>Not an immediate consequence of @{thm [source] trace_class_iff_hs_times_hs} because here the types of \<^term>\<open>b\<close>, \<^term>\<open>c\<close> are more general.\<close>
-  sorry
+lemma hs_times_hs_trace_class: 
+  fixes B :: \<open>'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'c::chilbert_space\<close> and C :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  assumes \<open>hilbert_schmidt B\<close> and \<open>hilbert_schmidt C\<close>
+  shows \<open>trace_class (B o\<^sub>C\<^sub>L C)\<close>
+  \<comment> \<open>Not an immediate consequence of @{thm [source] trace_class_iff_hs_times_hs} because here the types of \<^term>\<open>B\<close>, \<^term>\<open>C\<close> are more general.\<close>
+proof -
+  define A Sq W where \<open>A = B o\<^sub>C\<^sub>L C\<close> and \<open>Sq = sqrt_op (abs_op A)\<close> and \<open>W = polar_decomposition A\<close>
 
+  from \<open>hilbert_schmidt B\<close>
+  have hs_WB: \<open>hilbert_schmidt (W* o\<^sub>C\<^sub>L B)\<close>
+    by (simp add: hilbert_schmidt_comp_right)
+  have \<open>abs_op A = W* o\<^sub>C\<^sub>L A\<close>
+    by (simp add: W_def polar_decomposition_correct')
+  also have \<open>\<dots> = (W* o\<^sub>C\<^sub>L B) o\<^sub>C\<^sub>L C\<close>
+    by (metis A_def cblinfun_compose_assoc)
+  finally have abs_op_A: \<open>abs_op A = (W* o\<^sub>C\<^sub>L B) o\<^sub>C\<^sub>L C\<close>
+    by -
+  from \<open>hilbert_schmidt (W* o\<^sub>C\<^sub>L B)\<close>
+  have \<open>hilbert_schmidt (B* o\<^sub>C\<^sub>L W)\<close>
+    by (simp add: assms(1) hilbert_schmidt_comp_left)
+  then have \<open>(\<lambda>e. (norm ((B* o\<^sub>C\<^sub>L W) *\<^sub>V e))\<^sup>2) abs_summable_on some_chilbert_basis\<close>
+    by (metis is_onb_some_chilbert_basis summable_hilbert_schmidt_norm_square summable_on_iff_abs_summable_on_real)
+  moreover from \<open>hilbert_schmidt C\<close>
+  have \<open>(\<lambda>e. (norm (C *\<^sub>V e))\<^sup>2) abs_summable_on some_chilbert_basis\<close>
+    by (metis is_onb_some_chilbert_basis summable_hilbert_schmidt_norm_square summable_on_iff_abs_summable_on_real)
+  ultimately have \<open>(\<lambda>e. norm ((B* o\<^sub>C\<^sub>L W) *\<^sub>V e) * norm (C *\<^sub>V e)) abs_summable_on some_chilbert_basis\<close>
+    apply (rule_tac abs_summable_product)
+    by (metis (no_types, lifting) power2_eq_square summable_on_cong)+
+  then have \<open>(\<lambda>e. cinner e (abs_op A *\<^sub>V e)) abs_summable_on some_chilbert_basis\<close>
+  proof (rule Infinite_Sum.abs_summable_on_comparison_test)
+    fix e :: 'a assume \<open>e \<in> some_chilbert_basis\<close>
+    have \<open>norm (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e)) = norm (((B* o\<^sub>C\<^sub>L W) *\<^sub>V e) \<bullet>\<^sub>C (C *\<^sub>V e))\<close>
+      by (simp add: abs_op_A cinner_adj_left cinner_adj_right)
+    also have \<open>\<dots> \<le> norm ((B* o\<^sub>C\<^sub>L W) *\<^sub>V e) * norm (C *\<^sub>V e)\<close>
+      by (rule Cauchy_Schwarz_ineq2)
+    also have \<open>\<dots> = norm (norm ((B* o\<^sub>C\<^sub>L W) *\<^sub>V e) * norm (C *\<^sub>V e))\<close>
+      by simp
+    finally show \<open>cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e)) \<le> norm (norm ((B* o\<^sub>C\<^sub>L W) *\<^sub>V e) * norm (C *\<^sub>V e))\<close>
+      by -
+  qed
+  then show \<open>trace_class A\<close>
+    apply (rule trace_classI[rotated]) by simp
+qed
 
 instantiation hilbert_schmidt :: (chilbert_space, complex_inner) complex_vector begin
 instance
@@ -1220,24 +1259,134 @@ qed
 lemma trace_class_finite_dim'[simp]: \<open>trace_class A\<close> for A :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::{cfinite_dim,chilbert_space}\<close>
   by (metis double_adj trace_class_adj trace_class_finite_dim)
 
+(* TODO move *)
+lemma cblinfun_left_right_ortho[simp]: \<open>cblinfun_left* o\<^sub>C\<^sub>L cblinfun_right = 0\<close>
+proof -
+  have \<open>x \<bullet>\<^sub>C ((cblinfun_left* o\<^sub>C\<^sub>L cblinfun_right) *\<^sub>V y) = 0\<close> for x :: 'b and y :: 'a
+    apply (simp add: cinner_adj_right)
+    apply transfer
+    by auto
+  then show ?thesis
+    by (metis cblinfun.zero_left cblinfun_eqI cinner_eq_zero_iff)
+qed
 
-lemma trace_class_plus[simp]: \<open>trace_class t \<Longrightarrow> trace_class u \<Longrightarrow> trace_class (t + u)\<close>
-  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (a)\<close>
-(* 
-Proof idea:
+(* TODO move *)
+lemma cblinfun_right_left_ortho[simp]: \<open>cblinfun_right* o\<^sub>C\<^sub>L cblinfun_left = 0\<close>
+proof -
+  have \<open>x \<bullet>\<^sub>C ((cblinfun_right* o\<^sub>C\<^sub>L cblinfun_left) *\<^sub>V y) = 0\<close> for x :: 'b and y :: 'a
+    apply (simp add: cinner_adj_right)
+    apply transfer
+    by auto
+  then show ?thesis
+    by (metis cblinfun.zero_left cblinfun_eqI cinner_eq_zero_iff)
+qed
 
-t + u = 
-(1  *  (t 0  * (1
- 1) *   0 u)    1)
+(* TODO move *)
+lemma cblinfun_left_apply[simp]: \<open>cblinfun_left *\<^sub>V \<psi> = (\<psi>,0)\<close>
+  apply transfer by simp
 
-The middle one is elementarily shown to be TC (abs_op is block-wise (generally, abs_op additive for commuting ops?))).
+(* TODO move *)
+lemma cblinfun_left_adj_apply[simp]: \<open>cblinfun_left* *\<^sub>V \<psi> = fst \<psi>\<close>
+  apply (cases \<psi>)
+  by (auto intro!: cinner_extensionality[of \<open>_ *\<^sub>V _\<close>] simp: cinner_adj_right)
 
-Then t+u is TC by trace_class_comp_right/left
+(* TODO move *)
+lemma cblinfun_right_apply[simp]: \<open>cblinfun_right *\<^sub>V \<psi> = (0,\<psi>)\<close>
+  apply transfer by simp
 
- *)
-  sorry
+(* TODO move *)
+lemma cblinfun_right_adj_apply[simp]: \<open>cblinfun_right* *\<^sub>V \<psi> = snd \<psi>\<close>
+  apply (cases \<psi>)
+  by (auto intro!: cinner_extensionality[of \<open>_ *\<^sub>V _\<close>] simp: cinner_adj_right)
+
+(* TODO move *)
+lemma abs_opI: 
+  assumes \<open>a* o\<^sub>C\<^sub>L a = b* o\<^sub>C\<^sub>L b\<close>
+  assumes \<open>a \<ge> 0\<close>
+  shows \<open>a = abs_op b\<close>
+  by (simp add: abs_op_def assms(1) assms(2) sqrt_op_unique)
+
+(* TODO move. TODO better name *)
+lemma aux: \<open>a o\<^sub>C\<^sub>L b = c \<Longrightarrow> a o\<^sub>C\<^sub>L (b o\<^sub>C\<^sub>L d) = c o\<^sub>C\<^sub>L d\<close>
+  by (simp add: cblinfun_assoc_left(1))
+
+
+(* TODO move *)
+lemma is_onb_prod:
+  assumes \<open>is_onb B\<close> and \<open>is_onb B'\<close>
+  shows \<open>is_onb (((\<lambda>x. (x,0)) ` B) \<union> ((\<lambda>x. (0,x)) ` B'))\<close>
+sorry
+
+
+lemma trace_class_plus[simp]:
+  fixes t u :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  assumes \<open>trace_class t\<close> and \<open>trace_class u\<close>
+  shows \<open>trace_class (t + u)\<close>
+  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (a).
+      However, we use a completely different proof that does not need the fact that trace class operators can be diagonalized with countably many diagonal elements.\<close>
+proof -
+  define II :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>'a)\<close> where \<open>II = cblinfun_left + cblinfun_right\<close>
+  define JJ :: \<open>('b\<times>'b) \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> where \<open>JJ = cblinfun_left* + cblinfun_right*\<close>
+  define tu :: \<open>('a\<times>'a) \<Rightarrow>\<^sub>C\<^sub>L ('b\<times>'b)\<close> where \<open>tu = (cblinfun_left o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L cblinfun_left*) + (cblinfun_right o\<^sub>C\<^sub>L u o\<^sub>C\<^sub>L cblinfun_right*)\<close>
+  have t_plus_u: \<open>t + u = JJ o\<^sub>C\<^sub>L tu o\<^sub>C\<^sub>L II\<close>
+    apply (simp add: II_def JJ_def tu_def cblinfun_compose_add_left cblinfun_compose_add_right cblinfun_compose_assoc)
+    by (simp flip: cblinfun_compose_assoc)
+  have \<open>trace_class tu\<close>
+  proof (rule trace_classI)
+    define BL BR B :: \<open>('a\<times>'a) set\<close> where \<open>BL = (\<lambda>x. (x,0)) ` some_chilbert_basis\<close>
+      and \<open>BR = (\<lambda>x. (0,x)) ` some_chilbert_basis\<close>
+      and \<open>B = BL \<union> BR\<close>
+    have \<open>BL \<inter> BR = {}\<close>
+      using is_ortho_set_some_chilbert_basis
+      by (auto simp: BL_def BR_def is_ortho_set_def)
+    show \<open>is_onb B\<close>
+      by (simp add: BL_def BR_def B_def is_onb_prod)
+    have abs_tu: \<open>abs_op tu = (cblinfun_left o\<^sub>C\<^sub>L abs_op t o\<^sub>C\<^sub>L cblinfun_left*) + (cblinfun_right o\<^sub>C\<^sub>L abs_op u o\<^sub>C\<^sub>L cblinfun_right*)\<close>
+    proof -
+      have \<open>((cblinfun_left o\<^sub>C\<^sub>L abs_op t o\<^sub>C\<^sub>L cblinfun_left*) + (cblinfun_right o\<^sub>C\<^sub>L abs_op u o\<^sub>C\<^sub>L cblinfun_right*))*
+        o\<^sub>C\<^sub>L ((cblinfun_left o\<^sub>C\<^sub>L abs_op t o\<^sub>C\<^sub>L cblinfun_left*) + (cblinfun_right o\<^sub>C\<^sub>L abs_op u o\<^sub>C\<^sub>L cblinfun_right*))
+        = tu* o\<^sub>C\<^sub>L tu\<close>
+      proof -
+        have tt[THEN aux, simp]: \<open>(abs_op t)* o\<^sub>C\<^sub>L abs_op t = t* o\<^sub>C\<^sub>L t\<close>
+          by (simp add: abs_op_def positive_cblinfun_squareI)
+        have uu[THEN aux, simp]: \<open>(abs_op u)* o\<^sub>C\<^sub>L abs_op u = u* o\<^sub>C\<^sub>L u\<close>
+          by (simp add: abs_op_def positive_cblinfun_squareI)
+        note isometryD[THEN aux, simp]
+        note cblinfun_right_left_ortho[THEN aux, simp]
+        note cblinfun_left_right_ortho[THEN aux, simp]
+        show ?thesis
+          using tt uu
+          by (simp add: tu_def cblinfun_compose_add_right cblinfun_compose_add_left adj_plus
+              cblinfun_compose_assoc)
+      qed
+      moreover have \<open>(cblinfun_left o\<^sub>C\<^sub>L abs_op t o\<^sub>C\<^sub>L cblinfun_left*) + (cblinfun_right o\<^sub>C\<^sub>L abs_op u o\<^sub>C\<^sub>L cblinfun_right*) \<ge> 0\<close>
+        apply (rule positive_cblinfunI)
+        by (auto simp: cblinfun.add_left cinner_pos_if_pos)
+      ultimately show ?thesis
+        by (rule abs_opI[symmetric])
+    qed
+    from assms(1)
+    have \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op t *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
+      by (metis is_onb_some_chilbert_basis summable_on_iff_abs_summable_on_complex trace_class_abs_op trace_exists)
+    then have sum_BL: \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op tu *\<^sub>V x)) abs_summable_on BL\<close>
+      by (auto simp: BL_def summable_on_reindex inj_on_def o_def abs_tu cblinfun.add_left)
+    from assms(2)
+    have \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op u *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
+      by (metis is_onb_some_chilbert_basis summable_on_iff_abs_summable_on_complex trace_class_abs_op trace_exists)
+    then have sum_BR: \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op tu *\<^sub>V x)) abs_summable_on BR\<close>
+      by (auto simp: BR_def summable_on_reindex inj_on_def o_def abs_tu cblinfun.add_left)
+    from sum_BL sum_BR
+    show \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op tu *\<^sub>V x)) abs_summable_on B\<close>
+      using \<open>BL \<inter> BR = {}\<close>
+      by (auto intro!: summable_on_Un_disjoint simp: B_def)
+  qed
+  with t_plus_u
+  show \<open>trace_class (t + u)\<close>
+    by (simp add: trace_class_comp_left trace_class_comp_right)
+qed
 
 lemma trace_class_minus[simp]: \<open>trace_class t \<Longrightarrow> trace_class u \<Longrightarrow> trace_class (t - u)\<close>
+  for t u :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
   by (metis trace_class_plus trace_class_uminus uminus_add_conv_diff)
 
 lemma trace_plus: 
@@ -1252,81 +1401,6 @@ lemma
     and trace_class_sum: \<open>trace_class (\<Sum>i\<in>I. a i)\<close>
   using assms apply (induction I rule:infinite_finite_induct)
   by (auto simp: trace_plus)
-
-lemma trace_norm_triangle: \<open>trace_class a \<Longrightarrow> trace_class b \<Longrightarrow> trace_norm (a + b) \<le> trace_norm a + trace_norm b\<close>
-  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (a)\<close>
-  sorry
-
-
-instantiation trace_class :: (chilbert_space) "{complex_vector}" begin
-(* Lifted definitions *)
-lift_definition zero_trace_class :: \<open>'a trace_class\<close> is 0 by auto
-lift_definition minus_trace_class :: \<open>'a trace_class \<Rightarrow> 'a trace_class \<Rightarrow> 'a trace_class\<close> is minus by auto
-lift_definition uminus_trace_class :: \<open>'a trace_class \<Rightarrow> 'a trace_class\<close> is uminus by auto
-lift_definition plus_trace_class :: \<open>'a trace_class \<Rightarrow> 'a trace_class \<Rightarrow> 'a trace_class\<close> is plus by auto
-lift_definition scaleC_trace_class :: \<open>complex \<Rightarrow> 'a trace_class \<Rightarrow> 'a trace_class\<close> is scaleC
-  by (metis (no_types, opaque_lifting) cblinfun_compose_id_right cblinfun_compose_scaleC_right mem_Collect_eq trace_class_comp_left)
-lift_definition scaleR_trace_class :: \<open>real \<Rightarrow> 'a trace_class \<Rightarrow> 'a trace_class\<close> is scaleR
-  by (metis (no_types, opaque_lifting) cblinfun_compose_id_right cblinfun_compose_scaleC_right mem_Collect_eq scaleR_scaleC trace_class_comp_left)
-instance
-proof standard
-  fix a b c :: \<open>'a trace_class\<close>
-  show \<open>a + b + c = a + (b + c)\<close>
-    apply transfer by auto
-  show \<open>a + b = b + a\<close>
-    apply transfer by auto
-  show \<open>0 + a = a\<close>
-    apply transfer by auto
-  show \<open>- a + a = 0\<close>
-    apply transfer by auto
-  show \<open>a - b = a + - b\<close>
-    apply transfer by auto
-  show \<open>(*\<^sub>R) r = ((*\<^sub>C) (complex_of_real r) :: _ \<Rightarrow> 'a trace_class)\<close> for r :: real
-    by (metis (mono_tags, opaque_lifting) Trace_Class.scaleC_trace_class_def Trace_Class.scaleR_trace_class_def id_apply map_fun_def o_def scaleR_scaleC)
-  show \<open>r *\<^sub>C (a + b) = r *\<^sub>C a + r *\<^sub>C b\<close> for r :: complex
-    apply transfer
-    by (metis (no_types, lifting) scaleC_add_right)
-  show \<open>(r + r') *\<^sub>C a = r *\<^sub>C a + r' *\<^sub>C a\<close> for r r' :: complex
-    apply transfer
-    by (metis (no_types, lifting) scaleC_add_left)
-  show \<open>r *\<^sub>C r' *\<^sub>C a = (r * r') *\<^sub>C a\<close> for r r' :: complex
-    apply transfer by auto
-  show \<open>1 *\<^sub>C a = a\<close>
-    apply transfer by auto
-qed
-end
-
-instantiation trace_class :: (chilbert_space) "{complex_normed_vector}" begin
-(* Definitions related to the trace norm *)
-lift_definition norm_trace_class :: \<open>'a trace_class \<Rightarrow> real\<close> is trace_norm .
-definition sgn_trace_class :: \<open>'a trace_class \<Rightarrow> 'a trace_class\<close> where \<open>sgn_trace_class a = a /\<^sub>R norm a\<close>
-definition dist_trace_class :: \<open>'a trace_class \<Rightarrow> _ \<Rightarrow> _\<close> where \<open>dist_trace_class a b = norm (a - b)\<close>
-definition [code del]: "uniformity_trace_class = (INF e\<in>{0<..}. principal {(x::'a trace_class, y). dist x y < e})"
-definition [code del]: "open_trace_class U = (\<forall>x\<in>U. \<forall>\<^sub>F (x', y) in INF e\<in>{0<..}. principal {(x, y). dist x y < e}. x' = x \<longrightarrow> y \<in> U)" for U :: "'a trace_class set"
-instance
-proof standard
-  fix a b :: \<open>'a trace_class\<close>
-  show \<open>dist a b = norm (a - b)\<close>
-    by (metis (no_types, lifting) Trace_Class.dist_trace_class_def)
-  show \<open>uniformity = (INF e\<in>{0<..}. principal {(x :: 'a trace_class, y). dist x y < e})\<close>
-    by (simp add: uniformity_trace_class_def)
-  show \<open>open U = (\<forall>x\<in>U. \<forall>\<^sub>F (x', y) in uniformity. x' = x \<longrightarrow> y \<in> U)\<close> for U :: \<open>'a trace_class set\<close>
-    by (smt (verit, del_insts) case_prod_beta' eventually_mono open_trace_class_def uniformity_trace_class_def)
-  show \<open>(norm a = 0) = (a = 0)\<close>
-    apply transfer
-    by (auto simp add: trace_norm_nondegenerate)
-  show \<open>norm (a + b) \<le> norm a + norm b\<close>
-    apply transfer
-    by (auto simp: trace_norm_triangle)
-  show \<open>norm (r *\<^sub>C a) = cmod r * norm a\<close> for r
-    apply transfer
-    by (auto simp: trace_norm_scaleC)
-  then show \<open>norm (r *\<^sub>R a) = \<bar>r\<bar> * norm a\<close> for r
-    by (metis norm_of_real scaleR_scaleC)
-  show \<open>sgn a = a /\<^sub>R norm a\<close>
-    by (simp add: sgn_trace_class_def)
-qed
-end
 
 
 lemma cmod_trace_times: \<open>cmod (trace (a o\<^sub>C\<^sub>L b)) \<le> norm a * trace_norm b\<close> if \<open>trace_class b\<close> 
@@ -1416,6 +1490,101 @@ next
   then show ?thesis
     by (simp add: trace_def)
 qed
+
+lemma trace_norm_triangle: 
+  fixes a b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  assumes [simp]: \<open>trace_class a\<close> \<open>trace_class b\<close>
+  shows \<open>trace_class b \<Longrightarrow> trace_norm (a + b) \<le> trace_norm a + trace_norm b\<close>
+  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (a)\<close>
+proof -
+  define w where \<open>w = polar_decomposition (a+b)\<close>
+  have \<open>norm (w*) \<le> 1\<close>
+    by (metis dual_order.refl norm_adj norm_partial_isometry norm_zero polar_decomposition_partial_isometry w_def zero_less_one_class.zero_le_one)
+  have \<open>trace_norm (a + b) = cmod (trace (abs_op (a+b)))\<close>
+    by simp
+  also have \<open>\<dots> = cmod (trace (w* o\<^sub>C\<^sub>L (a+b)))\<close>
+    by (simp add: polar_decomposition_correct' w_def)
+  also have \<open>\<dots> \<le> cmod (trace (w* o\<^sub>C\<^sub>L a)) + cmod (trace (w* o\<^sub>C\<^sub>L b))\<close>
+    by (simp add: cblinfun_compose_add_right norm_triangle_ineq trace_class_comp_right trace_plus)
+  also have \<open>\<dots> \<le> (norm (w*) * trace_norm a) + (norm (w*) * trace_norm b)\<close>
+    by (smt (verit, best) assms(1) assms(2) cmod_trace_times)
+  also have \<open>\<dots> \<le> trace_norm a + trace_norm b\<close>
+    using \<open>norm (w*) \<le> 1\<close>
+    by (smt (verit, ccfv_SIG) mult_le_cancel_right2 trace_norm_nneg)
+  finally show ?thesis
+    by -
+qed
+
+instantiation trace_class :: (chilbert_space) "{complex_vector}" begin
+(* Lifted definitions *)
+lift_definition zero_trace_class :: \<open>'a trace_class\<close> is 0 by auto
+lift_definition minus_trace_class :: \<open>'a trace_class \<Rightarrow> 'a trace_class \<Rightarrow> 'a trace_class\<close> is minus by auto
+lift_definition uminus_trace_class :: \<open>'a trace_class \<Rightarrow> 'a trace_class\<close> is uminus by auto
+lift_definition plus_trace_class :: \<open>'a trace_class \<Rightarrow> 'a trace_class \<Rightarrow> 'a trace_class\<close> is plus by auto
+lift_definition scaleC_trace_class :: \<open>complex \<Rightarrow> 'a trace_class \<Rightarrow> 'a trace_class\<close> is scaleC
+  by (metis (no_types, opaque_lifting) cblinfun_compose_id_right cblinfun_compose_scaleC_right mem_Collect_eq trace_class_comp_left)
+lift_definition scaleR_trace_class :: \<open>real \<Rightarrow> 'a trace_class \<Rightarrow> 'a trace_class\<close> is scaleR
+  by (metis (no_types, opaque_lifting) cblinfun_compose_id_right cblinfun_compose_scaleC_right mem_Collect_eq scaleR_scaleC trace_class_comp_left)
+instance
+proof standard
+  fix a b c :: \<open>'a trace_class\<close>
+  show \<open>a + b + c = a + (b + c)\<close>
+    apply transfer by auto
+  show \<open>a + b = b + a\<close>
+    apply transfer by auto
+  show \<open>0 + a = a\<close>
+    apply transfer by auto
+  show \<open>- a + a = 0\<close>
+    apply transfer by auto
+  show \<open>a - b = a + - b\<close>
+    apply transfer by auto
+  show \<open>(*\<^sub>R) r = ((*\<^sub>C) (complex_of_real r) :: _ \<Rightarrow> 'a trace_class)\<close> for r :: real
+    by (metis (mono_tags, opaque_lifting) Trace_Class.scaleC_trace_class_def Trace_Class.scaleR_trace_class_def id_apply map_fun_def o_def scaleR_scaleC)
+  show \<open>r *\<^sub>C (a + b) = r *\<^sub>C a + r *\<^sub>C b\<close> for r :: complex
+    apply transfer
+    by (metis (no_types, lifting) scaleC_add_right)
+  show \<open>(r + r') *\<^sub>C a = r *\<^sub>C a + r' *\<^sub>C a\<close> for r r' :: complex
+    apply transfer
+    by (metis (no_types, lifting) scaleC_add_left)
+  show \<open>r *\<^sub>C r' *\<^sub>C a = (r * r') *\<^sub>C a\<close> for r r' :: complex
+    apply transfer by auto
+  show \<open>1 *\<^sub>C a = a\<close>
+    apply transfer by auto
+qed
+end
+
+instantiation trace_class :: (chilbert_space) "{complex_normed_vector}" begin
+(* Definitions related to the trace norm *)
+lift_definition norm_trace_class :: \<open>'a trace_class \<Rightarrow> real\<close> is trace_norm .
+definition sgn_trace_class :: \<open>'a trace_class \<Rightarrow> 'a trace_class\<close> where \<open>sgn_trace_class a = a /\<^sub>R norm a\<close>
+definition dist_trace_class :: \<open>'a trace_class \<Rightarrow> _ \<Rightarrow> _\<close> where \<open>dist_trace_class a b = norm (a - b)\<close>
+definition [code del]: "uniformity_trace_class = (INF e\<in>{0<..}. principal {(x::'a trace_class, y). dist x y < e})"
+definition [code del]: "open_trace_class U = (\<forall>x\<in>U. \<forall>\<^sub>F (x', y) in INF e\<in>{0<..}. principal {(x, y). dist x y < e}. x' = x \<longrightarrow> y \<in> U)" for U :: "'a trace_class set"
+instance
+proof standard
+  fix a b :: \<open>'a trace_class\<close>
+  show \<open>dist a b = norm (a - b)\<close>
+    by (metis (no_types, lifting) Trace_Class.dist_trace_class_def)
+  show \<open>uniformity = (INF e\<in>{0<..}. principal {(x :: 'a trace_class, y). dist x y < e})\<close>
+    by (simp add: uniformity_trace_class_def)
+  show \<open>open U = (\<forall>x\<in>U. \<forall>\<^sub>F (x', y) in uniformity. x' = x \<longrightarrow> y \<in> U)\<close> for U :: \<open>'a trace_class set\<close>
+    by (smt (verit, del_insts) case_prod_beta' eventually_mono open_trace_class_def uniformity_trace_class_def)
+  show \<open>(norm a = 0) = (a = 0)\<close>
+    apply transfer
+    by (auto simp add: trace_norm_nondegenerate)
+  show \<open>norm (a + b) \<le> norm a + norm b\<close>
+    apply transfer
+    by (auto simp: trace_norm_triangle)
+  show \<open>norm (r *\<^sub>C a) = cmod r * norm a\<close> for r
+    apply transfer
+    by (auto simp: trace_norm_scaleC)
+  then show \<open>norm (r *\<^sub>R a) = \<bar>r\<bar> * norm a\<close> for r
+    by (metis norm_of_real scaleR_scaleC)
+  show \<open>sgn a = a /\<^sub>R norm a\<close>
+    by (simp add: sgn_trace_class_def)
+qed
+end
+
 
 lemma trace_norm_comp_left: \<open>trace_class a \<Longrightarrow> trace_norm (a o\<^sub>C\<^sub>L b) \<le> trace_norm a * norm b\<close>
   \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (g)\<close>
