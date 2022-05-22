@@ -1547,11 +1547,111 @@ lemma cblinfun_image_bot_zero[simp]: \<open>A *\<^sub>S \<top> = \<bottom> \<lon
     by simp
 qed simp *)
 
+
+definition some_chilbert_basis :: \<open>'a::chilbert_space set\<close> where
+  \<open>some_chilbert_basis = (SOME B::'a set. is_onb B)\<close>
+
+lemma is_onb_some_chilbert_basis[simp]: \<open>is_onb (some_chilbert_basis :: 'a::chilbert_space set)\<close>
+  using orthonormal_basis_exists[OF is_ortho_set_empty]
+  by (auto simp add: some_chilbert_basis_def intro: someI2)
+
+lemma is_ortho_set_some_chilbert_basis[simp]: \<open>is_ortho_set some_chilbert_basis\<close>
+  using is_onb_def is_onb_some_chilbert_basis by blast
+lemma is_normal_some_chilbert_basis: \<open>\<And>x. x \<in> some_chilbert_basis \<Longrightarrow> norm x = 1\<close>
+  using is_onb_def is_onb_some_chilbert_basis by blast
+lemma ccspan_some_chilbert_basis[simp]: \<open>ccspan some_chilbert_basis = \<top>\<close>
+  using is_onb_def is_onb_some_chilbert_basis by blast
+lemma span_some_chilbert_basis[simp]: \<open>closure (cspan some_chilbert_basis) = UNIV\<close>
+  by (metis ccspan.rep_eq ccspan_some_chilbert_basis top_ccsubspace.rep_eq)
+
+lemma cindependent_some_chilbert_basis[simp]: \<open>cindependent some_chilbert_basis\<close>
+  using is_ortho_set_cindependent is_ortho_set_some_chilbert_basis by blast
+
+lemma finite_some_chilbert_basis[simp]: \<open>finite (some_chilbert_basis :: 'a :: {chilbert_space, cfinite_dim} set)\<close>
+  apply (rule cindependent_cfinite_dim_finite)
+  by simp
+
+lemma some_chilbert_basis_nonempty: \<open>(some_chilbert_basis :: 'a::{chilbert_space, not_singleton} set) \<noteq> {}\<close>
+proof (rule ccontr, simp)
+  define B :: \<open>'a set\<close> where \<open>B = some_chilbert_basis\<close>
+  assume [simp]: \<open>B = {}\<close>
+  have \<open>UNIV = closure (cspan B)\<close>
+    using B_def span_some_chilbert_basis by blast
+  also have \<open>\<dots> = {0}\<close>
+    by simp
+  also have \<open>\<dots> \<noteq> UNIV\<close>
+    using Extra_General.UNIV_not_singleton by blast
+  finally show False
+    by simp
+qed
+
 instance prod :: (complex_normed_vector, complex_normed_vector) complex_normed_vector 
   apply intro_classes
   sorry
 
 instance prod :: (chilbert_space, chilbert_space) chilbert_space ..
+
+(* TODO move *)
+lift_definition cblinfun_left :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>'b::complex_normed_vector)\<close> is \<open>(\<lambda>x. (x,0))\<close>
+  by (auto intro!: bounded_clinearI[where K=1])
+lift_definition cblinfun_right :: \<open>'b::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L ('a::complex_normed_vector\<times>'b)\<close> is \<open>(\<lambda>x. (0,x))\<close>
+  by (auto intro!: bounded_clinearI[where K=1])
+
+lemma isometry_cblinfun_left[simp]: \<open>isometry cblinfun_left\<close>
+  apply (rule orthogonal_on_basis_is_isometry[of some_chilbert_basis])
+   apply simp
+  apply transfer
+  by simp
+
+lemma isometry_cblinfun_right[simp]: \<open>isometry cblinfun_right\<close>
+  apply (rule orthogonal_on_basis_is_isometry[of some_chilbert_basis])
+   apply simp
+  apply transfer
+  by simp
+
+lemma cblinfun_left_right_ortho[simp]: \<open>cblinfun_left* o\<^sub>C\<^sub>L cblinfun_right = 0\<close>
+proof -
+  have \<open>x \<bullet>\<^sub>C ((cblinfun_left* o\<^sub>C\<^sub>L cblinfun_right) *\<^sub>V y) = 0\<close> for x :: 'b and y :: 'a
+    apply (simp add: cinner_adj_right)
+    apply transfer
+    by auto
+  then show ?thesis
+    by (metis cblinfun.zero_left cblinfun_eqI cinner_eq_zero_iff)
+qed
+
+lemma cblinfun_right_left_ortho[simp]: \<open>cblinfun_right* o\<^sub>C\<^sub>L cblinfun_left = 0\<close>
+proof -
+  have \<open>x \<bullet>\<^sub>C ((cblinfun_right* o\<^sub>C\<^sub>L cblinfun_left) *\<^sub>V y) = 0\<close> for x :: 'b and y :: 'a
+    apply (simp add: cinner_adj_right)
+    apply transfer
+    by auto
+  then show ?thesis
+    by (metis cblinfun.zero_left cblinfun_eqI cinner_eq_zero_iff)
+qed
+
+lemma cblinfun_left_apply[simp]: \<open>cblinfun_left *\<^sub>V \<psi> = (\<psi>,0)\<close>
+  apply transfer by simp
+
+lemma cblinfun_left_adj_apply[simp]: \<open>cblinfun_left* *\<^sub>V \<psi> = fst \<psi>\<close>
+  apply (cases \<psi>)
+  by (auto intro!: cinner_extensionality[of \<open>_ *\<^sub>V _\<close>] simp: cinner_adj_right)
+
+lemma cblinfun_right_apply[simp]: \<open>cblinfun_right *\<^sub>V \<psi> = (0,\<psi>)\<close>
+  apply transfer by simp
+
+lemma cblinfun_right_adj_apply[simp]: \<open>cblinfun_right* *\<^sub>V \<psi> = snd \<psi>\<close>
+  apply (cases \<psi>)
+  by (auto intro!: cinner_extensionality[of \<open>_ *\<^sub>V _\<close>] simp: cinner_adj_right)
+
+lemma is_onb_prod:
+  assumes \<open>is_onb B\<close> and \<open>is_onb B'\<close>
+  shows \<open>is_onb (((\<lambda>x. (x,0)) ` B) \<union> ((\<lambda>x. (0,x)) ` B'))\<close>
+sorry
+
+lemma simp_a_oCL_b: \<open>a o\<^sub>C\<^sub>L b = c \<Longrightarrow> a o\<^sub>C\<^sub>L (b o\<^sub>C\<^sub>L d) = c o\<^sub>C\<^sub>L d\<close>
+  \<comment> \<open>A convenience lemma to transform simplification rules of the form \<^term>\<open>a o\<^sub>C\<^sub>L b = c\<close>.
+     E.g., \<open>simp_a_oCL_b[OF isometryD, simp]\<close> declares a simp-rule for simplifying \<^term>\<open>x* o\<^sub>C\<^sub>L (x o\<^sub>C\<^sub>L y) = id_cblinfun o\<^sub>C\<^sub>L y\<close>.\<close>
+  by (simp add: cblinfun_assoc_left(1))
 
 unbundle no_cblinfun_notation
 

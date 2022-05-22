@@ -299,17 +299,6 @@ qed
 lemma trace_uminus: \<open>trace (- a) = - trace a\<close>
   by (metis mult_minus1 scaleC_minus1_left trace_scaleC)
 
-(* TODO move *)
-lemma norm_abs[simp]: \<open>norm (abs x) = norm x\<close> for x :: \<open>'a :: {idom_abs_sgn, real_normed_div_algebra}\<close>
-proof -
-  have \<open>norm x = norm (sgn x * abs x)\<close>
-    by (simp add: sgn_mult_abs)
-  also have \<open>\<dots> = norm \<bar>x\<bar>\<close>
-    by (simp add: norm_mult norm_sgn)
-  finally show ?thesis
-    by simp
-qed
-
 lemma trace_norm_0[simp]: \<open>trace_norm 0 = 0\<close>
   by (auto simp: trace_norm_def)
 
@@ -584,19 +573,80 @@ lemma hilbert_schmidt_scaleR: \<open>hilbert_schmidt (r *\<^sub>R a)\<close> if 
 lemma hilbert_schmidt_uminus: \<open>hilbert_schmidt (- a)\<close> if \<open>hilbert_schmidt a\<close>
   by (metis hilbert_schmidt_scaleC scaleC_minus1_left that) 
 
-lemma hilbert_schmidt_plus: \<open>hilbert_schmidt (a + b)\<close> if \<open>hilbert_schmidt a\<close> and \<open>hilbert_schmidt b\<close>
-  \<comment> \<open>@{cite conway00operator}, Proposition 18.6 (e)\<close>
-(* See trace_class_plus. Similar approach might work here. Or Conway's direct approach *)
-  sorry
+lemma hilbert_schmidt_plus: \<open>hilbert_schmidt (t + u)\<close> if \<open>hilbert_schmidt t\<close> and \<open>hilbert_schmidt u\<close>
+  for t u :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  \<comment> \<open>@{cite conway00operator}, Proposition 18.6 (e).
+     We use a different proof than Conway: Our proof of \<open>trace_class_plus\<close> below was easy to adapt to Hilbert-Schmidt operators,
+     so we adapted that one. However, Conway's proof would most likely work as well, and possible additionally
+     allow us to weaken the sort of \<^typ>\<open>'b\<close> to \<^class>\<open>complex_inner\<close>.\<close>
+proof -
+  define II :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>'a)\<close> where \<open>II = cblinfun_left + cblinfun_right\<close>
+  define JJ :: \<open>('b\<times>'b) \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> where \<open>JJ = cblinfun_left* + cblinfun_right*\<close>
+  define t2 u2 where \<open>t2 = t* o\<^sub>C\<^sub>L t\<close> and \<open>u2 = u* o\<^sub>C\<^sub>L u\<close>
+  define tu :: \<open>('a\<times>'a) \<Rightarrow>\<^sub>C\<^sub>L ('b\<times>'b)\<close> where \<open>tu = (cblinfun_left o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L cblinfun_left*) + (cblinfun_right o\<^sub>C\<^sub>L u o\<^sub>C\<^sub>L cblinfun_right*)\<close>
+  define tu2 :: \<open>('a\<times>'a) \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>'a)\<close> where \<open>tu2 = (cblinfun_left o\<^sub>C\<^sub>L t2 o\<^sub>C\<^sub>L cblinfun_left*) + (cblinfun_right o\<^sub>C\<^sub>L u2 o\<^sub>C\<^sub>L cblinfun_right*)\<close>
+  have t_plus_u: \<open>t + u = JJ o\<^sub>C\<^sub>L tu o\<^sub>C\<^sub>L II\<close>
+    apply (simp add: II_def JJ_def tu_def cblinfun_compose_add_left cblinfun_compose_add_right cblinfun_compose_assoc)
+    by (simp flip: cblinfun_compose_assoc)
+  have tu_tu2: \<open>tu* o\<^sub>C\<^sub>L tu = tu2\<close>
+    by (simp add: tu_def tu2_def t2_def u2_def cblinfun_compose_add_left 
+        cblinfun_compose_add_right cblinfun_compose_assoc adj_plus
+        isometryD[THEN simp_a_oCL_b] cblinfun_right_left_ortho[THEN simp_a_oCL_b]
+        cblinfun_left_right_ortho[THEN simp_a_oCL_b])
+  have \<open>trace_class tu2\<close>
+  proof (rule trace_classI)
+    define BL BR B :: \<open>('a\<times>'a) set\<close> where \<open>BL = (\<lambda>x. (x,0)) ` some_chilbert_basis\<close>
+      and \<open>BR = (\<lambda>x. (0,x)) ` some_chilbert_basis\<close>
+      and \<open>B = BL \<union> BR\<close>
+    have \<open>BL \<inter> BR = {}\<close>
+      using is_ortho_set_some_chilbert_basis
+      by (auto simp: BL_def BR_def is_ortho_set_def)
+    show \<open>is_onb B\<close>
+      by (simp add: BL_def BR_def B_def is_onb_prod)
+    have \<open>tu2 \<ge> 0\<close>
+      by (auto intro!: positive_cblinfunI simp: t2_def u2_def cinner_adj_right tu2_def cblinfun.add_left cinner_pos_if_pos)
+    then have abs_tu2: \<open>abs_op tu2 = tu2\<close>
+      by (metis abs_opI)
+    have abs_t2: \<open>abs_op t2 = t2\<close>
+      by (metis abs_opI positive_cblinfun_squareI t2_def)
+    have abs_u2: \<open>abs_op u2 = u2\<close>
+      by (metis abs_opI positive_cblinfun_squareI u2_def)
+
+    from that(1)
+    have \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op t2 *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
+      by (simp add: hilbert_schmidt_def t2_def trace_class_iff_summable[OF is_onb_some_chilbert_basis])
+    then have \<open>(\<lambda>x. x \<bullet>\<^sub>C (t2 *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
+      by (simp add: abs_t2)
+    then have sum_BL: \<open>(\<lambda>x. x \<bullet>\<^sub>C (tu2 *\<^sub>V x)) abs_summable_on BL\<close>
+      by (auto simp: BL_def summable_on_reindex inj_on_def o_def tu2_def cblinfun.add_left)
+    from that(2)
+    have \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op u2 *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
+      by (simp add: hilbert_schmidt_def u2_def trace_class_iff_summable[OF is_onb_some_chilbert_basis])
+    then have \<open>(\<lambda>x. x \<bullet>\<^sub>C (u2 *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
+      by (simp add: abs_u2)
+    then have sum_BR: \<open>(\<lambda>x. x \<bullet>\<^sub>C (tu2 *\<^sub>V x)) abs_summable_on BR\<close>
+      by (auto simp: BR_def summable_on_reindex inj_on_def o_def tu2_def cblinfun.add_left)
+    from sum_BL sum_BR
+    show \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op tu2 *\<^sub>V x)) abs_summable_on B\<close>
+      using \<open>BL \<inter> BR = {}\<close>
+      by (auto intro!: summable_on_Un_disjoint simp: B_def abs_tu2)
+  qed
+  then have \<open>hilbert_schmidt tu\<close>
+    by (auto simp flip: tu_tu2 intro!: hilbert_schmidtI)
+  with t_plus_u
+  show \<open>hilbert_schmidt (t + u)\<close>
+    by (auto intro: hilbert_schmidt_comp_left hilbert_schmidt_comp_right)
+qed
 
 lemma hilbert_schmidt_minus: \<open>hilbert_schmidt (a - b)\<close> if \<open>hilbert_schmidt a\<close> and \<open>hilbert_schmidt b\<close>
+  for a b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
   using hilbert_schmidt_plus hilbert_schmidt_uminus that(1) that(2) by fastforce
 
 typedef (overloaded) ('a::chilbert_space,'b::complex_inner) hilbert_schmidt = \<open>Collect hilbert_schmidt :: ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close>
   by (auto intro!: exI[of _ 0])
 setup_lifting type_definition_hilbert_schmidt
 
-instantiation hilbert_schmidt :: (chilbert_space, complex_inner) 
+instantiation hilbert_schmidt :: (chilbert_space, chilbert_space) 
   "{zero,scaleC,uminus,plus,minus,dist_norm,sgn_div_norm,uniformity_dist,open_uniformity}" begin
 lift_definition zero_hilbert_schmidt :: \<open>('a,'b) hilbert_schmidt\<close> is 0 by auto
 lift_definition norm_hilbert_schmidt :: \<open>('a,'b) hilbert_schmidt \<Rightarrow> real\<close> is hilbert_schmidt_norm .
@@ -823,7 +873,7 @@ proof -
     apply (rule trace_classI[rotated]) by simp
 qed
 
-instantiation hilbert_schmidt :: (chilbert_space, complex_inner) complex_vector begin
+instantiation hilbert_schmidt :: (chilbert_space, chilbert_space) complex_vector begin
 instance
 proof intro_classes
   fix a b c :: \<open>('a,'b) hilbert_schmidt\<close>
@@ -910,6 +960,25 @@ proof intro_classes
 qed
 end
 
+lemma hilbert_schmidt_norm_triangle_ineq:
+  \<comment> \<open>@{cite conway00operator}, Proposition 18.6 (e). We do not use their proof but get it as a
+  simple corollary of the instantiation of \<open>hilbert_schmidt\<close> as a inner product space.
+  The proof by Conway would probably allow us to weaken the sort of \<^typ>\<open>'b\<close> to \<^class>\<open>complex_inner\<close>.\<close>
+  fixes a b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  assumes \<open>hilbert_schmidt a\<close> \<open>hilbert_schmidt b\<close>
+  shows \<open>hilbert_schmidt_norm (a + b) \<le> hilbert_schmidt_norm a + hilbert_schmidt_norm b\<close>
+proof -
+  define a' b' where \<open>a' = Abs_hilbert_schmidt a\<close> and \<open>b' = Abs_hilbert_schmidt b\<close>
+  have [transfer_rule]: \<open>cr_hilbert_schmidt a a'\<close>
+    by (simp add: Abs_hilbert_schmidt_inverse a'_def assms(1) cr_hilbert_schmidt_def)
+  have [transfer_rule]: \<open>cr_hilbert_schmidt b b'\<close>
+    by (simp add: Abs_hilbert_schmidt_inverse assms(2) b'_def cr_hilbert_schmidt_def)
+  have \<open>norm (a' + b') \<le> norm a' + norm b'\<close>
+    by (rule norm_triangle_ineq)
+  then show ?thesis
+    apply transfer
+    by -
+qed
 
 lift_definition adj_hs :: \<open>('a::chilbert_space,'b::chilbert_space) hilbert_schmidt \<Rightarrow> ('b,'a) hilbert_schmidt\<close> is adj
   by auto
@@ -1042,23 +1111,6 @@ lemma trace_has_sum:
   shows \<open>has_sum (\<lambda>e. e \<bullet>\<^sub>C (t *\<^sub>V e)) E (trace t)\<close>
   using assms(1) assms(2) trace_alt_def trace_exists by fastforce
 
-(* TODO move *)
-lift_definition cblinfun_left :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>'b::complex_normed_vector)\<close> is \<open>(\<lambda>x. (x,0))\<close>
-  by (auto intro!: bounded_clinearI[where K=1])
-lift_definition cblinfun_right :: \<open>'b::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L ('a::complex_normed_vector\<times>'b)\<close> is \<open>(\<lambda>x. (0,x))\<close>
-  by (auto intro!: bounded_clinearI[where K=1])
-
-lemma isometry_cblinfun_left[simp]: \<open>isometry cblinfun_left\<close>
-  apply (rule orthogonal_on_basis_is_isometry[of some_chilbert_basis])
-   apply simp
-  apply transfer
-  by simp
-
-lemma isometry_cblinfun_right[simp]: \<open>isometry cblinfun_right\<close>
-  apply (rule orthogonal_on_basis_is_isometry[of some_chilbert_basis])
-   apply simp
-  apply transfer
-  by simp
 
 lemma trace_sandwich_isometry[simp]: \<open>trace (sandwich U A) = trace A\<close> if \<open>isometry U\<close>
 proof (cases \<open>trace_class A\<close>)
@@ -1241,7 +1293,7 @@ proof -
     by simp
 qed
 
-lemma trace_class_adj: \<open>trace_class (a*)\<close> if \<open>trace_class a\<close>
+lemma trace_class_adj[simp]: \<open>trace_class (a*)\<close> if \<open>trace_class a\<close>
 proof (rule ccontr)
   assume asm: \<open>\<not> trace_class (a*)\<close>
   then have \<open>trace_norm (a*) = 0\<close>
@@ -1258,64 +1310,6 @@ qed
 
 lemma trace_class_finite_dim'[simp]: \<open>trace_class A\<close> for A :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::{cfinite_dim,chilbert_space}\<close>
   by (metis double_adj trace_class_adj trace_class_finite_dim)
-
-(* TODO move *)
-lemma cblinfun_left_right_ortho[simp]: \<open>cblinfun_left* o\<^sub>C\<^sub>L cblinfun_right = 0\<close>
-proof -
-  have \<open>x \<bullet>\<^sub>C ((cblinfun_left* o\<^sub>C\<^sub>L cblinfun_right) *\<^sub>V y) = 0\<close> for x :: 'b and y :: 'a
-    apply (simp add: cinner_adj_right)
-    apply transfer
-    by auto
-  then show ?thesis
-    by (metis cblinfun.zero_left cblinfun_eqI cinner_eq_zero_iff)
-qed
-
-(* TODO move *)
-lemma cblinfun_right_left_ortho[simp]: \<open>cblinfun_right* o\<^sub>C\<^sub>L cblinfun_left = 0\<close>
-proof -
-  have \<open>x \<bullet>\<^sub>C ((cblinfun_right* o\<^sub>C\<^sub>L cblinfun_left) *\<^sub>V y) = 0\<close> for x :: 'b and y :: 'a
-    apply (simp add: cinner_adj_right)
-    apply transfer
-    by auto
-  then show ?thesis
-    by (metis cblinfun.zero_left cblinfun_eqI cinner_eq_zero_iff)
-qed
-
-(* TODO move *)
-lemma cblinfun_left_apply[simp]: \<open>cblinfun_left *\<^sub>V \<psi> = (\<psi>,0)\<close>
-  apply transfer by simp
-
-(* TODO move *)
-lemma cblinfun_left_adj_apply[simp]: \<open>cblinfun_left* *\<^sub>V \<psi> = fst \<psi>\<close>
-  apply (cases \<psi>)
-  by (auto intro!: cinner_extensionality[of \<open>_ *\<^sub>V _\<close>] simp: cinner_adj_right)
-
-(* TODO move *)
-lemma cblinfun_right_apply[simp]: \<open>cblinfun_right *\<^sub>V \<psi> = (0,\<psi>)\<close>
-  apply transfer by simp
-
-(* TODO move *)
-lemma cblinfun_right_adj_apply[simp]: \<open>cblinfun_right* *\<^sub>V \<psi> = snd \<psi>\<close>
-  apply (cases \<psi>)
-  by (auto intro!: cinner_extensionality[of \<open>_ *\<^sub>V _\<close>] simp: cinner_adj_right)
-
-(* TODO move *)
-lemma abs_opI: 
-  assumes \<open>a* o\<^sub>C\<^sub>L a = b* o\<^sub>C\<^sub>L b\<close>
-  assumes \<open>a \<ge> 0\<close>
-  shows \<open>a = abs_op b\<close>
-  by (simp add: abs_op_def assms(1) assms(2) sqrt_op_unique)
-
-(* TODO move. TODO better name *)
-lemma aux: \<open>a o\<^sub>C\<^sub>L b = c \<Longrightarrow> a o\<^sub>C\<^sub>L (b o\<^sub>C\<^sub>L d) = c o\<^sub>C\<^sub>L d\<close>
-  by (simp add: cblinfun_assoc_left(1))
-
-
-(* TODO move *)
-lemma is_onb_prod:
-  assumes \<open>is_onb B\<close> and \<open>is_onb B'\<close>
-  shows \<open>is_onb (((\<lambda>x. (x,0)) ` B) \<union> ((\<lambda>x. (0,x)) ` B'))\<close>
-sorry
 
 
 lemma trace_class_plus[simp]:
@@ -1347,13 +1341,13 @@ proof -
         o\<^sub>C\<^sub>L ((cblinfun_left o\<^sub>C\<^sub>L abs_op t o\<^sub>C\<^sub>L cblinfun_left*) + (cblinfun_right o\<^sub>C\<^sub>L abs_op u o\<^sub>C\<^sub>L cblinfun_right*))
         = tu* o\<^sub>C\<^sub>L tu\<close>
       proof -
-        have tt[THEN aux, simp]: \<open>(abs_op t)* o\<^sub>C\<^sub>L abs_op t = t* o\<^sub>C\<^sub>L t\<close>
+        have tt[THEN simp_a_oCL_b, simp]: \<open>(abs_op t)* o\<^sub>C\<^sub>L abs_op t = t* o\<^sub>C\<^sub>L t\<close>
           by (simp add: abs_op_def positive_cblinfun_squareI)
-        have uu[THEN aux, simp]: \<open>(abs_op u)* o\<^sub>C\<^sub>L abs_op u = u* o\<^sub>C\<^sub>L u\<close>
+        have uu[THEN simp_a_oCL_b, simp]: \<open>(abs_op u)* o\<^sub>C\<^sub>L abs_op u = u* o\<^sub>C\<^sub>L u\<close>
           by (simp add: abs_op_def positive_cblinfun_squareI)
-        note isometryD[THEN aux, simp]
-        note cblinfun_right_left_ortho[THEN aux, simp]
-        note cblinfun_left_right_ortho[THEN aux, simp]
+        note isometryD[THEN simp_a_oCL_b, simp]
+        note cblinfun_right_left_ortho[THEN simp_a_oCL_b, simp]
+        note cblinfun_left_right_ortho[THEN simp_a_oCL_b, simp]
         show ?thesis
           using tt uu
           by (simp add: tu_def cblinfun_compose_add_right cblinfun_compose_add_left adj_plus
@@ -1402,7 +1396,6 @@ lemma
   using assms apply (induction I rule:infinite_finite_induct)
   by (auto simp: trace_plus)
 
-
 lemma cmod_trace_times: \<open>cmod (trace (a o\<^sub>C\<^sub>L b)) \<le> norm a * trace_norm b\<close> if \<open>trace_class b\<close> 
   for b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
   \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (e)\<close>
@@ -1422,12 +1415,11 @@ proof -
   then have sum1: \<open>(\<lambda>e. e \<bullet>\<^sub>C ((a o\<^sub>C\<^sub>L b) *\<^sub>V e)) abs_summable_on some_chilbert_basis\<close>
     by (metis is_onb_some_chilbert_basis summable_on_iff_abs_summable_on_complex trace_exists)
 
-  have sum5: \<open>(\<lambda>x. norm (sqrt_op (abs_op b) *\<^sub>V x) * norm (sqrt_op (abs_op b) *\<^sub>V x)) summable_on some_chilbert_basis\<close>
+  have sum5: \<open>(\<lambda>x. (norm (sqrt_op (abs_op b) *\<^sub>V x))\<^sup>2) summable_on some_chilbert_basis\<close>
     using summable_hilbert_schmidt_norm_square[OF is_onb_some_chilbert_basis hs1]
     by (simp add: power2_eq_square)
 
-  have sum4: \<open>(\<lambda>x. norm ((sqrt_op (abs_op b) o\<^sub>C\<^sub>L W* o\<^sub>C\<^sub>L a*) *\<^sub>V x) * norm ((sqrt_op (abs_op b) o\<^sub>C\<^sub>L W* o\<^sub>C\<^sub>L a*) *\<^sub>V x)) summable_on
-    some_chilbert_basis\<close>
+  have sum4: \<open>(\<lambda>x. (norm ((sqrt_op (abs_op b) o\<^sub>C\<^sub>L W* o\<^sub>C\<^sub>L a*) *\<^sub>V x))\<^sup>2) summable_on some_chilbert_basis\<close>
     using summable_hilbert_schmidt_norm_square[OF is_onb_some_chilbert_basis hs2]
     by (simp add: power2_eq_square)
 
@@ -1452,9 +1444,15 @@ proof -
   also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. norm ((sqrt_op (abs_op b) o\<^sub>C\<^sub>L W* o\<^sub>C\<^sub>L a*) *\<^sub>V e) * norm (sqrt_op (abs_op b) *\<^sub>V e))\<close>
     using sum2 sum3 apply (rule infsum_mono)
     using complex_inner_class.Cauchy_Schwarz_ineq2 by blast
-  also have \<open>\<dots> \<le> sqrt (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. (norm ((sqrt_op (abs_op b) o\<^sub>C\<^sub>L W* o\<^sub>C\<^sub>L a*) *\<^sub>V e))\<^sup>2) 
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. norm (norm ((sqrt_op (abs_op b) o\<^sub>C\<^sub>L W* o\<^sub>C\<^sub>L a*) *\<^sub>V e) * norm (sqrt_op (abs_op b) *\<^sub>V e)))\<close>
+    by simp
+  also have \<open>\<dots> \<le> sqrt (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. (norm (norm ((sqrt_op (abs_op b) o\<^sub>C\<^sub>L W* o\<^sub>C\<^sub>L a*) *\<^sub>V e)))\<^sup>2) 
+                * sqrt (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. (norm (norm (sqrt_op (abs_op b) *\<^sub>V e)))\<^sup>2)\<close>
+    apply (rule Cauchy_Schwarz_ineq_infsum)
+    using sum4 sum5 by auto
+  also have \<open>\<dots> = sqrt (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. (norm ((sqrt_op (abs_op b) o\<^sub>C\<^sub>L W* o\<^sub>C\<^sub>L a*) *\<^sub>V e))\<^sup>2)
                 * sqrt (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. (norm (sqrt_op (abs_op b) *\<^sub>V e))\<^sup>2)\<close>
-    sorry
+    by simp
   also have \<open>\<dots> = hilbert_schmidt_norm (sqrt_op (abs_op b) o\<^sub>C\<^sub>L W* o\<^sub>C\<^sub>L a*) * hilbert_schmidt_norm (sqrt_op (abs_op b))\<close>
     apply (subst infsum_hilbert_schmidt_norm_square, simp, fact hs2)
     apply (subst infsum_hilbert_schmidt_norm_square, simp, fact hs1)
@@ -1585,14 +1583,53 @@ proof standard
 qed
 end
 
-
-lemma trace_norm_comp_left: \<open>trace_class a \<Longrightarrow> trace_norm (a o\<^sub>C\<^sub>L b) \<le> trace_norm a * norm b\<close>
+lemma trace_norm_comp_right:
+  fixes a :: \<open>'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'c::chilbert_space\<close> and b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
+  assumes \<open>trace_class b\<close>
+  shows \<open>trace_norm (a o\<^sub>C\<^sub>L b) \<le> norm a * trace_norm b\<close>
   \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (g)\<close>
-  sorry
+proof -
+  define w w1 s where \<open>w = polar_decomposition b\<close> and \<open>w1 = polar_decomposition (a o\<^sub>C\<^sub>L b)\<close>
+    and \<open>s = w1* o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L w\<close>
+  have abs_ab: \<open>abs_op (a o\<^sub>C\<^sub>L b) = s o\<^sub>C\<^sub>L abs_op b\<close>
+    by (auto simp: w1_def w_def s_def cblinfun_compose_assoc polar_decomposition_correct polar_decomposition_correct')
+  have norm_s_t: \<open>norm s \<le> norm a\<close>
+  proof -
+    have \<open>norm s \<le> norm (w1* o\<^sub>C\<^sub>L a) * norm w\<close>
+      by (simp add: norm_cblinfun_compose s_def)
+    also have \<open>\<dots> \<le> norm (w1*) * norm a * norm w\<close>
+      by (metis mult.commute mult_left_mono norm_cblinfun_compose norm_ge_zero)
+    also have \<open>\<dots> \<le> norm a\<close>
+      by (metis (no_types, opaque_lifting) dual_order.refl mult.commute mult.right_neutral mult_zero_left norm_adj norm_ge_zero norm_partial_isometry norm_zero polar_decomposition_partial_isometry w1_def w_def)
+    finally show ?thesis
+      by -
+  qed
+  have \<open>trace_norm (a o\<^sub>C\<^sub>L b) = cmod (trace (abs_op (a o\<^sub>C\<^sub>L b)))\<close>
+    by simp
+  also have \<open>\<dots> = cmod (trace (s o\<^sub>C\<^sub>L abs_op b))\<close>
+    using abs_ab by presburger
+  also have \<open>\<dots> \<le> norm s * trace_norm (abs_op b)\<close>
+    using assms by (simp add: cmod_trace_times)
+  also from norm_s_t have \<open>\<dots> \<le> norm a * trace_norm b\<close>
+    by (metis abs_op_idem mult_right_mono of_real_eq_iff trace_abs_op trace_norm_nneg)
+  finally show ?thesis
+    by -
+qed
 
-lemma trace_norm_comp_right: \<open>trace_class b \<Longrightarrow> trace_norm (a o\<^sub>C\<^sub>L b) \<le> norm a * trace_norm b\<close>
+lemma trace_norm_comp_left:
   \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (g)\<close>
-  sorry
+  fixes a :: \<open>'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'c::chilbert_space\<close> and b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
+  assumes [simp]: \<open>trace_class a\<close>
+  shows \<open>trace_norm (a o\<^sub>C\<^sub>L b) \<le> trace_norm a * norm b\<close>
+proof -
+  have \<open>trace_norm (b* o\<^sub>C\<^sub>L a*) \<le> norm (b*) * trace_norm (a*)\<close>
+    apply (rule trace_norm_comp_right)
+    by simp
+  then have \<open>trace_norm ((b* o\<^sub>C\<^sub>L a*)*) \<le> norm b * trace_norm a\<close>
+    by (simp del: adj_cblinfun_compose)
+  then show ?thesis
+    by (simp add: mult.commute)
+qed
 
 lemma bounded_clinear_trace_duality: \<open>trace_class t \<Longrightarrow> bounded_clinear (\<lambda>a. trace (t o\<^sub>C\<^sub>L a))\<close>
   apply (rule bounded_clinearI[where K=\<open>trace_norm t\<close>])

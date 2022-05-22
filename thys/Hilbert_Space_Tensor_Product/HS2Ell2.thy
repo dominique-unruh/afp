@@ -6,44 +6,6 @@ begin
 
 unbundle cblinfun_notation
 
-
-definition some_chilbert_basis :: \<open>'a::chilbert_space set\<close> where
-  \<open>some_chilbert_basis = (SOME B::'a set. is_onb B)\<close>
-
-lemma is_onb_some_chilbert_basis[simp]: \<open>is_onb (some_chilbert_basis :: 'a::chilbert_space set)\<close>
-  using orthonormal_basis_exists[OF is_ortho_set_empty]
-  by (auto simp add: some_chilbert_basis_def intro: someI2)
-
-lemma is_ortho_set_some_chilbert_basis[simp]: \<open>is_ortho_set some_chilbert_basis\<close>
-  using is_onb_def is_onb_some_chilbert_basis by blast
-lemma is_normal_some_chilbert_basis: \<open>\<And>x. x \<in> some_chilbert_basis \<Longrightarrow> norm x = 1\<close>
-  using is_onb_def is_onb_some_chilbert_basis by blast
-lemma ccspan_some_chilbert_basis[simp]: \<open>ccspan some_chilbert_basis = \<top>\<close>
-  using is_onb_def is_onb_some_chilbert_basis by blast
-lemma span_some_chilbert_basis[simp]: \<open>closure (cspan some_chilbert_basis) = UNIV\<close>
-  by (metis ccspan.rep_eq ccspan_some_chilbert_basis top_ccsubspace.rep_eq)
-
-lemma cindependent_some_chilbert_basis[simp]: \<open>cindependent some_chilbert_basis\<close>
-  using is_ortho_set_cindependent is_ortho_set_some_chilbert_basis by blast
-
-lemma finite_some_chilbert_basis[simp]: \<open>finite (some_chilbert_basis :: 'a :: {chilbert_space, cfinite_dim} set)\<close>
-  apply (rule cindependent_cfinite_dim_finite)
-  by simp
-
-lemma some_chilbert_basis_nonempty: \<open>(some_chilbert_basis :: 'a::{chilbert_space, not_singleton} set) \<noteq> {}\<close>
-proof (rule ccontr, simp)
-  define B :: \<open>'a set\<close> where \<open>B = some_chilbert_basis\<close>
-  assume [simp]: \<open>B = {}\<close>
-  have \<open>UNIV = closure (cspan B)\<close>
-    using B_def span_some_chilbert_basis by blast
-  also have \<open>\<dots> = {0}\<close>
-    by simp
-  also have \<open>\<dots> \<noteq> UNIV\<close>
-    using Extra_General.UNIV_not_singleton by blast
-  finally show False
-    by simp
-qed
-
 typedef (overloaded) 'a::\<open>{chilbert_space, not_singleton}\<close> chilbert2ell2 = \<open>some_chilbert_basis :: 'a set\<close>
   using some_chilbert_basis_nonempty by auto
 

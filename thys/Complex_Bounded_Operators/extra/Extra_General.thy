@@ -544,9 +544,10 @@ lemma infsum_nonneg:
    apply (rule infsum_nonneg)
   using assms by (auto simp add: infsum_not_exists)
 
+(* TODO: Rename as something...Cauchy-Schwarz *)
 lemma abs_summable_product:
-  fixes x :: "'a \<Rightarrow> 'b::{real_normed_div_algebra,banach,second_countable_topology}"
-  assumes x2_sum: "(\<lambda>i. (x i) * (x i)) abs_summable_on A"
+  fixes x :: "'a \<Rightarrow> 'b::{real_normed_div_algebra,banach,second_countable_topology}"  (* TODO: real_normed_div_algebra is sufficient *)
+  assumes x2_sum: "(\<lambda>i. (x i) * (x i)) abs_summable_on A" (* TODO: write as (x i)\<^sup>2 *)
     and y2_sum: "(\<lambda>i. (y i) * (y i)) abs_summable_on A"
   shows "(\<lambda>i. x i * y i) abs_summable_on A"
 proof (rule nonneg_bdd_above_summable_on, simp, rule bdd_aboveI2, rename_tac F)

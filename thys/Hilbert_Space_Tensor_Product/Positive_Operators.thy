@@ -902,5 +902,10 @@ proof -
     by simp
 qed
 
+lemma abs_opI: 
+  assumes \<open>a* o\<^sub>C\<^sub>L a = b* o\<^sub>C\<^sub>L b\<close>
+  assumes \<open>a \<ge> 0\<close>
+  shows \<open>a = abs_op b\<close>
+  by (simp add: abs_op_def assms(1) assms(2) sqrt_op_unique)
 
 end

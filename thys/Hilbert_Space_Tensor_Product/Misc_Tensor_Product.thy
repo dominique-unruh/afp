@@ -1489,4 +1489,78 @@ lemma summable_on_cdivide:
   apply (subst division_ring_class.divide_inverse)
   using assms summable_on_cmult_left by blast
 
+lemma norm_abs[simp]: \<open>norm (abs x) = norm x\<close> for x :: \<open>'a :: {idom_abs_sgn, real_normed_div_algebra}\<close>
+proof -
+  have \<open>norm x = norm (sgn x * abs x)\<close>
+    by (simp add: sgn_mult_abs)
+  also have \<open>\<dots> = norm \<bar>x\<bar>\<close>
+    by (simp add: norm_mult norm_sgn)
+  finally show ?thesis
+    by simp
+qed
+
+(* Strengthening of  *) thm abs_summable_product (* with narrower typeclass *)
+lemma abs_summable_product:
+  fixes x :: "'a \<Rightarrow> 'b::real_normed_div_algebra"
+  assumes x2_sum: "(\<lambda>i. (x i)\<^sup>2) abs_summable_on A"
+    and y2_sum: "(\<lambda>i. (y i)\<^sup>2) abs_summable_on A"
+  shows "(\<lambda>i. x i * y i) abs_summable_on A"
+proof (rule nonneg_bdd_above_summable_on, simp, rule bdd_aboveI2, rename_tac F)
+  fix F assume \<open>F \<in> {F. F \<subseteq> A \<and> finite F}\<close>
+  then have "finite F" and "F \<subseteq> A"
+    by auto
+
+  have "norm (x i * y i) \<le> norm (x i * x i) + norm (y i * y i)" for i
+    unfolding norm_mult
+    by (smt mult_left_mono mult_nonneg_nonneg mult_right_mono norm_ge_zero)
+  hence "(\<Sum>i\<in>F. norm (x i * y i)) \<le> (\<Sum>i\<in>F. norm ((x i)\<^sup>2) + norm ((y i)\<^sup>2))"
+    by (simp add: power2_eq_square sum_mono)
+  also have "\<dots> = (\<Sum>i\<in>F. norm ((x i)\<^sup>2)) + (\<Sum>i\<in>F. norm ((y i)\<^sup>2))"
+    by (simp add: sum.distrib)
+  also have "\<dots> \<le> (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((x i)\<^sup>2)) + (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((y i)\<^sup>2))"
+    using x2_sum y2_sum \<open>finite F\<close> \<open>F \<subseteq> A\<close> by (auto intro!: finite_sum_le_infsum add_mono)
+  finally show \<open>(\<Sum>xa\<in>F. norm (x xa * y xa)) \<le> (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((x i)\<^sup>2)) + (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((y i)\<^sup>2))\<close>
+    by simp
+qed
+
+lemma Cauchy_Schwarz_ineq_infsum:
+  fixes x :: "'a \<Rightarrow> 'b::{real_normed_div_algebra}"
+  assumes x2_sum: "(\<lambda>i. (x i)\<^sup>2) abs_summable_on A"
+    and y2_sum: "(\<lambda>i. (y i)\<^sup>2) abs_summable_on A"
+  shows \<open>(\<Sum>\<^sub>\<infinity>i\<in>A. norm (x i * y i)) \<le> sqrt (\<Sum>\<^sub>\<infinity>i\<in>A. (norm (x i))\<^sup>2) * sqrt (\<Sum>\<^sub>\<infinity>i\<in>A. (norm (y i))\<^sup>2)\<close>
+proof -
+  (* have \<open>(norm (\<Sum>\<^sub>\<infinity>i\<in>A. x i * y i)) \<le> (\<Sum>\<^sub>\<infinity>i\<in>A. norm (x i * y i))\<close>
+    by (simp add: Misc_Tensor_Product.abs_summable_product assms(2) norm_infsum_bound x2_sum)
+  also *) have \<open>(\<Sum>\<^sub>\<infinity>i\<in>A. norm (x i * y i)) \<le> sqrt (\<Sum>\<^sub>\<infinity>i\<in>A. (norm (x i))\<^sup>2) * sqrt (\<Sum>\<^sub>\<infinity>i\<in>A. (norm (y i))\<^sup>2)\<close>
+  proof (rule infsum_le_finite_sums)
+    show \<open>(\<lambda>i. x i * y i) abs_summable_on A\<close>
+      using Misc_Tensor_Product.abs_summable_product x2_sum y2_sum by blast
+    fix F assume \<open>finite F\<close> and \<open>F \<subseteq> A\<close>
+
+
+    have sum1: \<open>(\<lambda>i. (norm (x i))\<^sup>2) summable_on A\<close>
+      by (metis (mono_tags, lifting) norm_power summable_on_cong x2_sum)
+    have sum2: \<open>(\<lambda>i. (norm (y i))\<^sup>2) summable_on A\<close>
+      by (metis (no_types, lifting) norm_power summable_on_cong y2_sum)
+
+    have \<open>(\<Sum>i\<in>F. norm (x i * y i))\<^sup>2 = (\<Sum>i\<in>F. norm (x i) * norm (y i))\<^sup>2\<close>
+      by (simp add: norm_mult)
+    also have \<open>\<dots> \<le> (\<Sum>i\<in>F. (norm (x i))\<^sup>2) * (\<Sum>i\<in>F. (norm (y i))\<^sup>2)\<close>
+      using Cauchy_Schwarz_ineq_sum by fastforce
+    also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>i\<in>A. (norm (x i))\<^sup>2) * (\<Sum>i\<in>F. (norm (y i))\<^sup>2)\<close>
+      using sum1 \<open>finite F\<close> \<open>F \<subseteq> A\<close> 
+      by (auto intro!: mult_right_mono finite_sum_le_infsum sum_nonneg)
+    also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>i\<in>A. (norm (x i))\<^sup>2) * (\<Sum>\<^sub>\<infinity>i\<in>A. (norm (y i))\<^sup>2)\<close>
+      using sum2 \<open>finite F\<close> \<open>F \<subseteq> A\<close> 
+      by (auto intro!: mult_left_mono finite_sum_le_infsum infsum_nonneg)
+    also have \<open>\<dots> = (sqrt (\<Sum>\<^sub>\<infinity>i\<in>A. (norm (x i))\<^sup>2) * sqrt (\<Sum>\<^sub>\<infinity>i\<in>A. (norm (y i))\<^sup>2))\<^sup>2\<close>
+      by (smt (verit, best) calculation real_sqrt_mult real_sqrt_pow2 zero_le_power2)
+  finally show \<open>(\<Sum>i\<in>F. norm (x i * y i)) \<le> sqrt (\<Sum>\<^sub>\<infinity>i\<in>A. (norm (x i))\<^sup>2) * sqrt (\<Sum>\<^sub>\<infinity>i\<in>A. (norm (y i))\<^sup>2)\<close>
+    apply (rule power2_le_imp_le)
+    by (auto intro!: mult_nonneg_nonneg infsum_nonneg)
+  qed
+  then show ?thesis
+    by -
+qed
+
 end
