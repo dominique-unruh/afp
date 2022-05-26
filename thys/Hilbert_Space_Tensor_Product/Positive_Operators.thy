@@ -711,6 +711,28 @@ proof -
     by -
 qed
 
+
+lemma kernel_abs_op[simp]: \<open>kernel (abs_op a) = kernel a\<close>
+proof (rule ccsubspace_eqI)
+  fix x
+  have \<open>x \<in> space_as_set (kernel (abs_op a)) \<longleftrightarrow> abs_op a x = 0\<close>
+    using kernel_memberD kernel_memberI by blast
+  also have \<open>\<dots> \<longleftrightarrow> abs_op a x \<bullet>\<^sub>C abs_op a x = 0\<close>
+    by simp
+  also have \<open>\<dots> \<longleftrightarrow> x \<bullet>\<^sub>C ((abs_op a)* o\<^sub>C\<^sub>L abs_op a) x = 0\<close>
+    by (simp add: cinner_adj_right)
+  also have \<open>\<dots> \<longleftrightarrow> x \<bullet>\<^sub>C (a* o\<^sub>C\<^sub>L a) x = 0\<close>
+    by (simp add: abs_op_def positive_cblinfun_squareI)
+  also have \<open>\<dots> \<longleftrightarrow> a x \<bullet>\<^sub>C a x = 0\<close>
+    by (simp add: cinner_adj_right)
+  also have \<open>\<dots> \<longleftrightarrow> a x = 0\<close>
+    by simp
+  also have \<open>\<dots> \<longleftrightarrow> x \<in> space_as_set (kernel a)\<close>
+    using kernel_memberD kernel_memberI by auto
+  finally show \<open>x \<in> space_as_set (kernel (abs_op a)) \<longleftrightarrow> x \<in> space_as_set (kernel a)\<close>
+    by -
+qed
+
 definition polar_decomposition where
   \<comment> \<open>@{cite conway00operator}, 3.9 Polar Decomposition\<close>
   \<open>polar_decomposition A = cblinfun_extension (range (abs_op A)) (\<lambda>\<psi>. A *\<^sub>V inv (abs_op A) \<psi>) o\<^sub>C\<^sub>L Proj (abs_op A *\<^sub>S \<top>)\<close>
@@ -869,38 +891,14 @@ proof -
     apply (rule partial_isometryI'[where V=\<open>abs_op A *\<^sub>S \<top>\<close>])
     by (auto simp add: P_def cancel_apply_Proj norm_W' pdA kernel_memberD)
 
-(*   have \<open>kernel (polar_decomposition A) = - (abs_op A *\<^sub>S \<top>)\<close>
+  have \<open>kernel (polar_decomposition A) = - (abs_op A *\<^sub>S \<top>)\<close>
     apply (rule partial_isometry_initial[where V=\<open>abs_op A *\<^sub>S \<top>\<close>])
     by (auto simp add: P_def cancel_apply_Proj norm_W' pdA kernel_memberD)
-
+  also have \<open>\<dots> = kernel (abs_op A)\<close>
+    by (metis abs_op_pos kernel_compl_adj_range positive_hermitianI)
   also have \<open>\<dots> = kernel A\<close>
-    by - (* See Conway *)
-
+    by (simp add: kernel_abs_op)
   finally show \<open>kernel (polar_decomposition A) = kernel A\<close>
-    by - *)
-
-  show \<open>kernel (polar_decomposition A) = kernel A\<close>
-    sorry
-qed
-
-lemma kernel_abs_op[simp]: \<open>kernel (abs_op a) = kernel a\<close>
-proof (rule ccsubspace_eqI)
-  fix x
-  have \<open>x \<in> space_as_set (kernel (abs_op a)) \<longleftrightarrow> abs_op a x = 0\<close>
-    using kernel_memberD kernel_memberI by blast
-  also have \<open>\<dots> \<longleftrightarrow> abs_op a x \<bullet>\<^sub>C abs_op a x = 0\<close>
-    by simp
-  also have \<open>\<dots> \<longleftrightarrow> x \<bullet>\<^sub>C ((abs_op a)* o\<^sub>C\<^sub>L abs_op a) x = 0\<close>
-    by (simp add: cinner_adj_right)
-  also have \<open>\<dots> \<longleftrightarrow> x \<bullet>\<^sub>C (a* o\<^sub>C\<^sub>L a) x = 0\<close>
-    by (simp add: abs_op_def positive_cblinfun_squareI)
-  also have \<open>\<dots> \<longleftrightarrow> a x \<bullet>\<^sub>C a x = 0\<close>
-    by (simp add: cinner_adj_right)
-  also have \<open>\<dots> \<longleftrightarrow> a x = 0\<close>
-    by simp
-  also have \<open>\<dots> \<longleftrightarrow> x \<in> space_as_set (kernel a)\<close>
-    using kernel_memberD kernel_memberI by auto
-  finally show \<open>x \<in> space_as_set (kernel (abs_op a)) \<longleftrightarrow> x \<in> space_as_set (kernel a)\<close>
     by -
 qed
 
