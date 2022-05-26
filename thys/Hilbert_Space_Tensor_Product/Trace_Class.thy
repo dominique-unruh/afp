@@ -595,8 +595,8 @@ proof -
         cblinfun_left_right_ortho[THEN simp_a_oCL_b])
   have \<open>trace_class tu2\<close>
   proof (rule trace_classI)
-    define BL BR B :: \<open>('a\<times>'a) set\<close> where \<open>BL = (\<lambda>x. (x,0)) ` some_chilbert_basis\<close>
-      and \<open>BR = (\<lambda>x. (0,x)) ` some_chilbert_basis\<close>
+    define BL BR B :: \<open>('a\<times>'a) set\<close> where \<open>BL = some_chilbert_basis \<times> {0}\<close>
+      and \<open>BR = {0} \<times> some_chilbert_basis\<close>
       and \<open>B = BL \<union> BR\<close>
     have \<open>BL \<inter> BR = {}\<close>
       using is_ortho_set_some_chilbert_basis
@@ -618,6 +618,7 @@ proof -
     then have \<open>(\<lambda>x. x \<bullet>\<^sub>C (t2 *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
       by (simp add: abs_t2)
     then have sum_BL: \<open>(\<lambda>x. x \<bullet>\<^sub>C (tu2 *\<^sub>V x)) abs_summable_on BL\<close>
+      apply (subst asm_rl[of \<open>BL = (\<lambda>x. (x,0)) ` some_chilbert_basis\<close>])
       by (auto simp: BL_def summable_on_reindex inj_on_def o_def tu2_def cblinfun.add_left)
     from that(2)
     have \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op u2 *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
@@ -625,6 +626,7 @@ proof -
     then have \<open>(\<lambda>x. x \<bullet>\<^sub>C (u2 *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
       by (simp add: abs_u2)
     then have sum_BR: \<open>(\<lambda>x. x \<bullet>\<^sub>C (tu2 *\<^sub>V x)) abs_summable_on BR\<close>
+      apply (subst asm_rl[of \<open>BR = (\<lambda>x. (0,x)) ` some_chilbert_basis\<close>])
       by (auto simp: BR_def summable_on_reindex inj_on_def o_def tu2_def cblinfun.add_left)
     from sum_BL sum_BR
     show \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op tu2 *\<^sub>V x)) abs_summable_on B\<close>
@@ -1327,8 +1329,8 @@ proof -
     by (simp flip: cblinfun_compose_assoc)
   have \<open>trace_class tu\<close>
   proof (rule trace_classI)
-    define BL BR B :: \<open>('a\<times>'a) set\<close> where \<open>BL = (\<lambda>x. (x,0)) ` some_chilbert_basis\<close>
-      and \<open>BR = (\<lambda>x. (0,x)) ` some_chilbert_basis\<close>
+    define BL BR B :: \<open>('a\<times>'a) set\<close> where \<open>BL = some_chilbert_basis \<times> {0}\<close>
+      and \<open>BR = {0} \<times> some_chilbert_basis\<close>
       and \<open>B = BL \<union> BR\<close>
     have \<open>BL \<inter> BR = {}\<close>
       using is_ortho_set_some_chilbert_basis
@@ -1363,11 +1365,13 @@ proof -
     have \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op t *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
       by (metis is_onb_some_chilbert_basis summable_on_iff_abs_summable_on_complex trace_class_abs_op trace_exists)
     then have sum_BL: \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op tu *\<^sub>V x)) abs_summable_on BL\<close>
+      apply (subst asm_rl[of \<open>BL = (\<lambda>x. (x,0)) ` some_chilbert_basis\<close>])
       by (auto simp: BL_def summable_on_reindex inj_on_def o_def abs_tu cblinfun.add_left)
     from assms(2)
     have \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op u *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
       by (metis is_onb_some_chilbert_basis summable_on_iff_abs_summable_on_complex trace_class_abs_op trace_exists)
     then have sum_BR: \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op tu *\<^sub>V x)) abs_summable_on BR\<close>
+      apply (subst asm_rl[of \<open>BR = (\<lambda>x. (0,x)) ` some_chilbert_basis\<close>])
       by (auto simp: BR_def summable_on_reindex inj_on_def o_def abs_tu cblinfun.add_left)
     from sum_BL sum_BR
     show \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op tu *\<^sub>V x)) abs_summable_on B\<close>

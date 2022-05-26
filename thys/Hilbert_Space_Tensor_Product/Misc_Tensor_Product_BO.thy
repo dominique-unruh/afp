@@ -1586,12 +1586,17 @@ proof (rule ccontr, simp)
 qed
 
 instance prod :: (complex_normed_vector, complex_normed_vector) complex_normed_vector 
-  apply intro_classes
-  sorry
+proof
+  fix c :: complex and x y :: "'a \<times> 'b"
+  show "norm (c *\<^sub>C x) = cmod c * norm x"
+    unfolding norm_prod_def
+    apply (simp add: power_mult_distrib)
+    apply (simp add: distrib_left [symmetric])
+    by (simp add: real_sqrt_mult)
+qed
 
 instance prod :: (chilbert_space, chilbert_space) chilbert_space ..
 
-(* TODO move *)
 lift_definition cblinfun_left :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>'b::complex_normed_vector)\<close> is \<open>(\<lambda>x. (x,0))\<close>
   by (auto intro!: bounded_clinearI[where K=1])
 lift_definition cblinfun_right :: \<open>'b::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L ('a::complex_normed_vector\<times>'b)\<close> is \<open>(\<lambda>x. (0,x))\<close>
@@ -1643,15 +1648,204 @@ lemma cblinfun_right_adj_apply[simp]: \<open>cblinfun_right* *\<^sub>V \<psi> = 
   apply (cases \<psi>)
   by (auto intro!: cinner_extensionality[of \<open>_ *\<^sub>V _\<close>] simp: cinner_adj_right)
 
+lift_definition ccsubspace_Times :: \<open>'a::complex_normed_vector ccsubspace \<Rightarrow> 'b::complex_normed_vector ccsubspace \<Rightarrow> ('a\<times>'b) ccsubspace\<close> is
+  Product_Type.Times
+proof -
+  fix S :: \<open>'a set\<close> and T :: \<open>'b set\<close>
+  assume [simp]: \<open>closed_csubspace S\<close> \<open>closed_csubspace T\<close>
+  have \<open>csubspace (S \<times> T)\<close>
+    by (simp add: complex_vector.subspace_Times)
+  moreover have \<open>closed (S \<times> T)\<close>
+    by (simp add: closed_Times closed_csubspace.closed)
+  ultimately show \<open>closed_csubspace (S \<times> T)\<close>
+    by (rule closed_csubspace.intro)
+qed
+
+lemma cspan_Times: \<open>cspan (S \<times> T) = cspan S \<times> cspan T\<close> if \<open>0 \<in> S\<close> and \<open>0 \<in> T\<close>
+proof 
+  have \<open>fst ` cspan (S \<times> T) \<subseteq> cspan S\<close>
+    apply (subst complex_vector.linear_span_image[symmetric])
+    using that complex_vector.module_hom_fst by auto
+  moreover have \<open>snd ` cspan (S \<times> T) \<subseteq> cspan T\<close>
+    apply (subst complex_vector.linear_span_image[symmetric])
+    using that complex_vector.module_hom_snd by auto
+  ultimately show \<open>cspan (S \<times> T) \<subseteq> cspan S \<times> cspan T\<close>
+    by auto
+
+  show \<open>cspan S \<times> cspan T \<subseteq> cspan (S \<times> T)\<close>
+  proof
+    fix x assume assm: \<open>x \<in> cspan S \<times> cspan T\<close>
+    then have \<open>fst x \<in> cspan S\<close>
+      by auto
+    then obtain t1 r1 where fst_x: \<open>fst x = (\<Sum>a\<in>t1. r1 a *\<^sub>C a)\<close> and [simp]: \<open>finite t1\<close> and \<open>t1 \<subseteq> S\<close>
+      by (auto simp add: complex_vector.span_explicit)
+    from assm
+    have \<open>snd x \<in> cspan T\<close>
+      by auto
+    then obtain t2 r2 where snd_x: \<open>snd x = (\<Sum>a\<in>t2. r2 a *\<^sub>C a)\<close> and [simp]: \<open>finite t2\<close> and \<open>t2 \<subseteq> T\<close>
+      by (auto simp add: complex_vector.span_explicit)
+    define t :: \<open>('a+'b) set\<close> and r :: \<open>('a+'b) \<Rightarrow> complex\<close> and f :: \<open>('a+'b) \<Rightarrow> ('a\<times>'b)\<close>
+      where \<open>t = t1 <+> t2\<close>
+      and \<open>r a = (case a of Inl a1 \<Rightarrow> r1 a1 | Inr a2 \<Rightarrow> r2 a2)\<close>
+      and \<open>f a = (case a of Inl a1 \<Rightarrow> (a1,0) | Inr a2 \<Rightarrow> (0,a2))\<close>
+    for a
+    have \<open>finite t\<close>
+      by (simp add: t_def)
+    moreover have \<open>f ` t \<subseteq> S \<times> T\<close>
+      using  \<open>t1 \<subseteq> S\<close> \<open>t2 \<subseteq> T\<close> that
+      by (auto simp: f_def t_def)
+    moreover have \<open>(fst x, snd x) = (\<Sum>a\<in>t. r a *\<^sub>C f a)\<close>
+      apply (simp only: fst_x snd_x)
+      by (auto simp: t_def sum.Plus r_def f_def sum_prod)
+    ultimately show \<open>x \<in> cspan (S \<times> T)\<close>
+      apply auto
+      by (smt (verit, best) complex_vector.span_scale complex_vector.span_sum complex_vector.span_superset image_subset_iff subset_iff)
+  qed
+qed
+
+lemma ccspan_Times: \<open>ccspan (S \<times> T) = ccsubspace_Times (ccspan S) (ccspan T)\<close> if \<open>0 \<in> S\<close> and \<open>0 \<in> T\<close>
+proof (transfer fixing: S T)
+  from that have \<open>closure (cspan (S \<times> T)) = closure (cspan S \<times> cspan T)\<close>
+    by (simp add: cspan_Times)
+  also have \<open>\<dots> = closure (cspan S) \<times> closure (cspan T)\<close>
+    using closure_Times by blast
+  finally   show \<open>closure (cspan (S \<times> T)) = closure (cspan S) \<times> closure (cspan T)\<close>
+    by -
+qed
+
+lemma ccspan_Times_sing1: \<open>ccspan ({0::'a::complex_normed_vector} \<times> B) = ccsubspace_Times 0 (ccspan B)\<close>
+proof (transfer fixing: B)
+  have \<open>closure (cspan ({0::'a} \<times> B)) = closure ({0} \<times> cspan B)\<close>
+    by (simp add: complex_vector.span_Times_sing1)
+  also have \<open>\<dots> = closure {0} \<times> closure (cspan B)\<close>
+    using closure_Times by blast
+  also have \<open>\<dots> = {0} \<times> closure (cspan B)\<close>
+    by simp
+  finally show \<open>closure (cspan ({0::'a} \<times> B)) = {0} \<times> closure (cspan B)\<close>
+    by -
+qed
+
+lemma ccspan_Times_sing2: \<open>ccspan (B \<times> {0::'a::complex_normed_vector}) = ccsubspace_Times (ccspan B) 0\<close>
+proof (transfer fixing: B)
+  have \<open>closure (cspan (B \<times> {0::'a})) = closure (cspan B \<times> {0})\<close>
+    by (simp add: complex_vector.span_Times_sing2)
+  also have \<open>\<dots> = closure (cspan B) \<times> closure {0}\<close>
+    using closure_Times by blast
+  also have \<open>\<dots> = closure (cspan B) \<times> {0}\<close>
+    by simp
+  finally show \<open>closure (cspan (B \<times> {0::'a})) = closure (cspan B) \<times> {0}\<close>
+    by -
+qed
+
+
+lemma ccspan_0[simp]: \<open>ccspan {0} = 0\<close>
+  apply transfer
+  by simp
+
+lemma set_Times_plus_distrib: \<open>(A \<times> B) + (C \<times> D) = (A + C) \<times> (B + D)\<close>
+  by (auto simp: Sigma_def set_plus_def)
+
+lemma ccsubspace_Times_sup: \<open>(ccsubspace_Times A B) \<squnion> (ccsubspace_Times C D) = ccsubspace_Times (A \<squnion> C) (B \<squnion> D)\<close>
+proof transfer
+  fix A C :: \<open>'a set\<close> and B D :: \<open>'b set\<close>
+  have \<open>A \<times> B +\<^sub>M C \<times> D = closure ((A \<times> B) + (C \<times> D))\<close>
+    using closed_sum_def by blast
+  also have \<open>\<dots> = closure ((A + C) \<times> (B + D))\<close>
+    by (simp add: set_Times_plus_distrib)
+  also have \<open>\<dots> = closure (A + C) \<times> closure (B + D)\<close>
+    by (simp add: closure_Times)
+  also have \<open>\<dots> = (A +\<^sub>M C) \<times> (B +\<^sub>M D)\<close>
+    by (simp add: closed_sum_def)
+  finally show \<open>A \<times> B +\<^sub>M C \<times> D = (A +\<^sub>M C) \<times> (B +\<^sub>M D)\<close>
+    by -
+qed
+
+lemma ccsubspace_Times_top_top[simp]: \<open>ccsubspace_Times \<top> \<top> = \<top>\<close>
+  apply transfer
+  by simp
+
 lemma is_onb_prod:
-  assumes \<open>is_onb B\<close> and \<open>is_onb B'\<close>
-  shows \<open>is_onb (((\<lambda>x. (x,0)) ` B) \<union> ((\<lambda>x. (0,x)) ` B'))\<close>
-sorry
+  assumes \<open>is_onb B\<close> \<open>is_onb B'\<close>
+  shows \<open>is_onb ((B \<times> {0}) \<union> ({0} \<times> B'))\<close>
+proof -
+  from assms
+  have 1: \<open>is_ortho_set ((B \<times> {0}) \<union> ({0} \<times> B'))\<close>
+    unfolding is_ortho_set_def
+    apply (auto simp: is_onb_def is_ortho_set_def zero_prod_def)
+    by (meson is_onb_def is_ortho_set_def)+
+
+  have 2: \<open>(l, r) \<in> B \<times> {0} \<Longrightarrow> norm (l, r) = 1\<close> for l :: 'a and r :: 'b
+    using \<open>is_onb B\<close> is_onb_def by auto
+
+  have 3: \<open>(l, r) \<in> {0} \<times> B' \<Longrightarrow> norm (l, r) = 1\<close> for l :: 'a and r :: 'b
+    using \<open>is_onb B'\<close> is_onb_def by auto
+
+  have [simp]: \<open>ccspan B = \<top>\<close> \<open>ccspan B' = \<top>\<close>
+    using assms is_onb_def by auto
+
+  have 4: \<open>ccspan ((B \<times> {0}) \<union> ({0} \<times> B')) = \<top>\<close>
+    by (auto simp: ccspan_Times_sing1 ccspan_Times_sing2 ccsubspace_Times_sup simp flip: ccspan_union)
+
+  from 1 2 3 4
+  show \<open>is_onb ((B \<times> {0}) \<union> ({0} \<times> B'))\<close>
+    by (auto simp add: is_onb_def)
+qed
 
 lemma simp_a_oCL_b: \<open>a o\<^sub>C\<^sub>L b = c \<Longrightarrow> a o\<^sub>C\<^sub>L (b o\<^sub>C\<^sub>L d) = c o\<^sub>C\<^sub>L d\<close>
   \<comment> \<open>A convenience lemma to transform simplification rules of the form \<^term>\<open>a o\<^sub>C\<^sub>L b = c\<close>.
      E.g., \<open>simp_a_oCL_b[OF isometryD, simp]\<close> declares a simp-rule for simplifying \<^term>\<open>x* o\<^sub>C\<^sub>L (x o\<^sub>C\<^sub>L y) = id_cblinfun o\<^sub>C\<^sub>L y\<close>.\<close>
   by (simp add: cblinfun_assoc_left(1))
+
+lemma simp_a_oCL_b': \<open>a o\<^sub>C\<^sub>L b = c \<Longrightarrow> a *\<^sub>V (b *\<^sub>V d) = c *\<^sub>V d\<close>
+  \<comment> \<open>A convenience lemma to transform simplification rules of the form \<^term>\<open>a o\<^sub>C\<^sub>L b = c\<close>.
+     E.g., \<open>simp_a_oCL_b'[OF isometryD, simp]\<close> declares a simp-rule for simplifying \<^term>\<open>x* *\<^sub>V x *\<^sub>V y = id_cblinfun *\<^sub>V y\<close>.\<close>
+  by auto
+
+lemma cblinfun_compose_Proj_kernel[simp]: \<open>a o\<^sub>C\<^sub>L Proj (kernel a) = 0\<close>
+  apply (rule cblinfun_eqI)
+  apply simp
+  by (metis Proj_range cblinfun_apply_in_image kernel_memberD)
+
+lemma partial_isometry_adj_a_o_a:
+  assumes \<open>partial_isometry a\<close>
+  shows \<open>a* o\<^sub>C\<^sub>L a = Proj (- kernel a)\<close>
+proof (rule cblinfun_cinner_eqI)
+  define P where \<open>P = Proj (- kernel a)\<close>
+  have aP: \<open>a o\<^sub>C\<^sub>L P = a\<close>
+    by (auto intro!: simp: cblinfun_compose_minus_right P_def Proj_ortho_compl)
+  have is_Proj_P[simp]: \<open>is_Proj P\<close>
+    by (simp add: P_def)
+
+  fix \<psi> :: 'a
+  have \<open>\<psi> \<bullet>\<^sub>C ((a* o\<^sub>C\<^sub>L a) *\<^sub>V \<psi>) = a \<psi> \<bullet>\<^sub>C a \<psi>\<close>
+    by (simp add: cinner_adj_right)
+  also have \<open>\<dots> = a (P \<psi>) \<bullet>\<^sub>C a (P \<psi>)\<close>
+    by (metis aP cblinfun_apply_cblinfun_compose)
+  also have \<open>\<dots> = P \<psi> \<bullet>\<^sub>C P \<psi>\<close>
+    by (metis P_def Proj_range assms cblinfun_apply_in_image cdot_square_norm partial_isometry_def)
+  also have \<open>\<dots> = \<psi> \<bullet>\<^sub>C P \<psi>\<close>
+    by (simp flip: cinner_adj_right add: is_proj_selfadj is_Proj_idempotent[THEN simp_a_oCL_b'])
+  finally show \<open>\<psi> \<bullet>\<^sub>C ((a* o\<^sub>C\<^sub>L a) *\<^sub>V \<psi>) = \<psi> \<bullet>\<^sub>C P \<psi>\<close>
+    by -
+qed
+
+lemma kernel_compl_adj_range:
+  shows \<open>kernel a = - (a* *\<^sub>S \<top>)\<close>
+proof (rule ccsubspace_eqI)
+  fix x
+  have \<open>x \<in> space_as_set (kernel a) \<longleftrightarrow> a x = 0\<close>
+    apply transfer by simp
+  also have \<open>a x = 0 \<longleftrightarrow> (\<forall>y. is_orthogonal y (a x))\<close>
+    by (metis cinner_gt_zero_iff cinner_zero_right)
+  also have \<open>\<dots> \<longleftrightarrow> (\<forall>y. is_orthogonal (a* *\<^sub>V y) x)\<close>
+    by (simp add: cinner_adj_left)
+  also have \<open>\<dots> \<longleftrightarrow> x \<in> space_as_set (- (a* *\<^sub>S \<top>))\<close>
+    apply transfer
+    by (metis (mono_tags, opaque_lifting) UNIV_I image_iff is_orthogonal_sym orthogonal_complementI orthogonal_complement_of_closure orthogonal_complement_orthoI')
+  finally show \<open>x \<in> space_as_set (kernel a) \<longleftrightarrow> x \<in> space_as_set (- (a* *\<^sub>S \<top>))\<close>
+    by -
+qed
+
 
 unbundle no_cblinfun_notation
 

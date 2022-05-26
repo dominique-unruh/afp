@@ -1474,13 +1474,14 @@ lemma has_sum_diff:
   assumes \<open>has_sum f A a\<close>
   assumes \<open>has_sum g A b\<close>
   shows \<open>has_sum (\<lambda>x. f x - g x) A (a - b)\<close>
-  sorry
+  by (auto intro!: has_sum_add has_sum_uminus[THEN iffD2] assms simp add: simp flip: add_uminus_conv_diff)
 
 lemma has_sum_of_real:
   fixes f :: "'a \<Rightarrow> real"
   assumes \<open>has_sum f A a\<close>
-  shows \<open>has_sum (\<lambda>x. of_real (f x)) A (of_real a)\<close>
-   sorry
+  shows \<open>has_sum (\<lambda>x. of_real (f x)) A (of_real a :: 'b::{real_algebra_1,real_normed_vector})\<close>
+  apply (rule has_sum_comm_additive[unfolded o_def, where f=of_real])
+  by (auto intro!: additive.intro assms tendsto_of_real)
 
 lemma summable_on_cdivide:
   fixes f :: "'a \<Rightarrow> 'b :: {t2_space, topological_semigroup_mult, division_ring}"
