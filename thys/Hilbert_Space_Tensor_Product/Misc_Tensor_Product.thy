@@ -1564,4 +1564,22 @@ proof -
     by -
 qed
 
+lemma continuous_map_pullback_both:
+  assumes cont: \<open>continuous_map T1 T2 g'\<close>
+  assumes g'g: \<open>\<And>x. f1 x \<in> topspace T1 \<Longrightarrow> x \<in> A1 \<Longrightarrow> g' (f1 x) = f2 (g x)\<close>
+  assumes top1: \<open>f1 -` topspace T1 \<inter> A1 \<subseteq> g -` A2\<close>
+  shows \<open>continuous_map (pullback_topology A1 f1 T1) (pullback_topology A2 f2 T2) g\<close>
+proof -
+  from cont
+  have \<open>continuous_map (pullback_topology A1 f1 T1) T2 (g' \<circ> f1)\<close>
+    by (rule continuous_map_pullback)
+  then have \<open>continuous_map (pullback_topology A1 f1 T1) T2 (f2 \<circ> g)\<close>
+    apply (rule continuous_map_eq)
+    by (simp add: g'g topspace_pullback_topology)
+  then show ?thesis
+    apply (rule continuous_map_pullback')
+    by (simp add: top1 topspace_pullback_topology)
+qed
+
+
 end
