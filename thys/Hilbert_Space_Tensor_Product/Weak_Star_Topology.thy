@@ -5,7 +5,297 @@ theory Weak_Star_Topology
 begin
 
 definition weak_star_topology :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L'b::chilbert_space) topology\<close>
-  where \<open>weak_star_topology = pullback_topology UNIV (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) euclidean\<close>
+  where \<open>weak_star_topology = pullback_topology UNIV (\<lambda>x. \<lambda>t\<in>Collect trace_class. trace (t o\<^sub>C\<^sub>L x))
+                              (product_topology (\<lambda>_. euclidean)  (Collect trace_class))\<close>
+
+(* TODO move *)
+lemma trace_class_from_trace_class[simp]: \<open>trace_class (from_trace_class t)\<close>
+  using from_trace_class by blast
+
+(* TODO move *)
+lemma from_trace_class_0[simp]: \<open>from_trace_class 0 = 0\<close>
+  by (simp add: zero_trace_class.rep_eq)
+
+(* TODO move *)
+lemma pullback_topology_twice:
+  assumes \<open>(f -` B) \<inter> A = C\<close>
+  shows \<open>pullback_topology A f (pullback_topology B g T) = pullback_topology C (g o f) T\<close>
+(* TODO pretty proof *)
+proof -
+  have aux: \<open>S = A \<longleftrightarrow> S = B\<close> if \<open>A = B\<close> for A B S :: 'z
+    using that by simp
+  have *: \<open>(\<exists>V. (openin T U \<and> V = g -` U \<inter> B) \<and> S = f -` V \<inter> A) = (openin T U \<and> S = (g \<circ> f) -` U \<inter> C)\<close> for S U
+    apply (cases \<open>openin T U\<close>)
+     apply (simp_all add: vimage_comp)
+    apply (rule aux)
+    apply auto
+    using assms
+    apply auto
+    by -
+  then have *: \<open>(\<exists>V. (\<exists>U. openin T U \<and> V = g -` U \<inter> B) \<and> S = f -` V \<inter> A) = (\<exists>U. openin T U \<and> S = (g \<circ> f) -` U \<inter> C)\<close> for S
+    by metis
+  show ?thesis
+  apply (simp add: topology_eq openin_pullback_topology)
+    apply (intro allI)
+    by (rule *)
+qed
+
+lemma pullback_topology_homeo_cong:
+  assumes \<open>homeomorphic_map T S g\<close>
+  assumes \<open>range f \<subseteq> topspace T\<close>
+  shows \<open>pullback_topology A f T = pullback_topology A (g o f) S\<close>
+proof -
+  have \<open>\<exists>Us. openin S Us \<and> f -` Ut \<inter> A = (g \<circ> f) -` Us \<inter> A\<close> if \<open>openin T Ut\<close> for Ut
+    apply (rule exI[of _ \<open>g ` Ut\<close>])
+    using assms that apply auto
+    using homeomorphic_map_openness_eq apply blast
+    by (smt (verit, best) homeomorphic_map_maps homeomorphic_maps_map openin_subset rangeI subsetD)
+  moreover have \<open>\<exists>Ut. openin T Ut \<and> (g \<circ> f) -` Us \<inter> A = f -` Ut \<inter> A\<close> if \<open>openin S Us\<close> for Us
+    apply (rule exI[of _ \<open>(g -` Us) \<inter> topspace T\<close>])
+    using assms that apply auto
+    by (meson continuous_map_open homeomorphic_imp_continuous_map)
+  ultimately show ?thesis
+    by (auto simp: topology_eq openin_pullback_topology)
+qed
+
+(* lemma open_map_basisI:
+  assumes \<open>\<And>U. openin\<close>
+  shows \<open>open_map f T U\<close> *)
+
+(* lift_definition map_topology :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('a topology \<Rightarrow> 'b topology)\<close> is undefined . *)
+
+lemma homeomorphic_map_product_topology_reindex:
+  fixes \<pi> :: \<open>'a \<Rightarrow> 'b\<close>
+  assumes \<open>bij_betw \<pi> B A\<close> and \<open>\<And>x. x\<in>B \<Longrightarrow> S x = T (\<pi> x)\<close>
+  defines \<open>\<And>f. g f \<equiv> restrict (f o \<pi>) B\<close>
+  shows \<open>homeomorphic_map (product_topology T A) (product_topology S B) g\<close>
+proof (rule bijective_open_imp_homeomorphic_map)
+  have g_topspace: \<open>g x \<in> topspace (product_topology S B)\<close> if \<open>x \<in> topspace (product_topology T A)\<close> for x
+    using that apply (auto simp add: g_def[abs_def])
+    by (metis PiE_mem assms(1) assms(2) bij_betwE)
+  have l1: \<open>x \<in> (\<lambda>x. restrict (x \<circ> \<pi>) B) ` (\<Pi>\<^sub>E i\<in>A. topspace (T i))\<close> if \<open>x \<in> (\<Pi>\<^sub>E i\<in>B. topspace (S i))\<close> for x
+    by -
+  have open_gU: \<open>openin (product_topology T A) {x \<in> topspace (product_topology T A). g x \<in> U}\<close> 
+    if \<open>openin (product_topology S B) U\<close> for U
+    using that unfolding openin_product_topology_alt
+    apply auto
+    by -
+  have open_gU2: \<open>openin (product_topology S B) (g ` U)\<close> if \<open>openin (product_topology T A) U\<close> for U
+    by -
+  show \<open>continuous_map (product_topology T A) (product_topology S B) g\<close>
+   by (smt (verit, best) Collect_cong continuous_map_def g_topspace open_gU)
+  show \<open>open_map (product_topology T A) (product_topology S B) g\<close>
+    by (simp add: open_gU2 open_map_def)
+  show \<open>g ` topspace (product_topology T A) = topspace (product_topology S B)\<close>
+    apply (auto simp add: l1 topspace_product_topology g_def[abs_def])
+    by (metis PiE_mem assms(1) assms(2) bij_betw_apply)
+  show \<open>inj_on g (topspace (product_topology T A))\<close>
+    apply (simp add: topspace_product_topology g_def[abs_def])
+    by (smt (verit) PiE_ext assms(1) bij_betw_iff_bijections comp_apply inj_on_def restrict_apply') 
+qed
+
+(* lemma product_topology_parametric[transfer_rule]:
+  includes lifting_syntax
+(* TODO assms *)
+  shows \<open>((R ===> (=)) ===> rel_set R ===> (=)) product_topology product_topology\<close> (* TODO: more general: S instead of (=) *)
+  sorry *)
+
+lemma weak_star_topology_def':
+  \<open>weak_star_topology = pullback_topology UNIV (\<lambda>x t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) euclidean\<close>
+proof -
+  define f g where \<open>f x = (\<lambda>t\<in>Collect trace_class. trace (t o\<^sub>C\<^sub>L x))\<close> and \<open>g f' = f' o from_trace_class\<close> for x :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> and f' :: \<open>'b \<Rightarrow>\<^sub>C\<^sub>L 'a \<Rightarrow> complex\<close>
+  have \<open>homeomorphic_map (product_topology (\<lambda>_. euclidean) (Collect trace_class)) (product_topology (\<lambda>_. euclidean) UNIV) g\<close>
+    unfolding g_def[abs_def]
+    apply (rule homeomorphic_map_product_topology_reindex)
+    apply (smt (verit, best) Abs_trace_class_inverse UNIV_I bij_betwI' from_trace_class from_trace_class_inject)
+    by simp
+  then have homeo_g: \<open>homeomorphic_map (product_topology (\<lambda>_. euclidean) (Collect trace_class)) euclidean g\<close>
+    by (simp add: euclidean_product_topology)
+  have \<open>weak_star_topology = pullback_topology UNIV f (product_topology (\<lambda>_. euclidean) (Collect trace_class))\<close>
+    by (simp add: weak_star_topology_def pullback_topology_homeo_cong homeo_g f_def[abs_def])
+  also have \<open>\<dots> = pullback_topology UNIV (g o f) euclidean\<close>
+    apply (subst pullback_topology_homeo_cong)
+      apply (auto simp add: homeo_g f_def[abs_def])
+    by metis
+  also have \<open>\<dots> = pullback_topology UNIV (\<lambda>x t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) euclidean\<close>
+    by (auto simp: f_def[abs_def] g_def[abs_def] o_def)
+  finally show ?thesis
+    by -
+qed
+
+  have \<open>bij_betw g (extensional (Collect trace_class)) UNIV\<close>
+sorry
+
+    by (smt (verit, best) Abs_trace_class_inverse comp_eq_elim extensionalityI g_def inj_on_def)
+  have 1:  \<open>product_topology (\<lambda>_. euclidean) (Collect trace_class) = pullback_topology (extensional (Collect trace_class)) g euclidean\<close>
+  proof -
+    have \<open>\<exists>U. open U \<and> S = g -` U \<inter> extensional (Collect trace_class)\<close> if \<open>openin (product_topology (\<lambda>_. euclidean) (Collect trace_class)) S\<close> for S
+    proof (rule exI[of _ \<open>g ` S\<close>], intro conjI)
+      show \<open>open (g ` S)\<close>
+        apply (simp add: g_def open_fun_def)
+sorry
+
+        by -
+      from openin_subset[OF that]
+      have \<open>S \<subseteq> extensional (Collect trace_class)\<close>
+        by (auto simp: PiE_def subsetD)
+      show \<open>S = g -` g ` S \<inter> extensional (Collect trace_class)\<close>
+        sledgehammer
+        sorry
+    qed
+    moreover have \<open>openin (product_topology (\<lambda>_. euclidean) (Collect trace_class)) (g -` U)\<close> if \<open>open U\<close> for U
+      by -
+     show ?thesis
+       apply (auto simp add: topology_eq openin_pullback_topology)
+       by -
+  qed
+  have 2: \<open>g o f = (\<lambda>x t. trace (from_trace_class t o\<^sub>C\<^sub>L x))\<close>
+    unfolding f_def[abs_def] g_def[abs_def] by force
+  show ?thesis
+    by (simp add: weak_star_topology_def 1 pullback_topology_twice flip: f_def[abs_def] 2)
+
+
+
+  include lifting_syntax
+  have [transfer_rule]: \<open>rel_set cr_trace_class (Collect trace_class) UNIV\<close>
+    by auto
+  show ?thesis
+    unfolding weak_star_topology_def
+    apply (rule sym)
+    apply (subst euclidean_product_topology[symmetric])
+    apply (transfer_prover_start)
+    apply transfer_step
+    apply transfer_step
+         apply transfer_step
+        apply (rule transfer_raw(2))
+  thm transfer_raw(2)[where R=cr_trace_class]
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+
+proof -
+  have \<open>undefined = pullback_topology UNIV (\<lambda>x t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) euclidean\<close>
+    apply (subst euclidean_product_topology[symmetric])
+    apply (transfer_start)
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+    apply transfer_step
+       defer
+       apply transfer_step
+       apply transfer_step
+     defer
+    apply simp
+      apply transfer_step
+
+  apply (rule topology_eq[THEN iffD2])
+  unfolding weak_star_topology_def
+  sorry
+(* proof -
+  define Abs where \<open>Abs t = (if trace_class t then Abs_trace_class t else 0)\<close> for t :: \<open>'b \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
+  have [simp]: \<open>trace_class t \<Longrightarrow> from_trace_class (Abs t) = t\<close> for t
+    by (simp add: Abs_trace_class_inverse local.Abs_def)
+  have [simp]: \<open>\<not> trace_class t \<Longrightarrow> Abs t = 0\<close> for t
+    by (simp add: local.Abs_def)
+
+  have \<open>\<exists>Ua. open Ua \<and>
+              (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` U = (\<lambda>x t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) -` Ua\<close> 
+    if \<open>open U\<close> for U :: \<open>('b \<Rightarrow>\<^sub>C\<^sub>L 'a \<Rightarrow> complex) set\<close>
+  proof (rule exI[of _ \<open>{f o from_trace_class | f. f \<in> U \<and> (\<forall>t. \<not> trace_class t \<longrightarrow> f t = 0)}\<close>], intro conjI set_eqI iffI)
+    from \<open>open U\<close>
+    have \<open>openin (product_topology (\<lambda>_. euclidean) UNIV) U\<close>
+      by (simp add: open_fun_def)
+(*      obtain V where \<open>\<forall>x\<in>U. finite {i \<in> UNIV. V i \<noteq> topspace euclidean} \<and> (\<forall>i \<in> UNIV. openin euclidean (V i)) \<and> x \<in> Pi\<^sub>E UNIV V \<and> Pi\<^sub>E UNIV V \<subseteq> U\<close>
+       apply atomize_elim unfolding PiE_def Pi_def
+       thm bchoice[where S=U]
+       apply (rule bchoice[where S=U])
+      unfolding openin_product_topology_alt
+      apply auto
+sledgehammer
+sorry
+
+sorry
+  then have 
+      by -
+ *)    have \<open>open {f. f \<in> U \<and> (\<forall>t. \<not> trace_class t \<longrightarrow> f t = 0)}\<close>
+      sorry
+    then show \<open>open {f \<circ> from_trace_class |f. f \<in> U \<and> (\<forall>t. \<not> trace_class t \<longrightarrow> f t = 0)}\<close>
+sorry
+  next
+    fix x
+    assume asm: \<open>x \<in> (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` U\<close>
+    show \<open>x \<in> (\<lambda>x t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) -`
+              {f \<circ> from_trace_class |f. f \<in> U \<and> (\<forall>t. \<not> trace_class t \<longrightarrow> f t = 0)}\<close>
+      apply (intro vimageI2 image_eqI)
+      using asm 
+      by (auto intro!: exI[of _ \<open>\<lambda>t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0\<close>])
+  next
+    fix x
+    assume asm: \<open>x \<in> (\<lambda>x t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) -`
+             {f \<circ> from_trace_class |f. f \<in> U \<and> (\<forall>t. \<not> trace_class t \<longrightarrow> f t = 0)}\<close>
+    then obtain f where f_tc: \<open>(\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) = f \<circ> from_trace_class\<close>
+      and \<open>f \<in> U\<close> and f0: \<open>\<not> trace_class t \<Longrightarrow> f t = 0\<close> for t
+      by auto
+    have \<open>(\<lambda>t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) 
+            = (\<lambda>t. if trace_class t then (f o from_trace_class) (Abs_trace_class t) else 0)\<close>
+      by (metis (mono_tags, lifting) Abs_trace_class_inverse f_tc mem_Collect_eq)
+    also have \<open>\<dots> = f\<close>
+      apply (auto intro!: ext)
+      using f0 by (auto simp add: Abs_trace_class_inverse)
+    also have \<open>f \<in> U\<close>
+      using \<open>f \<in> U\<close> by blast
+    finally show \<open>x \<in> (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` U\<close>
+      by simp
+  qed
+
+  moreover have \<open>\<exists>Ua. open Ua \<and>
+              (\<lambda>x t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) -` U = (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` Ua\<close>
+    if \<open>open U\<close> for U :: \<open>(('b, 'a) trace_class \<Rightarrow> complex) set\<close>
+  proof (rule exI[of _ \<open>{f o Abs | f. f \<in> U}\<close>], intro conjI set_eqI iffI)
+    show \<open>open {f \<circ> Abs |f. f \<in> U}\<close>
+      sorry
+  next
+    fix x
+    assume asm: \<open>x \<in> (\<lambda>x t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) -` U\<close>
+    show \<open>x \<in> (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` {f \<circ> Abs |f. f \<in> U}\<close>
+      apply (intro vimageI2 image_eqI)
+      using asm 
+      by (auto intro!: ext exI[of _ \<open>\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x)\<close>] simp: Abs_trace_class_inverse)
+  next
+    fix x
+    assume asm: \<open>x \<in> (\<lambda>x t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) -` {f \<circ> Abs |f. f \<in> U}\<close>
+    then obtain f where f_tc: \<open>(\<lambda>t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) = f \<circ> Abs\<close>
+      and \<open>f \<in> U\<close>
+      by auto
+    have \<open>(\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x))
+            = (\<lambda>t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) o from_trace_class\<close>
+      by auto
+    also have \<open>\<dots> = (f o Abs) o from_trace_class\<close>
+      using f_tc by auto
+    also have \<open>\<dots> = f\<close>
+      by (auto intro!: ext simp: Abs_def[abs_def] from_trace_class_inverse)
+    also note \<open>f \<in> U\<close>
+    finally show \<open>x \<in> (\<lambda>x t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) -` U\<close>
+      by simp
+  qed
+   ultimately show ?thesis
+     apply (auto intro!: simp: topology_eq weak_star_topology_def openin_pullback_topology)
+     by -
+qed *)
 
 lemma weak_star_topology_topspace[simp]:
   "topspace weak_star_topology = UNIV"
@@ -17,15 +307,17 @@ lemma weak_star_topology_basis:
   assumes tc: \<open>\<And>i. i \<in> I \<Longrightarrow> trace_class (t i)\<close>
   shows "openin weak_star_topology {f. \<forall>i\<in>I. trace (t i o\<^sub>C\<^sub>L f) \<in> U i}"
 proof -
-  have "open {g::('b\<Rightarrow>\<^sub>C\<^sub>L'a)\<Rightarrow>complex. \<forall>i\<in>I. g (t i) \<in> U i}"
-    by (rule product_topology_basis'[OF assms(1,2)])
-  moreover have "{a. \<forall>i\<in>I. trace (t i o\<^sub>C\<^sub>L a) \<in> U i}
-                = (\<lambda>a t. if trace_class t then trace (t o\<^sub>C\<^sub>L a) else 0) -` \<dots> \<inter> UNIV"
+  have 1: "openin (product_topology (\<lambda>_. euclidean) (Collect trace_class)) {g::('b\<Rightarrow>\<^sub>C\<^sub>L'a)\<Rightarrow>complex. \<forall>i\<in>I. g (t i) \<in> U i}"
+    apply (subst asm_rl[of \<open>{g::('b\<Rightarrow>\<^sub>C\<^sub>L'a)\<Rightarrow>complex. \<forall>i\<in>I. g (t i) \<in> U i} = Pi\<^sub>E I\<close>])
+    thm product_topology_basis
+    apply (rule product_topology_basis)
+  have 2: "{a. \<forall>i\<in>I. trace (t i o\<^sub>C\<^sub>L a) \<in> U i}
+                = (\<lambda>a. \<lambda>t\<in>Collect trace_class. trace (t o\<^sub>C\<^sub>L a)) -` \<dots> \<inter> UNIV"
     using tc by auto
-  ultimately show ?thesis
-    unfolding weak_star_topology_def 
+  show ?thesis
+    unfolding weak_star_topology_def 2
     apply (subst openin_pullback_topology)
-    by (meson open_openin)
+    using 1 by metis
 qed
 
 lemma wot_weaker_than_weak_star:

@@ -375,7 +375,8 @@ proof (rule ccontr)
     by simp
 qed
 
-typedef (overloaded) 'a::chilbert_space trace_class = \<open>Collect trace_class :: ('a \<Rightarrow>\<^sub>C\<^sub>L 'a) set\<close>
+typedef (overloaded) ('a::chilbert_space, 'b::chilbert_space) trace_class = \<open>Collect trace_class :: ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close>
+  morphisms from_trace_class Abs_trace_class
   by (auto intro!: exI[of _ 0])
 setup_lifting type_definition_trace_class
 
@@ -1517,19 +1518,19 @@ proof -
     by -
 qed
 
-instantiation trace_class :: (chilbert_space) "{complex_vector}" begin
+instantiation trace_class :: (chilbert_space, chilbert_space) "{complex_vector}" begin
 (* Lifted definitions *)
-lift_definition zero_trace_class :: \<open>'a trace_class\<close> is 0 by auto
-lift_definition minus_trace_class :: \<open>'a trace_class \<Rightarrow> 'a trace_class \<Rightarrow> 'a trace_class\<close> is minus by auto
-lift_definition uminus_trace_class :: \<open>'a trace_class \<Rightarrow> 'a trace_class\<close> is uminus by auto
-lift_definition plus_trace_class :: \<open>'a trace_class \<Rightarrow> 'a trace_class \<Rightarrow> 'a trace_class\<close> is plus by auto
-lift_definition scaleC_trace_class :: \<open>complex \<Rightarrow> 'a trace_class \<Rightarrow> 'a trace_class\<close> is scaleC
+lift_definition zero_trace_class :: \<open>('a,'b) trace_class\<close> is 0 by auto
+lift_definition minus_trace_class :: \<open>('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class\<close> is minus by auto
+lift_definition uminus_trace_class :: \<open>('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class\<close> is uminus by auto
+lift_definition plus_trace_class :: \<open>('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class\<close> is plus by auto
+lift_definition scaleC_trace_class :: \<open>complex \<Rightarrow> ('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class\<close> is scaleC
   by (metis (no_types, opaque_lifting) cblinfun_compose_id_right cblinfun_compose_scaleC_right mem_Collect_eq trace_class_comp_left)
-lift_definition scaleR_trace_class :: \<open>real \<Rightarrow> 'a trace_class \<Rightarrow> 'a trace_class\<close> is scaleR
+lift_definition scaleR_trace_class :: \<open>real \<Rightarrow> ('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class\<close> is scaleR
   by (metis (no_types, opaque_lifting) cblinfun_compose_id_right cblinfun_compose_scaleC_right mem_Collect_eq scaleR_scaleC trace_class_comp_left)
 instance
 proof standard
-  fix a b c :: \<open>'a trace_class\<close>
+  fix a b c :: \<open>('a,'b) trace_class\<close>
   show \<open>a + b + c = a + (b + c)\<close>
     apply transfer by auto
   show \<open>a + b = b + a\<close>
@@ -1540,7 +1541,7 @@ proof standard
     apply transfer by auto
   show \<open>a - b = a + - b\<close>
     apply transfer by auto
-  show \<open>(*\<^sub>R) r = ((*\<^sub>C) (complex_of_real r) :: _ \<Rightarrow> 'a trace_class)\<close> for r :: real
+  show \<open>(*\<^sub>R) r = ((*\<^sub>C) (complex_of_real r) :: _ \<Rightarrow> ('a,'b) trace_class)\<close> for r :: real
     by (metis (mono_tags, opaque_lifting) Trace_Class.scaleC_trace_class_def Trace_Class.scaleR_trace_class_def id_apply map_fun_def o_def scaleR_scaleC)
   show \<open>r *\<^sub>C (a + b) = r *\<^sub>C a + r *\<^sub>C b\<close> for r :: complex
     apply transfer
@@ -1555,21 +1556,21 @@ proof standard
 qed
 end
 
-instantiation trace_class :: (chilbert_space) "{complex_normed_vector}" begin
+instantiation trace_class :: (chilbert_space, chilbert_space) "{complex_normed_vector}" begin
 (* Definitions related to the trace norm *)
-lift_definition norm_trace_class :: \<open>'a trace_class \<Rightarrow> real\<close> is trace_norm .
-definition sgn_trace_class :: \<open>'a trace_class \<Rightarrow> 'a trace_class\<close> where \<open>sgn_trace_class a = a /\<^sub>R norm a\<close>
-definition dist_trace_class :: \<open>'a trace_class \<Rightarrow> _ \<Rightarrow> _\<close> where \<open>dist_trace_class a b = norm (a - b)\<close>
-definition [code del]: "uniformity_trace_class = (INF e\<in>{0<..}. principal {(x::'a trace_class, y). dist x y < e})"
-definition [code del]: "open_trace_class U = (\<forall>x\<in>U. \<forall>\<^sub>F (x', y) in INF e\<in>{0<..}. principal {(x, y). dist x y < e}. x' = x \<longrightarrow> y \<in> U)" for U :: "'a trace_class set"
+lift_definition norm_trace_class :: \<open>('a,'b) trace_class \<Rightarrow> real\<close> is trace_norm .
+definition sgn_trace_class :: \<open>('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class\<close> where \<open>sgn_trace_class a = a /\<^sub>R norm a\<close>
+definition dist_trace_class :: \<open>('a,'b) trace_class \<Rightarrow> _ \<Rightarrow> _\<close> where \<open>dist_trace_class a b = norm (a - b)\<close>
+definition [code del]: "uniformity_trace_class = (INF e\<in>{0<..}. principal {(x::('a,'b) trace_class, y). dist x y < e})"
+definition [code del]: "open_trace_class U = (\<forall>x\<in>U. \<forall>\<^sub>F (x', y) in INF e\<in>{0<..}. principal {(x, y). dist x y < e}. x' = x \<longrightarrow> y \<in> U)" for U :: "('a,'b) trace_class set"
 instance
 proof standard
-  fix a b :: \<open>'a trace_class\<close>
+  fix a b :: \<open>('a,'b) trace_class\<close>
   show \<open>dist a b = norm (a - b)\<close>
     by (metis (no_types, lifting) Trace_Class.dist_trace_class_def)
-  show \<open>uniformity = (INF e\<in>{0<..}. principal {(x :: 'a trace_class, y). dist x y < e})\<close>
+  show \<open>uniformity = (INF e\<in>{0<..}. principal {(x :: ('a,'b) trace_class, y). dist x y < e})\<close>
     by (simp add: uniformity_trace_class_def)
-  show \<open>open U = (\<forall>x\<in>U. \<forall>\<^sub>F (x', y) in uniformity. x' = x \<longrightarrow> y \<in> U)\<close> for U :: \<open>'a trace_class set\<close>
+  show \<open>open U = (\<forall>x\<in>U. \<forall>\<^sub>F (x', y) in uniformity. x' = x \<longrightarrow> y \<in> U)\<close> for U :: \<open>('a,'b) trace_class set\<close>
     by (smt (verit, del_insts) case_prod_beta' eventually_mono open_trace_class_def uniformity_trace_class_def)
   show \<open>(norm a = 0) = (a = 0)\<close>
     apply transfer
