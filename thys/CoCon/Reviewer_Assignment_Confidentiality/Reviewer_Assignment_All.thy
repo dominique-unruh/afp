@@ -1,7 +1,0 @@
-theory Reviewer_Assignment_All
-imports
-Reviewer_Assignment_NCPC
-Reviewer_Assignment_NCPC_Aut
-begin
-
-end

@@ -1,9 +1,0 @@
-chapter AFP
-
-session Blue_Eyes (AFP) = "HOL-Combinatorics" +
-  options [timeout = 300]
-  theories
-    Blue_Eyes
-  document_files
-    "root.tex"
-    "root.bib"
