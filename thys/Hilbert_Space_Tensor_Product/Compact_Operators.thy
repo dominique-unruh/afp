@@ -17,6 +17,11 @@ lemma rank1_scaleR[simp]: \<open>rank1 (c *\<^sub>R a)\<close> if \<open>rank1 a
 lemma rank1_uminus[simp]: \<open>rank1 (-a) = rank1 a\<close>
   by (metis add.inverse_inverse rank1_scaleC scaleC_minus1_left)
 
+lemma rank1_butterfly[simp]: \<open>rank1 (butterfly x y)\<close>
+  using rank1_def by blast
+
+subsection \<open>Finite rank operators\<close>
+
 definition finite_rank where \<open>finite_rank A \<longleftrightarrow> A \<in> cspan (Collect rank1)\<close>
 
 lemma finite_rank_0[simp]: \<open>finite_rank 0\<close>
@@ -36,6 +41,35 @@ lemma finite_rank_plus[simp]: \<open>finite_rank (a + b)\<close> if \<open>finit
 
 lemma finite_rank_minus[simp]: \<open>finite_rank (a - b)\<close> if \<open>finite_rank a\<close> and \<open>finite_rank b\<close>
   using complex_vector.span_diff finite_rank_def that(1) that(2) by blast
+
+lemma finite_rank_butterfly[simp]: \<open>finite_rank (butterfly x y)\<close>
+  by (simp add: complex_vector.span_base finite_rank_def)
+
+lemma finite_rank_sum_butterfly:
+  assumes \<open>finite_rank a\<close>
+  shows \<open>\<exists>x y (n::nat). a = (\<Sum>i<n. butterfly (x i) (y i))\<close>
+proof -
+  from assms
+  have \<open>a \<in> cspan (Collect rank1)\<close>
+    by (simp add: finite_rank_def)
+  then obtain r t where \<open>finite t\<close> and t_rank1: \<open>t \<subseteq> Collect rank1\<close> and a_sum: \<open>a = (\<Sum>a\<in>t. r a *\<^sub>C a)\<close>
+  by (smt (verit, best) complex_vector.span_alt mem_Collect_eq)
+  from \<open>finite t\<close> obtain \<iota> and n::nat where \<iota>: \<open>bij_betw \<iota> {..<n} t\<close>
+    using bij_betw_from_nat_into_finite by blast
+  define c where \<open>c i = r (\<iota> i) *\<^sub>C \<iota> i\<close> for i
+  from \<iota> t_rank1
+  have c_rank1: \<open>rank1 (c i)\<close> if \<open>i < n\<close> for i
+    by (auto intro!: rank1_scaleC simp: c_def bij_betw_apply subset_iff that)
+  have ac_sum: \<open>a = (\<Sum>i<n. c i)\<close>
+    by (smt (verit, best) a_sum \<iota> c_def sum.cong sum.reindex_bij_betw)
+  from c_rank1
+  obtain x y where \<open>c i = butterfly (x i) (y i)\<close> if \<open>i < n\<close> for i
+    apply atomize_elim unfolding rank1_def by metis
+  with ac_sum show ?thesis
+    by auto
+qed    
+
+subsection \<open>Compact operators\<close>
 
 definition compact_op where \<open>compact_op A \<longleftrightarrow> A \<in> closure (Collect finite_rank)\<close>
 
@@ -144,6 +178,7 @@ next
 qed
 
 typedef (overloaded) ('a::chilbert_space,'b::complex_normed_vector) compact_op = \<open>Collect compact_op :: ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close>
+  morphisms from_compact_op Abs_compact_op
   by (auto intro!: exI[of _ 0])
 setup_lifting type_definition_compact_op
 
@@ -230,5 +265,91 @@ proof
     for a :: complex and x :: "('a, 'b) compact_op"
     apply transfer by simp
 qed
+end (* instantiation compact_op :: complex_normed_vector *)
+
+
+lemma from_compact_op_plus: \<open>from_compact_op (a + b) = from_compact_op a + from_compact_op b\<close>
+  apply transfer by simp
+
+lemma from_compact_op_scaleC: \<open>from_compact_op (c *\<^sub>C a) = c *\<^sub>C from_compact_op a\<close>
+  apply transfer by simp
+
+lemma from_compact_op_norm[simp]: \<open>norm (from_compact_op a) = norm a\<close>
+  apply transfer by simp
+
+lemma compact_op_butterfly[simp]: \<open>compact_op (butterfly x y)\<close>
+  by (metis closure_subset compact_op_def finite_rank_butterfly in_mono mem_Collect_eq)
+
+lift_definition butterfly_co :: \<open>'a::complex_normed_vector \<Rightarrow> 'b::chilbert_space \<Rightarrow> ('b,'a) compact_op\<close> is butterfly
+  by simp
+
+lemma butterfly_co_add_left: \<open>butterfly_co (a + a') b = butterfly_co a b + butterfly_co a' b\<close>
+  apply transfer by (rule butterfly_add_left)
+
+lemma butterfly_co_add_right: \<open>butterfly_co a (b + b') = butterfly_co a b + butterfly_co a b'\<close>
+  apply transfer by (rule butterfly_add_right)
+
+lemma butterfly_co_scaleR_left[simp]: "butterfly_co (r *\<^sub>R \<psi>) \<phi> = r *\<^sub>C butterfly_co \<psi> \<phi>"
+  apply transfer by (rule butterfly_scaleR_left)
+
+lemma butterfly_co_scaleR_right[simp]: "butterfly_co \<psi> (r *\<^sub>R \<phi>) = r *\<^sub>C butterfly_co \<psi> \<phi>"
+  apply transfer by (rule butterfly_scaleR_right)
+
+lemma butterfly_co_scaleC_left[simp]: "butterfly_co (r *\<^sub>C \<psi>) \<phi> = r *\<^sub>C butterfly_co \<psi> \<phi>"
+  apply transfer by (rule butterfly_scaleC_left)
+
+lemma butterfly_co_scaleC_right[simp]: "butterfly_co \<psi> (r *\<^sub>C \<phi>) = cnj r *\<^sub>C butterfly_co \<psi> \<phi>"
+  apply transfer by (rule butterfly_scaleC_right)
+
+lemma finite_rank_separating_on_compact_op:
+  fixes F G :: \<open>('a::chilbert_space,'b::chilbert_space) compact_op \<Rightarrow> 'c::complex_normed_vector\<close>
+  assumes \<open>\<And>x. finite_rank (from_compact_op x) \<Longrightarrow> F x = G x\<close>
+  assumes \<open>bounded_clinear F\<close>
+  assumes \<open>bounded_clinear G\<close>
+  shows \<open>F = G\<close>
+proof -
+  define FG where \<open>FG x = F x - G x\<close> for x
+  from \<open>bounded_clinear F\<close> and \<open>bounded_clinear G\<close>
+  have \<open>bounded_clinear FG\<close>
+    by (auto simp: FG_def[abs_def] intro!: bounded_clinear_sub)
+  then have contFG': \<open>continuous_map euclidean euclidean FG\<close>
+    by (simp add: Complex_Vector_Spaces.bounded_clinear.bounded_linear linear_continuous_on)
+  have \<open>continuous_on (Collect compact_op) (FG o Abs_compact_op)\<close>
+  proof
+    fix a :: "'a \<Rightarrow>\<^sub>C\<^sub>L 'b" and e :: real
+    assume "0 < e" and a_compact: "a \<in> Collect compact_op"
+    have dist_rw: \<open>dist x' a = dist (Abs_compact_op x') (Abs_compact_op a)\<close> if \<open>compact_op x'\<close> for x'
+      by (metis Abs_compact_op_inverse a_compact dist_compact_op.rep_eq mem_Collect_eq that)
+
+    from \<open>bounded_clinear FG\<close>
+    have \<open>continuous_on UNIV FG\<close>
+      using contFG' continuous_map_iff_continuous2 by blast
+    then have \<open>\<exists>d>0. \<forall>x'. dist x' (Abs_compact_op a) < d \<longrightarrow> dist (FG x') (FG (Abs_compact_op a)) \<le> e\<close>
+      using \<open>e > 0\<close> apply (auto simp: continuous_on_iff) by (meson less_eq_real_def)
+    then have \<open>\<exists>d>0. \<forall>x'. compact_op x' \<longrightarrow> dist (Abs_compact_op x') (Abs_compact_op a) < d \<longrightarrow> 
+                  dist (FG (Abs_compact_op x')) (FG (Abs_compact_op a)) \<le> e\<close>
+      by blast
+    then show "\<exists>d>0. \<forall>x'\<in>Collect compact_op. dist x' a < d \<longrightarrow> dist ((FG \<circ> Abs_compact_op) x') ((FG \<circ> Abs_compact_op) a) \<le> e"
+      by (simp add: dist_rw o_def)
+  qed
+  then have contFG: \<open>continuous_on (closure (Collect finite_rank)) (FG o Abs_compact_op)\<close>
+    by (auto simp: compact_op_def[abs_def])
+
+  have FG0: \<open>finite_rank a \<Longrightarrow> (FG o Abs_compact_op) a = 0\<close> for a
+    by (metis (no_types, lifting) Abs_compact_op_inverse FG_def assms(1) closure_subset comp_apply compact_op_def eq_iff_diff_eq_0 mem_Collect_eq subset_eq)
+
+  have \<open>(FG o Abs_compact_op) a = 0\<close> if \<open>compact_op a\<close> for a
+    using contFG FG0
+    apply (rule continuous_constant_on_closure)
+    using that by (auto simp: compact_op_def)
+
+  then have \<open>FG a = 0\<close> for a
+    by (metis Abs_compact_op_cases comp_apply mem_Collect_eq)
+
+  then show \<open>F = G\<close>
+    by (auto intro!: ext simp: FG_def[abs_def])
+qed
+
+
 
 end

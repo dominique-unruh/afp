@@ -1885,15 +1885,14 @@ lemma the_riesz_rep_bilinear'_correct:
   by (auto simp add: the_riesz_rep_bilinear'_def assms bounded_clinear_CBlinfun_apply)
 
 lemma CBlinfun_plus: 
-  assumes \<open>bounded_clinear f\<close> and \<open>bounded_clinear g\<close>
+  assumes [simp]: \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
   shows \<open>CBlinfun (f + g) = CBlinfun f + CBlinfun g\<close>
-  sorry
+  by (auto intro!: cblinfun_eqI simp: plus_fun_def bounded_clinear_add CBlinfun_inverse cblinfun.add_left)
 
 lemma CBlinfun_scaleC:
   assumes \<open>bounded_clinear f\<close>
   shows \<open>CBlinfun (\<lambda>y. c *\<^sub>C f y) = c *\<^sub>C CBlinfun f\<close>
-sledgehammer
-sorry
+  by (simp add: assms eq_onp_same_args scaleC_cblinfun.abs_eq)
 
 
 lemma the_riesz_rep_bilinear'_plus1:

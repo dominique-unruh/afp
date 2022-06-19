@@ -2,7 +2,7 @@ section \<open>\<open>Trace_Class\<close> -- Trace-class operators\<close>
 
 theory Trace_Class
   imports Complex_Bounded_Operators.Complex_L2 HS2Ell2
-    Weak_Operator_Topology Positive_Operators
+    Weak_Operator_Topology Positive_Operators Compact_Operators
 begin
 
 hide_fact (open) Infinite_Set_Sum.abs_summable_on_Sigma_iff
@@ -1657,12 +1657,288 @@ lemma cmod_trace_times': \<open>cmod (trace (a o\<^sub>C\<^sub>L b)) \<le> norm 
   using cmod_trace_times[of \<open>a*\<close> \<open>b*\<close>]
   by (auto intro!: that trace_class_adj hilbert_schmidt_comp_right hilbert_schmidt_adj simp del: adj_cblinfun_compose)
 
+
+lift_definition iso_trace_class_compact_op_dual' :: \<open>('a::chilbert_space,'b::chilbert_space) trace_class \<Rightarrow> ('b,'a) compact_op \<Rightarrow>\<^sub>C\<^sub>L complex\<close> is
+  \<open>\<lambda>t c. trace (from_compact_op c o\<^sub>C\<^sub>L t)\<close>
+proof (rename_tac t)
+  include lifting_syntax
+  fix t :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
+  assume \<open>t \<in> Collect trace_class\<close>
+  then have [simp]: \<open>trace_class t\<close>
+    by simp
+  have \<open>cmod (trace (from_compact_op x o\<^sub>C\<^sub>L t)) \<le> norm x * trace_norm t\<close> for x
+    by (metis \<open>trace_class t\<close> cmod_trace_times from_compact_op_norm)
+  then show \<open>bounded_clinear (\<lambda>c. trace (from_compact_op c o\<^sub>C\<^sub>L t))\<close>
+    apply (rule_tac bounded_clinearI[where K=\<open>trace_norm t\<close>])
+    by (auto simp: from_compact_op_plus from_compact_op_scaleC cblinfun_compose_add_right
+        cblinfun_compose_add_left trace_plus trace_class_comp_right trace_scaleC)
+qed
+
+lemma iso_trace_class_compact_op_dual'_apply: \<open>iso_trace_class_compact_op_dual' t c = trace (from_compact_op c o\<^sub>C\<^sub>L from_trace_class t)\<close>
+  by (simp add: iso_trace_class_compact_op_dual'.rep_eq)
+
+lemma iso_trace_class_compact_op_dual'_plus: \<open>iso_trace_class_compact_op_dual' (a + b) = iso_trace_class_compact_op_dual' a + iso_trace_class_compact_op_dual' b\<close>
+  apply transfer
+  by (simp add: cblinfun_compose_add_right trace_class_comp_right trace_plus)
+
+lemma iso_trace_class_compact_op_dual'_scaleC: \<open>iso_trace_class_compact_op_dual' (c *\<^sub>C a) = c *\<^sub>C iso_trace_class_compact_op_dual' a\<close>
+  apply transfer
+  by (simp add: trace_scaleC)
+
+(* TODO We might avoid reuse if we prove this after iso_trace_class_compact_op_dual'_isometric *)
+lemma iso_trace_class_compact_op_dual'_bounded_clinear[bounded_clinear, simp]:
+  \<comment> \<open>@{cite conway00operator}, Theorem 19.1\<close>
+    \<open>bounded_clinear (iso_trace_class_compact_op_dual' :: ('a::chilbert_space,'b::chilbert_space) trace_class \<Rightarrow> _)\<close>
+proof -
+  let ?iso = \<open>iso_trace_class_compact_op_dual' :: ('a,'b) trace_class \<Rightarrow> _\<close>
+  have \<open>norm (?iso t) \<le> norm t\<close> for t
+  proof (rule norm_cblinfun_bound)
+    show \<open>norm t \<ge> 0\<close> by simp
+    fix c
+    show \<open>cmod (iso_trace_class_compact_op_dual' t *\<^sub>V c) \<le> norm t * norm c\<close>
+      apply (transfer fixing: c)
+      apply simp
+      by (metis cmod_trace_times from_compact_op_norm ordered_field_class.sign_simps(5))
+  qed
+  then show \<open>bounded_clinear ?iso\<close>
+    apply (rule_tac bounded_clinearI[where K=1])
+    by (auto simp: iso_trace_class_compact_op_dual'_plus iso_trace_class_compact_op_dual'_scaleC)
+qed
+
+
+(* TODO move *)
+lemma sum_butterfly_is_Proj:
+  assumes \<open>is_ortho_set E\<close>
+  assumes \<open>\<And>e. e\<in>E \<Longrightarrow> norm e = 1\<close>
+  shows \<open>is_Proj (\<Sum>e\<in>E. butterfly e e)\<close>
+proof (cases \<open>finite E\<close>)
+  case True
+  show ?thesis
+  proof (rule is_Proj_I)
+    show \<open>(\<Sum>e\<in>E. butterfly e e)* = (\<Sum>e\<in>E. butterfly e e)\<close>
+      by (simp add: sum_adj)
+    have ortho: \<open>f \<noteq> e \<Longrightarrow> e \<in> E \<Longrightarrow> f \<in> E \<Longrightarrow> is_orthogonal f e\<close> for f e
+      by (meson assms(1) is_ortho_set_def)
+    have unit: \<open>e \<bullet>\<^sub>C e = 1\<close> if \<open>e \<in> E\<close> for e
+      using assms(2) cnorm_eq_1 that by blast
+    have *: \<open>(\<Sum>f\<in>E. (f \<bullet>\<^sub>C e) *\<^sub>C butterfly f e) = butterfly e e\<close> if \<open>e \<in> E\<close> for e
+      apply (subst sum_single[where i=e])
+      by (auto intro!: simp: that ortho unit True)
+    show \<open>(\<Sum>e\<in>E. butterfly e e) o\<^sub>C\<^sub>L (\<Sum>e\<in>E. butterfly e e) = (\<Sum>e\<in>E. butterfly e e)\<close>
+      by (auto simp: * cblinfun_compose_sum_right cblinfun_compose_sum_left)
+  qed
+next
+  case False
+  then show ?thesis
+    by simp
+qed
+
+(* TODO move *)
+lemma sum_cmod_pos: 
+  assumes \<open>\<And>x. x\<in>A \<Longrightarrow> f x \<ge> 0\<close>
+  shows \<open>(\<Sum>x\<in>A. cmod (f x)) = cmod (\<Sum>x\<in>A. f x)\<close>
+  by (metis (mono_tags, lifting) assms complex_of_real_cmod of_real_eq_iff of_real_sum sum.cong sum_nonneg)
+
+(* TODO move *)
+lemma norm_is_Proj: \<open>norm P \<le> 1\<close> if \<open>is_Proj P\<close>
+  using is_Proj_partial_isometry norm_partial_isometry that by fastforce
+
+lemma iso_trace_class_compact_op_dual'_surjective[simp]: 
+  \<open>surj (iso_trace_class_compact_op_dual' :: ('a::chilbert_space,'b::chilbert_space) trace_class \<Rightarrow> _)\<close>
+proof -
+  let ?iso = \<open>iso_trace_class_compact_op_dual' :: ('a,'b) trace_class \<Rightarrow> _\<close>
+  have \<open>\<exists>A. \<Phi> = ?iso A\<close> for \<Phi> :: \<open>('b, 'a) compact_op \<Rightarrow>\<^sub>C\<^sub>L complex\<close>
+  proof -
+    define p where \<open>p x y = \<Phi> (butterfly_co y x)\<close> for x y
+    have norm_p: \<open>norm (p x y) \<le> norm \<Phi> * norm x * norm y\<close> for x y
+    proof -
+      have \<open>norm (p x y) \<le> norm \<Phi> * norm (butterfly_co y x)\<close>
+        by (auto simp: p_def norm_cblinfun)
+      also have \<open>\<dots> = norm \<Phi> * norm (butterfly y x)\<close>
+        apply transfer by simp
+      also have \<open>\<dots> = norm \<Phi> * norm x * norm y\<close>
+        by (simp add: norm_butterfly)
+      finally show ?thesis
+        by -
+    qed
+    have [simp]: \<open>bounded_sesquilinear p\<close>
+      apply (rule bounded_sesquilinear.intro)
+      using norm_p
+      by (auto
+          intro!: exI[of _ \<open>norm \<Phi>\<close>]
+          simp add: p_def butterfly_co_add_left butterfly_co_add_right  complex_vector.linear_add 
+          cblinfun.scaleC_right cblinfun.scaleC_left ab_semigroup_mult_class.mult_ac)
+    define A where \<open>A = (the_riesz_rep_bilinear p)*\<close>
+    then have xAy: \<open>x \<bullet>\<^sub>C (A y) = p x y\<close> for x y
+      by (simp add: cinner_adj_right the_riesz_rep_bilinear_correct)
+    have \<Phi>C: \<open>\<Phi> C = trace (from_compact_op C o\<^sub>C\<^sub>L A)\<close> if \<open>finite_rank (from_compact_op C)\<close> for C
+    proof -
+      from that
+      obtain x y and n :: nat where C_sum: \<open>from_compact_op C = (\<Sum>i<n. butterfly (y i) (x i))\<close>
+        apply atomize_elim by (rule finite_rank_sum_butterfly)
+      then have \<open>C = (\<Sum>i<n. butterfly_co (y i) (x i))\<close>
+        apply transfer by simp
+      then have \<open>\<Phi> C = (\<Sum>i<n. \<Phi> *\<^sub>V butterfly_co (y i) (x i))\<close>
+        using cblinfun.sum_right by blast
+      also have \<open>\<dots> = (\<Sum>i<n. p (x i) (y i))\<close>
+        using p_def by presburger
+      also have \<open>\<dots> = (\<Sum>i<n. (x i) \<bullet>\<^sub>C (A (y i)))\<close>
+        using xAy by presburger
+      also have \<open>\<dots> = (\<Sum>i<n. trace (butterfly (y i) (x i) o\<^sub>C\<^sub>L A))\<close>
+        by (simp add: trace_butterfly_comp)
+      also have \<open>\<dots> = trace ((\<Sum>i<n. butterfly (y i) (x i)) o\<^sub>C\<^sub>L A)\<close>
+        by (metis (mono_tags, lifting) cblinfun_compose_sum_left sum.cong trace_class_butterfly trace_class_comp_left trace_sum)
+      also have \<open>\<dots> = trace (from_compact_op C o\<^sub>C\<^sub>L A)\<close>
+        using C_sum by presburger
+      finally show ?thesis
+        by -
+    qed
+    have \<open>trace_class A\<close>
+    proof (rule trace_classI)
+      show \<open>is_onb some_chilbert_basis\<close>
+        by simp
+      define W where \<open>W = polar_decomposition A\<close>
+      have \<open>norm (W*) \<le> 1\<close>
+        by (metis W_def nle_le norm_adj norm_partial_isometry norm_zero not_one_le_zero polar_decomposition_partial_isometry)
+      have \<open>(\<Sum>x\<in>E. cmod (x \<bullet>\<^sub>C (abs_op A *\<^sub>V x))) \<le> norm \<Phi>\<close> if \<open>finite E\<close> and \<open>E \<subseteq> some_chilbert_basis\<close> for E
+      proof -
+        define CE where \<open>CE = (\<Sum>x\<in>E. (butterfly x x))\<close>
+        from \<open>E \<subseteq> some_chilbert_basis\<close>
+        have \<open>norm CE \<le> 1\<close>
+          by (auto intro!: sum_butterfly_is_Proj norm_is_Proj is_normal_some_chilbert_basis simp: CE_def is_ortho_set_antimono)
+        have \<open>(\<Sum>x\<in>E. cmod (x \<bullet>\<^sub>C (abs_op A *\<^sub>V x))) = cmod (\<Sum>x\<in>E. x \<bullet>\<^sub>C (abs_op A *\<^sub>V x))\<close>
+          apply (rule sum_cmod_pos)
+          by (simp add: cinner_pos_if_pos)
+        also have \<open>\<dots> = cmod (\<Sum>x\<in>E. (W *\<^sub>V x) \<bullet>\<^sub>C (A *\<^sub>V x))\<close>
+          apply (rule arg_cong, rule sum.cong, simp)
+          by (metis W_def cblinfun_apply_cblinfun_compose cinner_adj_right polar_decomposition_correct')
+        also have \<open>\<dots> = cmod (\<Sum>x\<in>E. \<Phi> (butterfly_co x (W x)))\<close>
+          apply (rule arg_cong, rule sum.cong, simp)
+          by (simp flip: p_def xAy)
+        also have \<open>\<dots> = cmod (\<Phi> (\<Sum>x\<in>E. butterfly_co x (W x)))\<close>
+          by (simp add: cblinfun.sum_right)
+        also have \<open>\<dots> \<le> norm \<Phi> * norm (\<Sum>x\<in>E. butterfly_co x (W x))\<close>
+          using norm_cblinfun by blast
+        also have \<open>\<dots> = norm \<Phi> * norm (\<Sum>x\<in>E. butterfly x (W x))\<close>
+          apply transfer by simp
+        also have \<open>\<dots> = norm \<Phi> * norm (\<Sum>x\<in>E. (butterfly x x o\<^sub>C\<^sub>L W*))\<close>
+          apply (rule arg_cong, rule sum.cong, simp)
+          by (simp add: butterfly_comp_cblinfun)
+        also have \<open>\<dots> = norm \<Phi> * norm (CE o\<^sub>C\<^sub>L W*)\<close>
+          by (simp add: CE_def cblinfun_compose_sum_left)
+        also have \<open>\<dots> \<le> norm \<Phi>\<close>
+          apply (rule mult_left_le, simp_all)
+          using \<open>norm CE \<le> 1\<close> \<open>norm (W*) \<le> 1\<close>
+          by (metis mult_le_one norm_cblinfun_compose norm_ge_zero order_trans)
+        finally show ?thesis
+          by -
+      qed
+      then show \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op A *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
+        apply (rule_tac nonneg_bdd_above_summable_on)
+        by (auto intro!: bdd_aboveI2)
+    qed
+    then obtain A' where A': \<open>A = from_trace_class A'\<close>
+      using from_trace_class_cases by blast
+    from \<Phi>C have \<Phi>C': \<open>\<Phi> C = ?iso A' C\<close> if \<open>finite_rank (from_compact_op C)\<close> for C
+      by (simp add: that iso_trace_class_compact_op_dual'_apply A')
+    have \<open>\<Phi> = ?iso A'\<close>
+      apply (unfold cblinfun_apply_inject[symmetric])
+      apply (rule finite_rank_separating_on_compact_op)
+      using \<Phi>C' by (auto intro!: cblinfun.bounded_clinear_right)
+    then show ?thesis
+      by auto
+  qed
+  then show ?thesis
+    by auto
+qed
+
+lemma iso_trace_class_compact_op_dual'_isometric[simp]:
+  \<comment> \<open>@{cite conway00operator}, Theorem 19.1\<close>
+  \<open>norm (iso_trace_class_compact_op_dual' t) = norm t\<close> for t :: \<open>('a::chilbert_space, 'b::chilbert_space) trace_class\<close>
+proof -
+  let ?iso = \<open>iso_trace_class_compact_op_dual' :: ('a,'b) trace_class \<Rightarrow> _\<close>
+  have \<open>norm (?iso t) \<le> norm t\<close> for t
+  proof (rule norm_cblinfun_bound)
+    show \<open>norm t \<ge> 0\<close> by simp
+    fix c
+    show \<open>cmod (iso_trace_class_compact_op_dual' t *\<^sub>V c) \<le> norm t * norm c\<close>
+      apply (transfer fixing: c)
+      apply simp
+      by (metis cmod_trace_times from_compact_op_norm ordered_field_class.sign_simps(5))
+  qed
+  moreover have \<open>norm (?iso t) \<ge> norm t\<close> for t
+  proof -
+    define s where \<open>s E = (\<Sum>e\<in>E. cmod (e \<bullet>\<^sub>C (abs_op (from_trace_class t) *\<^sub>V e)))\<close> for E
+    have bound: \<open>norm (?iso t) \<ge> s E\<close> if \<open>finite E\<close> and \<open>E \<subseteq> some_chilbert_basis\<close> for E
+    proof - 
+      text \<open>Partial duplication from the proof of @{thm [source] iso_trace_class_compact_op_dual'_surjective}.
+In Conway's text, this subproof occurs only once. However, it did not become clear to use how this works:
+It seems that Conway's proof only implies that \<^const>\<open>iso_trace_class_compact_op_dual'\<close> is isometric on
+the subset of trace-class operators \<^term>\<open>A\<close> constructed in that proof, but not necessarily on others (if \<^const>\<open>iso_trace_class_compact_op_dual'\<close> were non-injective, there might be others)\<close>
+      define A \<Phi> where \<open>A = from_trace_class t\<close> and \<open>\<Phi> = ?iso t\<close>
+      define W where \<open>W = polar_decomposition A\<close>
+      have \<open>norm (W*) \<le> 1\<close>
+        by (metis W_def nle_le norm_adj norm_partial_isometry norm_zero not_one_le_zero polar_decomposition_partial_isometry)
+      define CE where \<open>CE = (\<Sum>x\<in>E. (butterfly x x))\<close>
+      from \<open>E \<subseteq> some_chilbert_basis\<close>
+      have \<open>norm CE \<le> 1\<close>
+        by (auto intro!: sum_butterfly_is_Proj norm_is_Proj is_normal_some_chilbert_basis simp: CE_def is_ortho_set_antimono)
+      have \<open>s E = (\<Sum>x\<in>E. cmod (x \<bullet>\<^sub>C (abs_op A *\<^sub>V x)))\<close>
+        using A_def s_def by blast
+      also have \<open>\<dots> = cmod (\<Sum>x\<in>E. x \<bullet>\<^sub>C (abs_op A *\<^sub>V x))\<close>
+        apply (rule sum_cmod_pos)
+        by (simp add: cinner_pos_if_pos)
+      also have \<open>\<dots> = cmod (\<Sum>x\<in>E. (W *\<^sub>V x) \<bullet>\<^sub>C (A *\<^sub>V x))\<close>
+        apply (rule arg_cong, rule sum.cong, simp)
+        by (metis W_def cblinfun_apply_cblinfun_compose cinner_adj_right polar_decomposition_correct')
+      also have \<open>\<dots> = cmod (\<Sum>x\<in>E. \<Phi> (butterfly_co x (W x)))\<close>
+        apply (rule arg_cong, rule sum.cong, simp)
+        by (auto simp: \<Phi>_def iso_trace_class_compact_op_dual'_apply butterfly_co.rep_eq trace_butterfly_comp
+            simp flip: A_def)
+      also have \<open>\<dots> = cmod (\<Phi> (\<Sum>x\<in>E. butterfly_co x (W x)))\<close>
+        by (simp add: cblinfun.sum_right)
+      also have \<open>\<dots> \<le> norm \<Phi> * norm (\<Sum>x\<in>E. butterfly_co x (W x))\<close>
+        using norm_cblinfun by blast
+      also have \<open>\<dots> = norm \<Phi> * norm (\<Sum>x\<in>E. butterfly x (W x))\<close>
+        apply transfer by simp
+      also have \<open>\<dots> = norm \<Phi> * norm (\<Sum>x\<in>E. (butterfly x x o\<^sub>C\<^sub>L W*))\<close>
+        apply (rule arg_cong, rule sum.cong, simp)
+        by (simp add: butterfly_comp_cblinfun)
+      also have \<open>\<dots> = norm \<Phi> * norm (CE o\<^sub>C\<^sub>L W*)\<close>
+        by (simp add: CE_def cblinfun_compose_sum_left)
+      also have \<open>\<dots> \<le> norm \<Phi>\<close>
+        apply (rule mult_left_le, simp_all)
+        using \<open>norm CE \<le> 1\<close> \<open>norm (W*) \<le> 1\<close>
+        by (metis mult_le_one norm_cblinfun_compose norm_ge_zero order_trans)
+      finally show ?thesis
+        by (simp add: \<Phi>_def)
+    qed
+    have \<open>trace_class (from_trace_class t)\<close> and \<open>norm t = trace_norm (from_trace_class t)\<close>
+      using from_trace_class
+      by (auto simp add: norm_trace_class.rep_eq)
+    then have \<open>has_sum (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op (from_trace_class t) *\<^sub>V e))) some_chilbert_basis (norm t)\<close>      
+      by (metis (no_types, lifting) has_sum_cong has_sum_infsum is_onb_some_chilbert_basis trace_class_def trace_norm_alt_def trace_norm_basis_invariance)
+    then have lim: \<open>(s \<longlongrightarrow> norm t) (finite_subsets_at_top some_chilbert_basis)\<close>
+      by (simp add: filterlim_iff has_sum_def s_def)
+    show ?thesis
+      using _ _ lim apply (rule tendsto_le)
+      by (auto intro!: tendsto_const eventually_finite_subsets_at_top_weakI bound)
+  qed
+  ultimately show ?thesis
+    using nle_le by blast
+qed
+
+
+lift_definition iso_trace_class_compact_op_dual :: \<open>('a::chilbert_space,'b::chilbert_space) trace_class \<Rightarrow>\<^sub>C\<^sub>L (('b,'a) compact_op \<Rightarrow>\<^sub>C\<^sub>L complex)\<close> is
+  iso_trace_class_compact_op_dual' 
+  by simp
+
 (* TODO: show TC is banach
 
-Conway op \<section>19
-
-Need; Riesz rep thm for bounded sesquilinear forms. Only have it for bounded functionals: riesz_frechet_representation_existence
-NOW AVAILABLE: the_riesz_rep_bilinear
+Steps:
+- Show that "('b,'a) compact_op \<Rightarrow>\<^sub>C\<^sub>L complex" is banach (generally "complex_normed_vector \<Rightarrow> one_dim" is banach)
+- Show that a isometric iso preserves completeness
+- Conclude using iso_trace_class_compact_op_dual'_isometric iso_trace_class_compact_op_dual'_surjective iso_trace_class_compact_op_dual'_bounded_clinear
 
  *)
 

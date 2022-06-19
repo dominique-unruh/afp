@@ -385,8 +385,7 @@ lemma filterlim_weak_star_topology:
 lemma openin_weak_star_topology': \<open>openin weak_star_topology U \<longleftrightarrow> (\<exists>V. open V \<and> U = (\<lambda>x t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) -` V)\<close>
   by (simp add: weak_star_topology_def' openin_pullback_topology)
 
-(* lemma openin_weak_star_topology: \<open>openin weak_star_topology U \<longleftrightarrow> (\<exists>V. open V \<and> U = (\<lambda>x t. trace (t o\<^sub>C\<^sub>L x)) -` V)\<close>
-sorry *)
+(* lemma openin_weak_star_topology: \<open>openin weak_star_topology U \<longleftrightarrow> (\<exists>V. open V \<and> U = (\<lambda>x t. trace (t o\<^sub>C\<^sub>L x)) -` V)\<close> *)
 
 lemma hausdorff_weak_star[simp]: \<open>hausdorff weak_star_topology\<close>
   by (metis cweak_operator_topology_topspace hausdorff_cweak_operator_topology hausdorff_def weak_star_topology_topspace wot_weaker_than_weak_star')
