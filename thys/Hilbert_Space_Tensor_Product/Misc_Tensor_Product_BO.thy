@@ -1,7 +1,8 @@
 section \<open>\<open>Misc_Tensor_Product_BO\<close> -- Miscelleanous results missing from \<^session>\<open>Complex_Bounded_Operators\<close>\<close>
 
 theory Misc_Tensor_Product_BO
-  imports Complex_Bounded_Operators.Complex_L2 Misc_Tensor_Product
+  imports Complex_Bounded_Operators.Complex_L2 Misc_Tensor_Product "HOL-Library.Function_Algebras"
+"HOL-ex.Sketch_and_Explore"
 begin
 
 no_notation Set_Algebras.elt_set_eq (infix "=o" 50)
@@ -1846,6 +1847,125 @@ proof (rule ccsubspace_eqI)
     by -
 qed
 
+
+definition the_riesz_rep :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L complex) \<Rightarrow> 'a\<close> where
+  \<open>the_riesz_rep f = (SOME t. \<forall>x. f x = \<langle>t, x\<rangle>)\<close>
+
+lemma the_riesz_rep[simp]: \<open>the_riesz_rep f \<bullet>\<^sub>C x = f *\<^sub>V x\<close>
+  unfolding the_riesz_rep_def
+  apply (rule someI2_ex)
+  by (simp_all add: riesz_frechet_representation_cblinfun_existence)
+
+lemma the_riesz_rep_unique:
+  assumes \<open>\<And>x. f *\<^sub>V x = t \<bullet>\<^sub>C x\<close>
+  shows \<open>t = the_riesz_rep f\<close>
+  using assms riesz_frechet_representation_cblinfun_unique the_riesz_rep by metis
+
+lemma the_riesz_rep_scaleC: \<open>the_riesz_rep (c *\<^sub>C f) = cnj c *\<^sub>C the_riesz_rep f\<close>
+  apply (rule the_riesz_rep_unique[symmetric])
+  by auto
+
+lemma the_riesz_rep_add: \<open>the_riesz_rep (f + g) = the_riesz_rep f + the_riesz_rep g\<close>
+  apply (rule the_riesz_rep_unique[symmetric])
+  by (auto simp: cinner_add_left cblinfun.add_left)
+
+lemma the_riesz_rep_norm[simp]: \<open>norm (the_riesz_rep f) = norm f\<close>
+  apply (rule riesz_frechet_representation_cblinfun_norm[symmetric])
+  by simp
+
+lemma bounded_antilinear_the_riesz_rep[bounded_antilinear]: \<open>bounded_antilinear the_riesz_rep\<close>
+  by (metis (no_types, opaque_lifting) bounded_antilinear_intro dual_order.refl mult.commute mult_1 the_riesz_rep_add the_riesz_rep_norm the_riesz_rep_scaleC)
+
+definition the_riesz_rep_bilinear' :: \<open>('a::complex_normed_vector \<Rightarrow> 'b::chilbert_space \<Rightarrow> complex) \<Rightarrow> ('a \<Rightarrow> 'b)\<close> where
+  \<open>the_riesz_rep_bilinear' p x = the_riesz_rep (CBlinfun (p x))\<close>
+
+lemma the_riesz_rep_bilinear'_correct:
+  assumes \<open>bounded_clinear (p x)\<close>
+  shows \<open>(the_riesz_rep_bilinear' p x) \<bullet>\<^sub>C y = p x y\<close>
+  by (auto simp add: the_riesz_rep_bilinear'_def assms bounded_clinear_CBlinfun_apply)
+
+lemma CBlinfun_plus: 
+  assumes \<open>bounded_clinear f\<close> and \<open>bounded_clinear g\<close>
+  shows \<open>CBlinfun (f + g) = CBlinfun f + CBlinfun g\<close>
+  sorry
+
+lemma CBlinfun_scaleC:
+  assumes \<open>bounded_clinear f\<close>
+  shows \<open>CBlinfun (\<lambda>y. c *\<^sub>C f y) = c *\<^sub>C CBlinfun f\<close>
+sledgehammer
+sorry
+
+
+lemma the_riesz_rep_bilinear'_plus1:
+  assumes \<open>\<And>x. bounded_clinear (p x)\<close> and \<open>\<And>x. bounded_clinear (q x)\<close>
+  shows \<open>the_riesz_rep_bilinear' (p + q) = the_riesz_rep_bilinear' p + the_riesz_rep_bilinear' q\<close>
+  by (auto intro!: ext simp add: the_riesz_rep_add CBlinfun_plus the_riesz_rep_bilinear'_def 
+      assms bounded_clinear_CBlinfun_apply)
+
+lemma the_riesz_rep_bilinear'_plus2:
+  assumes \<open>bounded_sesquilinear p\<close>
+  shows \<open>the_riesz_rep_bilinear' p (x + y) = the_riesz_rep_bilinear' p x + the_riesz_rep_bilinear' p y\<close>
+proof -
+  have [simp]: \<open>p (x + y) = p x + p y\<close>
+    using assms bounded_sesquilinear.add_left by fastforce
+  have [simp]: \<open>bounded_clinear (p x)\<close> for x
+    by (simp add: assms bounded_sesquilinear.bounded_clinear_right)
+  show ?thesis
+    by (auto intro!: ext simp add: the_riesz_rep_add CBlinfun_plus the_riesz_rep_bilinear'_def
+      assms bounded_clinear_CBlinfun_apply)
+qed
+
+lemma the_riesz_rep_bilinear'_scaleC1:
+  assumes \<open>\<And>x. bounded_clinear (p x)\<close>
+  shows \<open>the_riesz_rep_bilinear' (\<lambda>x y. c *\<^sub>C p x y) = (\<lambda>x. cnj c *\<^sub>C the_riesz_rep_bilinear' p x)\<close>
+  by (auto intro!: ext simp add: the_riesz_rep_scaleC CBlinfun_scaleC the_riesz_rep_bilinear'_def 
+      assms bounded_clinear_CBlinfun_apply
+      simp del: complex_scaleC_def scaleC_conv_of_complex)
+
+lemma the_riesz_rep_bilinear'_scaleC2:
+  assumes \<open>bounded_sesquilinear p\<close>
+  shows \<open>the_riesz_rep_bilinear' p (c *\<^sub>C x) = c *\<^sub>C the_riesz_rep_bilinear' p x\<close>
+proof -
+  have [simp]: \<open>p (c *\<^sub>C x) = (\<lambda>y. cnj c *\<^sub>C p x y)\<close>
+    using assms bounded_sesquilinear.scaleC_left by blast
+  have [simp]: \<open>bounded_clinear (p x)\<close> for x
+    by (simp add: assms bounded_sesquilinear.bounded_clinear_right)
+  show ?thesis
+    by (auto intro!: ext simp add: the_riesz_rep_scaleC CBlinfun_scaleC the_riesz_rep_bilinear'_def
+      assms bounded_clinear_CBlinfun_apply
+      simp del: complex_scaleC_def scaleC_conv_of_complex)
+qed
+
+lemma bounded_clinear_the_riesz_rep_bilinear'2:
+  assumes \<open>bounded_sesquilinear p\<close>
+  shows \<open>bounded_clinear (the_riesz_rep_bilinear' p)\<close>
+proof -
+  obtain K0 where K0: \<open>cmod (p x y) \<le> norm x * norm y * K0\<close> for x y
+    using assms bounded_sesquilinear.bounded  by blast
+  define K where \<open>K = max K0 0\<close>
+  with K0 have K: \<open>cmod (p x y) \<le> norm x * norm y * K\<close> for x y
+    by (smt (verit, del_insts) mult_nonneg_nonneg mult_nonneg_nonpos norm_ge_zero)
+  have [simp]: \<open>K \<ge> 0\<close>
+    by (simp add: K_def)
+  have [simp]: \<open>bounded_clinear (p x)\<close> for x
+    by (simp add: assms bounded_sesquilinear.bounded_clinear_right)
+  have "norm (the_riesz_rep_bilinear' p x) \<le> norm x * K" for x
+    unfolding the_riesz_rep_bilinear'_def
+    using K by (auto intro!: norm_cblinfun_bound simp: bounded_clinear_CBlinfun_apply mult.commute mult.left_commute)
+  then show ?thesis
+    apply (rule_tac bounded_clinearI)
+    by (auto simp: assms the_riesz_rep_bilinear'_plus2 the_riesz_rep_bilinear'_scaleC2)
+qed
+
+lift_definition the_riesz_rep_bilinear:: \<open>('a::complex_normed_vector \<Rightarrow> 'b::chilbert_space \<Rightarrow> complex) \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'b)\<close> is
+  \<open>\<lambda>p. if bounded_sesquilinear p then the_riesz_rep_bilinear' p else 0\<close>
+  by (auto simp: bounded_clinear_the_riesz_rep_bilinear'2 zero_fun_def)
+
+lemma the_riesz_rep_bilinear_correct:
+  assumes \<open>bounded_sesquilinear p\<close>
+  shows \<open>(the_riesz_rep_bilinear p x) \<bullet>\<^sub>C y = p x y\<close>
+  apply (transfer fixing: p)
+  by (simp add: assms bounded_sesquilinear.bounded_clinear_right the_riesz_rep_bilinear'_correct)
 
 unbundle no_cblinfun_notation
 

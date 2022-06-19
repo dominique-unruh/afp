@@ -1657,4 +1657,13 @@ lemma cmod_trace_times': \<open>cmod (trace (a o\<^sub>C\<^sub>L b)) \<le> norm 
   using cmod_trace_times[of \<open>a*\<close> \<open>b*\<close>]
   by (auto intro!: that trace_class_adj hilbert_schmidt_comp_right hilbert_schmidt_adj simp del: adj_cblinfun_compose)
 
+(* TODO: show TC is banach
+
+Conway op \<section>19
+
+Need; Riesz rep thm for bounded sesquilinear forms. Only have it for bounded functionals: riesz_frechet_representation_existence
+NOW AVAILABLE: the_riesz_rep_bilinear
+
+ *)
+
 end

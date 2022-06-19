@@ -86,19 +86,6 @@ next
     by (auto simp add: *)
 qed
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 typedef (overloaded) ('a,'b) cblinfun_wot = \<open>UNIV :: ('a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner) set\<close> ..
 setup_lifting type_definition_cblinfun_wot
 
