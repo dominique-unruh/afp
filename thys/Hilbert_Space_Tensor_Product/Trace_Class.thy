@@ -1933,13 +1933,75 @@ lift_definition iso_trace_class_compact_op_dual :: \<open>('a::chilbert_space,'b
   iso_trace_class_compact_op_dual' 
   by simp
 
-(* TODO: show TC is banach
+(* (* TODO move *)
+definition isometric_isomorphism where 
+  \<open>isometric_isomorphism \<Phi> \<longleftrightarrow> surj \<Phi> \<and> (\<forall>a. norm (\<Phi> a) = norm a)\<close> *)
 
-Steps:
-- Show that "('b,'a) compact_op \<Rightarrow>\<^sub>C\<^sub>L complex" is banach (generally "complex_normed_vector \<Rightarrow> one_dim" is banach)
-- Show that a isometric iso preserves completeness
-- Conclude using iso_trace_class_compact_op_dual'_isometric iso_trace_class_compact_op_dual'_surjective iso_trace_class_compact_op_dual'_bounded_clinear
+(* TODO move *)
+lemma bounded_clinear_inv:
+  assumes [simp]: \<open>bounded_clinear f\<close>
+  assumes b: \<open>b > 0\<close>
+  assumes bound: \<open>\<And>x. norm (f x) \<ge> b * norm x\<close>
+  assumes \<open>surj f\<close>
+  shows \<open>bounded_clinear (inv f)\<close>
+proof (rule bounded_clinear_intro)
+  fix x y :: 'b and r :: complex
+  define x' y' where \<open>x' = inv f x\<close> and \<open>y' = inv f y\<close>
+  have [simp]: \<open>clinear f\<close>
+    by (simp add: bounded_clinear.clinear)
+  have [simp]: \<open>inj f\<close>
+  proof (rule injI)
+    fix x y assume \<open>f x = f y\<close>
+    then have \<open>norm (f (x - y)) = 0\<close>
+      by (simp add: complex_vector.linear_diff)
+    with bound b have \<open>norm (x - y) = 0\<close>
+      by (metis linorder_not_le mult_le_0_iff nle_le norm_ge_zero)
+    then show \<open>x = y\<close>
+      by simp
+  qed
 
- *)
+  from \<open>surj f\<close>
+  have [simp]: \<open>x = f x'\<close> \<open>y = f y'\<close>
+    by (simp_all add: surj_f_inv_f x'_def y'_def)
+  show "inv f (x + y) = inv f x + inv f y"
+    by (simp flip: complex_vector.linear_add)
+  show "inv f (r *\<^sub>C x) = r *\<^sub>C inv f x"
+    by (simp flip: clinear.scaleC)
+  from bound have "b * norm (inv f x) \<le> norm x" 
+    by (simp flip: clinear.scaleC)
+  with b show "norm (inv f x) \<le> norm x * inverse b" 
+    by (smt (verit, ccfv_threshold) left_inverse mult.commute mult_cancel_right1 mult_le_cancel_left_pos vector_space_over_itself.scale_scale)
+qed
+
+instance trace_class :: (chilbert_space, chilbert_space) cbanach
+proof
+  let ?UNIVc = \<open>UNIV :: (('b,'a) compact_op \<Rightarrow>\<^sub>C\<^sub>L complex) set\<close>
+  let ?UNIVt = \<open>UNIV :: ('a,'b) trace_class set\<close>
+  let ?iso = \<open>iso_trace_class_compact_op_dual' :: ('a,'b) trace_class \<Rightarrow> _\<close>
+  have lin_inv[simp]: \<open>bounded_clinear (inv ?iso)\<close>
+    apply (rule bounded_clinear_inv[where b=1])
+    by auto
+  have [simp]: \<open>inj ?iso\<close>
+  proof (rule injI)
+    fix x y assume \<open>?iso x = ?iso y\<close>
+    then have \<open>norm (?iso (x - y)) = 0\<close>
+      by (metis (no_types, opaque_lifting) add_diff_cancel_left diff_self iso_trace_class_compact_op_dual'_isometric iso_trace_class_compact_op_dual'_plus norm_eq_zero ordered_field_class.sign_simps(12))
+    then have \<open>norm (x - y) = 0\<close>
+      by simp
+    then show \<open>x = y\<close>
+      by simp
+  qed
+  have norm_inv[simp]: \<open>norm (inv ?iso x) = norm x\<close> for x
+    by (metis iso_trace_class_compact_op_dual'_isometric iso_trace_class_compact_op_dual'_surjective surj_f_inv_f)
+  have \<open>complete ?UNIVc\<close>
+    by (simp add: complete_UNIV)
+  then have \<open>complete (inv ?iso ` ?UNIVc)\<close>
+    apply (rule complete_isometric_image[rotated 4, where e=1])
+    by (auto simp: bounded_clinear.bounded_linear)
+  then have \<open>complete ?UNIVt\<close>
+    by (simp add: inj_imp_surj_inv)
+  then show \<open>Cauchy X \<Longrightarrow> convergent X\<close> for X :: \<open>nat \<Rightarrow> ('a, 'b) trace_class\<close>
+    by (simp add: complete_def convergent_def)
+qed
 
 end
