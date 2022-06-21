@@ -134,20 +134,6 @@ next
     by -
 qed
 
-(* TODO move *)
-lemma comparable_hermitean:
-  assumes \<open>a \<le> b\<close>
-  assumes \<open>a* = a\<close>
-  shows \<open>b* = b\<close>
-  by (smt (verit, best) assms(1) assms(2) cinner_hermitian_real cinner_real_hermiteanI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def)
-
-(* TODO move *)
-lemma comparable_hermitean':
-  assumes \<open>a \<le> b\<close>
-  assumes \<open>b* = b\<close>
-  shows \<open>a* = a\<close>
-  by (smt (verit, best) assms(1) assms(2) cinner_hermitian_real cinner_real_hermiteanI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def)
-
 (* Proof follows https://link.springer.com/article/10.1007%2FBF01448052,
       @{cite wecken35linearer} *)
 lemma sqrt_op_existence:
@@ -743,8 +729,8 @@ lemma
   \<comment> \<open>@{cite conway00operator}, 3.9 Polar Decomposition\<close>
   shows polar_decomposition_correct: \<open>polar_decomposition A o\<^sub>C\<^sub>L abs_op A = A\<close>
     and polar_decomposition_final_space: \<open>polar_decomposition A *\<^sub>S \<top> = A *\<^sub>S \<top>\<close> (* Should be more precise: range (polar_decomposition A) = closure (range A) *)
-    and polar_decomposition_initial_space: \<open>kernel (polar_decomposition A) = kernel A\<close>
-    and polar_decomposition_partial_isometry: \<open>partial_isometry (polar_decomposition A)\<close>
+    and polar_decomposition_initial_space[simp]: \<open>kernel (polar_decomposition A) = kernel A\<close>
+    and polar_decomposition_partial_isometry[simp]: \<open>partial_isometry (polar_decomposition A)\<close>
 proof -
   have abs_A_norm: \<open>norm (abs_op A h) = norm (A h)\<close> for h
   proof -

@@ -8,56 +8,6 @@ definition weak_star_topology :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>
   where \<open>weak_star_topology = pullback_topology UNIV (\<lambda>x. \<lambda>t\<in>Collect trace_class. trace (t o\<^sub>C\<^sub>L x))
                               (product_topology (\<lambda>_. euclidean)  (Collect trace_class))\<close>
 
-(* TODO move *)
-lemma trace_class_from_trace_class[simp]: \<open>trace_class (from_trace_class t)\<close>
-  using from_trace_class by blast
-
-(* TODO move *)
-lemma from_trace_class_0[simp]: \<open>from_trace_class 0 = 0\<close>
-  by (simp add: zero_trace_class.rep_eq)
-
-(* TODO move *)
-lemma pullback_topology_twice:
-  assumes \<open>(f -` B) \<inter> A = C\<close>
-  shows \<open>pullback_topology A f (pullback_topology B g T) = pullback_topology C (g o f) T\<close>
-(* TODO pretty proof *)
-proof -
-  have aux: \<open>S = A \<longleftrightarrow> S = B\<close> if \<open>A = B\<close> for A B S :: 'z
-    using that by simp
-  have *: \<open>(\<exists>V. (openin T U \<and> V = g -` U \<inter> B) \<and> S = f -` V \<inter> A) = (openin T U \<and> S = (g \<circ> f) -` U \<inter> C)\<close> for S U
-    apply (cases \<open>openin T U\<close>)
-     apply (simp_all add: vimage_comp)
-    apply (rule aux)
-    apply auto
-    using assms
-    apply auto
-    by -
-  then have *: \<open>(\<exists>V. (\<exists>U. openin T U \<and> V = g -` U \<inter> B) \<and> S = f -` V \<inter> A) = (\<exists>U. openin T U \<and> S = (g \<circ> f) -` U \<inter> C)\<close> for S
-    by metis
-  show ?thesis
-  apply (simp add: topology_eq openin_pullback_topology)
-    apply (intro allI)
-    by (rule *)
-qed
-
-lemma pullback_topology_homeo_cong:
-  assumes \<open>homeomorphic_map T S g\<close>
-  assumes \<open>range f \<subseteq> topspace T\<close>
-  shows \<open>pullback_topology A f T = pullback_topology A (g o f) S\<close>
-proof -
-  have \<open>\<exists>Us. openin S Us \<and> f -` Ut \<inter> A = (g \<circ> f) -` Us \<inter> A\<close> if \<open>openin T Ut\<close> for Ut
-    apply (rule exI[of _ \<open>g ` Ut\<close>])
-    using assms that apply auto
-    using homeomorphic_map_openness_eq apply blast
-    by (smt (verit, best) homeomorphic_map_maps homeomorphic_maps_map openin_subset rangeI subsetD)
-  moreover have \<open>\<exists>Ut. openin T Ut \<and> (g \<circ> f) -` Us \<inter> A = f -` Ut \<inter> A\<close> if \<open>openin S Us\<close> for Us
-    apply (rule exI[of _ \<open>(g -` Us) \<inter> topspace T\<close>])
-    using assms that apply auto
-    by (meson continuous_map_open homeomorphic_imp_continuous_map)
-  ultimately show ?thesis
-    by (auto simp: topology_eq openin_pullback_topology)
-qed
-
 (* lemma open_map_basisI:
   assumes \<open>\<And>U. openin\<close>
   shows \<open>open_map f T U\<close> *)
@@ -465,43 +415,6 @@ proof intro_classes
     using \<open>a \<noteq> b\<close> by auto
 qed
 
-(* TODO move *)
-definition \<open>opensets T = Collect (openin T)\<close>
-  \<comment> \<open>This behaves more nicely with the @{method transfer}-method (and friends) than \<^const>\<open>openin\<close>.
-      So rewriting a subgoal to use, e.g., \<^term>\<open>\<exists>U\<in>opensets T. xxx\<close> instead of \<^term>\<open>\<exists>U. openin T U \<longrightarrow> xxx\<close> can make @{method transfer} work better. \<close>
-
-(* TODO move *)
-lemma opensets_parametric[transfer_rule]:
-  includes lifting_syntax
-  assumes \<open>bi_unique R\<close>
-  shows \<open>(rel_topology R ===> rel_set (rel_set R)) opensets opensets\<close>
-proof (intro rel_funI rel_setI)
-  fix S T
-  assume rel_topo: \<open>rel_topology R S T\<close>
-  fix U
-  assume \<open>U \<in> opensets S\<close>
-  then show \<open>\<exists>V \<in> opensets T. rel_set R U V\<close>
-    by (smt (verit, del_insts) Domainp.cases mem_Collect_eq opensets_def rel_fun_def rel_topo rel_topology_def)
-next
-  fix S T assume rel_topo: \<open>rel_topology R S T\<close>
-  fix U assume \<open>U \<in> opensets T\<close>
-  then show \<open>\<exists>V \<in> opensets S. rel_set R V U\<close>
-    by (smt (verit) RangepE mem_Collect_eq opensets_def rel_fun_def rel_topo rel_topology_def)
-qed
-
-(* TODO move *)
-lemma hausdorff_parametric[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique R\<close>
-  shows \<open>(rel_topology R ===> (\<longleftrightarrow>)) hausdorff hausdorff\<close>
-proof -
-  have hausdorff_def': \<open>hausdorff T \<longleftrightarrow> (\<forall>x\<in>topspace T. \<forall>y\<in>topspace T. x \<noteq> y \<longrightarrow> (\<exists>U \<in> opensets T. \<exists>V \<in> opensets T. x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
-    for T :: \<open>'z topology\<close>
-    unfolding opensets_def hausdorff_def Bex_def by auto
-  show ?thesis
-    unfolding hausdorff_def'
-    by transfer_prover
-qed
 
 instance cblinfun_weak_star :: (chilbert_space, chilbert_space) t2_space
   apply (rule hausdorff_OFCLASS_t2_space)

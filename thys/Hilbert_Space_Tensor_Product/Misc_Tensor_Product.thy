@@ -6,7 +6,7 @@ theory Misc_Tensor_Product
     "HOL-Analysis.Infinite_Sum" "HOL-Analysis.Harmonic_Numbers" 
 begin
 
-(* TODO move, explain *)
+(* TODO explain *)
 lemma local_defE: "(\<And>x. x=y \<Longrightarrow> P) \<Longrightarrow> P" by metis
 
 lemma on_closure_leI:
@@ -518,7 +518,6 @@ proof -
 qed
 
 
-(* TODO move *)
 lemma has_sum_euclidean_iff: \<open>has_sum_in euclidean f A s \<longleftrightarrow> has_sum f A s\<close>
   by (simp add: has_sum_def has_sum_in_def)
 
@@ -861,7 +860,6 @@ lemma summable_on_transfer[transfer_rule]:
   unfolding summable_on_euclidean_eq[symmetric]
   by transfer_prover
 
-(* TODO move *)
 lemma abs_gbinomial: \<open>abs (a gchoose n) = (-1)^(n - nat (ceiling a)) * (a gchoose n)\<close>
 proof -
   have \<open>(\<Prod>i=0..<n. abs (a - of_nat i)) = (- 1) ^ (n - nat (ceiling a)) * (\<Prod>i=0..<n. a - of_nat i)\<close>
@@ -1312,7 +1310,6 @@ lemma has_sum_singleton[simp]: \<open>has_sum f {x} y \<longleftrightarrow> f x 
   by (metis infsumI)
 
 
-(* TODO move *)
 lemma tendsto_compose_at_within:
   assumes f: "(f \<longlongrightarrow> y) F" and g: "(g \<longlongrightarrow> z) (at y within S)" 
     and fg: "eventually (\<lambda>w. f w = y \<longrightarrow> g y = z) F"
@@ -1345,7 +1342,6 @@ next
 qed
 
 
-(* TODO move *)
 (* strengthening of original *)
 lemma has_sum_comm_additive_general: 
   fixes f :: \<open>'b :: {comm_monoid_add,topological_space} \<Rightarrow> 'c :: {comm_monoid_add,topological_space}\<close>
@@ -1581,5 +1577,100 @@ proof -
     by (simp add: top1 topspace_pullback_topology)
 qed
 
+lemma norm_plus_leq_norm_prod: \<open>norm (a + b) \<le> sqrt 2 * norm (a, b)\<close>
+proof -
+  have \<open>(norm (a + b))\<^sup>2 \<le> (norm a + norm b)\<^sup>2\<close>
+    using norm_triangle_ineq by auto
+  also have \<open>\<dots> \<le> 2 * ((norm a)\<^sup>2 + (norm b)\<^sup>2)\<close>
+    by (smt (verit, best) power2_sum sum_squares_bound)
+  also have \<open>\<dots> \<le> (sqrt 2 * norm (a, b))\<^sup>2\<close>
+    by (auto simp: power_mult_distrib norm_prod_def simp del: power_mono_iff)
+  finally show ?thesis
+    by auto
+qed
+
+lemma onorm_case_prod_plus_leq: \<open>onorm (case_prod plus :: _ \<Rightarrow> 'a::real_normed_vector) \<le> sqrt 2\<close>
+  apply (rule onorm_bound)
+  using norm_plus_leq_norm_prod by auto
+
+lemma bounded_linear_case_prod_plus[simp]: \<open>bounded_linear (case_prod plus)\<close>
+  apply (rule bounded_linear_intro[where K=\<open>sqrt 2\<close>])
+  by (auto simp add: scaleR_right_distrib norm_plus_leq_norm_prod mult.commute)
+
+lemma pullback_topology_twice:
+  assumes \<open>(f -` B) \<inter> A = C\<close>
+  shows \<open>pullback_topology A f (pullback_topology B g T) = pullback_topology C (g o f) T\<close>
+(* TODO pretty proof *)
+proof -
+  have aux: \<open>S = A \<longleftrightarrow> S = B\<close> if \<open>A = B\<close> for A B S :: 'z
+    using that by simp
+  have *: \<open>(\<exists>V. (openin T U \<and> V = g -` U \<inter> B) \<and> S = f -` V \<inter> A) = (openin T U \<and> S = (g \<circ> f) -` U \<inter> C)\<close> for S U
+    apply (cases \<open>openin T U\<close>)
+     apply (simp_all add: vimage_comp)
+    apply (rule aux)
+    apply auto
+    using assms
+    apply auto
+    by -
+  then have *: \<open>(\<exists>V. (\<exists>U. openin T U \<and> V = g -` U \<inter> B) \<and> S = f -` V \<inter> A) = (\<exists>U. openin T U \<and> S = (g \<circ> f) -` U \<inter> C)\<close> for S
+    by metis
+  show ?thesis
+  apply (simp add: topology_eq openin_pullback_topology)
+    apply (intro allI)
+    by (rule *)
+qed
+
+lemma pullback_topology_homeo_cong:
+  assumes \<open>homeomorphic_map T S g\<close>
+  assumes \<open>range f \<subseteq> topspace T\<close>
+  shows \<open>pullback_topology A f T = pullback_topology A (g o f) S\<close>
+proof -
+  have \<open>\<exists>Us. openin S Us \<and> f -` Ut \<inter> A = (g \<circ> f) -` Us \<inter> A\<close> if \<open>openin T Ut\<close> for Ut
+    apply (rule exI[of _ \<open>g ` Ut\<close>])
+    using assms that apply auto
+    using homeomorphic_map_openness_eq apply blast
+    by (smt (verit, best) homeomorphic_map_maps homeomorphic_maps_map openin_subset rangeI subsetD)
+  moreover have \<open>\<exists>Ut. openin T Ut \<and> (g \<circ> f) -` Us \<inter> A = f -` Ut \<inter> A\<close> if \<open>openin S Us\<close> for Us
+    apply (rule exI[of _ \<open>(g -` Us) \<inter> topspace T\<close>])
+    using assms that apply auto
+    by (meson continuous_map_open homeomorphic_imp_continuous_map)
+  ultimately show ?thesis
+    by (auto simp: topology_eq openin_pullback_topology)
+qed
+
+definition \<open>opensets T = Collect (openin T)\<close>
+  \<comment> \<open>This behaves more nicely with the @{method transfer}-method (and friends) than \<^const>\<open>openin\<close>.
+      So when rewriting a subgoal, using, e.g., \<^term>\<open>\<exists>U\<in>opensets T. xxx\<close> instead of \<^term>\<open>\<exists>U. openin T U \<longrightarrow> xxx\<close> can make @{method transfer} work better. \<close>
+
+lemma opensets_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes \<open>bi_unique R\<close>
+  shows \<open>(rel_topology R ===> rel_set (rel_set R)) opensets opensets\<close>
+proof (intro rel_funI rel_setI)
+  fix S T
+  assume rel_topo: \<open>rel_topology R S T\<close>
+  fix U
+  assume \<open>U \<in> opensets S\<close>
+  then show \<open>\<exists>V \<in> opensets T. rel_set R U V\<close>
+    by (smt (verit, del_insts) Domainp.cases mem_Collect_eq opensets_def rel_fun_def rel_topo rel_topology_def)
+next
+  fix S T assume rel_topo: \<open>rel_topology R S T\<close>
+  fix U assume \<open>U \<in> opensets T\<close>
+  then show \<open>\<exists>V \<in> opensets S. rel_set R V U\<close>
+    by (smt (verit) RangepE mem_Collect_eq opensets_def rel_fun_def rel_topo rel_topology_def)
+qed
+
+lemma hausdorff_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  shows \<open>(rel_topology R ===> (\<longleftrightarrow>)) hausdorff hausdorff\<close>
+proof -
+  have hausdorff_def': \<open>hausdorff T \<longleftrightarrow> (\<forall>x\<in>topspace T. \<forall>y\<in>topspace T. x \<noteq> y \<longrightarrow> (\<exists>U \<in> opensets T. \<exists>V \<in> opensets T. x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
+    for T :: \<open>'z topology\<close>
+    unfolding opensets_def hausdorff_def Bex_def by auto
+  show ?thesis
+    unfolding hausdorff_def'
+    by transfer_prover
+qed
 
 end

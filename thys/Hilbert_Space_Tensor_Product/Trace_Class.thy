@@ -1706,43 +1706,6 @@ proof -
 qed
 
 
-(* TODO move *)
-lemma sum_butterfly_is_Proj:
-  assumes \<open>is_ortho_set E\<close>
-  assumes \<open>\<And>e. e\<in>E \<Longrightarrow> norm e = 1\<close>
-  shows \<open>is_Proj (\<Sum>e\<in>E. butterfly e e)\<close>
-proof (cases \<open>finite E\<close>)
-  case True
-  show ?thesis
-  proof (rule is_Proj_I)
-    show \<open>(\<Sum>e\<in>E. butterfly e e)* = (\<Sum>e\<in>E. butterfly e e)\<close>
-      by (simp add: sum_adj)
-    have ortho: \<open>f \<noteq> e \<Longrightarrow> e \<in> E \<Longrightarrow> f \<in> E \<Longrightarrow> is_orthogonal f e\<close> for f e
-      by (meson assms(1) is_ortho_set_def)
-    have unit: \<open>e \<bullet>\<^sub>C e = 1\<close> if \<open>e \<in> E\<close> for e
-      using assms(2) cnorm_eq_1 that by blast
-    have *: \<open>(\<Sum>f\<in>E. (f \<bullet>\<^sub>C e) *\<^sub>C butterfly f e) = butterfly e e\<close> if \<open>e \<in> E\<close> for e
-      apply (subst sum_single[where i=e])
-      by (auto intro!: simp: that ortho unit True)
-    show \<open>(\<Sum>e\<in>E. butterfly e e) o\<^sub>C\<^sub>L (\<Sum>e\<in>E. butterfly e e) = (\<Sum>e\<in>E. butterfly e e)\<close>
-      by (auto simp: * cblinfun_compose_sum_right cblinfun_compose_sum_left)
-  qed
-next
-  case False
-  then show ?thesis
-    by simp
-qed
-
-(* TODO move *)
-lemma sum_cmod_pos: 
-  assumes \<open>\<And>x. x\<in>A \<Longrightarrow> f x \<ge> 0\<close>
-  shows \<open>(\<Sum>x\<in>A. cmod (f x)) = cmod (\<Sum>x\<in>A. f x)\<close>
-  by (metis (mono_tags, lifting) assms complex_of_real_cmod of_real_eq_iff of_real_sum sum.cong sum_nonneg)
-
-(* TODO move *)
-lemma norm_is_Proj: \<open>norm P \<le> 1\<close> if \<open>is_Proj P\<close>
-  using is_Proj_partial_isometry norm_partial_isometry that by fastforce
-
 lemma iso_trace_class_compact_op_dual'_surjective[simp]: 
   \<open>surj (iso_trace_class_compact_op_dual' :: ('a::chilbert_space,'b::chilbert_space) trace_class \<Rightarrow> _)\<close>
 proof -
@@ -1928,50 +1891,11 @@ the subset of trace-class operators \<^term>\<open>A\<close> constructed in that
     using nle_le by blast
 qed
 
-
+(* (* TODO: Not used. Remove and rename iso_trace_class_compact_op_dual' \<rightarrow> iso_trace_class_compact_op_dual *)
 lift_definition iso_trace_class_compact_op_dual :: \<open>('a::chilbert_space,'b::chilbert_space) trace_class \<Rightarrow>\<^sub>C\<^sub>L (('b,'a) compact_op \<Rightarrow>\<^sub>C\<^sub>L complex)\<close> is
   iso_trace_class_compact_op_dual' 
-  by simp
+  by simp *)
 
-(* (* TODO move *)
-definition isometric_isomorphism where 
-  \<open>isometric_isomorphism \<Phi> \<longleftrightarrow> surj \<Phi> \<and> (\<forall>a. norm (\<Phi> a) = norm a)\<close> *)
-
-(* TODO move *)
-lemma bounded_clinear_inv:
-  assumes [simp]: \<open>bounded_clinear f\<close>
-  assumes b: \<open>b > 0\<close>
-  assumes bound: \<open>\<And>x. norm (f x) \<ge> b * norm x\<close>
-  assumes \<open>surj f\<close>
-  shows \<open>bounded_clinear (inv f)\<close>
-proof (rule bounded_clinear_intro)
-  fix x y :: 'b and r :: complex
-  define x' y' where \<open>x' = inv f x\<close> and \<open>y' = inv f y\<close>
-  have [simp]: \<open>clinear f\<close>
-    by (simp add: bounded_clinear.clinear)
-  have [simp]: \<open>inj f\<close>
-  proof (rule injI)
-    fix x y assume \<open>f x = f y\<close>
-    then have \<open>norm (f (x - y)) = 0\<close>
-      by (simp add: complex_vector.linear_diff)
-    with bound b have \<open>norm (x - y) = 0\<close>
-      by (metis linorder_not_le mult_le_0_iff nle_le norm_ge_zero)
-    then show \<open>x = y\<close>
-      by simp
-  qed
-
-  from \<open>surj f\<close>
-  have [simp]: \<open>x = f x'\<close> \<open>y = f y'\<close>
-    by (simp_all add: surj_f_inv_f x'_def y'_def)
-  show "inv f (x + y) = inv f x + inv f y"
-    by (simp flip: complex_vector.linear_add)
-  show "inv f (r *\<^sub>C x) = r *\<^sub>C inv f x"
-    by (simp flip: clinear.scaleC)
-  from bound have "b * norm (inv f x) \<le> norm x" 
-    by (simp flip: clinear.scaleC)
-  with b show "norm (inv f x) \<le> norm x * inverse b" 
-    by (smt (verit, ccfv_threshold) left_inverse mult.commute mult_cancel_right1 mult_le_cancel_left_pos vector_space_over_itself.scale_scale)
-qed
 
 instance trace_class :: (chilbert_space, chilbert_space) cbanach
 proof
@@ -2003,5 +1927,19 @@ proof
   then show \<open>Cauchy X \<Longrightarrow> convergent X\<close> for X :: \<open>nat \<Rightarrow> ('a, 'b) trace_class\<close>
     by (simp add: complete_def convergent_def)
 qed
+
+
+lemma trace_class_from_trace_class[simp]: \<open>trace_class (from_trace_class t)\<close>
+  using from_trace_class by blast
+
+lemma from_trace_class_0[simp]: \<open>from_trace_class 0 = 0\<close>
+  by (simp add: zero_trace_class.rep_eq)
+
+lemma trace_ket_sum:
+  fixes A :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
+  assumes \<open>trace_class A\<close>
+  shows \<open>trace A = (\<Sum>\<^sub>\<infinity>e. ket e \<bullet>\<^sub>C (A *\<^sub>V ket e))\<close>
+  apply (subst infsum_reindex[where h=ket, unfolded o_def, symmetric])
+  by (auto simp: \<open>trace_class A\<close>  trace_alt_def[OF is_onb_ket] is_onb_ket)
 
 end

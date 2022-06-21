@@ -737,7 +737,6 @@ next
     by (smt (verit) cinner_adj_left cinner_scaleR_left cinner_simps(6) complex_of_real_nn_iff mult_cancel_right1 mult_left_mono norm_eq_zero norm_ge_zero of_real_1 right_inverse scaleR_scaleC scaleR_scaleR)
 qed
 
-(* TODO move *)
 lemma cblinfun_compose_minus_right: \<open>a o\<^sub>C\<^sub>L (b - c) = (a o\<^sub>C\<^sub>L b) - (a o\<^sub>C\<^sub>L c)\<close>
   by (simp add: bounded_cbilinear.diff_right bounded_cbilinear_cblinfun_compose)
 lemma cblinfun_compose_minus_left: \<open>(a - b) o\<^sub>C\<^sub>L c = (a o\<^sub>C\<^sub>L c) - (b o\<^sub>C\<^sub>L c)\<close>
@@ -1965,6 +1964,143 @@ lemma the_riesz_rep_bilinear_correct:
   shows \<open>(the_riesz_rep_bilinear p x) \<bullet>\<^sub>C y = p x y\<close>
   apply (transfer fixing: p)
   by (simp add: assms bounded_sesquilinear.bounded_clinear_right the_riesz_rep_bilinear'_correct)
+
+
+lemma onorm_case_prod_plus: \<open>onorm (case_prod plus :: _ \<Rightarrow> 'a::{real_normed_vector, not_singleton}) = sqrt 2\<close>
+proof -
+  obtain x :: 'a where \<open>x \<noteq> 0\<close>
+    apply atomize_elim by auto
+  show ?thesis
+    apply (rule onormI[where x=\<open>(x,x)\<close>])
+    using norm_plus_leq_norm_prod apply force
+    using  \<open>x \<noteq> 0\<close>
+    by (auto simp add: zero_prod_def norm_prod_def real_sqrt_mult
+        simp flip: scaleR_2)
+qed
+
+lemma comparable_hermitean:
+  assumes \<open>a \<le> b\<close>
+  assumes \<open>a* = a\<close>
+  shows \<open>b* = b\<close>
+  by (smt (verit, best) assms(1) assms(2) cinner_hermitian_real cinner_real_hermiteanI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def)
+
+lemma comparable_hermitean':
+  assumes \<open>a \<le> b\<close>
+  assumes \<open>b* = b\<close>
+  shows \<open>a* = a\<close>
+  by (smt (verit, best) assms(1) assms(2) cinner_hermitian_real cinner_real_hermiteanI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def)
+
+lemma sum_butterfly_is_Proj:
+  assumes \<open>is_ortho_set E\<close>
+  assumes \<open>\<And>e. e\<in>E \<Longrightarrow> norm e = 1\<close>
+  shows \<open>is_Proj (\<Sum>e\<in>E. butterfly e e)\<close>
+proof (cases \<open>finite E\<close>)
+  case True
+  show ?thesis
+  proof (rule is_Proj_I)
+    show \<open>(\<Sum>e\<in>E. butterfly e e)* = (\<Sum>e\<in>E. butterfly e e)\<close>
+      by (simp add: sum_adj)
+    have ortho: \<open>f \<noteq> e \<Longrightarrow> e \<in> E \<Longrightarrow> f \<in> E \<Longrightarrow> is_orthogonal f e\<close> for f e
+      by (meson assms(1) is_ortho_set_def)
+    have unit: \<open>e \<bullet>\<^sub>C e = 1\<close> if \<open>e \<in> E\<close> for e
+      using assms(2) cnorm_eq_1 that by blast
+    have *: \<open>(\<Sum>f\<in>E. (f \<bullet>\<^sub>C e) *\<^sub>C butterfly f e) = butterfly e e\<close> if \<open>e \<in> E\<close> for e
+      apply (subst sum_single[where i=e])
+      by (auto intro!: simp: that ortho unit True)
+    show \<open>(\<Sum>e\<in>E. butterfly e e) o\<^sub>C\<^sub>L (\<Sum>e\<in>E. butterfly e e) = (\<Sum>e\<in>E. butterfly e e)\<close>
+      by (auto simp: * cblinfun_compose_sum_right cblinfun_compose_sum_left)
+  qed
+next
+  case False
+  then show ?thesis
+    by simp
+qed
+
+lemma norm_is_Proj: \<open>norm P \<le> 1\<close> if \<open>is_Proj P\<close>
+  using is_Proj_partial_isometry norm_partial_isometry that by fastforce
+
+lemma bounded_clinear_inv:
+  assumes [simp]: \<open>bounded_clinear f\<close>
+  assumes b: \<open>b > 0\<close>
+  assumes bound: \<open>\<And>x. norm (f x) \<ge> b * norm x\<close>
+  assumes \<open>surj f\<close>
+  shows \<open>bounded_clinear (inv f)\<close>
+proof (rule bounded_clinear_intro)
+  fix x y :: 'b and r :: complex
+  define x' y' where \<open>x' = inv f x\<close> and \<open>y' = inv f y\<close>
+  have [simp]: \<open>clinear f\<close>
+    by (simp add: bounded_clinear.clinear)
+  have [simp]: \<open>inj f\<close>
+  proof (rule injI)
+    fix x y assume \<open>f x = f y\<close>
+    then have \<open>norm (f (x - y)) = 0\<close>
+      by (simp add: complex_vector.linear_diff)
+    with bound b have \<open>norm (x - y) = 0\<close>
+      by (metis linorder_not_le mult_le_0_iff nle_le norm_ge_zero)
+    then show \<open>x = y\<close>
+      by simp
+  qed
+
+  from \<open>surj f\<close>
+  have [simp]: \<open>x = f x'\<close> \<open>y = f y'\<close>
+    by (simp_all add: surj_f_inv_f x'_def y'_def)
+  show "inv f (x + y) = inv f x + inv f y"
+    by (simp flip: complex_vector.linear_add)
+  show "inv f (r *\<^sub>C x) = r *\<^sub>C inv f x"
+    by (simp flip: clinear.scaleC)
+  from bound have "b * norm (inv f x) \<le> norm x" 
+    by (simp flip: clinear.scaleC)
+  with b show "norm (inv f x) \<le> norm x * inverse b" 
+    by (smt (verit, ccfv_threshold) left_inverse mult.commute mult_cancel_right1 mult_le_cancel_left_pos vector_space_over_itself.scale_scale)
+qed
+
+lemma sum_cmod_pos: 
+  assumes \<open>\<And>x. x\<in>A \<Longrightarrow> f x \<ge> 0\<close>
+  shows \<open>(\<Sum>x\<in>A. cmod (f x)) = cmod (\<Sum>x\<in>A. f x)\<close>
+  by (metis (mono_tags, lifting) assms complex_of_real_cmod of_real_eq_iff of_real_sum sum.cong sum_nonneg)
+
+lemma adj_inject: \<open>adj a = adj b \<longleftrightarrow> a = b\<close>
+  by (metis (mono_tags, lifting) adj_minus cblinfun_compose_zero_left eq_iff_diff_eq_0 op_square_nondegenerate)
+
+lemma norm_AadjA[simp]: \<open>norm (A* o\<^sub>C\<^sub>L A) = (norm A)\<^sup>2\<close> for A :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  by (metis double_adj norm_AAadj norm_adj)
+
+lemma partial_isometry_square_proj: \<open>is_Proj (a* o\<^sub>C\<^sub>L a)\<close> if \<open>partial_isometry a\<close>
+  by (simp add: partial_isometry_adj_a_o_a that)
+
+lemma partial_isometry_adj[simp]: \<open>partial_isometry (a*)\<close> if \<open>partial_isometry a\<close>
+  for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+proof -
+  have ran_ker: \<open>a *\<^sub>S \<top> = - kernel (a*)\<close>
+    by (simp add: kernel_compl_adj_range)
+
+  have \<open>norm (a* *\<^sub>V h) = norm h\<close> if \<open>h \<in> range a\<close> for h
+  proof -
+    from that obtain x where h: \<open>h = a x\<close>
+      by auto
+    have \<open>norm (a* *\<^sub>V h) = norm (a* *\<^sub>V a *\<^sub>V x)\<close>
+      by (simp add: h)
+    also have \<open>\<dots> = norm (Proj (- kernel a) *\<^sub>V x)\<close>
+      by (simp add: \<open>partial_isometry a\<close> partial_isometry_adj_a_o_a simp_a_oCL_b')
+    also have \<open>\<dots> = norm (a *\<^sub>V Proj (- kernel a) *\<^sub>V x)\<close>
+      by (metis Proj_range \<open>partial_isometry a\<close> cblinfun_apply_in_image partial_isometry_def)
+    also have \<open>\<dots> = norm (a *\<^sub>V x)\<close>
+      by (smt (verit, best) Proj_idempotent \<open>partial_isometry a\<close> adj_Proj cblinfun_apply_cblinfun_compose cinner_adj_right cnorm_eq partial_isometry_adj_a_o_a)
+    also have \<open>\<dots> = norm h\<close>
+      using h by auto
+    finally show ?thesis
+      by -
+  qed
+
+  then have norm_pres: \<open>norm (a* *\<^sub>V h) = norm h\<close> if \<open>h \<in> closure (range a)\<close> for h
+    using that apply (rule on_closure_eqI)
+      apply assumption
+    by (intro continuous_intros)+
+
+  show ?thesis
+    apply (rule partial_isometryI)
+    by (auto simp: cblinfun_image.rep_eq norm_pres simp flip: ran_ker)
+qed
 
 unbundle no_cblinfun_notation
 

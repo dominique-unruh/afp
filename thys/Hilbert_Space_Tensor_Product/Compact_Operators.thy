@@ -102,41 +102,6 @@ lemma compact_op_scaleR[simp]: \<open>compact_op (c *\<^sub>R a)\<close> if \<op
 lemma compact_op_uminus[simp]: \<open>compact_op (-a) = compact_op a\<close>
   by (metis compact_op_scaleC scaleC_minus1_left verit_minus_simplify(4))
 
-(* TODO move *)
-lemma norm_plus_leq_norm_prod: \<open>norm (a + b) \<le> sqrt 2 * norm (a, b)\<close>
-proof -
-  have \<open>(norm (a + b))\<^sup>2 \<le> (norm a + norm b)\<^sup>2\<close>
-    using norm_triangle_ineq by auto
-  also have \<open>\<dots> \<le> 2 * ((norm a)\<^sup>2 + (norm b)\<^sup>2)\<close>
-    by (smt (verit, best) power2_sum sum_squares_bound)
-  also have \<open>\<dots> \<le> (sqrt 2 * norm (a, b))\<^sup>2\<close>
-    by (auto simp: power_mult_distrib norm_prod_def simp del: power_mono_iff)
-  finally show ?thesis
-    by auto
-qed
-
-(* TODO move *)
-lemma onorm_case_prod_plus_leq: \<open>onorm (case_prod plus :: _ \<Rightarrow> 'a::real_normed_vector) \<le> sqrt 2\<close>
-  apply (rule onorm_bound)
-  using norm_plus_leq_norm_prod by auto
-
-(* TODO move *)
-lemma onorm_case_prod_plus: \<open>onorm (case_prod plus :: _ \<Rightarrow> 'a::{real_normed_vector, not_singleton}) = sqrt 2\<close>
-proof -
-  obtain x :: 'a where \<open>x \<noteq> 0\<close>
-    apply atomize_elim by auto
-  show ?thesis
-    apply (rule onormI[where x=\<open>(x,x)\<close>])
-    using norm_plus_leq_norm_prod apply force
-    using  \<open>x \<noteq> 0\<close>
-    by (auto simp add: zero_prod_def norm_prod_def real_sqrt_mult
-        simp flip: scaleR_2)
-qed
-
-(* TODO move *)
-lemma bounded_linear_case_prod_plus[simp]: \<open>bounded_linear (case_prod plus)\<close>
-  apply (rule bounded_linear_intro[where K=\<open>sqrt 2\<close>])
-  by (auto simp add: scaleR_right_distrib norm_plus_leq_norm_prod mult.commute)
 
 lemma compact_op_plus[simp]: \<open>compact_op (a + b)\<close> if \<open>compact_op a\<close> and \<open>compact_op b\<close>
 proof -
