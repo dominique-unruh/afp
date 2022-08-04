@@ -2,6 +2,8 @@ theory Misc_With_Type
   imports Main
 begin
 
+lemma distinct_prems_rl_protected: \<open>PROP Pure.prop (PROP A \<Longrightarrow> PROP A \<Longrightarrow> PROP B) \<Longrightarrow> PROP Pure.prop (PROP A \<Longrightarrow> PROP B)\<close>
+  unfolding Pure.prop_def by (rule distinct_prems_rl)
 
 definition \<open>rel_square r = r OO r\<inverse>\<inverse>\<close>
 

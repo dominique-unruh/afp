@@ -78,11 +78,33 @@ thm example_semigroup[cancel_with_type]
 thm example_ab_group_add[cancel_with_type]
 
 
-(* TODO: fix or improve error message *)
-lemma example_semigroup2:
+(* ML \<open>
+\<close>
+
+
+ML \<open>
+val thm = @{lemma \<open>(1)=1 \<Longrightarrow> (1) = 1 \<Longrightarrow> 3=3 \<Longrightarrow> 4=4\<close> by simp}
+val xxx = (@{thm distinct_prems_rl_protected} OF [protect_thm thm]) |> unprotect_thm
+\<close>
+
+ML \<open>
+fun unify_subgoals_12_tac st = Seq.single ((@{thm distinct_prems_rl_protected} OF [protect_thm st]) |> unprotect_thm)
+;;
+unify_subgoals_12_tac @{lemma \<open>(1)=1 \<Longrightarrow> (1) = 1 \<Longrightarrow> 3=3 \<Longrightarrow> 4=4\<close> by simp} |> Seq.hd |> Thm.prop_of
+\<close>
+ *)
+
+thm protectI
+
+(* TODO: remove when no error *)
+lemma tmp0:
+  shows \<open>\<forall>\<^sub>\<tau> 'abs::finite = (undefined :: 'a set). undefined (3::nat)\<close>
+  sorry
+thm tmp0[cancel_with_type]
+lemma tmp:
   shows \<open>\<forall>\<^sub>\<tau> 'abs::semigroup_add = undefined with undefined. undefined (3::nat)\<close>
   sorry
-thm example_semigroup2[cancel_with_type]
+thm tmp[cancel_with_type]
 
 
 end (* experiment *)

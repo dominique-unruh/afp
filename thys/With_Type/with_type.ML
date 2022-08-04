@@ -30,6 +30,13 @@ val get_all_type_info : Proof.context -> { by_class: with_type_info Symtab.table
 
 end = struct
 
+val protect_conv = Conv.rewr_conv (@{thm Pure.prop_def[symmetric]})
+val unprotect_conv = Conv.rewr_conv (@{thm Pure.prop_def})
+fun protect_thm thm = Conv.fconv_rule protect_conv thm 
+fun unprotect_thm thm = Conv.fconv_rule unprotect_conv thm 
+
+fun unify_prems_12 thm = (@{thm distinct_prems_rl_protected} OF [protect_thm thm]) |> unprotect_thm
+
 type with_type_info = {
   class: class,
   rep_class_data: string,
@@ -111,24 +118,21 @@ fun with_type_cancel ctxt thm = let
   (* May be NONE *)
   val uncurry_conv = repeat_conv (rewr_conv @{thm case_prod_beta[THEN eq_reflection]}) |> HOLogic.Trueprop_conv |> implies_concl_conv
   val class_some_uncurried = Option.map (fconv_rule uncurry_conv) class_some
-val _ = \<^print> (5, class_some_uncurried)
 
-val _ = \<^print> (5, class_some_uncurried, unoverloaded)
   (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> with_type CR Sp (\<lambda>_ _. P) *)
   val unoverloaded' = case class_some_uncurried of SOME thm => unoverloaded OF [thm] | NONE => unoverloaded
   
-val _ = \<^print> 6
-  (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) [TWICE!] \<Longrightarrow> P *)
+  (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) [POSSIBLY TWICE!] \<Longrightarrow> P *)
   val no_with_type = @{thm with_type_prepare_cancel} OF [unoverloaded']
   
-val _ = \<^print> 7
   (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> P *)
-  val no_repetition = Tactic.distinct_subgoals_tac no_with_type |> Seq.hd
+  val no_repetition = 
+    if Thm.nprems_of no_with_type = 2 then unify_prems_12 no_with_type else no_with_type
 
-val _ = \<^print> 8
+  val _ = Thm.nprems_of no_repetition = 1 orelse raise THM ("with_type_cancel: could not remove duplicate premise", 0, [no_repetition])
+
   (* fst Sp \<noteq> {} \<Longrightarrow> P *)
   val removed_abs_type = Local_Typedef.cancel_type_definition no_repetition
-val _ = \<^print> 10
   
   (* fst Sp \<noteq> {} *)
   val non_empty = @{thm with_type_nonempty} OF [thm]
