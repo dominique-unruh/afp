@@ -72,39 +72,34 @@ ML \<open>
 With_Type.with_type_cancel \<^context> @{thm example_finite}
 \<close>
 
+ML \<open>
+\<close>
+
+
 thm example_type[cancel_with_type]
 thm example_finite[cancel_with_type]
 thm example_semigroup[cancel_with_type]
 thm example_ab_group_add[cancel_with_type]
 
+(* lemma \<open>a=1\<close> if \<open>a=1\<close> and \<open>b=1\<close> for a b :: \<open>'a::one\<close>
+proof -
+  note [[show_consts,show_hyps]]
+  have \<open>\<forall>\<^sub>\<tau> 'd::type={1::nat}. a=b\<close>
+    sorry
+  note this[cancel_with_type]
+  have cheat: \<open>PROP a\<close> for a
+    sorry
 
-(* ML \<open>
+  have xxx: \<open>xxx == xxx\<close> for xxx :: \<open>'c::{finite, semigroup_add, metric_space}\<close>
+    sorry
+  note [[show_consts,show_hyps]]
+  thm xxx
+  ML_val \<open>
+Assumption.all_prems_of \<^context>
 \<close>
-
-
-ML \<open>
-val thm = @{lemma \<open>(1)=1 \<Longrightarrow> (1) = 1 \<Longrightarrow> 3=3 \<Longrightarrow> 4=4\<close> by simp}
-val xxx = (@{thm distinct_prems_rl_protected} OF [protect_thm thm]) |> unprotect_thm
-\<close>
-
-ML \<open>
-fun unify_subgoals_12_tac st = Seq.single ((@{thm distinct_prems_rl_protected} OF [protect_thm st]) |> unprotect_thm)
-;;
-unify_subgoals_12_tac @{lemma \<open>(1)=1 \<Longrightarrow> (1) = 1 \<Longrightarrow> 3=3 \<Longrightarrow> 4=4\<close> by simp} |> Seq.hd |> Thm.prop_of
-\<close>
- *)
-
-thm protectI
-
-(* TODO: remove when no error *)
-lemma tmp0:
-  shows \<open>\<forall>\<^sub>\<tau> 'abs::finite = (undefined :: 'a set). undefined (3::nat)\<close>
-  sorry
-thm tmp0[cancel_with_type]
-lemma tmp:
-  shows \<open>\<forall>\<^sub>\<tau> 'abs::semigroup_add = undefined with undefined. undefined (3::nat)\<close>
-  sorry
-thm tmp[cancel_with_type]
+  ML_val \<open>
+unoverload_type_local \<^context> [("'c",2)] @{thm xxx} 
+\<close> *)
 
 
 end (* experiment *)

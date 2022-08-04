@@ -81,6 +81,26 @@ val get_with_type_info_by_class = get_with_type_info_by_class_generic o Context.
 
 fun get_all_type_info ctxt = With_Type_Data.get (Context.Proof ctxt)
 
+(* Like Unoverload_Type.unoverload_type, but works if the theorem contains assumptions from the current context. *)
+fun unoverload_type_local ctxt tvars thm = let
+  val hyps = Assumption.all_assms_of ctxt |> map Thm.term_of
+  val tvars_hyps = fold Term.add_tvars hyps [] |> map fst
+  val bad_tvars = inter (op=) (distinct (op=) tvars_hyps) tvars
+  val _ = null bad_tvars orelse
+          raise THM ("unoverload_type_local: context assumptions contain type variables " ^
+                String.concatWith ", " (map string_of_indexname bad_tvars) ^
+                " that we are trying to unoverload", 0, [thm])
+  val global_ctxt = Proof_Context.init_global (Proof_Context.theory_of ctxt)
+  val thm' = Proof_Context.export ctxt global_ctxt [thm] |> hd
+  val thm'' = Unoverload_Type.unoverload_type (Context.Proof ctxt) tvars thm'
+  val skip_nprems = Thm.nprems_of thm'' - Thm.nprems_of thm'
+  val _ = skip_nprems >= 0 orelse error ("unoverload_type_local: skip_nprems is negative")
+  fun remove_hyp (i,hyp) thm : thm = case Seq.pull (solve_tac ctxt [hyp] (i+skip_nprems+1) thm) of
+    NONE => raise THM ("unoverload_type_local: solving assumption failed", i+skip_nprems+1, [thm,hyp])
+  | SOME (thm,_) => thm
+  val thm''' = fold remove_hyp (Assumption.all_prems_of ctxt |> map_index I |> rev) thm''
+  in thm''' end
+
 fun with_type_cancel ctxt thm = let
   val (const, abs_type) = case Thm.prop_of thm of
       \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type _ _ abs _\<close> $ Const(const,_) $ _ $ _) => (const,abs)
@@ -103,7 +123,7 @@ fun with_type_cancel ctxt thm = let
   
   (* class.name (\<dots> using ?'abs::type) \<Longrightarrow> with_type CR Sp (\<lambda>_ _. P) *)
   (* class.name part may be absent for some type classes *)
-  val unoverloaded = Unoverload_Type.unoverload_type (Context.Proof ctxt) [abs_type_name] thm
+  val unoverloaded = unoverload_type_local ctxt [abs_type_name] thm
 
   (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> \<exists>x::?'abs_params2. class.name' x *)
   (* May be NONE *)
@@ -143,7 +163,7 @@ fun with_type_cancel ctxt thm = let
 
 fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
   val (typname_raw,sort) = case typ_term of 
-    Const ("_ofsort", _) $ Free (n, _) $ Free _ =>
+    Const ("_ofsort", _) $ Free (_, _) $ Free _ =>
       raise TERM ("with_type_parse_translation: abstract type must be annotated with a type class", [typ_term])
     | Const ("_ofsort", _) $ (Const ("_ofsort", _) $ Free (n, _) $ Free _) $ sort => (n, sort)
     | _ => (\<^print> typ_term;
