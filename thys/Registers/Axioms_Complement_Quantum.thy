@@ -2,6 +2,7 @@ section \<open>Quantum instantiation of complements\<close>
 
 theory Axioms_Complement_Quantum
   imports Laws_Quantum With_Type.With_Type_Inst_Complex_Bounded_Operators Quantum_Extra Tensor_Product.Weak_Star_Topology
+    Tensor_Product.Partial_Trace
 begin
 
 no_notation m_inv ("inv\<index> _" [81] 80)
@@ -172,12 +173,10 @@ lemma closure_of_eqI:
   thm on_closure_eqI
   sorry
 
-(* 
 lemma xxx: \<open>\<forall>\<^sub>\<tau> 's::chilbert_space = closure (cspan S) with (scaleR, scaleC, plus, 0, minus, uminus, dist, norm, sgn, uniformity, open, cinner). 
           \<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
   by -
 thm xxx[cancel_with_type]
- *)
 
 lemma orthonormal_subspace_basis_exists:
   fixes S :: \<open>'a::chilbert_space set\<close>
@@ -211,19 +210,267 @@ lemma has_sum_in_comm_additive:
   sorry
 
 
-lemma butterkets_weak_star_dense:
-  \<open>weak_star_topology closure_of cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True} = UNIV\<close>
+lemma infsum_butterfly_ket_a: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (a *\<^sub>V ket i) (ket i)) UNIV a\<close>
+proof -
+  have \<open>has_sum_in weak_star_topology ((\<lambda>b. a o\<^sub>C\<^sub>L b) \<circ> (\<lambda>i. Misc.selfbutterket i)) UNIV (a o\<^sub>C\<^sub>L id_cblinfun)\<close>
+    apply (rule has_sum_in_comm_additive)
+    by (auto intro!: continuous_map_left_comp_weak_star infsum_butterfly_ket simp: cblinfun_compose_add_right)
+  then show ?thesis
+    by (auto simp: o_def cblinfun_comp_butterfly)
+qed
+
+
+lemma finite_rank_sum: \<open>finite_rank (\<Sum>x\<in>F. f x)\<close> if \<open>\<And>x. x\<in>F \<Longrightarrow> finite_rank (f x)\<close>
+  using that apply (induction F rule:infinite_finite_induct)
+  by (auto intro!: finite_rank_plus)
+
+lemma finite_rank_weak_star_dense[simp]: \<open>weak_star_topology closure_of (Collect finite_rank) = (UNIV :: ('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) set)\<close>
+proof -
+  have \<open>x \<in> weak_star_topology closure_of (Collect finite_rank)\<close> for x :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
+  proof (rule limitin_closure_of)
+    define f :: \<open>'a \<Rightarrow> 'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> where \<open>f = (\<lambda>i. butterfly (x *\<^sub>V ket i) (ket i))\<close>
+    have \<open>has_sum_in weak_star_topology f UNIV x\<close>
+      using f_def infsum_butterfly_ket_a by blast
+    then show \<open>limitin weak_star_topology (sum f) x (finite_subsets_at_top UNIV)\<close>
+      using has_sum_in_def by blast
+    show \<open>range (sum f) \<subseteq> Collect finite_rank\<close>
+      by (auto intro!: finite_rank_sum simp: f_def)
+    show \<open>finite_subsets_at_top UNIV \<noteq> \<bottom>\<close>
+      by simp
+  qed
+  then show ?thesis
+    by auto
+qed
+
+lemma trunc_ell2_singleton: \<open>trunc_ell2 {x} \<psi> = Rep_ell2 \<psi> x *\<^sub>C ket x\<close>
+  apply transfer by auto
+
+lemma trunc_ell2_insert: \<open>trunc_ell2 (insert x M) \<psi> = trunc_ell2 M \<psi> + Rep_ell2 \<psi> x *\<^sub>C ket x\<close> if \<open>x \<notin> M\<close>
+  using trunc_ell2_union_disjoint[where M=M and N=\<open>{x}\<close> and \<psi>=\<psi>]
+  using that by (auto simp: trunc_ell2_singleton)
+
+(* TODO move *)
+lemma trunc_ell2_finite_sum: \<open>trunc_ell2 M \<psi> = (\<Sum>i\<in>M. Rep_ell2 \<psi> i *\<^sub>C ket i)\<close> if \<open>finite M\<close>
+  using that apply induction by (auto simp: trunc_ell2_insert)
+
+(* TODO move *)
+lemma butterfly_sum_left: \<open>butterfly (\<Sum>i\<in>M. \<psi> i) \<phi> = (\<Sum>i\<in>M. butterfly (\<psi> i) \<phi>)\<close>
+  apply (induction M rule:infinite_finite_induct)
+  by (auto simp add: butterfly_add_left)
+
+(* TODO move *)
+lemma butterfly_sum_right: \<open>butterfly \<psi> (\<Sum>i\<in>M. \<phi> i) = (\<Sum>i\<in>M. butterfly \<psi> (\<phi> i))\<close>
+  apply (induction M rule:infinite_finite_induct)
+  by (auto simp add: butterfly_add_right)
+
+
+(* TODO move *)
+lemma finite_rank_dense_compact[simp]: \<open>closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}) = Collect compact_op\<close>
+proof (rule Set.equalityI)
+  show \<open>closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}) \<subseteq> Collect compact_op\<close>
+  proof -
+    have \<open>closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}) \<subseteq> closure (Collect finite_rank)\<close>
+      apply (auto intro!: closure_mono simp: finite_rank_def)
+      by (smt (verit, del_insts) Collect_mono complex_vector.span_mono in_mono rank1_def)
+    also have \<open>\<dots> = Collect compact_op\<close>
+      by (simp add: Set.set_eqI compact_op_def)
+    finally show ?thesis
+      by -
+  qed
+  show \<open>Collect compact_op \<subseteq> closure (cspan {butterket \<xi> \<eta> |(\<xi>::'b) (\<eta>::'a). True})\<close>
+  proof -
+    have \<open>Collect compact_op = closure (cspan (Collect rank1))\<close>
+      by (metis compact_op_def finite_rank_def mem_Collect_eq subsetI subset_antisym)
+    also have \<open>\<dots> \<subseteq> closure (cspan (closure (cspan {butterket \<xi> \<eta> |(\<xi>::'b) (\<eta>::'a). True})))\<close>
+    proof (rule closure_mono, rule complex_vector.span_mono, rule subsetI)
+      fix x :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> assume \<open>x \<in> Collect rank1\<close>
+      then obtain a b where xab: \<open>x = butterfly a b\<close>
+        by (meson mem_Collect_eq rank1_def)
+      define f where \<open>f = (\<lambda>(F,G). butterfly (trunc_ell2 F a) (trunc_ell2 G b))\<close>
+      have lim: \<open>(f \<longlongrightarrow> x) (finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV)\<close>
+      proof (rule tendstoI, subst dist_norm)
+        fix e :: real assume \<open>e > 0\<close>
+        define d where \<open>d = (if norm a = 0 \<and> norm b = 0 then 1 else e / (max (norm a) (norm b)) / 4)\<close>
+        have d: \<open>norm a * d + norm a * d + norm b * d < e\<close>
+        proof -
+          have \<open>norm a * d \<le> e/4\<close>
+            using \<open>e > 0\<close> apply (auto simp: d_def)
+             apply (simp add: divide_le_eq)
+            by (smt (z3) Extra_Ordered_Fields.mult_sign_intros(3) \<open>0 < e\<close> antisym_conv divide_le_eq less_imp_le linordered_field_class.mult_imp_div_pos_le mult_left_mono nice_ordered_field_class.dense_le nice_ordered_field_class.divide_nonneg_neg nice_ordered_field_class.divide_nonpos_pos nle_le nonzero_mult_div_cancel_left norm_imp_pos_and_ge ordered_field_class.sign_simps(5) split_mult_pos_le)
+          moreover have \<open>norm b * d \<le> e/4\<close>
+            using \<open>e > 0\<close> apply (auto simp: d_def)
+             apply (simp add: divide_le_eq)
+            by (smt (verit) linordered_field_class.mult_imp_div_pos_le mult_left_mono norm_le_zero_iff ordered_field_class.sign_simps(5))
+          ultimately have \<open>norm a * d + norm a * d + norm b * d \<le> 3 * e / 4\<close>
+            by linarith
+          also have \<open>\<dots> < e\<close>
+            by (simp add: \<open>0 < e\<close>)
+          finally show ?thesis
+            by -
+        qed
+        have [simp]: \<open>d > 0\<close>
+          using \<open>e > 0\<close> apply (auto simp: d_def)
+           apply (smt (verit, best) nice_ordered_field_class.divide_pos_pos norm_eq_zero norm_not_less_zero)
+          by (smt (verit) linordered_field_class.divide_pos_pos zero_less_norm_iff)
+        from trunc_ell2_lim_at_UNIV[where \<psi>=a]
+        have \<open>\<forall>\<^sub>F F in finite_subsets_at_top UNIV. norm (trunc_ell2 F a - a) < d\<close>
+          by (metis Lim_null \<open>0 < d\<close> order_tendstoD(2) tendsto_norm_zero_iff)
+        moreover
+        from trunc_ell2_lim_at_UNIV[where \<psi>=b]
+        have \<open>\<forall>\<^sub>F G in finite_subsets_at_top UNIV. norm (trunc_ell2 G b - b) < d\<close>
+          by (metis Lim_null \<open>0 < d\<close> order_tendstoD(2) tendsto_norm_zero_iff)
+        ultimately have \<open>\<forall>\<^sub>F (F,G) in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. norm (trunc_ell2 F a - a) < d \<and> norm (trunc_ell2 G b - b) < d\<close>
+          unfolding case_prod_beta
+          by (rule eventually_prodI)
+        moreover have \<open>norm (f (F,G) - x) < e\<close> if \<open>norm (trunc_ell2 F a - a) < d\<close> and \<open>norm (trunc_ell2 G b - b) < d\<close> for F G
+        proof -
+          define B where \<open>B F G = butterfly (trunc_ell2 F a) (trunc_ell2 G b)\<close> for F G
+          have a_split: \<open>a = trunc_ell2 F a + trunc_ell2 (-F) a\<close>
+            by (simp add: Compl_eq_Diff_UNIV trunc_ell2_union_Diff)
+          have b_split: \<open>b = trunc_ell2 G b + trunc_ell2 (-G) b\<close>
+            by (simp add: Compl_eq_Diff_UNIV trunc_ell2_union_Diff)
+          have n1: \<open>norm (B F (-G)) \<le> norm a * d\<close> for F
+          proof -
+            have \<open>norm (B F (-G)) \<le> norm a * norm (trunc_ell2 (-G) b)\<close>
+              by (smt (verit, del_insts) B_def mult_right_mono norm_butterfly norm_ge_zero norm_id_minus_trunc_ell2 power2_eq_square square_less_square)
+            also have \<open>\<dots> \<le> norm a * norm (trunc_ell2 G b - b)\<close>
+              by (metis add_diff_cancel_left' b_split less_eq_real_def norm_minus_commute)
+            also have \<open>\<dots> \<le> norm a * d\<close>
+              by (meson less_eq_real_def mult_left_mono norm_ge_zero that(2))
+            finally show ?thesis
+              by -
+          qed
+          have n2: \<open>norm (B (-F) G) \<le> norm b * d\<close> for G
+          proof -
+            have \<open>norm (B (-F) G) \<le> norm b * norm (trunc_ell2 (-F) a)\<close>
+              apply (simp add: B_def norm_butterfly)
+              by (metis mult_right_mono norm_ge_zero ordered_field_class.sign_simps(33) top.extremum trunc_ell2_UNIV trunc_ell2_norm_mono)
+            also have \<open>\<dots> \<le> norm b * norm (trunc_ell2 F a - a)\<close>
+              by (smt (verit, best) a_split add_diff_cancel_left' minus_diff_eq norm_minus_cancel)
+            also have \<open>\<dots> \<le> norm b * d\<close>
+              by (meson less_eq_real_def mult_left_mono norm_ge_zero that(1))
+            finally show ?thesis
+              by -
+          qed
+          have \<open>norm (f (F,G) - x) = norm (B F G - butterfly a b)\<close>
+            by (simp add: f_def xab B_def)
+          also have \<open>\<dots> = norm (- B F (-G) - B (-F) (-G) - B (-F) G)\<close>
+            apply (subst a_split, subst b_split)
+            by (simp add: B_def butterfly_add_right butterfly_add_left)
+          also have \<open>\<dots> \<le> norm (B F (-G)) + norm (B (-F) (-G)) + norm (B (-F) G)\<close>
+            by (smt (verit, best) norm_minus_cancel norm_triangle_ineq4)
+          also have \<open>\<dots> \<le> norm a * d + norm a * d + norm b * d\<close>
+            using n1 n2
+            by (meson add_mono_thms_linordered_semiring(1))
+          also have \<open>\<dots> < e\<close>
+            by (fact d)
+          finally show ?thesis
+            by -
+        qed
+        ultimately show \<open>\<forall>\<^sub>F FG in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. norm (f FG - x) < e\<close>
+          by (smt (verit, ccfv_SIG) eventually_mono f_def prod.case_eq_if split_conv)
+      qed
+      have nontriv: \<open>finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV \<noteq> \<bottom>\<close>
+        by (simp add: prod_filter_eq_bot)
+      have inside: \<open>\<forall>\<^sub>F x in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. f x \<in> cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}\<close>
+      proof (rule eventually_mp[where P=\<open>\<lambda>(F,G). finite F \<and> finite G\<close>])
+        show \<open>\<forall>\<^sub>F (F,G) in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. finite F \<and> finite G\<close>
+          by (smt (verit) case_prod_conv eventually_finite_subsets_at_top_weakI eventually_prod_filter)
+        have \<open>f (F,G) \<in> cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}\<close> if [simp]: \<open>finite F\<close> \<open>finite G\<close> for F G
+          by (auto intro!: complex_vector.span_sum complex_vector.span_scale complex_vector.span_base[where a=\<open>butterfly _ _\<close>]
+              simp add: f_def trunc_ell2_finite_sum butterfly_sum_left butterfly_sum_right)
+        then show \<open>\<forall>\<^sub>F x in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. (case x of (F, G) \<Rightarrow> finite F \<and> finite G) \<longrightarrow> f x \<in> cspan {Misc.butterket \<xi> \<eta> |\<xi> \<eta>. True}\<close>
+          apply auto
+          by (simp add: always_eventually)
+      qed
+      show \<open>x \<in> closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True})\<close>
+        using lim nontriv inside by (rule limit_in_closure)
+    qed
+    also have \<open>\<dots> = closure (cspan {butterket \<xi> \<eta> |(\<xi>::'b) (\<eta>::'a). True})\<close>
+      by (simp add: complex_vector.span_eq_iff[THEN iffD2])
+    finally show ?thesis
+      by -
+  qed
+qed
+
+(* TODO move *)
+lemma butterkets_weak_star_dense[simp]:
+  \<open>weak_star_topology closure_of cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True} = UNIV\<close>
+proof -
+  from continuous_map_image_closure_subset[OF weak_star_topology_weaker_than_euclidean]
+  have \<open>weak_star_topology closure_of (cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True}) \<supseteq> closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True})\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
+    by auto
+  moreover from finite_rank_dense_compact
+  have \<open>\<dots> \<supseteq> Collect finite_rank\<close>
+    by (metis closure_subset compact_op_def mem_Collect_eq subsetI subset_antisym)
+  ultimately have *: \<open>weak_star_topology closure_of (cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True}) \<supseteq> Collect finite_rank\<close>
+    by simp
+  have \<open>weak_star_topology closure_of cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}
+        = weak_star_topology closure_of (weak_star_topology closure_of cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True})\<close>
+  by simp
+  also have \<open>\<dots> \<supseteq> weak_star_topology closure_of Collect finite_rank\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
+    using * closure_of_mono by blast
+  also have \<open>\<dots> = UNIV\<close>
+    by simp
+  finally show ?thesis
+    by auto
+qed
+
+lemma sandwich_weak_star_cont[simp]:
+  \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
+  using continuous_map_compose[OF continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star]
+  by (auto simp: o_def sandwich_def[abs_def])
+
+(* lemma continuous_map_cong:
+  assumes \<open>\<And>x. x \<in> topspace T \<Longrightarrow> f x = g x\<close>
+  shows \<open>continuous_map T S f \<longleftrightarrow> continuous_map T S g\<close>
+  by (metis assms continuous_map_eq)
+ *)
+
+(* 
+definition infsumopt where \<open>infsumopt f A = (if f summable_on A then Some (infsum f A) else None)\<close>
+
+syntax (ASCII)
+  "_infsumopt" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'b \<Rightarrow> 'b::topological_comm_monoid_add option"  ("(3INFSUM? (_/:_)./ _)" [0, 51, 10] 10)
+syntax
+  "_infsumopt" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'b \<Rightarrow> 'b::topological_comm_monoid_add option"  ("(2\<Sum>\<^sub>\<infinity>\<^sub>?(_/\<in>_)./ _)" [0, 51, 10] 10)
+translations \<comment> \<open>Beware of argument permutation!\<close>
+  "\<Sum>\<^sub>\<infinity>\<^sub>?i\<in>A. b" \<rightleftharpoons> "CONST infsumopt (\<lambda>i. b) A"
+
+syntax (ASCII)
+  "_univinfsumopt" :: "pttrn \<Rightarrow> 'a \<Rightarrow> 'a option"  ("(3INFSUM? _./ _)" [0, 10] 10)
+syntax
+  "_univinfsumopt" :: "pttrn \<Rightarrow> 'a \<Rightarrow> 'a option"  ("(2\<Sum>\<^sub>\<infinity>\<^sub>?_./ _)" [0, 10] 10)
+translations
+  "\<Sum>\<^sub>\<infinity>\<^sub>?x. t" \<rightleftharpoons> "CONST infsumopt (\<lambda>x. t) (CONST UNIV)"
+ *)
+
+ML \<open>
+type lifted_typ = Type.
+
+
+type env = (bool * typ) list
+fun lift_term_to_maybe (env:env) (Bound i) : (bool * typ * term) = let val (lifted, typ) = nth env i in (lifted, typ, Bound i) end
+  | lift_term_to_maybe env (Const(\<^const_name>\<open>divide\<close>, _)
+\<close>
+    
+
+lemma TODO_NAME: \<open>trace (partial_trace' t o\<^sub>C\<^sub>L x) = trace (t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close> if \<open>trace_class t\<close>
   sorry
 
 (* TODO move *)
 lemma amplification_weak_star_cont[simp]:
   \<open>continuous_map weak_star_topology weak_star_topology (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)\<close>
-    (* TODO: How is this proven? *)
-  sorry
-
-lemma sandwich_weak_star_cont[simp]:
-  \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
-  sorry
+proof (unfold weak_star_topology_def', rule continuous_map_pullback_both)
+  define g' :: \<open>(('b ell2, 'a ell2) trace_class \<Rightarrow> complex) \<Rightarrow> (('b \<times> 'c) ell2, ('a \<times> 'c) ell2) trace_class \<Rightarrow> complex\<close> where
+    \<open>g' \<tau> t = \<tau> (partial_trace t)\<close> for \<tau> t
+  have \<open>continuous_on UNIV g'\<close>
+    by (simp add: continuous_on_coordinatewise_then_product g'_def)
+  then show \<open>continuous_map euclidean euclidean g'\<close>
+    using continuous_map_iff_continuous2 by blast
+  show \<open>g' (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) = (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x \<otimes>\<^sub>o id_cblinfun))\<close> for x
+    by (auto intro!: ext simp: g'_def TODO_NAME) 
+qed auto
 
 lemma register_decomposition:
   fixes \<Phi> :: \<open>'a update \<Rightarrow> 'b update\<close>
@@ -777,6 +1024,7 @@ proof -
     show \<open>norm (F a) = norm a\<close>
       using \<open>unitary U\<close> by (simp add: FU sandwich_def norm_isometry_o norm_isometry_o' tensor_op_norm)
   qed
+  (* note this[cancel_with_type] *)
   then show ?thesis
     sorry
 qed
@@ -869,10 +1117,96 @@ proof -
     by (simp add: commutant_exchange commutant_tensor1)
 qed
 
-lemma TMP: \<open>isCont f a \<longleftrightarrow> filterlim f (nhds a) (nhds (f a))\<close>
+(* lemma TMP: \<open>isCont f a \<longleftrightarrow> filterlim f (nhds a) (nhds (f a))\<close>
   apply rule
   defer
-  by -
+  by - *)
+
+(* definition Collect_in where \<open>Collect_in S P = {x\<in>S. P x}\<close> for S and P
+
+lemma Collect_in_parametric[transfer_rule]:
+  includes lifting_syntax
+  shows \<open>(rel_set R ===> (R ===> (\<longleftrightarrow>)) ===> rel_set R) Collect_in Collect_in\<close>
+  apply (auto intro!: simp: rel_fun_def rel_set_def Collect_in_def)
+  by blast+
+
+term Set.filter *)
+
+definition \<open>opensets = Collect open\<close>
+  \<comment> \<open>This behaves more nicely with the @{method transfer}-method (and friends) than \<^const>\<open>open\<close>.
+      So when rewriting a subgoal, using, e.g., \<^term>\<open>\<exists>U\<in>opensets. xxx\<close> instead of \<^term>\<open>\<exists>U. open U \<longrightarrow> xxx\<close> can make @{method transfer} work better. \<close>
+
+lemma opensets_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  assumes [transfer_rule]: \<open>(rel_set R ===> (\<longleftrightarrow>)) open open\<close>
+  shows \<open>(rel_set (rel_set R)) opensets opensets\<close>
+  using assms apply (simp add: opensets_def rel_set_def )
+  apply auto
+sledgehammer
+sorry
+
+
+(* TODO move *)
+(* TODO reprove concrete nhds transfer rules with this (or drop them?) *)
+lemma nhds_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  assumes [transfer_rule]: \<open>(rel_set R ===> (\<longleftrightarrow>)) open open\<close>
+  shows \<open>(R ===> rel_filter R) nhds nhds\<close>
+(* proof -
+  have \<open>(R ===> rel_filter R) (\<lambda>a. \<Sqinter> (principal ` Set.filter ((\<in>) a) opensets)) (\<lambda>a. \<Sqinter> (principal ` Set.filter ((\<in>) a) opensets))\<close>
+  show ?thesis
+    unfolding nhds_def
+    apply transfer_prover_start
+
+
+         apply transfer_step
+  apply transfer_step
+      apply transfer_step
+  apply transfer_step
+  apply transfer_step
+     apply (rule RelI)
+
+     apply transfer_step
+
+
+
+  term nhds *)
+  sorry
+
+lemma at_within_parametric[transfer_rule]: 
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique R\<close>
+  assumes [transfer_rule]: \<open>(rel_set R ===> (\<longleftrightarrow>)) open open\<close>
+  shows \<open>(R ===> rel_set R ===> rel_filter R) at_within at_within\<close>
+  unfolding at_within_def
+  apply transfer_prover_start
+  apply transfer_step
+  apply transfer_step
+      apply transfer_step
+  apply transfer_step
+  apply transfer_step
+
+
+    apply transfer_step
+  apply transfer_step
+
+  
+  sorry
+
+
+  term at_within
+
+
+
+lemma transfer_nhds_weak_star_topology[transfer_rule]:
+  includes lifting_syntax
+  shows \<open>(cr_cblinfun_weak_star ===> rel_set cr_cblinfun_weak_star ===> rel_filter cr_cblinfun_weak_star) (at_within_in weak_star_topology) nhds\<close>
+  unfolding nhds_def nhdsin_def
+  apply (simp add: weak_star_topology_topspace)
+  by transfer_prover
+
 
 lemma same_range_equivalent:
   fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G :: \<open>'b update \<Rightarrow> 'c update\<close>
@@ -964,6 +1298,9 @@ proof -
     have [transfer_rule]: \<open>(cr_cblinfun_weak_star ===> cr_cblinfun_weak_star) I I'\<close>
       by (metis (no_types, lifting) I'_def UNIV_I cr_cblinfun_weak_star_def o_def rel_funI to_weak_star_inverse)
     have \<open>I' \<midarrow>a\<rightarrow> I' a\<close> for a
+      apply (transfer)
+      sorry
+
       sorry
     then have \<open>isCont I' a\<close> for a
       by (simp add: continuous_within)
