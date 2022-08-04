@@ -561,19 +561,19 @@ proof (rule complex_vector.subspaceI)
 qed
 
 
-lemma [transfer_rule]:
+lemma transfer_csubspace_cblinfun_weak_star[transfer_rule]:
   includes lifting_syntax
   shows \<open>(rel_set cr_cblinfun_weak_star ===> (=)) csubspace csubspace\<close>
   unfolding complex_vector.subspace_def
   by transfer_prover
 
-lemma [transfer_rule]:
+lemma transfer_closed_cblinfun_weak_star[transfer_rule]:
   includes lifting_syntax
   shows \<open>(rel_set cr_cblinfun_weak_star ===> (=)) (closedin weak_star_topology) closed\<close>
   apply (simp add: closed_def[abs_def] closedin_def[abs_def] weak_star_topology_topspace Compl_eq_Diff_UNIV)
   by transfer_prover
 
-lemma [transfer_rule]:
+lemma transfer_closure_cblinfun_weak_star[transfer_rule]:
   includes lifting_syntax
   shows \<open>(rel_set cr_cblinfun_weak_star ===> rel_set cr_cblinfun_weak_star) (Abstract_Topology.closure_of weak_star_topology) closure\<close>
   apply (subst closure_of_hull[where X=weak_star_topology, unfolded weak_star_topology_topspace, simplified, abs_def])

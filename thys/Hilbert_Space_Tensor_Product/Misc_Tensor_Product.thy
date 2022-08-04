@@ -1638,26 +1638,26 @@ proof -
     by (auto simp: topology_eq openin_pullback_topology)
 qed
 
-definition \<open>opensets T = Collect (openin T)\<close>
+definition \<open>opensets_in T = Collect (openin T)\<close>
   \<comment> \<open>This behaves more nicely with the @{method transfer}-method (and friends) than \<^const>\<open>openin\<close>.
       So when rewriting a subgoal, using, e.g., \<^term>\<open>\<exists>U\<in>opensets T. xxx\<close> instead of \<^term>\<open>\<exists>U. openin T U \<longrightarrow> xxx\<close> can make @{method transfer} work better. \<close>
 
-lemma opensets_parametric[transfer_rule]:
+lemma opensets_in_parametric[transfer_rule]:
   includes lifting_syntax
   assumes \<open>bi_unique R\<close>
-  shows \<open>(rel_topology R ===> rel_set (rel_set R)) opensets opensets\<close>
+  shows \<open>(rel_topology R ===> rel_set (rel_set R)) opensets_in opensets_in\<close>
 proof (intro rel_funI rel_setI)
   fix S T
   assume rel_topo: \<open>rel_topology R S T\<close>
   fix U
-  assume \<open>U \<in> opensets S\<close>
-  then show \<open>\<exists>V \<in> opensets T. rel_set R U V\<close>
-    by (smt (verit, del_insts) Domainp.cases mem_Collect_eq opensets_def rel_fun_def rel_topo rel_topology_def)
+  assume \<open>U \<in> opensets_in S\<close>
+  then show \<open>\<exists>V \<in> opensets_in T. rel_set R U V\<close>
+    by (smt (verit, del_insts) Domainp.cases mem_Collect_eq opensets_in_def rel_fun_def rel_topo rel_topology_def)
 next
   fix S T assume rel_topo: \<open>rel_topology R S T\<close>
-  fix U assume \<open>U \<in> opensets T\<close>
-  then show \<open>\<exists>V \<in> opensets S. rel_set R V U\<close>
-    by (smt (verit) RangepE mem_Collect_eq opensets_def rel_fun_def rel_topo rel_topology_def)
+  fix U assume \<open>U \<in> opensets_in T\<close>
+  then show \<open>\<exists>V \<in> opensets_in S. rel_set R V U\<close>
+    by (smt (verit) RangepE mem_Collect_eq opensets_in_def rel_fun_def rel_topo rel_topology_def)
 qed
 
 lemma hausdorff_parametric[transfer_rule]:
@@ -1665,9 +1665,9 @@ lemma hausdorff_parametric[transfer_rule]:
   assumes [transfer_rule]: \<open>bi_unique R\<close>
   shows \<open>(rel_topology R ===> (\<longleftrightarrow>)) hausdorff hausdorff\<close>
 proof -
-  have hausdorff_def': \<open>hausdorff T \<longleftrightarrow> (\<forall>x\<in>topspace T. \<forall>y\<in>topspace T. x \<noteq> y \<longrightarrow> (\<exists>U \<in> opensets T. \<exists>V \<in> opensets T. x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
+  have hausdorff_def': \<open>hausdorff T \<longleftrightarrow> (\<forall>x\<in>topspace T. \<forall>y\<in>topspace T. x \<noteq> y \<longrightarrow> (\<exists>U \<in> opensets_in T. \<exists>V \<in> opensets_in T. x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
     for T :: \<open>'z topology\<close>
-    unfolding opensets_def hausdorff_def Bex_def by auto
+    unfolding opensets_in_def hausdorff_def Bex_def by auto
   show ?thesis
     unfolding hausdorff_def'
     by transfer_prover
