@@ -1040,9 +1040,6 @@ local_setup \<open>define_stuff \<^here> \<^class>\<open>linear_continuum\<close
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.linear_continuum_topology\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>linear_continuum_topology\<close>\<close>
 
-
-
-
 ML \<open>
 fun print_untransferred_classes ctxt except = let
   val thy = Proof_Context.theory_of ctxt

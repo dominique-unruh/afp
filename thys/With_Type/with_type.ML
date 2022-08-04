@@ -6,7 +6,8 @@ type with_type_info = {
   with_type_compat_rel: thm, (* with_type_compat_rel (fst rep_class_data) S (snd rep_class_data)
                                 The two occurrences of rep_class_data must have different ?'abs *)
   transfer: thm option (* bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (snd rep_class_data r ===> (\<longleftrightarrow>)) (fst rep_class_data (Collect (Domainp r))) class.class *)
-                       (* The two occurrence of rep_class_data must have different ?'abs *)
+                       (* The two occurrences of rep_class_data must have different ?'abs *)
+                       (* class.class is the class-predicate-constant (e.g. semigroup_add.class), possibly curried (e.g. \<lambda>(x,y,z). const x y z) *)
 }
 
 val add_with_type_info_global : with_type_info -> theory -> theory
@@ -85,7 +86,8 @@ fun with_type_cancel ctxt thm = let
   val info = get_with_type_info_by_const ctxt const |> the
   
   (* "with_type CR ?Sp ?P \<Longrightarrow>
-      \<exists>Rep Abs. type_definition Rep Abs (fst ?Sp) \<Longrightarrow> \<exists>x. class.name x" *)
+      \<exists>Rep Abs. type_definition Rep Abs (fst ?Sp) \<Longrightarrow> \<exists>x. class.name' x" *)
+  (* Here class.name' is class.name, possibly uncurried (e.g., \<lambda>(x,y,z) class.name' x y z) *)
   (* May be NONE *)
   val with_type_class_axioms = case #transfer info of SOME transfer => 
         (@{thm with_type_class_axioms} OF [transfer, #with_type_compat_rel info])
@@ -96,25 +98,37 @@ fun with_type_cancel ctxt thm = let
   (* class.name part may be absent for some type classes *)
   val unoverloaded = Unoverload_Type.unoverload_type (Context.Proof ctxt) [abs_type_name] thm
 
-  (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> \<exists>x::?'abs_params2. class.name x *)
+  (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> \<exists>x::?'abs_params2. class.name' x *)
   (* May be NONE *)
   val ex_class = Option.map (fn th => th OF [thm]) with_type_class_axioms
 
-  (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> class.name (SOME \<dots>) *)
+  (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> class.name' (SOME \<dots>) *)
   (* May be NONE *)
   val class_some = Option.map (fn thm => @{thm someI_ex} OF [thm]) ex_class
-  
+
+  open Conv
+  (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> class.name \<dots> \<dots> \<dots> *)
+  (* May be NONE *)
+  val uncurry_conv = repeat_conv (rewr_conv @{thm case_prod_beta[THEN eq_reflection]}) |> HOLogic.Trueprop_conv |> implies_concl_conv
+  val class_some_uncurried = Option.map (fconv_rule uncurry_conv) class_some
+val _ = \<^print> (5, class_some_uncurried)
+
+val _ = \<^print> (5, class_some_uncurried, unoverloaded)
   (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> with_type CR Sp (\<lambda>_ _. P) *)
-  val unoverloaded' = case class_some of SOME thm => unoverloaded OF [thm] | NONE => unoverloaded
+  val unoverloaded' = case class_some_uncurried of SOME thm => unoverloaded OF [thm] | NONE => unoverloaded
   
+val _ = \<^print> 6
   (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) [TWICE!] \<Longrightarrow> P *)
   val no_with_type = @{thm with_type_prepare_cancel} OF [unoverloaded']
   
+val _ = \<^print> 7
   (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> P *)
   val no_repetition = Tactic.distinct_subgoals_tac no_with_type |> Seq.hd
 
+val _ = \<^print> 8
   (* fst Sp \<noteq> {} \<Longrightarrow> P *)
   val removed_abs_type = Local_Typedef.cancel_type_definition no_repetition
+val _ = \<^print> 10
   
   (* fst Sp \<noteq> {} *)
   val non_empty = @{thm with_type_nonempty} OF [thm]

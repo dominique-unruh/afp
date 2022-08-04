@@ -10,6 +10,11 @@ begin
 
 definition carrier :: \<open>int set\<close> where \<open>carrier = {0,1,2}\<close>
 definition carrier_plus :: \<open>int \<Rightarrow> int \<Rightarrow> int\<close> where \<open>carrier_plus i j = (i + j) mod 3\<close>
+ML \<open>
+(* TODO: provide toplevel diagnostic command for this *)
+get_params_of_class \<^theory> \<^class>\<open>ab_group_add\<close> |> #3
+\<close>
+definition carrier_ab_group_add where \<open>carrier_ab_group_add = (carrier_plus, 0::int, (\<lambda> i j. (i - j) mod 3), (\<lambda>i. (- i) mod 3))\<close>
 
 lemma carrier_nonempty: \<open>carrier \<noteq> {}\<close>
   by (simp add: carrier_def)
@@ -18,7 +23,11 @@ lemma carrier_semigroup: \<open>with_type_semigroup_add_class_pred carrier carri
   by (auto simp: with_type_semigroup_add_class_pred_def
       with_type_semigroup_add_class_dom_def with_type_semigroup_add_class_pred'_def carrier_def carrier_plus_def)
 
-lemma example_semigroup2:
+lemma carrier_ab_group_add: \<open>with_type_ab_group_add_class_pred carrier carrier_ab_group_add\<close>
+(* TODO *)
+  sorry
+
+lemma example_semigroup:
   shows \<open>\<forall>\<^sub>\<tau> 'abs::semigroup_add = carrier with carrier_plus. undefined (3::nat)\<close>
   apply (rule with_typeI)
   apply (simp_all add: with_type_semigroup_add_class_def)
@@ -44,23 +53,41 @@ proof -
     sorry
 qed
 
+lemma example_ab_group_add:
+  shows \<open>\<forall>\<^sub>\<tau> 'abs::ab_group_add = carrier with carrier_ab_group_add. undefined (3::nat)\<close>
+  sorry
+(* TODO *)
+
 lemma example_type:
-  includes lifting_syntax
-  shows \<open>with_type with_type_type_class undefined
-      (\<lambda>Rep (Abs::int \<Rightarrow> 'abs). undefined (3::nat))\<close>
+  \<open>\<forall>\<^sub>\<tau> 'abs::type = undefined::int set. undefined (3::nat)\<close>
   sorry
 
 lemma example_finite:
-  includes lifting_syntax
-  shows \<open>with_type with_type_finite_class undefined
-      (\<lambda>Rep (Abs::int \<Rightarrow> 'abs::finite). undefined (3::nat))\<close>
+  \<open>\<forall>\<^sub>\<tau> 'abs::finite = undefined::int set. undefined (3::nat)\<close>
   sorry
+
+declare [[show_consts, show_sorts]]
 
 ML \<open>
 With_Type.with_type_cancel \<^context> @{thm example_finite}
 \<close>
 
+thm example_type[cancel_with_type]
+thm example_finite[cancel_with_type]
+thm example_semigroup[cancel_with_type]
+thm example_ab_group_add[cancel_with_type]
+
+
+(* TODO: fix or improve error message *)
+lemma example_semigroup2:
+  shows \<open>\<forall>\<^sub>\<tau> 'abs::semigroup_add = undefined with undefined. undefined (3::nat)\<close>
+  sorry
+thm example_semigroup2[cancel_with_type]
+
+
 end (* experiment *)
+
+
 
 
 end
