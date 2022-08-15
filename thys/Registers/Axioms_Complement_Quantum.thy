@@ -178,26 +178,105 @@ lemma closure_of_eqI:
   sorry
 thm xxx[cancel_with_type] *)
 
+lemma map_filter_on_id: \<open>map_filter_on S (\<lambda>x. x) F = F\<close> if \<open>\<forall>\<^sub>F x in F. x \<in> S\<close>
+  using that
+  by (auto intro!: filter_eq_iff[THEN iffD2] simp: eventually_map_filter_on eventually_frequently_simps)
+
+lemma inverse_real_inverse: \<open>inverse_real_inst.inverse_real = inverse\<close>
+  by (simp add: HOL.nitpick_unfold)
+
+named_theorems with_type_intros
+lemma [with_type_intros]: \<open>fst (A,B) \<noteq> {}\<close> if \<open>A \<noteq> {}\<close>
+  using that by simp
+lemma [with_type_intros]: \<open>with_type_compat_rel C (fst (S,p)) R\<close> if \<open>with_type_compat_rel C S R\<close>
+  using that by simp
+declare with_typeI[with_type_intros]
+
+lemma with_type_chilbert_space_class_subspaceI[with_type_intros]: \<open>fst with_type_chilbert_space_class
+     (fst (S, (*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, openin (top_of_set S), (\<bullet>\<^sub>C)))
+     (snd (S, (*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, openin (top_of_set S), (\<bullet>\<^sub>C)))\<close>
+  if [simp]: \<open>csubspace S\<close> \<open>closed S\<close>
+  (* TODO open and uniformity may need to be restricted! *)
+proof -
+  have open1: \<open>(\<exists>y. \<forall>x ya. rel_set (equal_onp S) x ya \<longrightarrow> open x = y ya)\<close>
+    apply (rule exI[of _ \<open>open\<close>])
+    by (smt (verit, ccfv_threshold) equal_onp_def rel_setD1 rel_setD2 subset_iff topological_space_class.openI)
+  have uniformity: \<open>rel_filter (rel_prod (equal_onp S) (equal_onp S)) (uniformity_on S) (uniformity_on S)\<close>
+    apply (rule rel_filter.intros[where Z=\<open>map_filter_on (S\<times>S) (\<lambda>x. (x,x)) (uniformity_on S)\<close>])
+      apply (simp add: eventually_map_filter_on always_eventually equal_onp_def eventually_inf_principal)
+     apply (subst map_filter_on_comp)
+    apply (auto simp add: map_filter_on_comp equal_onp_def eventually_inf_principal map_filter_on_id o_def)[3]
+     apply (subst map_filter_on_comp)
+    by (auto simp add: map_filter_on_comp equal_onp_def eventually_inf_principal map_filter_on_id o_def)
+  have 0: \<open>(\<exists>y. \<forall>x ya. rel_set (equal_onp S) x ya \<longrightarrow> openin (top_of_set S) x = y ya)\<close>
+    apply (rule exI[of _ \<open>openin (top_of_set S)\<close>])
+    by (metis equal_onp_def equalityI rel_setD1 rel_setD2 subset_iff)
+  have 1: \<open>with_type_chilbert_space_class_dom S ((*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, openin (top_of_set S), (\<bullet>\<^sub>C))\<close>
+    apply (simp add: with_type_chilbert_space_class_dom_def Domainp_iff rel_fun_def equal_onp_def)
+    by (auto intro!: 0 exI uniformity simp add: scaleR_scaleC complex_vector.subspace_scale
+        complex_vector.subspace_add complex_vector.subspace_0 complex_vector.subspace_diff
+        complex_vector.subspace_neg sgn_div_norm open1)
+  have 2: \<open>with_type_chilbert_space_class_pred' (\<lambda>x. x \<in> S)
+     ((*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, open, (\<bullet>\<^sub>C))\<close>
+    apply (simp add: with_type_chilbert_space_class_pred'_def scaleR_scaleC)
+    apply (intro conjI)
+               apply (auto simp add: complex_vector.vector_space_assms dist_norm sgn_div_norm scaleR_scaleC
+        cinner_simps inverse_real_inverse simp flip: of_real_inverse norm_eq_sqrt_cinner)
+            defer
+  defer
+  defer
+             defer
+             defer
+             defer
+    using norm_diff_triangle_le norm_imp_pos_and_ge norm_minus_commute apply blast
+
+    defer
+            defer
+    by -
+  from 1 2
+  show ?thesis
+    by (simp add: with_type_chilbert_space_class_def with_type_chilbert_space_class_pred_def)
+qed
+
 lemma orthonormal_subspace_basis_exists:
   fixes S :: \<open>'a::chilbert_space set\<close>
   assumes \<open>is_ortho_set S\<close> and \<open>\<And>x. x\<in>S \<Longrightarrow> norm x = 1\<close> and \<open>S \<subseteq> space_as_set V\<close>
   shows \<open>\<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
-(* proof -
+proof -
+  note [[show_hyps]]
   (* TODO open and uniformity may need to be restricted! *)
   have \<open>\<forall>\<^sub>\<tau> 's::chilbert_space = closure (cspan S) with (scaleR, scaleC, plus, 0, minus, uminus, dist, norm, sgn, uniformity, open, cinner). 
           \<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
-(*   proof (rule with_typeI)
+  proof (intro with_type_intros)
+    show \<open>closure (cspan S) \<noteq> {}\<close>
+      using complex_vector.span_clauses(2) by auto
+    show \<open>csubspace (closure (cspan S))\<close>
+      using closure_is_csubspace by blast
+    show \<open>closed (closure (cspan S))\<close>
+      by simp
+    show \<open>with_type_compat_rel (fst with_type_chilbert_space_class)
+     (closure (cspan S)) (snd with_type_chilbert_space_class)\<close>
+      by (rule with_type_chilbert_space_class_rel_compat)
+    fix Rep :: \<open>'s \<Rightarrow> 'a\<close> and Abs abs_ops
+    assume \<open>type_definition Rep Abs
+        (fst (closure (cspan S), (*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity, open, (\<bullet>\<^sub>C)))\<close>
+    then have \<open>type_definition Rep Abs (closure (cspan S))\<close>
+      by simp
+    assume \<open>snd with_type_chilbert_space_class (\<lambda>x y. x = Rep y)
+        (snd (closure (cspan S), (*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity, open, (\<bullet>\<^sub>C))) abs_ops\<close>
+    then have \<open>with_type_chilbert_space_class_rel (\<lambda>x y. x = Rep y)
+        ((*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity, open, (\<bullet>\<^sub>C)) abs_ops\<close>
+      unfolding with_type_chilbert_space_class_def
+      by simp
     show \<open>\<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
       apply transfer
+      thm orthonormal_basis_exists
       by -
-  qed *)
-    by -
+  qed
   from this[cancel_with_type]
   show ?thesis
-  sorry (* By transferring orthonormal_basis_exists? *)
+    by simp
 qed
- *)
-  sorry
 
 (* TODO move *)
 lemma has_sum_in_comm_additive:
@@ -1143,7 +1222,6 @@ lemma opensets_parametric[transfer_rule]:
   shows \<open>(rel_set (rel_set R)) opensets opensets\<close>
   using assms apply (simp add: opensets_def rel_set_def )
   apply auto
-sledgehammer
 sorry
 
 
