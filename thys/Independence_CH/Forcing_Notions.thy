@@ -8,6 +8,8 @@ theory Forcing_Notions
     "Delta_System_Lemma.ZF_Library"
 begin
 
+hide_const (open) Order.pred
+
 subsection\<open>Basic concepts\<close>
 text\<open>We say that two elements $p,q$ are
   \<^emph>\<open>compatible\<close> if they have a lower bound in $P$\<close>
@@ -87,6 +89,9 @@ abbreviation Incompatible :: "[i, i] \<Rightarrow> o"  (infixl "\<bottom>" 50)
 lemma compatI[intro!]: "d\<in>P \<Longrightarrow> d\<preceq>p \<Longrightarrow> d\<preceq>q \<Longrightarrow> compat(p,q)"
   unfolding compat_def compat_in_def by blast
 
+lemma Incompatible_imp_not_eq: "\<lbrakk> p \<bottom> q; p\<in>P; q\<in>P \<rbrakk>\<Longrightarrow> p \<noteq> q"
+  using refl_leq by blast
+
 lemma denseD [dest]: "dense(D) \<Longrightarrow> p\<in>P \<Longrightarrow>  \<exists>d\<in>D. d\<preceq> p"
   unfolding dense_def by blast
 
@@ -136,6 +141,9 @@ definition
 
 lemma filterD : "filter(G) \<Longrightarrow> x \<in> G \<Longrightarrow> x \<in> P"
   by (auto simp add : subsetD filter_def)
+
+lemma filter_subset_notion[dest]: "filter(G) \<Longrightarrow> G \<subseteq> P"
+  by (auto dest:filterD)
 
 lemma filter_leqD : "filter(G) \<Longrightarrow> x \<in> G \<Longrightarrow> y \<in> P \<Longrightarrow> x\<preceq>y \<Longrightarrow> y \<in> G"
   by (simp add: filter_def increasing_def)

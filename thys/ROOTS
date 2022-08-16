@@ -193,7 +193,6 @@ FOL_Harrison
 FOL_Seq_Calc1
 FOL_Seq_Calc2
 FOL_Seq_Calc3
-FSM_Tests
 Factor_Algebraic_Polynomial
 Factored_Transition_System_Bounding
 Falling_Factorial_Sum
@@ -307,7 +306,6 @@ Interpolation_Polynomials_HOL_Algebra
 Interpreter_Optimizations
 Interval_Arithmetic_Word32
 Intro_Dest_Elim
-Involutions2Squares
 Iptables_Semantics
 Irrational_Series_Erdos_Straus
 Irrationality_J_Hancl
@@ -595,7 +593,6 @@ Sliding_Window_Algorithm
 Smith_Normal_Form
 Smooth_Manifolds
 Sophomores_Dream
-Solidity
 Sort_Encodings
 Source_Coding_Theorem
 SpecCheck
@@ -692,7 +689,6 @@ ZFC_in_HOL
 Zeta_3_Irrational
 Zeta_Function
 pGCL
-
 
 # Unruh's additions
 Hilbert_Space_Tensor_Product
