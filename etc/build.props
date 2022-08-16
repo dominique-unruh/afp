@@ -1,0 +1,25 @@
+title = AFP/Tools
+module = $AFP_BASE/tools/lib/classes/afp_tools.jar
+requirements = \
+  env:ISABELLE_SCALA_JAR \
+  $ISABELLE_HOME_USER/contrib/ci-extras-1/lib/ci-extras.jar
+sources = \
+  tools/admin/afp_build_hugo.scala \
+  tools/migration/afp_obfuscate_emails.scala \
+  tools/afp_build.scala \
+  tools/afp_check_metadata.scala \
+  tools/afp_check_roots.scala \
+  tools/afp_dependencies.scala \
+  tools/afp_site_gen.scala \
+  tools/afp_structure.scala \
+  tools/afp_tool.scala \
+  tools/hugo.scala \
+  tools/metadata.scala \
+  tools/rake.scala \
+  tools/toml.scala \
+  tools/utils.scala
+resources = \
+  tools/SmartStoplist.txt:SmartStoplist.txt
+services = \
+  afp.Tools \
+  afp.Build_Tools
