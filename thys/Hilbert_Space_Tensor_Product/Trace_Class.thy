@@ -1139,9 +1139,9 @@ proof (cases \<open>trace_class A\<close>)
       by (metis orthogonal_complementI orthogonal_complement_of_closure orthogonal_complement_of_cspan)
     then have \<open>x \<in> space_as_set (- ccspan (U ` some_chilbert_basis))\<close>
       by (simp add: ccspan.rep_eq uminus_ccsubspace.rep_eq)
-    then have \<open>x \<in> space_as_set (- (U *\<^sub>S \<top>))\<close>
+    then have \<open>x \<in> space_as_set (- (U *\<^sub>S top))\<close>
       by (metis cblinfun_image_ccspan ccspan_some_chilbert_basis)
-    moreover have \<open>U y \<in> space_as_set (U *\<^sub>S \<top>)\<close>
+    moreover have \<open>U y \<in> space_as_set (U *\<^sub>S top)\<close>
       by simp
     ultimately show ?thesis
       apply (transfer fixing: x y)

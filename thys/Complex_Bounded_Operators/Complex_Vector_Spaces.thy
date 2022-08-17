@@ -32,6 +32,32 @@ unbundle lattice_syntax
 
 subsection \<open>Misc\<close>
 
+
+(* TODO: replace vector_space.span_image_scale with this *)
+(* Should rather be in Extra_Vector_Spaces but then complex_vector.span_image_scale' does not exist for some reason *)
+lemma (in vector_space) span_image_scale':
+  \<comment> \<open>Strengthening of @{thm [source] vector_space.span_image_scale} without the condition \<open>finite S\<close>\<close>
+  assumes nz: "\<And>x. x \<in> S \<Longrightarrow> c x \<noteq> 0"
+  shows "span ((\<lambda>x. c x *s x) ` S) = span S"
+proof
+  have \<open>((\<lambda>x. c x *s x) ` S) \<subseteq> span S\<close>
+    by (metis (mono_tags, lifting) image_subsetI in_mono local.span_superset local.subspace_scale local.subspace_span)
+  then show \<open>span ((\<lambda>x. c x *s x) ` S) \<subseteq> span S\<close>
+    by (simp add: local.span_minimal)
+next
+  have \<open>x \<in> span ((\<lambda>x. c x *s x) ` S)\<close> if \<open>x \<in> S\<close> for x
+  proof -
+    have \<open>x = inverse (c x) *s c x *s x\<close>
+      by (simp add: nz that)
+    moreover have \<open>c x *s x \<in> (\<lambda>x. c x *s x) ` S\<close>
+      using that by blast
+    ultimately show ?thesis
+      by (metis local.span_base local.span_scale)
+  qed
+  then show \<open>span S \<subseteq> span ((\<lambda>x. c x *s x) ` S)\<close>
+    by (simp add: local.span_minimal subsetI)
+qed
+
 lemma (in scaleC) scaleC_real: assumes "r\<in>\<real>" shows "r *\<^sub>C x = Re r *\<^sub>R x"
   unfolding scaleR_scaleC using assms by simp
 
@@ -572,6 +598,14 @@ proof-
     by (simp add: complex_vector.dependent_explicit )
 qed
 
+lemma cspan_eqI:
+  assumes \<open>\<And>a. a\<in>A \<Longrightarrow> a\<in>cspan B\<close>
+  assumes \<open>\<And>b. b\<in>B \<Longrightarrow> b\<in>cspan A\<close>
+  shows \<open>cspan A = cspan B\<close>
+  apply (rule complex_vector.span_subspace[rotated])
+    apply (rule complex_vector.span_minimal)
+  using assms by auto
+
 subsection \<open>Antilinear maps and friends\<close>
 
 locale antilinear = additive f for f :: "'a::complex_vector \<Rightarrow> 'b::complex_vector" +
@@ -773,10 +807,10 @@ proof
     by (simp add: scaleC scaleC_left)
   show "prod (g a) (r *\<^sub>C b) = r *\<^sub>C prod (g a) b"
     by (simp add: scaleC_right)
-  interpret bounded_bilinear \<open>(\<lambda>x. prod (g x))\<close>
+  interpret bi: bounded_bilinear \<open>(\<lambda>x. prod (g x))\<close>
     by (simp add: bounded_linear comp1)
   show "\<exists>K. \<forall>a b. norm (prod (g a) b) \<le> norm a * norm b * K"
-    using bounded by blast
+    using bi.bounded by blast
 qed
 
 lemma (in bounded_sesquilinear) comp2:
@@ -793,12 +827,12 @@ proof
     by (simp add: scaleC scaleC_left)
   show "prod a (g (r *\<^sub>C b)) = r *\<^sub>C prod a (g b)"
     by (simp add: scaleC scaleC_right)
-  interpret bounded_bilinear \<open>(\<lambda>x y. prod x (g y))\<close>
+  interpret bi: bounded_bilinear \<open>(\<lambda>x y. prod x (g y))\<close>
     apply (rule bounded_bilinear.flip)
     using _ bounded_linear apply (rule bounded_bilinear.comp1)
     using bounded_bilinear by (rule bounded_bilinear.flip)
   show "\<exists>K. \<forall>a b. norm (prod a (g b)) \<le> norm a * norm b * K"
-    using bounded by blast
+    using bi.bounded by blast
 qed
 
 lemma (in bounded_sesquilinear) comp: "bounded_clinear f \<Longrightarrow> bounded_clinear g \<Longrightarrow> bounded_sesquilinear (\<lambda>x y. prod (f x) (g y))"

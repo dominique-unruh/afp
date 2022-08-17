@@ -260,6 +260,7 @@ lemma wot_closure_is_csubspace[simp]:
   assumes \<open>csubspace A\<close>
   shows \<open>csubspace (closure A)\<close>
 proof (rule complex_vector.subspaceI)
+  include lattice_syntax
   show 0: \<open>0 \<in> closure A\<close>
     by (simp add: assms closure_def complex_vector.subspace_0)
   show \<open>x + y \<in> closure A\<close> if \<open>x \<in> closure A\<close> \<open>y \<in> closure A\<close> for x y
@@ -403,11 +404,11 @@ proof (rule hausdorffI)
 qed
 
 lemma hermitian_limit_hermitian_wot:
-  assumes \<open>F \<noteq> \<bottom>\<close>
+  assumes \<open>F \<noteq> bot\<close>
   assumes herm: \<open>\<And>i. (a i)* = a i\<close>
   assumes lim: \<open>limitin cweak_operator_topology a A F\<close>
   shows \<open>A* = A\<close>
-  using hausdorff_cweak_operator_topology \<open>F \<noteq> \<bottom>\<close>
+  using hausdorff_cweak_operator_topology \<open>F \<noteq> bot\<close>
   apply (rule limitin_unique[of cweak_operator_topology])
   using lim apply (rule limitin_adj_wot)
   unfolding herm by (fact lim)
@@ -424,7 +425,7 @@ lemma wot_weaker_than_sot_limitin: \<open>limitin cweak_operator_topology a A F\
 
 (* Logically belongs in Strong_Operator_Topology, but we use hermitian_tendsto_hermitian_wot in the proof. *)
 lemma hermitian_limit_hermitian_sot:
-  assumes \<open>F \<noteq> \<bottom>\<close>
+  assumes \<open>F \<noteq> bot\<close>
   assumes \<open>\<And>i. (a i)* = a i\<close>
   assumes \<open>limitin cstrong_operator_topology a A F\<close>
   shows \<open>A* = A\<close>

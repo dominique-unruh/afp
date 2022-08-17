@@ -25,6 +25,9 @@ notation cblinfun_apply (infixr "*\<^sub>V" 70)
 lemma id_cblinfun_apply[simp]: "id_cblinfun *\<^sub>V \<psi> = \<psi>"
   apply transfer by simp
 
+lemma apply_id_cblinfun[simp]: \<open>(*\<^sub>V) id_cblinfun = id\<close>
+  by auto
+
 lemma isCont_cblinfun_apply[simp]: "isCont ((*\<^sub>V) A) \<psi>"
   apply transfer
   by (simp add: clinear_continuous_at)
@@ -345,6 +348,61 @@ proof intro_classes
   ultimately show \<open>\<exists>S :: ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set. finite S \<and> cspan S = UNIV\<close>
     by auto
 qed
+
+lemma norm_cblinfun_bound_dense:
+  assumes \<open>0 \<le> b\<close>
+  assumes S: \<open>closure S = UNIV\<close>
+  assumes bound: \<open>\<And>x. x\<in>S \<Longrightarrow> norm (cblinfun_apply f x) \<le> b * norm x\<close>
+  shows \<open>norm f \<le> b\<close>
+proof -
+  have 1: \<open>continuous_on UNIV (\<lambda>a. norm (f *\<^sub>V a))\<close>
+    apply (intro continuous_on_norm linear_continuous_on)
+    by (simp add: Complex_Vector_Spaces.bounded_clinear.bounded_linear cblinfun.bounded_clinear_right)
+  have 2: \<open>continuous_on UNIV (\<lambda>a. b * norm a)\<close>
+    using continuous_on_mult_left continuous_on_norm_id by blast
+  have \<open>norm (cblinfun_apply f x) \<le> b * norm x\<close> for x
+    apply (rule on_closure_leI[where x=x and S=S])
+    using S bound 1 2 by auto
+  then show \<open>norm f \<le> b\<close>
+    apply (rule_tac norm_cblinfun_bound)
+    using \<open>0 \<le> b\<close> by auto
+qed
+
+lemma dense_span_separating: \<open>closure (cspan S) = UNIV \<Longrightarrow> bounded_clinear F \<Longrightarrow> bounded_clinear G \<Longrightarrow> (\<forall>x\<in>S. F x = G x) \<Longrightarrow> F = G\<close>
+proof -
+  fix F G :: \<open>'a \<Rightarrow> 'b\<close>
+  assume dense: \<open>closure (cspan S) = UNIV\<close>
+  assume [simp]: \<open>bounded_clinear F\<close> \<open>bounded_clinear G\<close>
+  assume \<open>\<forall>x\<in>S. F x = G x\<close>
+  then have \<open>F x = G x\<close> if \<open>x \<in> cspan S\<close> for x
+    apply (rule_tac complex_vector.linear_eq_on[of F G _ S])
+    using that by (auto simp: bounded_clinear.clinear)
+  then show \<open>F = G\<close>
+    apply (rule_tac ext)
+    apply (rule on_closure_eqI[of \<open>cspan S\<close> F G])
+    using dense by (auto intro!: continuous_at_imp_continuous_on clinear_continuous_at)
+qed
+
+
+lemma infsum_cblinfun_apply:
+  assumes \<open>g summable_on S\<close>
+  shows \<open>infsum (\<lambda>x. A *\<^sub>V g x) S = A *\<^sub>V (infsum g S)\<close>
+  apply (rule infsum_bounded_linear[unfolded o_def, of \<open>cblinfun_apply A\<close>])
+  using assms 
+  by (auto simp add: bounded_clinear.bounded_linear bounded_cbilinear.bounded_clinear_right
+      bounded_cbilinear_cblinfun_apply)
+
+lemma has_sum_cblinfun_apply:
+  assumes \<open>has_sum g S x\<close>
+  shows \<open>has_sum (\<lambda>x. A *\<^sub>V g x) S (A *\<^sub>V x)\<close>
+  apply (rule has_sum_bounded_linear[unfolded o_def, of \<open>cblinfun_apply A\<close>])
+  using assms by (auto simp add: bounded_clinear.bounded_linear cblinfun.bounded_clinear_right)
+
+lemma abs_summable_on_cblinfun_apply:
+  assumes \<open>g abs_summable_on S\<close>
+  shows \<open>(\<lambda>x. A *\<^sub>V g x) abs_summable_on S\<close>
+  using bounded_clinear.bounded_linear[OF cblinfun.bounded_clinear_right] assms
+  by (rule abs_summable_on_bounded_linear[unfolded o_def])
 
 
 subsection \<open>Relationship to real bounded operators (\<^typ>\<open>_ \<Rightarrow>\<^sub>L _\<close>)\<close>
@@ -771,6 +829,13 @@ lemma cblinfun_compose_add_right: \<open>a o\<^sub>C\<^sub>L (b + c) = (a o\<^su
 lemma cbilinear_cblinfun_compose[simp]: "cbilinear cblinfun_compose"
   by (auto intro!: clinearI simp add: cbilinear_def bounded_cbilinear.add_left bounded_cbilinear.add_right bounded_cbilinear_cblinfun_compose)
 
+lemma cblinfun_compose_sum_left: \<open>(\<Sum>i\<in>S. g i) o\<^sub>C\<^sub>L x = (\<Sum>i\<in>S. g i o\<^sub>C\<^sub>L x)\<close>
+  apply (induction S rule:infinite_finite_induct)
+  by (auto simp: cblinfun_compose_add_left)
+
+lemma cblinfun_compose_sum_right: \<open>x o\<^sub>C\<^sub>L (\<Sum>i\<in>S. g i) = (\<Sum>i\<in>S. x o\<^sub>C\<^sub>L g i)\<close>
+  apply (induction S rule:infinite_finite_induct)
+  by (auto simp: cblinfun_compose_add_right)
 
 subsection \<open>Adjoint\<close>
 
@@ -902,11 +967,15 @@ lemma bounded_antilinear_adj[bounded_antilinear, simp]: \<open>bounded_antilinea
   by (auto intro!: antilinearI exI[of _ 1] simp: bounded_antilinear_def bounded_antilinear_axioms_def adj_plus)
 
 lemma adjoint_eqI:
-  fixes G:: \<open>'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a::chilbert_space\<close>
+  fixes G:: \<open>'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a::complex_inner\<close>
     and F:: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
   assumes \<open>\<And>x y. \<langle>(cblinfun_apply F) x, y\<rangle> = \<langle>x, (cblinfun_apply G) y\<rangle>\<close>
   shows \<open>F = G*\<close>
   using assms apply transfer using cadjoint_eqI by auto
+
+lemma adj_uminus: \<open>(-A)* = - (A*)\<close>
+  apply (rule adjoint_eqI[symmetric])
+  by (simp add: cblinfun.minus_left cinner_adj_left)
 
 lemma cinner_real_hermiteanI:
   \<comment> \<open>Prop. II.2.12 in @{cite conway2013course}\<close>
@@ -1004,6 +1073,10 @@ next
   then show ?thesis
     by auto
 qed
+
+lemma sum_adj: \<open>(sum a F)* = sum (\<lambda>i. (a i)*) F\<close>
+  apply (induction rule:infinite_finite_induct)
+  by (auto simp add: adj_plus)
 
 subsection \<open>Unitaries / isometries\<close>
 
@@ -2126,9 +2199,20 @@ lemma one_dim_iso_adjoint_complex[simp]: \<open>one_dim_iso (A*) = cnj (one_dim_
 lemma one_dim_cblinfun_compose_commute: \<open>a o\<^sub>C\<^sub>L b = b o\<^sub>C\<^sub>L a\<close> for a b :: \<open>('a::one_dim,'a) cblinfun\<close>
   by (simp add: one_dim_iso_inj)
 
-
 lemma one_cblinfun_apply_one[simp]: \<open>1 *\<^sub>V 1 = 1\<close>
   by (simp add: one_cblinfun.rep_eq)
+
+lemma ccspan_one_dim[simp]: \<open>ccspan {x} = top\<close> if \<open>x \<noteq> 0\<close> for x :: \<open>_ :: one_dim\<close>
+proof -
+  have \<open>y \<in> cspan {x}\<close> for y
+    using that by (metis complex_vector.span_base complex_vector.span_zero cspan_singleton_scaleC insertI1 one_dim_scaleC_1 scaleC_zero_left)
+  then show ?thesis
+    by (auto intro!: order.antisym ccsubspace_leI
+      simp: top_ccsubspace.rep_eq ccspan.rep_eq)
+qed
+
+lemma is_onb_one_dim[simp]: \<open>norm x = 1 \<Longrightarrow> is_onb {x}\<close> for x :: \<open>_ :: one_dim\<close>
+  by (auto simp: is_onb_def intro!: ccspan_one_dim)
 
 subsection \<open>Loewner order\<close>
 

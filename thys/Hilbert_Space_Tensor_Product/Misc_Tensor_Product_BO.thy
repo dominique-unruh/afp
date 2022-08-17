@@ -10,421 +10,6 @@ no_notation Set_Algebras.elt_set_eq (infix "=o" 50)
 
 unbundle cblinfun_notation
 
-lemma norm_cblinfun_bound_dense:
-  assumes \<open>0 \<le> b\<close>
-  assumes S: \<open>closure S = UNIV\<close>
-  assumes bound: \<open>\<And>x. x\<in>S \<Longrightarrow> norm (cblinfun_apply f x) \<le> b * norm x\<close>
-  shows \<open>norm f \<le> b\<close>
-proof -
-  have 1: \<open>continuous_on UNIV (\<lambda>a. norm (f *\<^sub>V a))\<close>
-    apply (intro continuous_on_norm linear_continuous_on)
-    by (simp add: Complex_Vector_Spaces.bounded_clinear.bounded_linear cblinfun.bounded_clinear_right)
-  have 2: \<open>continuous_on UNIV (\<lambda>a. b * norm a)\<close>
-    using continuous_on_mult_left continuous_on_norm_id by blast
-  have \<open>norm (cblinfun_apply f x) \<le> b * norm x\<close> for x
-    apply (rule on_closure_leI[where x=x and S=S])
-    using S bound 1 2 by auto
-  then show \<open>norm f \<le> b\<close>
-    apply (rule_tac norm_cblinfun_bound)
-    using \<open>0 \<le> b\<close> by auto
-qed
-
-lemma orthogonal_complement_of_cspan: \<open>orthogonal_complement A = orthogonal_complement (cspan A)\<close>
-  by (metis (no_types, opaque_lifting) closed_csubspace.subspace complex_vector.span_minimal complex_vector.span_superset double_orthogonal_complement_increasing orthogonal_complement_antimono orthogonal_complement_closed_subspace subset_antisym)
-
-lemma orthogonal_complement_orthogonal_complement_closure_cspan:
-  \<open>orthogonal_complement (orthogonal_complement S) = closure (cspan S)\<close> for S :: \<open>'a::chilbert_space set\<close>
-proof -
-  have \<open>orthogonal_complement (orthogonal_complement S) = orthogonal_complement (orthogonal_complement (closure (cspan S)))\<close>
-    by (simp flip: orthogonal_complement_of_closure orthogonal_complement_of_cspan)
-  also have \<open>\<dots> = closure (cspan S)\<close>
-    by simp
-  finally show \<open>orthogonal_complement (orthogonal_complement S) = closure (cspan S)\<close>
-    by -
-qed
-
-lemma dense_span_separating: \<open>closure (cspan S) = UNIV \<Longrightarrow> bounded_clinear F \<Longrightarrow> bounded_clinear G \<Longrightarrow> (\<forall>x\<in>S. F x = G x) \<Longrightarrow> F = G\<close>
-proof -
-  fix F G :: \<open>'a \<Rightarrow> 'b\<close>
-  assume dense: \<open>closure (cspan S) = UNIV\<close>
-  assume [simp]: \<open>bounded_clinear F\<close> \<open>bounded_clinear G\<close>
-  assume \<open>\<forall>x\<in>S. F x = G x\<close>
-  then have \<open>F x = G x\<close> if \<open>x \<in> cspan S\<close> for x
-    apply (rule_tac complex_vector.linear_eq_on[of F G _ S])
-    using that by (auto simp: bounded_clinear.clinear)
-  then show \<open>F = G\<close>
-    apply (rule_tac ext)
-    apply (rule on_closure_eqI[of \<open>cspan S\<close> F G])
-    using dense by (auto intro!: continuous_at_imp_continuous_on clinear_continuous_at)
-qed
-
-lemma separating_dense_span: 
-  assumes \<open>\<And>F G :: 'a::chilbert_space \<Rightarrow> 'b::{complex_normed_vector,not_singleton}. 
-           bounded_clinear F \<Longrightarrow> bounded_clinear G \<Longrightarrow> (\<forall>x\<in>S. F x = G x) \<Longrightarrow> F = G\<close>
-  shows \<open>closure (cspan S) = UNIV\<close>
-proof -
-  have \<open>\<psi> = 0\<close> if \<open>\<psi> \<in> orthogonal_complement S\<close> for \<psi>
-  proof -
-    obtain \<phi> :: 'b where \<open>\<phi> \<noteq> 0\<close>
-      by fastforce
-    have \<open>(\<lambda>x. cinner \<psi> x *\<^sub>C \<phi>) = (\<lambda>_. 0)\<close> 
-      apply (rule assms[rule_format])
-      using orthogonal_complement_orthoI that
-      by (auto simp add: bounded_clinear_cinner_right bounded_clinear_scaleC_const)
-    then have \<open>cinner \<psi> \<psi> = 0\<close>
-      by (meson \<open>\<phi> \<noteq> 0\<close> scaleC_eq_0_iff)
-    then show \<open>\<psi> = 0\<close>
-      by auto
-  qed
-  then have \<open>orthogonal_complement (orthogonal_complement S) = UNIV\<close>
-    by (metis UNIV_eq_I cinner_zero_right orthogonal_complementI)
-  then show \<open>closure (cspan S) = UNIV\<close>
-    by (simp add: orthogonal_complement_orthogonal_complement_closure_cspan)
-qed
-
-
-lemma ortho_basis_exists: 
-  fixes S :: \<open>'a::chilbert_space set\<close>
-  assumes \<open>is_ortho_set S\<close>
-  shows \<open>\<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> closure (cspan B) = UNIV\<close>
-proof -
-  define on where \<open>on B \<longleftrightarrow> B \<supseteq> S \<and> is_ortho_set B\<close> for B :: \<open>'a set\<close>
-  have \<open>\<exists>B\<in>Collect on. \<forall>B'\<in>Collect on. B \<subseteq> B' \<longrightarrow> B' = B\<close>
-  proof (rule subset_Zorn_nonempty; simp)
-    show \<open>\<exists>S. on S\<close>
-      apply (rule exI[of _ S])
-      using assms on_def by fastforce
-  next
-    fix C :: \<open>'a set set\<close>
-    assume \<open>C \<noteq> {}\<close>
-    assume \<open>subset.chain (Collect on) C\<close>
-    then have C_on: \<open>B \<in> C \<Longrightarrow> on B\<close> and C_order: \<open>B \<in> C \<Longrightarrow> B' \<in> C \<Longrightarrow> B \<subseteq> B' \<or> B' \<subseteq> B\<close> for B B'
-      by (auto simp: subset.chain_def)
-    have \<open>is_orthogonal x y\<close> if \<open>x\<in>\<Union>C\<close> \<open>y\<in>\<Union>C\<close> \<open>x \<noteq> y\<close> for x y
-      by (smt (verit) UnionE C_order C_on on_def is_ortho_set_def subsetD that(1) that(2) that(3))
-    moreover have \<open>0 \<notin> \<Union> C\<close>
-      by (meson UnionE C_on is_ortho_set_def on_def)
-    moreover have \<open>\<Union>C \<supseteq> S\<close>
-      using C_on \<open>C \<noteq> {}\<close> on_def by blast
-    ultimately show \<open>on (\<Union> C)\<close>
-      unfolding on_def is_ortho_set_def by simp
-  qed
-  then obtain B where \<open>on B\<close> and B_max: \<open>B' \<supseteq> B \<Longrightarrow> on B' \<Longrightarrow> B=B'\<close> for B'
-    by auto
-  have \<open>\<psi> = 0\<close> if \<psi>ortho: \<open>\<forall>b\<in>B. is_orthogonal \<psi> b\<close> for \<psi> :: 'a
-  proof (rule ccontr)
-    assume \<open>\<psi> \<noteq> 0\<close>
-    define \<phi> B' where \<open>\<phi> = \<psi> /\<^sub>R norm \<psi>\<close> and \<open>B' = B \<union> {\<phi>}\<close>
-    have [simp]: \<open>norm \<phi> = 1\<close>
-      using \<open>\<psi> \<noteq> 0\<close> by (auto simp: \<phi>_def)
-    have \<phi>ortho: \<open>is_orthogonal \<phi> b\<close> if \<open>b \<in> B\<close> for b
-      using \<psi>ortho that \<phi>_def  apply auto
-      by (simp add: scaleR_scaleC)
-    have orthoB': \<open>is_orthogonal x y\<close> if \<open>x\<in>B'\<close> \<open>y\<in>B'\<close> \<open>x \<noteq> y\<close> for x y
-      using that \<open>on B\<close> \<phi>ortho \<phi>ortho[THEN is_orthogonal_sym[THEN iffD1]]
-      by (auto simp: B'_def on_def is_ortho_set_def)
-    have B'0: \<open>0 \<notin> B'\<close>
-      using B'_def \<open>norm \<phi> = 1\<close> \<open>on B\<close> is_ortho_set_def on_def by fastforce
-    have \<open>S \<subseteq> B'\<close>
-      using B'_def \<open>on B\<close> on_def by auto
-    from orthoB' B'0 \<open>S \<subseteq> B'\<close> have \<open>on B'\<close>
-      by (simp add: on_def is_ortho_set_def)
-    with B_max have \<open>B = B'\<close>
-      by (metis B'_def Un_upper1)
-    then have \<open>\<phi> \<in> B\<close>
-      using B'_def by blast
-    then have \<open>is_orthogonal \<phi> \<phi>\<close>
-      using \<phi>ortho by blast
-    then show False
-      using B'0 \<open>B = B'\<close> \<open>\<phi> \<in> B\<close> by fastforce
-  qed 
-  then have \<open>orthogonal_complement B = {0}\<close>
-    by (auto simp: orthogonal_complement_def)
-  then have \<open>UNIV = orthogonal_complement (orthogonal_complement B)\<close>
-    by simp
-  also have \<open>\<dots> = orthogonal_complement (orthogonal_complement (closure (cspan B)))\<close>
-    by (metis (mono_tags, opaque_lifting) \<open>orthogonal_complement B = {0}\<close> cinner_zero_left complex_vector.span_superset empty_iff insert_iff orthogonal_complementI orthogonal_complement_antimono orthogonal_complement_of_closure subsetI subset_antisym)
-  also have \<open>\<dots> = closure (cspan B)\<close>
-    apply (rule double_orthogonal_complement_id)
-    by simp
-  finally have \<open>closure (cspan B) = UNIV\<close>
-    by simp
-  with \<open>on B\<close> show ?thesis
-    by (auto simp: on_def)
-qed
-
-(* TODO: replace vector_space.span_image_scale *)
-lemma (in vector_space) span_image_scale:
-  assumes nz: "\<And>x. x \<in> S \<Longrightarrow> c x \<noteq> 0"
-  shows "span ((\<lambda>x. c x *s x) ` S) = span S"
-proof
-  have \<open>((\<lambda>x. c x *s x) ` S) \<subseteq> span S\<close>
-    by (metis (mono_tags, lifting) image_subsetI in_mono local.span_superset local.subspace_scale local.subspace_span)
-  then show \<open>span ((\<lambda>x. c x *s x) ` S) \<subseteq> span S\<close>
-    by (simp add: local.span_minimal)
-next
-  have \<open>x \<in> span ((\<lambda>x. c x *s x) ` S)\<close> if \<open>x \<in> S\<close> for x
-  proof -
-    have \<open>x = inverse (c x) *s c x *s x\<close>
-      by (simp add: nz that)
-    moreover have \<open>c x *s x \<in> (\<lambda>x. c x *s x) ` S\<close>
-      using that by blast
-    ultimately show ?thesis
-      by (metis local.span_base local.span_scale)
-  qed
-  then show \<open>span S \<subseteq> span ((\<lambda>x. c x *s x) ` S)\<close>
-    by (simp add: local.span_minimal subsetI)
-qed
-
-definition is_onb where \<open>is_onb E \<longleftrightarrow> is_ortho_set E \<and> (\<forall>b\<in>E. norm b = 1) \<and> ccspan E = \<top>\<close>
-
-lemma orthonormal_basis_exists: 
-  fixes S :: \<open>'a::chilbert_space set\<close>
-  assumes \<open>is_ortho_set S\<close> and \<open>\<And>x. x\<in>S \<Longrightarrow> norm x = 1\<close>
-  shows \<open>\<exists>B. B \<supseteq> S \<and> is_onb B\<close>
-proof -
-  from \<open>is_ortho_set S\<close>
-  obtain B where \<open>is_ortho_set B\<close> and \<open>B \<supseteq> S\<close> and \<open>closure (cspan B) = UNIV\<close>
-    using ortho_basis_exists by blast
-  define B' where \<open>B' = (\<lambda>x. x /\<^sub>R norm x) ` B\<close>
-  have \<open>S = (\<lambda>x. x /\<^sub>R norm x) ` S\<close>
-    by (simp add: assms(2))
-  then have \<open>B' \<supseteq> S\<close>
-    using B'_def \<open>S \<subseteq> B\<close> by blast
-  moreover 
-  have \<open>ccspan B' = \<top>\<close>
-    apply (transfer fixing: B')
-    apply (simp add: B'_def scaleR_scaleC)
-    apply (subst complex_vector.span_image_scale)
-    using \<open>is_ortho_set B\<close> \<open>closure (cspan B) = UNIV\<close> is_ortho_set_def by auto
-  moreover have \<open>is_ortho_set B'\<close>
-    using \<open>is_ortho_set B\<close> apply (auto simp: B'_def is_ortho_set_def)
-    by (metis cinner_simps(5) is_orthogonal_sym mult_zero_right scaleR_scaleC)
-  moreover have \<open>\<forall>b\<in>B'. norm b = 1\<close>
-    using \<open>is_ortho_set B\<close> apply (auto simp: B'_def is_ortho_set_def)
-    by (metis field_class.field_inverse norm_eq_zero)
-  ultimately show ?thesis
-    by (auto simp: is_onb_def)
-qed
-
-
-lemma bounded_clinear_equal_ket:
-  fixes f g :: \<open>'a ell2 \<Rightarrow> _\<close>
-  assumes \<open>bounded_clinear f\<close>
-  assumes \<open>bounded_clinear g\<close>
-  assumes \<open>\<And>i. f (ket i) = g (ket i)\<close>
-  shows \<open>f = g\<close>
-  apply (rule ext)
-  apply (rule bounded_clinear_eq_on[of f g \<open>range ket\<close>])
-  using assms by auto
-
-lemma bounded_antilinear_equal_ket:
-  fixes f g :: \<open>'a ell2 \<Rightarrow> _\<close>
-  assumes \<open>bounded_antilinear f\<close>
-  assumes \<open>bounded_antilinear g\<close>
-  assumes \<open>\<And>i. f (ket i) = g (ket i)\<close>
-  shows \<open>f = g\<close>
-  apply (rule ext)
-  apply (rule bounded_antilinear_eq_on[of f g \<open>range ket\<close>])
-  using assms by auto
-
-lemma cspan_eqI:
-  assumes \<open>\<And>a. a\<in>A \<Longrightarrow> a\<in>cspan B\<close>
-  assumes \<open>\<And>b. b\<in>B \<Longrightarrow> b\<in>cspan A\<close>
-  shows \<open>cspan A = cspan B\<close>
-  apply (rule complex_vector.span_subspace[rotated])
-    apply (rule complex_vector.span_minimal)
-  using assms by auto
-
-(* TODO: bounded_linear is enough *)
-lemma infsum_bounded_clinear:
-  assumes \<open>bounded_clinear f\<close>
-  assumes \<open>g summable_on S\<close>
-  shows \<open>infsum (f \<circ> g) S = f (infsum g S)\<close>
-  apply (rule infsum_comm_additive)
-  using assms cblinfun_apply_induct cblinfun.additive_right
-  by (auto simp: clinear_continuous_within)
-
-lemma infsum_cblinfun_apply:
-  assumes \<open>g summable_on S\<close>
-  shows \<open>infsum (\<lambda>x. A *\<^sub>V g x) S = A *\<^sub>V (infsum g S)\<close>
-  apply (rule infsum_bounded_clinear[unfolded o_def, of \<open>cblinfun_apply A\<close>])
-  using assms by (auto simp add: bounded_cbilinear.bounded_clinear_right bounded_cbilinear_cblinfun_apply)
-
-lemma has_sum_cblinfun_apply:
-  assumes \<open>has_sum g S x\<close>
-  shows \<open>has_sum (\<lambda>x. A *\<^sub>V g x) S (A *\<^sub>V x)\<close>
-  apply (rule has_sum_bounded_linear[unfolded o_def, of \<open>cblinfun_apply A\<close>])
-  using assms by (auto simp add: bounded_clinear.bounded_linear cblinfun.bounded_clinear_right)
-
-lemma abs_summable_on_cblinfun_apply:
-  assumes \<open>g abs_summable_on S\<close>
-  shows \<open>(\<lambda>x. A *\<^sub>V g x) abs_summable_on S\<close>
-  using bounded_clinear.bounded_linear[OF cblinfun.bounded_clinear_right] assms
-  by (rule abs_summable_on_bounded_linear[unfolded o_def])
-
-lemma trunc_ell2_UNIV[simp]: \<open>trunc_ell2 UNIV \<psi> = \<psi>\<close>
-  apply transfer by simp
-
-lemma ell2_norm_square: \<open>(ell2_norm x)\<^sup>2 = (\<Sum>\<^sub>\<infinity>i. (cmod (x i))\<^sup>2)\<close>
-  unfolding ell2_norm_def
-  apply (subst real_sqrt_pow2)
-   apply (meson Extra_General.infsum_nonneg zero_le_power2)
-  by simp
-
-lemma trunc_ell2_norm_mono: \<open>M \<subseteq> N \<Longrightarrow> norm (trunc_ell2 M \<psi>) \<le> norm (trunc_ell2 N \<psi>)\<close>
-proof (rule power2_le_imp_le[rotated], force, transfer)
-  fix M N :: \<open>'a set\<close> and \<psi> :: \<open>'a \<Rightarrow> complex\<close>
-  assume \<open>M \<subseteq> N\<close> and \<open>has_ell2_norm \<psi>\<close>
-  have \<open>(ell2_norm (\<lambda>i. if i \<in> M then \<psi> i else 0))\<^sup>2 = (\<Sum>\<^sub>\<infinity>i\<in>M. (cmod (\<psi> i))\<^sup>2)\<close>
-    unfolding ell2_norm_square
-    apply (rule infsum_cong_neutral)
-    by auto
-  also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>i\<in>N. (cmod (\<psi> i))\<^sup>2)\<close>
-    apply (rule infsum_mono2)
-    using \<open>has_ell2_norm \<psi>\<close> \<open>M \<subseteq> N\<close>
-    by (auto simp add: ell2_norm_square has_ell2_norm_def simp flip: norm_power intro: summable_on_subset_banach)
-  also have \<open>\<dots> = (ell2_norm (\<lambda>i. if i \<in> N then \<psi> i else 0))\<^sup>2\<close>
-    unfolding ell2_norm_square
-    apply (rule infsum_cong_neutral)
-    by auto
-  finally show \<open>(ell2_norm (\<lambda>i. if i \<in> M then \<psi> i else 0))\<^sup>2 \<le> (ell2_norm (\<lambda>i. if i \<in> N then \<psi> i else 0))\<^sup>2\<close>
-    by -
-qed
-
-lemma trunc_ell2_twice[simp]: \<open>trunc_ell2 M (trunc_ell2 N \<psi>) = trunc_ell2 (M\<inter>N) \<psi>\<close>
-  apply transfer by auto
-
-lemma trunc_ell2_union: \<open>trunc_ell2 (M \<union> N) \<psi> = trunc_ell2 M \<psi> + trunc_ell2 N \<psi> - trunc_ell2 (M\<inter>N) \<psi>\<close>
-  apply transfer by auto
-
-lemma trunc_ell2_union_disjoint: \<open>M\<inter>N = {} \<Longrightarrow> trunc_ell2 (M \<union> N) \<psi> = trunc_ell2 M \<psi> + trunc_ell2 N \<psi>\<close>
-  by (simp add: trunc_ell2_union)
-
-lemma trunc_ell2_union_Diff: \<open>M \<subseteq> N \<Longrightarrow> trunc_ell2 (N-M) \<psi> = trunc_ell2 N \<psi> - trunc_ell2 M \<psi>\<close>
-  using trunc_ell2_union_disjoint[where M=\<open>N-M\<close> and N=M and \<psi>=\<psi>]
-  by (simp add: Un_commute inf.commute le_iff_sup)
-
-
-(* TODO replace existing lemma (strengthening) *)
-thm finite_subsets_at_top_inter
-lemma finite_subsets_at_top_inter: 
-  assumes "A\<subseteq>B"
-  shows "filtermap (\<lambda>F. F \<inter> A) (finite_subsets_at_top B) = finite_subsets_at_top A"
-proof (subst filter_eq_iff, intro allI iffI)
-  fix P :: "'a set \<Rightarrow> bool"
-  assume "eventually P (finite_subsets_at_top A)"
-  then show "eventually P (filtermap (\<lambda>F. F \<inter> A) (finite_subsets_at_top B))"
-    unfolding eventually_filtermap
-    unfolding eventually_finite_subsets_at_top
-    by (metis Int_subset_iff assms finite_Int inf_le2 subset_trans)
-next
-  fix P :: "'a set \<Rightarrow> bool"
-  assume "eventually P (filtermap (\<lambda>F. F \<inter> A) (finite_subsets_at_top B))"
-  then obtain X where \<open>finite X\<close> \<open>X \<subseteq> B\<close> and P: \<open>finite Y \<Longrightarrow> X \<subseteq> Y \<Longrightarrow> Y \<subseteq> B \<Longrightarrow> P (Y \<inter> A)\<close> for Y
-    unfolding eventually_filtermap eventually_finite_subsets_at_top by metis
-  have *: \<open>finite Y \<Longrightarrow> X \<inter> A \<subseteq> Y \<Longrightarrow> Y \<subseteq> A \<Longrightarrow> P Y\<close> for Y
-    using P[where Y=\<open>Y \<union> (B-A)\<close>]
-    apply (subgoal_tac \<open>(Y \<union> (B - A)) \<inter> A = Y\<close>)
-    apply (smt (verit, best) Int_Un_distrib2 Int_Un_eq(4) P Un_subset_iff \<open>X \<subseteq> B\<close> \<open>finite X\<close> assms finite_UnI inf.orderE sup_ge2)
-    by auto
-  show "eventually P (finite_subsets_at_top A)"
-    unfolding eventually_finite_subsets_at_top
-    apply (rule exI[of _ \<open>X\<inter>A\<close>])
-    by (auto simp: \<open>finite X\<close> intro!: *)
-qed
-
-
-lemma trunc_ell2_lim: \<open>((\<lambda>S. trunc_ell2 S \<psi>) \<longlongrightarrow> trunc_ell2 M \<psi>) (finite_subsets_at_top M)\<close>
-proof -
-  have \<open>((\<lambda>S. trunc_ell2 S (trunc_ell2 M \<psi>)) \<longlongrightarrow> trunc_ell2 M \<psi>) (finite_subsets_at_top UNIV)\<close>
-    using trunc_ell2_lim_at_UNIV by blast
-  then have \<open>((\<lambda>S. trunc_ell2 (S\<inter>M) \<psi>) \<longlongrightarrow> trunc_ell2 M \<psi>) (finite_subsets_at_top UNIV)\<close>
-    by simp
-  then show \<open>((\<lambda>S. trunc_ell2 S \<psi>) \<longlongrightarrow> trunc_ell2 M \<psi>) (finite_subsets_at_top M)\<close>
-    unfolding filterlim_def
-    apply (subst (asm) filtermap_filtermap[where g=\<open>\<lambda>S. S\<inter>M\<close>, symmetric])
-    apply (subst (asm) finite_subsets_at_top_inter[where A=M and B=UNIV])
-    by auto
-qed
-
-lemma trunc_ell2_lim_general:
-  assumes big: \<open>\<And>G. finite G \<Longrightarrow> G \<subseteq> M \<Longrightarrow> (\<forall>\<^sub>F H in F. H \<supseteq> G)\<close>
-  assumes small: \<open>\<forall>\<^sub>F H in F. H \<subseteq> M\<close>
-  shows \<open>((\<lambda>S. trunc_ell2 S \<psi>) \<longlongrightarrow> trunc_ell2 M \<psi>) F\<close>
-proof (rule tendstoI)
-  fix e :: real assume \<open>e > 0\<close>
-  from trunc_ell2_lim[THEN tendsto_iff[THEN iffD1], rule_format, OF \<open>e > 0\<close>, where M=M and \<psi>=\<psi>]
-  obtain G where \<open>finite G\<close> and \<open>G \<subseteq> M\<close> and 
-    close: \<open>dist (trunc_ell2 G \<psi>) (trunc_ell2 M \<psi>) < e\<close>
-    apply atomize_elim
-    unfolding eventually_finite_subsets_at_top
-    by blast
-  from \<open>finite G\<close> \<open>G \<subseteq> M\<close> and big
-  have \<open>\<forall>\<^sub>F H in F. H \<supseteq> G\<close>
-    by -
-  with small have \<open>\<forall>\<^sub>F H in F. H \<subseteq> M \<and> H \<supseteq> G\<close>
-    by (simp add: eventually_conj_iff)
-  then show \<open>\<forall>\<^sub>F H in F. dist (trunc_ell2 H \<psi>) (trunc_ell2 M \<psi>) < e\<close>
-  proof (rule eventually_mono)
-    fix H assume GHM: \<open>H \<subseteq> M \<and> H \<supseteq> G\<close>
-    have \<open>dist (trunc_ell2 H \<psi>) (trunc_ell2 M \<psi>) = norm (trunc_ell2 (M-H) \<psi>)\<close>
-      by (simp add: GHM dist_ell2_def norm_minus_commute trunc_ell2_union_Diff)
-    also have \<open>\<dots> \<le> norm (trunc_ell2 (M-G) \<psi>)\<close>
-      by (simp add: Diff_mono GHM trunc_ell2_norm_mono)
-    also have \<open>\<dots>  = dist (trunc_ell2 G \<psi>) (trunc_ell2 M \<psi>)\<close>
-      by (simp add: \<open>G \<subseteq> M\<close> dist_ell2_def norm_minus_commute trunc_ell2_union_Diff)
-    also have \<open>\<dots> < e\<close>
-      using close by simp
-    finally show \<open>dist (trunc_ell2 H \<psi>) (trunc_ell2 M \<psi>) < e\<close>
-      by -
-  qed
-qed
-
-lemma ket_CARD_1_is_1: \<open>ket x = 1\<close> for x :: \<open>'a::CARD_1\<close>
-  apply transfer by simp
-
-
-(* TODO replace *) thm adjoint_eqI
-lemma adjoint_eqI:
-  fixes G:: \<open>'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a::complex_inner\<close>
-    and F:: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
-  assumes \<open>\<And>x y. \<langle>(cblinfun_apply F) x, y\<rangle> = \<langle>x, (cblinfun_apply G) y\<rangle>\<close>
-  shows \<open>F = G*\<close>
-  using assms apply transfer using cadjoint_eqI by auto
-
-lemma adj_uminus: \<open>(-A)* = - (A*)\<close>
-  apply (rule adjoint_eqI[symmetric])
-  by (simp add: cblinfun.minus_left cinner_adj_left)
-
-lemma cblinfun_compose_sum_left: \<open>(\<Sum>i\<in>S. g i) o\<^sub>C\<^sub>L x = (\<Sum>i\<in>S. g i o\<^sub>C\<^sub>L x)\<close>
-  apply (induction S rule:infinite_finite_induct)
-  by (auto simp: cblinfun_compose_add_left)
-
-lemma cblinfun_compose_sum_right: \<open>x o\<^sub>C\<^sub>L (\<Sum>i\<in>S. g i) = (\<Sum>i\<in>S. x o\<^sub>C\<^sub>L g i)\<close>
-  apply (induction S rule:infinite_finite_induct)
-  by (auto simp: cblinfun_compose_add_right)
-
-
-lemma sum_adj: \<open>(sum a F)* = sum (\<lambda>i. (a i)*) F\<close>
-  apply (induction rule:infinite_finite_induct)
-  by (auto simp add: adj_plus)
-
-
-lemma is_ortho_set_singleton[simp]: \<open>is_ortho_set {x} \<longleftrightarrow> x \<noteq> 0\<close>
-  by (simp add: is_ortho_set_def)
-
-
-lemma ccspan_one_dim[simp]: \<open>x \<noteq> 0 \<Longrightarrow> ccspan {x} = \<top>\<close> for x :: \<open>_ :: one_dim\<close>
-  by (metis (mono_tags, opaque_lifting) cblinfun_image_id ccspan_singleton_scaleC id_cblinfun_eq_1
-      image_vector_to_cblinfun of_complex_def of_complex_one_dim_iso one_dim_iso_def 
-      one_dim_iso_of_one one_dim_iso_of_zero one_dim_iso_scaleC one_dim_scaleC_1 
-      vector_to_cblinfun_adj_apply vector_to_cblinfun_adj_comp_vector_to_cblinfun
-      vector_to_cblinfun_cblinfun_apply)
-
-lemma is_onb_one_dim[simp]: \<open>norm x = 1 \<Longrightarrow> is_onb {x}\<close> for x :: \<open>_ :: one_dim\<close>
-  by (auto simp: is_onb_def intro!: ccspan_one_dim)
-
 lemma norm_Proj_leq1: \<open>norm (Proj M) \<le> 1\<close>
   apply transfer
   by (metis (no_types, opaque_lifting) mult.left_neutral onorm_bound projection_reduces_norm zero_less_one_class.zero_le_one)
@@ -436,7 +21,7 @@ lemma Proj_orthog_ccspan_insert:
   apply (rule Proj_orthog_ccspan_union)
   using assms by auto
 
-lemma space_as_set_bot[simp]: \<open>space_as_set \<bottom> = {0}\<close>
+lemma space_as_set_bot[simp]: \<open>space_as_set bot = {0}\<close>
   by (rule bot_ccsubspace.rep_eq)
 
 
@@ -459,7 +44,7 @@ proof -
         using orthogonal_complement_of_closure orthogonal_complement_of_cspan by blast
       also have \<open>\<dots> = space_as_set (- ccspan E)\<close>
         apply transfer by simp
-      also have \<open>\<dots> = space_as_set (- \<top>)\<close>
+      also have \<open>\<dots> = space_as_set (- top)\<close>
         by (metis \<open>is_onb E\<close> is_onb_def)
       also have \<open>\<dots> = {0}\<close>
         by auto
@@ -615,7 +200,7 @@ proof -
   then have iso: \<open>isometry (unitary_between E F)\<close>
     apply (rule_tac orthogonal_on_basis_is_isometry[where B=E])
     using assms(1) is_onb_def by auto
-  have \<open>unitary_between E F *\<^sub>S \<top> = unitary_between E F *\<^sub>S ccspan E\<close>
+  have \<open>unitary_between E F *\<^sub>S top = unitary_between E F *\<^sub>S ccspan E\<close>
     by (metis assms(1) is_onb_def)
   also have \<open>\<dots> \<ge> ccspan (unitary_between E F ` E)\<close> (is \<open>_ \<ge> \<dots>\<close>)
     by (simp add: cblinfun_image_ccspan)
@@ -623,9 +208,9 @@ proof -
     by (metis assms(1) assms(2) image_cong unitary_between_apply)
   also have \<open>\<dots> = ccspan F\<close>
     by (metis assms(1) assms(2) bij_betw_imp_surj_on bij_between_bases_bij)
-  also have \<open>\<dots> = \<top>\<close>
+  also have \<open>\<dots> = top\<close>
     using assms(2) is_onb_def by blast
-  finally have surj: \<open>unitary_between E F *\<^sub>S \<top> = \<top>\<close>
+  finally have surj: \<open>unitary_between E F *\<^sub>S top = top\<close>
     by (simp add: top.extremum_unique)
   from iso surj show ?thesis
     by (rule surj_isometry_is_unitary)
@@ -708,7 +293,7 @@ proof -
     by (auto intro!: right_total_conversep[THEN iffD1] simp: converse_rel_ccsubspace)
 qed
 
-lemma [simp]: \<open>space_as_set \<top> = UNIV\<close>
+lemma space_as_set_top[simp]: \<open>space_as_set top = UNIV\<close>
   by (rule top_ccsubspace.rep_eq)
 
 (* Better: add "interpretation cinner: bounded_sesquilinear cinner", but needs fixing local bounded_sesquilinear first *)
@@ -1146,9 +731,8 @@ proof -
   qed
 
   then have \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) abs_summable_on (-X)\<times>(-Y)\<close>
-    apply (rule_tac abs_summable_bdd_above[THEN iffD2])
-    apply (rule bdd_aboveI2)
-    by (auto simp: case_prod_unfold)
+    apply (rule_tac nonneg_bdd_above_summable_on)
+    by (auto intro!: bdd_aboveI2 simp: case_prod_unfold)
   then have 1: \<open>(\<lambda>(x, y). a x \<bullet>\<^sub>C b y) summable_on (-X)\<times>(-Y)\<close>
     using abs_summable_summable by blast
 
@@ -1531,7 +1115,7 @@ next
     by (metis (no_types, opaque_lifting) Proj_range adj_Proj adj_cblinfun_compose basic_trans_rules(31) cblinfun.zero_left cblinfun_apply_cblinfun_compose cblinfun_apply_in_image cblinfun_eqI kernel_Proj kernel_memberD less_eq_ccsubspace.rep_eq)
 qed
 
-lemma cblinfun_image_bot_zero[simp]: \<open>A *\<^sub>S \<top> = \<bottom> \<longleftrightarrow> A = 0\<close>
+lemma cblinfun_image_bot_zero[simp]: \<open>A *\<^sub>S top = bot \<longleftrightarrow> A = 0\<close>
   by (metis Complex_Bounded_Linear_Function.zero_cblinfun_image bot_ccsubspace.rep_eq cblinfun_apply_in_image cblinfun_eqI empty_iff insert_iff zero_ccsubspace_def)
 (* proof (rule iffI, rule ccontr)
   assume Atopbot: \<open>A *\<^sub>S \<top> = \<bottom>\<close> and \<open>A \<noteq> 0\<close>
@@ -1559,7 +1143,7 @@ lemma is_ortho_set_some_chilbert_basis[simp]: \<open>is_ortho_set some_chilbert_
   using is_onb_def is_onb_some_chilbert_basis by blast
 lemma is_normal_some_chilbert_basis: \<open>\<And>x. x \<in> some_chilbert_basis \<Longrightarrow> norm x = 1\<close>
   using is_onb_def is_onb_some_chilbert_basis by blast
-lemma ccspan_some_chilbert_basis[simp]: \<open>ccspan some_chilbert_basis = \<top>\<close>
+lemma ccspan_some_chilbert_basis[simp]: \<open>ccspan some_chilbert_basis = top\<close>
   using is_onb_def is_onb_some_chilbert_basis by blast
 lemma span_some_chilbert_basis[simp]: \<open>closure (cspan some_chilbert_basis) = UNIV\<close>
   by (metis ccspan.rep_eq ccspan_some_chilbert_basis top_ccsubspace.rep_eq)
@@ -1745,7 +1329,7 @@ lemma ccspan_0[simp]: \<open>ccspan {0} = 0\<close>
 lemma set_Times_plus_distrib: \<open>(A \<times> B) + (C \<times> D) = (A + C) \<times> (B + D)\<close>
   by (auto simp: Sigma_def set_plus_def)
 
-lemma ccsubspace_Times_sup: \<open>(ccsubspace_Times A B) \<squnion> (ccsubspace_Times C D) = ccsubspace_Times (A \<squnion> C) (B \<squnion> D)\<close>
+lemma ccsubspace_Times_sup: \<open>sup (ccsubspace_Times A B) (ccsubspace_Times C D) = ccsubspace_Times (sup A C) (sup B D)\<close>
 proof transfer
   fix A C :: \<open>'a set\<close> and B D :: \<open>'b set\<close>
   have \<open>A \<times> B +\<^sub>M C \<times> D = closure ((A \<times> B) + (C \<times> D))\<close>
@@ -1760,7 +1344,7 @@ proof transfer
     by -
 qed
 
-lemma ccsubspace_Times_top_top[simp]: \<open>ccsubspace_Times \<top> \<top> = \<top>\<close>
+lemma ccsubspace_Times_top_top[simp]: \<open>ccsubspace_Times top top = top\<close>
   apply transfer
   by simp
 
@@ -1780,10 +1364,10 @@ proof -
   have 3: \<open>(l, r) \<in> {0} \<times> B' \<Longrightarrow> norm (l, r) = 1\<close> for l :: 'a and r :: 'b
     using \<open>is_onb B'\<close> is_onb_def by auto
 
-  have [simp]: \<open>ccspan B = \<top>\<close> \<open>ccspan B' = \<top>\<close>
+  have [simp]: \<open>ccspan B = top\<close> \<open>ccspan B' = top\<close>
     using assms is_onb_def by auto
 
-  have 4: \<open>ccspan ((B \<times> {0}) \<union> ({0} \<times> B')) = \<top>\<close>
+  have 4: \<open>ccspan ((B \<times> {0}) \<union> ({0} \<times> B')) = top\<close>
     by (auto simp: ccspan_Times_sing1 ccspan_Times_sing2 ccsubspace_Times_sup simp flip: ccspan_union)
 
   from 1 2 3 4
@@ -1830,7 +1414,7 @@ proof (rule cblinfun_cinner_eqI)
 qed
 
 lemma kernel_compl_adj_range:
-  shows \<open>kernel a = - (a* *\<^sub>S \<top>)\<close>
+  shows \<open>kernel a = - (a* *\<^sub>S top)\<close>
 proof (rule ccsubspace_eqI)
   fix x
   have \<open>x \<in> space_as_set (kernel a) \<longleftrightarrow> a x = 0\<close>
@@ -1839,10 +1423,10 @@ proof (rule ccsubspace_eqI)
     by (metis cinner_gt_zero_iff cinner_zero_right)
   also have \<open>\<dots> \<longleftrightarrow> (\<forall>y. is_orthogonal (a* *\<^sub>V y) x)\<close>
     by (simp add: cinner_adj_left)
-  also have \<open>\<dots> \<longleftrightarrow> x \<in> space_as_set (- (a* *\<^sub>S \<top>))\<close>
+  also have \<open>\<dots> \<longleftrightarrow> x \<in> space_as_set (- (a* *\<^sub>S top))\<close>
     apply transfer
     by (metis (mono_tags, opaque_lifting) UNIV_I image_iff is_orthogonal_sym orthogonal_complementI orthogonal_complement_of_closure orthogonal_complement_orthoI')
-  finally show \<open>x \<in> space_as_set (kernel a) \<longleftrightarrow> x \<in> space_as_set (- (a* *\<^sub>S \<top>))\<close>
+  finally show \<open>x \<in> space_as_set (kernel a) \<longleftrightarrow> x \<in> space_as_set (- (a* *\<^sub>S top))\<close>
     by -
 qed
 
@@ -2071,7 +1655,7 @@ lemma partial_isometry_square_proj: \<open>is_Proj (a* o\<^sub>C\<^sub>L a)\<clo
 lemma partial_isometry_adj[simp]: \<open>partial_isometry (a*)\<close> if \<open>partial_isometry a\<close>
   for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
 proof -
-  have ran_ker: \<open>a *\<^sub>S \<top> = - kernel (a*)\<close>
+  have ran_ker: \<open>a *\<^sub>S top = - kernel (a*)\<close>
     by (simp add: kernel_compl_adj_range)
 
   have \<open>norm (a* *\<^sub>V h) = norm h\<close> if \<open>h \<in> range a\<close> for h

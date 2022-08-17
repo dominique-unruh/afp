@@ -721,14 +721,14 @@ qed
 
 definition polar_decomposition where
   \<comment> \<open>@{cite conway00operator}, 3.9 Polar Decomposition\<close>
-  \<open>polar_decomposition A = cblinfun_extension (range (abs_op A)) (\<lambda>\<psi>. A *\<^sub>V inv (abs_op A) \<psi>) o\<^sub>C\<^sub>L Proj (abs_op A *\<^sub>S \<top>)\<close>
+  \<open>polar_decomposition A = cblinfun_extension (range (abs_op A)) (\<lambda>\<psi>. A *\<^sub>V inv (abs_op A) \<psi>) o\<^sub>C\<^sub>L Proj (abs_op A *\<^sub>S top)\<close>
     for A :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner\<close>
 
 lemma 
   fixes A :: \<open>'a :: chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b :: chilbert_space\<close>
   \<comment> \<open>@{cite conway00operator}, 3.9 Polar Decomposition\<close>
   shows polar_decomposition_correct: \<open>polar_decomposition A o\<^sub>C\<^sub>L abs_op A = A\<close>
-    and polar_decomposition_final_space: \<open>polar_decomposition A *\<^sub>S \<top> = A *\<^sub>S \<top>\<close> (* Should be more precise: range (polar_decomposition A) = closure (range A) *)
+    and polar_decomposition_final_space: \<open>polar_decomposition A *\<^sub>S top = A *\<^sub>S top\<close> (* Should be more precise: range (polar_decomposition A) = closure (range A) *)
     and polar_decomposition_initial_space[simp]: \<open>kernel (polar_decomposition A) = kernel A\<close>
     and polar_decomposition_partial_isometry[simp]: \<open>partial_isometry (polar_decomposition A)\<close>
 proof -
@@ -751,7 +751,7 @@ proof -
   define W W' P
     where \<open>W = (\<lambda>\<psi>. A *\<^sub>V inv (abs_op A) \<psi>)\<close> 
     and \<open>W' = cblinfun_extension (range (abs_op A)) W\<close>
-    and \<open>P = Proj (abs_op A *\<^sub>S \<top>)\<close>
+    and \<open>P = Proj (abs_op A *\<^sub>S top)\<close>
 
   have pdA: \<open>polar_decomposition A = W' o\<^sub>C\<^sub>L P\<close>
     by (auto simp: polar_decomposition_def W'_def W_def P_def) 
@@ -830,7 +830,7 @@ proof -
   then have \<open>norm (W' \<psi>) - norm \<psi> = 0\<close> if \<open>\<psi> \<in> closure (range (abs_op A))\<close> for \<psi>
     apply (rule_tac continuous_constant_on_closure[where S=\<open>range (abs_op A)\<close>])
     using that by (auto intro!: continuous_at_imp_continuous_on)
-  then have norm_W': \<open>norm (W' \<psi>) = norm \<psi>\<close> if \<open>\<psi> \<in> space_as_set (abs_op A *\<^sub>S \<top>)\<close> for \<psi>
+  then have norm_W': \<open>norm (W' \<psi>) = norm \<psi>\<close> if \<open>\<psi> \<in> space_as_set (abs_op A *\<^sub>S top)\<close> for \<psi>
     using cblinfun_image.rep_eq that by force
 
   show correct: \<open>polar_decomposition A o\<^sub>C\<^sub>L abs_op A = A\<close>
@@ -850,13 +850,13 @@ proof -
       by -
   qed
 
-  show \<open>polar_decomposition A *\<^sub>S \<top> = A *\<^sub>S \<top>\<close>
+  show \<open>polar_decomposition A *\<^sub>S top = A *\<^sub>S top\<close>
   proof (rule antisym)
-    have *: \<open>A *\<^sub>S \<top> = polar_decomposition A *\<^sub>S abs_op A *\<^sub>S \<top>\<close>
+    have *: \<open>A *\<^sub>S top = polar_decomposition A *\<^sub>S abs_op A *\<^sub>S top\<close>
       by (simp add: cblinfun_assoc_left(2) correct)
-    also have \<open>\<dots> \<le> polar_decomposition A *\<^sub>S \<top>\<close>
+    also have \<open>\<dots> \<le> polar_decomposition A *\<^sub>S top\<close>
       by (simp add: cblinfun_image_mono)
-    finally show \<open>A *\<^sub>S \<top> \<le> polar_decomposition A *\<^sub>S \<top>\<close>
+    finally show \<open>A *\<^sub>S top \<le> polar_decomposition A *\<^sub>S top\<close>
       by -
 
     have \<open>W' \<psi> \<in> range A\<close> if \<open>\<psi> \<in> range (abs_op A)\<close> for \<psi>
@@ -864,21 +864,21 @@ proof -
     then have \<open>W' \<psi> \<in> closure (range A)\<close> if \<open>\<psi> \<in> closure (range (abs_op A))\<close> for \<psi>
       using * 
       by (metis (mono_tags, lifting) P_def Proj_range cancel_apply_Proj cblinfun_apply_cblinfun_compose cblinfun_apply_in_image cblinfun_compose_image cblinfun_image.rep_eq pdA that top_ccsubspace.rep_eq)
-    then have \<open>W' \<psi> \<in> space_as_set (A *\<^sub>S \<top>)\<close> if \<open>\<psi> \<in> space_as_set (abs_op A *\<^sub>S \<top>)\<close> for \<psi>
+    then have \<open>W' \<psi> \<in> space_as_set (A *\<^sub>S top)\<close> if \<open>\<psi> \<in> space_as_set (abs_op A *\<^sub>S top)\<close> for \<psi>
       by (metis cblinfun_image.rep_eq that top_ccsubspace.rep_eq)
-    then have \<open>polar_decomposition A \<psi> \<in> space_as_set (A *\<^sub>S \<top>)\<close> for \<psi>
+    then have \<open>polar_decomposition A \<psi> \<in> space_as_set (A *\<^sub>S top)\<close> for \<psi>
       by (metis P_def Proj_range cblinfun_apply_cblinfun_compose cblinfun_apply_in_image pdA)
-    then show \<open>polar_decomposition A *\<^sub>S \<top> \<le> A *\<^sub>S \<top>\<close>
+    then show \<open>polar_decomposition A *\<^sub>S top \<le> A *\<^sub>S top\<close>
       using * 
       by (metis (no_types, lifting) Proj_idempotent Proj_range cblinfun_compose_image dual_order.eq_iff polar_decomposition_def)
   qed
 
   show \<open>partial_isometry (polar_decomposition A)\<close>
-    apply (rule partial_isometryI'[where V=\<open>abs_op A *\<^sub>S \<top>\<close>])
+    apply (rule partial_isometryI'[where V=\<open>abs_op A *\<^sub>S top\<close>])
     by (auto simp add: P_def cancel_apply_Proj norm_W' pdA kernel_memberD)
 
-  have \<open>kernel (polar_decomposition A) = - (abs_op A *\<^sub>S \<top>)\<close>
-    apply (rule partial_isometry_initial[where V=\<open>abs_op A *\<^sub>S \<top>\<close>])
+  have \<open>kernel (polar_decomposition A) = - (abs_op A *\<^sub>S top)\<close>
+    apply (rule partial_isometry_initial[where V=\<open>abs_op A *\<^sub>S top\<close>])
     by (auto simp add: P_def cancel_apply_Proj norm_W' pdA kernel_memberD)
   also have \<open>\<dots> = kernel (abs_op A)\<close>
     by (metis abs_op_pos kernel_compl_adj_range positive_hermitianI)
@@ -899,7 +899,7 @@ proof -
     by (simp add: polar_decomposition_initial_space)
   also have \<open>\<dots> = Proj (- kernel (abs_op A)) o\<^sub>C\<^sub>L abs_op A\<close>
     by simp
-  also have \<open>\<dots> = Proj (abs_op A *\<^sub>S \<top>) o\<^sub>C\<^sub>L abs_op A\<close>
+  also have \<open>\<dots> = Proj (abs_op A *\<^sub>S top) o\<^sub>C\<^sub>L abs_op A\<close>
     by (metis abs_op_pos kernel_compl_adj_range ortho_involution positive_hermitianI)
   also have \<open>\<dots> = abs_op A\<close>
     by (simp add: cancel_apply_Proj cblinfun_eqI)

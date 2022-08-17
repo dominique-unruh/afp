@@ -265,19 +265,31 @@ proof (rule filter_leI)
     unfolding eventually_finite_subsets_at_top by meson
 qed
 
-
 lemma finite_subsets_at_top_inter: 
   assumes "A\<subseteq>B"
-  shows "filtermap (\<lambda>F. F \<inter> A) (finite_subsets_at_top B) \<le> finite_subsets_at_top A"
-proof (rule filter_leI)
-  show "eventually P (filtermap (\<lambda>F. F \<inter> A) (finite_subsets_at_top B))"
-    if "eventually P (finite_subsets_at_top A)"
-    for P :: "'a set \<Rightarrow> bool"
-    using that unfolding eventually_filtermap
+  shows "filtermap (\<lambda>F. F \<inter> A) (finite_subsets_at_top B) = finite_subsets_at_top A"
+proof (subst filter_eq_iff, intro allI iffI)
+  fix P :: "'a set \<Rightarrow> bool"
+  assume "eventually P (finite_subsets_at_top A)"
+  then show "eventually P (filtermap (\<lambda>F. F \<inter> A) (finite_subsets_at_top B))"
+    unfolding eventually_filtermap
     unfolding eventually_finite_subsets_at_top
     by (metis Int_subset_iff assms finite_Int inf_le2 subset_trans)
+next
+  fix P :: "'a set \<Rightarrow> bool"
+  assume "eventually P (filtermap (\<lambda>F. F \<inter> A) (finite_subsets_at_top B))"
+  then obtain X where \<open>finite X\<close> \<open>X \<subseteq> B\<close> and P: \<open>finite Y \<Longrightarrow> X \<subseteq> Y \<Longrightarrow> Y \<subseteq> B \<Longrightarrow> P (Y \<inter> A)\<close> for Y
+    unfolding eventually_filtermap eventually_finite_subsets_at_top by metis
+  have *: \<open>finite Y \<Longrightarrow> X \<inter> A \<subseteq> Y \<Longrightarrow> Y \<subseteq> A \<Longrightarrow> P Y\<close> for Y
+    using P[where Y=\<open>Y \<union> (B-A)\<close>]
+    apply (subgoal_tac \<open>(Y \<union> (B - A)) \<inter> A = Y\<close>)
+    apply (smt (verit, best) Int_Un_distrib2 Int_Un_eq(4) P Un_subset_iff \<open>X \<subseteq> B\<close> \<open>finite X\<close> assms finite_UnI inf.orderE sup_ge2)
+    by auto
+  show "eventually P (finite_subsets_at_top A)"
+    unfolding eventually_finite_subsets_at_top
+    apply (rule exI[of _ \<open>X\<inter>A\<close>])
+    by (auto simp: \<open>finite X\<close> intro!: *)
 qed
-
 
 lemma tendsto_principal_singleton:
   shows "(f \<longlongrightarrow> f x) (principal {x})"
@@ -314,6 +326,26 @@ proof -
     using X_def by blast
 qed
 
+lemma on_closure_leI:
+  fixes f g :: \<open>'a::topological_space \<Rightarrow> 'b::linorder_topology\<close>
+  assumes eq: \<open>\<And>x. x \<in> S \<Longrightarrow> f x \<le> g x\<close>
+  assumes xS: \<open>x \<in> closure S\<close>
+  assumes cont: \<open>continuous_on UNIV f\<close> \<open>continuous_on UNIV g\<close> (* Is "isCont f x" "isCont g x" sufficient? *)
+  shows \<open>f x \<le> g x\<close>
+proof -
+  define X where \<open>X = {x. f x \<le> g x}\<close>
+  have \<open>closed X\<close>
+    using cont by (simp add: X_def closed_Collect_le)
+  moreover have \<open>S \<subseteq> X\<close>
+    by (simp add: X_def eq subsetI)
+  ultimately have \<open>closure S \<subseteq> X\<close>
+    using closure_minimal by blast
+  with xS have \<open>x \<in> X\<close>
+    by auto
+  then show ?thesis
+    using X_def by blast
+qed
+      
 subsection \<open>Complex numbers\<close>
 
 lemma cmod_Re:

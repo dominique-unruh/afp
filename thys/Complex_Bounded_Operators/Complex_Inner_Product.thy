@@ -407,10 +407,11 @@ lift_definition minus_ccsubspace :: "'a ccsubspace \<Rightarrow> 'a ccsubspace \
 instance..
 end
 
-
-text \<open>Orthogonal set\<close>
 definition is_ortho_set :: "'a::complex_inner set \<Rightarrow> bool" where
+  \<comment> \<open>Orthogonal set\<close>
   \<open>is_ortho_set S = ((\<forall>x\<in>S. \<forall>y\<in>S. x \<noteq> y \<longrightarrow> \<langle>x, y\<rangle> = 0) \<and> 0 \<notin> S)\<close>
+
+definition is_onb where \<open>is_onb E \<longleftrightarrow> is_ortho_set E \<and> (\<forall>b\<in>E. norm b = 1) \<and> ccspan E = top\<close>
 
 lemma is_ortho_set_empty[simp]: "is_ortho_set {}"
   unfolding is_ortho_set_def by auto
@@ -692,6 +693,9 @@ proof -
     using \<open>x = (\<Sum> a\<in>T. r a *\<^sub>C a)\<close>
     by fastforce
 qed
+
+lemma is_ortho_set_singleton[simp]: \<open>is_ortho_set {x} \<longleftrightarrow> x \<noteq> 0\<close>
+  by (simp add: is_ortho_set_def)
 
 subsection \<open>Projections\<close>
 
@@ -1603,6 +1607,120 @@ proof-
     by simp
 qed
 
+lemma orthogonal_complement_of_cspan: \<open>orthogonal_complement A = orthogonal_complement (cspan A)\<close>
+  by (metis (no_types, opaque_lifting) closed_csubspace.subspace complex_vector.span_minimal complex_vector.span_superset double_orthogonal_complement_increasing orthogonal_complement_antimono orthogonal_complement_closed_subspace subset_antisym)
+
+lemma orthogonal_complement_orthogonal_complement_closure_cspan:
+  \<open>orthogonal_complement (orthogonal_complement S) = closure (cspan S)\<close> for S :: \<open>'a::chilbert_space set\<close>
+proof -
+  have \<open>orthogonal_complement (orthogonal_complement S) = orthogonal_complement (orthogonal_complement (closure (cspan S)))\<close>
+    by (simp flip: orthogonal_complement_of_closure orthogonal_complement_of_cspan)
+  also have \<open>\<dots> = closure (cspan S)\<close>
+    by simp
+  finally show \<open>orthogonal_complement (orthogonal_complement S) = closure (cspan S)\<close>
+    by -
+qed
+
+lemma ortho_basis_exists: 
+  fixes S :: \<open>'a::chilbert_space set\<close>
+  assumes \<open>is_ortho_set S\<close>
+  shows \<open>\<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> closure (cspan B) = UNIV\<close>
+proof -
+  define on where \<open>on B \<longleftrightarrow> B \<supseteq> S \<and> is_ortho_set B\<close> for B :: \<open>'a set\<close>
+  have \<open>\<exists>B\<in>Collect on. \<forall>B'\<in>Collect on. B \<subseteq> B' \<longrightarrow> B' = B\<close>
+  proof (rule subset_Zorn_nonempty; simp)
+    show \<open>\<exists>S. on S\<close>
+      apply (rule exI[of _ S])
+      using assms on_def by fastforce
+  next
+    fix C :: \<open>'a set set\<close>
+    assume \<open>C \<noteq> {}\<close>
+    assume \<open>subset.chain (Collect on) C\<close>
+    then have C_on: \<open>B \<in> C \<Longrightarrow> on B\<close> and C_order: \<open>B \<in> C \<Longrightarrow> B' \<in> C \<Longrightarrow> B \<subseteq> B' \<or> B' \<subseteq> B\<close> for B B'
+      by (auto simp: subset.chain_def)
+    have \<open>is_orthogonal x y\<close> if \<open>x\<in>\<Union>C\<close> \<open>y\<in>\<Union>C\<close> \<open>x \<noteq> y\<close> for x y
+      by (smt (verit) UnionE C_order C_on on_def is_ortho_set_def subsetD that(1) that(2) that(3))
+    moreover have \<open>0 \<notin> \<Union> C\<close>
+      by (meson UnionE C_on is_ortho_set_def on_def)
+    moreover have \<open>\<Union>C \<supseteq> S\<close>
+      using C_on \<open>C \<noteq> {}\<close> on_def by blast
+    ultimately show \<open>on (\<Union> C)\<close>
+      unfolding on_def is_ortho_set_def by simp
+  qed
+  then obtain B where \<open>on B\<close> and B_max: \<open>B' \<supseteq> B \<Longrightarrow> on B' \<Longrightarrow> B=B'\<close> for B'
+    by auto
+  have \<open>\<psi> = 0\<close> if \<psi>ortho: \<open>\<forall>b\<in>B. is_orthogonal \<psi> b\<close> for \<psi> :: 'a
+  proof (rule ccontr)
+    assume \<open>\<psi> \<noteq> 0\<close>
+    define \<phi> B' where \<open>\<phi> = \<psi> /\<^sub>R norm \<psi>\<close> and \<open>B' = B \<union> {\<phi>}\<close>
+    have [simp]: \<open>norm \<phi> = 1\<close>
+      using \<open>\<psi> \<noteq> 0\<close> by (auto simp: \<phi>_def)
+    have \<phi>ortho: \<open>is_orthogonal \<phi> b\<close> if \<open>b \<in> B\<close> for b
+      using \<psi>ortho that \<phi>_def  apply auto
+      by (simp add: scaleR_scaleC)
+    have orthoB': \<open>is_orthogonal x y\<close> if \<open>x\<in>B'\<close> \<open>y\<in>B'\<close> \<open>x \<noteq> y\<close> for x y
+      using that \<open>on B\<close> \<phi>ortho \<phi>ortho[THEN is_orthogonal_sym[THEN iffD1]]
+      by (auto simp: B'_def on_def is_ortho_set_def)
+    have B'0: \<open>0 \<notin> B'\<close>
+      using B'_def \<open>norm \<phi> = 1\<close> \<open>on B\<close> is_ortho_set_def on_def by fastforce
+    have \<open>S \<subseteq> B'\<close>
+      using B'_def \<open>on B\<close> on_def by auto
+    from orthoB' B'0 \<open>S \<subseteq> B'\<close> have \<open>on B'\<close>
+      by (simp add: on_def is_ortho_set_def)
+    with B_max have \<open>B = B'\<close>
+      by (metis B'_def Un_upper1)
+    then have \<open>\<phi> \<in> B\<close>
+      using B'_def by blast
+    then have \<open>is_orthogonal \<phi> \<phi>\<close>
+      using \<phi>ortho by blast
+    then show False
+      using B'0 \<open>B = B'\<close> \<open>\<phi> \<in> B\<close> by fastforce
+  qed 
+  then have \<open>orthogonal_complement B = {0}\<close>
+    by (auto simp: orthogonal_complement_def)
+  then have \<open>UNIV = orthogonal_complement (orthogonal_complement B)\<close>
+    by simp
+  also have \<open>\<dots> = orthogonal_complement (orthogonal_complement (closure (cspan B)))\<close>
+    by (metis (mono_tags, opaque_lifting) \<open>orthogonal_complement B = {0}\<close> cinner_zero_left complex_vector.span_superset empty_iff insert_iff orthogonal_complementI orthogonal_complement_antimono orthogonal_complement_of_closure subsetI subset_antisym)
+  also have \<open>\<dots> = closure (cspan B)\<close>
+    apply (rule double_orthogonal_complement_id)
+    by simp
+  finally have \<open>closure (cspan B) = UNIV\<close>
+    by simp
+  with \<open>on B\<close> show ?thesis
+    by (auto simp: on_def)
+qed
+
+lemma orthonormal_basis_exists: 
+  fixes S :: \<open>'a::chilbert_space set\<close>
+  assumes \<open>is_ortho_set S\<close> and \<open>\<And>x. x\<in>S \<Longrightarrow> norm x = 1\<close>
+  shows \<open>\<exists>B. B \<supseteq> S \<and> is_onb B\<close>
+proof -
+  from \<open>is_ortho_set S\<close>
+  obtain B where \<open>is_ortho_set B\<close> and \<open>B \<supseteq> S\<close> and \<open>closure (cspan B) = UNIV\<close>
+    using ortho_basis_exists by blast
+  define B' where \<open>B' = (\<lambda>x. x /\<^sub>R norm x) ` B\<close>
+  have \<open>S = (\<lambda>x. x /\<^sub>R norm x) ` S\<close>
+    by (simp add: assms(2))
+  then have \<open>B' \<supseteq> S\<close>
+    using B'_def \<open>S \<subseteq> B\<close> by blast
+  moreover 
+  have \<open>ccspan B' = top\<close>
+    apply (transfer fixing: B')
+    apply (simp add: B'_def scaleR_scaleC)
+    apply (subst complex_vector.span_image_scale')
+    using \<open>is_ortho_set B\<close> \<open>closure (cspan B) = UNIV\<close> is_ortho_set_def 
+    by auto
+  moreover have \<open>is_ortho_set B'\<close>
+    using \<open>is_ortho_set B\<close> apply (auto simp: B'_def is_ortho_set_def)
+    by (metis cinner_simps(5) is_orthogonal_sym mult_zero_right scaleR_scaleC)
+  moreover have \<open>\<forall>b\<in>B'. norm b = 1\<close>
+    using \<open>is_ortho_set B\<close> apply (auto simp: B'_def is_ortho_set_def)
+    by (metis field_class.field_inverse norm_eq_zero)
+  ultimately show ?thesis
+    by (auto simp: is_onb_def)
+qed
+
 subsection \<open>Riesz-representation theorem\<close>
 
 lemma orthogonal_complement_kernel_functional:
@@ -2221,6 +2339,34 @@ instance
     apply (simp add: cinner_add_right)
   using cinner_ge_zero norm_eq_sqrt_cinner by auto
 end
+
+subsection \<open>Misc (ctd.)\<close>
+
+
+lemma separating_dense_span: 
+  assumes \<open>\<And>F G :: 'a::chilbert_space \<Rightarrow> 'b::{complex_normed_vector,not_singleton}. 
+           bounded_clinear F \<Longrightarrow> bounded_clinear G \<Longrightarrow> (\<forall>x\<in>S. F x = G x) \<Longrightarrow> F = G\<close>
+  shows \<open>closure (cspan S) = UNIV\<close>
+proof -
+  have \<open>\<psi> = 0\<close> if \<open>\<psi> \<in> orthogonal_complement S\<close> for \<psi>
+  proof -
+    obtain \<phi> :: 'b where \<open>\<phi> \<noteq> 0\<close>
+      by fastforce
+    have \<open>(\<lambda>x. cinner \<psi> x *\<^sub>C \<phi>) = (\<lambda>_. 0)\<close> 
+      apply (rule assms[rule_format])
+      using orthogonal_complement_orthoI that
+      by (auto simp add: bounded_clinear_cinner_right bounded_clinear_scaleC_const)
+    then have \<open>cinner \<psi> \<psi> = 0\<close>
+      by (meson \<open>\<phi> \<noteq> 0\<close> scaleC_eq_0_iff)
+    then show \<open>\<psi> = 0\<close>
+      by auto
+  qed
+  then have \<open>orthogonal_complement (orthogonal_complement S) = UNIV\<close>
+    by (metis UNIV_eq_I cinner_zero_right orthogonal_complementI)
+  then show \<open>closure (cspan S) = UNIV\<close>
+    by (simp add: orthogonal_complement_orthogonal_complement_closure_cspan)
+qed
+
 
 instance conjugate_space :: (chilbert_space) chilbert_space..
 

@@ -96,6 +96,11 @@ lemma ell2_norm_finite:
 lemma ell2_norm_finite_L2_set: "ell2_norm (x::'a::finite\<Rightarrow>complex) = L2_set (norm o x) UNIV"
   by (simp add: ell2_norm_finite L2_set_def)
 
+lemma ell2_norm_square: \<open>(ell2_norm x)\<^sup>2 = (\<Sum>\<^sub>\<infinity>i. (cmod (x i))\<^sup>2)\<close>
+  unfolding ell2_norm_def
+  apply (subst real_sqrt_pow2)
+  by (simp_all add: infsum_nonneg)
+
 lemma ell2_ket:
   fixes a
   defines \<open>f \<equiv> (\<lambda>i. if a = i then 1 else 0)\<close>
@@ -676,7 +681,6 @@ proof (intro_classes; transfer)
 qed (auto simp add: divide_complex_def mult.commute ring_class.ring_distribs)
 end
 
-
 subsection \<open>Orthogonality\<close>
 
 lemma ell2_pointwise_ortho:
@@ -704,6 +708,9 @@ proof (rename_tac S x)
 qed
 
 lemma trunc_ell2_empty[simp]: \<open>trunc_ell2 {} x = 0\<close>
+  apply transfer by simp
+
+lemma trunc_ell2_UNIV[simp]: \<open>trunc_ell2 UNIV \<psi> = \<psi>\<close>
   apply transfer by simp
 
 lemma norm_id_minus_trunc_ell2:
@@ -774,6 +781,85 @@ proof -
   then show ?thesis
     apply (rule Lim_transform2[where f=\<open>\<lambda>_. \<psi>\<close>, rotated])
     by simp
+qed
+
+lemma trunc_ell2_norm_mono: \<open>M \<subseteq> N \<Longrightarrow> norm (trunc_ell2 M \<psi>) \<le> norm (trunc_ell2 N \<psi>)\<close>
+proof (rule power2_le_imp_le[rotated], force, transfer)
+  fix M N :: \<open>'a set\<close> and \<psi> :: \<open>'a \<Rightarrow> complex\<close>
+  assume \<open>M \<subseteq> N\<close> and \<open>has_ell2_norm \<psi>\<close>
+  have \<open>(ell2_norm (\<lambda>i. if i \<in> M then \<psi> i else 0))\<^sup>2 = (\<Sum>\<^sub>\<infinity>i\<in>M. (cmod (\<psi> i))\<^sup>2)\<close>
+    unfolding ell2_norm_square
+    apply (rule infsum_cong_neutral)
+    by auto
+  also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>i\<in>N. (cmod (\<psi> i))\<^sup>2)\<close>
+    apply (rule infsum_mono2)
+    using \<open>has_ell2_norm \<psi>\<close> \<open>M \<subseteq> N\<close>
+    by (auto simp add: ell2_norm_square has_ell2_norm_def simp flip: norm_power intro: summable_on_subset_banach)
+  also have \<open>\<dots> = (ell2_norm (\<lambda>i. if i \<in> N then \<psi> i else 0))\<^sup>2\<close>
+    unfolding ell2_norm_square
+    apply (rule infsum_cong_neutral)
+    by auto
+  finally show \<open>(ell2_norm (\<lambda>i. if i \<in> M then \<psi> i else 0))\<^sup>2 \<le> (ell2_norm (\<lambda>i. if i \<in> N then \<psi> i else 0))\<^sup>2\<close>
+    by -
+qed
+
+lemma trunc_ell2_twice[simp]: \<open>trunc_ell2 M (trunc_ell2 N \<psi>) = trunc_ell2 (M\<inter>N) \<psi>\<close>
+  apply transfer by auto
+
+lemma trunc_ell2_union: \<open>trunc_ell2 (M \<union> N) \<psi> = trunc_ell2 M \<psi> + trunc_ell2 N \<psi> - trunc_ell2 (M\<inter>N) \<psi>\<close>
+  apply transfer by auto
+
+lemma trunc_ell2_union_disjoint: \<open>M\<inter>N = {} \<Longrightarrow> trunc_ell2 (M \<union> N) \<psi> = trunc_ell2 M \<psi> + trunc_ell2 N \<psi>\<close>
+  by (simp add: trunc_ell2_union)
+
+lemma trunc_ell2_union_Diff: \<open>M \<subseteq> N \<Longrightarrow> trunc_ell2 (N-M) \<psi> = trunc_ell2 N \<psi> - trunc_ell2 M \<psi>\<close>
+  using trunc_ell2_union_disjoint[where M=\<open>N-M\<close> and N=M and \<psi>=\<psi>]
+  by (simp add: Un_commute inf.commute le_iff_sup)
+
+lemma trunc_ell2_lim: \<open>((\<lambda>S. trunc_ell2 S \<psi>) \<longlongrightarrow> trunc_ell2 M \<psi>) (finite_subsets_at_top M)\<close>
+proof -
+  have \<open>((\<lambda>S. trunc_ell2 S (trunc_ell2 M \<psi>)) \<longlongrightarrow> trunc_ell2 M \<psi>) (finite_subsets_at_top UNIV)\<close>
+    using trunc_ell2_lim_at_UNIV by blast
+  then have \<open>((\<lambda>S. trunc_ell2 (S\<inter>M) \<psi>) \<longlongrightarrow> trunc_ell2 M \<psi>) (finite_subsets_at_top UNIV)\<close>
+    by simp
+  then show \<open>((\<lambda>S. trunc_ell2 S \<psi>) \<longlongrightarrow> trunc_ell2 M \<psi>) (finite_subsets_at_top M)\<close>
+    unfolding filterlim_def
+    apply (subst (asm) filtermap_filtermap[where g=\<open>\<lambda>S. S\<inter>M\<close>, symmetric])
+    apply (subst (asm) finite_subsets_at_top_inter[where A=M and B=UNIV])
+    by auto
+qed
+
+lemma trunc_ell2_lim_general:
+  assumes big: \<open>\<And>G. finite G \<Longrightarrow> G \<subseteq> M \<Longrightarrow> (\<forall>\<^sub>F H in F. H \<supseteq> G)\<close>
+  assumes small: \<open>\<forall>\<^sub>F H in F. H \<subseteq> M\<close>
+  shows \<open>((\<lambda>S. trunc_ell2 S \<psi>) \<longlongrightarrow> trunc_ell2 M \<psi>) F\<close>
+proof (rule tendstoI)
+  fix e :: real assume \<open>e > 0\<close>
+  from trunc_ell2_lim[THEN tendsto_iff[THEN iffD1], rule_format, OF \<open>e > 0\<close>, where M=M and \<psi>=\<psi>]
+  obtain G where \<open>finite G\<close> and \<open>G \<subseteq> M\<close> and 
+    close: \<open>dist (trunc_ell2 G \<psi>) (trunc_ell2 M \<psi>) < e\<close>
+    apply atomize_elim
+    unfolding eventually_finite_subsets_at_top
+    by blast
+  from \<open>finite G\<close> \<open>G \<subseteq> M\<close> and big
+  have \<open>\<forall>\<^sub>F H in F. H \<supseteq> G\<close>
+    by -
+  with small have \<open>\<forall>\<^sub>F H in F. H \<subseteq> M \<and> H \<supseteq> G\<close>
+    by (simp add: eventually_conj_iff)
+  then show \<open>\<forall>\<^sub>F H in F. dist (trunc_ell2 H \<psi>) (trunc_ell2 M \<psi>) < e\<close>
+  proof (rule eventually_mono)
+    fix H assume GHM: \<open>H \<subseteq> M \<and> H \<supseteq> G\<close>
+    have \<open>dist (trunc_ell2 H \<psi>) (trunc_ell2 M \<psi>) = norm (trunc_ell2 (M-H) \<psi>)\<close>
+      by (simp add: GHM dist_ell2_def norm_minus_commute trunc_ell2_union_Diff)
+    also have \<open>\<dots> \<le> norm (trunc_ell2 (M-G) \<psi>)\<close>
+      by (simp add: Diff_mono GHM trunc_ell2_norm_mono)
+    also have \<open>\<dots>  = dist (trunc_ell2 G \<psi>) (trunc_ell2 M \<psi>)\<close>
+      by (simp add: \<open>G \<subseteq> M\<close> dist_ell2_def norm_minus_commute trunc_ell2_union_Diff)
+    also have \<open>\<dots> < e\<close>
+      using close by simp
+    finally show \<open>dist (trunc_ell2 H \<psi>) (trunc_ell2 M \<psi>) < e\<close>
+      by -
+  qed
 qed
 
 subsection \<open>Kets and bras\<close>
@@ -1041,6 +1127,29 @@ lemma cdim_UNIV_ell2[simp]: \<open>cdim (UNIV::'a::finite ell2 set) = CARD('a)\<
 
 lemma is_ortho_set_ket[simp]: \<open>is_ortho_set (range ket)\<close>
   using is_ortho_set_def by fastforce
+
+lemma bounded_clinear_equal_ket:
+  fixes f g :: \<open>'a ell2 \<Rightarrow> _\<close>
+  assumes \<open>bounded_clinear f\<close>
+  assumes \<open>bounded_clinear g\<close>
+  assumes \<open>\<And>i. f (ket i) = g (ket i)\<close>
+  shows \<open>f = g\<close>
+  apply (rule ext)
+  apply (rule bounded_clinear_eq_on[of f g \<open>range ket\<close>])
+  using assms by auto
+
+lemma bounded_antilinear_equal_ket:
+  fixes f g :: \<open>'a ell2 \<Rightarrow> _\<close>
+  assumes \<open>bounded_antilinear f\<close>
+  assumes \<open>bounded_antilinear g\<close>
+  assumes \<open>\<And>i. f (ket i) = g (ket i)\<close>
+  shows \<open>f = g\<close>
+  apply (rule ext)
+  apply (rule bounded_antilinear_eq_on[of f g \<open>range ket\<close>])
+  using assms by auto
+
+lemma ket_CARD_1_is_1: \<open>ket x = 1\<close> for x :: \<open>'a::CARD_1\<close>
+  apply transfer by simp
 
 subsection \<open>Butterflies\<close>
 

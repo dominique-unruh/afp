@@ -42,7 +42,7 @@ lemma unitary_ell2_to_hilbert: \<open>unitary ell2_to_hilbert\<close>
 proof (rule surj_isometry_is_unitary)
   show \<open>isometry (ell2_to_hilbert :: 'a chilbert2ell2 ell2 \<Rightarrow>\<^sub>C\<^sub>L _)\<close>
   proof (rule orthogonal_on_basis_is_isometry)
-    show \<open>ccspan (range ket) = \<top>\<close>
+    show \<open>ccspan (range ket) = top\<close>
       by auto
     fix x y :: \<open>'a chilbert2ell2 ell2\<close>
     assume \<open>x \<in> range ket\<close> \<open>y \<in> range ket\<close>
@@ -63,11 +63,11 @@ proof (rule surj_isometry_is_unitary)
   qed
   have \<open>cblinfun_apply ell2_to_hilbert ` range ket \<supseteq> some_chilbert_basis\<close>
     by (metis Rep_chilbert2ell2_cases UNIV_I ell2_to_hilbert_ket image_eqI subsetI)
-  then have \<open>ell2_to_hilbert *\<^sub>S \<top> \<ge> ccspan some_chilbert_basis\<close> (is \<open>_ \<ge> \<dots>\<close>)
+  then have \<open>ell2_to_hilbert *\<^sub>S top \<ge> ccspan some_chilbert_basis\<close> (is \<open>_ \<ge> \<dots>\<close>)
     by (smt (verit, del_insts) cblinfun_image_ccspan ccspan_mono ccspan_range_ket)
-  also have \<open>\<dots> = \<top>\<close>
+  also have \<open>\<dots> = top\<close>
     by simp
-  finally show \<open>ell2_to_hilbert *\<^sub>S \<top> = \<top>\<close>
+  finally show \<open>ell2_to_hilbert *\<^sub>S top = top\<close>
     by (simp add: top.extremum_unique)
 qed
 

@@ -286,6 +286,7 @@ lemma sot_closure_is_csubspace[simp]:
   assumes \<open>csubspace A\<close>
   shows \<open>csubspace (closure A)\<close>
 proof (rule complex_vector.subspaceI)
+  include lattice_syntax
   show 0: \<open>0 \<in> closure A\<close>
     by (simp add: assms closure_def complex_vector.subspace_0)
   show \<open>x + y \<in> closure A\<close> if \<open>x \<in> closure A\<close> \<open>y \<in> closure A\<close> for x y

@@ -71,9 +71,6 @@ lemma mat_of_rows_list_carrier[simp]:
   "dim_col (mat_of_rows_list n vs) = n"
   unfolding mat_of_rows_list_def by auto
 
-lemma apply_id_cblinfun[simp]: \<open>(*\<^sub>V) id_cblinfun = id\<close>
-  by auto
-
 text \<open>Overriding \<^theory>\<open>Complex_Bounded_Operators.Complex_Bounded_Linear_Function\<close>.\<^term>\<open>sandwich\<close>.
       The latter is the same function but defined as a \<^typ>\<open>(_,_) cblinfun\<close> which is less convenient for us.\<close>
 definition sandwich where \<open>sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\<^sub>L a*\<close>

@@ -9,26 +9,6 @@ begin
 (* TODO explain *)
 lemma local_defE: "(\<And>x. x=y \<Longrightarrow> P) \<Longrightarrow> P" by metis
 
-lemma on_closure_leI:
-  fixes f g :: \<open>'a::topological_space \<Rightarrow> 'b::linorder_topology\<close>
-  assumes eq: \<open>\<And>x. x \<in> S \<Longrightarrow> f x \<le> g x\<close>
-  assumes xS: \<open>x \<in> closure S\<close>
-  assumes cont: \<open>continuous_on UNIV f\<close> \<open>continuous_on UNIV g\<close> (* Is "isCont f x" "isCont g x" sufficient? *)
-  shows \<open>f x \<le> g x\<close>
-proof -
-  define X where \<open>X = {x. f x \<le> g x}\<close>
-  have \<open>closed X\<close>
-    using cont by (simp add: X_def closed_Collect_le)
-  moreover have \<open>S \<subseteq> X\<close>
-    by (simp add: X_def eq subsetI)
-  ultimately have \<open>closure S \<subseteq> X\<close>
-    using closure_minimal by blast
-  with xS have \<open>x \<in> X\<close>
-    by auto
-  then show ?thesis
-    using X_def by blast
-qed
-
 lemma inv_prod_swap[simp]: \<open>inv prod.swap = prod.swap\<close>
   by (simp add: inv_unique_comp)
 
@@ -1376,32 +1356,6 @@ lemma summable_on_comm_additive_general:
   assumes \<open>g summable_on S\<close>
   shows \<open>(f o g) summable_on S\<close>
   by (meson assms summable_on_def has_sum_comm_additive_general has_sum_def infsum_tendsto)
-
-lemma has_sum_bounded_linear: 
-  assumes \<open>bounded_linear f\<close>
-  assumes \<open>has_sum g S x\<close>
-  shows \<open>has_sum (f o g) S (f x)\<close>
-  apply (rule has_sum_comm_additive)
-  using assms blinfun_apply_induct blinfun.additive_right apply auto
-  using isCont_def linear_continuous_at by fastforce
-
-lemma abs_summable_on_bounded_linear:
-  assumes \<open>bounded_linear f\<close>
-  assumes \<open>g abs_summable_on S\<close>
-  shows \<open>(f o g) abs_summable_on S\<close>
-proof -
-  have bound: \<open>norm (f (g x)) \<le> onorm f * norm (g x)\<close> for x
-    apply (rule onorm)
-    by (simp add: assms(1))
-
-  from assms(2) have \<open>(\<lambda>x. onorm f *\<^sub>R g x) abs_summable_on S\<close>
-    by (auto intro!: summable_on_cmult_right)
-  then have \<open>(\<lambda>x. f (g x)) abs_summable_on S\<close>
-    apply (rule abs_summable_on_comparison_test)
-    using bound by (auto simp: assms(1) onorm_pos_le)
-  then show ?thesis
-    by auto
-qed
 
 lemma has_sum_sums: \<open>f sums s\<close> if \<open>has_sum f UNIV s\<close>
 proof -
