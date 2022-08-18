@@ -108,7 +108,7 @@ next
 qed
 
 lemma sandwich_pos[intro]: \<open>sandwich b a \<ge> 0\<close> if \<open>a \<ge> 0\<close>
-  by (metis (no_types, opaque_lifting) Misc_Tensor_Product_BO.positive_cblinfunI cblinfun_apply_cblinfun_compose cinner_adj_left cinner_pos_if_pos sandwich_apply that)
+  by (metis (no_types, opaque_lifting) positive_cblinfunI cblinfun_apply_cblinfun_compose cinner_adj_left cinner_pos_if_pos sandwich_apply that)
 
 lemma cblinfun_power_pos: \<open>cblinfun_power a n \<ge> 0\<close> if \<open>a \<ge> 0\<close>
 proof (cases \<open>even n\<close>)

@@ -10,9 +10,10 @@ Authors:
 
 theory Complex_Bounded_Linear_Function
   imports
-    Complex_Inner_Product One_Dimensional_Spaces
-    Banach_Steinhaus.Banach_Steinhaus
     "HOL-Types_To_Sets.Types_To_Sets"
+    Banach_Steinhaus.Banach_Steinhaus
+    Complex_Inner_Product
+    One_Dimensional_Spaces
     Complex_Bounded_Linear_Function0
 begin
 
@@ -403,6 +404,39 @@ lemma abs_summable_on_cblinfun_apply:
   shows \<open>(\<lambda>x. A *\<^sub>V g x) abs_summable_on S\<close>
   using bounded_clinear.bounded_linear[OF cblinfun.bounded_clinear_right] assms
   by (rule abs_summable_on_bounded_linear[unfolded o_def])
+
+text \<open>The next six lemmas logically belong in \<^theory>\<open>Complex_Bounded_Operators.Complex_Inner_Product\<close> 
+  but the proofs use facts from this theory.\<close>
+lemma has_sum_cinner_left:
+  assumes \<open>has_sum f I x\<close>
+  shows \<open>has_sum (\<lambda>i. cinner a (f i)) I (cinner a x)\<close>
+  by (metis assms cblinfun_cinner_right.rep_eq has_sum_cblinfun_apply)
+
+lemma summable_on_cinner_left:
+  assumes \<open>f summable_on I\<close>
+  shows \<open>(\<lambda>i. cinner a (f i)) summable_on I\<close>
+  by (metis assms has_sum_cinner_left summable_on_def)
+
+lemma infsum_cinner_left:
+  assumes \<open>\<phi> summable_on I\<close>
+  shows \<open>cinner \<psi> (\<Sum>\<^sub>\<infinity>i\<in>I. \<phi> i) = (\<Sum>\<^sub>\<infinity>i\<in>I. cinner \<psi> (\<phi> i))\<close>
+  by (metis assms has_sum_cinner_left has_sum_infsum infsumI)
+
+lemma has_sum_cinner_right:
+  assumes \<open>has_sum f I x\<close>
+  shows \<open>has_sum (\<lambda>i. f i \<bullet>\<^sub>C a) I (x \<bullet>\<^sub>C a)\<close>
+  apply (rule has_sum_bounded_linear[where f=\<open>\<lambda>x. x \<bullet>\<^sub>C a\<close>, unfolded o_def])
+  using assms by (simp_all add: bounded_antilinear.bounded_linear bounded_antilinear_cinner_left)
+
+lemma summable_on_cinner_right:
+  assumes \<open>f summable_on I\<close>
+  shows \<open>(\<lambda>i. f i \<bullet>\<^sub>C a) summable_on I\<close>
+  by (metis assms has_sum_cinner_right summable_on_def)
+
+lemma infsum_cinner_right:
+  assumes \<open>\<phi> summable_on I\<close>
+  shows \<open>(\<Sum>\<^sub>\<infinity>i\<in>I. \<phi> i) \<bullet>\<^sub>C \<psi> = (\<Sum>\<^sub>\<infinity>i\<in>I. \<phi> i \<bullet>\<^sub>C \<psi>)\<close>
+  by (metis assms has_sum_cinner_right has_sum_infsum infsumI)
 
 
 subsection \<open>Relationship to real bounded operators (\<^typ>\<open>_ \<Rightarrow>\<^sub>L _\<close>)\<close>
@@ -837,6 +871,29 @@ lemma cblinfun_compose_sum_right: \<open>x o\<^sub>C\<^sub>L (\<Sum>i\<in>S. g i
   apply (induction S rule:infinite_finite_induct)
   by (auto simp: cblinfun_compose_add_right)
 
+lemma cblinfun_compose_minus_right: \<open>a o\<^sub>C\<^sub>L (b - c) = (a o\<^sub>C\<^sub>L b) - (a o\<^sub>C\<^sub>L c)\<close>
+  by (simp add: bounded_cbilinear.diff_right bounded_cbilinear_cblinfun_compose)
+lemma cblinfun_compose_minus_left: \<open>(a - b) o\<^sub>C\<^sub>L c = (a o\<^sub>C\<^sub>L c) - (b o\<^sub>C\<^sub>L c)\<close>
+  by (simp add: bounded_cbilinear.diff_left bounded_cbilinear_cblinfun_compose)
+
+subsection \<open>Powers of operators\<close>
+
+
+lift_definition cblinfun_power :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'a \<Rightarrow> nat \<Rightarrow> 'a \<Rightarrow>\<^sub>C\<^sub>L 'a\<close> is
+  \<open>\<lambda>(a::'a\<Rightarrow>'a) n. a ^^ n\<close>
+  apply (rename_tac f n, induct_tac n, auto simp: Nat.funpow_code_def)
+  by (simp add: bounded_clinear_compose)
+
+lemma cblinfun_power_0[simp]: \<open>cblinfun_power A 0 = id_cblinfun\<close> 
+  apply transfer by auto
+
+lemma cblinfun_power_Suc': \<open>cblinfun_power A (Suc n) = A o\<^sub>C\<^sub>L cblinfun_power A n\<close> 
+  apply transfer by auto
+
+lemma cblinfun_power_Suc: \<open>cblinfun_power A (Suc n) = cblinfun_power A n o\<^sub>C\<^sub>L A\<close>
+  apply (induction n)
+  by (auto simp: cblinfun_power_Suc' simp flip:  cblinfun_compose_assoc)
+
 subsection \<open>Adjoint\<close>
 
 lift_definition
@@ -1078,6 +1135,14 @@ lemma sum_adj: \<open>(sum a F)* = sum (\<lambda>i. (a i)*) F\<close>
   apply (induction rule:infinite_finite_induct)
   by (auto simp add: adj_plus)
 
+lemma has_sum_adj:
+  assumes \<open>has_sum f I x\<close>
+  shows \<open>has_sum (\<lambda>x. adj (f x)) I (adj x)\<close>
+  apply (rule has_sum_comm_additive[where f=adj, unfolded o_def])
+  apply (simp add: antilinear.axioms(1))
+  apply (metis (no_types, lifting) LIM_eq adj_plus adj_uminus norm_adj uminus_add_conv_diff)
+  by (simp add: assms)
+
 subsection \<open>Unitaries / isometries\<close>
 
 
@@ -1155,7 +1220,8 @@ proof -
     using isometry_def by blast
 qed
 
-
+lemma isometry_preserves_norm: \<open>isometry U \<Longrightarrow> norm (U *\<^sub>V \<psi>) = norm \<psi>\<close>
+  by (metis (no_types, lifting) cblinfun_apply_cblinfun_compose cblinfun_id_cblinfun_apply cinner_adj_right cnorm_eq isometryD)
 
 subsection \<open>Images\<close>
 
@@ -1485,6 +1551,51 @@ next
     by auto
 qed
 
+
+lemma space_as_set_image_commute:
+  assumes UV: \<open>U o\<^sub>C\<^sub>L V = id_cblinfun\<close> and VU: \<open>V o\<^sub>C\<^sub>L U = id_cblinfun\<close> (* TODO: I think only one of them is needed *)
+  shows \<open>(*\<^sub>V) U ` space_as_set T = space_as_set (U *\<^sub>S T)\<close>
+proof -
+  have \<open>space_as_set (U *\<^sub>S T) = U ` V ` space_as_set (U *\<^sub>S T)\<close>
+    by (simp add: image_image UV flip: cblinfun_apply_cblinfun_compose)
+  also have \<open>\<dots> \<subseteq> U ` space_as_set (V *\<^sub>S U *\<^sub>S T)\<close>
+    by (metis cblinfun_image.rep_eq closure_subset image_mono)
+  also have \<open>\<dots> = U ` space_as_set T\<close>
+    by (simp add: VU cblinfun_assoc_left(2))
+  finally have 1: \<open>space_as_set (U *\<^sub>S T) \<subseteq> U ` space_as_set T\<close>
+    by -
+  have 2: \<open>U ` space_as_set T \<subseteq> space_as_set (U *\<^sub>S T)\<close>
+    by (simp add: cblinfun_image.rep_eq closure_subset)
+  from 1 2 show ?thesis
+    by simp
+qed
+
+lemma right_total_rel_ccsubspace:
+  fixes R :: \<open>'a::complex_normed_vector \<Rightarrow> 'b::complex_normed_vector \<Rightarrow> bool\<close>
+  assumes UV: \<open>U o\<^sub>C\<^sub>L V = id_cblinfun\<close>
+  assumes VU: \<open>V o\<^sub>C\<^sub>L U = id_cblinfun\<close>
+  assumes R_def: \<open>\<And>x y. R x y \<longleftrightarrow> x = U *\<^sub>V y\<close>
+  shows \<open>right_total (rel_ccsubspace R)\<close>
+proof (rule right_totalI)
+  fix T :: \<open>'b ccsubspace\<close>
+  show \<open>\<exists>S. rel_ccsubspace R S T\<close>
+    apply (rule exI[of _ \<open>U *\<^sub>S T\<close>])
+    using UV VU by (auto simp add: rel_ccsubspace_def R_def rel_set_def simp flip: space_as_set_image_commute)
+qed
+
+lemma left_total_rel_ccsubspace:
+  fixes R :: \<open>'a::complex_normed_vector \<Rightarrow> 'b::complex_normed_vector \<Rightarrow> bool\<close>
+  assumes UV: \<open>U o\<^sub>C\<^sub>L V = id_cblinfun\<close>
+  assumes VU: \<open>V o\<^sub>C\<^sub>L U = id_cblinfun\<close>
+  assumes R_def: \<open>\<And>x y. R x y \<longleftrightarrow> y = U *\<^sub>V x\<close>
+  shows \<open>left_total (rel_ccsubspace R)\<close>
+proof -
+  have \<open>right_total (rel_ccsubspace (conversep R))\<close>
+    apply (rule right_total_rel_ccsubspace)
+    using assms by auto
+  then show ?thesis
+    by (auto intro!: right_total_conversep[THEN iffD1] simp: converse_rel_ccsubspace)
+qed
 
 
 subsection \<open>Sandwiches\<close>
@@ -1946,6 +2057,17 @@ lemma Proj_inj:
   shows "X = Y"
   by (metis assms Proj_range)
 
+lemma norm_Proj_leq1: \<open>norm (Proj M) \<le> 1\<close>
+  apply transfer
+  by (metis (no_types, opaque_lifting) mult.left_neutral onorm_bound projection_reduces_norm zero_less_one_class.zero_le_one)
+
+lemma Proj_orthog_ccspan_insert:
+  assumes "\<And>y. y \<in> Y \<Longrightarrow> is_orthogonal x y"
+  shows \<open>Proj (ccspan (insert x Y)) = proj x + Proj (ccspan Y)\<close>
+  apply (subst asm_rl[of \<open>insert x Y = {x} \<union> Y\<close>], simp)
+  apply (rule Proj_orthog_ccspan_union)
+  using assms by auto
+
 subsection \<open>Kernel\<close>
 
 lift_definition kernel :: "'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L'b::complex_normed_vector
@@ -2357,14 +2479,33 @@ lemma positive_hermitianI: \<open>A = A*\<close> if \<open>A \<ge> 0\<close>
   apply (rule cinner_real_hermiteanI)
   using that by (auto simp: complex_is_real_iff_compare0 less_eq_cblinfun_def)
 
-lemma positive_cblinfunI: \<open>A \<ge> 0\<close> if \<open>\<And>x. cinner x (A *\<^sub>V x) \<ge> 0\<close>
-  unfolding less_eq_cblinfun_def using that by auto
+lemma cblinfun_leI:
+  assumes \<open>\<And>x. norm x = 1 \<Longrightarrow> x \<bullet>\<^sub>C (A *\<^sub>V x) \<le> x \<bullet>\<^sub>C (B *\<^sub>V x)\<close>
+  shows \<open>A \<le> B\<close>
+proof (unfold less_eq_cblinfun_def, intro allI, case_tac \<open>\<psi> = 0\<close>)
+  fix \<psi> :: 'a assume \<open>\<psi> = 0\<close>
+  then show \<open>\<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>) \<le> \<psi> \<bullet>\<^sub>C (B *\<^sub>V \<psi>)\<close>
+    by simp
+next
+  fix \<psi> :: 'a assume \<open>\<psi> \<noteq> 0\<close>
+  define \<phi> where \<open>\<phi> = \<psi> /\<^sub>R norm \<psi>\<close>
+  have \<open>\<phi> \<bullet>\<^sub>C (A *\<^sub>V \<phi>) \<le> \<phi> \<bullet>\<^sub>C (B *\<^sub>V \<phi>)\<close>
+    apply (rule assms)
+    unfolding \<phi>_def
+    by (simp add: \<open>\<psi> \<noteq> 0\<close>)
+  with \<open>\<psi> \<noteq> 0\<close> show \<open>\<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>) \<le> \<psi> \<bullet>\<^sub>C (B *\<^sub>V \<psi>)\<close>
+    unfolding \<phi>_def
+    by (smt (verit) cinner_adj_left cinner_scaleR_left cinner_simps(6) complex_of_real_nn_iff mult_cancel_right1 mult_left_mono norm_eq_zero norm_ge_zero of_real_1 right_inverse scaleR_scaleC scaleR_scaleR)
+qed
+
+lemma positive_cblinfunI: \<open>A \<ge> 0\<close> if \<open>\<And>x. norm x = 1 \<Longrightarrow> cinner x (A *\<^sub>V x) \<ge> 0\<close>
+  apply (rule cblinfun_leI)
+  using that by simp
 
 (* Note: this does not require B to be a square operator *)
 lemma positive_cblinfun_squareI: \<open>A = B* o\<^sub>C\<^sub>L B \<Longrightarrow> A \<ge> 0\<close>
   apply (rule positive_cblinfunI)
   by (metis cblinfun_apply_cblinfun_compose cinner_adj_right cinner_ge_zero)
-
 
 lemma one_dim_loewner_order: \<open>A \<ge> B \<longleftrightarrow> one_dim_iso A \<ge> (one_dim_iso B :: complex)\<close> for A B :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a::{chilbert_space, one_dim}\<close>
 proof -
@@ -2650,6 +2791,22 @@ proof -
     by (simp add: B \<phi>_def assms cblinfun_compose_image range_adjoint_isometry)
   with BProj show "B = proj x"
     by simp
+qed
+
+lemma butterfly_sgn_eq_proj:
+  shows "selfbutter (sgn x) = proj x"
+proof (cases \<open>x = 0\<close>)
+  case True
+  then show ?thesis
+    by simp
+next
+  case False
+  then have \<open>selfbutter (sgn x) = proj (sgn x)\<close>
+    by (simp add: butterfly_eq_proj norm_sgn)
+  also have \<open>ccspan {sgn x} = ccspan {x}\<close>
+    by (metis ccspan_singleton_scaleC scaleC_eq_0_iff scaleR_scaleC sgn_div_norm sgn_zero_iff)
+  finally show ?thesis
+    by -
 qed
 
 lemma butterfly_is_Proj:
@@ -3166,6 +3323,211 @@ proof -
   from norm_extg extg_extf
   show \<open>norm (cblinfun_extension S f) \<le> B\<close> if \<open>B \<ge> 0\<close>
     using that by simp
+qed
+
+subsection \<open>Bijections between different ONBs\<close>
+
+text \<open>Some of the theorems here logically belong into \<^theory>\<open>Complex_Bounded_Operators.Complex_Inner_Product\<close>
+  but the proof uses some concepts from the present theory.\<close>
+
+(* TODO mention: follows conway functional, Prop 4.14 *)
+lemma all_ortho_bases_same_card:
+  fixes E F :: \<open>'a::chilbert_space set\<close>
+  assumes \<open>is_ortho_set E\<close> \<open>is_ortho_set F\<close> \<open>ccspan E = top\<close> \<open>ccspan F = top\<close>
+  shows \<open>\<exists>f. bij_betw f E F\<close>
+proof -
+  have \<open>|F| \<le>o |E|\<close> if \<open>infinite E\<close> and
+    \<open>is_ortho_set E\<close> \<open>is_ortho_set F\<close> \<open>ccspan E = top\<close> \<open>ccspan F = top\<close> for E F :: \<open>'a set\<close>
+  proof -
+    define F' where \<open>F' e = {f\<in>F. \<not> is_orthogonal f e}\<close> for e
+    have \<open>\<exists>e\<in>E. cinner f e \<noteq> 0\<close> if \<open>f \<in> F\<close> for f
+    proof (rule ccontr, simp)
+      assume \<open>\<forall>e\<in>E. is_orthogonal f e\<close>
+      then have \<open>f \<in> orthogonal_complement E\<close>
+        by (simp add: orthogonal_complementI)
+      also have \<open>\<dots> = orthogonal_complement (closure (cspan E))\<close>
+        using orthogonal_complement_of_closure orthogonal_complement_of_cspan by blast
+      also have \<open>\<dots> = space_as_set (- ccspan E)\<close>
+        apply transfer by simp
+      also have \<open>\<dots> = space_as_set (- top)\<close>
+        by (simp add: \<open>ccspan E = top\<close>)
+      also have \<open>\<dots> = {0}\<close>
+        by (auto simp add: top_ccsubspace.rep_eq uminus_ccsubspace.rep_eq)
+      finally have \<open>f = 0\<close>
+        by simp
+      with \<open>f \<in> F\<close> \<open>is_ortho_set F\<close> show False
+        by (simp add: is_onb_def is_ortho_set_def)
+    qed
+    then have F'_union: \<open>F = (\<Union>e\<in>E. F' e)\<close>
+      unfolding F'_def by auto
+    have \<open>countable (F' e)\<close> for e
+    proof -
+      have \<open>(\<Sum>f\<in>M. (cmod (cinner (sgn f) e))\<^sup>2) \<le> (norm e)\<^sup>2\<close> if \<open>finite M\<close> and \<open>M \<subseteq> F\<close> for M
+      proof -
+        have [simp]: \<open>is_ortho_set M\<close>
+          using \<open>is_ortho_set F\<close> is_ortho_set_antimono that(2) by blast
+        have [simp]: \<open>norm (sgn f) = 1\<close> if \<open>f \<in> M\<close> for f
+          by (metis \<open>is_ortho_set M\<close> is_ortho_set_def norm_sgn that)
+        have \<open>(\<Sum>f\<in>M. (cmod (cinner (sgn f) e))\<^sup>2) = (\<Sum>f\<in>M. (norm ((cinner (sgn f) e) *\<^sub>C sgn f))\<^sup>2)\<close>
+          apply (rule sum.cong[OF refl])
+          by simp
+        also have \<open>\<dots> = (norm (\<Sum>f\<in>M. ((cinner (sgn f) e) *\<^sub>C sgn f)))\<^sup>2\<close>
+          apply (rule pythagorean_theorem_sum[symmetric])
+          using that apply auto
+          by (meson \<open>is_ortho_set M\<close> is_ortho_set_def)
+        also have \<open>\<dots> = (norm (\<Sum>f\<in>M. proj f e))\<^sup>2\<close>
+          by (metis butterfly_apply butterfly_sgn_eq_proj)
+        also have \<open>\<dots> = (norm (Proj (ccspan M) e))\<^sup>2\<close>
+          apply (rule arg_cong[where f=\<open>\<lambda>x. (norm x)\<^sup>2\<close>])
+          using \<open>finite M\<close> \<open>is_ortho_set M\<close> apply induction
+           apply simp
+          by (smt (verit, ccfv_threshold) Proj_orthog_ccspan_insert insertCI is_ortho_set_def plus_cblinfun.rep_eq sum.insert)
+        also have \<open>\<dots> \<le> (norm (Proj (ccspan M)) * norm e)\<^sup>2\<close>
+          by (auto simp: norm_cblinfun intro!: power_mono)
+        also have \<open>\<dots> \<le> (norm e)\<^sup>2\<close>
+          apply (rule power_mono)
+           apply (metis norm_Proj_leq1 mult_left_le_one_le norm_ge_zero)
+          by simp
+        finally show ?thesis
+          by -
+      qed
+      then have \<open>(\<lambda>f. (cmod (cinner (sgn f) e))\<^sup>2) abs_summable_on F\<close>
+        apply (intro nonneg_bdd_above_summable_on bdd_aboveI)
+        by auto
+      then have \<open>countable {f \<in> F. (cmod (sgn f \<bullet>\<^sub>C e))\<^sup>2 \<noteq> 0}\<close>
+        by (rule abs_summable_countable)
+      then have \<open>countable {f \<in> F. \<not> is_orthogonal (sgn f) e}\<close>
+        by force
+      then have \<open>countable {f \<in> F. \<not> is_orthogonal f e}\<close>
+        by force
+      then show ?thesis
+        unfolding F'_def by simp
+    qed
+    then have F'_leq: \<open>|F' e| \<le>o natLeq\<close> for e
+      using countable_leq_natLeq by auto
+
+    from F'_union have \<open>|F| \<le>o |Sigma E F'|\<close> (is \<open>_ \<le>o \<dots>\<close>)
+      using card_of_UNION_Sigma by blast
+    also have \<open>\<dots> \<le>o |E \<times> (UNIV::nat set)|\<close> (is \<open>_ \<le>o \<dots>\<close>)
+      apply (rule card_of_Sigma_mono1)
+      using F'_leq
+      using card_of_nat ordIso_symmetric ordLeq_ordIso_trans by blast
+    also have \<open>\<dots> =o |E| *c natLeq\<close> (is \<open>ordIso2 _ \<dots>\<close>)
+      by (metis Field_card_of Field_natLeq card_of_ordIso_subst cprod_def)
+    also have \<open>\<dots> =o |E|\<close>
+      apply (rule card_prod_omega)
+      using that by (simp add: cinfinite_def)
+    finally show \<open>|F| \<le>o |E|\<close>
+      by -
+  qed
+  then have infinite: \<open>|E| =o |F|\<close> if \<open>infinite E\<close> and \<open>infinite F\<close>
+    by (simp add: assms ordIso_iff_ordLeq that(1) that(2))
+
+  have \<open>|E| =o |F|\<close> if \<open>finite E\<close> and \<open>is_ortho_set E\<close> \<open>is_ortho_set F\<close> \<open>ccspan E = top\<close> \<open>ccspan F = top\<close>
+    for E F :: \<open>'a set\<close>
+  proof -
+    have \<open>card E = card F\<close>
+      using that 
+      by (metis bij_betw_same_card ccspan.rep_eq closure_finite_cspan complex_vector.bij_if_span_eq_span_bases 
+          complex_vector.independent_span_bound is_ortho_set_cindependent top_ccsubspace.rep_eq top_greatest)
+    with \<open>finite E\<close> have \<open>finite F\<close>
+      by (metis ccspan.rep_eq closure_finite_cspan complex_vector.independent_span_bound is_ortho_set_cindependent that(3) that(4) top_ccsubspace.rep_eq top_greatest)
+    with \<open>card E = card F\<close> that show ?thesis
+      apply (rule_tac finite_card_of_iff_card[THEN iffD2])
+      by auto
+  qed
+
+  with infinite assms have \<open>|E| =o |F|\<close>
+    by (meson ordIso_symmetric)
+
+  then show ?thesis
+    by (simp add: card_of_ordIso)
+qed
+
+lemma all_onbs_same_card:
+  fixes E F :: \<open>'a::chilbert_space set\<close>
+  assumes \<open>is_onb E\<close> \<open>is_onb F\<close>
+  shows \<open>\<exists>f. bij_betw f E F\<close>
+  apply (rule all_ortho_bases_same_card)
+  using assms by (auto simp: is_onb_def)
+
+definition bij_between_bases where \<open>bij_between_bases E F = (SOME f. bij_betw f E F)\<close> for E F :: \<open>'a::chilbert_space set\<close>
+
+lemma
+  fixes E F :: \<open>'a::chilbert_space set\<close>
+  assumes \<open>is_onb E\<close> \<open>is_onb F\<close>
+  shows bij_between_bases_bij: \<open>bij_betw (bij_between_bases E F) E F\<close>
+  using all_onbs_same_card
+  by (metis assms(1) assms(2) bij_between_bases_def someI)
+
+definition unitary_between where \<open>unitary_between E F = cblinfun_extension E (bij_between_bases E F)\<close>
+
+lemma unitary_between_apply:
+  fixes E F :: \<open>'a::chilbert_space set\<close>
+  assumes \<open>is_onb E\<close> \<open>is_onb F\<close> \<open>e \<in> E\<close>
+  shows \<open>unitary_between E F *\<^sub>V e = bij_between_bases E F e\<close>
+proof -
+  from \<open>is_onb E\<close> \<open>is_onb F\<close>
+  have EF: \<open>bij_between_bases E F e \<in> F\<close> if \<open>e \<in> E\<close> for e
+    by (meson bij_betwE bij_between_bases_bij that)
+  have ortho: \<open>is_orthogonal (bij_between_bases E F x) (bij_between_bases E F y)\<close> if \<open>x \<noteq> y\<close> and \<open>x \<in> E\<close> and \<open>y \<in> E\<close> for x y
+    by (smt (verit, del_insts) assms(1) assms(2) bij_betw_iff_bijections bij_between_bases_bij is_onb_def is_ortho_set_def that(1) that(2) that(3))
+  have spanE: \<open>closure (cspan E) = UNIV\<close>
+    by (metis assms(1) ccspan.rep_eq is_onb_def top_ccsubspace.rep_eq)
+  show ?thesis
+    unfolding unitary_between_def
+    apply (rule cblinfun_extension_apply)
+     apply (rule cblinfun_extension_exists_ortho[where B=1])
+    using assms EF ortho spanE
+    by (auto simp: is_onb_def)
+qed
+
+lemma unitary_between_unitary:
+  fixes E F :: \<open>'a::chilbert_space set\<close>
+  assumes \<open>is_onb E\<close> \<open>is_onb F\<close>
+  shows \<open>unitary (unitary_between E F)\<close>
+proof -
+  have \<open>(unitary_between E F *\<^sub>V b) \<bullet>\<^sub>C (unitary_between E F *\<^sub>V c) = b \<bullet>\<^sub>C c\<close> if \<open>b \<in> E\<close> and \<open>c \<in> E\<close> for b c
+  proof (cases \<open>b = c\<close>)
+    case True
+    from \<open>is_onb E\<close> that have 1: \<open>b \<bullet>\<^sub>C b = 1\<close>
+      using cnorm_eq_1 is_onb_def by blast
+    from that have \<open>unitary_between E F *\<^sub>V b \<in> F\<close>
+      by (metis assms(1) assms(2) bij_betw_apply bij_between_bases_bij unitary_between_apply)
+    with \<open>is_onb F\<close> have 2: \<open>(unitary_between E F *\<^sub>V b) \<bullet>\<^sub>C (unitary_between E F *\<^sub>V b) = 1\<close>
+      by (simp add: cnorm_eq_1 is_onb_def)
+    from 1 2 True show ?thesis
+      by simp
+  next
+    case False
+    from \<open>is_onb E\<close> that have 1: \<open>b \<bullet>\<^sub>C c = 0\<close>
+      by (simp add: False is_onb_def is_ortho_set_def)
+    from that have inF: \<open>unitary_between E F *\<^sub>V b \<in> F\<close> \<open>unitary_between E F *\<^sub>V c \<in> F\<close>
+      by (metis assms(1) assms(2) bij_betw_apply bij_between_bases_bij unitary_between_apply)+
+    have neq: \<open>unitary_between E F *\<^sub>V b \<noteq> unitary_between E F *\<^sub>V c\<close>
+      by (metis (no_types, lifting) False assms(1) assms(2) bij_betw_iff_bijections bij_between_bases_bij that(1) that(2) unitary_between_apply)
+    from inF neq \<open>is_onb F\<close> have 2: \<open>(unitary_between E F *\<^sub>V b) \<bullet>\<^sub>C (unitary_between E F *\<^sub>V c) = 0\<close>
+      by (simp add: is_onb_def is_ortho_set_def)
+    from 1 2 show ?thesis
+      by simp
+  qed
+  then have iso: \<open>isometry (unitary_between E F)\<close>
+    apply (rule_tac orthogonal_on_basis_is_isometry[where B=E])
+    using assms(1) is_onb_def by auto
+  have \<open>unitary_between E F *\<^sub>S top = unitary_between E F *\<^sub>S ccspan E\<close>
+    by (metis assms(1) is_onb_def)
+  also have \<open>\<dots> \<ge> ccspan (unitary_between E F ` E)\<close> (is \<open>_ \<ge> \<dots>\<close>)
+    by (simp add: cblinfun_image_ccspan)
+  also have \<open>\<dots> = ccspan (bij_between_bases E F ` E)\<close>
+    by (metis assms(1) assms(2) image_cong unitary_between_apply)
+  also have \<open>\<dots> = ccspan F\<close>
+    by (metis assms(1) assms(2) bij_betw_imp_surj_on bij_between_bases_bij)
+  also have \<open>\<dots> = top\<close>
+    using assms(2) is_onb_def by blast
+  finally have surj: \<open>unitary_between E F *\<^sub>S top = top\<close>
+    by (simp add: top.extremum_unique)
+  from iso surj show ?thesis
+    by (rule surj_isometry_is_unitary)
 qed
 
 subsection \<open>Notation\<close>

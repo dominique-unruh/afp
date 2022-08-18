@@ -9,6 +9,7 @@ theory Extra_General
     "HOL-Types_To_Sets.Types_To_Sets"
     "HOL-Library.Complex_Order"
     "HOL-Analysis.Infinite_Sum"
+    "HOL-Cardinals.Cardinals"
 begin
 
 subsection \<open>Misc\<close>
@@ -106,6 +107,13 @@ in
   Scan.lift Args.var >> internalize_sort_attr
 end\<close>
   "internalize a sort"
+
+lemma card_prod_omega: \<open>X *c natLeq =o X\<close> if \<open>Cinfinite X\<close>
+  by (simp add: Cinfinite_Cnotzero cprod_infinite1' natLeq_Card_order natLeq_cinfinite natLeq_ordLeq_cinfinite that)
+
+lemma countable_leq_natLeq: \<open>|X| \<le>o natLeq\<close> if \<open>countable X\<close>
+  using subset_range_from_nat_into[OF that]
+  by (meson card_of_nat ordIso_iff_ordLeq ordLeq_transitive surj_imp_ordLeq)
 
 subsection \<open>Not singleton\<close>
 

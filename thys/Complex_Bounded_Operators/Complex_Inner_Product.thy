@@ -52,6 +52,13 @@ end
 
 subsection \<open>Misc facts\<close>
 
+lemma cinner_scaleR_left [simp]: "cinner (scaleR r x) y = of_real r * (cinner x y)"
+  by (simp add: scaleR_scaleC)
+
+lemma cinner_scaleR_right [simp]: "cinner x (scaleR r y) = of_real r * (cinner x y)"
+  by (simp add: scaleR_scaleC)
+
+
 text \<open>This is a useful rule for establishing the equality of vectors\<close>
 lemma cinner_extensionality:
   assumes \<open>\<And>\<gamma>. \<langle>\<gamma>, \<psi>\<rangle> = \<langle>\<gamma>, \<phi>\<rangle>\<close>
@@ -287,6 +294,11 @@ next
 qed
 
 
+lemma sum_cinner:
+  fixes f :: "'a \<Rightarrow> 'b::complex_inner"
+  shows "cinner (sum f A) (sum g B) = (\<Sum>i\<in>A. \<Sum>j\<in>B. cinner (f i) (g j))"
+  by (simp add: cinner_sum_right cinner_sum_left) (rule sum.swap)
+
 subsection \<open>Orthogonality\<close>
 
 
@@ -319,6 +331,24 @@ end
 
 lemma is_orthogonal_sym: "is_orthogonal \<psi> \<phi> = is_orthogonal \<phi> \<psi>"
   by (metis cinner_commute' complex_cnj_zero)
+
+lemma is_orthogonal_sgn_right[simp]: \<open>is_orthogonal e (sgn f) \<longleftrightarrow> is_orthogonal e f\<close>
+proof (cases \<open>f = 0\<close>)
+  case True
+  then show ?thesis
+    by simp
+next
+  case False
+  have \<open>cinner e (sgn f) = cinner e f / norm f\<close>
+    by (simp add: sgn_div_norm divide_inverse scaleR_scaleC)
+  moreover have \<open>norm f \<noteq> 0\<close>
+    by (simp add: False)
+  ultimately show ?thesis
+    by force
+qed
+
+lemma is_orthogonal_sgn_left[simp]: \<open>is_orthogonal (sgn e) f \<longleftrightarrow> is_orthogonal e f\<close>
+  by (simp add: is_orthogonal_sym)
 
 lemma orthogonal_complement_closed_subspace[simp]:
   "closed_csubspace (orthogonal_complement A)"
@@ -1656,8 +1686,7 @@ proof -
     have [simp]: \<open>norm \<phi> = 1\<close>
       using \<open>\<psi> \<noteq> 0\<close> by (auto simp: \<phi>_def)
     have \<phi>ortho: \<open>is_orthogonal \<phi> b\<close> if \<open>b \<in> B\<close> for b
-      using \<psi>ortho that \<phi>_def  apply auto
-      by (simp add: scaleR_scaleC)
+      using \<psi>ortho that \<phi>_def  by auto
     have orthoB': \<open>is_orthogonal x y\<close> if \<open>x\<in>B'\<close> \<open>y\<in>B'\<close> \<open>x \<noteq> y\<close> for x y
       using that \<open>on B\<close> \<phi>ortho \<phi>ortho[THEN is_orthogonal_sym[THEN iffD1]]
       by (auto simp: B'_def on_def is_ortho_set_def)
@@ -1712,8 +1741,7 @@ proof -
     using \<open>is_ortho_set B\<close> \<open>closure (cspan B) = UNIV\<close> is_ortho_set_def 
     by auto
   moreover have \<open>is_ortho_set B'\<close>
-    using \<open>is_ortho_set B\<close> apply (auto simp: B'_def is_ortho_set_def)
-    by (metis cinner_simps(5) is_orthogonal_sym mult_zero_right scaleR_scaleC)
+    using \<open>is_ortho_set B\<close> by (auto simp: B'_def is_ortho_set_def)
   moreover have \<open>\<forall>b\<in>B'. norm b = 1\<close>
     using \<open>is_ortho_set B\<close> apply (auto simp: B'_def is_ortho_set_def)
     by (metis field_class.field_inverse norm_eq_zero)

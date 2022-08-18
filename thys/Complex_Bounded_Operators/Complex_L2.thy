@@ -1151,6 +1151,9 @@ lemma bounded_antilinear_equal_ket:
 lemma ket_CARD_1_is_1: \<open>ket x = 1\<close> for x :: \<open>'a::CARD_1\<close>
   apply transfer by simp
 
+lemma is_onb_ket[simp]: \<open>is_onb (range ket)\<close>
+  by (auto simp: is_onb_def)
+
 subsection \<open>Butterflies\<close>
 
 lemma cspan_butterfly_ket: \<open>cspan {butterfly (ket i) (ket j)| (i::'b::finite) (j::'a::finite). True} = UNIV\<close>

@@ -422,13 +422,6 @@ lemma nhdsin_mono:
   by (auto intro!: INF_superset_mono)
 
 
-lemma card_prod_omega: \<open>X *c natLeq =o X\<close> if \<open>Cinfinite X\<close>
-  by (simp add: Cinfinite_Cnotzero cprod_infinite1' natLeq_Card_order natLeq_cinfinite natLeq_ordLeq_cinfinite that)
-
-lemma countable_leq_natLeq: \<open>|X| \<le>o natLeq\<close> if \<open>countable X\<close>
-  using subset_range_from_nat_into[OF that]
-  by (meson card_of_nat ordIso_iff_ordLeq ordLeq_transitive surj_imp_ordLeq)
-
 lemma has_sum_in_cong: 
   assumes "\<And>x. x\<in>A \<Longrightarrow> f x = g x"
   shows "has_sum_in T f A x \<longleftrightarrow> has_sum_in T g A x"

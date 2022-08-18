@@ -1905,6 +1905,9 @@ lift_definition top_ccsubspace :: \<open>'a ccsubspace\<close> is \<open>UNIV\<c
 instance ..
 end
 
+lemma space_as_set_bot[simp]: \<open>space_as_set bot = {0}\<close>
+  by (rule bot_ccsubspace.rep_eq)
+
 lemma ccsubspace_top_not_bot[simp]:
   "(top::'a::{complex_vector,t1_space,not_singleton} ccsubspace) \<noteq> bot"
   (* The type class t1_space is needed because the definition of bot in ccsubspace needs it *)
@@ -2283,6 +2286,32 @@ lemma zero_ccsubspace_transfer[transfer_rule]: \<open>pcr_ccsubspace (=) {0} 0\<
 instance ..
 end
 
+definition \<open>rel_ccsubspace R x y = rel_set R (space_as_set x) (space_as_set y)\<close>
+
+
+lemma left_unique_rel_ccsubspace[transfer_rule]: \<open>left_unique (rel_ccsubspace R)\<close> if \<open>left_unique R\<close>
+proof (rule left_uniqueI)
+  fix S T :: \<open>'a ccsubspace\<close> and U
+  assume assms: \<open>rel_ccsubspace R S U\<close> \<open>rel_ccsubspace R T U\<close>
+  have \<open>space_as_set S = space_as_set T\<close>
+    apply (rule left_uniqueD)
+      using that apply (rule left_unique_rel_set)
+    using assms unfolding rel_ccsubspace_def by auto
+  then show \<open>S = T\<close>
+    by (simp add: space_as_set_inject)
+qed
+
+lemma right_unique_rel_ccsubspace[transfer_rule]: \<open>right_unique (rel_ccsubspace R)\<close> if \<open>right_unique R\<close>
+  by (metis rel_ccsubspace_def right_unique_def right_unique_rel_set space_as_set_inject that)
+
+lemma bi_unique_rel_ccsubspace[transfer_rule]: \<open>bi_unique (rel_ccsubspace R)\<close> if \<open>bi_unique R\<close>
+  by (metis (no_types, lifting) bi_unique_def bi_unique_rel_set rel_ccsubspace_def space_as_set_inject that)
+
+lemma converse_rel_ccsubspace: \<open>conversep (rel_ccsubspace R) = rel_ccsubspace (conversep R)\<close>
+  by (auto simp: rel_ccsubspace_def[abs_def])
+
+lemma space_as_set_top[simp]: \<open>space_as_set top = UNIV\<close>
+  by (rule top_ccsubspace.rep_eq)
 
 subsection \<open>Closed sums\<close>
 
