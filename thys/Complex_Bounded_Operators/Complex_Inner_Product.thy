@@ -299,8 +299,27 @@ lemma sum_cinner:
   shows "cinner (sum f A) (sum g B) = (\<Sum>i\<in>A. \<Sum>j\<in>B. cinner (f i) (g j))"
   by (simp add: cinner_sum_right cinner_sum_left) (rule sum.swap)
 
-subsection \<open>Orthogonality\<close>
+lemma Cauchy_cinner_product_summable':
+  fixes a b :: "nat \<Rightarrow> 'a::complex_inner"
+  shows \<open>(\<lambda>(x, y). cinner (a x) (b y)) summable_on UNIV \<longleftrightarrow> (\<lambda>(x, y). cinner (a y) (b (x - y))) summable_on {(k, i). i \<le> k}\<close>
+proof -
+  have img: \<open>(\<lambda>(k::nat, i). (i, k - i)) ` {(k, i). i \<le> k} = UNIV\<close>
+    apply (auto simp: image_def)
+    by (metis add.commute add_diff_cancel_right' diff_le_self)
+  have inj: \<open>inj_on (\<lambda>(k::nat, i). (i, k - i)) {(k, i). i \<le> k}\<close>
+    by (smt (verit, del_insts) Pair_inject case_prodE case_prod_conv eq_diff_iff inj_onI mem_Collect_eq)
 
+  have \<open>(\<lambda>(x, y). cinner (a x) (b y)) summable_on UNIV \<longleftrightarrow> (\<lambda>(k, l). cinner (a k) (b l)) summable_on (\<lambda>(k, i). (i, k - i)) ` {(k, i). i \<le> k}\<close>
+    by (simp only: img)
+  also have \<open>\<dots> \<longleftrightarrow> ((\<lambda>(k, l). cinner (a k) (b l)) \<circ> (\<lambda>(k, i). (i, k - i))) summable_on {(k, i). i \<le> k}\<close>
+    using inj by (rule summable_on_reindex)
+  also have \<open>\<dots> \<longleftrightarrow> (\<lambda>(x, y). cinner (a y) (b (x - y))) summable_on {(k, i). i \<le> k}\<close>
+    by (simp add: o_def case_prod_unfold)
+  finally show ?thesis
+    by -
+qed
+
+subsection \<open>Orthogonality\<close>
 
 definition "orthogonal_complement S = {x| x. \<forall>y\<in>S. cinner x y = 0}"
 

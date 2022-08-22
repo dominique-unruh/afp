@@ -4,6 +4,7 @@ theory Misc_Tensor_Product
   imports "HOL-Analysis.Elementary_Topology" "HOL-Analysis.Abstract_Topology"
     "HOL-Analysis.Abstract_Limits" "HOL-Analysis.Function_Topology" "HOL-Cardinals.Cardinals"
     "HOL-Analysis.Infinite_Sum" "HOL-Analysis.Harmonic_Numbers" 
+    Complex_Bounded_Operators.Extra_General
 begin
 
 (* TODO explain *)
@@ -1156,14 +1157,6 @@ proof -
     using sums_def_le by blast
 qed
 
-lemma has_sum_metric:
-  fixes l :: \<open>'a :: {metric_space, comm_monoid_add}\<close>
-  shows \<open>has_sum f A l \<longleftrightarrow> (\<forall>e. e > 0 \<longrightarrow> (\<exists>X. finite X \<and> X \<subseteq> A \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> A \<longrightarrow> dist (sum f Y) l < e)))\<close>
-  unfolding has_sum_def
-  apply (subst tendsto_iff)
-  unfolding eventually_finite_subsets_at_top
-  by simp
-
 lemma has_sumI_metric:
   fixes l :: \<open>'a :: {metric_space, comm_monoid_add}\<close>
   assumes \<open>\<And>e. e > 0 \<Longrightarrow> \<exists>X. finite X \<and> X \<subseteq> A \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> A \<longrightarrow> dist (sum f Y) l < e)\<close>
@@ -1282,73 +1275,6 @@ lemma has_sum_singleton[simp]: \<open>has_sum f {x} y \<longleftrightarrow> f x 
   apply auto
   by (metis infsumI)
 
-
-lemma tendsto_compose_at_within:
-  assumes f: "(f \<longlongrightarrow> y) F" and g: "(g \<longlongrightarrow> z) (at y within S)" 
-    and fg: "eventually (\<lambda>w. f w = y \<longrightarrow> g y = z) F"
-    and fS: \<open>\<forall>\<^sub>F w in F. f w \<in> S\<close>
-  shows "((g \<circ> f) \<longlongrightarrow> z) F"
-proof (cases \<open>g y = z\<close>)
-  case False
-  then have 1: "(\<forall>\<^sub>F a in F. f a \<noteq> y)"
-    using fg by force
-  have 2: "(g \<longlongrightarrow> z) (filtermap f F) \<or> \<not> (\<forall>\<^sub>F a in F. f a \<noteq> y)"
-    by (smt (verit, best) eventually_elim2 f fS filterlim_at filterlim_def g tendsto_mono)
-  show ?thesis
-    using "1" "2" tendsto_compose_filtermap by blast
-next
-  case True
-  have *: ?thesis if \<open>(g \<longlongrightarrow> z) (filtermap f F)\<close>
-    using that by (simp add: tendsto_compose_filtermap)
-  from g
-  have \<open>(g \<longlongrightarrow> g y) (inf (nhds y) (principal (S-{y})))\<close>
-    by (simp add: True at_within_def)
-  then have g': \<open>(g \<longlongrightarrow> g y) (inf (nhds y) (principal S))\<close>
-    using True g tendsto_at_iff_tendsto_nhds_within by blast
-  from f have \<open>filterlim f (nhds y) F\<close>
-    by -
-  then have f': \<open>filterlim f (inf (nhds y) (principal S)) F\<close>
-    using fS
-    by (simp add: filterlim_inf filterlim_principal)
-  from f' g' show ?thesis
-    by (simp add: * True filterlim_compose filterlim_filtermap)
-qed
-
-
-(* strengthening of original *)
-lemma has_sum_comm_additive_general: 
-  fixes f :: \<open>'b :: {comm_monoid_add,topological_space} \<Rightarrow> 'c :: {comm_monoid_add,topological_space}\<close>
-  assumes f_sum: \<open>\<And>F. finite F \<Longrightarrow> F \<subseteq> S \<Longrightarrow> sum (f o g) F = f (sum g F)\<close>
-      \<comment> \<open>Not using \<^const>\<open>additive\<close> because it would add sort constraint \<^class>\<open>ab_group_add\<close>\<close>
-  assumes inS: \<open>\<And>F. finite F \<Longrightarrow> sum g F \<in> T\<close>
-  assumes cont: \<open>(f \<longlongrightarrow> f x) (at x within T)\<close>
-    \<comment> \<open>For \<^class>\<open>t2_space\<close> and \<^term>\<open>T=UNIV\<close>, this is equivalent to \<open>isCont f x\<close> by @{thm [source] isCont_def}.\<close>
-  assumes infsum: \<open>has_sum g S x\<close>
-  shows \<open>has_sum (f o g) S (f x)\<close> 
-proof -
-  have \<open>(sum g \<longlongrightarrow> x) (finite_subsets_at_top S)\<close>
-    using infsum has_sum_def by blast
-  then have \<open>((f o sum g) \<longlongrightarrow> f x) (finite_subsets_at_top S)\<close>
-    apply (rule tendsto_compose_at_within[where S=T])
-    using assms by auto
-  then have \<open>(sum (f o g) \<longlongrightarrow> f x) (finite_subsets_at_top S)\<close>
-    apply (rule tendsto_cong[THEN iffD1, rotated])
-    using f_sum by fastforce
-  then show \<open>has_sum (f o g) S (f x)\<close>
-    using has_sum_def by blast 
-qed
-
-(* strengthening of original *)
-lemma summable_on_comm_additive_general:
-  fixes g :: \<open>'a \<Rightarrow> 'b :: {comm_monoid_add,topological_space}\<close> and f :: \<open>'b \<Rightarrow> 'c :: {comm_monoid_add,topological_space}\<close>
-  assumes \<open>\<And>F. finite F \<Longrightarrow> F \<subseteq> S \<Longrightarrow> sum (f o g) F = f (sum g F)\<close>
-    \<comment> \<open>Not using \<^const>\<open>additive\<close> because it would add sort constraint \<^class>\<open>ab_group_add\<close>\<close>
-  assumes inS: \<open>\<And>F. finite F \<Longrightarrow> sum g F \<in> T\<close>
-  assumes cont: \<open>\<And>x. has_sum g S x \<Longrightarrow> (f \<longlongrightarrow> f x) (at x within T)\<close>
-    \<comment> \<open>For \<^class>\<open>t2_space\<close> and \<^term>\<open>T=UNIV\<close>, this is equivalent to \<open>isCont f x\<close> by @{thm [source] isCont_def}.\<close>
-  assumes \<open>g summable_on S\<close>
-  shows \<open>(f o g) summable_on S\<close>
-  by (meson assms summable_on_def has_sum_comm_additive_general has_sum_def infsum_tendsto)
 
 lemma has_sum_sums: \<open>f sums s\<close> if \<open>has_sum f UNIV s\<close>
 proof -

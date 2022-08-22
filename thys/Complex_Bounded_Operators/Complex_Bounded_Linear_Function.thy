@@ -405,7 +405,7 @@ lemma abs_summable_on_cblinfun_apply:
   using bounded_clinear.bounded_linear[OF cblinfun.bounded_clinear_right] assms
   by (rule abs_summable_on_bounded_linear[unfolded o_def])
 
-text \<open>The next six lemmas logically belong in \<^theory>\<open>Complex_Bounded_Operators.Complex_Inner_Product\<close> 
+text \<open>The next eight lemmas logically belong in \<^theory>\<open>Complex_Bounded_Operators.Complex_Inner_Product\<close> 
   but the proofs use facts from this theory.\<close>
 lemma has_sum_cinner_left:
   assumes \<open>has_sum f I x\<close>
@@ -438,6 +438,160 @@ lemma infsum_cinner_right:
   shows \<open>(\<Sum>\<^sub>\<infinity>i\<in>I. \<phi> i) \<bullet>\<^sub>C \<psi> = (\<Sum>\<^sub>\<infinity>i\<in>I. \<phi> i \<bullet>\<^sub>C \<psi>)\<close>
   by (metis assms has_sum_cinner_right has_sum_infsum infsumI)
 
+lemma Cauchy_cinner_product_summable:
+  assumes asum: \<open>a summable_on UNIV\<close>
+  assumes bsum: \<open>b summable_on UNIV\<close>
+  assumes \<open>finite X\<close> \<open>finite Y\<close>
+  assumes pos: \<open>\<And>x y. x \<notin> X \<Longrightarrow> y \<notin> Y \<Longrightarrow> cinner (a x) (b y) \<ge> 0\<close>
+  shows absum: \<open>(\<lambda>(x, y). cinner (a x) (b y)) summable_on UNIV\<close>
+proof -
+  have \<open>(\<Sum>(x,y)\<in>F. norm (cinner (a x) (b y))) \<le> norm (cinner (infsum a (-X)) (infsum b (-Y))) + norm (infsum a (-X)) + norm (infsum b (-Y)) + 1\<close> 
+    if \<open>finite F\<close> and \<open>F \<subseteq> (-X)\<times>(-Y)\<close> for F
+  proof -
+    from asum \<open>finite X\<close>
+    have \<open>a summable_on (-X)\<close>
+      by (simp add: Compl_eq_Diff_UNIV summable_on_cofin_subset)
+    then obtain MA where \<open>finite MA\<close> and \<open>MA \<subseteq> -X\<close>
+      and MA: \<open>G \<supseteq> MA \<Longrightarrow> G \<subseteq> -X \<Longrightarrow> finite G \<Longrightarrow> norm (sum a G - infsum a (-X)) \<le> 1\<close> for G
+      apply (simp add: summable_iff_has_sum_infsum has_sum_metric dist_norm)
+      by (meson less_eq_real_def zero_less_one)
+    
+    from bsum \<open>finite Y\<close>
+    have \<open>b summable_on (-Y)\<close>
+      by (simp add: Compl_eq_Diff_UNIV summable_on_cofin_subset)
+    then obtain MB where \<open>finite MB\<close> and \<open>MB \<subseteq> -Y\<close>
+      and MB: \<open>G \<supseteq> MB \<Longrightarrow> G \<subseteq> -Y \<Longrightarrow> finite G \<Longrightarrow> norm (sum b G - infsum b (-Y)) \<le> 1\<close> for G
+      apply (simp add: summable_iff_has_sum_infsum has_sum_metric dist_norm)
+      by (meson less_eq_real_def zero_less_one)
+
+    define F1 F2 where \<open>F1 = fst ` F \<union> MA\<close> and \<open>F2 = snd ` F \<union> MB\<close>
+    define t1 t2 where \<open>t1 = sum a F1 - infsum a (-X)\<close> and \<open>t2 = sum b F2 - infsum b (-Y)\<close>
+  
+    have [simp]: \<open>finite F1\<close> \<open>finite F2\<close>
+      using F1_def F2_def \<open>finite MA\<close> \<open>finite MB\<close> that by auto
+    have [simp]: \<open>F1 \<subseteq> -X\<close> \<open>F2 \<subseteq> -Y\<close>
+      using \<open>F \<subseteq> (-X)\<times>(-Y)\<close> \<open>MA \<subseteq> -X\<close> \<open>MB \<subseteq> -Y\<close>
+      by (auto simp: F1_def F2_def)
+    from MA[OF _ \<open>F1 \<subseteq> -X\<close> \<open>finite F1\<close>] have \<open>norm t1 \<le> 1\<close> 
+      by (auto simp: t1_def F1_def)
+    from MB[OF _ \<open>F2 \<subseteq> -Y\<close> \<open>finite F2\<close>] have \<open>norm t2 \<le> 1\<close> 
+      by (auto simp: t2_def F2_def)
+    have [simp]: \<open>F \<subseteq> F1 \<times> F2\<close>
+      apply (auto simp: F1_def F2_def image_def)
+      by force+
+    have \<open>(\<Sum>(x,y)\<in>F. norm (cinner (a x) (b y))) \<le> (\<Sum>(x,y)\<in>F1\<times>F2. norm (cinner (a x) (b y)))\<close>
+      apply (rule sum_mono2)
+      by auto
+    also from pos have \<open>\<dots> = norm (\<Sum>(x,y)\<in>F1\<times>F2. cinner (a x) (b y))\<close>
+      apply (auto intro!: of_real_eq_iff[THEN iffD1] simp: case_prod_beta)
+      apply (subst abs_complex_def[unfolded o_def, symmetric, THEN fun_cong])+
+      apply (subst (2) abs_pos)
+       apply (rule sum_nonneg)
+       apply (metis Compl_eq_Diff_UNIV Diff_iff SigmaE \<open>F1 \<subseteq> - X\<close> \<open>F2 \<subseteq> - Y\<close> fst_conv prod.sel(2) subsetD)
+      apply (rule sum.cong)
+      apply simp
+      by (metis Compl_iff SigmaE \<open>F1 \<subseteq> - X\<close> \<open>F2 \<subseteq> - Y\<close> abs_pos fst_conv prod.sel(2) subset_eq)
+    also have \<open>\<dots> = norm (cinner (sum a F1) (sum b F2))\<close>
+      by (simp add: sum.cartesian_product sum_cinner)
+    also have \<open>\<dots> = norm (cinner (infsum a (-X) + t1) (infsum b (-Y) + t2))\<close>
+      by (simp add: t1_def t2_def)
+    also have \<open>\<dots> \<le> norm (cinner (infsum a (-X)) (infsum b (-Y))) + norm (infsum a (-X)) * norm t2 + norm t1 * norm (infsum b (-Y)) + norm t1 * norm t2\<close>
+      apply (simp add: cinner_add_right cinner_add_left)
+      by (smt (verit, del_insts) complex_inner_class.Cauchy_Schwarz_ineq2 norm_triangle_ineq)
+    also from \<open>norm t1 \<le> 1\<close> \<open>norm t2 \<le> 1\<close>
+    have \<open>\<dots> \<le> norm (cinner (infsum a (-X)) (infsum b (-Y))) + norm (infsum a (-X)) + norm (infsum b (-Y)) + 1\<close>
+      by (auto intro!: add_mono mult_left_le mult_left_le_one_le mult_le_one)
+    finally show ?thesis
+      by -
+  qed
+
+  then have \<open>(\<lambda>(x, y). cinner (a x) (b y)) abs_summable_on (-X)\<times>(-Y)\<close>
+    apply (rule_tac nonneg_bdd_above_summable_on)
+    by (auto intro!: bdd_aboveI2 simp: case_prod_unfold)
+  then have 1: \<open>(\<lambda>(x, y). cinner (a x) (b y)) summable_on (-X)\<times>(-Y)\<close>
+    using abs_summable_summable by blast
+
+  from bsum
+  have \<open>(\<lambda>y. b y) summable_on (-Y)\<close>
+    by (simp add: Compl_eq_Diff_UNIV assms(4) summable_on_cofin_subset)
+  then have \<open>(\<lambda>y. cinner (a x) (b y)) summable_on (-Y)\<close> for x
+    using summable_on_cinner_left by blast
+  with \<open>finite X\<close> have 2: \<open>(\<lambda>(x, y). cinner (a x) (b y)) summable_on X\<times>(-Y)\<close>
+    apply (rule_tac summable_on_product_finite_left)
+    by auto
+
+  from asum
+  have \<open>(\<lambda>x. a x) summable_on (-X)\<close>
+    by (simp add: Compl_eq_Diff_UNIV assms(3) summable_on_cofin_subset)
+  then have \<open>(\<lambda>x. cinner (a x) (b y)) summable_on (-X)\<close> for y
+    using summable_on_cinner_right by blast
+  with \<open>finite Y\<close> have 3: \<open>(\<lambda>(x, y). cinner (a x) (b y)) summable_on (-X)\<times>Y\<close>
+    apply (rule_tac summable_on_product_finite_right)
+    by auto
+
+  have 4: \<open>(\<lambda>(x, y). cinner (a x) (b y)) summable_on X\<times>Y\<close>
+    by (simp add: \<open>finite X\<close> \<open>finite Y\<close>)
+
+  show ?thesis
+    apply (subst asm_rl[of \<open>UNIV = (-X)\<times>(-Y) \<union> X\<times>(-Y) \<union> (-X)\<times>Y \<union> X\<times>Y\<close>])
+    using 1 2 3 4 by (auto intro!: summable_on_Un_disjoint)
+qed
+
+
+text \<open>A variant of @{thm [source] Series.Cauchy_product_sums} with \<^term>\<open>(*)\<close> replaced by \<^term>\<open>cinner\<close>.
+   Differently from @{thm [source] Series.Cauchy_product_sums}, we do not require absolute summability
+   of \<^term>\<open>a\<close> and \<^term>\<open>b\<close> individually but only unconditional summability of \<^term>\<open>a\<close>, \<^term>\<open>b\<close>, and their product.
+   While on, e.g., reals, unconditional summability is equivalent to absolute summability, in
+   general unconditional summability is a weaker requirement.\<close>
+lemma 
+  fixes a b :: "nat \<Rightarrow> 'a::complex_inner"
+  assumes asum: \<open>a summable_on UNIV\<close>
+  assumes bsum: \<open>b summable_on UNIV\<close>
+  assumes absum: \<open>(\<lambda>(x, y). cinner (a x) (b y)) summable_on UNIV\<close>
+    (* \<comment> \<open>See @{thm [source] Cauchy_cinner_product_summable} or @{thm [source] Cauchy_cinner_product_summable'} for a way to rewrite this premise.\<close> *)
+  shows Cauchy_cinner_product_infsum: \<open>(\<Sum>\<^sub>\<infinity>k. \<Sum>i\<le>k. cinner (a i) (b (k - i))) = cinner (\<Sum>\<^sub>\<infinity>k. a k) (\<Sum>\<^sub>\<infinity>k. b k)\<close>
+    and Cauchy_cinner_product_infsum_exists: \<open>(\<lambda>k. \<Sum>i\<le>k. cinner (a i) (b (k - i))) summable_on UNIV\<close>
+proof -
+  have img: \<open>(\<lambda>(k::nat, i). (i, k - i)) ` {(k, i). i \<le> k} = UNIV\<close>
+    apply (auto simp: image_def)
+    by (metis add.commute add_diff_cancel_right' diff_le_self)
+  have inj: \<open>inj_on (\<lambda>(k::nat, i). (i, k - i)) {(k, i). i \<le> k}\<close>
+    by (smt (verit, del_insts) Pair_inject case_prodE case_prod_conv eq_diff_iff inj_onI mem_Collect_eq)
+  have sigma: \<open>(SIGMA k:UNIV. {i. i \<le> k}) = {(k, i). i \<le> k}\<close>
+    by auto
+
+  from absum
+  have \<open>(\<lambda>(x, y). cinner (a y) (b (x - y))) summable_on {(k, i). i \<le> k}\<close>
+    by (rule Cauchy_cinner_product_summable'[THEN iffD1])
+  then have \<open>(\<lambda>k. \<Sum>\<^sub>\<infinity>i|i\<le>k. cinner (a i) (b (k-i))) summable_on UNIV\<close>
+    by (metis (mono_tags, lifting) sigma summable_on_Sigma_banach summable_on_cong)
+  then show \<open>(\<lambda>k. \<Sum>i\<le>k. cinner (a i) (b (k - i))) summable_on UNIV\<close>
+    by (metis (mono_tags, lifting) atMost_def finite_Collect_le_nat infsum_finite summable_on_cong)
+
+  have \<open>cinner (\<Sum>\<^sub>\<infinity>k. a k) (\<Sum>\<^sub>\<infinity>k. b k) = (\<Sum>\<^sub>\<infinity>k. \<Sum>\<^sub>\<infinity>l. cinner (a k) (b l))\<close>
+    apply (subst infsum_cinner_right)
+     apply (rule asum)
+    apply (subst infsum_cinner_left)
+     apply (rule bsum)
+    by simp
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(k,l). cinner (a k) (b l))\<close>
+    apply (subst infsum_Sigma'_banach)
+    using absum by auto
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(k, l)\<in>(\<lambda>(k, i). (i, k - i)) ` {(k, i). i \<le> k}. cinner (a k) (b l))\<close>
+    by (simp only: img)
+  also have \<open>\<dots> = infsum ((\<lambda>(k, l). a k \<bullet>\<^sub>C b l) \<circ> (\<lambda>(k, i). (i, k - i))) {(k, i). i \<le> k}\<close>
+    using inj by (rule infsum_reindex)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(k,i)|i\<le>k. a i \<bullet>\<^sub>C b (k-i))\<close>
+    by (simp add: o_def case_prod_unfold)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>k. \<Sum>\<^sub>\<infinity>i|i\<le>k. a i \<bullet>\<^sub>C b (k-i))\<close>
+    apply (subst infsum_Sigma'_banach)
+    using absum by (auto simp: sigma Cauchy_cinner_product_summable')
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k-i))\<close>
+    apply (subst infsum_finite[symmetric])
+    by (auto simp add: atMost_def)
+  finally show \<open>(\<Sum>\<^sub>\<infinity>k. \<Sum>i\<le>k. a i \<bullet>\<^sub>C b (k - i)) = (\<Sum>\<^sub>\<infinity>k. a k) \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>k. b k)\<close>
+    by simp
+qed
 
 subsection \<open>Relationship to real bounded operators (\<^typ>\<open>_ \<Rightarrow>\<^sub>L _\<close>)\<close>
 
@@ -2068,6 +2222,11 @@ lemma Proj_orthog_ccspan_insert:
   apply (rule Proj_orthog_ccspan_union)
   using assms by auto
 
+lemma cancel_apply_Proj:
+  assumes \<open>\<psi> \<in> space_as_set S\<close>
+  shows \<open>Proj S *\<^sub>V \<psi> = \<psi>\<close>
+  by (metis Proj_idempotent Proj_range assms cblinfun_fixes_range)
+
 subsection \<open>Kernel\<close>
 
 lift_definition kernel :: "'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L'b::complex_normed_vector
@@ -2122,6 +2281,96 @@ lemma kernel_memberI:
   assumes "A *\<^sub>V x = 0"
   shows "x \<in> space_as_set (kernel A)"
   using assms apply transfer by auto
+
+lemma kernel_Proj[simp]: \<open>kernel (Proj S) = - S\<close>
+  apply transfer
+  apply auto
+  apply (metis diff_0_right is_projection_on_iff_orthog projection_is_projection_on')
+  by (simp add: complex_vector.subspace_0 projection_eqI)
+
+subsection \<open>Partial isometries\<close>
+
+definition partial_isometry where
+  \<open>partial_isometry A \<longleftrightarrow> (\<forall>h \<in> space_as_set (- kernel A). norm (A h) = norm h)\<close>
+
+lemma partial_isometryI: 
+  assumes \<open>\<And>h. h \<in> space_as_set (- kernel A) \<Longrightarrow> norm (A h) = norm h\<close>
+  shows \<open>partial_isometry A\<close>
+  using assms partial_isometry_def by blast
+
+
+lemma
+  fixes A :: \<open>'a :: chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b :: complex_normed_vector\<close>
+  assumes iso: \<open>\<And>\<psi>. \<psi> \<in> space_as_set V \<Longrightarrow> norm (A *\<^sub>V \<psi>) = norm \<psi>\<close>
+  assumes zero: \<open>\<And>\<psi>. \<psi> \<in> space_as_set (- V) \<Longrightarrow> A *\<^sub>V \<psi> = 0\<close>
+  shows partial_isometryI': \<open>partial_isometry A\<close>
+    and partial_isometry_initial: \<open>kernel A = - V\<close>
+proof -
+  from zero
+  have \<open>- V \<le> kernel A\<close>
+    by (simp add: kernel_memberI less_eq_ccsubspace.rep_eq subsetI)
+  moreover have \<open>kernel A \<le> -V\<close>
+    by (smt (verit, ccfv_threshold) Proj_ortho_compl Proj_range assms(1) cblinfun.diff_left cblinfun.diff_right cblinfun_apply_in_image cblinfun_id_cblinfun_apply ccsubspace_leI kernel_Proj kernel_memberD kernel_memberI norm_eq_zero ortho_involution subsetI zero)
+  ultimately show kerA: \<open>kernel A = -V\<close>
+    by simp
+
+  show \<open>partial_isometry A\<close>
+    apply (rule partial_isometryI)
+    by (simp add: kerA iso)
+qed
+
+lemma Proj_partial_isometry: \<open>partial_isometry (Proj S)\<close>
+  apply (rule partial_isometryI)
+  by (simp add: cancel_apply_Proj)
+
+lemma is_Proj_partial_isometry: \<open>is_Proj P \<Longrightarrow> partial_isometry P\<close>
+  by (metis Proj_on_own_range Proj_partial_isometry)
+
+lemma isometry_partial_isometry: \<open>isometry P \<Longrightarrow> partial_isometry P\<close>
+  by (simp add: isometry_preserves_norm partial_isometry_def)
+
+lemma unitary_partial_isometry: \<open>unitary P \<Longrightarrow> partial_isometry P\<close>
+  using isometry_partial_isometry unitary_isometry by blast
+
+lemma norm_partial_isometry:
+  fixes A :: \<open>'a :: chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
+  assumes \<open>partial_isometry A\<close> and \<open>A \<noteq> 0\<close>
+  shows \<open>norm A = 1\<close> 
+proof -
+  from \<open>A \<noteq> 0\<close>
+  have \<open>- (kernel A) \<noteq> 0\<close>
+    by (metis cblinfun_eqI diff_zero id_cblinfun_apply kernel_id kernel_memberD ortho_involution orthog_proj_exists orthogonal_complement_closed_subspace uminus_ccsubspace.rep_eq zero_cblinfun.rep_eq)
+  then obtain h where \<open>h \<in> space_as_set (- kernel A)\<close> and \<open>h \<noteq> 0\<close>
+    by (metis cblinfun_id_cblinfun_apply ccsubspace_eqI closed_csubspace.subspace complex_vector.subspace_0 kernel_id kernel_memberD kernel_memberI orthogonal_complement_closed_subspace uminus_ccsubspace.rep_eq)
+  with \<open>partial_isometry A\<close>
+  have \<open>norm (A h) = norm h\<close>
+    using partial_isometry_def by blast
+  then have \<open>norm A \<ge> 1\<close>
+    by (smt (verit) \<open>h \<noteq> 0\<close> mult_cancel_right1 mult_left_le_one_le norm_cblinfun norm_eq_zero norm_ge_zero)
+
+  have \<open>norm A \<le> 1\<close>
+  proof (rule norm_cblinfun_bound)
+    show \<open>0 \<le> (1::real)\<close>
+      by simp
+    fix \<psi> :: 'a
+    define g h where \<open>g = Proj (kernel A) \<psi>\<close> and \<open>h = Proj (- kernel A) \<psi>\<close>
+    have \<open>A g = 0\<close>
+      by (metis Proj_range cblinfun_apply_in_image g_def kernel_memberD)
+    moreover from \<open>partial_isometry A\<close>
+    have \<open>norm (A h) = norm h\<close>
+      by (metis Proj_range cblinfun_apply_in_image h_def partial_isometry_def)
+    ultimately have \<open>norm (A \<psi>) = norm h\<close>
+      by (simp add: Proj_ortho_compl cblinfun.diff_left cblinfun.diff_right g_def h_def)
+    also have \<open>norm h \<le> norm \<psi>\<close>
+      by (smt (verit, del_insts) h_def mult_left_le_one_le norm_Proj_leq1 norm_cblinfun norm_ge_zero)
+    finally show \<open>norm (A *\<^sub>V \<psi>) \<le> 1 * norm \<psi>\<close>
+      by simp
+  qed
+
+  from \<open>norm A \<le> 1\<close> and \<open>norm A \<ge> 1\<close>
+  show \<open>norm A = 1\<close>
+    by auto
+qed
 
 subsection \<open>Isomorphisms and inverses\<close>
 
@@ -2336,6 +2585,10 @@ qed
 lemma is_onb_one_dim[simp]: \<open>norm x = 1 \<Longrightarrow> is_onb {x}\<close> for x :: \<open>_ :: one_dim\<close>
   by (auto simp: is_onb_def intro!: ccspan_one_dim)
 
+lemma one_dim_iso_cblinfun_comp: \<open>one_dim_iso (a o\<^sub>C\<^sub>L b) = of_complex (cinner (a* *\<^sub>V 1) (b *\<^sub>V 1))\<close>
+  for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::one_dim\<close> and b :: \<open>'c::one_dim \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
+  by (simp add: cinner_adj_left cinner_cblinfun_def one_dim_iso_def)
+
 subsection \<open>Loewner order\<close>
 
 lift_definition heterogenous_cblinfun_id :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
@@ -2527,6 +2780,17 @@ qed
 
 lemma one_dim_positive: \<open>A \<ge> 0 \<longleftrightarrow> one_dim_iso A \<ge> (0::complex)\<close> for A :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a::{chilbert_space, one_dim}\<close>
   using one_dim_loewner_order[where B=0] by auto
+
+lemma op_square_nondegenerate: \<open>a = 0\<close> if \<open>a* o\<^sub>C\<^sub>L a = 0\<close>
+proof (rule cblinfun_eq_0_on_UNIV_span[where basis=UNIV]; simp)
+  fix s
+  from that have \<open>s \<bullet>\<^sub>C ((a* o\<^sub>C\<^sub>L a) *\<^sub>V s) = 0\<close>
+    by simp
+  then have \<open>(a *\<^sub>V s) \<bullet>\<^sub>C (a *\<^sub>V s) = 0\<close>
+    by (simp add: cinner_adj_right)
+  then show \<open>a *\<^sub>V s = 0\<close>
+    by simp
+qed
 
 subsection \<open>Embedding vectors to operators\<close>
 
