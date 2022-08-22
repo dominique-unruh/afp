@@ -15,11 +15,12 @@ theory Complex_Vector_Spaces
     "HOL-Library.Set_Algebras"
     "HOL-Analysis.Starlike"
     "HOL-Types_To_Sets.Types_To_Sets"
-
-    "Complex_Bounded_Operators.Extra_Vector_Spaces"
-    "Complex_Bounded_Operators.Extra_Ordered_Fields"
     "HOL-Library.Complemented_Lattices"
-    "Complex_Bounded_Operators.Extra_General"
+
+    Extra_Vector_Spaces
+    Extra_Ordered_Fields
+    Extra_Operator_Norm
+    Extra_General
 
     Complex_Vector_Spaces0
 begin
@@ -866,6 +867,68 @@ lemmas isCont_scaleC [simp] =
   bounded_bilinear.isCont [OF bounded_cbilinear_scaleC[THEN bounded_cbilinear.bounded_bilinear]]
 
 subsection \<open>Misc 2\<close>
+
+lemma summable_on_scaleC_left [intro]:
+  fixes c :: \<open>'a :: complex_normed_vector\<close>
+  assumes "c \<noteq> 0 \<Longrightarrow> f summable_on A"
+  shows   "(\<lambda>x. f x *\<^sub>C c) summable_on A"
+  apply (cases \<open>c \<noteq> 0\<close>)
+   apply (subst asm_rl[of \<open>(\<lambda>x. f x *\<^sub>C c) = (\<lambda>y. y *\<^sub>C c) o f\<close>], simp add: o_def)
+   apply (rule summable_on_comm_additive)
+  using assms by (auto simp add: scaleC_left.additive_axioms)
+
+lemma summable_on_scaleC_right [intro]:
+  fixes f :: \<open>'a \<Rightarrow> 'b :: complex_normed_vector\<close>
+  assumes "c \<noteq> 0 \<Longrightarrow> f summable_on A"
+  shows   "(\<lambda>x. c *\<^sub>C f x) summable_on A"
+  apply (cases \<open>c \<noteq> 0\<close>)
+   apply (subst asm_rl[of \<open>(\<lambda>x. c *\<^sub>C f x) = (\<lambda>y. c *\<^sub>C y) o f\<close>], simp add: o_def)
+   apply (rule summable_on_comm_additive)
+  using assms by (auto simp add: scaleC_right.additive_axioms)
+
+lemma infsum_scaleC_left:
+  fixes c :: \<open>'a :: complex_normed_vector\<close>
+  assumes "c \<noteq> 0 \<Longrightarrow> f summable_on A"
+  shows   "infsum (\<lambda>x. f x *\<^sub>C c) A = infsum f A *\<^sub>C c"
+  apply (cases \<open>c \<noteq> 0\<close>)
+   apply (subst asm_rl[of \<open>(\<lambda>x. f x *\<^sub>C c) = (\<lambda>y. y *\<^sub>C c) o f\<close>], simp add: o_def)
+   apply (rule infsum_comm_additive)
+  using assms by (auto simp add: scaleC_left.additive_axioms)
+
+lemma infsum_scaleC_right:
+  fixes f :: \<open>'a \<Rightarrow> 'b :: complex_normed_vector\<close>
+  shows   "infsum (\<lambda>x. c *\<^sub>C f x) A = c *\<^sub>C infsum f A"
+proof -
+  consider (summable) \<open>f summable_on A\<close> | (c0) \<open>c = 0\<close> | (not_summable) \<open>\<not> f summable_on A\<close> \<open>c \<noteq> 0\<close>
+    by auto
+  then show ?thesis
+  proof cases
+    case summable
+    then show ?thesis
+      apply (subst asm_rl[of \<open>(\<lambda>x. c *\<^sub>C f x) = (\<lambda>y. c *\<^sub>C y) o f\<close>], simp add: o_def)
+      apply (rule infsum_comm_additive)
+      using summable by (auto simp add: scaleC_right.additive_axioms)
+  next
+    case c0
+    then show ?thesis by auto
+  next
+    case not_summable
+    have \<open>\<not> (\<lambda>x. c *\<^sub>C f x) summable_on A\<close>
+    proof (rule notI)
+      assume \<open>(\<lambda>x. c *\<^sub>C f x) summable_on A\<close>
+      then have \<open>(\<lambda>x. inverse c *\<^sub>C c *\<^sub>C f x) summable_on A\<close>
+        using summable_on_scaleC_right by blast
+      then have \<open>f summable_on A\<close>
+        using not_summable by auto
+      with not_summable show False
+        by simp
+    qed
+    then show ?thesis
+      by (simp add: infsum_not_exists not_summable(1)) 
+  qed
+qed
+
+
 
 lemmas sums_of_complex = bounded_linear.sums [OF bounded_clinear_of_complex[THEN bounded_clinear.bounded_linear]]
 lemmas summable_of_complex = bounded_linear.summable [OF bounded_clinear_of_complex[THEN bounded_clinear.bounded_linear]]
@@ -1906,6 +1969,9 @@ setup_lifting type_definition_ccsubspace
 lemma csubspace_space_as_set[simp]: \<open>csubspace (space_as_set S)\<close>
   by (metis closed_csubspace_def mem_Collect_eq space_as_set)
 
+lemma closed_space_as_set[simp]: \<open>closed (space_as_set S)\<close>
+  apply transfer by (simp add: closed_csubspace.closed)
+
 instantiation ccsubspace :: (complex_normed_vector) scaleC begin
 lift_definition scaleC_ccsubspace :: "complex \<Rightarrow> 'a ccsubspace \<Rightarrow> 'a ccsubspace" is
   "\<lambda>c S. (*\<^sub>C) c ` S"
@@ -2385,6 +2451,10 @@ lemma zero_ccsubspace_transfer[transfer_rule]: \<open>pcr_ccsubspace (=) {0} 0\<
   unfolding zero_ccsubspace_def by transfer_prover
 instance ..
 end
+
+lemma ccspan_0[simp]: \<open>ccspan {0} = 0\<close>
+  apply transfer
+  by simp
 
 definition \<open>rel_ccsubspace R x y = rel_set R (space_as_set x) (space_as_set y)\<close>
 
@@ -2957,6 +3027,71 @@ interpretation complex_vector?: vector_space_prod "scaleC::_\<Rightarrow>_\<Righ
   unfolding cdependent_raw_def crepresentation_raw_def csubspace_raw_def cspan_raw_def
     cextend_basis_raw_def cdim_raw_def clinear_def
   by (rule refl)+
+
+instance prod :: (complex_normed_vector, complex_normed_vector) complex_normed_vector 
+proof
+  fix c :: complex and x y :: "'a \<times> 'b"
+  show "norm (c *\<^sub>C x) = cmod c * norm x"
+    unfolding norm_prod_def
+    apply (simp add: power_mult_distrib)
+    apply (simp add: distrib_left [symmetric])
+    by (simp add: real_sqrt_mult)
+qed
+
+
+lemma cspan_Times: \<open>cspan (S \<times> T) = cspan S \<times> cspan T\<close> if \<open>0 \<in> S\<close> and \<open>0 \<in> T\<close>
+proof 
+  have \<open>fst ` cspan (S \<times> T) \<subseteq> cspan S\<close>
+    apply (subst complex_vector.linear_span_image[symmetric])
+    using that complex_vector.module_hom_fst by auto
+  moreover have \<open>snd ` cspan (S \<times> T) \<subseteq> cspan T\<close>
+    apply (subst complex_vector.linear_span_image[symmetric])
+    using that complex_vector.module_hom_snd by auto
+  ultimately show \<open>cspan (S \<times> T) \<subseteq> cspan S \<times> cspan T\<close>
+    by auto
+
+  show \<open>cspan S \<times> cspan T \<subseteq> cspan (S \<times> T)\<close>
+  proof
+    fix x assume assm: \<open>x \<in> cspan S \<times> cspan T\<close>
+    then have \<open>fst x \<in> cspan S\<close>
+      by auto
+    then obtain t1 r1 where fst_x: \<open>fst x = (\<Sum>a\<in>t1. r1 a *\<^sub>C a)\<close> and [simp]: \<open>finite t1\<close> and \<open>t1 \<subseteq> S\<close>
+      by (auto simp add: complex_vector.span_explicit)
+    from assm
+    have \<open>snd x \<in> cspan T\<close>
+      by auto
+    then obtain t2 r2 where snd_x: \<open>snd x = (\<Sum>a\<in>t2. r2 a *\<^sub>C a)\<close> and [simp]: \<open>finite t2\<close> and \<open>t2 \<subseteq> T\<close>
+      by (auto simp add: complex_vector.span_explicit)
+    define t :: \<open>('a+'b) set\<close> and r :: \<open>('a+'b) \<Rightarrow> complex\<close> and f :: \<open>('a+'b) \<Rightarrow> ('a\<times>'b)\<close>
+      where \<open>t = t1 <+> t2\<close>
+      and \<open>r a = (case a of Inl a1 \<Rightarrow> r1 a1 | Inr a2 \<Rightarrow> r2 a2)\<close>
+      and \<open>f a = (case a of Inl a1 \<Rightarrow> (a1,0) | Inr a2 \<Rightarrow> (0,a2))\<close>
+    for a
+    have \<open>finite t\<close>
+      by (simp add: t_def)
+    moreover have \<open>f ` t \<subseteq> S \<times> T\<close>
+      using  \<open>t1 \<subseteq> S\<close> \<open>t2 \<subseteq> T\<close> that
+      by (auto simp: f_def t_def)
+    moreover have \<open>(fst x, snd x) = (\<Sum>a\<in>t. r a *\<^sub>C f a)\<close>
+      apply (simp only: fst_x snd_x)
+      by (auto simp: t_def sum.Plus r_def f_def sum_prod)
+    ultimately show \<open>x \<in> cspan (S \<times> T)\<close>
+      apply auto
+      by (smt (verit, best) complex_vector.span_scale complex_vector.span_sum complex_vector.span_superset image_subset_iff subset_iff)
+  qed
+qed
+
+lemma onorm_case_prod_plus: \<open>onorm (case_prod plus :: _ \<Rightarrow> 'a::{real_normed_vector, not_singleton}) = sqrt 2\<close>
+proof -
+  obtain x :: 'a where \<open>x \<noteq> 0\<close>
+    apply atomize_elim by auto
+  show ?thesis
+    apply (rule onormI[where x=\<open>(x,x)\<close>])
+    using norm_plus_leq_norm_prod apply force
+    using  \<open>x \<noteq> 0\<close>
+    by (auto simp add: zero_prod_def norm_prod_def real_sqrt_mult
+        simp flip: scaleR_2)
+qed
 
 
 subsection \<open>Copying existing theorems into sublocales\<close>

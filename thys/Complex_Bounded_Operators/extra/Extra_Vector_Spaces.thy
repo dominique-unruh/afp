@@ -162,4 +162,17 @@ proof -
     by auto
 qed
 
+lemma norm_plus_leq_norm_prod: \<open>norm (a + b) \<le> sqrt 2 * norm (a, b)\<close>
+proof -
+  have \<open>(norm (a + b))\<^sup>2 \<le> (norm a + norm b)\<^sup>2\<close>
+    using norm_triangle_ineq by auto
+  also have \<open>\<dots> \<le> 2 * ((norm a)\<^sup>2 + (norm b)\<^sup>2)\<close>
+    by (smt (verit, best) power2_sum sum_squares_bound)
+  also have \<open>\<dots> \<le> (sqrt 2 * norm (a, b))\<^sup>2\<close>
+    by (auto simp: power_mult_distrib norm_prod_def simp del: power_mono_iff)
+  finally show ?thesis
+    by auto
+qed
+
+
 end

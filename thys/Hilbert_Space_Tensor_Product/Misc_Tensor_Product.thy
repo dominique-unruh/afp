@@ -5,6 +5,7 @@ theory Misc_Tensor_Product
     "HOL-Analysis.Abstract_Limits" "HOL-Analysis.Function_Topology" "HOL-Cardinals.Cardinals"
     "HOL-Analysis.Infinite_Sum" "HOL-Analysis.Harmonic_Numbers" 
     Complex_Bounded_Operators.Extra_General
+    Complex_Bounded_Operators.Extra_Vector_Spaces
 begin
 
 (* TODO explain *)
@@ -1450,18 +1451,6 @@ proof -
     by (simp add: top1 topspace_pullback_topology)
 qed
 
-lemma norm_plus_leq_norm_prod: \<open>norm (a + b) \<le> sqrt 2 * norm (a, b)\<close>
-proof -
-  have \<open>(norm (a + b))\<^sup>2 \<le> (norm a + norm b)\<^sup>2\<close>
-    using norm_triangle_ineq by auto
-  also have \<open>\<dots> \<le> 2 * ((norm a)\<^sup>2 + (norm b)\<^sup>2)\<close>
-    by (smt (verit, best) power2_sum sum_squares_bound)
-  also have \<open>\<dots> \<le> (sqrt 2 * norm (a, b))\<^sup>2\<close>
-    by (auto simp: power_mult_distrib norm_prod_def simp del: power_mono_iff)
-  finally show ?thesis
-    by auto
-qed
-
 lemma onorm_case_prod_plus_leq: \<open>onorm (case_prod plus :: _ \<Rightarrow> 'a::real_normed_vector) \<le> sqrt 2\<close>
   apply (rule onorm_bound)
   using norm_plus_leq_norm_prod by auto
@@ -1545,5 +1534,11 @@ proof -
     unfolding hausdorff_def'
     by transfer_prover
 qed
+
+lemma sum_cmod_pos: 
+  assumes \<open>\<And>x. x\<in>A \<Longrightarrow> f x \<ge> 0\<close>
+  shows \<open>(\<Sum>x\<in>A. cmod (f x)) = cmod (\<Sum>x\<in>A. f x)\<close>
+  by (metis (mono_tags, lifting) Re_sum assms cmod_Re sum.cong sum_nonneg)
+
 
 end

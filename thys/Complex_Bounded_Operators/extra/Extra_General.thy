@@ -108,6 +108,9 @@ lemma countable_leq_natLeq: \<open>|X| \<le>o natLeq\<close> if \<open>countable
   using subset_range_from_nat_into[OF that]
   by (meson card_of_nat ordIso_iff_ordLeq ordLeq_transitive surj_imp_ordLeq)
 
+lemma set_Times_plus_distrib: \<open>(A \<times> B) + (C \<times> D) = (A + C) \<times> (B + D)\<close>
+  by (auto simp: Sigma_def set_plus_def)
+
 subsection \<open>Not singleton\<close>
 
 class not_singleton =
@@ -501,9 +504,13 @@ qed
 lemma cnj_x_x_geq0[simp]: \<open>cnj x * x \<ge> 0\<close>
   by (simp add: less_eq_complex_def)
 
+lemma complex_of_real_leq_1_iff[iff]: \<open>complex_of_real x \<le> 1 \<longleftrightarrow> x \<le> 1\<close>
+  by (simp add: less_eq_complex_def)
+
+lemma x_cnj_x: \<open>x * cnj x = (abs x)\<^sup>2\<close>
+  by (metis cnj_x_x mult.commute)
 
 subsection \<open>List indices and enum\<close>
-
 
 fun index_of where
   "index_of x [] = (0::nat)"

@@ -319,6 +319,40 @@ proof -
     by -
 qed
 
+instantiation prod :: (complex_inner, complex_inner) complex_inner
+begin
+
+definition cinner_prod_def:
+  "cinner x y = cinner (fst x) (fst y) + cinner (snd x) (snd y)"
+
+instance
+proof
+  fix r :: complex
+  fix x y z :: "'a::complex_inner \<times> 'b::complex_inner"
+  show "cinner x y = cnj (cinner y x)"
+    unfolding cinner_prod_def
+    by simp
+  show "cinner (x + y) z = cinner x z + cinner y z"
+    unfolding cinner_prod_def
+    by (simp add: cinner_add_left)
+  show "cinner (scaleC r x) y = cnj r * cinner x y"
+    unfolding cinner_prod_def
+    by (simp add: distrib_left)
+  show "0 \<le> cinner x x"
+    unfolding cinner_prod_def
+    by (intro add_nonneg_nonneg cinner_ge_zero)
+  show "cinner x x = 0 \<longleftrightarrow> x = 0"
+    unfolding cinner_prod_def prod_eq_iff
+    by (metis antisym cinner_eq_zero_iff cinner_ge_zero fst_zero le_add_same_cancel2 snd_zero verit_sum_simplify)
+  show "norm x = sqrt (cmod (cinner x x))"
+    unfolding norm_prod_def cinner_prod_def
+    by (metis (no_types, lifting) Re_complex_of_real add_nonneg_nonneg cinner_ge_zero complex_of_real_cmod plus_complex.simps(1) power2_norm_eq_cinner')
+qed
+
+end
+
+instance prod :: (chilbert_space, chilbert_space) chilbert_space..
+
 subsection \<open>Orthogonality\<close>
 
 definition "orthogonal_complement S = {x| x. \<forall>y\<in>S. cinner x y = 0}"
@@ -1670,6 +1704,8 @@ proof -
     by -
 qed
 
+subsection \<open>Orthonormal bases\<close>
+
 lemma ortho_basis_exists: 
   fixes S :: \<open>'a::chilbert_space set\<close>
   assumes \<open>is_ortho_set S\<close>
@@ -1766,6 +1802,44 @@ proof -
     by (metis field_class.field_inverse norm_eq_zero)
   ultimately show ?thesis
     by (auto simp: is_onb_def)
+qed
+
+
+definition some_chilbert_basis :: \<open>'a::chilbert_space set\<close> where
+  \<open>some_chilbert_basis = (SOME B::'a set. is_onb B)\<close>
+
+lemma is_onb_some_chilbert_basis[simp]: \<open>is_onb (some_chilbert_basis :: 'a::chilbert_space set)\<close>
+  using orthonormal_basis_exists[OF is_ortho_set_empty]
+  by (auto simp add: some_chilbert_basis_def intro: someI2)
+
+lemma is_ortho_set_some_chilbert_basis[simp]: \<open>is_ortho_set some_chilbert_basis\<close>
+  using is_onb_def is_onb_some_chilbert_basis by blast
+lemma is_normal_some_chilbert_basis: \<open>\<And>x. x \<in> some_chilbert_basis \<Longrightarrow> norm x = 1\<close>
+  using is_onb_def is_onb_some_chilbert_basis by blast
+lemma ccspan_some_chilbert_basis[simp]: \<open>ccspan some_chilbert_basis = top\<close>
+  using is_onb_def is_onb_some_chilbert_basis by blast
+lemma span_some_chilbert_basis[simp]: \<open>closure (cspan some_chilbert_basis) = UNIV\<close>
+  by (metis ccspan.rep_eq ccspan_some_chilbert_basis top_ccsubspace.rep_eq)
+
+lemma cindependent_some_chilbert_basis[simp]: \<open>cindependent some_chilbert_basis\<close>
+  using is_ortho_set_cindependent is_ortho_set_some_chilbert_basis by blast
+
+lemma finite_some_chilbert_basis[simp]: \<open>finite (some_chilbert_basis :: 'a :: {chilbert_space, cfinite_dim} set)\<close>
+  apply (rule cindependent_cfinite_dim_finite)
+  by simp
+
+lemma some_chilbert_basis_nonempty: \<open>(some_chilbert_basis :: 'a::{chilbert_space, not_singleton} set) \<noteq> {}\<close>
+proof (rule ccontr, simp)
+  define B :: \<open>'a set\<close> where \<open>B = some_chilbert_basis\<close>
+  assume [simp]: \<open>B = {}\<close>
+  have \<open>UNIV = closure (cspan B)\<close>
+    using B_def span_some_chilbert_basis by blast
+  also have \<open>\<dots> = {0}\<close>
+    by simp
+  also have \<open>\<dots> \<noteq> UNIV\<close>
+    using Extra_General.UNIV_not_singleton by blast
+  finally show False
+    by simp
 qed
 
 subsection \<open>Riesz-representation theorem\<close>

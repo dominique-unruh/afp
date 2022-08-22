@@ -5,7 +5,9 @@ section \<open>\<open>Complex_Vector_Spaces0\<close> -- Vector Spaces and Algebr
 
 theory Complex_Vector_Spaces0
   imports HOL.Real_Vector_Spaces HOL.Topological_Spaces HOL.Vector_Spaces
-    Complex_Main "HOL-Library.Complex_Order"
+    Complex_Main 
+    "HOL-Library.Complex_Order"
+    "HOL-Analysis.Product_Vector"
 begin                              
 
 subsection \<open>Complex vector spaces\<close>
