@@ -272,6 +272,7 @@ proof -
       apply transfer
       thm orthonormal_basis_exists
       by -
+  next show x for x by -
   qed
   from this[cancel_with_type]
   show ?thesis
@@ -537,9 +538,81 @@ fun lift_term_to_maybe (env:env) (Bound i) : (bool * typ * term) = let val (lift
 lemma TODO_NAME: \<open>trace (partial_trace' t o\<^sub>C\<^sub>L x) = trace (t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close> if \<open>trace_class t\<close>
   sorry
 
+lemma sandwich_weak_star_cont[simp]:
+  \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
+  using continuous_map_compose[OF continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star]
+  by (auto simp: o_def sandwich_def[abs_def])
+
+(* lemma continuous_map_cong:
+  assumes \<open>\<And>x. x \<in> topspace T \<Longrightarrow> f x = g x\<close>
+  shows \<open>continuous_map T S f \<longleftrightarrow> continuous_map T S g\<close>
+sledgehammer
+  by (metis assms continuous_map_eq)
+sorry
+ *)
+
+lemma continuous_map_pullback_both:
+  assumes cont: \<open>continuous_map T1 T2 g'\<close>
+  assumes g'g: \<open>\<And>x. f1 x \<in> topspace T1 \<and> x \<in> A1 \<Longrightarrow> g' (f1 x) = f2 (g x)\<close>
+  assumes top1: \<open>f1 -` topspace T1 \<inter> A1 \<subseteq> g -` A2\<close>
+  shows \<open>continuous_map (pullback_topology A1 f1 T1) (pullback_topology A2 f2 T2) g\<close>
+proof -
+  from cont
+  have \<open>continuous_map (pullback_topology A1 f1 T1) T2 (g' \<circ> f1)\<close>
+    by (rule continuous_map_pullback)
+  then have \<open>continuous_map (pullback_topology A1 f1 T1) T2 (f2 \<circ> g)\<close>
+    apply (rule continuous_map_eq)
+    by (simp add: g'g topspace_pullback_topology)
+  then show ?thesis
+    apply (rule continuous_map_pullback')
+    by (simp add: top1 topspace_pullback_topology)
+qed
+
+definition partial_trace :: \<open>(('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b \<times> 'c) ell2)  \<Rightarrow> ('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2)\<close> where
+  \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))\<close>
+
+lemma  
+  assumes \<open>trace_class t\<close>
+  shows partial_trace_has_sum: \<open>has_sum (\<lambda>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))) UNIV (partial_trace t)\<close>
+  and partial_trace_summable: \<open>(\<lambda>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))) abs_summable_on UNIV\<close>
+proof -
+  show \<open>(\<lambda>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))) abs_summable_on UNIV\<close>
+    by -
+  then show \<open>has_sum (\<lambda>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))) UNIV (partial_trace t)\<close>
+    by (simp add: Axioms_Complement_Quantum.partial_trace_def abs_summable_summable)
+qed
+
+lemma partial_trace_trace_class[simp]: \<open>trace_class (partial_trace t)\<close> if \<open>trace_class t\<close>
+proof -
+  have \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op (partial_trace t) *\<^sub>V x)) abs_summable_on range ket\<close>
+    by -
+  then show \<open>trace_class (partial_trace t)\<close>
+    using is_onb_ket
+    by (rule trace_classI[rotated])
+qed
+
+lemma TODO_NAME2: \<open>trace (partial_trace t o\<^sub>C\<^sub>L x) = trace (t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close> if \<open>trace_class t\<close>
+  sorry
+
 (* TODO move *)
 lemma amplification_weak_star_cont[simp]:
   \<open>continuous_map weak_star_topology weak_star_topology (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)\<close>
+(* Two proofs (due to merge), I think first is more current. *)
+  sorry
+(*
+proof (unfold weak_star_topology_def, rule continuous_map_pullback_both)
+  define g' :: \<open>('b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2 \<Rightarrow> complex)
+   \<Rightarrow> ('b \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'c) ell2 \<Rightarrow> complex\<close> where \<open>g' \<tau> t = \<tau> (if trace_class t then partial_trace t else 0)\<close> for \<tau> t
+  have \<open>continuous_on UNIV g'\<close>
+    by (simp add: continuous_on_coordinatewise_then_product g'_def)
+  then show \<open>continuous_map euclidean euclidean g'\<close>
+    using continuous_map_iff_continuous2 by blast
+  show \<open>g' (\<lambda>t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) =
+         (\<lambda>t. if trace_class t then trace (t o\<^sub>C\<^sub>L x \<otimes>\<^sub>o id_cblinfun) else 0)\<close> for x
+    by (auto intro!: ext simp: g'_def TODO_NAME2) 
+qed auto
+ *)
+(*
 proof (unfold weak_star_topology_def', rule continuous_map_pullback_both)
   define g' :: \<open>(('b ell2, 'a ell2) trace_class \<Rightarrow> complex) \<Rightarrow> (('b \<times> 'c) ell2, ('a \<times> 'c) ell2) trace_class \<Rightarrow> complex\<close> where
     \<open>g' \<tau> t = \<tau> (partial_trace t)\<close> for \<tau> t
@@ -550,6 +623,7 @@ proof (unfold weak_star_topology_def', rule continuous_map_pullback_both)
   show \<open>g' (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) = (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x \<otimes>\<^sub>o id_cblinfun))\<close> for x
     by (auto intro!: ext simp: g'_def TODO_NAME) 
 qed auto
+ *)
 
 lemma register_decomposition:
   fixes \<Phi> :: \<open>'a update \<Rightarrow> 'b update\<close>
