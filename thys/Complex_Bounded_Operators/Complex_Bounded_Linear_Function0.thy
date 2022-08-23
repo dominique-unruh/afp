@@ -673,7 +673,7 @@ proof
     fix i
     show "f (x + y) i = (f x + f y) i" "f (r *\<^sub>C x) i = (cnj r *\<^sub>C f x) i" for r x y
       by (auto intro!: cblinfun_eqI simp: cblinfun.scaleC_left scaleC_left add_left cblinfun.add_left)
-    from _ nonneg_bounded show "\<exists>K. \<forall>x. norm (f x) \<le> norm x * K"
+    from _ real.nonneg_bounded show "\<exists>K. \<forall>x. norm (f x) \<le> norm x * K"
       by (rule ex_reg) (auto intro!: onorm_bound simp: norm_cblinfun.rep_eq ac_simps)
   qed
 next

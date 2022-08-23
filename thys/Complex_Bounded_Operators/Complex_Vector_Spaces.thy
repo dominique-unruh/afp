@@ -72,20 +72,15 @@ lemma Complexs_of_real [simp]: "of_real r \<in> \<complex>"
 lemma Reals_in_Complexs: "\<real> \<subseteq> \<complex>"
   unfolding Reals_def by auto
 
-lemma (in clinear) "linear f"
-  apply standard
-  by (simp_all add: add scaleC scaleR_scaleC)
-
 lemma (in bounded_clinear) bounded_linear: "bounded_linear f"
-  by (simp add: add bounded bounded_linear.intro bounded_linear_axioms.intro linearI scaleC scaleR_scaleC)
+  by standard
 
 lemma clinear_times: "clinear (\<lambda>x. c * x)"
   for c :: "'a::complex_algebra"
   by (auto simp: clinearI distrib_left)
 
-lemma (in clinear) linear:
-  shows \<open>linear f\<close>
-  by (simp add: add linearI scaleC scaleR_scaleC)
+lemma (in clinear) linear: \<open>linear f\<close>
+  by standard
 
 lemma bounded_clinearI:
   assumes \<open>\<And>b1 b2. f (b1 + b2) = f b1 + f b2\<close>
@@ -96,12 +91,6 @@ lemma bounded_clinearI:
 
 lemma bounded_clinear_id[simp]: \<open>bounded_clinear id\<close>
   by (simp add: id_def)
-
-(* The following would be a natural inclusion of locales, but unfortunately it leads to
-   name conflicts upon interpretation of bounded_cbilinear *)
-(* sublocale bounded_cbilinear \<subseteq> bounded_bilinear
-  by (rule bounded_bilinear) *)
-
 
 definition cbilinear :: \<open>('a::complex_vector \<Rightarrow> 'b::complex_vector \<Rightarrow> 'c::complex_vector) \<Rightarrow> bool\<close>
   where \<open>cbilinear = (\<lambda> f. (\<forall> y. clinear (\<lambda> x. f x y)) \<and> (\<forall> x. clinear (\<lambda> y. f x y)) )\<close>
@@ -607,6 +596,9 @@ lemma cspan_eqI:
     apply (rule complex_vector.span_minimal)
   using assms by auto
 
+lemma (in bounded_cbilinear) bounded_bilinear[simp]: "bounded_bilinear prod"
+  by standard
+
 subsection \<open>Antilinear maps and friends\<close>
 
 locale antilinear = additive f for f :: "'a::complex_vector \<Rightarrow> 'b::complex_vector" +
@@ -677,11 +669,12 @@ lemma bounded_antilinearI:
   shows "bounded_antilinear f"
   using assms by (auto intro!: exI bounded_antilinear.intro antilinearI simp: bounded_antilinear_axioms_def)
 
-sublocale bounded_antilinear \<subseteq> bounded_linear
+sublocale bounded_antilinear \<subseteq> real: bounded_linear
+  \<comment> \<open>Gives access to all lemmas from \<^locale>\<open>linear\<close> using prefix \<open>real.\<close>\<close>
   apply standard by (fact bounded)
 
 lemma (in bounded_antilinear) bounded_linear: "bounded_linear f"
-  by (fact bounded_linear)
+  by (fact real.bounded_linear)
 
 lemma (in bounded_antilinear) antilinear: "antilinear f"
   by (fact antilinear_axioms)
@@ -774,15 +767,13 @@ locale bounded_sesquilinear =
     and scaleC_right: "prod a (r *\<^sub>C b) = r *\<^sub>C (prod a b)"
     and bounded: "\<exists>K. \<forall>a b. norm (prod a b) \<le> norm a * norm b * K"
 
-(* TODO: this blocks interpretation. E.g., interpretation cinnerxxx: bounded_sesquilinear cinner sorry. 
-Replace by lemma (like bounded_cbilinear.bounded_bilinear), or (maybe) rename add_left etc.
- *)
-sublocale bounded_sesquilinear \<subseteq> bounded_bilinear
+sublocale bounded_sesquilinear \<subseteq> real: bounded_bilinear
+  \<comment> \<open>Gives access to all lemmas from \<^locale>\<open>linear\<close> using prefix \<open>real.\<close>\<close>
   apply standard
   by (auto simp: add_left add_right scaleC_left scaleC_right bounded scaleR_scaleC)
 
 lemma (in bounded_sesquilinear) bounded_bilinear[simp]: "bounded_bilinear prod"
-  by (fact bounded_bilinear_axioms)
+  by intro_locales
 
 lemma (in bounded_sesquilinear) bounded_antilinear_left: "bounded_antilinear (\<lambda>a. prod a b)"
   apply standard
@@ -792,7 +783,7 @@ lemma (in bounded_sesquilinear) bounded_antilinear_left: "bounded_antilinear (\<
 lemma (in bounded_sesquilinear) bounded_clinear_right: "bounded_clinear (\<lambda>b. prod a b)"
   apply standard
     apply (auto simp add: scaleC_right add_right)
-  by (metis ab_semigroup_mult_class.mult_ac(1) ordered_field_class.sign_simps(34) pos_bounded)
+  by (metis ab_semigroup_mult_class.mult_ac(1) ordered_field_class.sign_simps(34) real.pos_bounded)
 
 lemma (in bounded_sesquilinear) comp1:
   assumes \<open>bounded_clinear g\<close>
@@ -809,7 +800,7 @@ proof
   show "prod (g a) (r *\<^sub>C b) = r *\<^sub>C prod (g a) b"
     by (simp add: scaleC_right)
   interpret bi: bounded_bilinear \<open>(\<lambda>x. prod (g x))\<close>
-    by (simp add: bounded_linear comp1)
+    by (simp add: bounded_linear real.comp1)
   show "\<exists>K. \<forall>a b. norm (prod (g a) b) \<le> norm a * norm b * K"
     using bi.bounded by blast
 qed
@@ -3098,28 +3089,32 @@ subsection \<open>Copying existing theorems into sublocales\<close>
 
 context bounded_clinear begin
 interpretation bounded_linear f by (rule bounded_linear)
-lemmas continuous = continuous
-lemmas uniform_limit = uniform_limit
-lemmas Cauchy = Cauchy
+lemmas continuous = real.continuous
+lemmas uniform_limit = real.uniform_limit
+lemmas Cauchy = real.Cauchy
 end
 
 context bounded_antilinear begin
 interpretation bounded_linear f by (rule bounded_linear)
-lemmas continuous = continuous
-lemmas uniform_limit = uniform_limit
+lemmas continuous = real.continuous
+lemmas uniform_limit = real.uniform_limit
 end
 
 
 context bounded_cbilinear begin
 interpretation bounded_bilinear prod by simp
-lemmas tendsto = tendsto
-lemmas isCont = isCont
+lemmas tendsto = real.tendsto
+lemmas isCont = real.isCont
+lemmas scaleR_right = real.scaleR_right
+lemmas scaleR_left = real.scaleR_left
 end
 
 context bounded_sesquilinear begin
 interpretation bounded_bilinear prod by simp
-lemmas tendsto = tendsto
-lemmas isCont = isCont
+lemmas tendsto = real.tendsto
+lemmas isCont = real.isCont
+lemmas scaleR_right = real.scaleR_right
+lemmas scaleR_left = real.scaleR_left
 end
 
 lemmas tendsto_scaleC [tendsto_intros] =

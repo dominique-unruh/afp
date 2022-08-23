@@ -207,7 +207,7 @@ proof (transfer fixing: \<epsilon>)
     apply (rule Sup_real_close)
     using assms by (auto simp: ex_norm1 bounded_clinear.bounded_linear bdd_above_norm_f)
   also have \<open>\<Squnion> {norm (A x) |x. norm x = 1} = onorm A\<close>
-    by (simp add: Complex_Vector_Spaces0.bounded_clinear.bounded_linear onorm_sphere)
+    by (simp add: bounded_clinear.bounded_linear onorm_sphere)
   finally
   show \<open>\<exists>\<psi>. onorm A - \<epsilon> \<le> norm (A \<psi>) \<and> norm \<psi> = 1\<close>
     by force
@@ -1123,7 +1123,7 @@ qed
 
 lemma scaleC_adj[simp]: "(a *\<^sub>C A)* = (cnj a) *\<^sub>C (A*)"
   apply transfer
-  by (simp add: Complex_Vector_Spaces0.bounded_clinear.bounded_linear bounded_clinear_def complex_vector.linear_scale scaleC_cadjoint)
+  by (simp add: bounded_clinear.bounded_linear bounded_clinear_def complex_vector.linear_scale scaleC_cadjoint)
 
 lemma scaleR_adj[simp]: "(a *\<^sub>R A)* = a *\<^sub>R (A*)"
   by (simp add: scaleR_scaleC)
@@ -1723,7 +1723,7 @@ proof (use assms in transfer)
   have "A ` closure S = B ` closure S"
     by (smt (verit, best) UnCI a1 a2 a3 a4 bounded_clinear_eq_on closure_Un closure_closure image_cong sup.absorb_iff1)
   then show "closure (A ` S) = closure (B ` S)"
-    by (metis Complex_Vector_Spaces0.bounded_clinear.bounded_linear a1 a2 closure_bounded_linear_image_subset_eq)
+    by (metis bounded_clinear.bounded_linear a1 a2 closure_bounded_linear_image_subset_eq)
 qed
 
 lemma cblinfun_fixes_range:
