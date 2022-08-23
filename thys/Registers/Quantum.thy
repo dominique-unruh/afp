@@ -2,9 +2,7 @@ section \<open>Quantum mechanics basics\<close>
 
 theory Quantum
   imports
-    (* Finite_Tensor_Product *)
-    Misc
-    Tensor_Product.Hilbert_Space_Tensor_Product
+    Finite_Tensor_Product
     "HOL-Library.Z2"
     Jordan_Normal_Form.Matrix_Impl 
     Real_Impl.Real_Impl
@@ -81,7 +79,6 @@ subsubsection Hadamard
 definition "matrix_hadamard = mat_of_rows_list 2 [ [1/sqrt 2::complex, 1/sqrt 2], [1/sqrt 2, -1/sqrt 2] ]"
 definition hadamard :: \<open>(bit,bit) matrix\<close> where [code del]: "hadamard = cblinfun_of_mat matrix_hadamard"
 
-(* TODO add name *)
 lemma [simp, code]: "mat_of_cblinfun hadamard = matrix_hadamard"
   apply (auto simp add: hadamard_def matrix_hadamard_def)
   apply (subst cblinfun_of_mat_inverse)
@@ -96,13 +93,11 @@ subsubsection CNOT
 definition "matrix_CNOT = mat_of_rows_list 4 [ [1::complex,0,0,0], [0,1,0,0], [0,0,0,1], [0,0,1,0] ]"
 definition CNOT :: \<open>(bit*bit, bit*bit) matrix\<close> where [code del]: "CNOT = cblinfun_of_mat matrix_CNOT"
 
-(* TODO add name *)
 lemma [simp, code]: "mat_of_cblinfun CNOT = matrix_CNOT"
   apply (auto simp add: CNOT_def matrix_CNOT_def)
   apply (subst cblinfun_of_mat_inverse)
   by (auto)
 
-(* TODO add name *)
 lemma [simp]: "CNOT* = CNOT"
   by eval
 
@@ -135,15 +130,13 @@ lemma unitary_Uswap[simp]: "unitary Uswap"
 
 lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otimes>\<^sub>s s\<close>
   apply (rule clinear_equal_ket[where f=\<open>\<lambda>s. Uswap *\<^sub>V s \<otimes>\<^sub>s t\<close>, THEN fun_cong])
-    apply (auto simp add: cblinfun.add_right tensor_ell2_add1 tensor_ell2_scaleC1
-      cblinfun.scaleC_right tensor_ell2_add2 tensor_ell2_scaleC2
-      intro!: clinearI)[2]
+    apply (simp add: cblinfun.add_right clinearI tensor_ell2_add1 tensor_ell2_scaleC1)
+   apply (simp add: clinear_tensor_ell21)
   apply (rule clinear_equal_ket[where f=\<open>\<lambda>t. Uswap *\<^sub>V _ \<otimes>\<^sub>s t\<close>, THEN fun_cong])
-    apply (auto simp add: cblinfun.add_right tensor_ell2_add1 tensor_ell2_scaleC1
-      cblinfun.scaleC_right tensor_ell2_add2 tensor_ell2_scaleC2
-      intro!: clinearI)[2]
+    apply (simp add: cblinfun.add_right clinearI tensor_ell2_add2 tensor_ell2_scaleC2)
+   apply (simp add: clinear_tensor_ell22)
   apply (rule basis_enum_eq_vec_of_basis_enumI)
-  apply (simp add: mat_of_cblinfun_cblinfun_apply vec_of_basis_enum_ket tensor_ell2_ket)
+  apply (simp add: mat_of_cblinfun_cblinfun_apply vec_of_basis_enum_ket)
   by (case_tac i; case_tac ia; hypsubst_thin; normalization)
 
 end

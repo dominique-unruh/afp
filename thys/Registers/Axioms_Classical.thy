@@ -1,4 +1,4 @@
-section \<open>Classical instantiation of registers\<close>
+section \<open>Classical instantiation of registerss\<close>
 
 (* AXIOM INSTANTIATION (use instantiate_laws.py to generate Laws_Classical.thy)
  

@@ -298,7 +298,6 @@ lemmas compatible_ac_rules = swap_registers comp_update_assoc[symmetric] swap_re
 
 subsection \<open>Fst and Snd\<close>
 
-(* TODO: specify types *)
 definition Fst where \<open>Fst a = a \<otimes>\<^sub>u id_update\<close>
 definition Snd where \<open>Snd a = id_update \<otimes>\<^sub>u a\<close>
 

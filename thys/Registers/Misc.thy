@@ -71,7 +71,10 @@ lemma mat_of_rows_list_carrier[simp]:
   "dim_col (mat_of_rows_list n vs) = n"
   unfolding mat_of_rows_list_def by auto
 
-text \<open>Overriding \<^theory>\<open>Complex_Bounded_Operators.Complex_Bounded_Linear_Function\<close>.\<^term>\<open>sandwich\<close>.
+lemma apply_id_cblinfun[simp]: \<open>(*\<^sub>V) id_cblinfun = id\<close>
+  by auto
+
+text \<open>Overriding \\<^theory>\<open>Complex_Bounded_Operators.Complex_Bounded_Linear_Function\<close>.\<^term>\<open>sandwich\<close>.
       The latter is the same function but defined as a \<^typ>\<open>(_,_) cblinfun\<close> which is less convenient for us.\<close>
 definition sandwich where \<open>sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\<^sub>L a*\<close>
 
@@ -79,11 +82,6 @@ lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
   apply (rule clinearI)
    apply (simp add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right sandwich_def)
   by (simp add: sandwich_def)
-
-lemma bounded_clinear_sandwich[simp]: \<open>bounded_clinear (sandwich a)\<close>
-  apply (rule bounded_clinearI[where K=\<open>norm a * norm a\<close>])
-   apply (auto simp add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right sandwich_def)
-  by (smt (verit, ccfv_SIG) mult.commute mult_right_mono norm_adj norm_cblinfun_compose norm_ge_zero ordered_field_class.sign_simps(32))
 
 lemma sandwich_id[simp]: \<open>sandwich id_cblinfun = id\<close>
   by (auto simp: sandwich_def)
@@ -159,12 +157,5 @@ lemma surj_from_comp:
 
 lemma double_exists: \<open>(\<exists>x y. Q x y) \<longleftrightarrow> (\<exists>z. Q (fst z) (snd z))\<close>
   by simp
-
-lemma Ex_iffI:
-  assumes \<open>\<And>x. P x \<Longrightarrow> Q (f x)\<close>
-  assumes \<open>\<And>x. Q x \<Longrightarrow> P (g x)\<close>
-  shows \<open>Ex P \<longleftrightarrow> Ex Q\<close>
-  using assms(1) assms(2) by auto
-
 
 end

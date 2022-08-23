@@ -1,6 +1,0 @@
-session With_Type = Complex_Bounded_Operators +
-  options [quick_and_dirty = true, document = pdf, document_output = "output", 
-           document_variants="document:outline=/proof,/ML"]
-  theories With_Type_Example
-(*   document_files
-    "root.tex" "root.bib" *)
