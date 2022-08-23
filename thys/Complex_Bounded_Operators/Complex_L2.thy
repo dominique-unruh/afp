@@ -1244,83 +1244,26 @@ lemma classical_operator_existsI:
 lemma classical_operator_exists_inj:
   assumes "inj_map \<pi>"
   shows "classical_operator_exists \<pi>"
-proof -
-  define f where \<open>f t = (case \<pi> (inv ket t) of None \<Rightarrow> 0 | Some x \<Rightarrow> ket x)\<close> for t
-  define g where \<open>g = cconstruct (range ket) f\<close>
-  have g_f: \<open>g (ket x) = f (ket x)\<close> for x
-    unfolding g_def apply (rule complex_vector.construct_basis)
-    using cindependent_ket by auto
-  have \<open>clinear g\<close>
-    unfolding g_def apply (rule complex_vector.linear_construct)
-    using cindependent_ket by blast
-  then have \<open>g (x + y) = g x + g y\<close> if \<open>x \<in> cspan (range ket)\<close> and \<open>y \<in> cspan (range ket)\<close> for x y
-    using clinear_iff by blast
-  moreover from \<open>clinear g\<close> have \<open>g (c *\<^sub>C x) = c *\<^sub>C g x\<close> if \<open>x \<in> cspan (range ket)\<close> for x c
-    by (simp add: complex_vector.linear_scale)
-  moreover have \<open>norm (g x) \<le> norm x\<close> if \<open>x \<in> cspan (range ket)\<close> for x
-  proof -
-    from that obtain t r where x_sum: \<open>x = (\<Sum>a\<in>t. r a *\<^sub>C a)\<close> and \<open>finite t\<close> and \<open>t \<subseteq> range ket\<close>
-      unfolding complex_vector.span_explicit by auto
-    then obtain T where tT: \<open>t = ket ` T\<close> and [simp]: \<open>finite T\<close>
-      by (meson finite_subset_image)
-    define R where \<open>R i = r (ket i)\<close> for i
-    have x_sum: \<open>x = (\<Sum>i\<in>T. R i *\<^sub>C ket i)\<close>
-      unfolding R_def tT x_sum
-      apply (rule sum.reindex_cong)
-      by (auto simp add: inj_on_def)
-
-    define T' \<pi>' \<pi>T \<pi>R where \<open>T' = {i\<in>T. \<pi> i \<noteq> None}\<close> and \<open>\<pi>' = the o \<pi>\<close> and \<open>\<pi>T = \<pi>' ` T'\<close> and \<open>\<pi>R i = R (inv_into T' \<pi>' i)\<close> for i
-    have \<open>inj_on \<pi>' T'\<close>
-      by (smt (z3) T'_def \<pi>'_def assms comp_apply inj_map_def inj_on_def mem_Collect_eq option.expand)
-    have [simp]: \<open>finite \<pi>T\<close>
-      by (simp add: T'_def \<pi>T_def)
-
-    have \<open>g x = (\<Sum>i\<in>T. R i *\<^sub>C g (ket i))\<close>
-      by (smt (verit, ccfv_threshold) \<open>clinear g\<close> complex_vector.linear_scale complex_vector.linear_sum sum.cong x_sum)
-    also have \<open>\<dots> = (\<Sum>i\<in>T. R i *\<^sub>C f (ket i))\<close>
-      using g_f by presburger
-    also have \<open>\<dots> = (\<Sum>i\<in>T. R i *\<^sub>C (case \<pi> i of None \<Rightarrow> 0 | Some x \<Rightarrow> ket x))\<close>
-      unfolding f_def by auto
-    also have \<open>\<dots> = (\<Sum>i\<in>T'. R i *\<^sub>C ket (\<pi>' i))\<close>
-      apply (rule sum.mono_neutral_cong_right)
-      unfolding T'_def \<pi>'_def
-      by auto
-    also have \<open>\<dots> = (\<Sum>i\<in>\<pi>' ` T'. R (inv_into T' \<pi>' i) *\<^sub>C ket i)\<close>
-      apply (subst sum.reindex)
-      using \<open>inj_on \<pi>' T'\<close> apply assumption
-      apply (rule sum.cong)
-      using \<open>inj_on \<pi>' T'\<close> by auto
-    finally have gx_sum: \<open>g x = (\<Sum>i\<in>\<pi>T. \<pi>R i *\<^sub>C ket i)\<close>
-      using \<pi>R_def \<pi>T_def by auto
-
-    have \<open>(norm (g x))\<^sup>2 = (\<Sum>a\<in>\<pi>T. (cmod (\<pi>R a))\<^sup>2)\<close>
-      unfolding gx_sum 
-      apply (subst pythagorean_theorem_sum)
-      by auto
-    also have \<open>\<dots> = (\<Sum>i\<in>T'. (cmod (R i))\<^sup>2)\<close>
-      unfolding \<pi>R_def \<pi>T_def
-      apply (subst sum.reindex)
-      using \<open>inj_on \<pi>' T'\<close> apply assumption
-      apply (rule sum.cong)
-      using \<open>inj_on \<pi>' T'\<close> by auto
-    also have \<open>\<dots> \<le> (\<Sum>a\<in>T. (cmod (R a))\<^sup>2)\<close>
-      apply (rule sum_mono2)
-      using T'_def by auto
-    also have \<open>\<dots> = (norm x)\<^sup>2\<close>
-      unfolding x_sum 
-      apply (subst pythagorean_theorem_sum)
-      using \<open>finite T\<close> by auto
-    finally show \<open>norm (g x) \<le> norm x\<close>
-      by auto
-  qed
-  ultimately have \<open>cblinfun_extension_exists (cspan (range ket)) g\<close>
-    apply (rule_tac cblinfun_extension_exists_bounded_dense[where B=1])
-    by auto
-
-  then have \<open>cblinfun_extension_exists (range ket) f\<close>
-    by (metis (mono_tags, opaque_lifting) g_f cblinfun_extension_apply cblinfun_extension_existsI complex_vector.span_base rangeE)
-  then show \<open>classical_operator_exists \<pi>\<close>
-    unfolding classical_operator_exists_def f_def by simp
+proof (unfold classical_operator_exists_def, rule cblinfun_extension_exists_ortho)
+  show \<open>is_ortho_set (range ket)\<close>
+    by simp
+  show \<open>closure (cspan (range ket)) = UNIV\<close>
+    by simp
+  have \<open>is_orthogonal (case \<pi> x of None \<Rightarrow> 0 | Some x' \<Rightarrow> ket x')
+                      (case \<pi> y of None \<Rightarrow> 0 | Some y' \<Rightarrow> ket y')\<close>
+    if \<open>x \<noteq> y\<close> for x y
+    apply (cases \<open>\<pi> x\<close>; cases \<open>\<pi> y\<close>)
+    using that assms
+    by (auto simp add: inj_map_def)
+  then show \<open>is_orthogonal (case \<pi> (inv ket x) of None \<Rightarrow> 0 | Some x' \<Rightarrow> ket x')
+                      (case \<pi> (inv ket y) of None \<Rightarrow> 0 | Some y' \<Rightarrow> ket y')\<close>
+    if \<open>x \<in> range ket\<close> and \<open>y \<in> range ket\<close> and \<open>x \<noteq> y\<close> for x y
+    using that by auto
+  have \<open>norm (case \<pi> x of None \<Rightarrow> 0 | Some x \<Rightarrow> ket x) \<le> 1 * norm (ket x)\<close> for x
+    apply (cases \<open>\<pi> x\<close>) by auto
+  then show \<open>norm (case \<pi> (inv ket x) of None \<Rightarrow> 0 | Some x \<Rightarrow> ket x) \<le> 1 * norm x\<close>
+    if \<open>x \<in> range ket\<close> for x
+    using that by auto
 qed
 
 lemma classical_operator_exists_finite[simp]: "classical_operator_exists (\<pi> :: _::finite \<Rightarrow> _)"

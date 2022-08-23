@@ -441,9 +441,9 @@ proof (rule exI, intro conjI allI impI)
   define P where \<open>P = Proj (kernel (W-T))\<close>
   show \<open>is_Proj P\<close>
     by (simp add: P_def)
-  show thesis1: \<open>F o\<^sub>C\<^sub>L P = P o\<^sub>C\<^sub>L F\<close> if \<open>F o\<^sub>C\<^sub>L W - T = W - T o\<^sub>C\<^sub>L F\<close> for F
+  show thesis1: \<open>F o\<^sub>C\<^sub>L P = P o\<^sub>C\<^sub>L F\<close> if \<open>F o\<^sub>C\<^sub>L (W - T) = (W - T) o\<^sub>C\<^sub>L F\<close> for F
   proof -
-    have 1: \<open>F o\<^sub>C\<^sub>L P = P o\<^sub>C\<^sub>L F o\<^sub>C\<^sub>L P\<close> if \<open>F o\<^sub>C\<^sub>L W - T = W - T o\<^sub>C\<^sub>L F\<close> for F
+    have 1: \<open>F o\<^sub>C\<^sub>L P = P o\<^sub>C\<^sub>L F o\<^sub>C\<^sub>L P\<close> if \<open>F o\<^sub>C\<^sub>L (W - T) = (W - T) o\<^sub>C\<^sub>L F\<close> for F
     proof (rule cblinfun_eqI)
       fix \<psi>
       have \<open>P *\<^sub>V \<psi> \<in> space_as_set (kernel (W - T))\<close>
@@ -459,7 +459,7 @@ proof (rule exI, intro conjI allI impI)
       then show \<open>(F o\<^sub>C\<^sub>L P) *\<^sub>V \<psi> = (P o\<^sub>C\<^sub>L F o\<^sub>C\<^sub>L P) *\<^sub>V \<psi>\<close>
         by simp
     qed
-    have 2: \<open>F* o\<^sub>C\<^sub>L W - T = W - T o\<^sub>C\<^sub>L F*\<close>
+    have 2: \<open>F* o\<^sub>C\<^sub>L (W - T) = (W - T) o\<^sub>C\<^sub>L F*\<close>
       by (metis \<open>T = T*\<close> \<open>W = W*\<close> adj_cblinfun_compose adj_minus that)
     have \<open>F o\<^sub>C\<^sub>L P = P o\<^sub>C\<^sub>L F o\<^sub>C\<^sub>L P\<close> and \<open>F* o\<^sub>C\<^sub>L P = P o\<^sub>C\<^sub>L F* o\<^sub>C\<^sub>L P\<close>
       using 1[OF that] 1[OF 2] by auto
@@ -493,7 +493,7 @@ proof (rule exI, intro conjI allI impI)
       fix \<psi>
       from WT_binomial have \<open>(W + T) *\<^sub>V \<psi> \<in> space_as_set (kernel (W-T))\<close>
         by (metis cblinfun_apply_cblinfun_compose kernel_memberI zero_cblinfun.rep_eq)
-      then show \<open>(P o\<^sub>C\<^sub>L W + T) *\<^sub>V \<psi> = (W + T) *\<^sub>V \<psi>\<close>
+      then show \<open>(P o\<^sub>C\<^sub>L (W + T)) *\<^sub>V \<psi> = (W + T) *\<^sub>V \<psi>\<close>
         by (metis P_def Proj_idempotent Proj_range cblinfun_apply_cblinfun_compose cblinfun_fixes_range)
     qed
     from P_def have \<open>(W - T) o\<^sub>C\<^sub>L P = 0\<close>
@@ -597,7 +597,7 @@ proof -
       apply (simp add: b_P_sq)
       by (smt (verit, del_insts) \<open>0 \<le> sq\<close> \<open>is_Proj P\<close> add_diff_cancel_left' cancel_comm_monoid_add_class.diff_cancel cblinfun_compose_assoc cblinfun_compose_id_right cblinfun_compose_minus_right diff_diff_eq2 is_Proj_algebraic is_Proj_complement minus_diff_eq scaleC_2)
     also have \<open>\<dots> = - sandwich (id_cblinfun - P) sq\<close>
-      by (metis \<open>id_cblinfun - P o\<^sub>C\<^sub>L b = - (id_cblinfun - P) o\<^sub>C\<^sub>L sq\<close> calculation cblinfun_compose_uminus_left sandwich_apply)
+      by (metis \<open>(id_cblinfun - P) o\<^sub>C\<^sub>L b = - (id_cblinfun - P) o\<^sub>C\<^sub>L sq\<close> calculation cblinfun_compose_uminus_left sandwich_apply)
     also have \<open>\<dots> \<le> 0\<close>
       by (simp add: \<open>0 \<le> sq\<close> sandwich_pos)
     finally have \<open>sandwich (id_cblinfun - P) b \<le> 0\<close>

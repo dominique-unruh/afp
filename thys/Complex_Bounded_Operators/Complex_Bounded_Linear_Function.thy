@@ -1090,6 +1090,11 @@ lemma simp_a_oCL_b': \<open>a o\<^sub>C\<^sub>L b = c \<Longrightarrow> a *\<^su
      E.g., \<open>simp_a_oCL_b'[OF isometryD, simp]\<close> declares a simp-rule for simplifying \<^term>\<open>adj x *\<^sub>V x *\<^sub>V y = id_cblinfun *\<^sub>V y\<close>.\<close>
   by auto
 
+lemma cblinfun_compose_uminus_left: \<open>(- a) o\<^sub>C\<^sub>L b = - (a o\<^sub>C\<^sub>L b)\<close>
+  by (simp add: bounded_cbilinear.minus_left bounded_cbilinear_cblinfun_compose)
+
+lemma cblinfun_compose_uminus_right: \<open>a o\<^sub>C\<^sub>L (- b) = - (a o\<^sub>C\<^sub>L b)\<close>
+  by (simp add: bounded_cbilinear.minus_right bounded_cbilinear_cblinfun_compose)
 
 subsection \<open>Adjoint\<close>
 
@@ -1948,9 +1953,9 @@ next
     by auto
 qed
 
-
 lemma space_as_set_image_commute:
-  assumes UV: \<open>U o\<^sub>C\<^sub>L V = id_cblinfun\<close> and VU: \<open>V o\<^sub>C\<^sub>L U = id_cblinfun\<close> (* TODO: I think only one of them is needed *)
+  assumes UV: \<open>U o\<^sub>C\<^sub>L V = id_cblinfun\<close> and VU: \<open>V o\<^sub>C\<^sub>L U = id_cblinfun\<close>
+    (* I think only one of them is needed, can the lemma be strengthened? *)
   shows \<open>(*\<^sub>V) U ` space_as_set T = space_as_set (U *\<^sub>S T)\<close>
 proof -
   have \<open>space_as_set (U *\<^sub>S T) = U ` V ` space_as_set (U *\<^sub>S T)\<close>
@@ -4017,7 +4022,6 @@ proof -
     by auto
 qed
 
-(* TODO: use this to prove classical_operator_exists_inj *)
 lemma
   fixes f :: \<open>'a::complex_inner \<Rightarrow> 'b::chilbert_space\<close> and S 
   assumes \<open>is_ortho_set S\<close> and \<open>closure (cspan S) = UNIV\<close>
@@ -4372,14 +4376,14 @@ qed
 subsection \<open>Notation\<close>
 
 bundle cblinfun_notation begin
-notation cblinfun_compose (infixl "o\<^sub>C\<^sub>L" 55)
+notation cblinfun_compose (infixl "o\<^sub>C\<^sub>L" 67)
 notation cblinfun_apply (infixr "*\<^sub>V" 70)
 notation cblinfun_image (infixr "*\<^sub>S" 70)
 notation adj ("_*" [99] 100)
 end
 
 bundle no_cblinfun_notation begin
-no_notation cblinfun_compose (infixl "o\<^sub>C\<^sub>L" 55)
+no_notation cblinfun_compose (infixl "o\<^sub>C\<^sub>L" 67)
 no_notation cblinfun_apply (infixr "*\<^sub>V" 70)
 no_notation cblinfun_image (infixr "*\<^sub>S" 70)
 no_notation adj ("_*" [99] 100)

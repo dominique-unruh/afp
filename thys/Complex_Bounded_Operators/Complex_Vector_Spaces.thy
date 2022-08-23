@@ -34,8 +34,8 @@ unbundle lattice_syntax
 subsection \<open>Misc\<close>
 
 
-(* TODO: replace vector_space.span_image_scale with this *)
-(* Should rather be in Extra_Vector_Spaces but then complex_vector.span_image_scale' does not exist for some reason *)
+(* Should rather be in Extra_Vector_Spaces but then complex_vector.span_image_scale' does not exist for some reason.
+   Ideally this would replace Vector_Spaces.vector_space.span_image_scale. *)
 lemma (in vector_space) span_image_scale':
   \<comment> \<open>Strengthening of @{thm [source] vector_space.span_image_scale} without the condition \<open>finite S\<close>\<close>
   assumes nz: "\<And>x. x \<in> S \<Longrightarrow> c x \<noteq> 0"
@@ -85,7 +85,7 @@ lemma (in clinear) linear: \<open>linear f\<close>
 lemma bounded_clinearI:
   assumes \<open>\<And>b1 b2. f (b1 + b2) = f b1 + f b2\<close>
   assumes \<open>\<And>r b. f (r *\<^sub>C b) = r *\<^sub>C f b\<close>
-  assumes \<open>\<forall>x. norm (f x) \<le> norm x * K\<close> (* TODO: Should have \<And>x *)
+  assumes \<open>\<And>x. norm (f x) \<le> norm x * K\<close>
   shows "bounded_clinear f"
   using assms by (auto intro!: exI bounded_clinear.intro clinearI simp: bounded_clinear_axioms_def)
 

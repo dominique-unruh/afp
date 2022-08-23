@@ -1485,7 +1485,7 @@ proof (cases \<open>trace_class a\<close>)
     by simp
   also have \<open>\<dots> \<le> trace_norm a\<close>
     apply (rule mult_left_le_one_le)
-    by (auto intro!: mult_left_le_one_le simp: norm_blinfun_id_le)
+    by (auto intro!: mult_left_le_one_le simp: norm_cblinfun_id_le)
   finally show ?thesis
     by -
 next

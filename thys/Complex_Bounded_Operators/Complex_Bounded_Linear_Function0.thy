@@ -731,8 +731,7 @@ lemma norm_cblinfun_id[simp]:
    apply standard[1]
   by simp
 
-(* TODO blinfun \<rightarrow> cblinfun *)
-lemma norm_blinfun_id_le:
+lemma norm_cblinfun_id_le:
   "norm (id_cblinfun::'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'a) \<le> 1"
   by transfer (auto simp: onorm_id_le)
 
@@ -745,11 +744,12 @@ lemma norm_blinfun_id_le:
 
 (* lemma blinfun_apply_snd_blinfun[simp]: "blinfun_apply snd_blinfun = snd" *)
 
-(* TODO: Different infixl-priority so that "a - b oCL c" parses as "a - (b oCL c)"? How is it with the blinfun_compose notation? *)
 lift_definition cblinfun_compose::
   "'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector \<Rightarrow>
     'c::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'a \<Rightarrow>
-    'c \<Rightarrow>\<^sub>C\<^sub>L 'b" (infixl "o\<^sub>C\<^sub>L" 55) is "(o)"
+    'c \<Rightarrow>\<^sub>C\<^sub>L 'b" (infixl "o\<^sub>C\<^sub>L" 67) is "(o)"
+  (* Difference from Real_Vector_Spaces: Priority of o\<^sub>C\<^sub>L is 55 there.
+     But we want "a - b o\<^sub>C\<^sub>L c" to parse as "a - (b o\<^sub>C\<^sub>L c)". *)
   parametric comp_transfer
   unfolding o_def
   by (rule bounded_clinear_compose)
