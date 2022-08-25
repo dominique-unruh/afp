@@ -220,7 +220,7 @@ qed
 
 lemma cspan_as_span:
   "cspan (B::'a::complex_vector set) = span (B \<union> scaleC \<i> ` B)"
-proof auto
+proof (intro set_eqI iffI)
   let ?cspan = complex_vector.span
   let ?rspan = real_vector.span
   fix \<psi>
@@ -1184,6 +1184,7 @@ text \<open>The following auxiliary lemma (\<open>finite_span_complete_aux\<clos
    (HOL does not support such reasoning). Therefore we have the type \<^typ>\<open>'basis\<close> as
    an explicit assumption and remove it using @{attribute internalize_sort} after the proof.\<close>
 
+(* TODO: Maybe this should be in Extra_Vector_Spaces *)
 lemma finite_span_complete_aux:
   fixes b :: "'b::real_normed_vector" and B :: "'b set"
     and  rep :: "'basis::finite \<Rightarrow> 'b" and abs :: "'b \<Rightarrow> 'basis"
@@ -1425,6 +1426,7 @@ proof -
     by simp
 qed
 
+(* TODO: Maybe this should be in Extra_Vector_Spaces *)
 lemma finite_span_complete[simp]:
   fixes A :: "'a::real_normed_vector set"
   assumes "finite A"
@@ -1470,7 +1472,7 @@ next
     using complete_singleton by auto
 qed
 
-
+(* TODO: Maybe this should be in Extra_Vector_Spaces *)
 lemma finite_span_representation_bounded:
   fixes B :: "'a::real_normed_vector set"
   assumes "finite B" and "independent B"
@@ -1563,7 +1565,7 @@ lemma finite_cspan_complete[simp]:
   shows "complete (cspan B)"
   by (simp add: assms cspan_as_span)
 
-
+(* TODO: Maybe this should be in Extra_Vector_Spaces *)
 lemma finite_span_closed[simp]:
   fixes B :: "'a::real_normed_vector set"
   assumes "finite B"
@@ -1580,14 +1582,14 @@ lemma finite_cspan_closed[simp]:
 lemma closure_finite_cspan:
   fixes T::\<open>'a::complex_normed_vector set\<close>
   assumes \<open>finite T\<close>
-  shows \<open>closure (cspan T)  = cspan T\<close>
+  shows \<open>closure (cspan T) = cspan T\<close>
   by (simp add: assms)
 
 
 lemma finite_cspan_crepresentation_bounded:
   fixes B :: "'a::complex_normed_vector set"
   assumes a1: "finite B" and a2: "cindependent B"
-  shows "\<exists>D>0. \<forall>\<psi> b. norm (crepresentation B \<psi> b) \<le> norm \<psi> * D"
+  shows "\<exists>D>0. \<forall>\<psi> b. cmod (crepresentation B \<psi> b) \<le> norm \<psi> * D"
 proof -
   define B' where "B' = (B \<union> scaleC \<i> ` B)"
   have independent_B': "independent B'"
@@ -1712,7 +1714,7 @@ proof -
     using assms bounded_clinear_def bounded_clinear_axioms_def by blast
 qed
 
-
+(* TODO: Maybe this should be in Extra_Vector_Spaces if we move finite_span_closed, too. *)
 lemma summable_on_scaleR_left_converse:
   \<comment> \<open>This result has nothing to do with the bounded operator library but it
       uses @{thm [source] finite_span_closed} so it is proven here.\<close>
@@ -1780,6 +1782,7 @@ proof -
     by (auto simp: o_def)
 qed
 
+(* TODO: Maybe this should be in Extra_Vector_Spaces if we move finite_span_closed, too. *)
 lemma infsum_scaleR_left:
   \<comment> \<open>This result has nothing to do with the bounded operator library but it
       uses @{thm [source] finite_span_closed} so it is proven here.
@@ -1803,6 +1806,7 @@ next
     by (auto simp add: infsum_not_exists)
 qed
 
+(* TODO: Maybe this should be in Extra_Vector_Spaces if we move finite_span_closed, too. *)
 lemma infsum_of_real: 
   shows \<open>(\<Sum>\<^sub>\<infinity>x\<in>A. of_real (f x) :: 'b::{real_normed_vector, real_algebra_1}) = of_real (\<Sum>\<^sub>\<infinity>x\<in>A. f x)\<close>
   \<comment> \<open>This result has nothing to do with the bounded operator library but it
@@ -1967,16 +1971,10 @@ instantiation ccsubspace :: (complex_normed_vector) scaleC begin
 lift_definition scaleC_ccsubspace :: "complex \<Rightarrow> 'a ccsubspace \<Rightarrow> 'a ccsubspace" is
   "\<lambda>c S. (*\<^sub>C) c ` S"
 proof
-  show "csubspace ((*\<^sub>C) c ` S)"
-    if "closed_csubspace S"
-    for c :: complex
-      and S :: "'a set"
+  show "csubspace ((*\<^sub>C) c ` S)" if "closed_csubspace S" for c :: complex and S :: "'a set"
     using that
-    by (simp add: closed_csubspace.subspace complex_vector.linear_subspace_image)
-  show "closed ((*\<^sub>C) c ` S)"
-    if "closed_csubspace S"
-    for c :: complex
-      and S :: "'a set"
+    by (simp add: complex_vector.linear_subspace_image)
+  show "closed ((*\<^sub>C) c ` S)" if "closed_csubspace S" for c :: complex and S :: "'a set"
     using that
     by (simp add: closed_scaleC closed_csubspace.closed)
 qed
@@ -1989,7 +1987,7 @@ proof
     for r :: real
       and S :: "'a set"
     using that   using bounded_clinear_def bounded_clinear_scaleC_right scaleR_scaleC
-    by (simp add: scaleR_scaleC closed_csubspace.subspace complex_vector.linear_subspace_image)
+    by (simp add: scaleR_scaleC complex_vector.linear_subspace_image)
   show "closed ((*\<^sub>R) r ` S)"
     if "closed_csubspace S"
     for r :: real
@@ -2107,7 +2105,7 @@ lemma ccspan_canonical_basis[simp]: "ccspan (set canonical_basis) = top"
 
 lemma ccspan_Inf_def: \<open>ccspan A = Inf {S. A \<subseteq> space_as_set S}\<close>
   for A::\<open>('a::cbanach) set\<close>
-proof-
+proof -
   have \<open>x \<in> space_as_set (ccspan A)
     \<Longrightarrow> x \<in> space_as_set (Inf {S. A \<subseteq> space_as_set S})\<close>
     for x::'a
@@ -2181,54 +2179,7 @@ lemma closure_is_closed_csubspace[simp]:
   fixes S::\<open>'a::complex_normed_vector set\<close>
   assumes \<open>csubspace S\<close>
   shows \<open>closed_csubspace (closure S)\<close>
-proof-
-  fix x y :: 'a and c :: complex
-  have "x + y \<in> closure S"
-    if "x \<in> closure S"
-      and "y \<in> closure S"
-  proof-
-    have \<open>\<exists> r. (\<forall> n::nat. r n \<in> S) \<and> r \<longlonglongrightarrow> x\<close>
-      using closure_sequential that(1) by auto
-    then obtain r where \<open>\<forall> n::nat. r n \<in> S\<close> and \<open>r \<longlonglongrightarrow> x\<close>
-      by blast
-    have \<open>\<exists> s. (\<forall> n::nat. s n \<in> S) \<and> s \<longlonglongrightarrow> y\<close>
-      using closure_sequential that(2) by auto
-    then obtain s where \<open>\<forall> n::nat. s n \<in> S\<close> and \<open>s \<longlonglongrightarrow> y\<close>
-      by blast
-    have \<open>\<forall> n::nat. r n + s n \<in> S\<close>
-      using \<open>\<forall>n. r n \<in> S\<close> \<open>\<forall>n. s n \<in> S\<close> assms complex_vector.subspace_add by blast
-    moreover have \<open>(\<lambda> n. r n + s n) \<longlonglongrightarrow> x + y\<close>
-      by (simp add: \<open>r \<longlonglongrightarrow> x\<close> \<open>s \<longlonglongrightarrow> y\<close> tendsto_add)
-    ultimately show ?thesis
-      using assms that(1) that(2)
-      by (simp add: complex_vector.subspace_add)
-  qed
-  moreover have "c *\<^sub>C x \<in> closure S"
-    if "x \<in> closure S"
-  proof-
-    have \<open>\<exists> y. (\<forall> n::nat. y n \<in> S) \<and> y \<longlonglongrightarrow> x\<close>
-      using Elementary_Topology.closure_sequential that by auto
-    then obtain y where \<open>\<forall> n::nat. y n \<in> S\<close> and \<open>y \<longlonglongrightarrow> x\<close>
-      by blast
-    have \<open>isCont (scaleC c) x\<close>
-      by simp
-    hence \<open>(\<lambda> n. scaleC c (y n)) \<longlonglongrightarrow> scaleC c x\<close>
-      using  \<open>y \<longlonglongrightarrow> x\<close>
-      by (simp add: isCont_tendsto_compose)
-    from  \<open>\<forall> n::nat. y n \<in> S\<close>
-    have  \<open>\<forall> n::nat. scaleC c (y n) \<in> S\<close>
-      using assms complex_vector.subspace_scale by auto
-    thus ?thesis
-      using assms that
-      by (simp add: complex_vector.subspace_scale)
-  qed
-  moreover have "0 \<in> closure S"
-    by (simp add: assms complex_vector.subspace_0)
-  moreover have "closed (closure S)"
-    by auto
-  ultimately show ?thesis
-    by (simp add: assms closed_csubspace_def)
-qed
+  using assms closed_csubspace.intro closure_is_csubspace by blast
 
 lemma ccspan_singleton_scaleC[simp]: "(a::complex)\<noteq>0 \<Longrightarrow> ccspan {a *\<^sub>C \<psi>} = ccspan {\<psi>}"
   apply transfer by simp
@@ -2303,6 +2254,7 @@ lemma ccspan_mono:
   apply (transfer fixing: A B)
   by (simp add: assms closure_mono complex_vector.span_mono)
 
+(* TODO move to other section *)
 lemma bounded_sesquilinear_add:
   \<open>bounded_sesquilinear (\<lambda> x y. A x y + B x y)\<close> if \<open>bounded_sesquilinear A\<close> and \<open>bounded_sesquilinear B\<close>
 proof
@@ -2343,6 +2295,7 @@ proof
   qed
 qed
 
+(* TODO move to other section *)
 lemma bounded_sesquilinear_uminus:
   \<open>bounded_sesquilinear (\<lambda> x y. - A x y)\<close> if \<open>bounded_sesquilinear A\<close>
 proof
@@ -2368,6 +2321,7 @@ proof
   qed
 qed
 
+(* TODO move to other section *)
 lemma bounded_sesquilinear_diff:
   \<open>bounded_sesquilinear (\<lambda> x y. A x y - B x y)\<close> if \<open>bounded_sesquilinear A\<close> and \<open>bounded_sesquilinear B\<close>
 proof -
@@ -2649,12 +2603,10 @@ proof
     apply (rule closed_sum_is_sup) by auto
 qed
 
-instance ccsubspace :: ("{complex_normed_vector}") complete_lattice
+instance ccsubspace :: (complex_normed_vector) complete_lattice
 proof
-  show "Inf A \<le> x"
-    if "x \<in> A"
-    for x :: "'a ccsubspace"
-      and A :: "'a ccsubspace set"
+  show "Inf A \<le> x" if "x \<in> A"
+    for x :: "'a ccsubspace" and A :: "'a ccsubspace set"
     using that
     apply transfer
     by auto
@@ -2858,6 +2810,7 @@ proof -
     by (simp add: to_conjugate_space_inverse)
 qed
 
+(* TODO move after basis_enum *)
 instantiation complex :: basis_enum begin
 definition "canonical_basis = [1::complex]"
 instance
@@ -2874,6 +2827,7 @@ proof
 qed
 end
 
+(* TODO move to subspace section *)
 lemma csubspace_is_convex[simp]:
   assumes a1: "csubspace M"
   shows "convex M"
@@ -2888,40 +2842,13 @@ proof-
   thus ?thesis using convex_def by blast
 qed
 
+(* TODO move to subspace section *)
 lemma kernel_is_csubspace[simp]:
   assumes a1: "clinear f"
   shows "csubspace  (f -` {0})"
-proof-
-  have w3: \<open>t *\<^sub>C x \<in> {x. f x = 0}\<close>
-    if b1: "x \<in> {x. f x = 0}"
-    for x t
-    by (metis assms complex_vector.linear_subspace_kernel complex_vector.subspace_def that)
-  have \<open>f 0 = 0\<close>
-    by (simp add: assms complex_vector.linear_0)
-  hence s2: \<open>0 \<in> {x. f x = 0}\<close>
-    by blast
+  by (simp add: assms complex_vector.linear_subspace_vimage)
 
-  have w4: "x + y \<in> {x. f x = 0}"
-    if c1: "x \<in> {x. f x = 0}" and c2: "y \<in> {x. f x = 0}"
-    for x y
-    using assms c1 c2 complex_vector.linear_add by fastforce
-  have s4: \<open>c *\<^sub>C t \<in> {x. f x = 0}\<close>
-    if "t \<in> {x. f x = 0}"
-    for t c
-    using that w3 by auto
-  have s5: "u + v \<in> {x. f x = 0}"
-    if "u \<in> {x. f x = 0}" and "v \<in> {x. f x = 0}"
-    for u v
-    using w4 that(1) that(2) by auto
-  have f3: "f -` {b. b = 0 \<or> b \<in> {}} = {a. f a = 0}"
-    by blast
-  have "csubspace {a. f a = 0}"
-    by (metis complex_vector.subspace_def s2 s4 s5)
-  thus ?thesis
-    using f3 by auto
-qed
-
-
+(* TODO move to subspace section *)
 lemma kernel_is_closed_csubspace[simp]:
   assumes a1: "bounded_clinear f"
   shows "closed_csubspace (f -` {0})"
@@ -2950,11 +2877,14 @@ proof-
     using closed_csubspace.intro by blast
 qed
 
+(* TODO move to subspace section *)
+(* TODO rename \<rightarrow> range_is_csubspace *)
 lemma range_is_clinear[simp]:
   assumes a1: "clinear f"
   shows "csubspace (range f)"
   using assms complex_vector.linear_subspace_image complex_vector.subspace_UNIV by blast
 
+(* TODO move to subspace section *)
 lemma ccspan_superset:
   \<open>A \<subseteq> space_as_set (ccspan A)\<close>
   for A :: \<open>'a::complex_normed_vector set\<close>

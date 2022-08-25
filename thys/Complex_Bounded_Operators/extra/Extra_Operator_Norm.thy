@@ -10,6 +10,7 @@ begin
 text \<open>This theorem complements \<^theory>\<open>HOL-Analysis.Operator_Norm\<close>
       additional useful facts about operator norms.\<close>
 
+(* TODO: Belongs in Extra_Vector_Spaces *)
 lemma ex_norm1:
   assumes \<open>(UNIV::'a::real_normed_vector set) \<noteq> {0}\<close>
   shows \<open>\<exists>x::'a. norm x = 1\<close>
@@ -30,6 +31,7 @@ proof-
     by blast
 qed
 
+(* TODO: Belongs in Extra_Vector_Spaces *)
 lemma bdd_above_norm_f:
   assumes "bounded_linear f"
   shows \<open>bdd_above {norm (f x) |x. norm x = 1}\<close>
@@ -175,7 +177,7 @@ next
   thus ?thesis unfolding onorm_def by blast
 qed
 
-
+(* TODO: Not used in this AFP entry. Remove? *)
 lemma onorm_Inf_bound:
   fixes f :: \<open>'a::{real_normed_vector,not_singleton} \<Rightarrow> 'b::real_normed_vector\<close>
   assumes a1: "bounded_linear f"
@@ -305,10 +307,11 @@ lemma onormI:
    apply (smt (verit) UNIV_I assms(2) assms(3) image_iff nonzero_mult_div_cancel_right norm_eq_zero)
   by (smt (verit, del_insts) assms(1) assms(2) divide_nonneg_nonpos norm_ge_zero norm_le_zero_iff pos_divide_le_eq rangeE zero_le_mult_iff)
 
-
+(* TODO: Not used in this AFP entry. Remove? *)
 lemma norm_unit_sphere:
   fixes f::\<open>'a::{real_normed_vector,not_singleton} \<Rightarrow>\<^sub>L 'b::real_normed_vector\<close>
   assumes a1: "bounded_linear f" and a2: "e > 0"
+(* TODO: Something is weird here: a1 is vacuously true afaik *)
   shows \<open>\<exists>x\<in>(sphere 0 1). norm (norm (blinfun_apply f x) - norm f) < e\<close>
 proof-
   define S::"real set" where \<open>S = { norm (f x)| x. x \<in> sphere 0 1 }\<close>
