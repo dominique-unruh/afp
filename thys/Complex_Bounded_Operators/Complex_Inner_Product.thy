@@ -782,6 +782,20 @@ qed
 lemma is_ortho_set_singleton[simp]: \<open>is_ortho_set {x} \<longleftrightarrow> x \<noteq> 0\<close>
   by (simp add: is_ortho_set_def)
 
+lemma orthogonal_complement_antimono[simp]:
+  fixes  A B :: \<open>('a::complex_inner) set\<close>
+  assumes "A \<supseteq> B"
+  shows \<open>orthogonal_complement A \<subseteq> orthogonal_complement B\<close>
+  by (meson assms orthogonal_complementI orthogonal_complement_orthoI' subsetD subsetI)
+
+lemma orthogonal_complement_UNIV[simp]:
+  "orthogonal_complement UNIV = {0}"
+  by (metis Int_UNIV_left complex_vector.subspace_UNIV complex_vector.subspace_def orthogonal_complement_zero_intersection)
+
+lemma orthogonal_complement_zero[simp]:
+  "orthogonal_complement {0} = UNIV"
+  unfolding orthogonal_complement_def by auto
+
 subsection \<open>Projections\<close>
 
 lemma smallest_norm_exists:
@@ -790,7 +804,7 @@ lemma smallest_norm_exists:
   fixes M :: \<open>'a::chilbert_space set\<close>
   assumes q1: \<open>convex M\<close> and q2: \<open>closed M\<close> and q3: \<open>M \<noteq> {}\<close>
   shows  \<open>\<exists>k. is_arg_min (\<lambda> x. \<parallel>x\<parallel>) (\<lambda> t. t \<in> M) k\<close>
-proof-
+proof -
   define d where \<open>d = Inf { \<parallel>x\<parallel>^2 | x. x \<in> M }\<close>
   have w4: \<open>{ \<parallel>x\<parallel>^2 | x. x \<in> M } \<noteq> {}\<close>
     by (simp add: assms(3))
@@ -1000,7 +1014,7 @@ theorem smallest_dist_exists:
   fixes M::\<open>'a::chilbert_space set\<close> and h
   assumes a1: \<open>convex M\<close> and a2: \<open>closed M\<close> and a3: \<open>M \<noteq> {}\<close>
   shows  \<open>\<exists>k. is_arg_min (\<lambda> x. dist x h) (\<lambda> x. x \<in> M) k\<close>
-proof-
+proof -
   have *: "is_arg_min (\<lambda>x. dist x h) (\<lambda>x. x\<in>M) (k+h) \<longleftrightarrow> is_arg_min (\<lambda>x. norm x) (\<lambda>x. x\<in>(\<lambda>x. x-h) ` M) k" for k
     unfolding dist_norm is_arg_min_def apply auto using add_implies_diff by blast
   have \<open>\<exists>k. is_arg_min (\<lambda>x. dist x h) (\<lambda>x. x\<in>M) (k+h)\<close>
@@ -1034,8 +1048,8 @@ theorem smallest_dist_is_ortho:
   fixes M::\<open>'a::complex_inner set\<close> and h k::'a
   assumes b1: \<open>closed_csubspace M\<close>
   shows  \<open>(is_arg_min (\<lambda> x. dist x h) (\<lambda> x. x \<in> M) k) \<longleftrightarrow>
-          h - k \<in> (orthogonal_complement M) \<and> k \<in> M\<close>
-proof-
+          h - k \<in> orthogonal_complement M \<and> k \<in> M\<close>
+proof -
   include notation_norm
   have  \<open>csubspace M\<close>
     using \<open>closed_csubspace M\<close> unfolding closed_csubspace_def by blast
@@ -1217,7 +1231,7 @@ corollary orthog_proj_exists:
   fixes M :: \<open>'a::chilbert_space set\<close>
   assumes \<open>closed_csubspace M\<close>
   shows  \<open>\<exists>k. h - k \<in> orthogonal_complement M \<and> k \<in> M\<close>
-proof-
+proof -
   from  \<open>closed_csubspace M\<close>
   have \<open>M \<noteq> {}\<close>
     using closed_csubspace.subspace complex_vector.subspace_0 by blast
@@ -1343,11 +1357,11 @@ lemma is_projection_on_fixes_image:
 
 lemma projection_fixes_image:
   fixes M :: \<open>('a::chilbert_space) set\<close>
-  assumes a1: "closed_csubspace M" and a2: "x \<in> M"
-  shows "(projection M) x = x"
+  assumes "closed_csubspace M" and "x \<in> M"
+  shows "projection M x = x"
   using is_projection_on_fixes_image
     \<comment> \<open>Theorem 2.7 in @{cite conway2013course}\<close>
-  by (simp add: a1 a2 complex_vector.subspace_0 projection_eqI)
+  by (simp add: assms complex_vector.subspace_0 projection_eqI)
 
 proposition is_projection_on_reduces_norm:
   includes notation_norm
@@ -1583,17 +1597,11 @@ proof-
   finally show ?thesis by blast
 qed
 
-lemma orthogonal_complement_antimono[simp]:
-  fixes  A B :: \<open>('a::complex_inner) set\<close>
-  assumes "A \<supseteq> B"
-  shows \<open>orthogonal_complement A \<subseteq> orthogonal_complement B\<close>
-  by (meson assms orthogonal_complementI orthogonal_complement_orthoI' subsetD subsetI)
-
 lemma orthogonal_complement_antimono_iff[simp]:
   fixes  A B :: \<open>('a::chilbert_space) set\<close>
   assumes \<open>closed_csubspace A\<close> and  \<open>closed_csubspace B\<close>
   shows \<open>orthogonal_complement A \<subseteq> orthogonal_complement B \<longleftrightarrow> A \<supseteq> B\<close>
-proof
+proof (rule iffI)
   show \<open>orthogonal_complement A \<subseteq> orthogonal_complement B\<close> if \<open>A \<supseteq> B\<close>
     using that by auto
 
@@ -1604,24 +1612,14 @@ proof
     using assms by auto
 qed
 
-lemma orthogonal_complement_UNIV[simp]:
-  "orthogonal_complement UNIV = {0}"
-  by (metis Int_UNIV_left complex_vector.subspace_UNIV complex_vector.subspace_def orthogonal_complement_zero_intersection)
-
-lemma orthogonal_complement_zero[simp]:
-  "orthogonal_complement {0} = UNIV"
-  unfolding orthogonal_complement_def by auto
-
-
 lemma de_morgan_orthogonal_complement_plus:
   fixes A B::"('a::complex_inner) set"
   assumes \<open>0 \<in> A\<close> and \<open>0 \<in> B\<close>
-  shows \<open>orthogonal_complement (A +\<^sub>M B) = (orthogonal_complement A) \<inter> (orthogonal_complement B)\<close>
-proof-
+  shows \<open>orthogonal_complement (A +\<^sub>M B) = orthogonal_complement A \<inter> orthogonal_complement B\<close>
+proof -
   have "x \<in> (orthogonal_complement A) \<inter> (orthogonal_complement B)"
-    if "x \<in> orthogonal_complement (A +\<^sub>M B)"
-    for x
-  proof-
+    if "x \<in> orthogonal_complement (A +\<^sub>M B)" for x
+  proof -
     have \<open>orthogonal_complement (A +\<^sub>M B) = orthogonal_complement (A + B)\<close>
       unfolding closed_sum_def by (subst orthogonal_complement_of_closure[symmetric], simp)
     hence \<open>x \<in> orthogonal_complement (A + B)\<close>
@@ -1702,6 +1700,78 @@ proof -
     by simp
   finally show \<open>orthogonal_complement (orthogonal_complement S) = closure (cspan S)\<close>
     by -
+qed
+
+instance ccsubspace :: (chilbert_space) complete_orthomodular_lattice
+proof
+  fix X Y :: \<open>'a ccsubspace\<close>
+
+  show "inf X (- X) = bot"
+    apply transfer
+    by (simp add: closed_csubspace_def complex_vector.subspace_0 orthogonal_complement_zero_intersection)
+
+  have \<open>t \<in> M +\<^sub>M orthogonal_complement M\<close>
+    if \<open>closed_csubspace M\<close> for t::'a and M
+    by (metis (no_types, lifting) UNIV_I closed_csubspace.subspace complex_vector.subspace_def de_morgan_orthogonal_complement_inter double_orthogonal_complement_id orthogonal_complement_closed_subspace orthogonal_complement_zero orthogonal_complement_zero_intersection that)
+  hence b1: \<open>M +\<^sub>M orthogonal_complement M = UNIV\<close>
+    if \<open>closed_csubspace M\<close> for M :: \<open>'a set\<close>
+    using that by blast
+  show "sup X (- X) = top"
+    apply transfer
+    using b1 by auto
+  show "- (- X) = X"
+    apply transfer by simp
+
+  show "- Y \<le> - X"
+    if "X \<le> Y"
+    using that apply transfer by simp
+
+  have c1: "M +\<^sub>M orthogonal_complement M \<inter> N \<subseteq> N"
+    if "closed_csubspace M" and "closed_csubspace N" and "M \<subseteq> N"
+    for M N :: "'a set"
+    using that
+    by (simp add: closed_sum_is_sup)
+
+  have c2: \<open>u \<in> M +\<^sub>M (orthogonal_complement M \<inter> N)\<close>
+    if a1: "closed_csubspace M" and a2: "closed_csubspace N" and a3: "M \<subseteq> N" and x1: \<open>u \<in> N\<close>
+    for M :: "'a set" and N :: "'a set"  and u
+  proof -
+    have d4: \<open>(projection M) u \<in> M\<close>
+      by (metis a1 closed_csubspace_def csubspace_is_convex equals0D orthog_proj_exists projection_in_image)
+    hence d2: \<open>(projection M) u \<in> N\<close>
+      using a3 by auto
+    have d1: \<open>csubspace N\<close>
+      by (simp add: a2)
+    have \<open>u - (projection M) u \<in> orthogonal_complement M\<close>
+      by (simp add: a1 orthogonal_complementI projection_orthogonal)
+    moreover have  \<open>u - (projection M) u \<in> N\<close>
+      by (simp add: d1 d2 complex_vector.subspace_diff x1)
+    ultimately have d3: \<open>u - (projection M) u \<in> ((orthogonal_complement M) \<inter> N)\<close>
+      by simp
+    hence \<open>\<exists> v \<in> ((orthogonal_complement M) \<inter> N). u = (projection M) u + v\<close>
+      by (metis d3 diff_add_cancel ordered_field_class.sign_simps(2))
+    then obtain v where \<open>v \<in> ((orthogonal_complement M) \<inter> N)\<close> and \<open>u = (projection M) u + v\<close>
+      by blast
+    hence \<open>u \<in> M + ((orthogonal_complement M) \<inter> N)\<close>
+      by (metis d4 set_plus_intro)
+    thus ?thesis
+      unfolding closed_sum_def
+      using closure_subset by blast
+  qed
+
+  have c3: "N \<subseteq> M +\<^sub>M ((orthogonal_complement M) \<inter> N)"
+    if "closed_csubspace M" and "closed_csubspace N" and "M \<subseteq> N"
+    for M N :: "'a set"
+    using c2 that by auto
+
+  show "sup X (inf (- X) Y) = Y"
+    if "X \<le> Y"
+    using that apply transfer
+    using c1 c3
+    by (simp add: subset_antisym)
+
+  show "X - Y = inf X (- Y)"
+    apply transfer by simp
 qed
 
 subsection \<open>Orthonormal bases\<close>
@@ -1814,10 +1884,13 @@ lemma is_onb_some_chilbert_basis[simp]: \<open>is_onb (some_chilbert_basis :: 'a
 
 lemma is_ortho_set_some_chilbert_basis[simp]: \<open>is_ortho_set some_chilbert_basis\<close>
   using is_onb_def is_onb_some_chilbert_basis by blast
+
 lemma is_normal_some_chilbert_basis: \<open>\<And>x. x \<in> some_chilbert_basis \<Longrightarrow> norm x = 1\<close>
   using is_onb_def is_onb_some_chilbert_basis by blast
+
 lemma ccspan_some_chilbert_basis[simp]: \<open>ccspan some_chilbert_basis = top\<close>
   using is_onb_def is_onb_some_chilbert_basis by blast
+
 lemma span_some_chilbert_basis[simp]: \<open>closure (cspan some_chilbert_basis) = UNIV\<close>
   by (metis ccspan.rep_eq ccspan_some_chilbert_basis top_ccsubspace.rep_eq)
 
@@ -1906,7 +1979,7 @@ lemma riesz_frechet_representation_existence:
   \<comment> \<open>Theorem 3.4 in @{cite conway2013course}\<close>
   fixes f::\<open>'a::chilbert_space \<Rightarrow> complex\<close>
   assumes a1: \<open>bounded_clinear f\<close>
-  shows \<open>\<exists>t. \<forall>x.  f x = (t \<bullet>\<^sub>C x)\<close>
+  shows \<open>\<exists>t. \<forall>x.  f x = t \<bullet>\<^sub>C x\<close>
 proof(cases \<open>\<forall> x. f x = 0\<close>)
   case True
   thus ?thesis
@@ -1946,7 +2019,6 @@ lemma riesz_frechet_representation_unique:
   assumes \<open>\<And>x. f x = (u \<bullet>\<^sub>C x)\<close>
   shows \<open>t = u\<close>
   by (metis add_diff_cancel_left' assms(1) assms(2) cinner_diff_left cinner_gt_zero_iff diff_add_cancel diff_zero)
-
 
 subsection \<open>Adjoints\<close>
 
@@ -2013,33 +2085,20 @@ lemma is_cadjoint_unique:
   assumes \<open>is_cadjoint F1 G\<close>
   assumes \<open>is_cadjoint F2 G\<close>
   shows \<open>F1 = F2\<close>
-proof (rule ext)
-  fix x
-  {
-    fix y
-    have \<open>cinner (F1 x - F2 x) y = cinner (F1 x) y - cinner (F2 x) y\<close>
-      by (simp add: cinner_diff_left)
-    also have \<open>\<dots> = cinner x (G y) - cinner x (G y)\<close>
-      by (metis assms(1) assms(2) is_cadjoint_def)
-    also have \<open>\<dots> = 0\<close>
-      by simp
-    finally have \<open>cinner (F1 x - F2 x) y = 0\<close>
-      by -
-  }
-  then show \<open>F1 x = F2 x\<close>
-    by fastforce
-qed
+  by (metis (full_types) assms(1) assms(2) ext is_cadjoint_def riesz_frechet_representation_unique)
 
 lemma cadjoint_univ_prop:
   fixes G :: "'b::chilbert_space \<Rightarrow> 'a::complex_inner"
   assumes a1: \<open>bounded_clinear G\<close>
   shows \<open>\<forall>x. \<forall>y. (cadjoint G x \<bullet>\<^sub>C y) = (x \<bullet>\<^sub>C G y)\<close>
+    (* TODO: remove quantifiers *)
   using assms cadjoint_is_cadjoint is_cadjoint_def by blast
 
 lemma cadjoint_univ_prop':
   fixes G :: "'b::chilbert_space \<Rightarrow> 'a::complex_inner"
   assumes a1: \<open>bounded_clinear G\<close>
   shows \<open>\<forall>x. \<forall>y. (x \<bullet>\<^sub>C cadjoint G y) = (G x \<bullet>\<^sub>C y)\<close>
+    (* TODO: remove quantifiers *)
   by (metis cadjoint_univ_prop assms cinner_commute')
 
 notation cadjoint ("_\<^sup>\<dagger>" [99] 100)
@@ -2115,14 +2174,15 @@ proposition double_cadjoint:
   shows "U\<^sup>\<dagger>\<^sup>\<dagger> = U"
   by (metis assms cadjoint_def cadjoint_is_cadjoint is_adjoint_sym is_cadjoint_unique someI_ex)
 
-lemma cadjoint_id: \<open>(id::'a::complex_inner\<Rightarrow>'a)\<^sup>\<dagger> = id\<close>
+(* TODO add [simp] *)
+lemma cadjoint_id: \<open>id\<^sup>\<dagger> = id\<close>
   by (simp add: cadjoint_eqI id_def)
 
 lemma scaleC_cadjoint:
   fixes A::"'a::chilbert_space \<Rightarrow> 'b::complex_inner"
   assumes "bounded_clinear A"
-  shows \<open>(\<lambda>t. a *\<^sub>C (A t))\<^sup>\<dagger> = (\<lambda>s. (cnj a) *\<^sub>C ((A\<^sup>\<dagger>) s))\<close>
-proof-
+  shows \<open>(\<lambda>t. a *\<^sub>C A t)\<^sup>\<dagger> = (\<lambda>s. cnj a *\<^sub>C (A\<^sup>\<dagger>) s)\<close>
+proof -
   have b3: \<open>((\<lambda> s. (cnj a) *\<^sub>C ((A\<^sup>\<dagger>) s)) x \<bullet>\<^sub>C y) = (x \<bullet>\<^sub>C (\<lambda> t. a *\<^sub>C (A t)) y)\<close>
     for x y
     by (simp add: assms cadjoint_univ_prop)
@@ -2144,29 +2204,7 @@ lemma is_projection_on_is_cadjoint:
   fixes M :: \<open>'a::complex_inner set\<close>
   assumes a1: \<open>is_projection_on \<pi> M\<close> and a2: \<open>closed_csubspace M\<close>
   shows \<open>is_cadjoint \<pi> \<pi>\<close>
-proof -
-  have \<open>cinner (x - \<pi> x) y = 0\<close> if \<open>y\<in>M\<close> for x y
-    using a1 a2 is_projection_on_iff_orthog orthogonal_complement_orthoI that by blast
-  then have \<open>cinner x y = cinner (\<pi> x) y\<close> if \<open>y\<in>M\<close> for x y
-    by (metis cinner_diff_left eq_iff_diff_eq_0 that)
-  moreover have \<open>cinner x y = cinner x (\<pi> y)\<close> if \<open>y\<in>M\<close> for x y
-    using a1 is_projection_on_fixes_image that by fastforce
-  ultimately have 1: \<open>cinner (\<pi> x) y = cinner x (\<pi> y)\<close> if \<open>y\<in>M\<close> for x y
-    using that by metis
-
-  have \<open>cinner (\<pi> x) y = 0\<close> if \<open>y \<in> orthogonal_complement M\<close> for x y
-    by (meson a1 is_projection_on_in_image orthogonal_complement_orthoI' that)
-  also have \<open>0 = cinner x (\<pi> y)\<close> if \<open>y \<in> orthogonal_complement M\<close> for x y
-    by (metis a1 a2 cinner_zero_right closed_csubspace.subspace complex_vector.subspace_0 diff_zero is_projection_on_eqI that)
-  finally have 2: \<open>cinner (\<pi> x) y = cinner x (\<pi> y)\<close> if \<open>y \<in> orthogonal_complement M\<close> for x y
-    using that by simp
-
-  from 1 2
-  have \<open>cinner (\<pi> x) y = cinner x (\<pi> y)\<close> for x y
-    by (smt (verit, ccfv_threshold) a1 a2 cinner_commute cinner_diff_left eq_iff_diff_eq_0 is_projection_on_iff_orthog orthogonal_complement_orthoI)
-  then show ?thesis
-    by (simp add: is_cadjoint_def)
-qed
+  by (smt (verit, ccfv_threshold) a1 a2 cinner_diff_left cinner_eq_flip is_cadjoint_def is_projection_on_iff_orthog orthogonal_complement_orthoI right_minus_eq)
 
 lemma is_projection_on_cadjoint:
   fixes M :: \<open>'a::complex_inner set\<close>
@@ -2181,105 +2219,6 @@ lemma projection_cadjoint:
   using is_projection_on_cadjoint assms
   by (metis closed_csubspace.closed closed_csubspace.subspace csubspace_is_convex empty_iff orthog_proj_exists projection_is_projection_on)
 
-instance ccsubspace :: (chilbert_space) complete_orthomodular_lattice
-proof
-  show "inf x (- x) = bot"
-    for x :: "'a ccsubspace"
-    apply transfer
-    by (simp add: closed_csubspace_def complex_vector.subspace_0 orthogonal_complement_zero_intersection)
-
-  have \<open>t \<in> x +\<^sub>M orthogonal_complement x\<close>
-    if a1: \<open>closed_csubspace x\<close>
-    for t::'a and x
-  proof-
-    have e1: \<open>t = (projection x) t + (projection (orthogonal_complement x)) t\<close>
-      by (simp add: that)
-    have e2: \<open>(projection x) t \<in> x\<close>
-      by (metis closed_csubspace.closed closed_csubspace.subspace csubspace_is_convex empty_iff orthog_proj_exists projection_in_image that)
-    have e3: \<open>(projection (orthogonal_complement x)) t \<in> orthogonal_complement x\<close>
-      by (metis add_diff_cancel_left' e1 orthogonal_complementI projection_orthogonal that)
-    have "orthogonal_complement x \<subseteq> x +\<^sub>M orthogonal_complement x"
-      by (simp add: closed_sum_right_subset complex_vector.subspace_0 that)
-    thus ?thesis
-      using \<open>closed_csubspace x\<close>
-        \<open>projection (orthogonal_complement x) t \<in> orthogonal_complement x\<close> \<open>projection x t \<in> x\<close>
-        \<open>t = projection x t + projection (orthogonal_complement x) t\<close> in_mono
-        closed_sum_left_subset complex_vector.subspace_def
-      by (metis closed_csubspace.subspace closed_subspace_closed_sum orthogonal_complement_closed_subspace)
-  qed
-  hence b1: \<open>x +\<^sub>M orthogonal_complement x = UNIV\<close>
-    if a1: \<open>closed_csubspace x\<close>
-    for x::\<open>'a set\<close>
-    using that by blast
-  show "sup x (- x) = top"
-    for x :: "'a ccsubspace"
-    apply transfer
-    using b1 by auto
-  show "- (- x) = x"
-    for x :: "'a ccsubspace"
-    apply transfer
-    by (simp)
-
-  show "- y \<le> - x"
-    if "x \<le> y"
-    for x :: "'a ccsubspace"
-      and y :: "'a ccsubspace"
-    using that apply transfer
-    by simp
-
-  have c1: "x +\<^sub>M orthogonal_complement x \<inter> y \<subseteq> y"
-    if "closed_csubspace x"
-      and "closed_csubspace y"
-      and "x \<subseteq> y"
-    for x :: "'a set"
-      and y :: "'a set"
-    using that
-    by (simp add: closed_sum_is_sup)
-
-  have c2: \<open>u \<in> x +\<^sub>M ((orthogonal_complement x) \<inter> y)\<close>
-    if a1: "closed_csubspace x" and a2: "closed_csubspace y" and a3: "x \<subseteq> y" and x1: \<open>u \<in> y\<close>
-    for x :: "'a set" and y :: "'a set"  and u
-  proof-
-    have d4: \<open>(projection x) u \<in> x\<close>
-      by (metis a1 closed_csubspace_def csubspace_is_convex equals0D orthog_proj_exists projection_in_image)
-    hence d2: \<open>(projection x) u \<in> y\<close>
-      using a3 by auto
-    have d1: \<open>csubspace y\<close>
-      by (simp add: a2)
-    have \<open>u - (projection x) u \<in> orthogonal_complement x\<close>
-      by (simp add: a1 orthogonal_complementI projection_orthogonal)
-    moreover have  \<open>u - (projection x) u \<in> y\<close>
-      by (simp add: d1 d2 complex_vector.subspace_diff x1)
-    ultimately have d3: \<open>u - (projection x) u \<in> ((orthogonal_complement x) \<inter> y)\<close>
-      by simp
-    hence \<open>\<exists> v \<in> ((orthogonal_complement x) \<inter> y). u = (projection x) u + v\<close>
-      by (metis d3 diff_add_cancel ordered_field_class.sign_simps(2))
-    then obtain v where \<open>v \<in> ((orthogonal_complement x) \<inter> y)\<close> and \<open>u = (projection x) u + v\<close>
-      by blast
-    hence \<open>u \<in> x + ((orthogonal_complement x) \<inter> y)\<close>
-      by (metis d4 set_plus_intro)
-    thus ?thesis
-      unfolding closed_sum_def
-      using closure_subset by blast
-  qed
-
-  have c3: "y \<subseteq> x +\<^sub>M ((orthogonal_complement x) \<inter> y)"
-    if a1: "closed_csubspace x" and a2: "closed_csubspace y" and a3: "x \<subseteq> y"
-    for x y :: "'a set"
-    using c2 a1 a2 a3 by auto
-
-  show "sup x (inf (- x) y) = y"
-    if "x \<le> y"
-    for x y :: "'a ccsubspace"
-    using that apply transfer
-    using c1 c3
-    by (simp add: subset_antisym)
-
-  show "x - y = inf x (- y)"
-    for x y :: "'a ccsubspace"
-    apply transfer
-    by simp
-qed
 
 subsection \<open>More projections\<close>
 
@@ -2340,7 +2279,7 @@ proof -
 qed
 
 lemma is_projection_on_insert:
-  assumes ortho: "\<And>s. s \<in> S \<Longrightarrow> (a \<bullet>\<^sub>C s) = 0"
+  assumes ortho: "\<And>s. s \<in> S \<Longrightarrow> is_orthogonal a s"
   assumes \<open>is_projection_on \<pi> (closure (cspan S))\<close>
   assumes \<open>is_projection_on \<pi>a (cspan {a})\<close>
   shows "is_projection_on (\<lambda>x. \<pi>a x + \<pi> x) (closure (cspan (insert a S)))"
@@ -2360,14 +2299,15 @@ qed
 
 lemma projection_insert:
   fixes a :: \<open>'a::chilbert_space\<close>
-  assumes a1: "\<And>s. s \<in> S \<Longrightarrow> (a \<bullet>\<^sub>C s) = 0"
+  assumes a1: "\<And>s. s \<in> S \<Longrightarrow> is_orthogonal a s"
   shows "projection (closure (cspan (insert a S))) u
         = projection (cspan {a}) u + projection (closure (cspan S)) u"
   using is_projection_on_insert[where S=S, OF a1]
   by (metis (no_types, lifting) closed_closure closed_csubspace.intro closure_is_csubspace complex_vector.subspace_span csubspace_is_convex finite.intros(1) finite.intros(2) finite_cspan_closed_csubspace projection_eqI' projection_is_projection_on')
 
 lemma projection_insert_finite:
-  assumes a1: "\<And>s. s \<in> S \<Longrightarrow> (a \<bullet>\<^sub>C s) = 0" and a2: "finite (S::'a::chilbert_space set)"
+  fixes S :: \<open>'a::chilbert_space set\<close>
+  assumes a1: "\<And>s. s \<in> S \<Longrightarrow> is_orthogonal a s" and a2: "finite S"
   shows "projection (cspan (insert a S)) u
         = projection (cspan {a}) u + projection (cspan S) u"
   using projection_insert
@@ -2391,62 +2331,11 @@ lemma cinner_canonical_basis:
 
 instance onb_enum \<subseteq> chilbert_space
 proof
-  show "convergent X"
-    if "Cauchy X"
-    for X :: "nat \<Rightarrow> 'a"
-  proof-
-    have \<open>finite (set canonical_basis)\<close>
-      by simp
-    have \<open>Cauchy (\<lambda> n. (t \<bullet>\<^sub>C X n))\<close> for t
-      by (simp add: bounded_clinear.Cauchy bounded_clinear_cinner_right that)
-    hence \<open>convergent (\<lambda> n. (t \<bullet>\<^sub>C X n))\<close>
-      for t
-      by (simp add: Cauchy_convergent_iff)
-    hence \<open>\<forall> t\<in>set canonical_basis. \<exists> L. (\<lambda> n. (t \<bullet>\<^sub>C X n)) \<longlonglongrightarrow> L\<close>
-      by (simp add: convergentD)
-    hence \<open>\<exists> L. \<forall> t\<in>set canonical_basis. (\<lambda> n. (t \<bullet>\<^sub>C X n)) \<longlonglongrightarrow> L t\<close>
-      by metis
-    then obtain L where \<open>\<And> t. t\<in>set canonical_basis \<Longrightarrow> (\<lambda> n. (t \<bullet>\<^sub>C X n)) \<longlonglongrightarrow> L t\<close>
-      by blast
-    define l where \<open>l = (\<Sum>t\<in>set canonical_basis. L t *\<^sub>C t)\<close>
-    have x1: \<open>X n = (\<Sum>t\<in>set canonical_basis. (t \<bullet>\<^sub>C X n) *\<^sub>C t)\<close>
-      for n
-      using onb_expansion_finite[where T = "set canonical_basis" and x = "X n"]
-        \<open>finite (set canonical_basis)\<close>
-      by (smt is_generator_set is_normal is_orthonormal)
-
-    have \<open>(\<lambda> n. (t \<bullet>\<^sub>C X n) *\<^sub>C t) \<longlonglongrightarrow> L t *\<^sub>C t\<close>
-      if r1: \<open>t\<in>set canonical_basis\<close>
-      for t
-    proof-
-      have \<open>(\<lambda> n. (t \<bullet>\<^sub>C X n)) \<longlonglongrightarrow> L t\<close>
-        using r1  \<open>\<And> t. t\<in>set canonical_basis \<Longrightarrow> (\<lambda> n. (t \<bullet>\<^sub>C X n)) \<longlonglongrightarrow> L t\<close>
-        by blast
-      define f where \<open>f x = x *\<^sub>C t\<close> for x
-      have \<open>isCont f r\<close>
-        for r
-        unfolding f_def
-        by (simp add: bounded_clinear_scaleC_left clinear_continuous_at)
-      hence \<open>(\<lambda> n. f (t \<bullet>\<^sub>C X n)) \<longlonglongrightarrow> f (L t)\<close>
-        using \<open>(\<lambda>n. (t \<bullet>\<^sub>C X n)) \<longlonglongrightarrow> L t\<close> isCont_tendsto_compose by blast
-      hence \<open>(\<lambda> n. (t \<bullet>\<^sub>C X n) *\<^sub>C t) \<longlonglongrightarrow> L t *\<^sub>C t\<close>
-        unfolding f_def
-        by simp
-      thus ?thesis by blast
-    qed
-    hence \<open>(\<lambda> n. (\<Sum>t\<in>set canonical_basis. (t \<bullet>\<^sub>C X n) *\<^sub>C t))
-    \<longlonglongrightarrow>  (\<Sum>t\<in>set canonical_basis. L t *\<^sub>C t)\<close>
-      using \<open>finite (set canonical_basis)\<close>
-        tendsto_sum[where I = "set canonical_basis" and f = "\<lambda> t. \<lambda> n. (t \<bullet>\<^sub>C X n) *\<^sub>C t"
-          and a = "\<lambda> t. L t *\<^sub>C t"]
-      by auto
-    hence x2: \<open>(\<lambda> n. (\<Sum>t\<in>set canonical_basis. (t \<bullet>\<^sub>C X n) *\<^sub>C t)) \<longlonglongrightarrow> l\<close>
-      using l_def by blast
-    have \<open>X \<longlonglongrightarrow> l\<close>
-      using x1 x2 by simp
-    thus ?thesis
-      unfolding convergent_def by blast
-  qed
+  have \<open>complete (UNIV :: 'a set)\<close>
+    using finite_cspan_complete[where B=\<open>set canonical_basis\<close>]
+    by simp
+  then show "convergent X" if "Cauchy X" for X :: "nat \<Rightarrow> 'a"
+    by (simp add: complete_def convergent_def that)
 qed
 
 subsection \<open>Conjugate space\<close>
@@ -2460,6 +2349,8 @@ instance
     apply (simp add: cinner_add_right)
   using cinner_ge_zero norm_eq_sqrt_cinner by auto
 end
+
+instance conjugate_space :: (chilbert_space) chilbert_space..
 
 subsection \<open>Misc (ctd.)\<close>
 
@@ -2487,8 +2378,5 @@ proof -
   then show \<open>closure (cspan S) = UNIV\<close>
     by (simp add: orthogonal_complement_orthogonal_complement_closure_cspan)
 qed
-
-
-instance conjugate_space :: (chilbert_space) chilbert_space..
 
 end
