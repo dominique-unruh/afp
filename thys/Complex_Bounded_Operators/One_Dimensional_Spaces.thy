@@ -27,7 +27,7 @@ lemma one_cinner_one[simp]: \<open>(1::('a::one_dim)) \<bullet>\<^sub>C 1 = 1\<c
 proof-
   include notation_norm
   have \<open>(canonical_basis::'a list) = [1::('a::one_dim)]\<close>
-    by (simp add: one_dim_canonical_basis)    
+    by simp
   hence \<open>\<parallel>1::'a::one_dim\<parallel> = 1\<close>
     by (metis is_normal list.set_intros(1))
   hence \<open>\<parallel>1::'a::one_dim\<parallel>^2 = 1\<close>
@@ -40,7 +40,7 @@ qed
 lemma one_cinner_a_scaleC_one[simp]: \<open>((1::'a::one_dim) \<bullet>\<^sub>C a) *\<^sub>C 1 = a\<close>
 proof-
   have \<open>(canonical_basis::'a list) = [1]\<close>
-    by (simp add: one_dim_canonical_basis)
+    by simp
   hence r2: \<open>a \<in> complex_vector.span ({1::'a})\<close>        
     using  iso_tuple_UNIV_I empty_set is_generator_set list.simps(15)
     by metis
