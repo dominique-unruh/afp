@@ -385,6 +385,32 @@ fun has_tvar' (t$u) = has_tvar' t orelse has_tvar' u
   | has_tvar' (Bound _) = false
 \<close>
 
+
+inductive rel_itself :: \<open>'a itself \<Rightarrow> 'b itself \<Rightarrow> bool\<close> 
+  where \<open>rel_itself TYPE('a) TYPE('b)\<close>
+
+ML \<open>
+fun mk_relation_for_tfree name_fun (n,s) = 
+  let val (r,rep,_) = name_fun n in (r, TFree(rep,s) --> TFree(n,s) --> HOLogic.boolT) end
+  (* ("r"^n, TFree("'rep"^n,s) --> TFree(n,s) --> HOLogic.boolT) *)
+fun mk_relation_replaceT name_fun = 
+  map_type_tfree (fn (n,s) => let val (_,rep,_) = name_fun n in TFree(rep,s) end)
+fun mk_relation_for_type ctxt name_fun (T:typ) = let
+  fun mk T' = case T' of
+    TFree(n,s) => mk_relation_for_tfree name_fun (n,s) |> Free
+    | Type(_, []) => HOLogic.eq_const T'
+    | \<^Type>\<open>itself T\<close> => 
+        let val T' = mk_relation_replaceT name_fun T
+        in \<^Const>\<open>rel_itself T' T\<close> end
+    | Type(name, _) => (case With_Type.get_relator ctxt name of
+                         NONE => raise TYPE("mk_relation_for_type: don't know how to handle type " ^ name, [T,T'], [])
+                        | SOME f => f ctxt mk T'
+                                    handle e as TYPE _ => raise e
+                                         | e => raise TYPE("mk_relation_for_type: handler for type " ^ name ^ " failed with exception " ^ Runtime.exn_message e, [T,T'], []))
+    | TVar _ => raise TYPE("mk_relation_for_type: encountered schematic type var", [T,T'], [])
+  in mk T end
+\<close>
+
 ML \<open>
 (* Returns (T,R,D,thm) where:
   T is the type of the type of parameters of the type representation
@@ -397,15 +423,21 @@ fun get_relation_thm ctxt class = let
   open Conv
   val rep_paramT0 = get_params_of_class (Proof_Context.theory_of ctxt) class |> #3 |> map (fn (_,_,T) => T) |> HOLogic.mk_tupleT
   val repT = TFree("'rep",\<^sort>\<open>type\<close>)
-  val rep_paramT = TVar(("'rep_param",0),\<^sort>\<open>type\<close>)
+ val rep_paramT = TVar(("'rep_param",0),\<^sort>\<open>type\<close>) 
   val absT = TFree("'abs",\<^sort>\<open>type\<close>)
   val abs_paramT = typ_subst_TVars [(("'a",0), absT)] rep_paramT0
+  (* val rep_paramT = typ_subst_TVars [(("'a",0), repT)] rep_paramT0 *)
 (*   val goal = \<^Const>\<open>with_type_compat_xxx repT absT rep_paramT abs_paramT\<close>
         $ Var(("R",0), (repT --> absT --> HOLogic.boolT) --> (rep_paramT --> abs_paramT --> HOLogic.boolT))
         $ Var(("RR",0), (repT --> repT --> HOLogic.boolT) --> (rep_paramT --> rep_paramT --> HOLogic.boolT))
       |> HOLogic.mk_Trueprop *)
+(*   fun name_fun "'abs" = ("r", "'rep", "S")
+  val R = mk_relation_for_type ctxt name_fun abs_paramT |> absfree ("r", \<^typ>\<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>)
+        (* |> Type.varify_global TFrees.empty |> snd *)
+       |> \<^print> *)
   val goal = \<^Const>\<open>with_type_has_domain repT absT rep_paramT abs_paramT\<close>
-                $ Var(("R",0), (repT --> absT --> HOLogic.boolT) --> (rep_paramT --> abs_paramT --> HOLogic.boolT))
+                 $ Var(("R",0), (repT --> absT --> HOLogic.boolT) --> (rep_paramT --> abs_paramT --> HOLogic.boolT)) 
+                (* $ R *)
                 $ Var(("D",0), HOLogic.mk_setT repT --> rep_paramT --> HOLogic.boolT)
       |> HOLogic.mk_Trueprop
   val thms =  Named_Theorems.get ctxt \<^named_theorems>\<open>with_type_compat_xxx\<close>
@@ -428,7 +460,7 @@ fun get_relation_thm ctxt class = let
   val thm = Goal.prove ctxt [] [] goal (fn {context,...} => tac context)
   val simp_rules = @{thms Domainp_rel_fun_equal_onp[abs_def] Domainp_equal_onp} @ (Proof_Context.get_thms ctxt \<^named_theorems>\<open>with_type_simps\<close>)
   val thm = thm |> fconv_rule (Simplifier.rewrite ((clear_simpset ctxt) addsimps simp_rules)
-                               |> arg_conv(*Trueprop*) |> arg_conv)
+                               |> arg_conv |> HOLogic.Trueprop_conv)
   val (T,R,D) = dest_with_type_has_domain (Thm.prop_of thm)
 in
   (T,R,D,thm)
@@ -502,31 +534,6 @@ ML \<open>
 fun has_tfree (TFree _) = true
   | has_tfree (Type (_, Ts)) = exists has_tfree Ts
   | has_tfree _ = false
-\<close>
-
-inductive rel_itself :: \<open>'a itself \<Rightarrow> 'b itself \<Rightarrow> bool\<close> 
-  where \<open>rel_itself TYPE('a) TYPE('b)\<close>
-
-ML \<open>
-fun mk_relation_for_tfree name_fun (n,s) = 
-  let val (r,rep,_) = name_fun n in (r, TFree(rep,s) --> TFree(n,s) --> HOLogic.boolT) end
-  (* ("r"^n, TFree("'rep"^n,s) --> TFree(n,s) --> HOLogic.boolT) *)
-fun mk_relation_replaceT name_fun = 
-  map_type_tfree (fn (n,s) => let val (_,rep,_) = name_fun n in TFree(rep,s) end)
-fun mk_relation_for_type ctxt name_fun (T:typ) = let
-  fun mk T' = case T' of
-    TFree(n,s) => mk_relation_for_tfree name_fun (n,s) |> Free
-    | Type(_, []) => HOLogic.eq_const T'
-    | \<^Type>\<open>itself T\<close> => 
-        let val T' = mk_relation_replaceT name_fun T
-        in \<^Const>\<open>rel_itself T' T\<close> end
-    | Type(name, _) => (case With_Type.get_relator ctxt name of
-                         NONE => raise TYPE("mk_relation_for_type: don't know how to handle type " ^ name, [T,T'], [])
-                        | SOME f => f ctxt mk T'
-                                    handle e as TYPE _ => raise e
-                                         | e => raise TYPE("mk_relation_for_type: handler for type " ^ name ^ " failed with exception " ^ Runtime.exn_message e, [T,T'], []))
-    | TVar _ => raise TYPE("mk_relation_for_type: encountered schematic type var", [T,T'], [])
-  in mk T end
 \<close>
 
 setup \<open>
@@ -643,7 +650,7 @@ fun create_transfer_for_term ctxt name_fun (term:term) = let
      THEN'
      instantiate_rel_tac ctxt
      THEN'
-     (trace_tac ctxt \<^here> "resolve_tac" (resolve_tac ctxt rules)
+     ((* trace_tac ctxt \<^here> "resolve_tac" *) (resolve_tac ctxt rules)
       (* ORELSE' (resolve_tac ctxt @{thms RelI} THEN' resolve_tac ctxt rules) *)
       ORELSE' error_tac ctxt (fn t => "No transfer rule found for " ^ t))
      THEN_ALL_NEW step_premise_tac ctxt prems
@@ -791,14 +798,12 @@ declare Lifting_Set.finite_transfer[add_Rel, with_type_transfer_rules]
 ML \<open>
 (* rel_const must use 'rep, 'abs *)
 fun create_transfer_thm ctxt class (* rel_const rel_const_def_thm *) = let
-val _ = \<^print> 0
   val thy = Proof_Context.theory_of ctxt
   val (class_const, class_const_curried, _) = get_params_of_class thy class
   (* val class_const_def_thm = Proof_Context.get_thm ctxt ((class_const |> dest_Const |> fst) ^ "_def") |> Drule.abs_def *)
   val class_const_curried = subst_TVars [(("'a",0), TFree("'abs",\<^sort>\<open>type\<close>))] class_const_curried
   fun name_fun "'abs" = ("r", "'rep", "S")
   val thm = create_transfer_for_term ctxt name_fun class_const_curried
-val _ = \<^print> 1
   val transferred = thm
     |> Thm.concl_of |> HOLogic.dest_Trueprop
     |> dest_comb |> fst |> dest_comb |> snd
@@ -816,24 +821,28 @@ val _ = \<^print> 1
 
 lemma aux: 
   includes lifting_syntax
-  assumes class1_def: \<open>class1 == (class1P, class1R)\<close>
-  assumes class2_def: \<open>class2 == (class2P, class2R)\<close>
+  fixes r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
+  assumes class1_def: \<open>class1 \<equiv> (class1P, class1R)\<close>
+  assumes class2_def: \<open>class2 \<equiv> (class2P, class2R)\<close>
   assumes class2P_def: \<open>class2P \<equiv> \<lambda>S p. D S p \<and> pred' (\<lambda>x. x \<in> S) p\<close>
-  assumes pred'_def: \<open>pred' \<equiv> pred''\<close>
-  assumes class1R_def: \<open>class1R \<equiv> class1R'\<close>
+  (* assumes pred'_def: \<open>pred' \<equiv> pred''\<close> *)
+  (* assumes class1R_def: \<open>class1R \<equiv> class1R'\<close> *)
   assumes wthd: \<open>with_type_has_domain class1R D\<close>
   assumes 1: \<open>\<And>S. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> Domainp r = S \<Longrightarrow>
-               Transfer.Rel (class1R' r ===> (=)) (pred'' S) class_const\<close>
+               Transfer.Rel (class1R r ===> (=)) (pred' S) class_const\<close>
+  (* assumes class1R_same: \<open>class1R' = class1R''\<close> *)
   assumes r_assms: \<open>bi_unique r\<close> \<open>right_total r\<close>
   shows \<open>(snd class1 r ===> (\<longleftrightarrow>)) (fst class2 (Collect (Domainp r))) class_const\<close>
-  unfolding class1_def class2_def fst_conv snd_conv class2P_def pred'_def class1R_def
+
+  unfolding class1_def class2_def fst_conv snd_conv class2P_def (* pred'_def class1R_def *)
   apply (rule with_type_split_aux)
+   (* apply (unfold class1R_same) *)
    apply (rule 1[unfolded Rel_def])
      apply (rule r_assms)
      apply (rule r_assms)
    apply auto[1]
   using wthd
-  by (simp add: class1R_def r_assms(1) r_assms(2) with_type_has_domain_def)
+  by (simp add: (* class1R_def class1R_same *) r_assms(1) r_assms(2) with_type_has_domain_def)
 
 lemma xxxxx:
   assumes has_dom: \<open>with_type_has_domain class2R D\<close>
@@ -844,6 +853,16 @@ lemma xxxxx:
   using has_dom
   by (simp add: with_type_has_domain_def with_type_compat_rel_def class1_def class2_def class1P_def)
 
+
+ML \<open>
+val define_stuff_goal = Syntax.read_prop (Proof_Context.set_mode Proof_Context.mode_pattern \<^context>)
+  "bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (rel_fun (snd ?class1 r) (\<longleftrightarrow>)) (fst ?class2 (Collect (Domainp r))) ?class_const"
+\<close>
+
+ML \<open>
+fun force_fail pos description tac =
+  tac ORELSE (fn st => error (description ^ Position.here pos ^ ": " ^ (Thm.cprem_of st 1 |> \<^make_string>)))
+\<close>
 
 
 ML \<open>
@@ -857,20 +876,37 @@ fun define_stuff pos class lthy = let
   fun gen_thm lthy = Morphism.thm (Local_Theory.target_morphism lthy)
   fun gen_term lthy = Morphism.term (Local_Theory.target_morphism lthy)
   fun gen_sym_thm lthy thm = gen_thm lthy thm |> Thm.symmetric
-  val has_dom_thm' = has_dom_thm |> fconv_rule (rewr_conv (gen_sym_thm lthy rel_def) |> arg1_conv(*r*) |> arg_conv(*Trueprop*))
-                 |> fconv_rule (rewr_conv (gen_sym_thm lthy dom_def) |> arg_conv(*d*) |> arg_conv(*Trueprop*))
+  val has_dom_thm' = has_dom_thm |> fconv_rule (rewr_conv (gen_sym_thm lthy rel_def) |> arg1_conv(*r*) |> HOLogic.Trueprop_conv)
+                 |> fconv_rule (rewr_conv (gen_sym_thm lthy dom_def) |> arg_conv(*d*) |> HOLogic.Trueprop_conv)
   val ((* has_dom_thm'', *)lthy) = local_note (Binding.suffix_name "_has_dom" binding) has_dom_thm' lthy
   val (transferred,transfer_thm) = create_transfer_thm lthy class (* rel_const rel_def *)
   val (pred'_const,pred'_def,lthy) = local_def (Binding.suffix_name "_pred'" binding) (Type.legacy_freeze transferred) lthy
-  val (pred_const,pred_def, lthy) = local_def (Binding.suffix_name "_pred" binding) 
+  val (pred_const,pred_def, lthy) = local_def (Binding.suffix_name "_pred" binding)
         (\<^Term>\<open>(\<lambda>S p. \<open>dom_const\<close> S p \<and> \<open>pred'_const\<close> (\<lambda>x. x \<in> S) p)\<close> lthy) lthy
   val (wt_class_const,wt_class_def,lthy) = local_def binding (HOLogic.mk_prod (pred_const, rel_const)) lthy
-  fun assumption thm i = Thm.assumption (SOME lthy) thm i |> Seq.hd
-  val transfer_thm' = (@{thm aux} OF [gen_thm lthy wt_class_def, gen_thm lthy wt_class_def,
-      gen_thm lthy pred_def, gen_thm lthy pred'_def, gen_thm lthy rel_def, has_dom_thm'] 
-           OF [gen_thm lthy transfer_thm])
-        |> assumption 1 |> assumption 1 |> assumption 1
-  val ((* transfer_thm'', *)lthy) = local_note (Binding.suffix_name "_transfer" binding) transfer_thm' lthy
+
+  (* fun ctxt_conv conv_f conv ctxt = conv_f (conv ctxt) *)
+  val rel_def_gen = gen_thm lthy rel_def
+  val dom_def_gen = gen_thm lthy dom_def
+  val pred'_def_gen = gen_thm lthy pred'_def
+  val wt_class_def_gen = gen_thm lthy wt_class_def
+
+  val transfer_thm' = Goal.prove lthy ["r"] [] define_stuff_goal
+    (fn {context=ctxt,...} => 
+  resolve_tac ctxt @{thms aux} 1 |> force_fail \<^here> "internal error"
+  THEN solve_tac ctxt [wt_class_def_gen] 1 |> force_fail \<^here> "internal error"
+  THEN solve_tac ctxt [wt_class_def_gen] 1 |> force_fail \<^here> "internal error"
+  THEN solve_tac ctxt [gen_thm lthy pred_def] 1 |> force_fail \<^here> "internal error"
+  THEN CONVERSION (top_sweep_conv (fn _ => rewr_conv rel_def_gen) ctxt) 1 |> force_fail \<^here> "internal error"
+  THEN CONVERSION (top_sweep_conv (fn _ => rewr_conv dom_def_gen) ctxt) 1 |> force_fail \<^here> "internal error"
+  THEN solve_tac ctxt [has_dom_thm] 1 |> force_fail \<^here> "internal error"
+  THEN CONVERSION (top_sweep_conv (fn _ => rewr_conv rel_def_gen) ctxt) 1 |> force_fail \<^here> "internal error"
+  THEN CONVERSION (top_sweep_conv (fn _ => rewr_conv pred'_def_gen) ctxt) 1 |> force_fail \<^here> "internal error"
+  THEN solve_tac ctxt [transfer_thm] 1 |> force_fail \<^here> "internal error"
+  THEN assume_tac ctxt 1 |> force_fail \<^here> "internal error"
+  THEN assume_tac ctxt 1 |> force_fail \<^here> "internal error")
+
+  val lthy = local_note (Binding.suffix_name "_transfer" binding) transfer_thm' lthy
   val with_compat_rel_thm = @{thm xxxxx} OF (map (gen_thm lthy) [has_dom_thm', wt_class_def, wt_class_def, pred_def])
   val lthy = local_note (Binding.suffix_name "_rel_compat" binding) with_compat_rel_thm lthy
   val info : With_Type.with_type_info = {

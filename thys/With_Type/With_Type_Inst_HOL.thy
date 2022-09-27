@@ -579,6 +579,20 @@ local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>power.
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_bits_axioms\<close>\<close>
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.semiring_bits\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>semiring_bits\<close>\<close>
+(*
+
+FIX: in define_stuff, prove that the two relations are equal by simplification
+
+
+ANALYSIS:
+instantiated aux-thm has (=) in one place where transfer_thm has "rel_fun (=) (=)"
+
+Reason(?) : get_relation_thm produces relation by applying rules, while create_transfer_for_term
+uses mk_relation_for_type
+
+Solution(?): Force relation to be mk_relation_for_type in get_relation_thm instead of a schematic var
+
+ *)
 
 local_setup \<open>bind_transfers_for_const \<^here> \<^const_name>\<open>class.ordered_semiring_0\<close>\<close>
 local_setup \<open>define_stuff \<^here> \<^class>\<open>ordered_semiring_0\<close>\<close>
