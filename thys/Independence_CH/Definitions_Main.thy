@@ -551,9 +551,8 @@ thm instances1_fms_def
 text\<open>@{thm [display] instances1_fms_def}\<close>
 (*
 instances1_fms \<equiv>
-{ list_repl1_intf_fm, list_repl2_intf_fm, formula_repl1_intf_fm,
- formula_repl2_intf_fm, eclose_repl1_intf_fm, eclose_repl2_intf_fm,
- wfrec_rank_fm, trans_repl_HVFrom_fm, tl_repl_intf_fm }
+{ eclose_closed_fm, eclose_abs_fm,
+  wfrec_rank_fm, transrec_VFrom_fm }
 *)
 
 thm overhead_def overhead_notCH_def
@@ -570,7 +569,7 @@ of $32$ instances:\<close>
 thm overhead_CH_def
 text\<open>@{thm [display] overhead_CH_def}\<close>
 (*
-  overhead_CH \<equiv> overhead_notCH \<union> {replacement_dcwit_repl_body_fm}
+  overhead_CH \<equiv> overhead_notCH \<union> {dc_abs_fm}
 *)
 
 thm extensions_of_ctms

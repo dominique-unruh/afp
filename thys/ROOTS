@@ -67,6 +67,7 @@ CAVA_Automata
 CAVA_LTL_Modelchecker
 CCS
 CISC-Kernel
+CRYSTALS-Kyber
 CRDT
 CSP_RefTK
 CYK
@@ -267,6 +268,7 @@ HOL-CSP
 HOLCF-Prelude
 HRB-Slicing
 Hahn_Jordan_Decomposition
+Hales_Jewett
 Heard_Of
 Hello_World
 HereditarilyFinite
@@ -293,6 +295,7 @@ IMP_Compiler
 IMP_Compiler_Reuse
 IP_Addresses
 Imperative_Insertion_Sort
+Implicational_Logic
 Impossible_Geometry
 Incompleteness
 Incredible_Proof_Machine
@@ -328,6 +331,7 @@ KAT_and_DRA
 KBPs
 KD_Tree
 Key_Agreement_Strong_Adversaries
+Khovanskii_Theorem
 Kleene_Algebra
 Knights_Tour
 Knot_Theory
@@ -438,6 +442,7 @@ Noninterference_Ipurge_Unwinding
 Noninterference_Sequential_Composition
 NormByEval
 Nullstellensatz
+Number_Theoretic_Transform
 Octonions
 OpSets
 Open_Induction
@@ -458,6 +463,7 @@ PLM
 POPLmark-deBruijn
 PSemigroupsConvolution
 Padic_Ints
+Padic_Field
 Pairing_Heap
 Paraconsistency
 Parity_Game
@@ -551,6 +557,7 @@ Resolution_FOL
 Rewrite_Properties_Reduction
 Rewriting_Z
 Ribbon_Proofs
+Risk_Free_Lending
 Robbins-Conjecture
 Robinson_Arithmetic
 Root_Balanced_Tree
@@ -567,6 +574,7 @@ Safe_Distance
 Safe_OCL
 Saturation_Framework
 Saturation_Framework_Extensions
+SCC_Bloemen_Sequential
 Schutz_Spacetime
 Secondary_Sylow
 Security_Protocol_Refinement
@@ -575,6 +583,7 @@ SenSocialChoice
 Separata
 Separation_Algebra
 Separation_Logic_Imperative_HOL
+Separation_Logic_Unbounded
 SequentInvertibility
 Shadow_DOM
 Shadow_SC_DOM
@@ -602,6 +611,7 @@ Special_Function_Bounds
 Splay_Tree
 Sqrt_Babylonian
 Stable_Matching
+Stalnaker_Logic
 Statecharts
 Stateful_Protocol_Composition_and_Typing
 Stellar_Quorums

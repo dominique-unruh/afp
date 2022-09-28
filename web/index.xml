@@ -6,7 +6,97 @@
     <description>Recent content on Archive of Formal Proofs</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
-    <lastBuildDate>Mon, 15 Aug 2022 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 23 Sep 2022 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Stalnaker&#39;s Epistemic Logic</title>
+      <link>/entries/Stalnaker_Logic.html</link>
+      <pubDate>Fri, 23 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Stalnaker_Logic.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>p-adic Fields and p-adic Semialgebraic Sets</title>
+      <link>/entries/Padic_Field.html</link>
+      <pubDate>Thu, 22 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Padic_Field.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Risk-Free Lending</title>
+      <link>/entries/Risk_Free_Lending.html</link>
+      <pubDate>Sun, 18 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Risk_Free_Lending.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Soundness and Completeness of Implicational Logic</title>
+      <link>/entries/Implicational_Logic.html</link>
+      <pubDate>Tue, 13 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Implicational_Logic.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>CRYSTALS-Kyber</title>
+      <link>/entries/CRYSTALS-Kyber.html</link>
+      <pubDate>Thu, 08 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/CRYSTALS-Kyber.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Unbounded Separation Logic</title>
+      <link>/entries/Separation_Logic_Unbounded.html</link>
+      <pubDate>Mon, 05 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Separation_Logic_Unbounded.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Khovanskii&amp;#x27;s Theorem</title>
+      <link>/entries/Khovanskii_Theorem.html</link>
+      <pubDate>Fri, 02 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Khovanskii_Theorem.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>The Hales–Jewett Theorem</title>
+      <link>/entries/Hales_Jewett.html</link>
+      <pubDate>Fri, 02 Sep 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Hales_Jewett.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Number Theoretic Transform</title>
+      <link>/entries/Number_Theoretic_Transform.html</link>
+      <pubDate>Thu, 18 Aug 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Number_Theoretic_Transform.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Correctness of a Set-based Algorithm for Computing Strongly Connected Components of a Graph</title>
+      <link>/entries/SCC_Bloemen_Sequential.html</link>
+      <pubDate>Wed, 17 Aug 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/SCC_Bloemen_Sequential.html</guid>
+      <description></description>
+    </item>
+    
     <item>
       <title>From THE BOOK: Two Squares via Involutions</title>
       <link>/entries/Involutions2Squares.html</link>
@@ -7497,6 +7587,15 @@ The archive repository is hosted on Heptapod to provide easy free access to arch
     </item>
     
     <item>
+      <title>CRYSTALS-Kyber</title>
+      <link>/theories/crystals-kyber/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/crystals-kyber/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>CSP_RefTK</title>
       <link>/theories/csp_reftk/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -8743,6 +8842,15 @@ How to refer to AFP entries: You can refer to AFP entries by using the AFP as an
     </item>
     
     <item>
+      <title>Hales_Jewett</title>
+      <link>/theories/hales_jewett/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/hales_jewett/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Heard_Of</title>
       <link>/theories/heard_of/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -9028,6 +9136,15 @@ Referring to AFP Entries in Isabelle/JEdit Once you have downloaded the AFP, you
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/theories/imperative_insertion_sort/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Implicational_Logic</title>
+      <link>/theories/implicational_logic/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/implicational_logic/</guid>
       <description></description>
     </item>
     
@@ -9379,6 +9496,15 @@ Referring to AFP Entries in Isabelle/JEdit Once you have downloaded the AFP, you
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/theories/key_agreement_strong_adversaries/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Khovanskii_Theorem</title>
+      <link>/theories/khovanskii_theorem/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/khovanskii_theorem/</guid>
       <description></description>
     </item>
     
@@ -10418,6 +10544,15 @@ Referring to AFP Entries in Isabelle/JEdit Once you have downloaded the AFP, you
     </item>
     
     <item>
+      <title>Number_Theoretic_Transform</title>
+      <link>/theories/number_theoretic_transform/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/number_theoretic_transform/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Octonions</title>
       <link>/theories/octonions/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -10549,6 +10684,15 @@ Referring to AFP Entries in Isabelle/JEdit Once you have downloaded the AFP, you
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/theories/package_logic/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Padic_Field</title>
+      <link>/theories/padic_field/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/padic_field/</guid>
       <description></description>
     </item>
     
@@ -11435,6 +11579,15 @@ Referring to AFP Entries in Isabelle/JEdit Once you have downloaded the AFP, you
     </item>
     
     <item>
+      <title>Risk_Free_Lending</title>
+      <link>/theories/risk_free_lending/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/risk_free_lending/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Robbins-Conjecture</title>
       <link>/theories/robbins-conjecture/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -11561,6 +11714,15 @@ Referring to AFP Entries in Isabelle/JEdit Once you have downloaded the AFP, you
     </item>
     
     <item>
+      <title>SCC_Bloemen_Sequential</title>
+      <link>/theories/scc_bloemen_sequential/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/scc_bloemen_sequential/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Schutz_Spacetime</title>
       <link>/theories/schutz_spacetime/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -11647,6 +11809,15 @@ Referring to AFP Entries in Isabelle/JEdit Once you have downloaded the AFP, you
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/theories/separation_logic_imperative_hol/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Separation_Logic_Unbounded</title>
+      <link>/theories/separation_logic_unbounded/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/separation_logic_unbounded/</guid>
       <description></description>
     </item>
     
@@ -11975,6 +12146,15 @@ Referring to AFP Entries in Isabelle/JEdit Once you have downloaded the AFP, you
     </item>
     
     <item>
+      <title>Stalnaker_Logic</title>
+      <link>/theories/stalnaker_logic/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/stalnaker_logic/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Statecharts</title>
       <link>/theories/statecharts/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -11998,13 +12178,7 @@ Referring to AFP Entries in Isabelle/JEdit Once you have downloaded the AFP, you
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/statistics/</guid>
-<<<<<<< working copy
-      <description>690 Entries   424 Authors   ~213,500 Lemmas   ~3,459,300 Lines of Code   Most used AFP articles:   Name Used by ? articles   1. List-Index 21   2. Collections 18   3. Show 16   4. Coinductive 12   5. Deriving 12   6. Jordan_Normal_Form 12   7. Polynomial_Factorization 12   8. Regular-Sets 12   9.</description>
-||||||| common ancestor
-      <description>690 Entries   424 Authors   ~212,500 Lemmas   ~3,436,100 Lines of Code   Most used AFP articles:   Name Used by ? articles   1. List-Index 21   2. Collections 18   3. Show 16   4. Coinductive 12   5. Deriving 12   6. Jordan_Normal_Form 12   7. Polynomial_Factorization 12   8. Regular-Sets 12   9.</description>
-=======
-      <description>695 Entries   424 Authors   ~214,300 Lemmas   ~3,512,300 Lines of Code   Most used AFP articles:   Name Used by ? articles   1. List-Index 21   2. Collections 18   3. Show 16   4. Coinductive 12   5. Deriving 12   6. Jordan_Normal_Form 12   7. Polynomial_Factorization 12   8. Regular-Sets 12   9.</description>
->>>>>>> merge rev
+      <description>705 Entries   427 Authors   ~222,800 Lemmas   ~3,630,700 Lines of Code   Most used AFP entries:   Name Used by ? entries   1. List-Index 21   2. Collections 18   3. Show 16   4. Coinductive 12   5. Deriving 12   6. Jordan_Normal_Form 12   7. Polynomial_Factorization 12   8. Regular-Sets 12   9.</description>
     </item>
     
     <item>

@@ -82,6 +82,9 @@ host = [
 name = "Thomas Ammer"
 
 [ammer.emails]
+[ammer.emails.ammer_email]
+user = ["thomas","ammer"]
+host = ["tum","de"]
 
 [ammer.homepages]
 
@@ -624,6 +627,15 @@ host = [
   "nicta",
   "com",
   "au",
+]
+
+[bortin.emails.bortin_email1]
+user = [
+  "mbortin",
+]
+host = [
+  "gmail",
+  "com",
 ]
 
 [bortin.homepages]
@@ -1376,9 +1388,18 @@ host = [
 [dongol.homepages]
 
 [doty]
-name = "Matthew Wampler-Doty"
+name = "Matthew Doty"
 
 [doty.emails]
+
+[doty.emails.doty_email]
+user = [
+  "matt",
+]
+host = [
+  "w-d",
+  "org",
+]
 
 [doty.homepages]
 
@@ -1448,6 +1469,19 @@ host = [
   "tum",
   "de",
 ]
+
+
+[eberl.emails.eberl_email2]
+user = [
+  "manuel",
+  "eberl",
+]
+host = [
+  "uibk",
+  "ac",
+  "at",
+]
+
 
 [eberl.homepages]
 eberl_homepage = "https://pruvisto.org/"
@@ -2155,6 +2189,23 @@ host = [
 [guttmann.homepages]
 guttmann_homepage = "https://www.cosc.canterbury.ac.nz/walter.guttmann/"
 
+[guzman]
+name = "Laura P. Gamboa Guzman"
+
+[guzman.emails]
+
+[guzman.emails.guzman_email]
+user = [
+  "lpgamboa"
+]
+host = [
+  "iastate",
+  "edu"
+]
+
+[guzman.homepages]
+guzman_homepage = "https://sites.google.com/view/lpgamboa/home"
+
 [haftmann]
 name = "Florian Haftmann"
 
@@ -2596,16 +2647,6 @@ name = "Lars Hupel"
 
 [hupel.emails.hupel_email]
 user = [
-  "hupel",
-]
-host = [
-  "in",
-  "tum",
-  "de",
-]
-
-[hupel.emails.hupel_email1]
-user = [
   "lars",
 ]
 host = [
@@ -2614,8 +2655,7 @@ host = [
 ]
 
 [hupel.homepages]
-hupel_homepage = "https://www21.in.tum.de/~hupel/"
-hupel_homepage1 = "https://lars.hupel.info/"
+hupel_homepage = "https://lars.hupel.info/"
 
 [ijbema]
 name = "Mark Ijbema"
@@ -3194,6 +3234,16 @@ user = [
 ]
 host = [
   "in",
+  "tum",
+  "de",
+]
+
+[kreuzer.emails.kreuzer_email1]
+user = [
+  "k",
+  "kreuzer",
+]
+host = [
   "tum",
   "de",
 ]
@@ -4932,6 +4982,27 @@ name = "Rodrigo Raya"
 [raya.homepages]
 raya_homepage = "https://people.epfl.ch/rodrigo.raya"
 
+[regensburger]
+name = "Franz Regensburger"
+
+[regensburger.emails]
+
+[regensburger.emails.regensburger_email]
+user = [
+  "Franz",
+  "Regensburger",
+]
+host = [
+  "thi",
+  "de"
+]
+
+[regensburger.homepages]
+regensburger_homepage = "https://www.thi.de/suche/mitarbeiter/prof-dr-rer-nat-franz-regensburger"
+
+
+
+
 [reiche]
 name = "Sebastian Reiche"
 
@@ -5858,6 +5929,25 @@ name = "Ujkan Sulejmani"
 
 [sulejmani.emails]
 
+[sulejmani.emails.sulejmani_email]
+user = [
+  "ujkan",
+  "sulejmani",
+]
+host = [
+  "tum",
+  "de",
+]
+
+[sulejmani.emails.sulejmani_email1]
+user = [
+  "ujkan99",
+]
+host = [
+  "gmail",
+  "com",
+]
+
 [sulejmani.homepages]
 
 [sylvestre]
@@ -6132,6 +6222,23 @@ host = [
 
 [traytel.homepages]
 traytel_homepage = "https://traytel.bitbucket.io/"
+
+[trelat]
+name = "Vincent Trélat"
+
+[trelat.emails]
+
+[trelat.emails.trelat_email]
+user = [
+  "vincent",
+  "trelat",
+]
+host = [
+  "depinfonancy",
+  "net",
+]
+
+[trelat.homepages]
 
 [tuerk]
 name = "Thomas Tuerk"
