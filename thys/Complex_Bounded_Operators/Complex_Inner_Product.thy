@@ -2253,7 +2253,7 @@ subsection \<open>More projections\<close>
 text \<open>These lemmas logically belong in the "projections" section above but depend on lemmas developed later.\<close>
 
 lemma is_projection_on_plus:
-  assumes "\<And>x y. x:A \<Longrightarrow> y:B \<Longrightarrow> is_orthogonal x y"
+  assumes "\<And>x y. x \<in> A \<Longrightarrow> y \<in> B \<Longrightarrow> is_orthogonal x y"
   assumes \<open>closed_csubspace A\<close>
   assumes \<open>closed_csubspace B\<close>
   assumes \<open>is_projection_on \<pi>A A\<close>

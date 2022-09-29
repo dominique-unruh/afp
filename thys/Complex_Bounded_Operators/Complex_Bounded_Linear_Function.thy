@@ -605,7 +605,7 @@ lemma CBlinfun_scaleC:
   shows \<open>CBlinfun (\<lambda>y. c *\<^sub>C f y) = c *\<^sub>C CBlinfun f\<close>
   by (simp add: assms eq_onp_same_args scaleC_cblinfun.abs_eq)
 
-
+(* TODO: belongs into Complex_Vector_Spaces *)
 lemma bounded_clinear_inv:
   assumes [simp]: \<open>bounded_clinear f\<close>
   assumes b: \<open>b > 0\<close>
@@ -1000,13 +1000,13 @@ lemma blinfun_of_cblinfun_norm:
   shows \<open>norm f = norm (blinfun_of_cblinfun f)\<close>
   apply transfer by auto
 
-subsection \<open>Composition\<close>
-
 lemma blinfun_of_cblinfun_cblinfun_compose:
   fixes f::\<open>'b::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'c::complex_normed_vector\<close>
     and g::\<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
   shows \<open>blinfun_of_cblinfun (f  o\<^sub>C\<^sub>L g) = (blinfun_of_cblinfun f) o\<^sub>L (blinfun_of_cblinfun g)\<close>
   apply transfer by auto
+
+subsection \<open>Composition\<close>
 
 lemma cblinfun_compose_assoc:
   shows "(A o\<^sub>C\<^sub>L B) o\<^sub>C\<^sub>L C = A o\<^sub>C\<^sub>L (B o\<^sub>C\<^sub>L C)"
@@ -1058,6 +1058,7 @@ lemma cblinfun_eq_on:
   apply transfer
   using bounded_clinear_eq_on by blast
 
+(* TODO belongs to section higher up *)
 lemma cblinfun_eq_gen_eqI:
   fixes A B :: "'a::cbanach \<Rightarrow>\<^sub>C\<^sub>L'b::complex_normed_vector"
   assumes "\<And>x. x \<in> G \<Longrightarrow> A *\<^sub>V x = B *\<^sub>V x" and \<open>ccspan G = \<top>\<close>
@@ -2149,9 +2150,48 @@ proof -
     by auto
 qed
 
-(* Widen the type class *)
+(* TODO move *)
+lemma is_projection_on_closed:
+  assumes cont_f: \<open>\<And>x. x \<in> closure M \<Longrightarrow> isCont f x\<close>
+  assumes \<open>is_projection_on f M\<close>
+  shows \<open>closed M\<close>
+proof -
+  have \<open>x \<in> M\<close> if \<open>s \<longlonglongrightarrow> x\<close> and \<open>range s \<subseteq> M\<close> for s x
+  proof -
+    from \<open>is_projection_on f M\<close> \<open>range s \<subseteq> M\<close>
+    have \<open>s = (f o s)\<close>
+      by (simp add: comp_def is_projection_on_fixes_image range_subsetD)
+    also from cont_f \<open>s \<longlonglongrightarrow> x\<close> 
+    have \<open>(f o s) \<longlonglongrightarrow> f x\<close>
+      apply (rule continuous_imp_tendsto)
+      using \<open>s \<longlonglongrightarrow> x\<close> \<open>range s \<subseteq> M\<close>
+      by (meson closure_sequential range_subsetD)
+    finally have \<open>x = f x\<close>
+      using \<open>s \<longlonglongrightarrow> x\<close>
+      by (simp add: LIMSEQ_unique)
+    then have \<open>x \<in> range f\<close>
+      by simp
+    with \<open>is_projection_on f M\<close> show \<open>x \<in> M\<close>
+      by (simp add: is_projection_on_image)
+  qed
+  then show ?thesis
+    by (metis closed_sequential_limits image_subset_iff)
+qed
+
+
+(* TODO Widen the type class *)
 lift_definition is_Proj :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a \<Rightarrow> bool\<close> is
-  \<open>\<lambda>P. \<exists>M. closed_csubspace M \<and> is_projection_on P M\<close> .
+  \<open>\<lambda>P. \<exists>M. is_projection_on P M\<close> .
+(* TODO: do we need closed_subspace? *)
+
+(* TODO needed? *)
+(* lemma is_Proj_alt_def: \<open>is_Proj P \<longleftrightarrow> (\<exists>M. closed_csubspace M \<and> is_projection_on (cblinfun_apply P) M)\<close>
+proof -
+  have \<open>is_projection_on (cblinfun_apply P) M \<longleftrightarrow> closed_csubspace M \<and> is_projection_on (cblinfun_apply P) M\<close> for M
+    by (metis cblinfun_apply_clinear closed_csubspace_def complex_vector.linear_subspace_image complex_vector.subspace_UNIV isCont_cblinfun_apply is_projection_on_closed is_projection_on_image)
+  then show ?thesis
+    by (auto simp: is_Proj_def)
+qed *)
 
 lemma Proj_top[simp]: \<open>Proj \<top> = id_cblinfun\<close>
   by (metis Proj_idempotent Proj_range cblinfun_eqI cblinfun_fixes_range id_cblinfun_apply iso_tuple_UNIV_I space_as_set_top)
@@ -2160,7 +2200,7 @@ lemma Proj_on_own_range':
   fixes P :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L'a\<close>
   assumes \<open>P o\<^sub>C\<^sub>L P = P\<close> and \<open>P = P*\<close>
   shows \<open>Proj (P *\<^sub>S top) = P\<close>
-proof-
+proof -
   define M where "M = P *\<^sub>S top"
   have v3: "x \<in> (\<lambda>x. x - P *\<^sub>V x) -` {0}"
     if "x \<in> range (cblinfun_apply P)"
@@ -2281,8 +2321,8 @@ qed
 lemma Proj_range_closed:
   assumes "is_Proj P"
   shows "closed (range (cblinfun_apply P))"
-  using assms apply transfer
-  using closed_csubspace.closed is_projection_on_image by blast
+  apply (rule is_projection_on_closed[where f=\<open>cblinfun_apply P\<close>])
+  using assms is_Proj.rep_eq is_projection_on_image by auto
 
 lemma Proj_is_Proj[simp]:
   fixes M::\<open>'a::chilbert_space ccsubspace\<close>
@@ -2313,8 +2353,9 @@ proof
     by fastforce
   moreover have "P = P*"
     if "is_Proj P"
-    using that apply transfer
-    by (metis is_projection_on_cadjoint)
+    using that Proj_range_closed[OF that] is_projection_on_cadjoint[where \<pi>=P and M=\<open>range P\<close>]
+    apply transfer
+    by (metis bounded_clinear.axioms(1) closed_csubspace_UNIV closed_csubspace_def complex_vector.linear_subspace_image is_projection_on_image)
   ultimately show "P o\<^sub>C\<^sub>L P = P \<and> P = P*"
     if "is_Proj P"
     using that
@@ -2337,7 +2378,7 @@ lemma Proj_sandwich:
   fixes A::"'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space"
   assumes "isometry A"
   shows "sandwich A *\<^sub>V Proj S = Proj (A *\<^sub>S S)"
-proof-
+proof -
   define P where \<open>P = A o\<^sub>C\<^sub>L Proj S o\<^sub>C\<^sub>L (A*)\<close>
   have \<open>P o\<^sub>C\<^sub>L P = P\<close>
     using assms
@@ -3385,7 +3426,7 @@ lemma isometry_vector_to_cblinfun[simp]:
   shows "isometry (vector_to_cblinfun x)"
   using assms cnorm_eq_1 isometry_def by force
 
-subsection \<open>Butterflies (rank-1 projectors)\<close>
+subsection \<open>Butterflies (rank-1 operators)\<close>
 
 definition butterfly_def: "butterfly (s::'a::complex_normed_vector) (t::'b::chilbert_space)
    = vector_to_cblinfun s o\<^sub>C\<^sub>L (vector_to_cblinfun t :: complex \<Rightarrow>\<^sub>C\<^sub>L _)*"
