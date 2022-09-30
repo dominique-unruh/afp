@@ -285,4 +285,34 @@ qed
 
 instance one_dim \<subseteq> chilbert_space..
 
+lemma ccspan_one_dim[simp]: \<open>ccspan {x} = top\<close> if \<open>x \<noteq> 0\<close> for x :: \<open>_ :: one_dim\<close>
+proof -
+  have \<open>y \<in> cspan {x}\<close> for y
+    using that by (metis complex_vector.span_base complex_vector.span_zero cspan_singleton_scaleC insertI1 one_dim_scaleC_1 scaleC_zero_left)
+  then show ?thesis
+    by (auto intro!: order.antisym ccsubspace_leI
+      simp: top_ccsubspace.rep_eq ccspan.rep_eq)
+qed
+
+lemma one_dim_ccsubspace_all_or_nothing: \<open>A = bot \<or> A = top\<close> for A :: \<open>_::one_dim ccsubspace\<close>
+proof (rule Meson.disj_comm, rule disjCI)
+  assume \<open>A \<noteq> bot\<close>
+  then obtain \<psi> where \<open>\<psi> \<in> space_as_set A\<close> and \<open>\<psi> \<noteq> 0\<close>
+    by (metis ccsubspace_eqI singleton_iff space_as_set_bot zero_space_as_set)
+  then have \<open>A \<ge> ccspan {\<psi>}\<close> (is \<open>_ \<ge> \<dots>\<close>)
+    by (metis bot.extremum ccspan_leqI insert_absorb insert_mono)
+  also have \<open>\<dots> = ccspan {one_dim_iso \<psi> *\<^sub>C 1}\<close>
+    by auto
+  also have \<open>\<dots> = ccspan {1}\<close>
+    apply (rule ccspan_singleton_scaleC)
+    using \<open>\<psi> \<noteq> 0\<close> one_dim_iso_of_zero' by auto
+  also have \<open>\<dots> = top\<close>
+    by auto
+  finally show \<open>A = top\<close>
+    by (simp add: top.extremum_uniqueI)
+qed
+
+lemma scaleC_1_right[simp]: \<open>scaleC x (1::'a::one_dim) = of_complex x\<close>
+  unfolding of_complex_def by simp
+
 end

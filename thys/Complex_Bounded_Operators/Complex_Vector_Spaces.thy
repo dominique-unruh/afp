@@ -599,6 +599,13 @@ lemma cspan_eqI:
 lemma (in bounded_cbilinear) bounded_bilinear[simp]: "bounded_bilinear prod"
   by standard
 
+lemma norm_scaleC_sgn[simp]: \<open>complex_of_real (norm \<psi>) *\<^sub>C sgn \<psi> = \<psi>\<close> for \<psi> :: "'a::complex_normed_vector"
+  apply (cases \<open>\<psi> = 0\<close>)
+  by (auto simp: sgn_div_norm scaleR_scaleC)
+
+lemma scaleC_of_complex[simp]: \<open>scaleC x (of_complex y) = of_complex (x * y)\<close>
+  unfolding of_complex_def using scaleC_scaleC by blast
+
 subsection \<open>Antilinear maps and friends\<close>
 
 locale antilinear = additive f for f :: "'a::complex_vector \<Rightarrow> 'b::complex_vector" +

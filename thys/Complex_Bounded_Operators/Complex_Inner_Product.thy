@@ -353,6 +353,11 @@ qed
 
 end
 
+lemma sgn_cinner[simp]: \<open>sgn \<psi> \<bullet>\<^sub>C \<psi> = norm \<psi>\<close>
+  apply (cases \<open>\<psi> = 0\<close>)
+   apply (auto simp: sgn_div_norm)
+  by (smt (verit, ccfv_SIG) cinner_scaleR_left cinner_scaleR_right cnorm_eq cnorm_eq_1 complex_of_real_cmod complex_of_real_nn_iff left_inverse mult.right_neutral mult_scaleR_right norm_eq_zero norm_not_less_zero norm_one of_real_def of_real_eq_iff)
+
 instance prod :: (chilbert_space, chilbert_space) chilbert_space..
 
 subsection \<open>Orthogonality\<close>
@@ -484,6 +489,11 @@ lift_definition uminus_ccsubspace::\<open>'a ccsubspace  \<Rightarrow> 'a ccsubs
 instance ..
 end
 
+lemma orthocomplement_top[simp]: \<open>- top = (bot :: 'a::complex_inner ccsubspace)\<close>
+  \<comment> \<open>For \<^typ>\<open>'a\<close> of sort \<^class>\<open>chilbert_space\<close>, this is covered by @{thm [source] orthocomplemented_lattice_class.compl_top_eq} already.
+      But here we give it a wider sort}\<close>
+  apply transfer
+  by (metis Int_UNIV_left UNIV_I orthogonal_complement_zero_intersection)
 
 instantiation ccsubspace :: (complex_inner) minus begin
 lift_definition minus_ccsubspace :: "'a ccsubspace \<Rightarrow> 'a ccsubspace \<Rightarrow> 'a ccsubspace"
@@ -1801,6 +1811,9 @@ lemma orthogonal_sum:
   using assms
   apply induction
   by (auto intro!: orthogonal_sup)
+
+lemma orthogonal_spaces_ccspan: \<open>(\<forall>x\<in>S. \<forall>y\<in>T. is_orthogonal x y) \<longleftrightarrow> orthogonal_spaces (ccspan S) (ccspan T)\<close>
+  by (meson ccspan_leq_ortho_ccspan ccspan_superset orthogonal_spaces_def orthogonal_spaces_leq_compl subset_iff)
 
 subsection \<open>Orthonormal bases\<close>
 
