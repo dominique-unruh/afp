@@ -491,7 +491,7 @@ end
 
 lemma orthocomplement_top[simp]: \<open>- top = (bot :: 'a::complex_inner ccsubspace)\<close>
   \<comment> \<open>For \<^typ>\<open>'a\<close> of sort \<^class>\<open>chilbert_space\<close>, this is covered by @{thm [source] orthocomplemented_lattice_class.compl_top_eq} already.
-      But here we give it a wider sort}\<close>
+      But here we give it a wider sort.\<close>
   apply transfer
   by (metis Int_UNIV_left UNIV_I orthogonal_complement_zero_intersection)
 
@@ -1607,7 +1607,7 @@ subsection \<open>More orthogonal complement\<close>
 
 text \<open>The following lemmas logically fit into the "orthogonality" section but depend on projections for their proofs.\<close>
 
-text \<open>Corollary 2.8 in  @{cite conway2013course}\<close>
+text \<open>Corollary 2.8 in @{cite conway2013course}\<close>
 theorem double_orthogonal_complement_id[simp]:
   fixes M :: \<open>'a::chilbert_space set\<close>
   assumes a1: "closed_csubspace M"
