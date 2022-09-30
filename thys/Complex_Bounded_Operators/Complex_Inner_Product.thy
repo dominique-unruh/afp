@@ -1373,6 +1373,33 @@ lemma projection_fixes_image:
     \<comment> \<open>Theorem 2.7 in @{cite conway2013course}\<close>
   by (simp add: assms complex_vector.subspace_0 projection_eqI)
 
+lemma is_projection_on_closed:
+  assumes cont_f: \<open>\<And>x. x \<in> closure M \<Longrightarrow> isCont f x\<close>
+  assumes \<open>is_projection_on f M\<close>
+  shows \<open>closed M\<close>
+proof -
+  have \<open>x \<in> M\<close> if \<open>s \<longlonglongrightarrow> x\<close> and \<open>range s \<subseteq> M\<close> for s x
+  proof -
+    from \<open>is_projection_on f M\<close> \<open>range s \<subseteq> M\<close>
+    have \<open>s = (f o s)\<close>
+      by (simp add: comp_def is_projection_on_fixes_image range_subsetD)
+    also from cont_f \<open>s \<longlonglongrightarrow> x\<close> 
+    have \<open>(f o s) \<longlonglongrightarrow> f x\<close>
+      apply (rule continuous_imp_tendsto)
+      using \<open>s \<longlonglongrightarrow> x\<close> \<open>range s \<subseteq> M\<close>
+      by (meson closure_sequential range_subsetD)
+    finally have \<open>x = f x\<close>
+      using \<open>s \<longlonglongrightarrow> x\<close>
+      by (simp add: LIMSEQ_unique)
+    then have \<open>x \<in> range f\<close>
+      by simp
+    with \<open>is_projection_on f M\<close> show \<open>x \<in> M\<close>
+      by (simp add: is_projection_on_image)
+  qed
+  then show ?thesis
+    by (metis closed_sequential_limits image_subset_iff)
+qed
+
 proposition is_projection_on_reduces_norm:
   includes notation_norm
   fixes M :: \<open>('a::complex_inner) set\<close>
@@ -2131,15 +2158,13 @@ lemma is_cadjoint_unique:
 lemma cadjoint_univ_prop:
   fixes G :: "'b::chilbert_space \<Rightarrow> 'a::complex_inner"
   assumes a1: \<open>bounded_clinear G\<close>
-  shows \<open>\<forall>x. \<forall>y. (cadjoint G x \<bullet>\<^sub>C y) = (x \<bullet>\<^sub>C G y)\<close>
-    (* TODO: remove quantifiers *)
+  shows \<open>cadjoint G x \<bullet>\<^sub>C y = x \<bullet>\<^sub>C G y\<close>
   using assms cadjoint_is_cadjoint is_cadjoint_def by blast
 
 lemma cadjoint_univ_prop':
   fixes G :: "'b::chilbert_space \<Rightarrow> 'a::complex_inner"
   assumes a1: \<open>bounded_clinear G\<close>
-  shows \<open>\<forall>x. \<forall>y. (x \<bullet>\<^sub>C cadjoint G y) = (G x \<bullet>\<^sub>C y)\<close>
-    (* TODO: remove quantifiers *)
+  shows \<open>x \<bullet>\<^sub>C cadjoint G y = G x \<bullet>\<^sub>C y\<close>
   by (metis cadjoint_univ_prop assms cinner_commute')
 
 notation cadjoint ("_\<^sup>\<dagger>" [99] 100)
@@ -2215,8 +2240,7 @@ proposition double_cadjoint:
   shows "U\<^sup>\<dagger>\<^sup>\<dagger> = U"
   by (metis assms cadjoint_def cadjoint_is_cadjoint is_adjoint_sym is_cadjoint_unique someI_ex)
 
-(* TODO add [simp] *)
-lemma cadjoint_id: \<open>id\<^sup>\<dagger> = id\<close>
+lemma cadjoint_id[simp]: \<open>id\<^sup>\<dagger> = id\<close>
   by (simp add: cadjoint_eqI id_def)
 
 lemma scaleC_cadjoint:

@@ -4,43 +4,12 @@ theory Extra_Operator_Norm
   imports "HOL-Analysis.Operator_Norm"
     Extra_General
     "HOL-Analysis.Bounded_Linear_Function"
+    Extra_Vector_Spaces
 begin
 
 
 text \<open>This theorem complements \<^theory>\<open>HOL-Analysis.Operator_Norm\<close>
       additional useful facts about operator norms.\<close>
-
-(* TODO: Belongs in Extra_Vector_Spaces *)
-lemma ex_norm1:
-  assumes \<open>(UNIV::'a::real_normed_vector set) \<noteq> {0}\<close>
-  shows \<open>\<exists>x::'a. norm x = 1\<close>
-proof-
-  have \<open>\<exists>x::'a. x \<noteq> 0\<close>
-    using assms by fastforce
-  then obtain x::'a where \<open>x \<noteq> 0\<close>
-    by blast
-  hence \<open>norm x \<noteq> 0\<close>
-    by simp
-  hence \<open>(norm x) / (norm x) = 1\<close>
-    by simp
-  moreover have \<open>(norm x) / (norm x) = norm (x /\<^sub>R (norm x))\<close>
-    by simp
-  ultimately have \<open>norm (x /\<^sub>R (norm x)) = 1\<close>
-    by simp
-  thus ?thesis
-    by blast
-qed
-
-(* TODO: Belongs in Extra_Vector_Spaces *)
-lemma bdd_above_norm_f:
-  assumes "bounded_linear f"
-  shows \<open>bdd_above {norm (f x) |x. norm x = 1}\<close>
-proof-
-  have \<open>\<exists>M. \<forall>x. norm x = 1 \<longrightarrow> norm (f x) \<le> M\<close>
-    using assms
-    by (metis bounded_linear.axioms(2) bounded_linear_axioms_def)
-  thus ?thesis by auto
-qed
 
 lemma onorm_sphere:
   fixes f :: "'a::{real_normed_vector, not_singleton} \<Rightarrow> 'b::real_normed_vector"
@@ -178,7 +147,7 @@ next
 qed
 
 (* TODO: Not used in this AFP entry. Remove? *)
-lemma onorm_Inf_bound:
+(* lemma onorm_Inf_bound:
   fixes f :: \<open>'a::{real_normed_vector,not_singleton} \<Rightarrow> 'b::real_normed_vector\<close>
   assumes a1: "bounded_linear f"
   shows "onorm f = Inf {K. (\<forall>x\<noteq>0. norm (f x) \<le> norm x * K)}"
@@ -296,7 +265,7 @@ proof-
     by (metis f1 h1)
   thus ?thesis
     by (simp add: onorm_def)
-qed
+qed *)
 
 
 lemma onormI:
@@ -308,7 +277,7 @@ lemma onormI:
   by (smt (verit, del_insts) assms(1) assms(2) divide_nonneg_nonpos norm_ge_zero norm_le_zero_iff pos_divide_le_eq rangeE zero_le_mult_iff)
 
 (* TODO: Not used in this AFP entry. Remove? *)
-lemma norm_unit_sphere:
+(* lemma norm_unit_sphere:
   fixes f::\<open>'a::{real_normed_vector,not_singleton} \<Rightarrow>\<^sub>L 'b::real_normed_vector\<close>
   assumes a1: "bounded_linear f" and a2: "e > 0"
 (* TODO: Something is weird here: a1 is vacuously true afaik *)
@@ -388,7 +357,7 @@ proof-
     by force
   thus ?thesis
     using f2 by (metis (full_types) norm_blinfun.rep_eq)
-qed
+qed *)
 
 
 

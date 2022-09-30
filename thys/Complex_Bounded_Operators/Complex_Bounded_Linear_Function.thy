@@ -605,41 +605,6 @@ lemma CBlinfun_scaleC:
   shows \<open>CBlinfun (\<lambda>y. c *\<^sub>C f y) = c *\<^sub>C CBlinfun f\<close>
   by (simp add: assms eq_onp_same_args scaleC_cblinfun.abs_eq)
 
-(* TODO: belongs into Complex_Vector_Spaces *)
-lemma bounded_clinear_inv:
-  assumes [simp]: \<open>bounded_clinear f\<close>
-  assumes b: \<open>b > 0\<close>
-  assumes bound: \<open>\<And>x. norm (f x) \<ge> b * norm x\<close>
-  assumes \<open>surj f\<close>
-  shows \<open>bounded_clinear (inv f)\<close>
-proof (rule bounded_clinear_intro)
-  fix x y :: 'b and r :: complex
-  define x' y' where \<open>x' = inv f x\<close> and \<open>y' = inv f y\<close>
-  have [simp]: \<open>clinear f\<close>
-    by (simp add: bounded_clinear.clinear)
-  have [simp]: \<open>inj f\<close>
-  proof (rule injI)
-    fix x y assume \<open>f x = f y\<close>
-    then have \<open>norm (f (x - y)) = 0\<close>
-      by (simp add: complex_vector.linear_diff)
-    with bound b have \<open>norm (x - y) = 0\<close>
-      by (metis linorder_not_le mult_le_0_iff nle_le norm_ge_zero)
-    then show \<open>x = y\<close>
-      by simp
-  qed
-
-  from \<open>surj f\<close>
-  have [simp]: \<open>x = f x'\<close> \<open>y = f y'\<close>
-    by (simp_all add: surj_f_inv_f x'_def y'_def)
-  show "inv f (x + y) = inv f x + inv f y"
-    by (simp flip: complex_vector.linear_add)
-  show "inv f (r *\<^sub>C x) = r *\<^sub>C inv f x"
-    by (simp flip: clinear.scaleC)
-  from bound have "b * norm (inv f x) \<le> norm x" 
-    by (simp flip: clinear.scaleC)
-  with b show "norm (inv f x) \<le> norm x * inverse b" 
-    by (smt (verit, ccfv_threshold) left_inverse mult.commute mult_cancel_right1 mult_le_cancel_left_pos vector_space_over_itself.scale_scale)
-qed
 
 lemma cinner_sup_norm_cblinfun:
   fixes A :: \<open>'a::{complex_normed_vector,not_singleton} \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner\<close>
@@ -651,6 +616,24 @@ lemma cinner_sup_norm_cblinfun:
 
 lemma norm_cblinfun_Sup: \<open>norm A = (SUP \<psi>. norm (A *\<^sub>V \<psi>) / norm \<psi>)\<close>
   by (simp add: norm_cblinfun.rep_eq onorm_def)
+
+lemma cblinfun_eq_on:
+  fixes A B :: "'a::cbanach \<Rightarrow>\<^sub>C\<^sub>L'b::complex_normed_vector"
+  assumes "\<And>x. x \<in> G \<Longrightarrow> A *\<^sub>V x = B *\<^sub>V x" and \<open>t \<in> closure (cspan G)\<close>
+  shows "A *\<^sub>V t = B *\<^sub>V t"
+  using assms
+  apply transfer
+  using bounded_clinear_eq_on by blast
+
+lemma cblinfun_eq_gen_eqI:
+  fixes A B :: "'a::cbanach \<Rightarrow>\<^sub>C\<^sub>L'b::complex_normed_vector"
+  assumes "\<And>x. x \<in> G \<Longrightarrow> A *\<^sub>V x = B *\<^sub>V x" and \<open>ccspan G = \<top>\<close>
+  shows "A = B"
+  apply (rule cblinfun_eqI)
+  apply (rule cblinfun_eq_on[where G=G])
+  using assms apply auto
+  by (metis ccspan.rep_eq iso_tuple_UNIV_I top_ccsubspace.rep_eq)
+
 
 subsection \<open>Relationship to real bounded operators (\<^typ>\<open>_ \<Rightarrow>\<^sub>L _\<close>)\<close>
 
@@ -1049,24 +1032,6 @@ lemma cblinfun_compose_id_right[simp]:
 lemma cblinfun_compose_id_left[simp]:
   shows "id_cblinfun o\<^sub>C\<^sub>L U  = U"
   apply transfer by auto
-
-lemma cblinfun_eq_on:
-  fixes A B :: "'a::cbanach \<Rightarrow>\<^sub>C\<^sub>L'b::complex_normed_vector"
-  assumes "\<And>x. x \<in> G \<Longrightarrow> A *\<^sub>V x = B *\<^sub>V x" and \<open>t \<in> closure (cspan G)\<close>
-  shows "A *\<^sub>V t = B *\<^sub>V t"
-  using assms
-  apply transfer
-  using bounded_clinear_eq_on by blast
-
-(* TODO belongs to section higher up *)
-lemma cblinfun_eq_gen_eqI:
-  fixes A B :: "'a::cbanach \<Rightarrow>\<^sub>C\<^sub>L'b::complex_normed_vector"
-  assumes "\<And>x. x \<in> G \<Longrightarrow> A *\<^sub>V x = B *\<^sub>V x" and \<open>ccspan G = \<top>\<close>
-  shows "A = B"
-  apply (rule cblinfun_eqI)
-  apply (rule cblinfun_eq_on[where G=G])
-  using assms apply auto
-  by (metis ccspan.rep_eq iso_tuple_UNIV_I top_ccsubspace.rep_eq)
 
 lemma cblinfun_compose_add_left: \<open>(a + b) o\<^sub>C\<^sub>L c = (a o\<^sub>C\<^sub>L c) + (b o\<^sub>C\<^sub>L c)\<close>
   by (simp add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose)
@@ -1659,8 +1624,15 @@ qed
 
 subsection \<open>Images\<close>
 
+text \<open>The following definition defines the image of a closed subspace \<^term>\<open>S\<close> under a bounded operator \<^term>\<open>A\<close>.
+We do not define that image as the image of \<^term>\<open>A\<close> seen as a function (\<^term>\<open>A ` S\<close>) but as the topological closure of that image.
+This is because \<^term>\<open>A ` S\<close> might in general not be closed.
 
-(* Closure is necessary. See email 47a3bb3d-3cc3-0934-36eb-3ef0f7b70a85@ut.ee *)
+For example, if $e_i$ ($i\in\mathbb N$) form an orthonormal basis, and $A$ maps $e_i$ to $e_i/i$, 
+then all $e_i$ are in \<^term>\<open>A ` S\<close>, so the closure of \<^term>\<open>A ` S\<close> is the whole space.
+However, $\sum_i e_i/i$ is not in \<^term>\<open>A ` S\<close> because its preimage would have to be $\sum_i e_i$ which does not converge.
+So \<^term>\<open>A ` S\<close> does not contain the whole space, hence it is not closed.\<close>
+
 lift_definition cblinfun_image :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector
 \<Rightarrow> 'a ccsubspace \<Rightarrow> 'b ccsubspace\<close>  (infixr "*\<^sub>S" 70)
   is "\<lambda>A S. closure (A ` S)"
@@ -2034,8 +2006,14 @@ qed
 lemma cblinfun_image_bot_zero[simp]: \<open>A *\<^sub>S top = bot \<longleftrightarrow> A = 0\<close>
   by (metis Complex_Bounded_Linear_Function.zero_cblinfun_image bot_ccsubspace.rep_eq cblinfun_apply_in_image cblinfun_eqI empty_iff insert_iff zero_ccsubspace_def)
 
-subsection \<open>Sandwiches\<close>
+lemma surj_isometry_is_unitary:
+  fixes U :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  assumes \<open>isometry U\<close>
+  assumes \<open>U *\<^sub>S \<top> = \<top>\<close>
+  shows \<open>unitary U\<close>
+  by (metis UNIV_I assms(1) assms(2) cblinfun_assoc_left(1) cblinfun_compose_id_right cblinfun_eqI cblinfun_fixes_range id_cblinfun_apply isometry_def space_as_set_top unitary_def)
 
+subsection \<open>Sandwiches\<close>
 
 lift_definition sandwich :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner) \<Rightarrow> (('a \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow>\<^sub>C\<^sub>L ('b \<Rightarrow>\<^sub>C\<^sub>L 'b))\<close> is
   \<open>\<lambda>(A::'a\<Rightarrow>\<^sub>C\<^sub>L'b) B. A o\<^sub>C\<^sub>L B o\<^sub>C\<^sub>L A*\<close>
@@ -2150,47 +2128,8 @@ proof -
     by auto
 qed
 
-(* TODO move *)
-lemma is_projection_on_closed:
-  assumes cont_f: \<open>\<And>x. x \<in> closure M \<Longrightarrow> isCont f x\<close>
-  assumes \<open>is_projection_on f M\<close>
-  shows \<open>closed M\<close>
-proof -
-  have \<open>x \<in> M\<close> if \<open>s \<longlonglongrightarrow> x\<close> and \<open>range s \<subseteq> M\<close> for s x
-  proof -
-    from \<open>is_projection_on f M\<close> \<open>range s \<subseteq> M\<close>
-    have \<open>s = (f o s)\<close>
-      by (simp add: comp_def is_projection_on_fixes_image range_subsetD)
-    also from cont_f \<open>s \<longlonglongrightarrow> x\<close> 
-    have \<open>(f o s) \<longlonglongrightarrow> f x\<close>
-      apply (rule continuous_imp_tendsto)
-      using \<open>s \<longlonglongrightarrow> x\<close> \<open>range s \<subseteq> M\<close>
-      by (meson closure_sequential range_subsetD)
-    finally have \<open>x = f x\<close>
-      using \<open>s \<longlonglongrightarrow> x\<close>
-      by (simp add: LIMSEQ_unique)
-    then have \<open>x \<in> range f\<close>
-      by simp
-    with \<open>is_projection_on f M\<close> show \<open>x \<in> M\<close>
-      by (simp add: is_projection_on_image)
-  qed
-  then show ?thesis
-    by (metis closed_sequential_limits image_subset_iff)
-qed
-
-
-(* TODO Widen the type class *)
-lift_definition is_Proj :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a \<Rightarrow> bool\<close> is
+lift_definition is_Proj :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'a \<Rightarrow> bool\<close> is
   \<open>\<lambda>P. \<exists>M. is_projection_on P M\<close> .
-
-(* TODO needed? *)
-(* lemma is_Proj_alt_def: \<open>is_Proj P \<longleftrightarrow> (\<exists>M. closed_csubspace M \<and> is_projection_on (cblinfun_apply P) M)\<close>
-proof -
-  have \<open>is_projection_on (cblinfun_apply P) M \<longleftrightarrow> closed_csubspace M \<and> is_projection_on (cblinfun_apply P) M\<close> for M
-    by (metis cblinfun_apply_clinear closed_csubspace_def complex_vector.linear_subspace_image complex_vector.subspace_UNIV isCont_cblinfun_apply is_projection_on_closed is_projection_on_image)
-  then show ?thesis
-    by (auto simp: is_Proj_def)
-qed *)
 
 lemma Proj_top[simp]: \<open>Proj \<top> = id_cblinfun\<close>
   by (metis Proj_idempotent Proj_range cblinfun_eqI cblinfun_fixes_range id_cblinfun_apply iso_tuple_UNIV_I space_as_set_top)
@@ -2433,14 +2372,6 @@ abbreviation proj :: "'a::chilbert_space \<Rightarrow> 'a \<Rightarrow>\<^sub>C\
 lemma proj_0[simp]: \<open>proj 0 = 0\<close>
   apply transfer by auto
 
-(* TODO: move to images *)
-lemma surj_isometry_is_unitary:
-  fixes U :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
-  assumes \<open>isometry U\<close>
-  assumes \<open>U *\<^sub>S \<top> = \<top>\<close>
-  shows \<open>unitary U\<close>
-  by (metis Proj_sandwich sandwich_apply Proj_on_own_range' assms(1) assms(2) cblinfun_compose_id_right isometry_def unitary_def unitary_id unitary_range)
-
 lemma ccsubspace_supI_via_Proj:
   fixes A B C::"'a::chilbert_space ccsubspace"
   assumes a1: \<open>Proj (- C) *\<^sub>S A \<le> B\<close>
@@ -2498,9 +2429,8 @@ qed
 lemma is_Proj_idempotent:
   assumes "is_Proj P"
   shows "P o\<^sub>C\<^sub>L P = P"
-  using assms
-  unfolding is_Proj_def
-  using assms is_Proj_algebraic by auto
+  using assms apply transfer
+  using is_projection_on_fixes_image is_projection_on_in_image by fastforce
 
 lemma is_proj_selfadj:
   assumes "is_Proj P"
@@ -2515,11 +2445,13 @@ lemma is_Proj_I:
   using assms is_Proj_algebraic by metis
 
 lemma is_Proj_0[simp]: "is_Proj 0"
-  by (metis add_left_cancel adj_plus bounded_cbilinear.zero_left bounded_cbilinear_cblinfun_compose group_cancel.rule0 is_Proj_I)
+  apply transfer apply (rule exI[of _ 0])
+  by (simp add: is_projection_on_zero)
 
 lemma is_Proj_complement[simp]:
+  fixes P :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
   assumes a1: "is_Proj P"
-  shows "is_Proj (id_cblinfun-P)"
+  shows "is_Proj (id_cblinfun - P)"
   by (smt (z3) add_diff_cancel_left add_diff_cancel_left' adj_cblinfun_compose adj_plus assms bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose diff_add_cancel id_cblinfun_adjoint is_Proj_algebraic cblinfun_compose_id_left)
 
 lemma Proj_bot[simp]: "Proj bot = 0"
@@ -2535,7 +2467,7 @@ lemma Proj_inj:
   shows "X = Y"
   by (metis assms Proj_range)
 
-lemma norm_Proj_leq1: \<open>norm (Proj M) \<le> 1\<close>
+lemma norm_Proj_leq1: \<open>norm (Proj M) \<le> 1\<close> for M :: \<open>'a :: chilbert_space ccsubspace\<close>
   apply transfer
   by (metis (no_types, opaque_lifting) mult.left_neutral onorm_bound projection_reduces_norm zero_less_one_class.zero_le_one)
 
@@ -2546,16 +2478,16 @@ lemma Proj_orthog_ccspan_insert:
   apply (rule Proj_orthog_ccspan_union)
   using assms by auto
 
-lemma cancel_apply_Proj:
+(* TODO remove, is called Proj_fixes_image now *)
+(* lemma cancel_apply_Proj:
   assumes \<open>\<psi> \<in> space_as_set S\<close>
   shows \<open>Proj S *\<^sub>V \<psi> = \<psi>\<close>
-  by (metis Proj_idempotent Proj_range assms cblinfun_fixes_range)
+  by (metis Proj_idempotent Proj_range assms cblinfun_fixes_range) *)
 
-(* TODO: duplication with cancel_apply_Proj *)
 lemma Proj_fixes_image: \<open>Proj S *\<^sub>V \<psi> = \<psi>\<close> if \<open>\<psi> \<in> space_as_set S\<close>
-  by (simp add: Proj.rep_eq closed_csubspace_def projection_fixes_image that)
+  by (metis Proj_idempotent Proj_range that cblinfun_fixes_range)
 
-lemma norm_is_Proj: \<open>norm P \<le> 1\<close> if \<open>is_Proj P\<close>
+lemma norm_is_Proj: \<open>norm P \<le> 1\<close> if \<open>is_Proj P\<close> for P :: \<open>'a :: chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
   by (metis Proj_on_own_range norm_Proj_leq1 that)
 
 lemma Proj_sup: \<open>orthogonal_spaces S T \<Longrightarrow> Proj (sup S T) = Proj S + Proj T\<close>
@@ -2587,15 +2519,17 @@ next
 qed
 
 lemma is_Proj_reduces_norm:
+  fixes P :: \<open>'a::complex_inner \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
   assumes \<open>is_Proj P\<close>
   shows \<open>norm (P *\<^sub>V \<psi>) \<le> norm \<psi>\<close>
-  using assms apply transfer
-  using is_projection_on_reduces_norm by blast
+  apply (rule is_projection_on_reduces_norm[where M=\<open>range P\<close>])
+  using assms is_Proj.rep_eq is_projection_on_image apply blast
+  by (simp add: Proj_range_closed assms closed_csubspace.intro)
 
 lemma norm_Proj_apply: \<open>norm (Proj T *\<^sub>V \<psi>) = norm \<psi> \<longleftrightarrow> \<psi> \<in> space_as_set T\<close>
 proof (rule iffI)
   show \<open>norm (Proj T *\<^sub>V \<psi>) = norm \<psi>\<close> if \<open>\<psi> \<in> space_as_set T\<close>
-    by (simp add: cancel_apply_Proj that)
+    by (simp add: Proj_fixes_image that)
   assume assm: \<open>norm (Proj T *\<^sub>V \<psi>) = norm \<psi>\<close>
   have \<psi>_decomp: \<open>\<psi> = Proj T \<psi> + Proj (-T) \<psi>\<close>
     by (simp add: Proj_ortho_compl cblinfun.real.diff_left)
@@ -2681,23 +2615,24 @@ lemma kernel_Proj[simp]: \<open>kernel (Proj S) = - S\<close>
   apply (metis diff_0_right is_projection_on_iff_orthog projection_is_projection_on')
   by (simp add: complex_vector.subspace_0 projection_eqI)
 
-(* TODO state using orthogonal_spaces *)
-term orthogonal_spaces
 lemma orthogonal_projectors_orthogonal_spaces:
   \<comment> \<open>Logically belongs in section "Projectors".\<close>
-  fixes S T :: \<open>'a::chilbert_space set\<close>
-  shows \<open>(\<forall>x\<in>S. \<forall>y\<in>T. is_orthogonal x y) \<longleftrightarrow> Proj (ccspan S) o\<^sub>C\<^sub>L Proj (ccspan T) = 0\<close>
+  fixes S T :: \<open>'a::chilbert_space ccsubspace\<close>
+  shows \<open>orthogonal_spaces S T \<longleftrightarrow> Proj S o\<^sub>C\<^sub>L Proj T = 0\<close>
 proof (intro ballI iffI)
-  fix x y assume \<open>Proj (ccspan S) o\<^sub>C\<^sub>L Proj (ccspan T) = 0\<close> \<open>x \<in> S\<close> \<open>y \<in> T\<close>
-  then show \<open>is_orthogonal x y\<close>
-    by (smt (verit, del_insts) Proj_idempotent Proj_range adj_Proj cblinfun.zero_left cblinfun_apply_cblinfun_compose cblinfun_fixes_range ccspan_superset cinner_adj_right cinner_zero_right in_mono)
+  assume \<open>Proj S o\<^sub>C\<^sub>L Proj T = 0\<close> 
+  then have \<open>is_orthogonal x y\<close> if \<open>x \<in> space_as_set S\<close> \<open>y \<in> space_as_set T\<close> for x y
+    by (metis (no_types, opaque_lifting) Proj_fixes_image adj_Proj cblinfun.zero_left cblinfun_apply_cblinfun_compose cinner_adj_right cinner_zero_right that(1) that(2))
+  then show \<open>orthogonal_spaces S T\<close>
+    by (simp add: orthogonal_spaces_def)
 next 
-  assume \<open>\<forall>x\<in>S. \<forall>y\<in>T. is_orthogonal x y\<close>
-  then have \<open>ccspan S \<le> - ccspan T\<close>
-    by (simp add: ccspan_leq_ortho_ccspan)
-  then show \<open>Proj (ccspan S) o\<^sub>C\<^sub>L Proj (ccspan T) = 0\<close>
+  assume \<open>orthogonal_spaces S T\<close>
+  then have \<open>S \<le> - T\<close>
+    by (simp add: orthogonal_spaces_leq_compl)
+  then show \<open>Proj S o\<^sub>C\<^sub>L Proj T = 0\<close>
     by (metis (no_types, opaque_lifting) Proj_range adj_Proj adj_cblinfun_compose basic_trans_rules(31) cblinfun.zero_left cblinfun_apply_cblinfun_compose cblinfun_apply_in_image cblinfun_eqI kernel_Proj kernel_memberD less_eq_ccsubspace.rep_eq)
 qed
+
 
 lemma cblinfun_compose_Proj_kernel[simp]: \<open>a o\<^sub>C\<^sub>L Proj (kernel a) = 0\<close>
   apply (rule cblinfun_eqI)
@@ -2754,9 +2689,9 @@ qed
 
 lemma Proj_partial_isometry[simp]: \<open>partial_isometry (Proj S)\<close>
   apply (rule partial_isometryI)
-  by (simp add: cancel_apply_Proj)
+  by (simp add: Proj_fixes_image)
 
-lemma is_Proj_partial_isometry: \<open>is_Proj P \<Longrightarrow> partial_isometry P\<close>
+lemma is_Proj_partial_isometry: \<open>is_Proj P \<Longrightarrow> partial_isometry P\<close> for P :: \<open>_ :: chilbert_space \<Rightarrow>\<^sub>C\<^sub>L _\<close>
   by (metis Proj_on_own_range Proj_partial_isometry)
 
 lemma isometry_partial_isometry: \<open>isometry P \<Longrightarrow> partial_isometry P\<close>
@@ -3300,7 +3235,7 @@ next
   proof (rule ccsubspace_leI_unit)
     fix \<psi> assume \<open>\<psi> \<in> space_as_set S\<close> and [simp]: \<open>norm \<psi> = 1\<close>
     then have \<open>1 = norm (Proj S *\<^sub>V \<psi>)\<close>
-      by (simp add: cancel_apply_Proj)
+      by (simp add: Proj_fixes_image)
     also from PS_PT have \<open>\<dots> \<le> norm (Proj T *\<^sub>V \<psi>)\<close>
       by (metis (no_types, lifting) Proj_idempotent adj_Proj cblinfun_apply_cblinfun_compose cinner_adj_left cnorm_le less_eq_cblinfun_def)
     also have \<open>\<dots> \<le> 1\<close>
@@ -3371,8 +3306,9 @@ lemma vector_to_cblinfun_comp_one[simp]:
 lemma vector_to_cblinfun_0[simp]: "vector_to_cblinfun 0 = 0"
   by (metis cblinfun.zero_left cblinfun_compose_zero_left vector_to_cblinfun_cblinfun_compose)
 
-(* TODO: more general: instead of top anything nonzero *)
-lemma image_vector_to_cblinfun[simp]: "vector_to_cblinfun x *\<^sub>S top = ccspan {x}"
+lemma image_vector_to_cblinfun[simp]: "vector_to_cblinfun x *\<^sub>S \<top> = ccspan {x}"
+  \<comment> \<open>Not that the general case \<^term>\<open>vector_to_cblinfun x *\<^sub>S S\<close> can be handled by using
+      that \<open>S = \<top>\<close> or \<open>S = \<bottom>\<close> by @{thm [source] one_dim_ccsubspace_all_or_nothing}\<close>
 proof transfer
   show "closure (range (\<lambda>\<phi>::'b. one_dim_iso \<phi> *\<^sub>C x)) = closure (cspan {x})"
     for x :: 'a
@@ -4416,8 +4352,8 @@ subsection \<open>Bijections between different ONBs\<close>
 text \<open>Some of the theorems here logically belong into \<^theory>\<open>Complex_Bounded_Operators.Complex_Inner_Product\<close>
   but the proof uses some concepts from the present theory.\<close>
 
-(* TODO mention: follows conway functional, Prop 4.14 *)
 lemma all_ortho_bases_same_card:
+  \<comment> \<open>Follows @{cite conway2013course}, Proposition 4.14\<close>
   fixes E F :: \<open>'a::chilbert_space set\<close>
   assumes \<open>is_ortho_set E\<close> \<open>is_ortho_set F\<close> \<open>ccspan E = top\<close> \<open>ccspan F = top\<close>
   shows \<open>\<exists>f. bij_betw f E F\<close>

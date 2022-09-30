@@ -606,6 +606,67 @@ lemma norm_scaleC_sgn[simp]: \<open>complex_of_real (norm \<psi>) *\<^sub>C sgn 
 lemma scaleC_of_complex[simp]: \<open>scaleC x (of_complex y) = of_complex (x * y)\<close>
   unfolding of_complex_def using scaleC_scaleC by blast
 
+lemma bounded_clinear_inv:
+  assumes [simp]: \<open>bounded_clinear f\<close>
+  assumes b: \<open>b > 0\<close>
+  assumes bound: \<open>\<And>x. norm (f x) \<ge> b * norm x\<close>
+  assumes \<open>surj f\<close>
+  shows \<open>bounded_clinear (inv f)\<close>
+proof (rule bounded_clinear_intro)
+  fix x y :: 'b and r :: complex
+  define x' y' where \<open>x' = inv f x\<close> and \<open>y' = inv f y\<close>
+  have [simp]: \<open>clinear f\<close>
+    by (simp add: bounded_clinear.clinear)
+  have [simp]: \<open>inj f\<close>
+  proof (rule injI)
+    fix x y assume \<open>f x = f y\<close>
+    then have \<open>norm (f (x - y)) = 0\<close>
+      by (simp add: complex_vector.linear_diff)
+    with bound b have \<open>norm (x - y) = 0\<close>
+      by (metis linorder_not_le mult_le_0_iff nle_le norm_ge_zero)
+    then show \<open>x = y\<close>
+      by simp
+  qed
+
+  from \<open>surj f\<close>
+  have [simp]: \<open>x = f x'\<close> \<open>y = f y'\<close>
+    by (simp_all add: surj_f_inv_f x'_def y'_def)
+  show "inv f (x + y) = inv f x + inv f y"
+    by (simp flip: complex_vector.linear_add)
+  show "inv f (r *\<^sub>C x) = r *\<^sub>C inv f x"
+    by (simp flip: clinear.scaleC)
+  from bound have "b * norm (inv f x) \<le> norm x" 
+    by (simp flip: clinear.scaleC)
+  with b show "norm (inv f x) \<le> norm x * inverse b" 
+    by (smt (verit, ccfv_threshold) left_inverse mult.commute mult_cancel_right1 mult_le_cancel_left_pos vector_space_over_itself.scale_scale)
+qed
+
+(* TODO rename \<rightarrow> range_is_csubspace *)
+lemma range_is_clinear[simp]:
+  assumes a1: "clinear f"
+  shows "csubspace (range f)"
+  using assms complex_vector.linear_subspace_image complex_vector.subspace_UNIV by blast
+
+lemma csubspace_is_convex[simp]:
+  assumes a1: "csubspace M"
+  shows "convex M"
+proof-
+  have \<open>\<forall>x\<in>M. \<forall>y\<in> M. \<forall>u. \<forall>v. u *\<^sub>C x + v *\<^sub>C y \<in>  M\<close>
+    using a1
+    by (simp add:  complex_vector.subspace_def)
+  hence \<open>\<forall>x\<in>M. \<forall>y\<in>M. \<forall>u::real. \<forall>v::real. u *\<^sub>R x + v *\<^sub>R y \<in> M\<close>
+    by (simp add: scaleR_scaleC)
+  hence \<open>\<forall>x\<in>M. \<forall>y\<in>M. \<forall>u\<ge>0. \<forall>v\<ge>0. u + v = 1 \<longrightarrow> u *\<^sub>R x + v *\<^sub>R y \<in>M\<close>
+    by blast
+  thus ?thesis using convex_def by blast
+qed
+
+lemma kernel_is_csubspace[simp]:
+  assumes a1: "clinear f"
+  shows "csubspace  (f -` {0})"
+  by (simp add: assms complex_vector.linear_subspace_vimage)
+
+
 subsection \<open>Antilinear maps and friends\<close>
 
 locale antilinear = additive f for f :: "'a::complex_vector \<Rightarrow> 'b::complex_vector" +
@@ -860,6 +921,82 @@ lemma comp_bounded_clinear:
   shows \<open>bounded_clinear (A \<circ> B)\<close>
   by (metis clinear_compose assms(1) assms(2) bounded_clinear_axioms_def bounded_clinear_compose bounded_clinear_def o_def)
 
+
+lemma bounded_sesquilinear_add:
+  \<open>bounded_sesquilinear (\<lambda> x y. A x y + B x y)\<close> if \<open>bounded_sesquilinear A\<close> and \<open>bounded_sesquilinear B\<close>
+proof
+  fix a a' :: 'a and b b' :: 'b and r :: complex
+  show "A (a + a') b + B (a + a') b = (A a b + B a b) + (A a' b + B a' b)"
+    by (simp add: bounded_sesquilinear.add_left that(1) that(2))
+  show \<open>A a (b + b') + B a (b + b') = (A a b + B a b) + (A a b' + B a b')\<close>
+    by (simp add: bounded_sesquilinear.add_right that(1) that(2))
+  show \<open>A (r *\<^sub>C a) b + B (r *\<^sub>C a) b = cnj r *\<^sub>C (A a b + B a b)\<close>
+    by (simp add: bounded_sesquilinear.scaleC_left scaleC_add_right that(1) that(2))
+  show \<open>A a (r *\<^sub>C b) + B a (r *\<^sub>C b) = r *\<^sub>C (A a b + B a b)\<close>
+    by (simp add: bounded_sesquilinear.scaleC_right scaleC_add_right that(1) that(2))
+  show \<open>\<exists>K. \<forall>a b. norm (A a b + B a b) \<le> norm a * norm b * K\<close>
+  proof-
+    have \<open>\<exists> KA. \<forall> a b. norm (A a b) \<le> norm a * norm b * KA\<close>
+      by (simp add: bounded_sesquilinear.bounded that(1))
+    then obtain KA where \<open>\<forall> a b. norm (A a b) \<le> norm a * norm b * KA\<close>
+      by blast
+    have \<open>\<exists> KB. \<forall> a b. norm (B a b) \<le> norm a * norm b * KB\<close>
+      by (simp add: bounded_sesquilinear.bounded that(2))
+    then obtain KB where \<open>\<forall> a b. norm (B a b) \<le> norm a * norm b * KB\<close>
+      by blast
+    have \<open>norm (A a b + B a b) \<le> norm a * norm b * (KA + KB)\<close>
+      for a b
+    proof-
+      have \<open>norm (A a b + B a b) \<le> norm (A a b) +  norm (B a b)\<close>
+        using norm_triangle_ineq by blast
+      also have \<open>\<dots> \<le> norm a * norm b * KA + norm a * norm b * KB\<close>
+        using  \<open>\<forall> a b. norm (A a b) \<le> norm a * norm b * KA\<close>
+          \<open>\<forall> a b. norm (B a b) \<le> norm a * norm b * KB\<close>
+        using add_mono by blast
+      also have \<open>\<dots>=  norm a * norm b * (KA + KB)\<close>
+        by (simp add: mult.commute ring_class.ring_distribs(2))
+      finally show ?thesis
+        by blast
+    qed
+    thus ?thesis by blast
+  qed
+qed
+
+lemma bounded_sesquilinear_uminus:
+  \<open>bounded_sesquilinear (\<lambda> x y. - A x y)\<close> if \<open>bounded_sesquilinear A\<close>
+proof
+  fix a a' :: 'a and b b' :: 'b and r :: complex
+  show "- A (a + a') b = (- A a b) + (- A a' b)"
+    by (simp add: bounded_sesquilinear.add_left that)
+  show \<open>- A a (b + b') = (- A a b) + (- A a b')\<close>
+    by (simp add: bounded_sesquilinear.add_right that)
+  show \<open>- A (r *\<^sub>C a) b = cnj r *\<^sub>C (- A a b)\<close>
+    by (simp add: bounded_sesquilinear.scaleC_left that)
+  show \<open>- A a (r *\<^sub>C b) = r *\<^sub>C (- A a b)\<close>
+    by (simp add: bounded_sesquilinear.scaleC_right that)
+  show \<open>\<exists>K. \<forall>a b. norm (- A a b) \<le> norm a * norm b * K\<close>
+  proof-
+    have \<open>\<exists> KA. \<forall> a b. norm (A a b) \<le> norm a * norm b * KA\<close>
+      by (simp add: bounded_sesquilinear.bounded that(1))
+    then obtain KA where \<open>\<forall> a b. norm (A a b) \<le> norm a * norm b * KA\<close>
+      by blast
+    have \<open>norm (- A a b) \<le> norm a * norm b * KA\<close>
+      for a b
+      by (simp add: \<open>\<forall>a b. norm (A a b) \<le> norm a * norm b * KA\<close>)
+    thus ?thesis by blast
+  qed
+qed
+
+lemma bounded_sesquilinear_diff:
+  \<open>bounded_sesquilinear (\<lambda> x y. A x y - B x y)\<close> if \<open>bounded_sesquilinear A\<close> and \<open>bounded_sesquilinear B\<close>
+proof -
+  have \<open>bounded_sesquilinear (\<lambda> x y. - B x y)\<close>
+    using that(2) by (rule bounded_sesquilinear_uminus)
+  then have \<open>bounded_sesquilinear (\<lambda> x y. A x y + (- B x y))\<close>
+    using that(1) by (rule bounded_sesquilinear_add[rotated])
+  then show ?thesis
+    by auto
+qed
 
 lemmas isCont_scaleC [simp] =
   bounded_bilinear.isCont [OF bounded_cbilinear_scaleC[THEN bounded_cbilinear.bounded_bilinear]]
@@ -1138,6 +1275,23 @@ class basis_enum = complex_vector +
 setup \<open>Sign.add_const_constraint ("Complex_Vector_Spaces0.cindependent", SOME \<^typ>\<open>'a::complex_vector set \<Rightarrow> bool\<close>)\<close>
 setup \<open>Sign.add_const_constraint (\<^const_name>\<open>cdependent\<close>, SOME \<^typ>\<open>'a::complex_vector set \<Rightarrow> bool\<close>)\<close>
 setup \<open>Sign.add_const_constraint (\<^const_name>\<open>cspan\<close>, SOME \<^typ>\<open>'a::complex_vector set \<Rightarrow> 'a set\<close>)\<close>
+
+
+instantiation complex :: basis_enum begin
+definition "canonical_basis = [1::complex]"
+instance
+proof
+  show "distinct (canonical_basis::complex list)"
+    by (simp add: canonical_basis_complex_def)
+  show "cindependent (set (canonical_basis::complex list))"
+    unfolding canonical_basis_complex_def
+    by auto
+  show "cspan (set (canonical_basis::complex list)) = UNIV"
+    unfolding canonical_basis_complex_def
+    apply (auto simp add: cspan_raw_def vector_space_over_itself.span_Basis)
+    by (metis complex_scaleC_def complex_vector.span_base complex_vector.span_scale cspan_raw_def insertI1 mult.right_neutral)
+qed
+end
 
 lemma cdim_UNIV_basis_enum[simp]: \<open>cdim (UNIV::'a::basis_enum set) = length (canonical_basis::'a list)\<close>
   apply (subst is_generator_set[symmetric])
@@ -2108,6 +2262,12 @@ proof (rule closed_csubspace.intro)
     by simp
 qed
 
+lemma ccspan_superset:
+  \<open>A \<subseteq> space_as_set (ccspan A)\<close>
+  for A :: \<open>'a::complex_normed_vector set\<close>
+  apply transfer
+  by (meson closure_subset complex_vector.span_superset subset_trans)
+
 lemma ccspan_canonical_basis[simp]: "ccspan (set canonical_basis) = top"
   using ccspan.rep_eq space_as_set_inject top_ccsubspace.rep_eq
     closure_UNIV is_generator_set
@@ -2264,85 +2424,6 @@ lemma ccspan_mono:
   apply (transfer fixing: A B)
   by (simp add: assms closure_mono complex_vector.span_mono)
 
-(* TODO move to other section *)
-lemma bounded_sesquilinear_add:
-  \<open>bounded_sesquilinear (\<lambda> x y. A x y + B x y)\<close> if \<open>bounded_sesquilinear A\<close> and \<open>bounded_sesquilinear B\<close>
-proof
-  fix a a' :: 'a and b b' :: 'b and r :: complex
-  show "A (a + a') b + B (a + a') b = (A a b + B a b) + (A a' b + B a' b)"
-    by (simp add: bounded_sesquilinear.add_left that(1) that(2))
-  show \<open>A a (b + b') + B a (b + b') = (A a b + B a b) + (A a b' + B a b')\<close>
-    by (simp add: bounded_sesquilinear.add_right that(1) that(2))
-  show \<open>A (r *\<^sub>C a) b + B (r *\<^sub>C a) b = cnj r *\<^sub>C (A a b + B a b)\<close>
-    by (simp add: bounded_sesquilinear.scaleC_left scaleC_add_right that(1) that(2))
-  show \<open>A a (r *\<^sub>C b) + B a (r *\<^sub>C b) = r *\<^sub>C (A a b + B a b)\<close>
-    by (simp add: bounded_sesquilinear.scaleC_right scaleC_add_right that(1) that(2))
-  show \<open>\<exists>K. \<forall>a b. norm (A a b + B a b) \<le> norm a * norm b * K\<close>
-  proof-
-    have \<open>\<exists> KA. \<forall> a b. norm (A a b) \<le> norm a * norm b * KA\<close>
-      by (simp add: bounded_sesquilinear.bounded that(1))
-    then obtain KA where \<open>\<forall> a b. norm (A a b) \<le> norm a * norm b * KA\<close>
-      by blast
-    have \<open>\<exists> KB. \<forall> a b. norm (B a b) \<le> norm a * norm b * KB\<close>
-      by (simp add: bounded_sesquilinear.bounded that(2))
-    then obtain KB where \<open>\<forall> a b. norm (B a b) \<le> norm a * norm b * KB\<close>
-      by blast
-    have \<open>norm (A a b + B a b) \<le> norm a * norm b * (KA + KB)\<close>
-      for a b
-    proof-
-      have \<open>norm (A a b + B a b) \<le> norm (A a b) +  norm (B a b)\<close>
-        using norm_triangle_ineq by blast
-      also have \<open>\<dots> \<le> norm a * norm b * KA + norm a * norm b * KB\<close>
-        using  \<open>\<forall> a b. norm (A a b) \<le> norm a * norm b * KA\<close>
-          \<open>\<forall> a b. norm (B a b) \<le> norm a * norm b * KB\<close>
-        using add_mono by blast
-      also have \<open>\<dots>=  norm a * norm b * (KA + KB)\<close>
-        by (simp add: mult.commute ring_class.ring_distribs(2))
-      finally show ?thesis
-        by blast
-    qed
-    thus ?thesis by blast
-  qed
-qed
-
-(* TODO move to other section *)
-lemma bounded_sesquilinear_uminus:
-  \<open>bounded_sesquilinear (\<lambda> x y. - A x y)\<close> if \<open>bounded_sesquilinear A\<close>
-proof
-  fix a a' :: 'a and b b' :: 'b and r :: complex
-  show "- A (a + a') b = (- A a b) + (- A a' b)"
-    by (simp add: bounded_sesquilinear.add_left that)
-  show \<open>- A a (b + b') = (- A a b) + (- A a b')\<close>
-    by (simp add: bounded_sesquilinear.add_right that)
-  show \<open>- A (r *\<^sub>C a) b = cnj r *\<^sub>C (- A a b)\<close>
-    by (simp add: bounded_sesquilinear.scaleC_left that)
-  show \<open>- A a (r *\<^sub>C b) = r *\<^sub>C (- A a b)\<close>
-    by (simp add: bounded_sesquilinear.scaleC_right that)
-  show \<open>\<exists>K. \<forall>a b. norm (- A a b) \<le> norm a * norm b * K\<close>
-  proof-
-    have \<open>\<exists> KA. \<forall> a b. norm (A a b) \<le> norm a * norm b * KA\<close>
-      by (simp add: bounded_sesquilinear.bounded that(1))
-    then obtain KA where \<open>\<forall> a b. norm (A a b) \<le> norm a * norm b * KA\<close>
-      by blast
-    have \<open>norm (- A a b) \<le> norm a * norm b * KA\<close>
-      for a b
-      by (simp add: \<open>\<forall>a b. norm (A a b) \<le> norm a * norm b * KA\<close>)
-    thus ?thesis by blast
-  qed
-qed
-
-(* TODO move to other section *)
-lemma bounded_sesquilinear_diff:
-  \<open>bounded_sesquilinear (\<lambda> x y. A x y - B x y)\<close> if \<open>bounded_sesquilinear A\<close> and \<open>bounded_sesquilinear B\<close>
-proof -
-  have \<open>bounded_sesquilinear (\<lambda> x y. - B x y)\<close>
-    using that(2) by (rule bounded_sesquilinear_uminus)
-  then have \<open>bounded_sesquilinear (\<lambda> x y. A x y + (- B x y))\<close>
-    using that(1) by (rule bounded_sesquilinear_add[rotated])
-  then show ?thesis
-    by auto
-qed
-
 lemma ccsubspace_leI:
   assumes t1: "space_as_set A \<subseteq> space_as_set B"
   shows "A \<le> B"
@@ -2468,6 +2549,34 @@ proof (rule ccsubspace_leI, rule subsetI)
     apply simp
     using assms[of \<open>sgn \<psi>\<close>] \<psi>A sgn_in_spaceD sgn_in_spaceI 
     by (auto simp: norm_sgn)
+qed
+
+lemma kernel_is_closed_csubspace[simp]:
+  assumes a1: "bounded_clinear f"
+  shows "closed_csubspace (f -` {0})"
+proof-
+  have \<open>csubspace (f -` {0})\<close>
+    using assms bounded_clinear.clinear complex_vector.linear_subspace_vimage complex_vector.subspace_single_0 by blast
+  have "L \<in> {x. f x = 0}"
+    if "r \<longlonglongrightarrow> L" and "\<forall> n. r n \<in> {x. f x = 0}"
+    for r and  L
+  proof-
+    have d1: \<open>\<forall> n. f (r n) = 0\<close>
+      using that(2) by auto
+    have \<open>(\<lambda> n. f (r n)) \<longlonglongrightarrow> f L\<close>
+      using assms clinear_continuous_at continuous_within_tendsto_compose' that(1)
+      by fastforce
+    hence \<open>(\<lambda> n. 0) \<longlonglongrightarrow> f L\<close>
+      using d1 by simp
+    hence \<open>f L = 0\<close>
+      using limI by fastforce
+    thus ?thesis by blast
+  qed
+  then have s3: \<open>closed (f -` {0})\<close>
+    using closed_sequential_limits by force
+  with \<open>csubspace (f -` {0})\<close>
+  show ?thesis
+    using closed_csubspace.intro by blast
 qed
 
 subsection \<open>Closed sums\<close>
@@ -2849,88 +2958,6 @@ proof -
   then show \<open>A t = B t\<close>
     by (simp add: to_conjugate_space_inverse)
 qed
-
-(* TODO move after basis_enum *)
-instantiation complex :: basis_enum begin
-definition "canonical_basis = [1::complex]"
-instance
-proof
-  show "distinct (canonical_basis::complex list)"
-    by (simp add: canonical_basis_complex_def)
-  show "cindependent (set (canonical_basis::complex list))"
-    unfolding canonical_basis_complex_def
-    by auto
-  show "cspan (set (canonical_basis::complex list)) = UNIV"
-    unfolding canonical_basis_complex_def
-    apply (auto simp add: cspan_raw_def vector_space_over_itself.span_Basis)
-    by (metis complex_scaleC_def complex_vector.span_base complex_vector.span_scale cspan_raw_def insertI1 mult.right_neutral)
-qed
-end
-
-(* TODO move to subspace section *)
-lemma csubspace_is_convex[simp]:
-  assumes a1: "csubspace M"
-  shows "convex M"
-proof-
-  have \<open>\<forall>x\<in>M. \<forall>y\<in> M. \<forall>u. \<forall>v. u *\<^sub>C x + v *\<^sub>C y \<in>  M\<close>
-    using a1
-    by (simp add:  complex_vector.subspace_def)
-  hence \<open>\<forall>x\<in>M. \<forall>y\<in>M. \<forall>u::real. \<forall>v::real. u *\<^sub>R x + v *\<^sub>R y \<in> M\<close>
-    by (simp add: scaleR_scaleC)
-  hence \<open>\<forall>x\<in>M. \<forall>y\<in>M. \<forall>u\<ge>0. \<forall>v\<ge>0. u + v = 1 \<longrightarrow> u *\<^sub>R x + v *\<^sub>R y \<in>M\<close>
-    by blast
-  thus ?thesis using convex_def by blast
-qed
-
-(* TODO move to subspace section *)
-lemma kernel_is_csubspace[simp]:
-  assumes a1: "clinear f"
-  shows "csubspace  (f -` {0})"
-  by (simp add: assms complex_vector.linear_subspace_vimage)
-
-(* TODO move to subspace section *)
-lemma kernel_is_closed_csubspace[simp]:
-  assumes a1: "bounded_clinear f"
-  shows "closed_csubspace (f -` {0})"
-proof-
-  have \<open>csubspace (f -` {0})\<close>
-    using assms bounded_clinear.clinear complex_vector.linear_subspace_vimage complex_vector.subspace_single_0 by blast
-  have "L \<in> {x. f x = 0}"
-    if "r \<longlonglongrightarrow> L" and "\<forall> n. r n \<in> {x. f x = 0}"
-    for r and  L
-  proof-
-    have d1: \<open>\<forall> n. f (r n) = 0\<close>
-      using that(2) by auto
-    have \<open>(\<lambda> n. f (r n)) \<longlonglongrightarrow> f L\<close>
-      using assms clinear_continuous_at continuous_within_tendsto_compose' that(1)
-      by fastforce
-    hence \<open>(\<lambda> n. 0) \<longlonglongrightarrow> f L\<close>
-      using d1 by simp
-    hence \<open>f L = 0\<close>
-      using limI by fastforce
-    thus ?thesis by blast
-  qed
-  then have s3: \<open>closed (f -` {0})\<close>
-    using closed_sequential_limits by force
-  with \<open>csubspace (f -` {0})\<close>
-  show ?thesis
-    using closed_csubspace.intro by blast
-qed
-
-(* TODO move to subspace section *)
-(* TODO rename \<rightarrow> range_is_csubspace *)
-lemma range_is_clinear[simp]:
-  assumes a1: "clinear f"
-  shows "csubspace (range f)"
-  using assms complex_vector.linear_subspace_image complex_vector.subspace_UNIV by blast
-
-(* TODO move to subspace section *)
-lemma ccspan_superset:
-  \<open>A \<subseteq> space_as_set (ccspan A)\<close>
-  for A :: \<open>'a::complex_normed_vector set\<close>
-  apply transfer
-  by (meson closure_subset complex_vector.span_superset subset_trans)
-
 
 subsection \<open>Product is a Complex Vector Space\<close>
 
