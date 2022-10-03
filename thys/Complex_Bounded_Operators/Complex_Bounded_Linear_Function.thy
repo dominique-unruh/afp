@@ -2478,12 +2478,6 @@ lemma Proj_orthog_ccspan_insert:
   apply (rule Proj_orthog_ccspan_union)
   using assms by auto
 
-(* TODO remove, is called Proj_fixes_image now *)
-(* lemma cancel_apply_Proj:
-  assumes \<open>\<psi> \<in> space_as_set S\<close>
-  shows \<open>Proj S *\<^sub>V \<psi> = \<psi>\<close>
-  by (metis Proj_idempotent Proj_range assms cblinfun_fixes_range) *)
-
 lemma Proj_fixes_image: \<open>Proj S *\<^sub>V \<psi> = \<psi>\<close> if \<open>\<psi> \<in> space_as_set S\<close>
   by (metis Proj_idempotent Proj_range that cblinfun_fixes_range)
 

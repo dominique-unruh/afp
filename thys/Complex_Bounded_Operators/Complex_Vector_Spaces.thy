@@ -641,8 +641,7 @@ proof (rule bounded_clinear_intro)
     by (smt (verit, ccfv_threshold) left_inverse mult.commute mult_cancel_right1 mult_le_cancel_left_pos vector_space_over_itself.scale_scale)
 qed
 
-(* TODO rename \<rightarrow> range_is_csubspace *)
-lemma range_is_clinear[simp]:
+lemma range_is_csubspace[simp]:
   assumes a1: "clinear f"
   shows "csubspace (range f)"
   using assms complex_vector.linear_subspace_image complex_vector.subspace_UNIV by blast

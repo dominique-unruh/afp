@@ -17,12 +17,12 @@ subsection \<open>Complex inner product spaces\<close>
 
 unbundle cinner_syntax
 
-(* TODO: remove this eventually *)
+(* TODO: Remove this eventually. Do not use this syntax. *)
 bundle cinner_bracket_notation begin
 notation cinner ("\<langle>_, _\<rangle>")
 end
 
-(* TODO: remove this eventually *)
+(* TODO: Remove this eventually. Do not use this syntax. *)
 bundle no_cinner_bracket_notation begin
 no_notation cinner ("\<langle>_, _\<rangle>")
 end
@@ -1812,7 +1812,6 @@ proof
 qed
 
 subsection \<open>Orthogonal spaces\<close>
-(* TODO: Add to report overview *)
 
 definition \<open>orthogonal_spaces S T \<longleftrightarrow> (\<forall>x\<in>space_as_set S. \<forall>y\<in>space_as_set T. is_orthogonal x y)\<close>
 
