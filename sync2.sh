@@ -6,4 +6,5 @@ for VERSION in devel 2022 2021-1 2021 2020 2019; do
     fi
 
     git fetch mirror-afp-$VERSION master:afp-$VERSION
+    git push origin afp-$VERSION
 done
