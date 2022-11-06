@@ -135,7 +135,7 @@ next
   have \<open>compact_op (sgn a)\<close> if \<open>compact_op a\<close>
     by (simp add: sgn_cblinfun_def that)
   moreover have \<open>compact_op (norm a *\<^sub>R sgn a)\<close> if \<open>compact_op (sgn a)\<close>
-    by (simp add: scaleR_scaleC that)
+    by (simp add: that)
   moreover have \<open>norm a *\<^sub>R sgn a = a\<close>
     by (simp add: False sgn_div_norm)
   ultimately show ?thesis

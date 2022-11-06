@@ -44,7 +44,7 @@ lemma tensor_ell2_scaleC1: \<open>tensor_ell2 (c *\<^sub>C a) b = c *\<^sub>C te
 lemma tensor_ell2_scaleC2: \<open>tensor_ell2 a (c *\<^sub>C b) = c *\<^sub>C tensor_ell2 a b\<close>
   apply transfer apply (rule ext) by (auto simp: case_prod_beta)
 
-lemma tensor_ell2_inner_prod[simp]: \<open>\<langle>tensor_ell2 a b, tensor_ell2 c d\<rangle> = \<langle>a,c\<rangle> * \<langle>b,d\<rangle>\<close>
+lemma tensor_ell2_inner_prod[simp]: \<open>tensor_ell2 a b \<bullet>\<^sub>C tensor_ell2 c d = (a \<bullet>\<^sub>C c) * (b \<bullet>\<^sub>C d)\<close>
   apply (rule local_defE[where y=\<open>tensor_ell2 a b\<close>], rename_tac ab)
   apply (rule local_defE[where y=\<open>tensor_ell2 c d\<close>], rename_tac cd)
 proof (transfer, hypsubst_thin)
@@ -372,7 +372,7 @@ proof -
 
     from g1_add g1_scale g1_bounded
     show \<open>norm extg1 \<le> norm M\<close>
-      by (auto simp: extg1_def intro!: cblinfun_extension_exists_norm)
+      by (auto simp: extg1_def intro!: cblinfun_extension_norm_bounded_dense)
   qed
 
   have extg1_apply: \<open>extg1 *\<^sub>V (\<psi> \<otimes>\<^sub>s \<phi>) = (M *\<^sub>V \<psi>) \<otimes>\<^sub>s \<phi>\<close> for \<psi> \<phi>
@@ -471,7 +471,7 @@ proof -
 
     from g2_add g2_scale g2_bounded
     show \<open>norm extg2 \<le> norm N\<close>
-      by (auto simp: extg2_def intro!: cblinfun_extension_exists_norm)
+      by (auto simp: extg2_def intro!: cblinfun_extension_norm_bounded_dense)
   qed
 
   have extg2_apply: \<open>extg2 *\<^sub>V (\<psi> \<otimes>\<^sub>s \<phi>) = \<psi> \<otimes>\<^sub>s (N *\<^sub>V \<phi>)\<close> for \<psi> \<phi>

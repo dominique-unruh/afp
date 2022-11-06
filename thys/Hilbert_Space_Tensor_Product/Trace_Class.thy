@@ -1731,9 +1731,9 @@ proof -
           intro!: exI[of _ \<open>norm \<Phi>\<close>]
           simp add: p_def butterfly_co_add_left butterfly_co_add_right  complex_vector.linear_add 
           cblinfun.scaleC_right cblinfun.scaleC_left ab_semigroup_mult_class.mult_ac)
-    define A where \<open>A = (the_riesz_rep_bilinear p)*\<close>
+    define A where \<open>A = (the_riesz_rep_sesqui p)*\<close>
     then have xAy: \<open>x \<bullet>\<^sub>C (A y) = p x y\<close> for x y
-      by (simp add: cinner_adj_right the_riesz_rep_bilinear_correct)
+      by (simp add: cinner_adj_right the_riesz_rep_sesqui_apply)
     have \<Phi>C: \<open>\<Phi> C = trace (from_compact_op C o\<^sub>C\<^sub>L A)\<close> if \<open>finite_rank (from_compact_op C)\<close> for C
     proof -
       from that

@@ -455,7 +455,7 @@ proof (rule exI, intro conjI allI impI)
       then have \<open>F *\<^sub>V P *\<^sub>V \<psi> \<in> space_as_set (kernel (W - T))\<close>
         using kernel_memberI by blast
       then have \<open>P *\<^sub>V (F *\<^sub>V P *\<^sub>V \<psi>) = F *\<^sub>V P *\<^sub>V \<psi>\<close>
-        using P_def cancel_apply_Proj by blast
+        using P_def Proj_fixes_image by blast
       then show \<open>(F o\<^sub>C\<^sub>L P) *\<^sub>V \<psi> = (P o\<^sub>C\<^sub>L F o\<^sub>C\<^sub>L P) *\<^sub>V \<psi>\<close>
         by simp
     qed
@@ -482,7 +482,7 @@ proof (rule exI, intro conjI allI impI)
     then have \<open>(W - T) *\<^sub>V f = 0\<close>
       by (simp add: cblinfun.diff_left that)
     then show \<open>P *\<^sub>V f = f\<close>
-      using P_def cancel_apply_Proj kernel_memberI by blast
+      using P_def Proj_fixes_image kernel_memberI by blast
   qed
   show thesis3: \<open>W = (2 *\<^sub>C P - id_cblinfun) o\<^sub>C\<^sub>L T\<close>
   proof -
@@ -797,10 +797,11 @@ proof -
   qed
 
   have range_subspace: \<open>csubspace (range (abs_op A))\<close>
-    by (auto intro!: range_is_clinear)
+    by (auto intro!: range_is_csubspace)
 
-  have exP: \<open>\<exists>P. is_projection_on P (closure (range ((*\<^sub>V) (abs_op A)))) \<and> bounded_clinear P\<close>
-    using closure_is_closed_csubspace projection_bounded_clinear projection_is_projection_on' range_subspace by blast
+  have exP: \<open>\<exists>P. is_Proj P \<and> range ((*\<^sub>V) P) = closure (range ((*\<^sub>V) (abs_op A)))\<close>
+    apply (rule exI[of _ \<open>Proj (abs_op A *\<^sub>S \<top>)\<close>])
+    by (metis (no_types, opaque_lifting) Proj_is_Proj Proj_range Proj_range_closed cblinfun_image.rep_eq closure_closed space_as_set_top)
 
   have add: \<open>W (x + y) = W x + W y\<close> if x_in: \<open>x \<in> range (abs_op A)\<close> and y_in: \<open>y \<in> range (abs_op A)\<close> for x y
   proof -
@@ -837,9 +838,9 @@ proof -
   proof (rule cblinfun_eqI)
     fix \<psi> :: 'a
     have \<open>(polar_decomposition A o\<^sub>C\<^sub>L abs_op A) *\<^sub>V \<psi> = W (P (abs_op A \<psi>))\<close>
-      by (simp add: W'_apply P_def pdA cancel_apply_Proj) 
+      by (simp add: W'_apply P_def pdA Proj_fixes_image) 
     also have \<open>\<dots> = W (abs_op A \<psi>)\<close>
-      by (auto simp: P_def cancel_apply_Proj)
+      by (auto simp: P_def Proj_fixes_image)
     also have \<open>\<dots> = A \<psi>\<close>
       by (simp add: W_absA)
 (*     also have \<open>\<dots> = A (inv (abs_op A) (abs_op A \<psi>))\<close>
@@ -863,7 +864,7 @@ proof -
       using W'_apply W_def that by blast
     then have \<open>W' \<psi> \<in> closure (range A)\<close> if \<open>\<psi> \<in> closure (range (abs_op A))\<close> for \<psi>
       using * 
-      by (metis (mono_tags, lifting) P_def Proj_range cancel_apply_Proj cblinfun_apply_cblinfun_compose cblinfun_apply_in_image cblinfun_compose_image cblinfun_image.rep_eq pdA that top_ccsubspace.rep_eq)
+      by (metis (mono_tags, lifting) P_def Proj_range Proj_fixes_image cblinfun_apply_cblinfun_compose cblinfun_apply_in_image cblinfun_compose_image cblinfun_image.rep_eq pdA that top_ccsubspace.rep_eq)
     then have \<open>W' \<psi> \<in> space_as_set (A *\<^sub>S top)\<close> if \<open>\<psi> \<in> space_as_set (abs_op A *\<^sub>S top)\<close> for \<psi>
       by (metis cblinfun_image.rep_eq that top_ccsubspace.rep_eq)
     then have \<open>polar_decomposition A \<psi> \<in> space_as_set (A *\<^sub>S top)\<close> for \<psi>
@@ -875,11 +876,11 @@ proof -
 
   show \<open>partial_isometry (polar_decomposition A)\<close>
     apply (rule partial_isometryI'[where V=\<open>abs_op A *\<^sub>S top\<close>])
-    by (auto simp add: P_def cancel_apply_Proj norm_W' pdA kernel_memberD)
+    by (auto simp add: P_def Proj_fixes_image norm_W' pdA kernel_memberD)
 
   have \<open>kernel (polar_decomposition A) = - (abs_op A *\<^sub>S top)\<close>
     apply (rule partial_isometry_initial[where V=\<open>abs_op A *\<^sub>S top\<close>])
-    by (auto simp add: P_def cancel_apply_Proj norm_W' pdA kernel_memberD)
+    by (auto simp add: P_def Proj_fixes_image norm_W' pdA kernel_memberD)
   also have \<open>\<dots> = kernel (abs_op A)\<close>
     by (metis abs_op_pos kernel_compl_adj_range positive_hermitianI)
   also have \<open>\<dots> = kernel A\<close>
@@ -902,7 +903,7 @@ proof -
   also have \<open>\<dots> = Proj (abs_op A *\<^sub>S top) o\<^sub>C\<^sub>L abs_op A\<close>
     by (metis abs_op_pos kernel_compl_adj_range ortho_involution positive_hermitianI)
   also have \<open>\<dots> = abs_op A\<close>
-    by (simp add: cancel_apply_Proj cblinfun_eqI)
+    by (simp add: Proj_fixes_image cblinfun_eqI)
   finally show ?thesis
     by -
 qed
