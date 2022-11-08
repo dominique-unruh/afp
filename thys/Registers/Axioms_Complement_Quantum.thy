@@ -11,159 +11,6 @@ no_notation elt_set_eq (infix "=o" 50)
 no_notation eq_closure_of ("closure'_of\<index>")
 
 
-(* TODO move *)
-lemma butterfly_sum_left: \<open>butterfly (\<Sum>i\<in>M. \<psi> i) \<phi> = (\<Sum>i\<in>M. butterfly (\<psi> i) \<phi>)\<close>
-  apply (induction M rule:infinite_finite_induct)
-  by (auto simp add: butterfly_add_left)
-
-(* TODO move *)
-lemma butterfly_sum_right: \<open>butterfly \<psi> (\<Sum>i\<in>M. \<phi> i) = (\<Sum>i\<in>M. butterfly \<psi> (\<phi> i))\<close>
-  apply (induction M rule:infinite_finite_induct)
-  by (auto simp add: butterfly_add_right)
-
-
-lemma trunc_ell2_singleton: \<open>trunc_ell2 {x} \<psi> = Rep_ell2 \<psi> x *\<^sub>C ket x\<close>
-  apply transfer by auto
-
-lemma trunc_ell2_insert: \<open>trunc_ell2 (insert x M) \<psi> = trunc_ell2 M \<psi> + Rep_ell2 \<psi> x *\<^sub>C ket x\<close> if \<open>x \<notin> M\<close>
-  using trunc_ell2_union_disjoint[where M=M and N=\<open>{x}\<close> and \<psi>=\<psi>]
-  using that by (auto simp: trunc_ell2_singleton)
-
-(* TODO move *)
-lemma trunc_ell2_finite_sum: \<open>trunc_ell2 M \<psi> = (\<Sum>i\<in>M. Rep_ell2 \<psi> i *\<^sub>C ket i)\<close> if \<open>finite M\<close>
-  using that apply induction by (auto simp: trunc_ell2_insert)
-
-
-(* TODO move *)
-lemma finite_rank_dense_compact[simp]: \<open>closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}) = Collect compact_op\<close>
-proof (rule Set.equalityI)
-  show \<open>closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}) \<subseteq> Collect compact_op\<close>
-  proof -
-    have \<open>closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}) \<subseteq> closure (Collect finite_rank)\<close>
-      apply (auto intro!: closure_mono simp: finite_rank_def)
-      by (smt (verit, del_insts) Collect_mono complex_vector.span_mono in_mono rank1_def)
-    also have \<open>\<dots> = Collect compact_op\<close>
-      by (simp add: Set.set_eqI compact_op_def)
-    finally show ?thesis
-      by -
-  qed
-  show \<open>Collect compact_op \<subseteq> closure (cspan {butterket \<xi> \<eta> |(\<xi>::'b) (\<eta>::'a). True})\<close>
-  proof -
-    have \<open>Collect compact_op = closure (cspan (Collect rank1))\<close>
-      by (metis compact_op_def finite_rank_def mem_Collect_eq subsetI subset_antisym)
-    also have \<open>\<dots> \<subseteq> closure (cspan (closure (cspan {butterket \<xi> \<eta> |(\<xi>::'b) (\<eta>::'a). True})))\<close>
-    proof (rule closure_mono, rule complex_vector.span_mono, rule subsetI)
-      fix x :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> assume \<open>x \<in> Collect rank1\<close>
-      then obtain a b where xab: \<open>x = butterfly a b\<close>
-        by (meson mem_Collect_eq rank1_def)
-      define f where \<open>f = (\<lambda>(F,G). butterfly (trunc_ell2 F a) (trunc_ell2 G b))\<close>
-      have lim: \<open>(f \<longlongrightarrow> x) (finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV)\<close>
-      proof (rule tendstoI, subst dist_norm)
-        fix e :: real assume \<open>e > 0\<close>
-        define d where \<open>d = (if norm a = 0 \<and> norm b = 0 then 1 else e / (max (norm a) (norm b)) / 4)\<close>
-        have d: \<open>norm a * d + norm a * d + norm b * d < e\<close>
-        proof -
-          have \<open>norm a * d \<le> e/4\<close>
-            using \<open>e > 0\<close> apply (auto simp: d_def)
-             apply (simp add: divide_le_eq)
-            by (smt (z3) Extra_Ordered_Fields.mult_sign_intros(3) \<open>0 < e\<close> antisym_conv divide_le_eq less_imp_le linordered_field_class.mult_imp_div_pos_le mult_left_mono nice_ordered_field_class.dense_le nice_ordered_field_class.divide_nonneg_neg nice_ordered_field_class.divide_nonpos_pos nle_le nonzero_mult_div_cancel_left norm_imp_pos_and_ge ordered_field_class.sign_simps(5) split_mult_pos_le)
-          moreover have \<open>norm b * d \<le> e/4\<close>
-            using \<open>e > 0\<close> apply (auto simp: d_def)
-             apply (simp add: divide_le_eq)
-            by (smt (verit) linordered_field_class.mult_imp_div_pos_le mult_left_mono norm_le_zero_iff ordered_field_class.sign_simps(5))
-          ultimately have \<open>norm a * d + norm a * d + norm b * d \<le> 3 * e / 4\<close>
-            by linarith
-          also have \<open>\<dots> < e\<close>
-            by (simp add: \<open>0 < e\<close>)
-          finally show ?thesis
-            by -
-        qed
-        have [simp]: \<open>d > 0\<close>
-          using \<open>e > 0\<close> apply (auto simp: d_def)
-           apply (smt (verit, best) nice_ordered_field_class.divide_pos_pos norm_eq_zero norm_not_less_zero)
-          by (smt (verit) linordered_field_class.divide_pos_pos zero_less_norm_iff)
-        from trunc_ell2_lim_at_UNIV[where \<psi>=a]
-        have \<open>\<forall>\<^sub>F F in finite_subsets_at_top UNIV. norm (trunc_ell2 F a - a) < d\<close>
-          by (metis Lim_null \<open>0 < d\<close> order_tendstoD(2) tendsto_norm_zero_iff)
-        moreover
-        from trunc_ell2_lim_at_UNIV[where \<psi>=b]
-        have \<open>\<forall>\<^sub>F G in finite_subsets_at_top UNIV. norm (trunc_ell2 G b - b) < d\<close>
-          by (metis Lim_null \<open>0 < d\<close> order_tendstoD(2) tendsto_norm_zero_iff)
-        ultimately have \<open>\<forall>\<^sub>F (F,G) in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. norm (trunc_ell2 F a - a) < d \<and> norm (trunc_ell2 G b - b) < d\<close>
-          unfolding case_prod_beta
-          by (rule eventually_prodI)
-        moreover have \<open>norm (f (F,G) - x) < e\<close> if \<open>norm (trunc_ell2 F a - a) < d\<close> and \<open>norm (trunc_ell2 G b - b) < d\<close> for F G
-        proof -
-          define B where \<open>B F G = butterfly (trunc_ell2 F a) (trunc_ell2 G b)\<close> for F G
-          have a_split: \<open>a = trunc_ell2 F a + trunc_ell2 (-F) a\<close>
-            by (simp add: Compl_eq_Diff_UNIV trunc_ell2_union_Diff)
-          have b_split: \<open>b = trunc_ell2 G b + trunc_ell2 (-G) b\<close>
-            by (simp add: Compl_eq_Diff_UNIV trunc_ell2_union_Diff)
-          have n1: \<open>norm (B F (-G)) \<le> norm a * d\<close> for F
-          proof -
-            have \<open>norm (B F (-G)) \<le> norm a * norm (trunc_ell2 (-G) b)\<close>
-              by (smt (verit, del_insts) B_def mult_right_mono norm_butterfly norm_ge_zero norm_id_minus_trunc_ell2 power2_eq_square square_less_square)
-            also have \<open>\<dots> \<le> norm a * norm (trunc_ell2 G b - b)\<close>
-              by (metis add_diff_cancel_left' b_split less_eq_real_def norm_minus_commute)
-            also have \<open>\<dots> \<le> norm a * d\<close>
-              by (meson less_eq_real_def mult_left_mono norm_ge_zero that(2))
-            finally show ?thesis
-              by -
-          qed
-          have n2: \<open>norm (B (-F) G) \<le> norm b * d\<close> for G
-          proof -
-            have \<open>norm (B (-F) G) \<le> norm b * norm (trunc_ell2 (-F) a)\<close>
-              apply (simp add: B_def norm_butterfly)
-              by (metis mult_right_mono norm_ge_zero ordered_field_class.sign_simps(33) top.extremum trunc_ell2_UNIV trunc_ell2_norm_mono)
-            also have \<open>\<dots> \<le> norm b * norm (trunc_ell2 F a - a)\<close>
-              by (smt (verit, best) a_split add_diff_cancel_left' minus_diff_eq norm_minus_cancel)
-            also have \<open>\<dots> \<le> norm b * d\<close>
-              by (meson less_eq_real_def mult_left_mono norm_ge_zero that(1))
-            finally show ?thesis
-              by -
-          qed
-          have \<open>norm (f (F,G) - x) = norm (B F G - butterfly a b)\<close>
-            by (simp add: f_def xab B_def)
-          also have \<open>\<dots> = norm (- B F (-G) - B (-F) (-G) - B (-F) G)\<close>
-            apply (subst a_split, subst b_split)
-            by (simp add: B_def butterfly_add_right butterfly_add_left)
-          also have \<open>\<dots> \<le> norm (B F (-G)) + norm (B (-F) (-G)) + norm (B (-F) G)\<close>
-            by (smt (verit, best) norm_minus_cancel norm_triangle_ineq4)
-          also have \<open>\<dots> \<le> norm a * d + norm a * d + norm b * d\<close>
-            using n1 n2
-            by (meson add_mono_thms_linordered_semiring(1))
-          also have \<open>\<dots> < e\<close>
-            by (fact d)
-          finally show ?thesis
-            by -
-        qed
-        ultimately show \<open>\<forall>\<^sub>F FG in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. norm (f FG - x) < e\<close>
-          by (smt (verit, ccfv_SIG) eventually_mono f_def prod.case_eq_if split_conv)
-      qed
-      have nontriv: \<open>finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV \<noteq> \<bottom>\<close>
-        by (simp add: prod_filter_eq_bot)
-      have inside: \<open>\<forall>\<^sub>F x in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. f x \<in> cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}\<close>
-      proof (rule eventually_mp[where P=\<open>\<lambda>(F,G). finite F \<and> finite G\<close>])
-        show \<open>\<forall>\<^sub>F (F,G) in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. finite F \<and> finite G\<close>
-          by (smt (verit) case_prod_conv eventually_finite_subsets_at_top_weakI eventually_prod_filter)
-        have \<open>f (F,G) \<in> cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}\<close> if [simp]: \<open>finite F\<close> \<open>finite G\<close> for F G
-          by (auto intro!: complex_vector.span_sum complex_vector.span_scale complex_vector.span_base[where a=\<open>butterfly _ _\<close>]
-              simp add: f_def trunc_ell2_finite_sum butterfly_sum_left butterfly_sum_right)
-        then show \<open>\<forall>\<^sub>F x in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. (case x of (F, G) \<Rightarrow> finite F \<and> finite G) \<longrightarrow> f x \<in> cspan {Misc.butterket \<xi> \<eta> |\<xi> \<eta>. True}\<close>
-          apply auto
-          by (simp add: always_eventually)
-      qed
-      show \<open>x \<in> closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True})\<close>
-        using lim nontriv inside by (rule limit_in_closure)
-    qed
-    also have \<open>\<dots> = closure (cspan {butterket \<xi> \<eta> |(\<xi>::'b) (\<eta>::'a). True})\<close>
-      by (simp add: complex_vector.span_eq_iff[THEN iffD2])
-    finally show ?thesis
-      by -
-  qed
-qed
-
-
 (* lemma finite_subsets_at_top_parametric[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: \<open>bi_unique R\<close>
@@ -316,6 +163,12 @@ lemma clinear_cblinfun_compose_left: \<open>clinear (\<lambda>x. x o\<^sub>C\<^s
 lemma clinear_cblinfun_compose_right: \<open>clinear (\<lambda>y. x o\<^sub>C\<^sub>L y)\<close>
   by (simp add: bounded_clinear.clinear bounded_clinear_cblinfun_compose_right)
 
+typedef temp = "{undefined::nat}"
+  sorry
+find_theorems "_::temp"
+setup_lifting type_definition_temp
+find_theorems "_::temp"
+
 lemma closure_of_eqI:
   fixes f g :: \<open>'a \<Rightarrow> 'b\<close> and T :: \<open>'a topology\<close> and U :: \<open>'b topology\<close>
   assumes haus: \<open>hausdorff U\<close>
@@ -323,9 +176,102 @@ lemma closure_of_eqI:
   assumes xS: \<open>x \<in> T closure_of S\<close>
   assumes cont: \<open>continuous_map T U f\<close> \<open>continuous_map T U g\<close>
   shows \<open>f x = g x\<close>
-    (* Like on_closure_eqI *)
-  thm on_closure_eqI
-  sorry
+proof -
+  have \<open>\<forall>\<^sub>\<tau> 't::topological_space = topspace T with (\<lambda>S. openin T (S \<inter> topspace T)). 
+        \<forall>\<^sub>\<tau> 'u::t2_space = topspace U with (\<lambda>S. openin U (S \<inter> topspace U)).
+        f x = g x\<close>
+  proof (rule with_typeI)
+    show \<open>fst (topspace T, \<lambda>S. openin T (S \<inter> topspace T)) \<noteq> {}\<close>
+      apply auto
+      by (metis equals0D in_closure_of xS)
+    have \<open>Domainp (rel_fun (rel_set (equal_onp (topspace T))) (=)) (\<lambda>S. openin T (S \<inter> topspace T))\<close>
+      apply (intro Domainp.intros[where b=\<open>(\<lambda>S. openin T (S \<inter> topspace T))\<close>] rel_funI)
+      by (metis equal_onp_def order_antisym_conv rel_setD1 rel_setD2 subset_eq)
+    moreover have \<open>with_type_topological_space_class_pred' (\<lambda>x. x \<in> topspace T) (\<lambda>S. openin T (S \<inter> topspace T))\<close>
+      apply (simp add: with_type_topological_space_class_pred'_def)
+      apply safe
+       apply (metis Int_ac(3) Int_ac(4) inf.orderE openin_clauses(2) unfold_simps(2))
+      by (metis inf.orderE openin_clauses(2) openin_clauses(3) openin_topspace subset_eq)
+    ultimately show \<open>fst with_type_topological_space_class (fst (topspace T, \<lambda>S. openin T (S \<inter> topspace T)))
+     (snd (topspace T, \<lambda>S. openin T (S \<inter> topspace T)))\<close>
+      by (auto simp: with_type_topological_space_class_def with_type_topological_space_class_pred_def
+          with_type_topological_space_class_dom_def   )
+    show \<open>with_type_compat_rel (fst with_type_topological_space_class) (fst (topspace T, \<lambda>S. openin T (S \<inter> topspace T)))
+         (snd with_type_topological_space_class)\<close>
+      apply (simp add: with_type_compat_rel_def with_type_topological_space_class_def
+          with_type_topological_space_class_pred_def with_type_topological_space_class_dom_def
+          with_type_topological_space_class_pred'_def with_type_t2_space_class_rel_def)
+      apply safe
+      by (metis DomainPI with_type_has_domain_def with_type_topological_space_class_dom_def with_type_topological_space_class_has_dom)
+    fix RepT :: \<open>'t \<Rightarrow> 'a\<close> and AbsT and abs_ops_T
+    assume typedefT: \<open>type_definition RepT AbsT (fst (topspace T, \<lambda>S. openin T (S \<inter> topspace T)))\<close>
+      (* Like on_closure_eqI *)
+    define crT where \<open>crT \<equiv> \<lambda>x y. x = RepT y\<close>
+    have [transfer_rule]: \<open>bi_unique crT\<close>
+      using typedefT
+      by (simp add: crT_def typedef_bi_unique)
+    have [transfer_rule]: \<open>right_total crT\<close>
+      by (simp add: crT_def right_totalI)
+    have [transfer_rule]: \<open>rel_fun crT (=) (\<lambda>x. x) RepT\<close>
+      by (simp add: crT_def rel_funI)
+    have [transfer_rule]: \<open>Domainp crT = (\<lambda>x. x \<in> topspace T)\<close>
+      sorry
+    assume \<open>snd with_type_topological_space_class (\<lambda>x y. x = RepT y)
+        (snd (topspace T, \<lambda>S. openin T (S \<inter> topspace T))) abs_ops_T\<close>
+    then have [transfer_rule]: \<open>rel_fun (rel_set (\<lambda>x y. x = RepT y)) (=) (\<lambda>S. openin T (S \<inter> topspace T)) abs_ops_T\<close>
+      by (simp add: with_type_topological_space_class_def
+          with_type_topological_space_class_rel_def)
+    show \<open>\<forall>\<^sub>\<tau> 'u::t2_space = topspace U with (\<lambda>S. openin U (S \<inter> topspace U)).
+        f x = g x\<close>
+    proof (rule with_typeI)
+      show \<open>fst (topspace U, \<lambda>S. openin U (S \<inter> topspace U)) \<noteq> {}\<close>
+        apply auto
+        sorry
+      have \<open>Domainp (rel_fun (rel_set (equal_onp (topspace U))) (=)) (\<lambda>S. openin U (S \<inter> topspace U))\<close>
+        apply (intro Domainp.intros[where b=\<open>(\<lambda>S. openin U (S \<inter> topspace U))\<close>] rel_funI)
+        by (metis equal_onp_def order_antisym_conv rel_setD1 rel_setD2 subset_eq)
+      moreover have \<open>with_type_t2_space_class_pred' (\<lambda>x. x \<in> topspace U) (\<lambda>S. openin U (S \<inter> topspace U))\<close>
+        apply (simp add: with_type_t2_space_class_pred'_def)
+        apply safe
+          apply (metis Int_ac(3) Int_ac(4) inf.orderE openin_clauses(2) unfold_simps(2))
+         apply (metis inf.orderE openin_clauses(2) openin_clauses(3) openin_topspace subset_eq)
+        by (smt (verit) assms(1) hausdorff_def inf_absorb1 openin_subset subsetD)
+      ultimately show \<open>fst with_type_t2_space_class (fst (topspace U, \<lambda>S. openin U (S \<inter> topspace U)))
+     (snd (topspace U, \<lambda>S. openin U (S \<inter> topspace U)))\<close>
+        by (auto simp: with_type_t2_space_class_def with_type_t2_space_class_pred_def
+            with_type_t2_space_class_dom_def   )
+      show \<open>with_type_compat_rel (fst with_type_t2_space_class) (fst (topspace U, \<lambda>S. openin U (S \<inter> topspace U)))
+         (snd with_type_t2_space_class)\<close>
+        apply (simp add: with_type_compat_rel_def with_type_t2_space_class_def
+            with_type_t2_space_class_pred_def with_type_t2_space_class_dom_def
+            with_type_t2_space_class_pred'_def with_type_t2_space_class_rel_def)
+        apply safe
+        by -
+      fix RepU :: \<open>'u \<Rightarrow> 'b\<close> and AbsU and abs_ops_U
+      assume typedefU: \<open>type_definition RepU AbsU (fst (topspace U, \<lambda>S. openin U (S \<inter> topspace U)))\<close>
+      define crU where \<open>crU \<equiv> \<lambda>x y. x = RepU y\<close>
+      have [transfer_rule]: \<open>bi_unique crU\<close>
+        using typedefU
+        by (simp add: crU_def typedef_bi_unique)
+      have [transfer_rule]: \<open>right_total crU\<close>
+        by (simp add: crU_def right_totalI)
+      have [transfer_rule]: \<open>rel_fun crU (=) (\<lambda>x. x) RepU\<close>
+        by (simp add: crU_def rel_funI)
+      have [transfer_rule]: \<open>Domainp crU = (\<lambda>x. x \<in> topspace U)\<close>
+sledgehammer
+sorry
+
+        sorry
+      assume \<open>snd with_type_t2_space_class (\<lambda>x y. x = RepU y) (snd (topspace U, \<lambda>S. openin U (S \<inter> topspace U)))
+        abs_ops_U\<close>
+      then have [transfer_rule]: \<open>rel_fun (rel_set (\<lambda>x y. x = RepU y)) (=) (\<lambda>S. openin U (S \<inter> topspace U)) abs_ops_U\<close>
+        by (simp add: with_type_t2_space_class_def
+            with_type_t2_space_class_rel_def)
+      note on_closure_eqI[where 'a='t and 'b='u]
+      then show \<open>f x = g x\<close>
+        apply transfer
+qed
+
 
 (* lemma xxx: \<open>\<forall>\<^sub>\<tau> 's::chilbert_space = closure (cspan S) with (scaleR, scaleC, plus, 0, minus, uminus, dist, norm, sgn, uniformity, open, cinner). 
           \<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
@@ -541,11 +487,6 @@ fun lift_term_to_maybe (env:env) (Bound i) : (bool * typ * term) = let val (lift
 lemma TODO_NAME: \<open>trace (partial_trace' t o\<^sub>C\<^sub>L x) = trace (t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close> if \<open>trace_class t\<close>
   sorry
 
-lemma sandwich_weak_star_cont[simp]:
-  \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
-  using continuous_map_compose[OF continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star]
-  by (auto simp: o_def sandwich_def[abs_def])
-
 (* lemma continuous_map_cong:
   assumes \<open>\<And>x. x \<in> topspace T \<Longrightarrow> f x = g x\<close>
   shows \<open>continuous_map T S f \<longleftrightarrow> continuous_map T S g\<close>
@@ -736,7 +677,7 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
     then have *: \<open>Proj (ccspan (B i)) o\<^sub>C\<^sub>L Proj (ccspan (B j)) = 0\<close>
       by (simp add: Proj_on_own_range S_def cspanB proj_P')
     then show \<open>is_orthogonal x y\<close>
-      by (meson orthogonal_projectors_orthogonal_spaces that(1) that(2))
+      by (meson orthogonal_projectors_orthogonal_spaces orthogonal_spaces_ccspan that(1) that(2))
   qed
 
   define B' where \<open>B' = (\<Union>i\<in>UNIV. B i)\<close>
