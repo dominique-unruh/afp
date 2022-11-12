@@ -2,7 +2,7 @@ section \<open>Quantum instantiation of complements\<close>
 
 theory Axioms_Complement_Quantum
   imports Laws_Quantum With_Type.With_Type_Inst_Complex_Bounded_Operators Quantum_Extra Tensor_Product.Weak_Star_Topology
-    Tensor_Product.Partial_Trace
+    Tensor_Product.Partial_Trace TAS_Topology
 begin
 
 no_notation m_inv ("inv\<index> _" [81] 80)
@@ -169,7 +169,7 @@ find_theorems "_::temp"
 setup_lifting type_definition_temp
 find_theorems "_::temp"
 
-lemma closure_of_eqI:
+(* lemma closure_of_eqI:
   fixes f g :: \<open>'a \<Rightarrow> 'b\<close> and T :: \<open>'a topology\<close> and U :: \<open>'b topology\<close>
   assumes haus: \<open>hausdorff U\<close>
   assumes eq: \<open>\<And>x. x \<in> S \<Longrightarrow> f x = g x\<close>
@@ -271,7 +271,7 @@ sorry
       then show \<open>f x = g x\<close>
         apply transfer
 qed
-
+ *)
 
 (* lemma xxx: \<open>\<forall>\<^sub>\<tau> 's::chilbert_space = closure (cspan S) with (scaleR, scaleC, plus, 0, minus, uminus, dist, norm, sgn, uniformity, open, cinner). 
           \<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
@@ -285,7 +285,7 @@ lemma map_filter_on_id: \<open>map_filter_on S (\<lambda>x. x) F = F\<close> if 
 lemma inverse_real_inverse: \<open>inverse_real_inst.inverse_real = inverse\<close>
   by (simp add: HOL.nitpick_unfold)
 
-named_theorems with_type_intros
+(* named_theorems with_type_intros
 lemma [with_type_intros]: \<open>fst (A,B) \<noteq> {}\<close> if \<open>A \<noteq> {}\<close>
   using that by simp
 lemma [with_type_intros]: \<open>with_type_compat_rel C (fst (S,p)) R\<close> if \<open>with_type_compat_rel C S R\<close>
@@ -293,8 +293,8 @@ lemma [with_type_intros]: \<open>with_type_compat_rel C (fst (S,p)) R\<close> if
 declare with_typeI[with_type_intros]
 
 lemma with_type_chilbert_space_class_subspaceI[with_type_intros]: \<open>fst with_type_chilbert_space_class
-     (fst (S, (*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, openin (top_of_set S), (\<bullet>\<^sub>C)))
-     (snd (S, (*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, openin (top_of_set S), (\<bullet>\<^sub>C)))\<close>
+     (fst (S, ( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, openin (top_of_set S), (\<bullet>\<^sub>C)))
+     (snd (S, ( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, openin (top_of_set S), (\<bullet>\<^sub>C)))\<close>
   if [simp]: \<open>csubspace S\<close> \<open>closed S\<close>
   (* TODO open and uniformity may need to be restricted! *)
 proof -
@@ -311,13 +311,13 @@ proof -
   have 0: \<open>(\<exists>y. \<forall>x ya. rel_set (equal_onp S) x ya \<longrightarrow> openin (top_of_set S) x = y ya)\<close>
     apply (rule exI[of _ \<open>openin (top_of_set S)\<close>])
     by (metis equal_onp_def equalityI rel_setD1 rel_setD2 subset_iff)
-  have 1: \<open>with_type_chilbert_space_class_dom S ((*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, openin (top_of_set S), (\<bullet>\<^sub>C))\<close>
+  have 1: \<open>with_type_chilbert_space_class_dom S (( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, openin (top_of_set S), (\<bullet>\<^sub>C))\<close>
     apply (simp add: with_type_chilbert_space_class_dom_def Domainp_iff rel_fun_def equal_onp_def)
     by (auto intro!: 0 exI uniformity simp add: scaleR_scaleC complex_vector.subspace_scale
         complex_vector.subspace_add complex_vector.subspace_0 complex_vector.subspace_diff
         complex_vector.subspace_neg sgn_div_norm open1)
   have 2: \<open>with_type_chilbert_space_class_pred' (\<lambda>x. x \<in> S)
-     ((*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, open, (\<bullet>\<^sub>C))\<close>
+     (( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, open, (\<bullet>\<^sub>C))\<close>
     apply (simp add: with_type_chilbert_space_class_pred'_def scaleR_scaleC)
     apply (intro conjI)
                apply (auto simp add: complex_vector.vector_space_assms dist_norm sgn_div_norm scaleR_scaleC
@@ -336,13 +336,14 @@ proof -
   from 1 2
   show ?thesis
     by (simp add: with_type_chilbert_space_class_def with_type_chilbert_space_class_pred_def)
-qed
+qed *)
 
 lemma orthonormal_subspace_basis_exists:
   fixes S :: \<open>'a::chilbert_space set\<close>
   assumes \<open>is_ortho_set S\<close> and \<open>\<And>x. x\<in>S \<Longrightarrow> norm x = 1\<close> and \<open>S \<subseteq> space_as_set V\<close>
   shows \<open>\<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
-proof -
+  sorry
+(* proof -
   note [[show_hyps]]
   (* TODO open and uniformity may need to be restricted! *)
   have \<open>\<forall>\<^sub>\<tau> 's::chilbert_space = closure (cspan S) with (scaleR, scaleC, plus, 0, minus, uminus, dist, norm, sgn, uniformity, open, cinner). 
@@ -359,13 +360,13 @@ proof -
       by (rule with_type_chilbert_space_class_rel_compat)
     fix Rep :: \<open>'s \<Rightarrow> 'a\<close> and Abs abs_ops
     assume \<open>type_definition Rep Abs
-        (fst (closure (cspan S), (*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity, open, (\<bullet>\<^sub>C)))\<close>
+        (fst (closure (cspan S), ( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity, open, (\<bullet>\<^sub>C)))\<close>
     then have \<open>type_definition Rep Abs (closure (cspan S))\<close>
       by simp
     assume \<open>snd with_type_chilbert_space_class (\<lambda>x y. x = Rep y)
-        (snd (closure (cspan S), (*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity, open, (\<bullet>\<^sub>C))) abs_ops\<close>
+        (snd (closure (cspan S), ( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity, open, (\<bullet>\<^sub>C))) abs_ops\<close>
     then have \<open>with_type_chilbert_space_class_rel (\<lambda>x y. x = Rep y)
-        ((*\<^sub>R), (*\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity, open, (\<bullet>\<^sub>C)) abs_ops\<close>
+        (( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity, open, (\<bullet>\<^sub>C)) abs_ops\<close>
       unfolding with_type_chilbert_space_class_def
       by simp
     show \<open>\<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
@@ -377,7 +378,7 @@ proof -
   from this[cancel_with_type]
   show ?thesis
     by simp
-qed
+qed *)
 
 (* TODO move *)
 lemma has_sum_in_comm_additive:
@@ -473,15 +474,6 @@ syntax
 translations
   "\<Sum>\<^sub>\<infinity>\<^sub>?x. t" \<rightleftharpoons> "CONST infsumopt (\<lambda>x. t) (CONST UNIV)"
  *)
-
-ML \<open>
-type lifted_typ = Type.
-
-
-type env = (bool * typ) list
-fun lift_term_to_maybe (env:env) (Bound i) : (bool * typ * term) = let val (lifted, typ) = nth env i in (lifted, typ, Bound i) end
-  | lift_term_to_maybe env (Const(\<^const_name>\<open>divide\<close>, _)
-\<close>
     
 
 lemma TODO_NAME: \<open>trace (partial_trace' t o\<^sub>C\<^sub>L x) = trace (t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close> if \<open>trace_class t\<close>
@@ -1298,7 +1290,8 @@ lemma at_within_parametric[transfer_rule]:
 
 lemma transfer_nhds_weak_star_topology[transfer_rule]:
   includes lifting_syntax
-  shows \<open>(cr_cblinfun_weak_star ===> rel_set cr_cblinfun_weak_star ===> rel_filter cr_cblinfun_weak_star) (at_within_in weak_star_topology) nhds\<close>
+  shows \<open>(cr_cblinfun_weak_star ===> rel_set cr_cblinfun_weak_star ===> rel_filter cr_cblinfun_weak_star)
+     (at_within_in weak_star_topology) nhds\<close>
   unfolding nhds_def nhdsin_def
   apply (simp add: weak_star_topology_topspace)
   by transfer_prover
@@ -1397,7 +1390,6 @@ proof -
       apply (transfer)
       sorry
 
-      sorry
     then have \<open>isCont I' a\<close> for a
       by (simp add: continuous_within)
     then have \<open>continuous_on UNIV I'\<close>
