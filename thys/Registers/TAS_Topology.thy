@@ -1,24 +1,23 @@
 theory TAS_Topology
   imports
-    "HOL-Analysis.Abstract_Topology_2" "HOL-Types_To_Sets.T2_Spaces"
+    "HOL-Analysis.Abstract_Topology_2"
+    "HOL-Types_To_Sets.T2_Spaces"
     Complex_Bounded_Operators.Extra_General
+    Tensor_Product.Misc_Tensor_Product
 begin
 
 declare [[show_sorts=false]]
+\<comment> \<open>\<^theory>\<open>HOL-Types_To_Sets.T2_Spaces\<close> leaves @{attribute show_sorts} enabled.\<close>
 
-unoverload_definition closure_def[unfolded islimpt_def]
+subsection \<open>Transferring type classes\<close>
 
-definition continuous_on_UNIV_with where \<open>continuous_on_UNIV_with opn1 opn2 f \<longleftrightarrow> (\<forall>S. opn2 S \<longrightarrow> opn1 (f -` S))\<close>
-
-lemma continuous_on_UNIV_with: \<open>(continuous_on :: 'a::topological_space set \<Rightarrow> ('a \<Rightarrow> 'b::topological_space) \<Rightarrow> _) UNIV
- = continuous_on_UNIV_with open open\<close>
-  apply (simp add: continuous_on_UNIV_with_def[abs_def])
-  by (metis continuous_on_open_invariant open_vimage)
+subsubsection \<open>\<^class>\<open>topological_space\<close>\<close>
 
 lemma topology_restrict_topspace[simp]: \<open>topology (\<lambda>U. U \<subseteq> topspace T \<and> openin T U) = T\<close>
   apply (subst asm_rl[of \<open>\<And>U. (U \<subseteq> topspace T \<and> openin T U) = openin T U\<close>, rule_format])
   using openin_subset apply blast
   by (metis openin_inverse)
+
 
 lemma topological_space_on_with_alt_def: "topological_space_on_with A opn \<longleftrightarrow> istopology (\<lambda>U. U \<subseteq> A \<and> opn U) \<and> opn A"
   unfolding topological_space_on_with_def istopology_def
@@ -46,8 +45,8 @@ lemma topological_space_on_with_topspace: \<open>topological_space_on_with A opn
   apply (simp add: topspace_def topological_space_on_with_openin)
   by (smt (verit, ccfv_SIG) Sup_set_def cSup_eq_maximum mem_Collect_eq order_refl topological_space_on_with_alt_def)
 
-definition hausdorff where \<open>hausdorff T \<longleftrightarrow> (\<forall>x \<in> topspace T. \<forall>y \<in> topspace T. x \<noteq> y \<longrightarrow> 
-                              (\<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
+subsubsection \<open>\<^class>\<open>t2_space\<close>\<close>
+
 
 lemma topological_space_on_with_hausdorff:
   \<open>topological_space_on_with A opn \<Longrightarrow> hausdorff (topology (\<lambda>U. U \<subseteq> A \<and> opn U)) \<longleftrightarrow> (\<forall>x\<in>A. \<forall>y\<in>A. x \<noteq> y \<longrightarrow> 
@@ -69,47 +68,18 @@ lemma t2_space_on_with_from_topology:
   shows \<open>t2_space_on_with (topspace T) (openin T)\<close>
   using assms by (simp add: t2_space_on_with_alt_def topological_space_on_with_from_topology)
 
+subsection \<open>Transferring constants\<close>
+
+subsubsection \<open>\<^const>\<open>closed\<close>\<close>
+
 lemma closed_on_with_alt_def:
   shows "closed_on_with A opn S \<longleftrightarrow> (if topological_space_on_with A opn \<and> S\<subseteq>A then closedin (topology (\<lambda>U. U \<subseteq> A \<and> opn U)) S else opn (A-S))"
   by (auto simp add: closedin_def closed_on_with_def topological_space_on_with_openin
       topological_space_on_with_topspace Diff_eq inf_commute)
 
-lemma compact_imp_closed_set_based:
-  fixes T :: \<open>'a topology\<close>
-  assumes \<open>hausdorff T\<close>
-  assumes in_topspace: \<open>S \<subseteq> topspace T\<close>
-  assumes compact: \<open>compact_on_with (topspace T) (openin T) S\<close>
-  shows \<open>closedin T S\<close>
-proof (cases \<open>topspace T = {}\<close>)
-  case True
-  then show ?thesis 
-    using in_topspace by auto
-next
-  case False
-  {
-    define A where \<open>A = topspace T\<close>
-    assume T: "\<exists>(Rep :: 'z \<Rightarrow> 'a) Abs. type_definition Rep Abs A"
-    then interpret local_typedef A \<open>TYPE('z)\<close>
-      by unfold_locales
-    
-    have "\<forall>open. t2_space_on_with A open \<longrightarrow> (\<forall>S\<subseteq>A. compact_on_with A open S \<longrightarrow>
-                  closed_on_with A open S)"
-      text\<open>Relativization by the Transfer tool.\<close>
-      using compact_imp_closed[unfolded compact_compact_with closed_closed_with, unoverload_type 'a, where 'a = 'z, untransferred]
-      by auto
-  }
-  note * = this[cancel_type_definition, OF False, rule_format]
+subsubsection \<open>\<^const>\<open>closure\<close>\<close>
 
-  from \<open>hausdorff T\<close>
-  have \<open>t2_space_on_with (topspace T) (openin T)\<close>
-    by (rule t2_space_on_with_from_topology)
-  
-  then have \<open>closed_on_with (topspace T) (openin T) S\<close>
-    using in_topspace compact by (rule *)
-
-  then show ?thesis
-    by (auto simp: closed_on_with_alt_def in_topspace topological_space_on_with_from_topology)
-qed
+unoverload_definition closure_def[unfolded islimpt_def]
 
 definition closure_on_with where \<open>closure_on_with A opn S = 
   S \<union> {x\<in>A. \<forall>T\<subseteq>A. x \<in> T \<longrightarrow> opn T \<longrightarrow> (\<exists>y\<in>S. y \<in> T \<and> y \<noteq> x)}\<close>
@@ -125,6 +95,23 @@ lemma closure_with_transfer[transfer_rule]:
   unfolding Pow_def Ball_Collect[symmetric] Ball_def Bex_def mem_Collect_eq
   by blast
 
+lemma closure_on_with_from_topology:
+  assumes \<open>S \<subseteq> topspace T\<close>
+  shows \<open>closure_on_with (topspace T) (openin T) S = T closure_of S\<close>
+  unfolding closure_on_with_def closure_of_def
+  using assms 
+  apply safe
+  by blast+
+
+subsubsection \<open>\<^const>\<open>continuous_on\<close>\<close>
+
+definition continuous_on_UNIV_with where \<open>continuous_on_UNIV_with opn1 opn2 f \<longleftrightarrow> (\<forall>S. opn2 S \<longrightarrow> opn1 (f -` S))\<close>
+
+lemma continuous_on_UNIV_with: \<open>(continuous_on :: 'a::topological_space set \<Rightarrow> ('a \<Rightarrow> 'b::topological_space) \<Rightarrow> _) UNIV
+ = continuous_on_UNIV_with open open\<close>
+  apply (simp add: continuous_on_UNIV_with_def[abs_def])
+  by (metis continuous_on_open_invariant open_vimage)
+
 definition \<open>continuous_on_UNIV_on_with A B opnA opnB f \<longleftrightarrow>(\<forall>S\<subseteq>B. opnB S \<longrightarrow> opnA ((f -` S) \<inter> A))\<close>
 
 lemma continuous_on_UNIV_transfer[transfer_rule]:
@@ -139,14 +126,8 @@ lemma continuous_on_UNIV_transfer[transfer_rule]:
   unfolding Pow_def Ball_Collect[symmetric] Ball_def Bex_def mem_Collect_eq
   by blast
 
-lemma closure_on_with_from_topology:
-  assumes \<open>S \<subseteq> topspace T\<close>
-  shows \<open>closure_on_with (topspace T) (openin T) S = T closure_of S\<close>
-  unfolding closure_on_with_def closure_of_def
-  using assms 
-  apply safe
-  by blast+
-  
+subsection \<open>Transferring results\<close>
+
 lemma closure_of_eqI:
   fixes f g :: \<open>'a \<Rightarrow> 'b\<close> and T :: \<open>'a topology\<close> and U :: \<open>'b topology\<close>
   assumes hausdorff: \<open>hausdorff U\<close>

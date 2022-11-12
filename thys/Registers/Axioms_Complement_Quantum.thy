@@ -163,11 +163,11 @@ lemma clinear_cblinfun_compose_left: \<open>clinear (\<lambda>x. x o\<^sub>C\<^s
 lemma clinear_cblinfun_compose_right: \<open>clinear (\<lambda>y. x o\<^sub>C\<^sub>L y)\<close>
   by (simp add: bounded_clinear.clinear bounded_clinear_cblinfun_compose_right)
 
-typedef temp = "{undefined::nat}"
+(* typedef temp = "{undefined::nat}"
   sorry
 find_theorems "_::temp"
 setup_lifting type_definition_temp
-find_theorems "_::temp"
+find_theorems "_::temp" *)
 
 (* lemma closure_of_eqI:
   fixes f g :: \<open>'a \<Rightarrow> 'b\<close> and T :: \<open>'a topology\<close> and U :: \<open>'b topology\<close>
@@ -513,7 +513,7 @@ lemma
   and partial_trace_summable: \<open>(\<lambda>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))) abs_summable_on UNIV\<close>
 proof -
   show \<open>(\<lambda>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))) abs_summable_on UNIV\<close>
-    by -
+    sorry
   then show \<open>has_sum (\<lambda>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))) UNIV (partial_trace t)\<close>
     by (simp add: Axioms_Complement_Quantum.partial_trace_def abs_summable_summable)
 qed
@@ -521,7 +521,7 @@ qed
 lemma partial_trace_trace_class[simp]: \<open>trace_class (partial_trace t)\<close> if \<open>trace_class t\<close>
 proof -
   have \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op (partial_trace t) *\<^sub>V x)) abs_summable_on range ket\<close>
-    by -
+    sorry
   then show \<open>trace_class (partial_trace t)\<close>
     using is_onb_ket
     by (rule trace_classI[rotated])
@@ -1268,7 +1268,8 @@ lemma at_within_parametric[transfer_rule]:
   assumes [transfer_rule]: \<open>bi_unique R\<close>
   assumes [transfer_rule]: \<open>(rel_set R ===> (\<longleftrightarrow>)) open open\<close>
   shows \<open>(R ===> rel_set R ===> rel_filter R) at_within at_within\<close>
-  unfolding at_within_def
+  sorry
+(*   unfolding at_within_def
   apply transfer_prover_start
   apply transfer_step
   apply transfer_step
@@ -1284,17 +1285,17 @@ lemma at_within_parametric[transfer_rule]:
   sorry
 
 
-  term at_within
+  term at_within *)
 
 
 
-lemma transfer_nhds_weak_star_topology[transfer_rule]:
+(* lemma transfer_nhds_weak_star_topology[transfer_rule]:
   includes lifting_syntax
   shows \<open>(cr_cblinfun_weak_star ===> rel_set cr_cblinfun_weak_star ===> rel_filter cr_cblinfun_weak_star)
      (at_within_in weak_star_topology) nhds\<close>
   unfolding nhds_def nhdsin_def
   apply (simp add: weak_star_topology_topspace)
-  by transfer_prover
+  by transfer_prover *)
 
 
 lemma same_range_equivalent:
