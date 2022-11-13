@@ -4,7 +4,6 @@ theory Axioms_Complement_Quantum
   imports Laws_Quantum (* With_Type.With_Type_Inst_Complex_Bounded_Operators *) Quantum_Extra Tensor_Product.Weak_Star_Topology
     Tensor_Product.Partial_Trace TAS_Topology
     With_Type.With_Type
-  (* keywords "blabla" :: thy_goal_defn *)
 begin
 
 no_notation m_inv ("inv\<index> _" [81] 80)
@@ -979,21 +978,66 @@ lemma uniformity_dist_on_typeclass[simp]: \<open>uniformity_dist_on V dist (unif
   by auto
 
 lemma open_uniformity_on_typeclass[simp]: 
-  \<open>open_uniformity_on V (openin (top_of_set V)) (uniformity_on V)\<close> for V :: \<open>_::open_uniformity set\<close>
-  apply (auto simp add: open_uniformity_on_def)
-  apply (subst (asm) openin_open)
-  apply (auto simp add: open_uniformity_on_def)
-  by-
+  fixes V :: \<open>_::open_uniformity set\<close>
+  assumes \<open>closed V\<close>
+  shows \<open>open_uniformity_on V (openin (top_of_set V)) (uniformity_on V)\<close>
+proof (unfold open_uniformity_on_def, intro allI impI iffI)
+  fix U assume \<open>U \<subseteq> V\<close>
+  assume \<open>openin (top_of_set V) U\<close>
+  then obtain T where \<open>U = T \<inter> V\<close> and \<open>open T\<close>
+    by (metis Int_ac(3) openin_open)
+  with open_uniformity 
+  have *: \<open>\<forall>\<^sub>F (x', y) in uniformity. x' = x \<longrightarrow> y \<in> T\<close> if \<open>x \<in> T\<close> for x
+    using that by blast
+  have \<open>\<forall>\<^sub>F (x', y) in uniformity_on V. x' = x \<longrightarrow> y \<in> U\<close> if \<open>x \<in> U\<close> for x
+    apply (rule eventually_inf_principal[THEN iffD2])
+    using *[of x] apply (rule eventually_rev_mp)
+    using \<open>U = T \<inter> V\<close> that by (auto intro!: always_eventually)
+  then show \<open>\<forall>x\<in>U. \<forall>\<^sub>F (x', y) in uniformity_on V. x' = x \<longrightarrow> y \<in> U\<close>
+    by blast
+next
+  fix U assume \<open>U \<subseteq> V\<close>
+  assume asm: \<open>\<forall>x\<in>U. \<forall>\<^sub>F (x', y) in uniformity_on V. x' = x \<longrightarrow> y \<in> U\<close>
+  from asm[rule_format]
+  have \<open>\<forall>\<^sub>F (x', y) in uniformity. x' \<in> V \<and> y \<in> V \<and> x' = x \<longrightarrow> y \<in> U \<union> -V\<close> if \<open>x \<in> U\<close> for x
+    unfolding eventually_inf_principal
+    apply (rule eventually_rev_mp)
+    using that by (auto intro!: always_eventually)
+  then have xU: \<open>\<forall>\<^sub>F (x', y) in uniformity. x' = x \<longrightarrow> y \<in> U \<union> -V\<close> if \<open>x \<in> U\<close> for x
+    apply (rule eventually_rev_mp)
+    using that \<open>U \<subseteq> V\<close> by (auto intro!: always_eventually)
+  have \<open>open (-V)\<close>
+    using assms by auto
+  with open_uniformity
+  have \<open>\<forall>\<^sub>F (x', y) in uniformity. x' = x \<longrightarrow> y \<in> -V\<close> if \<open>x \<in> -V\<close> for x
+    using that by blast
+  then have xV: \<open>\<forall>\<^sub>F (x', y) in uniformity. x' = x \<longrightarrow> y \<in> U \<union> -V\<close> if \<open>x \<in> -V\<close> for x
+    apply (rule eventually_rev_mp)
+     apply (rule that)
+    apply (rule always_eventually)
+    by auto
+  have \<open>\<forall>\<^sub>F (x', y) in uniformity. x' = x \<longrightarrow> y \<in> U \<union> -V\<close> if \<open>x \<in> U \<union> -V\<close> for x
+    using xV[of x] xU[of x] that
+    by auto
+  then have \<open>open (U \<union> -V)\<close>
+    using open_uniformity by blast
+  then show \<open>openin (top_of_set V) U\<close>
+    using \<open>U \<subseteq> V\<close>
+    by (auto intro!: exI simp: openin_open)
+qed
 
 lemma complex_inner_on_typeclass[simp]:
- \<open>complex_inner_on V (*\<^sub>R) (*\<^sub>C) (+) 0 (-) uminus dist norm sgn (uniformity_on V) (openin (top_of_set V)) (\<bullet>\<^sub>C)\<close>
- for V :: \<open>_::complex_inner set\<close>
-  apply (auto simp: complex_inner_on_def cinner_simps)
+  fixes V :: \<open>_::complex_inner set\<close>
+  assumes \<open>closed V\<close>
+  shows \<open>complex_inner_on V (*\<^sub>R) (*\<^sub>C) (+) 0 (-) uminus dist norm sgn (uniformity_on V) (openin (top_of_set V)) (\<bullet>\<^sub>C)\<close>
+  apply (auto simp: assms complex_inner_on_def cinner_simps)
   using norm_eq_sqrt_cinner by blast
 
 lemma metric_space_on_typeclass[simp]:
- \<open>metric_space_on V dist (uniformity_on V) (openin (top_of_set V))\<close> for V :: \<open>_::metric_space set\<close>
-  by (auto simp: metric_space_on_def class.metric_space_axioms_def dist_triangle2)
+  fixes V :: \<open>_::metric_space set\<close>
+  assumes \<open>closed V\<close>
+  shows \<open>metric_space_on V dist (uniformity_on V) (openin (top_of_set V))\<close>
+  by (auto simp: assms metric_space_on_def class.metric_space_axioms_def dist_triangle2)
 
 lemma nhds_on_topology[simp]: \<open>nhds_on (topspace T) (openin T) x = nhdsin T x\<close> if \<open>x \<in> topspace T\<close>
   using that apply (auto intro!: ext simp add: nhds_on_def[abs_def] nhdsin_def[abs_def])
@@ -1041,7 +1085,7 @@ proof -
       by (auto intro!: exI[of _ l] simp: convergent_def limitin_subtopology)
   qed
   then show ?thesis
-    by (auto simp: complete_space_on_def)
+    by (auto simp: complete_space_on_def complete_imp_closed assms)
 qed
 
 lemma complet_space_as_set[simp]: \<open>complete (space_as_set V)\<close> for V :: \<open>_::cbanach ccsubspace\<close>
@@ -1052,7 +1096,7 @@ lemma chilbert_space_on_typeclass[simp]:
   assumes \<open>complete V\<close>
   shows \<open>chilbert_space_on V (*\<^sub>R) (*\<^sub>C) (+) 0 (-) uminus dist norm sgn
      (uniformity_on V) (openin (top_of_set V)) (\<bullet>\<^sub>C)\<close>
-  by (auto simp: chilbert_space_on_def assms)
+  by (auto simp: chilbert_space_on_def assms complete_imp_closed)
 
 lemma orthonormal_subspace_basis_exists:
   fixes S :: \<open>'a::chilbert_space set\<close>
