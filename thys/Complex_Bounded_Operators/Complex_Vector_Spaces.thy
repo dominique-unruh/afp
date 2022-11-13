@@ -2174,7 +2174,7 @@ qed
 
 typedef (overloaded) ('a::"{complex_vector,topological_space}")
   ccsubspace = \<open>{S::'a set. closed_csubspace S}\<close>
-  morphisms space_as_set Abs_clinear_space
+  morphisms space_as_set Abs_clinear_space (* TODO: rename \<rightarrow> Abs_ccsubspace *)
   using Complex_Vector_Spaces.closed_csubspace_UNIV by blast
 
 setup_lifting type_definition_ccsubspace
