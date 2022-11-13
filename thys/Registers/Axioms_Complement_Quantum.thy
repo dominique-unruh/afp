@@ -3,7 +3,8 @@ section \<open>Quantum instantiation of complements\<close>
 theory Axioms_Complement_Quantum
   imports Laws_Quantum (* With_Type.With_Type_Inst_Complex_Bounded_Operators *) Quantum_Extra Tensor_Product.Weak_Star_Topology
     Tensor_Product.Partial_Trace TAS_Topology
-  keywords "blabla" :: thy_goal_defn
+    With_Type.With_Type
+  (* keywords "blabla" :: thy_goal_defn *)
 begin
 
 no_notation m_inv ("inv\<index> _" [81] 80)
@@ -973,11 +974,15 @@ lemma sgn_div_norm_on_typeclass[simp]: \<open>sgn_div_norm_on V sgn norm (*\<^su
   by (auto simp add: sgn_div_norm_on_def sgn_div_norm)
 
 lemma uniformity_dist_on_typeclass[simp]: \<open>uniformity_dist_on V dist (uniformity_on V)\<close> for V :: \<open>_::uniformity_dist set\<close>
-  apply (auto simp add: uniformity_dist_on_def uniformity_dist)
-  by -
+  apply (auto simp add: uniformity_dist_on_def uniformity_dist simp flip: INF_inf_const2)
+  apply (subst asm_rl[of \<open>\<And>x. Restr {(xa, y). dist xa y < x} V = {(xa, y). xa \<in> V \<and> y \<in> V \<and> dist xa y < x}\<close>, rule_format])
+  by auto
 
-lemma open_uniformity_on_typeclass[simp]: \<open>open_uniformity_on V (openin (top_of_set V)) (uniformity_on V)\<close> for V :: \<open>_::open_uniformity set\<close>
-  apply (auto simp add: open_uniformity_on_def open_uniformity)
+lemma open_uniformity_on_typeclass[simp]: 
+  \<open>open_uniformity_on V (openin (top_of_set V)) (uniformity_on V)\<close> for V :: \<open>_::open_uniformity set\<close>
+  apply (auto simp add: open_uniformity_on_def)
+  apply (subst (asm) openin_open)
+  apply (auto simp add: open_uniformity_on_def)
   by-
 
 lemma complex_inner_on_typeclass[simp]:
@@ -990,18 +995,64 @@ lemma metric_space_on_typeclass[simp]:
  \<open>metric_space_on V dist (uniformity_on V) (openin (top_of_set V))\<close> for V :: \<open>_::metric_space set\<close>
   by (auto simp: metric_space_on_def class.metric_space_axioms_def dist_triangle2)
 
+lemma nhds_on_topology[simp]: \<open>nhds_on (topspace T) (openin T) x = nhdsin T x\<close> if \<open>x \<in> topspace T\<close>
+  using that apply (auto intro!: ext simp add: nhds_on_def[abs_def] nhdsin_def[abs_def])
+   apply (subst INF_inf_const2[symmetric])
+  using openin_subset by (auto intro!: INF_cong)
+
+lemma convergent_on_topology[simp]:
+  \<open>convergent_on (topspace T) (openin T) f \<longleftrightarrow> (\<exists>l. limitin T f l sequentially)\<close>
+  by (auto simp: convergent_on_def simp flip: filterlim_nhdsin_iff_limitin)
+
+lemma convergent_on_typeclass[simp]:
+  \<open>convergent_on V (openin (top_of_set V)) f \<longleftrightarrow> (\<exists>l. limitin (top_of_set V) f l sequentially)\<close>
+    by (simp add: flip: convergent_on_topology)
+
+lemma convergent_on_typeclass2[simp]:
+  assumes \<open>open V\<close>
+  shows \<open>convergent_on V (openin (top_of_set V)) f \<longleftrightarrow> (\<exists>l. f \<longlonglongrightarrow> l \<and> l \<in> V)\<close>
+  by (simp add: limitin_canonical_iff_gen assms)
+
+lemma convergent_on_typeclass3[simp]:
+  assumes \<open>open V\<close> \<open>closed V\<close> \<open>range f \<subseteq> V\<close>
+  shows \<open>convergent_on V (openin (top_of_set V)) f \<longleftrightarrow> convergent f\<close>
+  apply (simp add: assms)
+  by (meson assms(2) assms(3) closed_sequentially convergent_def range_subsetD)
+
 lemma complete_space_on_typeclass[simp]:
- \<open>complete_space_on V dist (uniformity_on V) (openin (top_of_set V))\<close>
- for V :: \<open>_::uniform_space set\<close> (* TODO: do we need complete_space? *)
-  apply (auto simp: complete_space_on_def)
-  by -
+  fixes V :: \<open>_::uniform_space set\<close>
+  assumes \<open>complete V\<close>
+  shows \<open>complete_space_on V dist (uniformity_on V) (openin (top_of_set V))\<close>
+proof -
+  have \<open>\<exists>l. limitin (top_of_set V) X l sequentially\<close>
+    if XV: \<open>\<And>n. X n \<in> V\<close> and cauchy: \<open>uniform_space.Cauchy (uniformity_on V) X\<close> for X
+  proof -
+    from cauchy
+    have \<open>uniform_space.cauchy_filter (uniformity_on V) (filtermap X sequentially)\<close>
+      by (simp add: [[axiom Topological_Spaces.uniform_space.Cauchy_uniform_raw]])
+    then have \<open>cauchy_filter (filtermap X sequentially)\<close>
+      by (auto simp: cauchy_filter_def [[axiom Topological_Spaces.uniform_space.cauchy_filter_def_raw]])
+    then have \<open>Cauchy X\<close>
+      by (simp add: Cauchy_uniform)
+    with \<open>complete V\<close> XV obtain l where l: \<open>X \<longlonglongrightarrow> l\<close> \<open>l \<in> V\<close>
+      apply atomize_elim
+      by (meson completeE)
+    with XV l show ?thesis
+      by (auto intro!: exI[of _ l] simp: convergent_def limitin_subtopology)
+  qed
+  then show ?thesis
+    by (auto simp: complete_space_on_def)
+qed
+
+lemma complet_space_as_set[simp]: \<open>complete (space_as_set V)\<close> for V :: \<open>_::cbanach ccsubspace\<close>
+  by (simp add: complete_eq_closed)
 
 lemma chilbert_space_on_typeclass[simp]:
-  (* assumes \<open>closed_csubspace V\<close> *)
-   \<open>chilbert_space_on V (*\<^sub>R) (*\<^sub>C) (+) 0 (-) uminus dist norm sgn
+  fixes V :: \<open>_::complex_inner set\<close>
+  assumes \<open>complete V\<close>
+  shows \<open>chilbert_space_on V (*\<^sub>R) (*\<^sub>C) (+) 0 (-) uminus dist norm sgn
      (uniformity_on V) (openin (top_of_set V)) (\<bullet>\<^sub>C)\<close>
-  for V :: \<open>_::complex_inner set\<close> (* TODO: do we need chilbert_space? *)
-  by (auto simp: chilbert_space_on_def)
+  by (auto simp: chilbert_space_on_def assms)
 
 lemma orthonormal_subspace_basis_exists:
   fixes S :: \<open>'a::chilbert_space set\<close>
@@ -1026,7 +1077,7 @@ proof -
   note * = this[cancel_type_definition]
   have 1: \<open>uniformity_on (space_as_set V)
     \<le> principal (Collect (pred_prod (\<lambda>x. x \<in> space_as_set V) (\<lambda>x. x \<in> space_as_set V)))\<close>
-    by -
+    by (auto simp: uniformity_dist intro!: le_infI2)
   have \<open>\<exists>B\<in>{A. \<forall>x\<in>A. x \<in> space_as_set V}.
      S \<subseteq> B \<and> is_onb_on {x. x \<in> space_as_set V} (\<bullet>\<^sub>C) 0 norm (openin (top_of_set (space_as_set V))) (+) (*\<^sub>C) B\<close>
     apply (rule * )
