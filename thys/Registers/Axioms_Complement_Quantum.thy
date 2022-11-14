@@ -2,7 +2,7 @@ section \<open>Quantum instantiation of complements\<close>
 
 theory Axioms_Complement_Quantum
   imports Laws_Quantum (* With_Type.With_Type_Inst_Complex_Bounded_Operators *) Quantum_Extra Tensor_Product.Weak_Star_Topology
-    Tensor_Product.Partial_Trace TAS_Topology
+    (* Tensor_Product.Partial_Trace *) TAS_Topology
     With_Type.With_Type
 begin
 
@@ -1392,6 +1392,11 @@ lemma additive_with_transfer[transfer_rule]:
   unfolding additive.with_def additive_with_on_def
   by transfer_prover
 
+lemma continuous_map_is_continuous_at_point:
+  assumes \<open>continuous_map T U f\<close>
+  shows \<open>filterlim f (nhdsin U (f l)) (atin T l)\<close>
+  by (metis assms atin_degenerate bot.extremum continuous_map_atin filterlim_iff_le_filtercomap filterlim_nhdsin_iff_limitin)
+
 (* TODO move *)
 lemma has_sum_in_comm_additive_general:
   fixes f :: \<open>'a \<Rightarrow> 'b :: comm_monoid_add\<close>
@@ -1495,13 +1500,26 @@ proof -
     unfolding f'_def g'_def using frange grange by auto
 qed
 
+lemma has_sum_in_comm_additive:
+  fixes f :: \<open>'a \<Rightarrow> 'b :: ab_group_add\<close>
+    and g :: \<open>'b \<Rightarrow> 'c :: ab_group_add\<close>
+  assumes \<open>topspace T = UNIV\<close> and \<open>topspace U = UNIV\<close>
+  assumes \<open>Modules.additive g\<close>
+  assumes gcont: \<open>continuous_map T U g\<close>
+  assumes sumf: \<open>has_sum_in T f S l\<close>
+  shows \<open>has_sum_in U (g o f) S (g l)\<close>
+  apply (rule has_sum_in_comm_additive_general[where T=T and U=U])
+  using assms
+  by (auto simp: additive.zero Modules.additive_def intro!: continuous_map_is_continuous_at_point)
+
+
 lemma infsum_butterfly_ket_a: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (a *\<^sub>V ket i) (ket i)) UNIV a\<close>
 proof -
   have \<open>has_sum_in weak_star_topology ((\<lambda>b. a o\<^sub>C\<^sub>L b) \<circ> (\<lambda>i. Misc.selfbutterket i)) UNIV (a o\<^sub>C\<^sub>L id_cblinfun)\<close>
-    apply (rule has_sum_in_comm_additive_general)
-    by (auto intro!: infsum_butterfly_ket
-        simp: cblinfun_compose_add_right filterlim_weak_star_topology 
-        continuous_map_left_comp_weak_star limitin_continuous_map)
+    apply (rule has_sum_in_comm_additive)
+    by (auto intro!: infsum_butterfly_ket continuous_map_is_continuous_at_point limitin_continuous_map
+        continuous_map_left_comp_weak_star  cblinfun_compose_add_right
+        simp: Modules.additive_def)
   then show ?thesis
     by (auto simp: o_def cblinfun_comp_butterfly)
 qed
@@ -1581,9 +1599,6 @@ translations
  *)
     
 
-lemma TODO_NAME: \<open>trace (partial_trace' t o\<^sub>C\<^sub>L x) = trace (t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close> if \<open>trace_class t\<close>
-  sorry
-
 (* lemma continuous_map_cong:
   assumes \<open>\<And>x. x \<in> topspace T \<Longrightarrow> f x = g x\<close>
   shows \<open>continuous_map T S f \<longleftrightarrow> continuous_map T S g\<close>
@@ -1613,6 +1628,7 @@ term partial_trace
 definition partial_trace :: \<open>(('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b \<times> 'c) ell2)  \<Rightarrow> ('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2)\<close> where
   \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))\<close>
 
+(* See Partial_Trace.thy; it seems to already have proofs for this *)
 lemma  
   assumes \<open>trace_class t\<close>
   shows partial_trace_has_sum: \<open>has_sum (\<lambda>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))) UNIV (partial_trace t)\<close>
@@ -1624,6 +1640,7 @@ proof -
     by (simp add: Axioms_Complement_Quantum.partial_trace_def abs_summable_summable)
 qed
 
+(* Proof implicit in Partial_Trace.thy? *)
 lemma partial_trace_trace_class[simp]: \<open>trace_class (partial_trace t)\<close> if \<open>trace_class t\<close>
 proof -
   have \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op (partial_trace t) *\<^sub>V x)) abs_summable_on range ket\<close>
@@ -1693,7 +1710,9 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
     from infsum_butterfly_ket
     have \<open>has_sum_in weak_star_topology (\<Phi> o selfbutterket) UNIV (\<Phi> id_cblinfun)\<close>
       apply (rule has_sum_in_comm_additive[rotated -1])
-      using assms by (auto simp: complex_vector.linear_add register_def)
+      using assms 
+      by (auto simp: complex_vector.linear_add register_def Modules.additive_def
+          intro!: continuous_map_is_continuous_at_point complex_vector.linear_0 \<open>clinear \<Phi>\<close>)
     then show ?thesis
       by (simp add: P'_def P_def o_def)
   qed
@@ -1927,7 +1946,7 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
       have \<open>has_sum_in weak_star_topology (\<lambda>\<xi>. Q o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<xi>)) UNIV (Q o\<^sub>C\<^sub>L id_cblinfun)\<close>
         apply (rule has_sum_in_comm_additive[where g=\<open>cblinfun_compose Q\<close> and T=weak_star_topology, unfolded o_def])
         using sumP'id2
-        by (auto simp add: continuous_map_left_comp_weak_star P'_def P_def cblinfun_compose_add_right)
+        by (auto simp add: continuous_map_left_comp_weak_star P'_def P_def cblinfun_compose_add_right Modules.additive_def)
       moreover have \<open>Q o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<xi>) = 0\<close> for \<xi>
         apply (auto intro!: equal_ket simp: Q_def Proj_ortho_compl cblinfun.diff_left)
         apply (subst Proj_fixes_image)
