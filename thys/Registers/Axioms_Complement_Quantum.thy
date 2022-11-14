@@ -164,181 +164,12 @@ lemma clinear_cblinfun_compose_left: \<open>clinear (\<lambda>x. x o\<^sub>C\<^s
 lemma clinear_cblinfun_compose_right: \<open>clinear (\<lambda>y. x o\<^sub>C\<^sub>L y)\<close>
   by (simp add: bounded_clinear.clinear bounded_clinear_cblinfun_compose_right)
 
-(* typedef temp = "{undefined::nat}"
-  sorry
-find_theorems "_::temp"
-setup_lifting type_definition_temp
-find_theorems "_::temp" *)
-
-(* lemma closure_of_eqI:
-  fixes f g :: \<open>'a \<Rightarrow> 'b\<close> and T :: \<open>'a topology\<close> and U :: \<open>'b topology\<close>
-  assumes haus: \<open>hausdorff U\<close>
-  assumes eq: \<open>\<And>x. x \<in> S \<Longrightarrow> f x = g x\<close>
-  assumes xS: \<open>x \<in> T closure_of S\<close>
-  assumes cont: \<open>continuous_map T U f\<close> \<open>continuous_map T U g\<close>
-  shows \<open>f x = g x\<close>
-proof -
-  have \<open>\<forall>\<^sub>\<tau> 't::topological_space = topspace T with (\<lambda>S. openin T (S \<inter> topspace T)). 
-        \<forall>\<^sub>\<tau> 'u::t2_space = topspace U with (\<lambda>S. openin U (S \<inter> topspace U)).
-        f x = g x\<close>
-  proof (rule with_typeI)
-    show \<open>fst (topspace T, \<lambda>S. openin T (S \<inter> topspace T)) \<noteq> {}\<close>
-      apply auto
-      by (metis equals0D in_closure_of xS)
-    have \<open>Domainp (rel_fun (rel_set (equal_onp (topspace T))) (=)) (\<lambda>S. openin T (S \<inter> topspace T))\<close>
-      apply (intro Domainp.intros[where b=\<open>(\<lambda>S. openin T (S \<inter> topspace T))\<close>] rel_funI)
-      by (metis equal_onp_def order_antisym_conv rel_setD1 rel_setD2 subset_eq)
-    moreover have \<open>with_type_topological_space_class_pred' (\<lambda>x. x \<in> topspace T) (\<lambda>S. openin T (S \<inter> topspace T))\<close>
-      apply (simp add: with_type_topological_space_class_pred'_def)
-      apply safe
-       apply (metis Int_ac(3) Int_ac(4) inf.orderE openin_clauses(2) unfold_simps(2))
-      by (metis inf.orderE openin_clauses(2) openin_clauses(3) openin_topspace subset_eq)
-    ultimately show \<open>fst with_type_topological_space_class (fst (topspace T, \<lambda>S. openin T (S \<inter> topspace T)))
-     (snd (topspace T, \<lambda>S. openin T (S \<inter> topspace T)))\<close>
-      by (auto simp: with_type_topological_space_class_def with_type_topological_space_class_pred_def
-          with_type_topological_space_class_dom_def   )
-    show \<open>with_type_compat_rel (fst with_type_topological_space_class) (fst (topspace T, \<lambda>S. openin T (S \<inter> topspace T)))
-         (snd with_type_topological_space_class)\<close>
-      apply (simp add: with_type_compat_rel_def with_type_topological_space_class_def
-          with_type_topological_space_class_pred_def with_type_topological_space_class_dom_def
-          with_type_topological_space_class_pred'_def with_type_t2_space_class_rel_def)
-      apply safe
-      by (metis DomainPI with_type_has_domain_def with_type_topological_space_class_dom_def with_type_topological_space_class_has_dom)
-    fix RepT :: \<open>'t \<Rightarrow> 'a\<close> and AbsT and abs_ops_T
-    assume typedefT: \<open>type_definition RepT AbsT (fst (topspace T, \<lambda>S. openin T (S \<inter> topspace T)))\<close>
-      (* Like on_closure_eqI *)
-    define crT where \<open>crT \<equiv> \<lambda>x y. x = RepT y\<close>
-    have [transfer_rule]: \<open>bi_unique crT\<close>
-      using typedefT
-      by (simp add: crT_def typedef_bi_unique)
-    have [transfer_rule]: \<open>right_total crT\<close>
-      by (simp add: crT_def right_totalI)
-    have [transfer_rule]: \<open>rel_fun crT (=) (\<lambda>x. x) RepT\<close>
-      by (simp add: crT_def rel_funI)
-    have [transfer_rule]: \<open>Domainp crT = (\<lambda>x. x \<in> topspace T)\<close>
-      sorry
-    assume \<open>snd with_type_topological_space_class (\<lambda>x y. x = RepT y)
-        (snd (topspace T, \<lambda>S. openin T (S \<inter> topspace T))) abs_ops_T\<close>
-    then have [transfer_rule]: \<open>rel_fun (rel_set (\<lambda>x y. x = RepT y)) (=) (\<lambda>S. openin T (S \<inter> topspace T)) abs_ops_T\<close>
-      by (simp add: with_type_topological_space_class_def
-          with_type_topological_space_class_rel_def)
-    show \<open>\<forall>\<^sub>\<tau> 'u::t2_space = topspace U with (\<lambda>S. openin U (S \<inter> topspace U)).
-        f x = g x\<close>
-    proof (rule with_typeI)
-      show \<open>fst (topspace U, \<lambda>S. openin U (S \<inter> topspace U)) \<noteq> {}\<close>
-        apply auto
-        sorry
-      have \<open>Domainp (rel_fun (rel_set (equal_onp (topspace U))) (=)) (\<lambda>S. openin U (S \<inter> topspace U))\<close>
-        apply (intro Domainp.intros[where b=\<open>(\<lambda>S. openin U (S \<inter> topspace U))\<close>] rel_funI)
-        by (metis equal_onp_def order_antisym_conv rel_setD1 rel_setD2 subset_eq)
-      moreover have \<open>with_type_t2_space_class_pred' (\<lambda>x. x \<in> topspace U) (\<lambda>S. openin U (S \<inter> topspace U))\<close>
-        apply (simp add: with_type_t2_space_class_pred'_def)
-        apply safe
-          apply (metis Int_ac(3) Int_ac(4) inf.orderE openin_clauses(2) unfold_simps(2))
-         apply (metis inf.orderE openin_clauses(2) openin_clauses(3) openin_topspace subset_eq)
-        by (smt (verit) assms(1) hausdorff_def inf_absorb1 openin_subset subsetD)
-      ultimately show \<open>fst with_type_t2_space_class (fst (topspace U, \<lambda>S. openin U (S \<inter> topspace U)))
-     (snd (topspace U, \<lambda>S. openin U (S \<inter> topspace U)))\<close>
-        by (auto simp: with_type_t2_space_class_def with_type_t2_space_class_pred_def
-            with_type_t2_space_class_dom_def   )
-      show \<open>with_type_compat_rel (fst with_type_t2_space_class) (fst (topspace U, \<lambda>S. openin U (S \<inter> topspace U)))
-         (snd with_type_t2_space_class)\<close>
-        apply (simp add: with_type_compat_rel_def with_type_t2_space_class_def
-            with_type_t2_space_class_pred_def with_type_t2_space_class_dom_def
-            with_type_t2_space_class_pred'_def with_type_t2_space_class_rel_def)
-        apply safe
-        by -
-      fix RepU :: \<open>'u \<Rightarrow> 'b\<close> and AbsU and abs_ops_U
-      assume typedefU: \<open>type_definition RepU AbsU (fst (topspace U, \<lambda>S. openin U (S \<inter> topspace U)))\<close>
-      define crU where \<open>crU \<equiv> \<lambda>x y. x = RepU y\<close>
-      have [transfer_rule]: \<open>bi_unique crU\<close>
-        using typedefU
-        by (simp add: crU_def typedef_bi_unique)
-      have [transfer_rule]: \<open>right_total crU\<close>
-        by (simp add: crU_def right_totalI)
-      have [transfer_rule]: \<open>rel_fun crU (=) (\<lambda>x. x) RepU\<close>
-        by (simp add: crU_def rel_funI)
-      have [transfer_rule]: \<open>Domainp crU = (\<lambda>x. x \<in> topspace U)\<close>
-sledgehammer
-sorry
-
-        sorry
-      assume \<open>snd with_type_t2_space_class (\<lambda>x y. x = RepU y) (snd (topspace U, \<lambda>S. openin U (S \<inter> topspace U)))
-        abs_ops_U\<close>
-      then have [transfer_rule]: \<open>rel_fun (rel_set (\<lambda>x y. x = RepU y)) (=) (\<lambda>S. openin U (S \<inter> topspace U)) abs_ops_U\<close>
-        by (simp add: with_type_t2_space_class_def
-            with_type_t2_space_class_rel_def)
-      note on_closure_eqI[where 'a='t and 'b='u]
-      then show \<open>f x = g x\<close>
-        apply transfer
-qed
- *)
-
-(* lemma xxx: \<open>\<forall>\<^sub>\<tau> 's::chilbert_space = closure (cspan S) with (scaleR, scaleC, plus, 0, minus, uminus, dist, norm, sgn, uniformity, open, cinner). 
-          \<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
-  sorry
-thm xxx[cancel_with_type] *)
-
 lemma map_filter_on_id: \<open>map_filter_on S (\<lambda>x. x) F = F\<close> if \<open>\<forall>\<^sub>F x in F. x \<in> S\<close>
   using that
   by (auto intro!: filter_eq_iff[THEN iffD2] simp: eventually_map_filter_on eventually_frequently_simps)
 
 lemma inverse_real_inverse: \<open>inverse_real_inst.inverse_real = inverse\<close>
   by (simp add: HOL.nitpick_unfold)
-
-(* named_theorems with_type_intros
-lemma [with_type_intros]: \<open>fst (A,B) \<noteq> {}\<close> if \<open>A \<noteq> {}\<close>
-  using that by simp
-lemma [with_type_intros]: \<open>with_type_compat_rel C (fst (S,p)) R\<close> if \<open>with_type_compat_rel C S R\<close>
-  using that by simp
-declare with_typeI[with_type_intros]
-
-lemma with_type_chilbert_space_class_subspaceI[with_type_intros]: \<open>fst with_type_chilbert_space_class
-     (fst (S, ( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, openin (top_of_set S), (\<bullet>\<^sub>C)))
-     (snd (S, ( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, openin (top_of_set S), (\<bullet>\<^sub>C)))\<close>
-  if [simp]: \<open>csubspace S\<close> \<open>closed S\<close>
-  (* TODO open and uniformity may need to be restricted! *)
-proof -
-  have open1: \<open>(\<exists>y. \<forall>x ya. rel_set (equal_onp S) x ya \<longrightarrow> open x = y ya)\<close>
-    apply (rule exI[of _ \<open>open\<close>])
-    by (smt (verit, ccfv_threshold) equal_onp_def rel_setD1 rel_setD2 subset_iff topological_space_class.openI)
-  have uniformity: \<open>rel_filter (rel_prod (equal_onp S) (equal_onp S)) (uniformity_on S) (uniformity_on S)\<close>
-    apply (rule rel_filter.intros[where Z=\<open>map_filter_on (S\<times>S) (\<lambda>x. (x,x)) (uniformity_on S)\<close>])
-      apply (simp add: eventually_map_filter_on always_eventually equal_onp_def eventually_inf_principal)
-     apply (subst map_filter_on_comp)
-    apply (auto simp add: map_filter_on_comp equal_onp_def eventually_inf_principal map_filter_on_id o_def)[3]
-     apply (subst map_filter_on_comp)
-    by (auto simp add: map_filter_on_comp equal_onp_def eventually_inf_principal map_filter_on_id o_def)
-  have 0: \<open>(\<exists>y. \<forall>x ya. rel_set (equal_onp S) x ya \<longrightarrow> openin (top_of_set S) x = y ya)\<close>
-    apply (rule exI[of _ \<open>openin (top_of_set S)\<close>])
-    by (metis equal_onp_def equalityI rel_setD1 rel_setD2 subset_iff)
-  have 1: \<open>with_type_chilbert_space_class_dom S (( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, openin (top_of_set S), (\<bullet>\<^sub>C))\<close>
-    apply (simp add: with_type_chilbert_space_class_dom_def Domainp_iff rel_fun_def equal_onp_def)
-    by (auto intro!: 0 exI uniformity simp add: scaleR_scaleC complex_vector.subspace_scale
-        complex_vector.subspace_add complex_vector.subspace_0 complex_vector.subspace_diff
-        complex_vector.subspace_neg sgn_div_norm open1)
-  have 2: \<open>with_type_chilbert_space_class_pred' (\<lambda>x. x \<in> S)
-     (( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity_on S, open, (\<bullet>\<^sub>C))\<close>
-    apply (simp add: with_type_chilbert_space_class_pred'_def scaleR_scaleC)
-    apply (intro conjI)
-               apply (auto simp add: complex_vector.vector_space_assms dist_norm sgn_div_norm scaleR_scaleC
-        cinner_simps inverse_real_inverse simp flip: of_real_inverse norm_eq_sqrt_cinner)
-            defer
-  defer
-  defer
-             defer
-             defer
-             defer
-    using norm_diff_triangle_le norm_imp_pos_and_ge norm_minus_commute apply blast
-
-    defer
-            defer
-    by -
-  from 1 2
-  show ?thesis
-    by (simp add: with_type_chilbert_space_class_def with_type_chilbert_space_class_pred_def)
-qed *)
-
 
 lemma is_onb_def_no_ccsubspace: 
   \<open>is_onb E \<longleftrightarrow> is_ortho_set E \<and> (\<forall>b\<in>E. norm b = 1) \<and> closure (cspan E) = UNIV\<close>
@@ -348,21 +179,6 @@ unoverload_definition is_ortho_set_def
 unoverload_definition complex_vector.subspace_def
 unoverload_definition complex_vector.span_def
 unoverload_definition is_onb_def_no_ccsubspace
-
-(* definition \<open>metric_space_axioms_on A dist \<longleftrightarrow>
-  (\<forall>x\<in>A. (\<forall>y\<in>A. (dist x y = 0) \<longleftrightarrow> (x = y))) \<and>
-          (\<forall>x\<in>A. (\<forall>y\<in>A. (\<forall>z\<in>A. dist x y \<le> dist x z + dist y z)))\<close> for A dist *)
-
-(* lemma metric_space_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "((T ===> T ===> (=)) ===> (=)) 
-    (metric_space_axioms_on (Collect (Domainp T)))
-    class.metric_space_axioms"
-  unfolding class.metric_space_axioms_def
-  apply transfer_prover_start
-              apply transfer_step+
-  by (simp add: metric_space_axioms_on_def[abs_def]) *)
 
 definition \<open>uniformity_dist_on A dist uniformity \<longleftrightarrow>
         uniformity = (\<Sqinter>e\<in>{0<..}. principal {(x, y)\<in>A\<times>A. dist x y < e})\<close>
@@ -580,22 +396,6 @@ lemma Cauchy_parametric[transfer_rule]:
   using filtermap_parametric[transfer_rule] apply fail?
   by transfer_prover
 
-(* definition \<open>complete_space_axioms_on A uniformity open \<longleftrightarrow>
-        (\<forall>X. (\<forall>n. X n \<in> A) \<longrightarrow>
-            uniform_space.Cauchy uniformity X \<longrightarrow> convergent_on A open X)\<close>
-  for A uniformity "open"
-
-lemma class_complete_space_axioms_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "(rel_filter (rel_prod T T) ===> (rel_set T ===> (=)) ===> (=)) 
-    (complete_space_axioms_on (Collect (Domainp T)))
-    class.complete_space_axioms"
-  unfolding class.complete_space_axioms_def
-  apply transfer_prover_start
-       apply transfer_step+
-  by (simp add: complete_space_axioms_on_def[abs_def]) *)
-
 definition \<open>complete_space_on A dist uniformity open \<longleftrightarrow>
         metric_space_on A dist uniformity open \<and>
         (\<forall>X. (\<forall>n. X n \<in> A) \<longrightarrow>
@@ -613,24 +413,6 @@ lemma complete_space_transfer[transfer_rule]:
        apply transfer_step+
   by (simp add: complete_space_on_def[abs_def])
 
-(* definition \<open>complex_vector_axioms_on A scaleC plusa \<longleftrightarrow>
-         (\<forall>a. \<forall>x\<in>A. \<forall>y\<in>A. scaleC a (plusa x y) = plusa (scaleC a x) (scaleC a y)) \<and>
-          (\<forall>a. \<forall>b. \<forall>x\<in>A. scaleC (a + b) x = plusa (scaleC a x) (scaleC b x)) \<and>
-         (\<forall>a. \<forall>b. \<forall>x\<in>A. scaleC a (scaleC b x) = scaleC (a * b) x) \<and> (\<forall>x\<in>A. scaleC 1 x = x)\<close>
-  for A scaleC plusa
-
-lemma complex_vector_axioms_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "(((=) ===> T ===> T) ===> (T ===> T ===> T) ===> (=))
-    (complex_vector_axioms_on (Collect (Domainp T)))
-    class.complex_vector_axioms"
-  unfolding class.complex_vector_axioms_def
-  apply transfer_prover_start
-       apply transfer_step+
-  apply (intro ext)
-  by (simp add: complex_vector_axioms_on_def[abs_def] Ball_def) *)
-
 definition \<open>scaleC_on A scaleR scaleC \<longleftrightarrow> (\<forall>r. \<forall>a\<in>A. scaleR r a = scaleC (complex_of_real r) a)\<close>
   for scaleR scaleC
 
@@ -645,12 +427,6 @@ lemma scaleC_transfer[transfer_rule]:
   apply transfer_prover_start
        apply transfer_step+
   by (simp add: scaleC_on_def[abs_def])
-
-(* definition \<open>ab_group_add_axioms_on A plus zero minus uminus \<longleftrightarrow>
-        (\<forall>a\<in>A. plus (uminus a) a = zero) \<and>
-        (\<forall>a\<in>A.
-            \<forall>b\<in>A. minus a b = plus a (uminus b))\<close>
-  for A plus zero minus uminus *)
 
 definition \<open>semigroup_add_on A plus \<longleftrightarrow>
         (\<forall>a\<in>A.
@@ -699,19 +475,6 @@ lemma comm_monoid_add_transfer[transfer_rule]:
        apply transfer_step+
   by (simp add: comm_monoid_add_on_def[abs_def])
 
-(* lemma ab_group_add_axioms_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "((T ===> T ===> T) ===> T
-      ===> (T ===> T ===> T) ===> (T ===> T) ===> (=))  
-    (ab_group_add_axioms_on (Collect (Domainp T)))
-    class.ab_group_add_axioms"
-  unfolding class.ab_group_add_axioms_def
-  apply transfer_prover_start
-       apply transfer_step+
-  by (simp add: ab_group_add_axioms_on_def[abs_def])
- *)
-
 definition \<open>ab_group_add_on A plus zero minus uminus \<longleftrightarrow>
         comm_monoid_add_on A plus zero \<and>
         (\<forall>a\<in>A. plus (uminus a) a = zero) \<and>
@@ -750,39 +513,6 @@ lemma complex_vector_transfer[transfer_rule]:
        apply transfer_step+
   by (simp add: complex_vector_on_def[abs_def])
 
-
-(* ML \<open>
-mk_relation_for_type \<^context> (fn n => ("r"^n, "'rep"^n, "S")) \<^typ>\<open>'a \<Rightarrow> 'b\<close>
-|> Thm.cterm_of \<^context>
-\<close> *)
-
-(* lemma
-
-ML \<open>
-val _ =
-  Outer_Syntax.local_theory_to_proof' \<^command_keyword>\<open>blabla\<close> "TODO"
-    (Scan.succeed (fn int => fn lthy => let
-    val constant = \<^term>\<open>class.complex_inner\<close>
-    val relator = mk_relation_for_type lthy (fn n => ("r"^n, "'rep"^n, "S")) (fastype_of constant)
-val _ = relator |> Thm.cterm_of lthy |> \<^print>
-    fun after_qed thms lthy = lthy
-    val prop = relator $ Var(("lhs",0), fastype_of relator |> domain_type) $ constant |> HOLogic.mk_Trueprop
-    val state = Specification.schematic_theorem true "lemma" NONE after_qed (Binding.empty, []) [] []
-      (Element.Shows [((Binding.empty, []), [(prop,[])])]) int lthy
-  in state end))
-\<close>
-blabla
-  by -
-
-
-setup \<open>fn thy =>
-let
-val thy = Proof.theorem NONE
-in
-lthy
-end
-\<close>
- *)
 
 definition \<open>sgn_div_norm_on A sgn norm scaleR
 \<longleftrightarrow> (\<forall>x\<in>A. sgn x = scaleR (inverse (norm x)) x)\<close>
@@ -1176,42 +906,6 @@ proof -
   ultimately show ?thesis
     using \<open>S \<subseteq> B\<close> by auto
 qed
-(* proof -
-  note [[show_hyps]]
-  (* TODO open and uniformity may need to be restricted! *)
-  have \<open>\<forall>\<^sub>\<tau> 's::chilbert_space = closure (cspan S) with (scaleR, scaleC, plus, 0, minus, uminus, dist, norm, sgn, uniformity, open, cinner). 
-          \<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
-  proof (intro with_type_intros)
-    show \<open>closure (cspan S) \<noteq> {}\<close>
-      using complex_vector.span_clauses(2) by auto
-    show \<open>csubspace (closure (cspan S))\<close>
-      using closure_is_csubspace by blast
-    show \<open>closed (closure (cspan S))\<close>
-      by simp
-    show \<open>with_type_compat_rel (fst with_type_chilbert_space_class)
-     (closure (cspan S)) (snd with_type_chilbert_space_class)\<close>
-      by (rule with_type_chilbert_space_class_rel_compat)
-    fix Rep :: \<open>'s \<Rightarrow> 'a\<close> and Abs abs_ops
-    assume \<open>type_definition Rep Abs
-        (fst (closure (cspan S), ( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity, open, (\<bullet>\<^sub>C)))\<close>
-    then have \<open>type_definition Rep Abs (closure (cspan S))\<close>
-      by simp
-    assume \<open>snd with_type_chilbert_space_class (\<lambda>x y. x = Rep y)
-        (snd (closure (cspan S), ( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity, open, (\<bullet>\<^sub>C))) abs_ops\<close>
-    then have \<open>with_type_chilbert_space_class_rel (\<lambda>x y. x = Rep y)
-        (( *\<^sub>R), ( *\<^sub>C), (+), 0, (-), uminus, dist, norm, sgn, uniformity, open, (\<bullet>\<^sub>C)) abs_ops\<close>
-      unfolding with_type_chilbert_space_class_def
-      by simp
-    show \<open>\<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
-      apply transfer
-      thm orthonormal_basis_exists
-      by -
-  next show x for x by -
-  qed
-  from this[cancel_with_type]
-  show ?thesis
-    by simp
-qed *)
 
 definition \<open>sum_with plus zero f A = (if finite A then foldr (\<lambda>i s. plus (f i) s) (SOME l. set l = A \<and> distinct l) zero else zero)\<close>
   for plus :: \<open>'a \<Rightarrow> 'a \<Rightarrow> 'a\<close> and zero :: 'a
@@ -1573,39 +1267,6 @@ lemma sandwich_weak_star_cont[simp]:
   \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
   using continuous_map_compose[OF continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star]
   by (auto simp: o_def sandwich_def[abs_def])
-
-(* lemma continuous_map_cong:
-  assumes \<open>\<And>x. x \<in> topspace T \<Longrightarrow> f x = g x\<close>
-  shows \<open>continuous_map T S f \<longleftrightarrow> continuous_map T S g\<close>
-  by (metis assms continuous_map_eq)
- *)
-
-(* 
-definition infsumopt where \<open>infsumopt f A = (if f summable_on A then Some (infsum f A) else None)\<close>
-
-syntax (ASCII)
-  "_infsumopt" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'b \<Rightarrow> 'b::topological_comm_monoid_add option"  ("(3INFSUM? (_/:_)./ _)" [0, 51, 10] 10)
-syntax
-  "_infsumopt" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'b \<Rightarrow> 'b::topological_comm_monoid_add option"  ("(2\<Sum>\<^sub>\<infinity>\<^sub>?(_/\<in>_)./ _)" [0, 51, 10] 10)
-translations \<comment> \<open>Beware of argument permutation!\<close>
-  "\<Sum>\<^sub>\<infinity>\<^sub>?i\<in>A. b" \<rightleftharpoons> "CONST infsumopt (\<lambda>i. b) A"
-
-syntax (ASCII)
-  "_univinfsumopt" :: "pttrn \<Rightarrow> 'a \<Rightarrow> 'a option"  ("(3INFSUM? _./ _)" [0, 10] 10)
-syntax
-  "_univinfsumopt" :: "pttrn \<Rightarrow> 'a \<Rightarrow> 'a option"  ("(2\<Sum>\<^sub>\<infinity>\<^sub>?_./ _)" [0, 10] 10)
-translations
-  "\<Sum>\<^sub>\<infinity>\<^sub>?x. t" \<rightleftharpoons> "CONST infsumopt (\<lambda>x. t) (CONST UNIV)"
- *)
-    
-
-(* lemma continuous_map_cong:
-  assumes \<open>\<And>x. x \<in> topspace T \<Longrightarrow> f x = g x\<close>
-  shows \<open>continuous_map T S f \<longleftrightarrow> continuous_map T S g\<close>
-sledgehammer
-  by (metis assms continuous_map_eq)
-sorry
- *)
 
 lemma continuous_map_pullback_both:
   assumes cont: \<open>continuous_map T1 T2 g'\<close>
@@ -2318,21 +1979,6 @@ proof -
   show \<open>range G = commutant (range F)\<close>
     by (simp add: commutant_exchange commutant_tensor1)
 qed
-
-(* lemma TMP: \<open>isCont f a \<longleftrightarrow> filterlim f (nhds a) (nhds (f a))\<close>
-  apply rule
-  defer
-  by - *)
-
-(* definition Collect_in where \<open>Collect_in S P = {x\<in>S. P x}\<close> for S and P
-
-lemma Collect_in_parametric[transfer_rule]:
-  includes lifting_syntax
-  shows \<open>(rel_set R ===> (R ===> (\<longleftrightarrow>)) ===> rel_set R) Collect_in Collect_in\<close>
-  apply (auto intro!: simp: rel_fun_def rel_set_def Collect_in_def)
-  by blast+
-
-term Set.filter *)
 
 definition \<open>opensets = Collect open\<close>
   \<comment> \<open>This behaves more nicely with the @{method transfer}-method (and friends) than \<^const>\<open>open\<close>.
