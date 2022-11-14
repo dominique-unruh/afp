@@ -1609,6 +1609,7 @@ proof -
     by (simp add: top1 topspace_pullback_topology)
 qed
 
+term partial_trace
 definition partial_trace :: \<open>(('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b \<times> 'c) ell2)  \<Rightarrow> ('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2)\<close> where
   \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))\<close>
 
@@ -1632,39 +1633,27 @@ proof -
     by (rule trace_classI[rotated])
 qed
 
+lift_definition partial_trace' :: \<open>(('a \<times> 'c) ell2, ('b \<times> 'c) ell2) trace_class  \<Rightarrow> ('a ell2, 'b ell2) trace_class\<close> is
+  partial_trace
+  by auto
+
 lemma TODO_NAME2: \<open>trace (partial_trace t o\<^sub>C\<^sub>L x) = trace (t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close> if \<open>trace_class t\<close>
   sorry
 
 (* TODO move *)
 lemma amplification_weak_star_cont[simp]:
   \<open>continuous_map weak_star_topology weak_star_topology (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)\<close>
-(* Two proofs (due to merge), I think first is more current. *)
-  sorry
-(*
-proof (unfold weak_star_topology_def, rule continuous_map_pullback_both)
-  define g' :: \<open>('b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2 \<Rightarrow> complex)
-   \<Rightarrow> ('b \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'c) ell2 \<Rightarrow> complex\<close> where \<open>g' \<tau> t = \<tau> (if trace_class t then partial_trace t else 0)\<close> for \<tau> t
-  have \<open>continuous_on UNIV g'\<close>
-    by (simp add: continuous_on_coordinatewise_then_product g'_def)
-  then show \<open>continuous_map euclidean euclidean g'\<close>
-    using continuous_map_iff_continuous2 by blast
-  show \<open>g' (\<lambda>t. if trace_class t then trace (t o\<^sub>C\<^sub>L x) else 0) =
-         (\<lambda>t. if trace_class t then trace (t o\<^sub>C\<^sub>L x \<otimes>\<^sub>o id_cblinfun) else 0)\<close> for x
-    by (auto intro!: ext simp: g'_def TODO_NAME2) 
-qed auto
- *)
-(*
 proof (unfold weak_star_topology_def', rule continuous_map_pullback_both)
   define g' :: \<open>(('b ell2, 'a ell2) trace_class \<Rightarrow> complex) \<Rightarrow> (('b \<times> 'c) ell2, ('a \<times> 'c) ell2) trace_class \<Rightarrow> complex\<close> where
-    \<open>g' \<tau> t = \<tau> (partial_trace t)\<close> for \<tau> t
+    \<open>g' \<tau> t = \<tau> (partial_trace' t)\<close> for \<tau> t
   have \<open>continuous_on UNIV g'\<close>
     by (simp add: continuous_on_coordinatewise_then_product g'_def)
   then show \<open>continuous_map euclidean euclidean g'\<close>
     using continuous_map_iff_continuous2 by blast
-  show \<open>g' (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) = (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x \<otimes>\<^sub>o id_cblinfun))\<close> for x
-    by (auto intro!: ext simp: g'_def TODO_NAME) 
+  show \<open>g' (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) =
+         (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x \<otimes>\<^sub>o id_cblinfun))\<close> for x
+    by (auto intro!: ext simp: g'_def TODO_NAME2 partial_trace'.rep_eq)
 qed auto
- *)
 
 lemma register_decomposition:
   fixes \<Phi> :: \<open>'a update \<Rightarrow> 'b update\<close>
