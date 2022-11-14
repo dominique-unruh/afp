@@ -2,8 +2,6 @@ theory Partial_Trace
   imports Trace_Class Hilbert_Space_Tensor_Product
 begin
 
-(* TODO: A different definition is given in Axioms_Complement_Quantum (allows to take partial traces
-even of non-traceclass operators). Merge with this proof. *)
 definition partial_trace :: \<open>(('a \<times> 'c) ell2, ('b \<times> 'c) ell2) trace_class \<Rightarrow> ('a ell2, 'b ell2) trace_class\<close> where
   \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))))\<close>
 
@@ -161,12 +159,12 @@ proof -
   qed
 qed
 
-definition partial_trace' where \<open>partial_trace' t = (if trace_class t then from_trace_class (partial_trace (Abs_trace_class t)) else 0)\<close>
+(* definition partial_trace' where \<open>partial_trace' t = (if trace_class t then from_trace_class (partial_trace (Abs_trace_class t)) else 0)\<close>
 
 lemma partial_trace_transfer[transfer_rule]: 
   includes lifting_syntax
   shows \<open>(cr_trace_class ===> cr_trace_class) partial_trace' partial_trace\<close>
-  by (auto intro!: rel_funI simp: cr_trace_class_def partial_trace'_def from_trace_class_inverse)
+  by (auto intro!: rel_funI simp: cr_trace_class_def partial_trace'_def from_trace_class_inverse) *)
 
 
 end

@@ -2,7 +2,7 @@ section \<open>Quantum instantiation of complements\<close>
 
 theory Axioms_Complement_Quantum
   imports Laws_Quantum (* With_Type.With_Type_Inst_Complex_Bounded_Operators *) Quantum_Extra Tensor_Product.Weak_Star_Topology
-    (* Tensor_Product.Partial_Trace *) TAS_Topology
+    Tensor_Product.Partial_Trace TAS_Topology
     With_Type.With_Type
 begin
 
@@ -1285,53 +1285,25 @@ proof -
     by (simp add: top1 topspace_pullback_topology)
 qed
 
-term partial_trace
-definition partial_trace :: \<open>(('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b \<times> 'c) ell2)  \<Rightarrow> ('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2)\<close> where
-  \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))\<close>
-
-(* See Partial_Trace.thy; it seems to already have proofs for this *)
-lemma  
-  assumes \<open>trace_class t\<close>
-  shows partial_trace_has_sum: \<open>has_sum (\<lambda>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))) UNIV (partial_trace t)\<close>
-  and partial_trace_summable: \<open>(\<lambda>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))) abs_summable_on UNIV\<close>
-proof -
-  show \<open>(\<lambda>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))) abs_summable_on UNIV\<close>
-    sorry
-  then show \<open>has_sum (\<lambda>j. (tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))) UNIV (partial_trace t)\<close>
-    by (simp add: Axioms_Complement_Quantum.partial_trace_def abs_summable_summable)
-qed
-
-(* Proof implicit in Partial_Trace.thy? *)
-lemma partial_trace_trace_class[simp]: \<open>trace_class (partial_trace t)\<close> if \<open>trace_class t\<close>
-proof -
-  have \<open>(\<lambda>x. x \<bullet>\<^sub>C (abs_op (partial_trace t) *\<^sub>V x)) abs_summable_on range ket\<close>
-    sorry
-  then show \<open>trace_class (partial_trace t)\<close>
-    using is_onb_ket
-    by (rule trace_classI[rotated])
-qed
-
-lift_definition partial_trace' :: \<open>(('a \<times> 'c) ell2, ('b \<times> 'c) ell2) trace_class  \<Rightarrow> ('a ell2, 'b ell2) trace_class\<close> is
-  partial_trace
-  by auto
-
-lemma TODO_NAME2: \<open>trace (partial_trace t o\<^sub>C\<^sub>L x) = trace (t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close> if \<open>trace_class t\<close>
+lemma TODO_NAME2: \<open>trace (from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) = trace (from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close>
   sorry
 
 (* TODO move *)
 lemma amplification_weak_star_cont[simp]:
   \<open>continuous_map weak_star_topology weak_star_topology (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)\<close>
 proof (unfold weak_star_topology_def', rule continuous_map_pullback_both)
+  show \<open>S \<subseteq> f -` UNIV\<close> for S :: \<open>'x set\<close> and f :: \<open>'x \<Rightarrow> 'y\<close>
+    by simp
   define g' :: \<open>(('b ell2, 'a ell2) trace_class \<Rightarrow> complex) \<Rightarrow> (('b \<times> 'c) ell2, ('a \<times> 'c) ell2) trace_class \<Rightarrow> complex\<close> where
-    \<open>g' \<tau> t = \<tau> (partial_trace' t)\<close> for \<tau> t
+    \<open>g' \<tau> t = \<tau> (partial_trace t)\<close> for \<tau> t
   have \<open>continuous_on UNIV g'\<close>
     by (simp add: continuous_on_coordinatewise_then_product g'_def)
   then show \<open>continuous_map euclidean euclidean g'\<close>
     using continuous_map_iff_continuous2 by blast
   show \<open>g' (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) =
          (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x \<otimes>\<^sub>o id_cblinfun))\<close> for x
-    by (auto intro!: ext simp: g'_def TODO_NAME2 partial_trace'.rep_eq)
-qed auto
+    by (auto intro!: ext simp: g'_def TODO_NAME2)
+qed
 
 lemma register_decomposition:
   fixes \<Phi> :: \<open>'a update \<Rightarrow> 'b update\<close>
