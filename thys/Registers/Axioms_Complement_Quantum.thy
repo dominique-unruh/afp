@@ -1288,8 +1288,18 @@ qed
 lemma min_power_distrib_left: \<open>(min x y) ^ n = min (x ^ n) (y ^ n)\<close> if \<open>x \<ge> 0\<close> and \<open>y \<ge> 0\<close> for x y :: \<open>_ :: linordered_semidom\<close>
   by (metis linorder_le_cases min.absorb_iff2 min.order_iff power_mono that(1) that(2))
 
-lemma norm_abs_op: \<open>norm (abs_op a) = norm a\<close> (* TODO add [simp] when proven *)
-  sorry
+lemma norm_abs_op[simp]: \<open>norm (abs_op a) = norm a\<close> 
+  for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+proof -
+  have \<open>(norm (abs_op a))\<^sup>2 = norm (abs_op a* o\<^sub>C\<^sub>L abs_op a)\<close>
+    by simp
+  also have \<open>\<dots> = norm (a* o\<^sub>C\<^sub>L a)\<close>
+    by (simp add: abs_op_def positive_cblinfun_squareI)
+  also have \<open>\<dots> = (norm a)\<^sup>2\<close>
+    by simp
+  finally show ?thesis
+    by simp
+qed
 
 lemma trace_norm_geq_cinner_abs_op: \<open>\<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>) \<le> trace_norm t\<close> if \<open>trace_class t\<close> and \<open>norm \<psi> = 1\<close>
 proof -
@@ -1314,7 +1324,7 @@ proof -
 qed
 
 lemma norm_leq_trace_norm: \<open>norm t \<le> trace_norm t\<close> if \<open>trace_class t\<close> 
-  for t :: \<open>'a::{chilbert_space,not_singleton} \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner\<close> (* TODO get rid of "not_singleton" *)
+  for t :: \<open>'a::{chilbert_space,not_singleton} \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close> (* TODO get rid of "not_singleton" *)
 proof (rule field_le_epsilon)
   fix \<epsilon> :: real assume \<open>\<epsilon> > 0\<close>
 
@@ -1356,7 +1366,7 @@ proof (rule field_le_epsilon)
     by simp
 
   have \<open>complex_of_real (norm t) = norm (abs_op t)\<close>
-    by (simp add: norm_abs_op)
+    by simp
   also have \<open>\<dots> = (norm (sqrt_op (abs_op t)))\<^sup>2\<close>
     by (simp flip: norm_AadjA)
   also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>) + \<delta>)\<^sup>2\<close>
@@ -1443,6 +1453,9 @@ proof -
 qed *)
 
 
+lemma ket_pair_split: \<open>ket x = tensor_ell2 (ket (fst x)) (ket (snd x))\<close>
+  by (simp add: tensor_ell2_ket)
+
 (* TODO better name *)
 lemma trace_partial_trace_compose: \<open>trace (from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) = trace (from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close>
 proof -
@@ -1500,52 +1513,15 @@ proof -
 
   have summable_u'_pairs: \<open>(\<lambda>(e, j). u' e j) summable_on UNIV \<times> UNIV\<close>
   proof -
-    have \<open>u abs_summable_on UNIV\<close> 
-      using partial_trace_abs_summable[of t] u_def by fastforce
-    then have \<open>(\<lambda>j. norm (u j) * norm x) abs_summable_on UNIV\<close>
-      using summable_on_cmult_left by auto
-    then have \<open>(\<lambda>j. trace_norm (from_trace_class (u j) o\<^sub>C\<^sub>L x)) abs_summable_on UNIV\<close>
-      apply (rule abs_summable_on_comparison_test)
-      by (simp add: norm_trace_class.rep_eq trace_norm_comp_left)
-    then have \<open>(\<lambda>j. \<Sum>\<^sub>\<infinity>e. norm (u' e j)) abs_summable_on UNIV\<close>
-    proof (rule abs_summable_on_comparison_test, rename_tac j)
-      fix j
-      define n where \<open>n = trace_norm (from_trace_class (u j) o\<^sub>C\<^sub>L x)\<close>
-      have u'_leq_absux: \<open>cmod (u' e j) \<le> cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))\<close> for e
-        (* Might be false? *)
-        using cmod_cinner_leq_cmod_cinner_abs[where \<psi>=\<open>ket e\<close> and a=\<open>from_trace_class (u j) o\<^sub>C\<^sub>L x\<close>]
-        by (simp add: u'_def)
-      have \<open>has_sum (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V e))) (range ket) n\<close>
-        unfolding n_def
-        by (smt (verit) has_sum_cong has_sum_infsum is_onb_ket trace_class_comp_left trace_class_def trace_class_from_trace_class trace_norm_alt_def trace_norm_basis_invariance)
-      then have \<open>has_sum (\<lambda>e. cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))) UNIV n\<close>
-        apply (subst (asm) has_sum_reindex)
-        by (auto simp: o_def)
-      then have cmod_absux_abssum: \<open>(\<lambda>e. cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))) abs_summable_on UNIV\<close>
-        and *: \<open>(\<Sum>\<^sub>\<infinity>e. cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))) = n\<close>
-        using summable_on_def infsumI by (auto, blast)
-      from this(1) have cmod_u'_abssum: \<open>(\<lambda>e. cmod (u' e j)) abs_summable_on UNIV\<close>
-        apply (rule abs_summable_on_comparison_test)
-        using u'_leq_absux by (auto simp: u'_def)
-      have \<open>(\<Sum>\<^sub>\<infinity>e. cmod (u' e j)) \<le> n\<close>
-        unfolding *[symmetric]
-        apply (rule infsum_mono)
-        using cmod_u'_abssum cmod_absux_abssum u'_leq_absux by auto
-      then show \<open>norm (\<Sum>\<^sub>\<infinity>e. cmod (u' e j)) \<le> norm n\<close>
-        by (simp add: infsum_nonneg)
-    qed
-    moreover have \<open>(\<lambda>e. u' e j) abs_summable_on UNIV\<close> for j
-      using trace_exists[OF is_onb_ket tc_u_x]
-      apply (subst (asm) summable_on_reindex)
-      by (auto simp: o_def u'_def summable_on_iff_abs_summable_on_complex)
-    ultimately have \<open>(\<lambda>(j, e). u' e j) abs_summable_on UNIV \<times> UNIV\<close>
-      apply (rule_tac abs_summable_on_Sigma_iff[THEN iffD2])
-      by simp
-    then have \<open>(\<lambda>(e, j). u' e j) abs_summable_on UNIV \<times> UNIV\<close>
-      apply (subst summable_on_reindex_bij_betw[where g=prod.swap, symmetric])
-      by auto
+    have \<open>trace_class (from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close>
+      by (simp add: trace_class_comp_left)
+    from trace_exists[OF is_onb_ket this]
+    have \<open>(\<lambda>ej. ket ej \<bullet>\<^sub>C (from_trace_class t *\<^sub>V (x \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket ej)) summable_on UNIV\<close>
+      by (simp_all add: summable_on_reindex o_def)
     then show ?thesis
-      by (rule abs_summable_summable)
+      by (simp_all add: o_def u'_def[abs_def] u_def
+          trace_class_comp_left trace_class_comp_right Abs_trace_class_inverse tensor_ell2_right_apply 
+          ket_pair_split tensor_op_ell2 case_prod_unfold cinner_adj_right)
   qed
 
   have u'_tensor: \<open>u' e j = ket (e,j) \<bullet>\<^sub>C ((from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun)) *\<^sub>V ket (e,j))\<close> for e j
