@@ -1285,8 +1285,210 @@ proof -
     by (simp add: top1 topspace_pullback_topology)
 qed
 
-lemma TODO_NAME2: \<open>trace (from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) = trace (from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close>
+lemma min_power_distrib_left: \<open>(min x y) ^ n = min (x ^ n) (y ^ n)\<close> if \<open>x \<ge> 0\<close> and \<open>y \<ge> 0\<close> for x y :: \<open>_ :: linordered_semidom\<close>
+  by (metis linorder_le_cases min.absorb_iff2 min.order_iff power_mono that(1) that(2))
+
+lemma norm_abs_op: \<open>norm (abs_op a) = norm a\<close> (* TODO add [simp] when proven *)
   sorry
+
+lemma trace_norm_geq_cinner_abs_op: \<open>\<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>) \<le> trace_norm t\<close> if \<open>trace_class t\<close> and \<open>norm \<psi> = 1\<close>
+  by -
+
+lemma norm_leq_trace_norm: \<open>norm t \<le> trace_norm t\<close> if \<open>trace_class t\<close> 
+  for t :: \<open>'a::{chilbert_space,not_singleton} \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner\<close> (* TODO get rid of "not_singleton" *)
+proof (rule field_le_epsilon)
+  fix \<epsilon> :: real assume \<open>\<epsilon> > 0\<close>
+
+  define \<delta> :: real where 
+    \<open>\<delta> = min (sqrt (\<epsilon> / 2)) (\<epsilon> / (4 * (norm (sqrt_op (abs_op t)) + 1)))\<close>
+  have \<open>\<delta> > 0\<close>
+    using \<open>\<epsilon> > 0\<close> apply (auto simp add: \<delta>_def)
+    by (smt (verit) norm_not_less_zero zero_less_divide_iff)
+  have \<delta>_small: \<open>\<delta>\<^sup>2 + 2 * norm (sqrt_op (abs_op t)) * \<delta> \<le> \<epsilon>\<close>
+  proof -
+    define n where \<open>n = norm (sqrt_op (abs_op t))\<close>
+    then have \<open>n \<ge> 0\<close>
+      by simp
+    have \<delta>: \<open>\<delta> = min (sqrt (\<epsilon> / 2)) (\<epsilon> / (4 * (n + 1)))\<close>
+      by (simp add: \<delta>_def n_def)
+
+    have \<open>\<delta>\<^sup>2 + 2 * n * \<delta> \<le> \<epsilon> / 2 + 2 * n * \<delta>\<close>
+      apply (rule add_right_mono)
+      apply (subst \<delta>) apply (subst min_power_distrib_left)
+      using \<open>\<epsilon> > 0\<close> \<open>n \<ge> 0\<close> by auto
+    also have \<open>\<dots> \<le> \<epsilon> / 2 + 2 * n * (\<epsilon> / (4 * (n + 1)))\<close>
+      apply (intro add_left_mono mult_left_mono)
+      by (simp_all add: \<delta> \<open>n \<ge> 0\<close>)
+    also have \<open>\<dots> = \<epsilon> / 2 + 2 * (n / (n+1)) * (\<epsilon> / 4)\<close>
+      by simp
+    also have \<open>\<dots> \<le> \<epsilon> / 2 + 2 * 1 * (\<epsilon> / 4)\<close>
+      apply (intro add_left_mono mult_left_mono mult_right_mono)
+      using \<open>n \<ge> 0\<close> \<open>\<epsilon> > 0\<close> by auto
+    also have \<open>\<dots> = \<epsilon>\<close>
+      by simp
+    finally show \<open>\<delta>\<^sup>2 + 2 * n * \<delta> \<le> \<epsilon>\<close>
+      by -
+  qed
+
+  from \<open>\<delta> > 0\<close> obtain \<psi> where \<psi>\<epsilon>: \<open>norm (sqrt_op (abs_op t)) - \<delta> \<le> norm (sqrt_op (abs_op t) *\<^sub>V \<psi>)\<close> and \<open>norm \<psi> = 1\<close>
+    apply atomize_elim by (rule cblinfun_norm_approx_witness)
+
+  have aux1: \<open>2 * complex_of_real x = complex_of_real (2 * x)\<close> for x
+    by simp
+
+  have \<open>complex_of_real (norm t) = norm (abs_op t)\<close>
+    by (simp add: norm_abs_op)
+  also have \<open>\<dots> = (norm (sqrt_op (abs_op t)))\<^sup>2\<close>
+    by (simp flip: norm_AadjA)
+  also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>) + \<delta>)\<^sup>2\<close>
+    by (smt (verit) \<psi>\<epsilon> complex_of_real_mono norm_triangle_ineq4 norm_triangle_sub pos2 power_strict_mono)
+  also have \<open>\<dots> = (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>))\<^sup>2 + \<delta>\<^sup>2 + 2 * norm (sqrt_op (abs_op t) *\<^sub>V \<psi>) * \<delta>\<close>
+    by (simp add: power2_sum)
+  also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>))\<^sup>2 + \<delta>\<^sup>2 + 2 * norm (sqrt_op (abs_op t)) * \<delta>\<close>
+    apply (rule complex_of_real_mono_iff[THEN iffD2])
+    by (smt (z3) \<open>0 < \<delta>\<close> \<open>norm \<psi> = 1\<close> more_arith_simps(11) mult_less_cancel_right_disj norm_cblinfun one_power2 power2_eq_square)
+  also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>))\<^sup>2 + \<epsilon>\<close>
+    apply (rule complex_of_real_mono_iff[THEN iffD2])
+    using \<delta>_small by auto
+  also have \<open>\<dots> = ((sqrt_op (abs_op t) *\<^sub>V \<psi>) \<bullet>\<^sub>C (sqrt_op (abs_op t) *\<^sub>V \<psi>)) + \<epsilon>\<close>
+    by (simp add: cdot_square_norm)
+  also have \<open>\<dots> = (\<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>)) + \<epsilon>\<close>
+    by (simp flip: cinner_adj_right cblinfun_apply_cblinfun_compose)
+  also have \<open>\<dots> \<le> trace_norm t + \<epsilon>\<close>
+    using \<open>norm \<psi> = 1\<close> \<open>trace_class t\<close> by (auto simp add: trace_norm_geq_cinner_abs_op)
+  finally show \<open>norm t \<le> trace_norm t + \<epsilon>\<close>
+    using complex_of_real_mono_iff by blast
+qed
+
+(* TODO better name *)
+lemma trace_partial_trace_compose: \<open>trace (from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) = trace (from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close>
+proof -
+  define s where \<open>s = trace (from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x)\<close>
+  define s' where \<open>s' e = ket e \<bullet>\<^sub>C ((from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) *\<^sub>V ket e)\<close> for e
+  define u where \<open>u j = Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))\<close> for j
+  define u' where \<open>u' e j = ket e \<bullet>\<^sub>C (from_trace_class (u j) *\<^sub>V x *\<^sub>V ket e)\<close> for e j
+  have \<open>has_sum u UNIV (partial_trace t)\<close>
+    using partial_trace_has_sum[of t]
+    by (simp add: u_def[abs_def])
+  then have \<open>has_sum ((\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e) o u) UNIV (from_trace_class (partial_trace t) *\<^sub>V x *\<^sub>V ket e)\<close> for e 
+  proof (rule has_sum_comm_additive[rotated -1])
+    show \<open>Modules.additive (\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e)\<close>
+      by (simp add: Modules.additive_def cblinfun.add_left plus_trace_class.rep_eq)
+    have bounded_clinear: \<open>bounded_clinear (\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e)\<close>
+    proof (rule bounded_clinearI[where K=\<open>norm (x *\<^sub>V ket e)\<close>])
+      show \<open>from_trace_class (b1 + b2) *\<^sub>V x *\<^sub>V ket e = from_trace_class b1 *\<^sub>V x *\<^sub>V ket e + from_trace_class b2 *\<^sub>V x *\<^sub>V ket e\<close> for b1 b2
+        by (simp add: plus_cblinfun.rep_eq plus_trace_class.rep_eq)
+      show \<open>from_trace_class (r *\<^sub>C b) *\<^sub>V x *\<^sub>V ket e = r *\<^sub>C (from_trace_class b *\<^sub>V x *\<^sub>V ket e)\<close> for b r
+        by (simp add: scaleC_trace_class.rep_eq)
+      show \<open>norm (from_trace_class t *\<^sub>V x *\<^sub>V ket e) \<le> norm t * norm (x *\<^sub>V ket e)\<close> for t
+      proof -
+        have \<open>norm (from_trace_class t *\<^sub>V x *\<^sub>V ket e) \<le> norm (from_trace_class t) * norm (x *\<^sub>V ket e)\<close>
+          by (simp add: norm_cblinfun)
+        also have \<open>\<dots> \<le> norm t * norm (x *\<^sub>V ket e)\<close>
+          by (auto intro!: mult_right_mono simp add: norm_leq_trace_norm norm_trace_class.rep_eq)
+        finally show ?thesis
+          by -
+      qed
+    qed
+    have \<open>isCont (\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e) (partial_trace t)\<close>
+      using bounded_clinear clinear_continuous_at by auto
+    then show \<open>(\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e) \<midarrow>partial_trace t\<rightarrow> from_trace_class (partial_trace t) *\<^sub>V x *\<^sub>V ket e\<close>
+      by (simp add: isCont_def)
+  qed
+  then have \<open>has_sum ((\<lambda>v. ket e \<bullet>\<^sub>C v) o ((\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e) o u)) UNIV (ket e \<bullet>\<^sub>C (from_trace_class (partial_trace t) *\<^sub>V x *\<^sub>V ket e))\<close> for e 
+  proof (rule has_sum_comm_additive[rotated -1])
+    show \<open>Modules.additive (\<lambda>v. ket e \<bullet>\<^sub>C v)\<close>
+      by (simp add: Modules.additive_def cinner_simps(2))
+    have bounded_clinear: \<open>bounded_clinear (\<lambda>v. ket e \<bullet>\<^sub>C v)\<close>
+      using bounded_clinear_cinner_right by auto
+    then have \<open>isCont (\<lambda>v. ket e \<bullet>\<^sub>C v) l\<close> for l
+      by simp
+    then show \<open>(\<lambda>v. ket e \<bullet>\<^sub>C v) \<midarrow>l\<rightarrow> ket e \<bullet>\<^sub>C l\<close> for l
+      by (simp add: isContD)
+  qed
+  then have has_sum_u': \<open>has_sum (\<lambda>j. u' e j) UNIV (s' e)\<close> for e 
+    by (simp add: o_def u'_def s'_def)
+  then have infsum_u': \<open>s' e = infsum (u' e) UNIV\<close> for e
+    by (metis infsumI)
+(*   have abs_sum_s': \<open>s' abs_summable_on UNIV\<close> (* TODO needed? *)
+    by - *)
+  have tc_u_x[simp]: \<open>trace_class (from_trace_class (u j) o\<^sub>C\<^sub>L x)\<close> for j
+    by (simp add: trace_class_comp_left)
+
+  have summable_u'_pairs: \<open>(\<lambda>(e, j). u' e j) summable_on UNIV \<times> UNIV\<close>
+  proof -
+    have \<open>u abs_summable_on UNIV\<close> 
+      using partial_trace_abs_summable[of t] u_def by fastforce
+    then have \<open>(\<lambda>j. norm (u j) * norm x) abs_summable_on UNIV\<close>
+      using summable_on_cmult_left by auto
+    then have \<open>(\<lambda>j. trace_norm (from_trace_class (u j) o\<^sub>C\<^sub>L x)) abs_summable_on UNIV\<close>
+      apply (rule abs_summable_on_comparison_test)
+      by (simp add: norm_trace_class.rep_eq trace_norm_comp_left)
+    then have \<open>(\<lambda>j. \<Sum>\<^sub>\<infinity>e. norm (u' e j)) abs_summable_on UNIV\<close>
+    proof (rule abs_summable_on_comparison_test, rename_tac j)
+      fix j
+      define n where \<open>n = trace_norm (from_trace_class (u j) o\<^sub>C\<^sub>L x)\<close>
+      have **: \<open>cmod (u' e j) \<le> cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))\<close> for e
+        by -
+      have \<open>has_sum (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V e))) (range ket) n\<close>
+        unfolding n_def
+        by (smt (verit) has_sum_cong has_sum_infsum is_onb_ket trace_class_comp_left trace_class_def trace_class_from_trace_class trace_norm_alt_def trace_norm_basis_invariance)
+      then have \<open>has_sum (\<lambda>e. cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))) UNIV n\<close>
+        apply (subst (asm) has_sum_reindex)
+        by (auto simp: o_def)
+      then have \<open>(\<lambda>e. cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))) abs_summable_on UNIV\<close>
+        and *: \<open>(\<Sum>\<^sub>\<infinity>e. cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))) = n\<close>
+        using summable_on_def infsumI by (auto, blast)
+      from this(1) have \<open>(\<lambda>e. cmod (u' e j)) abs_summable_on UNIV\<close>
+        apply (rule abs_summable_on_comparison_test)
+        using ** by (auto simp: u'_def)
+      have \<open>norm (\<Sum>\<^sub>\<infinity>e. cmod (u' e j)) \<le> n\<close>
+        unfolding *[symmetric]
+        using **
+        by -
+      then show \<open>norm (\<Sum>\<^sub>\<infinity>e. cmod (u' e j)) \<le> norm n\<close>
+        by auto
+    qed
+    moreover have \<open>(\<lambda>e. u' e j) abs_summable_on UNIV\<close> for j
+      using trace_exists[OF is_onb_ket tc_u_x]
+      apply (subst (asm) summable_on_reindex)
+      by (auto simp: o_def u'_def summable_on_iff_abs_summable_on_complex)
+    ultimately have \<open>(\<lambda>(j, e). u' e j) abs_summable_on UNIV \<times> UNIV\<close>
+      apply (rule_tac abs_summable_on_Sigma_iff[THEN iffD2])
+      by simp
+    then have \<open>(\<lambda>(e, j). u' e j) abs_summable_on UNIV \<times> UNIV\<close>
+      apply (subst summable_on_reindex_bij_betw[where g=prod.swap, symmetric])
+      by auto
+    then show ?thesis
+      by (rule abs_summable_summable)
+  qed
+
+  have u'_tensor: \<open>u' e j = ket (e,j) \<bullet>\<^sub>C ((from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun)) *\<^sub>V ket (e,j))\<close> for e j
+    by (simp add: u'_def u_def tensor_op_ell2 tensor_ell2_right_apply  Abs_trace_class_inverse
+        trace_class_comp_left trace_class_comp_right cinner_adj_right
+        flip: tensor_ell2_ket)
+
+  have \<open>has_sum (\<lambda>e. e \<bullet>\<^sub>C ((from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) *\<^sub>V e)) (range ket) s\<close>
+    unfolding s_def
+    apply (rule trace_has_sum)
+    by (auto simp: trace_class_comp_left)
+  then have \<open>has_sum s' UNIV s\<close>
+    apply (subst (asm) has_sum_reindex)
+    by (auto simp: o_def s'_def[abs_def])
+  then have \<open>s = infsum s' UNIV\<close>
+    by (simp add: infsumI)
+  also have \<open>\<dots> = infsum (\<lambda>e. infsum (u' e) UNIV) UNIV\<close>
+    using infsum_u' by presburger
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(e, j)\<in>UNIV. u' e j)\<close>
+    apply (subst infsum_Sigma'_banach)
+     apply (rule summable_u'_pairs)
+    by simp
+  also have \<open>\<dots> = trace (from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close>
+    unfolding u'_tensor 
+    by (simp add: trace_ket_sum cond_case_prod_eta trace_class_comp_left)
+  finally show ?thesis
+    by (simp add: s_def)
+qed
 
 (* TODO move *)
 lemma amplification_weak_star_cont[simp]:
@@ -1302,7 +1504,7 @@ proof (unfold weak_star_topology_def', rule continuous_map_pullback_both)
     using continuous_map_iff_continuous2 by blast
   show \<open>g' (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) =
          (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x \<otimes>\<^sub>o id_cblinfun))\<close> for x
-    by (auto intro!: ext simp: g'_def TODO_NAME2)
+    by (auto intro!: ext simp: g'_def trace_partial_trace_compose)
 qed
 
 lemma register_decomposition:
