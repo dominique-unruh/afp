@@ -1292,7 +1292,26 @@ lemma norm_abs_op: \<open>norm (abs_op a) = norm a\<close> (* TODO add [simp] wh
   sorry
 
 lemma trace_norm_geq_cinner_abs_op: \<open>\<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>) \<le> trace_norm t\<close> if \<open>trace_class t\<close> and \<open>norm \<psi> = 1\<close>
-  by -
+proof -
+  have \<open>\<exists>B. {\<psi>} \<subseteq> B \<and> is_onb B\<close>
+    apply (rule orthonormal_basis_exists)
+    using \<open>norm \<psi> = 1\<close>
+    by auto
+  then obtain B where \<open>is_onb B\<close> and \<open>\<psi> \<in> B\<close>
+    by auto
+
+  have \<open>\<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>) = (\<Sum>\<^sub>\<infinity>\<psi>\<in>{\<psi>}. \<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>))\<close>
+    by simp
+  also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>\<psi>\<in>B. \<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>))\<close>
+    apply (rule infsum_mono_neutral_complex)
+    using \<open>\<psi> \<in> B\<close> \<open>is_onb B\<close> that
+    by (auto simp add: trace_exists cinner_pos_if_pos)
+  also have \<open>\<dots> = trace_norm t\<close>
+    using \<open>is_onb B\<close> that
+    by (metis trace_abs_op trace_alt_def trace_class_abs_op)
+  finally show ?thesis
+    by -
+qed
 
 lemma norm_leq_trace_norm: \<open>norm t \<le> trace_norm t\<close> if \<open>trace_class t\<close> 
   for t :: \<open>'a::{chilbert_space,not_singleton} \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner\<close> (* TODO get rid of "not_singleton" *)
@@ -1359,6 +1378,68 @@ proof (rule field_le_epsilon)
   finally show \<open>norm t \<le> trace_norm t + \<epsilon>\<close>
     using complex_of_real_mono_iff by blast
 qed
+
+lemma abs_op_increasing[simp]: \<open>a \<le> abs_op a\<close>
+  by -
+
+definition \<open>pos_part_op a = (abs_op a + a) /\<^sub>R 2\<close>
+definition \<open>neg_part_op a = (abs_op a - a) /\<^sub>R 2\<close>
+
+lemma op_decomp_pos_neg: \<open>pos_part_op a - neg_part_op a = a\<close>
+  apply (auto simp: pos_part_op_def neg_part_op_def)
+  by (metis (no_types, opaque_lifting) Extra_Ordered_Fields.sign_simps(2) Extra_Ordered_Fields.sign_simps(8) arithmetic_simps(50) cblinfun_assoc_left(3) ordered_field_class.sign_simps(11) scaleR_2 scaleR_half_double scaleR_left_commute scaleR_right_diff_distrib verit_minus_simplify(1))
+
+lemma abs_op_decomp_pos_neg: \<open>pos_part_op a + neg_part_op a = abs_op a\<close>
+  apply (auto simp: pos_part_op_def neg_part_op_def)
+  by (metis (no_types, opaque_lifting) Extra_Ordered_Fields.sign_simps(2) Extra_Ordered_Fields.sign_simps(8) add_diff_cancel_left' scaleR_half_double scaleR_right_distrib)
+
+lemma pos_part_op_leq_abs_op: \<open>pos_part_op a \<le> abs_op a\<close>
+proof -
+  have \<open>pos_part_op a - abs_op a = (a - abs_op a) /\<^sub>R 2\<close>
+    apply (auto simp: pos_part_op_def)
+    by (metis (no_types, lifting) Extra_Ordered_Fields.sign_simps(7) add_diff_cancel_left' scaleR_half_double scaleR_right_diff_distrib)
+  also have \<open>\<dots> \<le> (abs_op a - abs_op a) /\<^sub>R 2\<close>
+    apply (intro scaleR_left_mono diff_right_mono)
+    by auto
+  also have \<open>\<dots> = 0\<close>
+    by simp
+  finally show ?thesis
+    by simp
+qed
+
+lemma pos_part_op_uminus[simp]: \<open>pos_part_op (-a) = neg_part_op a\<close>
+  by (simp add: pos_part_op_def neg_part_op_def)
+
+lemma neg_part_op_uminus[simp]: \<open>neg_part_op (-a) = pos_part_op a\<close>
+  by (simp add: pos_part_op_def neg_part_op_def)
+
+lemma neg_part_op_leq_abs_op: \<open>neg_part_op a \<le> abs_op a\<close>
+  using pos_part_op_leq_abs_op[of \<open>-a\<close>]
+  by simp
+
+lemma cmod_distrib_plus: \<open>a \<ge> 0 \<Longrightarrow> b \<ge> 0 \<Longrightarrow> cmod (a + b) = cmod a + cmod b\<close>
+  by (simp add: cmod_Re)
+
+lemma pos_part_op_pos[simp]: \<open>pos_part_op a \<ge> 0\<close>
+  by (metis abs_op_decomp_pos_neg le_add_same_cancel2 neg_part_op_leq_abs_op)
+
+lemma neg_part_op_pos[simp]: \<open>neg_part_op a \<ge> 0\<close>
+  by (metis pos_part_op_pos pos_part_op_uminus)
+
+lemma cmod_cinner_leq_cmod_cinner_abs: \<open>cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<psi>)) \<le> cmod (\<psi> \<bullet>\<^sub>C (abs_op a *\<^sub>V \<psi>))\<close>
+proof -
+  have \<open>cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<psi>)) = cmod (\<psi> \<bullet>\<^sub>C (pos_part_op a *\<^sub>V \<psi>) - \<psi> \<bullet>\<^sub>C (neg_part_op a *\<^sub>V \<psi>))\<close>
+    by (metis cinner_simps(3) minus_cblinfun.rep_eq op_decomp_pos_neg)
+  also have \<open>\<dots> \<le> cmod (\<psi> \<bullet>\<^sub>C (pos_part_op a *\<^sub>V \<psi>)) + cmod (\<psi> \<bullet>\<^sub>C (neg_part_op a *\<^sub>V \<psi>))\<close>
+    using norm_triangle_ineq4 by blast
+  also have \<open>\<dots> = cmod (\<psi> \<bullet>\<^sub>C (pos_part_op a *\<^sub>V \<psi>) + \<psi> \<bullet>\<^sub>C (neg_part_op a *\<^sub>V \<psi>))\<close>
+    by (intro cmod_distrib_plus[symmetric] cinner_pos_if_pos pos_part_op_pos neg_part_op_pos)
+  also have \<open>\<dots> = cmod (\<psi> \<bullet>\<^sub>C (abs_op a *\<^sub>V \<psi>))\<close>
+    by (metis abs_op_decomp_pos_neg cblinfun.add_left cinner_simps(2))
+  finally show ?thesis
+    by -
+qed
+
 
 (* TODO better name *)
 lemma trace_partial_trace_compose: \<open>trace (from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) = trace (from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close>
@@ -1428,26 +1509,27 @@ proof -
     proof (rule abs_summable_on_comparison_test, rename_tac j)
       fix j
       define n where \<open>n = trace_norm (from_trace_class (u j) o\<^sub>C\<^sub>L x)\<close>
-      have **: \<open>cmod (u' e j) \<le> cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))\<close> for e
-        by -
+      have u'_leq_absux: \<open>cmod (u' e j) \<le> cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))\<close> for e
+        using cmod_cinner_leq_cmod_cinner_abs[where \<psi>=\<open>ket e\<close> and a=\<open>from_trace_class (u j) o\<^sub>C\<^sub>L x\<close>]
+        by (simp add: u'_def)
       have \<open>has_sum (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V e))) (range ket) n\<close>
         unfolding n_def
         by (smt (verit) has_sum_cong has_sum_infsum is_onb_ket trace_class_comp_left trace_class_def trace_class_from_trace_class trace_norm_alt_def trace_norm_basis_invariance)
       then have \<open>has_sum (\<lambda>e. cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))) UNIV n\<close>
         apply (subst (asm) has_sum_reindex)
         by (auto simp: o_def)
-      then have \<open>(\<lambda>e. cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))) abs_summable_on UNIV\<close>
+      then have cmod_absux_abssum: \<open>(\<lambda>e. cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))) abs_summable_on UNIV\<close>
         and *: \<open>(\<Sum>\<^sub>\<infinity>e. cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))) = n\<close>
         using summable_on_def infsumI by (auto, blast)
-      from this(1) have \<open>(\<lambda>e. cmod (u' e j)) abs_summable_on UNIV\<close>
+      from this(1) have cmod_u'_abssum: \<open>(\<lambda>e. cmod (u' e j)) abs_summable_on UNIV\<close>
         apply (rule abs_summable_on_comparison_test)
-        using ** by (auto simp: u'_def)
-      have \<open>norm (\<Sum>\<^sub>\<infinity>e. cmod (u' e j)) \<le> n\<close>
+        using u'_leq_absux by (auto simp: u'_def)
+      have \<open>(\<Sum>\<^sub>\<infinity>e. cmod (u' e j)) \<le> n\<close>
         unfolding *[symmetric]
-        using **
-        by -
+        apply (rule infsum_mono)
+        using cmod_u'_abssum cmod_absux_abssum u'_leq_absux by auto
       then show \<open>norm (\<Sum>\<^sub>\<infinity>e. cmod (u' e j)) \<le> norm n\<close>
-        by auto
+        by (simp add: infsum_nonneg)
     qed
     moreover have \<open>(\<lambda>e. u' e j) abs_summable_on UNIV\<close> for j
       using trace_exists[OF is_onb_ket tc_u_x]
@@ -2061,9 +2143,9 @@ proof -
     show \<open>norm (F a) = norm a\<close>
       using \<open>unitary U\<close> by (simp add: FU sandwich_def norm_isometry_o norm_isometry_o' tensor_op_norm)
   qed
-  (* note this[cancel_with_type] *)
+  note this[cancel_with_type]
   then show ?thesis
-    sorry
+    by simp
 qed
 
 lemma commutant_exchange:
