@@ -1379,7 +1379,11 @@ proof (rule field_le_epsilon)
     using complex_of_real_mono_iff by blast
 qed
 
-lemma abs_op_increasing[simp]: \<open>a \<le> abs_op a\<close>
+
+lemma cmod_distrib_plus: \<open>a \<ge> 0 \<Longrightarrow> b \<ge> 0 \<Longrightarrow> cmod (a + b) = cmod a + cmod b\<close>
+  by (simp add: cmod_Re)
+
+(* lemma abs_op_increasing[simp]: \<open>a \<le> abs_op a\<close> (* WRONG unless a is Hermitian *)
   by -
 
 definition \<open>pos_part_op a = (abs_op a + a) /\<^sub>R 2\<close>
@@ -1417,16 +1421,14 @@ lemma neg_part_op_leq_abs_op: \<open>neg_part_op a \<le> abs_op a\<close>
   using pos_part_op_leq_abs_op[of \<open>-a\<close>]
   by simp
 
-lemma cmod_distrib_plus: \<open>a \<ge> 0 \<Longrightarrow> b \<ge> 0 \<Longrightarrow> cmod (a + b) = cmod a + cmod b\<close>
-  by (simp add: cmod_Re)
-
 lemma pos_part_op_pos[simp]: \<open>pos_part_op a \<ge> 0\<close>
   by (metis abs_op_decomp_pos_neg le_add_same_cancel2 neg_part_op_leq_abs_op)
 
 lemma neg_part_op_pos[simp]: \<open>neg_part_op a \<ge> 0\<close>
-  by (metis pos_part_op_pos pos_part_op_uminus)
+  by (metis pos_part_op_pos pos_part_op_uminus) *)
 
-lemma cmod_cinner_leq_cmod_cinner_abs: \<open>cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<psi>)) \<le> cmod (\<psi> \<bullet>\<^sub>C (abs_op a *\<^sub>V \<psi>))\<close>
+(* FALSE for non hermitian a! See quicksheets 2022, p.217 *)
+(* lemma cmod_cinner_leq_cmod_cinner_abs: \<open>cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<psi>)) \<le> cmod (\<psi> \<bullet>\<^sub>C (abs_op a *\<^sub>V \<psi>))\<close>
 proof -
   have \<open>cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<psi>)) = cmod (\<psi> \<bullet>\<^sub>C (pos_part_op a *\<^sub>V \<psi>) - \<psi> \<bullet>\<^sub>C (neg_part_op a *\<^sub>V \<psi>))\<close>
     by (metis cinner_simps(3) minus_cblinfun.rep_eq op_decomp_pos_neg)
@@ -1438,7 +1440,7 @@ proof -
     by (metis abs_op_decomp_pos_neg cblinfun.add_left cinner_simps(2))
   finally show ?thesis
     by -
-qed
+qed *)
 
 
 (* TODO better name *)
@@ -1510,6 +1512,7 @@ proof -
       fix j
       define n where \<open>n = trace_norm (from_trace_class (u j) o\<^sub>C\<^sub>L x)\<close>
       have u'_leq_absux: \<open>cmod (u' e j) \<le> cmod (ket e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V ket e))\<close> for e
+        (* Might be false? *)
         using cmod_cinner_leq_cmod_cinner_abs[where \<psi>=\<open>ket e\<close> and a=\<open>from_trace_class (u j) o\<^sub>C\<^sub>L x\<close>]
         by (simp add: u'_def)
       have \<open>has_sum (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op (from_trace_class (u j) o\<^sub>C\<^sub>L x) *\<^sub>V e))) (range ket) n\<close>
