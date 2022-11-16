@@ -2402,8 +2402,23 @@ proof (subst is_onb_def, intro conjI ballI)
     using \<open>is_onb A\<close> \<open>is_onb B\<close> by (auto simp: is_onb_def norm_tensor_ell2)
 qed
 
+lemma swap_tensor_op[simp]: \<open>swap_ell2 o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o b) o\<^sub>C\<^sub>L swap_ell2 = b \<otimes>\<^sub>o a\<close>
+  by (auto intro!: equal_ket simp add: tensor_op_ell2 simp flip: tensor_ell2_ket)
+
 lemma trace_class_tensor_op_swap: \<open>trace_class (a \<otimes>\<^sub>o b) \<longleftrightarrow> trace_class (b \<otimes>\<^sub>o a)\<close>
-  sorry
+proof (rule iffI)
+  assume \<open>trace_class (a \<otimes>\<^sub>o b)\<close>
+  then have \<open>trace_class (swap_ell2 o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o b) o\<^sub>C\<^sub>L swap_ell2)\<close>
+    using trace_class_comp_left trace_class_comp_right by blast
+  then show \<open>trace_class (b \<otimes>\<^sub>o a)\<close>
+    by simp
+next
+  assume \<open>trace_class (b \<otimes>\<^sub>o a)\<close>
+  then have \<open>trace_class (swap_ell2 o\<^sub>C\<^sub>L (b \<otimes>\<^sub>o a) o\<^sub>C\<^sub>L swap_ell2)\<close>
+    using trace_class_comp_left trace_class_comp_right by blast
+  then show \<open>trace_class (a \<otimes>\<^sub>o b)\<close>
+    by simp
+qed
 
 lemma trace_class_tensor_iff: \<open>trace_class (a \<otimes>\<^sub>o b) \<longleftrightarrow> (trace_class a \<and> trace_class b) \<or> a = 0 \<or> b = 0\<close>
 proof (intro iffI)
