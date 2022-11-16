@@ -2,6 +2,11 @@ theory Partial_Trace
   imports Trace_Class Hilbert_Space_Tensor_Product
 begin
 
+hide_fact (open) Infinite_Set_Sum.abs_summable_on_Sigma_iff
+hide_fact (open) Infinite_Set_Sum.abs_summable_on_comparison_test
+hide_const (open) Determinants.trace
+hide_fact (open) Determinants.trace_def
+
 definition partial_trace :: \<open>(('a \<times> 'c) ell2, ('b \<times> 'c) ell2) trace_class \<Rightarrow> ('a ell2, 'b ell2) trace_class\<close> where
   \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))))\<close>
 
@@ -166,6 +171,118 @@ lemma partial_trace_transfer[transfer_rule]:
   shows \<open>(cr_trace_class ===> cr_trace_class) partial_trace' partial_trace\<close>
   by (auto intro!: rel_funI simp: cr_trace_class_def partial_trace'_def from_trace_class_inverse) *)
 
+
+lemma trace_partial_trace_compose_eq_trace_compose_tensor_id: 
+  \<open>trace (from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) = trace (from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close>
+proof -
+  define s where \<open>s = trace (from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x)\<close>
+  define s' where \<open>s' e = ket e \<bullet>\<^sub>C ((from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) *\<^sub>V ket e)\<close> for e
+  define u where \<open>u j = Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))\<close> for j
+  define u' where \<open>u' e j = ket e \<bullet>\<^sub>C (from_trace_class (u j) *\<^sub>V x *\<^sub>V ket e)\<close> for e j
+  have \<open>has_sum u UNIV (partial_trace t)\<close>
+    using partial_trace_has_sum[of t]
+    by (simp add: u_def[abs_def])
+  then have \<open>has_sum ((\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e) o u) UNIV (from_trace_class (partial_trace t) *\<^sub>V x *\<^sub>V ket e)\<close> for e 
+  proof (rule has_sum_comm_additive[rotated -1])
+    show \<open>Modules.additive (\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e)\<close>
+      by (simp add: Modules.additive_def cblinfun.add_left plus_trace_class.rep_eq)
+    have bounded_clinear: \<open>bounded_clinear (\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e)\<close>
+    proof (rule bounded_clinearI[where K=\<open>norm (x *\<^sub>V ket e)\<close>])
+      show \<open>from_trace_class (b1 + b2) *\<^sub>V x *\<^sub>V ket e = from_trace_class b1 *\<^sub>V x *\<^sub>V ket e + from_trace_class b2 *\<^sub>V x *\<^sub>V ket e\<close> for b1 b2
+        by (simp add: plus_cblinfun.rep_eq plus_trace_class.rep_eq)
+      show \<open>from_trace_class (r *\<^sub>C b) *\<^sub>V x *\<^sub>V ket e = r *\<^sub>C (from_trace_class b *\<^sub>V x *\<^sub>V ket e)\<close> for b r
+        by (simp add: scaleC_trace_class.rep_eq)
+      show \<open>norm (from_trace_class t *\<^sub>V x *\<^sub>V ket e) \<le> norm t * norm (x *\<^sub>V ket e)\<close> for t
+      proof -
+        have \<open>norm (from_trace_class t *\<^sub>V x *\<^sub>V ket e) \<le> norm (from_trace_class t) * norm (x *\<^sub>V ket e)\<close>
+          by (simp add: norm_cblinfun)
+        also have \<open>\<dots> \<le> norm t * norm (x *\<^sub>V ket e)\<close>
+          by (auto intro!: mult_right_mono simp add: norm_leq_trace_norm norm_trace_class.rep_eq)
+        finally show ?thesis
+          by -
+      qed
+    qed
+    have \<open>isCont (\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e) (partial_trace t)\<close>
+      using bounded_clinear clinear_continuous_at by auto
+    then show \<open>(\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e) \<midarrow>partial_trace t\<rightarrow> from_trace_class (partial_trace t) *\<^sub>V x *\<^sub>V ket e\<close>
+      by (simp add: isCont_def)
+  qed
+  then have \<open>has_sum ((\<lambda>v. ket e \<bullet>\<^sub>C v) o ((\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e) o u)) UNIV (ket e \<bullet>\<^sub>C (from_trace_class (partial_trace t) *\<^sub>V x *\<^sub>V ket e))\<close> for e 
+  proof (rule has_sum_comm_additive[rotated -1])
+    show \<open>Modules.additive (\<lambda>v. ket e \<bullet>\<^sub>C v)\<close>
+      by (simp add: Modules.additive_def cinner_simps(2))
+    have bounded_clinear: \<open>bounded_clinear (\<lambda>v. ket e \<bullet>\<^sub>C v)\<close>
+      using bounded_clinear_cinner_right by auto
+    then have \<open>isCont (\<lambda>v. ket e \<bullet>\<^sub>C v) l\<close> for l
+      by simp
+    then show \<open>(\<lambda>v. ket e \<bullet>\<^sub>C v) \<midarrow>l\<rightarrow> ket e \<bullet>\<^sub>C l\<close> for l
+      by (simp add: isContD)
+  qed
+  then have has_sum_u': \<open>has_sum (\<lambda>j. u' e j) UNIV (s' e)\<close> for e 
+    by (simp add: o_def u'_def s'_def)
+  then have infsum_u': \<open>s' e = infsum (u' e) UNIV\<close> for e
+    by (metis infsumI)
+  have tc_u_x[simp]: \<open>trace_class (from_trace_class (u j) o\<^sub>C\<^sub>L x)\<close> for j
+    by (simp add: trace_class_comp_left)
+
+  have summable_u'_pairs: \<open>(\<lambda>(e, j). u' e j) summable_on UNIV \<times> UNIV\<close>
+  proof -
+    have \<open>trace_class (from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close>
+      by (simp add: trace_class_comp_left)
+    from trace_exists[OF is_onb_ket this]
+    have \<open>(\<lambda>ej. ket ej \<bullet>\<^sub>C (from_trace_class t *\<^sub>V (x \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket ej)) summable_on UNIV\<close>
+      by (simp_all add: summable_on_reindex o_def)
+    then show ?thesis
+      by (simp_all add: o_def u'_def[abs_def] u_def
+          trace_class_comp_left trace_class_comp_right Abs_trace_class_inverse tensor_ell2_right_apply 
+          ket_pair_split tensor_op_ell2 case_prod_unfold cinner_adj_right)
+  qed
+
+  have u'_tensor: \<open>u' e j = ket (e,j) \<bullet>\<^sub>C ((from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun)) *\<^sub>V ket (e,j))\<close> for e j
+    by (simp add: u'_def u_def tensor_op_ell2 tensor_ell2_right_apply  Abs_trace_class_inverse
+        trace_class_comp_left trace_class_comp_right cinner_adj_right
+        flip: tensor_ell2_ket)
+
+  have \<open>has_sum (\<lambda>e. e \<bullet>\<^sub>C ((from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) *\<^sub>V e)) (range ket) s\<close>
+    unfolding s_def
+    apply (rule trace_has_sum)
+    by (auto simp: trace_class_comp_left)
+  then have \<open>has_sum s' UNIV s\<close>
+    apply (subst (asm) has_sum_reindex)
+    by (auto simp: o_def s'_def[abs_def])
+  then have \<open>s = infsum s' UNIV\<close>
+    by (simp add: infsumI)
+  also have \<open>\<dots> = infsum (\<lambda>e. infsum (u' e) UNIV) UNIV\<close>
+    using infsum_u' by presburger
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(e, j)\<in>UNIV. u' e j)\<close>
+    apply (subst infsum_Sigma'_banach)
+     apply (rule summable_u'_pairs)
+    by simp
+  also have \<open>\<dots> = trace (from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun))\<close>
+    unfolding u'_tensor 
+    by (simp add: trace_ket_sum cond_case_prod_eta trace_class_comp_left)
+  finally show ?thesis
+    by (simp add: s_def)
+qed
+
+
+
+lemma amplification_weak_star_cont[simp]:
+  \<open>continuous_map weak_star_topology weak_star_topology (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)\<close>
+  \<comment> \<open>Logically does not belong in this theory but uses the partial trace in the proof.\<close>
+proof (unfold weak_star_topology_def', rule continuous_map_pullback_both)
+  show \<open>S \<subseteq> f -` UNIV\<close> for S :: \<open>'x set\<close> and f :: \<open>'x \<Rightarrow> 'y\<close>
+    by simp
+  define g' :: \<open>(('b ell2, 'a ell2) trace_class \<Rightarrow> complex) \<Rightarrow> (('b \<times> 'c) ell2, ('a \<times> 'c) ell2) trace_class \<Rightarrow> complex\<close> where
+    \<open>g' \<tau> t = \<tau> (partial_trace t)\<close> for \<tau> t
+  have \<open>continuous_on UNIV g'\<close>
+    by (simp add: continuous_on_coordinatewise_then_product g'_def)
+  then show \<open>continuous_map euclidean euclidean g'\<close>
+    using continuous_map_iff_continuous2 by blast
+  show \<open>g' (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) =
+         (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x \<otimes>\<^sub>o id_cblinfun))\<close> for x
+    by (auto intro!: ext simp: g'_def trace_partial_trace_compose_eq_trace_compose_tensor_id)
+qed
 
 end
 

@@ -69,6 +69,11 @@ proof -
     by auto
 qed    
 
+lemma finite_rank_sum: \<open>finite_rank (\<Sum>x\<in>F. f x)\<close> if \<open>\<And>x. x\<in>F \<Longrightarrow> finite_rank (f x)\<close>
+  using that apply (induction F rule:infinite_finite_induct)
+  by (auto intro!: finite_rank_plus)
+
+
 subsection \<open>Compact operators\<close>
 
 definition compact_op where \<open>compact_op A \<longleftrightarrow> A \<in> closure (Collect finite_rank)\<close>

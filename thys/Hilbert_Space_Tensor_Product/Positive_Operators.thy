@@ -932,4 +932,17 @@ lemma abs_opI:
   shows \<open>a = abs_op b\<close>
   by (simp add: abs_op_def assms(1) assms(2) sqrt_op_unique)
 
+lemma norm_abs_op[simp]: \<open>norm (abs_op a) = norm a\<close> 
+  for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+proof -
+  have \<open>(norm (abs_op a))\<^sup>2 = norm (abs_op a* o\<^sub>C\<^sub>L abs_op a)\<close>
+    by simp
+  also have \<open>\<dots> = norm (a* o\<^sub>C\<^sub>L a)\<close>
+    by (simp add: abs_op_def positive_cblinfun_squareI)
+  also have \<open>\<dots> = (norm a)\<^sup>2\<close>
+    by simp
+  finally show ?thesis
+    by simp
+qed
+
 end

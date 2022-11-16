@@ -3,6 +3,9 @@ section \<open>\<open>Hilbert_Space_Tensor_Product\<close> -- Tensor product of 
 theory Hilbert_Space_Tensor_Product
   imports Complex_Bounded_Operators.Complex_L2 (* Registers.Misc *) Misc_Tensor_Product
     Strong_Operator_Topology Polynomial_Interpolation.Ring_Hom
+
+    (* TODO: Consider moving things that depend on these elsewhere? *)
+    Positive_Operators Trace_Class Weak_Star_Topology
 begin
 
 unbundle cblinfun_notation
@@ -268,6 +271,45 @@ proof standard
   show \<open>\<exists>K. \<forall>a b. norm (tensor_ell2 a b) \<le> norm a * norm b * K \<close>
     apply (rule exI[of _ 1])
     by (simp add: norm_tensor_ell2)
+qed
+
+lemma ket_pair_split: \<open>ket x = tensor_ell2 (ket (fst x)) (ket (snd x))\<close>
+  by (simp add: tensor_ell2_ket)
+
+
+
+lemma tensor_ell2_is_ortho_set:
+  assumes \<open>is_ortho_set A\<close> \<open>is_ortho_set B\<close>
+  shows \<open>is_ortho_set {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B}\<close>
+  using assms unfolding is_ortho_set_def
+  apply auto
+   apply fast
+  by (metis tensor_ell2_nonzero)
+
+lemma tensor_ell2_is_onb:
+  assumes \<open>is_onb A\<close> \<open>is_onb B\<close>
+  shows \<open>is_onb {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B}\<close>
+proof (subst is_onb_def, intro conjI ballI)
+  show \<open>is_ortho_set {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B}\<close>
+    apply (rule tensor_ell2_is_ortho_set)
+    using assms by (auto simp: is_onb_def)
+  from \<open>is_onb A\<close>
+  have \<open>ccspan A = \<top>\<close>
+    by (simp add: is_onb_def)
+  then have Adense: \<open>closure (cspan A) = UNIV\<close>
+    apply (transfer' fixing: A)
+    by simp
+  from \<open>is_onb B\<close>
+  have \<open>ccspan B = \<top>\<close>
+    by (simp add: is_onb_def)
+  then have Bdense: \<open>closure (cspan B) = UNIV\<close>
+    apply (transfer' fixing: B)
+    by simp
+  show \<open>ccspan {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B} = \<top>\<close>
+    apply (transfer fixing: A B)
+    using Adense Bdense by (rule tensor_ell2_dense)
+  show \<open>ab \<in> {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B} \<Longrightarrow> norm ab = 1\<close> for ab
+    using \<open>is_onb A\<close> \<open>is_onb B\<close> by (auto simp: is_onb_def norm_tensor_ell2)
 qed
 
 subsection \<open>Tensor product of operators on \<^typ>\<open>_ ell2\<close>\<close>
@@ -1224,6 +1266,182 @@ proof -
   then show ?thesis
     by (auto simp: d_def)
 qed
+
+
+(* TODO cite [register paper], Lemma 17 *)
+lemma tensor_op_pos: \<open>a \<otimes>\<^sub>o b \<ge> 0\<close> if [simp]: \<open>a \<ge> 0\<close> \<open>b \<ge> 0\<close>
+  for a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+proof -
+  have \<open>(sqrt_op a \<otimes>\<^sub>o sqrt_op b)* o\<^sub>C\<^sub>L (sqrt_op a \<otimes>\<^sub>o sqrt_op b) = a \<otimes>\<^sub>o b\<close>
+    by (simp add: tensor_op_adjoint comp_tensor_op)
+  then show \<open>a \<otimes>\<^sub>o b \<ge> 0\<close>
+    by (metis positive_cblinfun_squareI)
+qed
+
+(* TODO cite [register paper], Lemma 17 *)
+lemma abs_op_tensor: \<open>abs_op (a \<otimes>\<^sub>o b) = abs_op a \<otimes>\<^sub>o abs_op b\<close>
+proof -
+  have \<open>(abs_op a \<otimes>\<^sub>o abs_op b)* o\<^sub>C\<^sub>L (abs_op a \<otimes>\<^sub>o abs_op b) = (a \<otimes>\<^sub>o b)* o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o b)\<close>
+    by (simp add: tensor_op_adjoint comp_tensor_op abs_op_def positive_cblinfun_squareI)
+  then show ?thesis
+    by (metis abs_opI abs_op_pos tensor_op_pos)
+qed
+
+(* TODO cite [register paper], Lemma 31 *)
+lemma trace_class_tensor: \<open>trace_class (a \<otimes>\<^sub>o b)\<close> if \<open>trace_class a\<close> and \<open>trace_class b\<close>
+proof -
+  from \<open>trace_class a\<close>
+  have a: \<open>(\<lambda>x. ket x \<bullet>\<^sub>C (abs_op a *\<^sub>V ket x)) abs_summable_on UNIV\<close>
+    by (auto simp add: trace_class_iff_summable[OF is_onb_ket] summable_on_reindex o_def)
+  from \<open>trace_class b\<close>
+  have b: \<open>(\<lambda>y. ket y \<bullet>\<^sub>C (abs_op b *\<^sub>V ket y)) abs_summable_on UNIV\<close>
+    by (auto simp add: trace_class_iff_summable[OF is_onb_ket] summable_on_reindex o_def)
+  from a b have \<open>(\<lambda>(x,y). (ket x \<bullet>\<^sub>C (abs_op a *\<^sub>V ket x)) * (ket y \<bullet>\<^sub>C (abs_op b *\<^sub>V ket y))) abs_summable_on UNIV \<times> UNIV\<close>
+    by (rule abs_summable_times)
+  then have \<open>(\<lambda>(x,y). (ket x \<otimes>\<^sub>s ket y) \<bullet>\<^sub>C ((abs_op a \<otimes>\<^sub>o abs_op b) *\<^sub>V (ket x \<otimes>\<^sub>s ket y))) abs_summable_on UNIV \<times> UNIV\<close>
+    by (simp add: tensor_op_ell2 case_prod_unfold flip: tensor_ell2_ket)
+  then have \<open>(\<lambda>xy. ket xy \<bullet>\<^sub>C ((abs_op a \<otimes>\<^sub>o abs_op b) *\<^sub>V ket xy)) abs_summable_on UNIV\<close>
+    by (simp add: case_prod_beta tensor_ell2_ket)
+  then have \<open>(\<lambda>xy. ket xy \<bullet>\<^sub>C (abs_op (a \<otimes>\<^sub>o b) *\<^sub>V ket xy)) abs_summable_on UNIV\<close>
+    by (simp add: abs_op_tensor)
+  then show \<open>trace_class (a \<otimes>\<^sub>o b)\<close>
+    by (auto simp add: trace_class_iff_summable[OF is_onb_ket] summable_on_reindex o_def)
+qed
+
+lemma swap_tensor_op[simp]: \<open>swap_ell2 o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o b) o\<^sub>C\<^sub>L swap_ell2 = b \<otimes>\<^sub>o a\<close>
+  by (auto intro!: equal_ket simp add: tensor_op_ell2 simp flip: tensor_ell2_ket)
+
+lemma trace_class_tensor_op_swap: \<open>trace_class (a \<otimes>\<^sub>o b) \<longleftrightarrow> trace_class (b \<otimes>\<^sub>o a)\<close>
+proof (rule iffI)
+  assume \<open>trace_class (a \<otimes>\<^sub>o b)\<close>
+  then have \<open>trace_class (swap_ell2 o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o b) o\<^sub>C\<^sub>L swap_ell2)\<close>
+    using trace_class_comp_left trace_class_comp_right by blast
+  then show \<open>trace_class (b \<otimes>\<^sub>o a)\<close>
+    by simp
+next
+  assume \<open>trace_class (b \<otimes>\<^sub>o a)\<close>
+  then have \<open>trace_class (swap_ell2 o\<^sub>C\<^sub>L (b \<otimes>\<^sub>o a) o\<^sub>C\<^sub>L swap_ell2)\<close>
+    using trace_class_comp_left trace_class_comp_right by blast
+  then show \<open>trace_class (a \<otimes>\<^sub>o b)\<close>
+    by simp
+qed
+
+
+lemma trace_class_tensor_iff: \<open>trace_class (a \<otimes>\<^sub>o b) \<longleftrightarrow> (trace_class a \<and> trace_class b) \<or> a = 0 \<or> b = 0\<close>
+proof (intro iffI)
+  show \<open>trace_class a \<and> trace_class b \<or> a = 0 \<or> b = 0 \<Longrightarrow> trace_class (a \<otimes>\<^sub>o b)\<close>
+    by (auto simp add: trace_class_tensor)
+  show \<open>trace_class a \<and> trace_class b \<or> a = 0 \<or> b = 0\<close> if \<open>trace_class (a \<otimes>\<^sub>o b)\<close>
+  proof (cases \<open>a = 0 \<or> b = 0\<close>)
+    case True
+    then show ?thesis
+      by simp
+  next
+    case False
+    then have \<open>a \<noteq> 0\<close> and \<open>b \<noteq> 0\<close>
+      by auto
+    have *: \<open>trace_class a\<close> if \<open>trace_class (a \<otimes>\<^sub>o b)\<close> and \<open>b \<noteq> 0\<close> for a :: \<open>'e ell2 \<Rightarrow>\<^sub>C\<^sub>L 'g ell2\<close> and b :: \<open>'f ell2 \<Rightarrow>\<^sub>C\<^sub>L 'h ell2\<close>
+    proof -
+      from \<open>b \<noteq> 0\<close> have \<open>abs_op b \<noteq> 0\<close>
+        using abs_op_nondegenerate by blast
+      then obtain \<psi>0 where \<psi>0: \<open>\<psi>0 \<bullet>\<^sub>C (abs_op b *\<^sub>V \<psi>0) \<noteq> 0\<close>
+        by (metis cblinfun.zero_left cblinfun_cinner_eqI cinner_zero_right)
+      define \<psi> where \<open>\<psi> = sgn \<psi>0\<close>
+      with \<psi>0 have \<open>\<psi> \<bullet>\<^sub>C (abs_op b *\<^sub>V \<psi>) \<noteq> 0\<close> and \<open>norm \<psi> = 1\<close>
+         apply (auto simp add: \<psi>_def norm_sgn)
+        by (simp add: sgn_div_norm cblinfun.scaleR_right)
+      then have \<open>\<exists>B. {\<psi>} \<subseteq> B \<and> is_onb B\<close>
+        apply (rule_tac orthonormal_basis_exists)
+        by auto
+      then obtain B where [simp]: \<open>is_onb B\<close> and \<open>\<psi> \<in> B\<close>
+        by auto
+      define A :: \<open>'e ell2 set\<close> where \<open>A = range ket\<close>      
+      then have [simp]: \<open>is_onb A\<close> by simp
+      with \<open>is_onb B\<close> have \<open>is_onb {\<alpha> \<otimes>\<^sub>s \<beta> |\<alpha> \<beta>. \<alpha> \<in> A \<and> \<beta> \<in> B}\<close>
+        by (simp add: tensor_ell2_is_onb)
+      with \<open>trace_class (a \<otimes>\<^sub>o b)\<close>
+      have \<open>(\<lambda>\<gamma>. \<gamma> \<bullet>\<^sub>C (abs_op (a \<otimes>\<^sub>o b) *\<^sub>V \<gamma>)) abs_summable_on {\<alpha> \<otimes>\<^sub>s \<beta> |\<alpha> \<beta>. \<alpha> \<in> A \<and> \<beta> \<in> B}\<close>
+        using trace_class_iff_summable by auto
+      then have \<open>(\<lambda>\<gamma>. \<gamma> \<bullet>\<^sub>C (abs_op (a \<otimes>\<^sub>o b) *\<^sub>V \<gamma>)) abs_summable_on (\<lambda>\<alpha>. \<alpha> \<otimes>\<^sub>s \<psi>) ` A\<close>
+        apply (rule summable_on_subset_banach)
+        using \<open>\<psi> \<in> B\<close> by blast
+      then have \<open>(\<lambda>\<alpha>. (\<alpha> \<otimes>\<^sub>s \<psi>) \<bullet>\<^sub>C (abs_op (a \<otimes>\<^sub>o b) *\<^sub>V (\<alpha> \<otimes>\<^sub>s \<psi>))) abs_summable_on A\<close>
+        apply (subst (asm) summable_on_reindex)
+         apply (metis UNIV_I \<open>norm \<psi> = 1\<close> inj_on_subset inj_tensor_ell2_left norm_le_zero_iff not_one_le_zero subset_iff)
+        by (simp add: o_def)
+      then have \<open>(\<lambda>\<alpha>. norm (\<alpha> \<bullet>\<^sub>C (abs_op a *\<^sub>V \<alpha>)) * norm (\<psi> \<bullet>\<^sub>C (abs_op b *\<^sub>V \<psi>))) summable_on A\<close>
+        by (simp add: abs_op_tensor tensor_op_ell2 norm_mult)
+      then have \<open>(\<lambda>\<alpha>. \<alpha> \<bullet>\<^sub>C (abs_op a *\<^sub>V \<alpha>)) abs_summable_on A\<close>
+        apply (rule summable_on_cmult_left'[THEN iffD1, rotated])
+        using \<open>\<psi> \<bullet>\<^sub>C (abs_op b *\<^sub>V \<psi>) \<noteq> 0\<close> norm_eq_zero by blast
+      then show \<open>trace_class a\<close>
+        using \<open>is_onb A\<close> trace_classI by blast
+    qed
+    from *[of a b] \<open>b \<noteq> 0\<close> \<open>trace_class (a \<otimes>\<^sub>o b)\<close> have \<open>trace_class a\<close>
+      by simp
+    have \<open>trace_class (b \<otimes>\<^sub>o a)\<close>
+      using that trace_class_tensor_op_swap by blast
+    from *[of b a] \<open>a \<noteq> 0\<close> \<open>trace_class (b \<otimes>\<^sub>o a)\<close> have \<open>trace_class b\<close>
+      by simp
+    from \<open>trace_class a\<close> \<open>trace_class b\<close> show ?thesis
+      by simp
+  qed
+qed
+
+
+(* TODO cite [register paper], Lemma 31 *)
+lemma trace_tensor: \<open>trace (a \<otimes>\<^sub>o b) = trace a * trace b\<close>
+(* TODO nice candidate for wlog demo *)
+proof -
+  consider (tc) \<open>trace_class a\<close> \<open>trace_class b\<close> | (zero) \<open>a = 0 \<or> b = 0\<close> | (nota) \<open>a \<noteq> 0\<close> \<open>b \<noteq> 0\<close> \<open>\<not> trace_class a\<close> | (notb) \<open>a \<noteq> 0\<close> \<open>b \<noteq> 0\<close> \<open>\<not> trace_class b\<close>
+    by blast
+  then show ?thesis
+  proof cases
+    case tc
+    then have *: \<open>trace_class (a \<otimes>\<^sub>o b)\<close>
+      by (simp add: trace_class_tensor)
+    have sum: \<open>(\<lambda>(x, y). ket (x, y) \<bullet>\<^sub>C ((a \<otimes>\<^sub>o b) *\<^sub>V ket (x, y))) summable_on UNIV\<close>
+      using trace_exists[OF is_onb_ket *]
+      by (simp_all add: o_def case_prod_unfold summable_on_reindex)
+
+    have \<open>trace a * trace b = (\<Sum>\<^sub>\<infinity>x. \<Sum>\<^sub>\<infinity>y. ket x \<bullet>\<^sub>C (a *\<^sub>V ket x) * (ket y \<bullet>\<^sub>C (b *\<^sub>V ket y)))\<close>
+      apply (simp add: trace_ket_sum tc flip: infsum_cmult_left')
+      by (simp flip: infsum_cmult_right')
+    also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>x. \<Sum>\<^sub>\<infinity>y. ket (x,y) \<bullet>\<^sub>C ((a \<otimes>\<^sub>o b) *\<^sub>V ket (x,y)))\<close>
+      by (simp add: tensor_op_ell2 flip: tensor_ell2_ket)
+    also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>xy\<in>UNIV. ket xy \<bullet>\<^sub>C ((a \<otimes>\<^sub>o b) *\<^sub>V ket xy))\<close>
+      apply (simp add: sum infsum_Sigma'_banach)
+      by (simp add: case_prod_unfold)
+    also have \<open>\<dots> = trace (a \<otimes>\<^sub>o b)\<close>
+      by (simp add: "*" trace_ket_sum)
+    finally show ?thesis 
+      by simp
+  next
+    case zero
+    then show ?thesis by auto
+  next
+    case nota
+    then have [simp]: \<open>trace a = 0\<close>
+      unfolding trace_def by simp
+    from nota have \<open>\<not> trace_class (a \<otimes>\<^sub>o b)\<close>
+      by (simp add: trace_class_tensor_iff)
+    then have [simp]: \<open>trace (a \<otimes>\<^sub>o b) = 0\<close>
+      unfolding trace_def by simp
+    show ?thesis 
+      by simp
+  next
+    case notb
+    then have [simp]: \<open>trace b = 0\<close>
+      unfolding trace_def by simp
+    from notb have \<open>\<not> trace_class (a \<otimes>\<^sub>o b)\<close>
+      by (simp add: trace_class_tensor_iff)
+    then have [simp]: \<open>trace (a \<otimes>\<^sub>o b) = 0\<close>
+      unfolding trace_def by simp
+    show ?thesis 
+      by simp
+  qed
+qed
+
 
 
 end

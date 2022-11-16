@@ -381,6 +381,8 @@ typedef (overloaded) ('a::chilbert_space, 'b::chilbert_space) trace_class = \<op
   by (auto intro!: exI[of _ 0])
 setup_lifting type_definition_trace_class
 
+lemma trace_class_from_trace_class[simp]: \<open>trace_class (from_trace_class t)\<close>
+  using from_trace_class by blast
 
 lemma trace_pos: \<open>trace a \<ge> 0\<close> if \<open>a \<ge> 0\<close>
   by (metis abs_op_def complex_of_real_nn_iff sqrt_op_unique that trace_abs_op trace_norm_nneg)
@@ -1094,6 +1096,13 @@ proof -
   qed
 qed
 
+lemma trace_ket_sum:
+  fixes A :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
+  assumes \<open>trace_class A\<close>
+  shows \<open>trace A = (\<Sum>\<^sub>\<infinity>e. ket e \<bullet>\<^sub>C (A *\<^sub>V ket e))\<close>
+  apply (subst infsum_reindex[where h=ket, unfolded o_def, symmetric])
+  by (auto simp: \<open>trace_class A\<close>  trace_alt_def[OF is_onb_ket] is_onb_ket)
+
 lemma trace_one_dim[simp]: \<open>trace A = one_dim_iso A\<close> for A :: \<open>'a::one_dim \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
 proof -
   have onb: \<open>is_onb {1 :: 'a}\<close>
@@ -1557,6 +1566,9 @@ proof standard
 qed
 end
 
+lemma from_trace_class_0[simp]: \<open>from_trace_class 0 = 0\<close>
+  by (simp add: zero_trace_class.rep_eq)
+
 instantiation trace_class :: (chilbert_space, chilbert_space) "{complex_normed_vector}" begin
 (* Definitions related to the trace norm *)
 lift_definition norm_trace_class :: \<open>('a,'b) trace_class \<Rightarrow> real\<close> is trace_norm .
@@ -1930,17 +1942,94 @@ proof
 qed
 
 
-lemma trace_class_from_trace_class[simp]: \<open>trace_class (from_trace_class t)\<close>
-  using from_trace_class by blast
 
-lemma from_trace_class_0[simp]: \<open>from_trace_class 0 = 0\<close>
-  by (simp add: zero_trace_class.rep_eq)
+lemma trace_norm_geq_cinner_abs_op: \<open>\<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>) \<le> trace_norm t\<close> if \<open>trace_class t\<close> and \<open>norm \<psi> = 1\<close>
+proof -
+  have \<open>\<exists>B. {\<psi>} \<subseteq> B \<and> is_onb B\<close>
+    apply (rule orthonormal_basis_exists)
+    using \<open>norm \<psi> = 1\<close>
+    by auto
+  then obtain B where \<open>is_onb B\<close> and \<open>\<psi> \<in> B\<close>
+    by auto
 
-lemma trace_ket_sum:
-  fixes A :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
-  assumes \<open>trace_class A\<close>
-  shows \<open>trace A = (\<Sum>\<^sub>\<infinity>e. ket e \<bullet>\<^sub>C (A *\<^sub>V ket e))\<close>
-  apply (subst infsum_reindex[where h=ket, unfolded o_def, symmetric])
-  by (auto simp: \<open>trace_class A\<close>  trace_alt_def[OF is_onb_ket] is_onb_ket)
+  have \<open>\<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>) = (\<Sum>\<^sub>\<infinity>\<psi>\<in>{\<psi>}. \<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>))\<close>
+    by simp
+  also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>\<psi>\<in>B. \<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>))\<close>
+    apply (rule infsum_mono_neutral_complex)
+    using \<open>\<psi> \<in> B\<close> \<open>is_onb B\<close> that
+    by (auto simp add: trace_exists cinner_pos_if_pos)
+  also have \<open>\<dots> = trace_norm t\<close>
+    using \<open>is_onb B\<close> that
+    by (metis trace_abs_op trace_alt_def trace_class_abs_op)
+  finally show ?thesis
+    by -
+qed
+
+lemma norm_leq_trace_norm: \<open>norm t \<le> trace_norm t\<close> if \<open>trace_class t\<close> 
+  for t :: \<open>'a::{chilbert_space,not_singleton} \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close> (* TODO get rid of "not_singleton" *)
+proof (rule field_le_epsilon)
+  fix \<epsilon> :: real assume \<open>\<epsilon> > 0\<close>
+
+  define \<delta> :: real where 
+    \<open>\<delta> = min (sqrt (\<epsilon> / 2)) (\<epsilon> / (4 * (norm (sqrt_op (abs_op t)) + 1)))\<close>
+  have \<open>\<delta> > 0\<close>
+    using \<open>\<epsilon> > 0\<close> apply (auto simp add: \<delta>_def)
+    by (smt (verit) norm_not_less_zero zero_less_divide_iff)
+  have \<delta>_small: \<open>\<delta>\<^sup>2 + 2 * norm (sqrt_op (abs_op t)) * \<delta> \<le> \<epsilon>\<close>
+  proof -
+    define n where \<open>n = norm (sqrt_op (abs_op t))\<close>
+    then have \<open>n \<ge> 0\<close>
+      by simp
+    have \<delta>: \<open>\<delta> = min (sqrt (\<epsilon> / 2)) (\<epsilon> / (4 * (n + 1)))\<close>
+      by (simp add: \<delta>_def n_def)
+
+    have \<open>\<delta>\<^sup>2 + 2 * n * \<delta> \<le> \<epsilon> / 2 + 2 * n * \<delta>\<close>
+      apply (rule add_right_mono)
+      apply (subst \<delta>) apply (subst min_power_distrib_left)
+      using \<open>\<epsilon> > 0\<close> \<open>n \<ge> 0\<close> by auto
+    also have \<open>\<dots> \<le> \<epsilon> / 2 + 2 * n * (\<epsilon> / (4 * (n + 1)))\<close>
+      apply (intro add_left_mono mult_left_mono)
+      by (simp_all add: \<delta> \<open>n \<ge> 0\<close>)
+    also have \<open>\<dots> = \<epsilon> / 2 + 2 * (n / (n+1)) * (\<epsilon> / 4)\<close>
+      by simp
+    also have \<open>\<dots> \<le> \<epsilon> / 2 + 2 * 1 * (\<epsilon> / 4)\<close>
+      apply (intro add_left_mono mult_left_mono mult_right_mono)
+      using \<open>n \<ge> 0\<close> \<open>\<epsilon> > 0\<close> by auto
+    also have \<open>\<dots> = \<epsilon>\<close>
+      by simp
+    finally show \<open>\<delta>\<^sup>2 + 2 * n * \<delta> \<le> \<epsilon>\<close>
+      by -
+  qed
+
+  from \<open>\<delta> > 0\<close> obtain \<psi> where \<psi>\<epsilon>: \<open>norm (sqrt_op (abs_op t)) - \<delta> \<le> norm (sqrt_op (abs_op t) *\<^sub>V \<psi>)\<close> and \<open>norm \<psi> = 1\<close>
+    apply atomize_elim by (rule cblinfun_norm_approx_witness)
+
+  have aux1: \<open>2 * complex_of_real x = complex_of_real (2 * x)\<close> for x
+    by simp
+
+  have \<open>complex_of_real (norm t) = norm (abs_op t)\<close>
+    by simp
+  also have \<open>\<dots> = (norm (sqrt_op (abs_op t)))\<^sup>2\<close>
+    by (simp flip: norm_AadjA)
+  also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>) + \<delta>)\<^sup>2\<close>
+    by (smt (verit) \<psi>\<epsilon> complex_of_real_mono norm_triangle_ineq4 norm_triangle_sub pos2 power_strict_mono)
+  also have \<open>\<dots> = (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>))\<^sup>2 + \<delta>\<^sup>2 + 2 * norm (sqrt_op (abs_op t) *\<^sub>V \<psi>) * \<delta>\<close>
+    by (simp add: power2_sum)
+  also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>))\<^sup>2 + \<delta>\<^sup>2 + 2 * norm (sqrt_op (abs_op t)) * \<delta>\<close>
+    apply (rule complex_of_real_mono_iff[THEN iffD2])
+    by (smt (z3) \<open>0 < \<delta>\<close> \<open>norm \<psi> = 1\<close> more_arith_simps(11) mult_less_cancel_right_disj norm_cblinfun one_power2 power2_eq_square)
+  also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>))\<^sup>2 + \<epsilon>\<close>
+    apply (rule complex_of_real_mono_iff[THEN iffD2])
+    using \<delta>_small by auto
+  also have \<open>\<dots> = ((sqrt_op (abs_op t) *\<^sub>V \<psi>) \<bullet>\<^sub>C (sqrt_op (abs_op t) *\<^sub>V \<psi>)) + \<epsilon>\<close>
+    by (simp add: cdot_square_norm)
+  also have \<open>\<dots> = (\<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>)) + \<epsilon>\<close>
+    by (simp flip: cinner_adj_right cblinfun_apply_cblinfun_compose)
+  also have \<open>\<dots> \<le> trace_norm t + \<epsilon>\<close>
+    using \<open>norm \<psi> = 1\<close> \<open>trace_class t\<close> by (auto simp add: trace_norm_geq_cinner_abs_op)
+  finally show \<open>norm t \<le> trace_norm t + \<epsilon>\<close>
+    using complex_of_real_mono_iff by blast
+qed
+
 
 end

@@ -1540,5 +1540,31 @@ lemma sum_cmod_pos:
   shows \<open>(\<Sum>x\<in>A. cmod (f x)) = cmod (\<Sum>x\<in>A. f x)\<close>
   by (metis (mono_tags, lifting) Re_sum assms cmod_Re sum.cong sum_nonneg)
 
+lemma min_power_distrib_left: \<open>(min x y) ^ n = min (x ^ n) (y ^ n)\<close> if \<open>x \<ge> 0\<close> and \<open>y \<ge> 0\<close> for x y :: \<open>_ :: linordered_semidom\<close>
+  by (metis linorder_le_cases min.absorb_iff2 min.order_iff power_mono that(1) that(2))
+
+lemma abs_summable_times: 
+  fixes f :: \<open>'a \<Rightarrow> 'c::{real_normed_algebra}\<close> and g :: \<open>'b \<Rightarrow> 'c\<close>
+  assumes sum_f: \<open>f abs_summable_on A\<close>
+  assumes sum_g: \<open>g abs_summable_on B\<close>
+  shows \<open>(\<lambda>(i,j). f i * g j) abs_summable_on A \<times> B\<close>
+proof -
+  have a1: \<open>(\<lambda>j. norm (f i) * norm (g j)) abs_summable_on B\<close> if \<open>i \<in> A\<close> for i
+    using sum_g by (simp add: summable_on_cmult_right)
+  then have a2: \<open>(\<lambda>j. f i * g j) abs_summable_on B\<close> if \<open>i \<in> A\<close> for i
+    apply (rule abs_summable_on_comparison_test)
+     apply (fact that)
+    by (simp add: norm_mult_ineq)
+  from sum_f
+  have \<open>(\<lambda>x. \<Sum>\<^sub>\<infinity>y\<in>B. norm (f x) * norm (g y)) abs_summable_on A\<close>
+    by (auto simp add: infsum_cmult_right' infsum_nonneg intro!: summable_on_cmult_left)
+  then have b1: \<open>(\<lambda>x. \<Sum>\<^sub>\<infinity>y\<in>B. norm (f x * g y)) abs_summable_on A\<close>
+    apply (rule abs_summable_on_comparison_test)
+    using a1 a2 by (simp_all add: norm_mult_ineq infsum_mono infsum_nonneg)
+  from a2 b1 show ?thesis
+    apply (rule_tac abs_summable_on_Sigma_iff[THEN iffD2])
+    by auto
+qed
+
 
 end
