@@ -1517,7 +1517,7 @@ definition \<open>opensets = Collect open\<close>
   \<comment> \<open>This behaves more nicely with the @{method transfer}-method (and friends) than \<^const>\<open>open\<close>.
       So when rewriting a subgoal, using, e.g., \<^term>\<open>\<exists>U\<in>opensets. xxx\<close> instead of \<^term>\<open>\<exists>U. open U \<longrightarrow> xxx\<close> can make @{method transfer} work better. \<close>
 
-lemma opensets_parametric[transfer_rule]:
+(* lemma opensets_parametric[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: \<open>bi_unique R\<close>
   assumes [transfer_rule]: \<open>(rel_set R ===> (\<longleftrightarrow>)) open open\<close>
@@ -1525,15 +1525,17 @@ lemma opensets_parametric[transfer_rule]:
   using assms apply (simp add: opensets_def rel_set_def )
   apply auto
 sorry
-
+ *)
 
 (* TODO move *)
 (* TODO reprove concrete nhds transfer rules with this (or drop them?) *)
-lemma nhds_parametric[transfer_rule]:
+(* lemma nhds_parametric[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: \<open>bi_unique R\<close>
   assumes [transfer_rule]: \<open>(rel_set R ===> (\<longleftrightarrow>)) open open\<close>
   shows \<open>(R ===> rel_filter R) nhds nhds\<close>
+  sorry
+ *)
 (* proof -
   have \<open>(R ===> rel_filter R) (\<lambda>a. \<Sqinter> (principal ` Set.filter ((\<in>) a) opensets)) (\<lambda>a. \<Sqinter> (principal ` Set.filter ((\<in>) a) opensets))\<close>
   show ?thesis
@@ -1553,14 +1555,13 @@ lemma nhds_parametric[transfer_rule]:
 
 
   term nhds *)
-  sorry
 
-lemma at_within_parametric[transfer_rule]: 
+(* lemma at_within_parametric[transfer_rule]: 
   includes lifting_syntax
   assumes [transfer_rule]: \<open>bi_unique R\<close>
   assumes [transfer_rule]: \<open>(rel_set R ===> (\<longleftrightarrow>)) open open\<close>
   shows \<open>(R ===> rel_set R ===> rel_filter R) at_within at_within\<close>
-  sorry
+  sorry *)
 (*   unfolding at_within_def
   apply transfer_prover_start
   apply transfer_step
@@ -1777,11 +1778,6 @@ proof (intro iffI)
       by simp
   qed
 qed
-
-(* TODO: Write to mailing list or similar to get this fixed: *)
-lemma test: \<open>\<exists>Rep Abs. type_definition Rep Abs {0::nat} \<Longrightarrow> 1=2\<close> sorry
-lemmas test2 = test[cancel_type_definition]
-thm_oracles test2 (* Should show skip_proof *) 
 
 (* TODO cite [register paper], Lemma 31 *)
 lemma trace_tensor: \<open>trace (a \<otimes>\<^sub>o b) = trace a * trace b\<close>

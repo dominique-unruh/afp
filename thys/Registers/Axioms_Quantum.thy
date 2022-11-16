@@ -42,13 +42,12 @@ definition preregister :: \<open>('a update \<Rightarrow> 'b update) \<Rightarro
   \<open>preregister F \<longleftrightarrow> bounded_clinear F \<and> continuous_map weak_star_topology weak_star_topology F\<close>
 
 lemma preregister_mult_right: \<open>preregister (\<lambda>a. a o\<^sub>C\<^sub>L z)\<close>
-  apply (auto simp add: bounded_cbilinear.bounded_clinear_left bounded_cbilinear_cblinfun_compose
-      preregister_def)
-  sorry
+  by (auto simp add: bounded_cbilinear.bounded_clinear_left bounded_cbilinear_cblinfun_compose
+      preregister_def continuous_map_right_comp_weak_star)
+
 lemma preregister_mult_left: \<open>preregister (\<lambda>a. z o\<^sub>C\<^sub>L a)\<close>
-  apply (auto simp add: bounded_cbilinear.bounded_clinear_right bounded_cbilinear_cblinfun_compose
-      preregister_def)
-  sorry
+  by (auto simp add: bounded_cbilinear.bounded_clinear_right bounded_cbilinear_cblinfun_compose
+      preregister_def continuous_map_left_comp_weak_star)
 
 lemma comp_preregister: "preregister F \<Longrightarrow> preregister G \<Longrightarrow> preregister (G \<circ> F)"
   by (auto simp add: preregister_def continuous_map_compose comp_bounded_clinear)
@@ -87,11 +86,12 @@ lemma register_mult: "register F \<Longrightarrow> cblinfun_compose (F a) (F b) 
 
 lemma register_tensor_left: \<open>register (\<lambda>a. tensor_op a id_cblinfun)\<close>
   apply (auto simp add: comp_tensor_op register_def tensor_op_cbilinear tensor_op_adjoint)
-  apply (metis eq_onp_def right_amplification.rsp)
+   apply (metis eq_onp_def right_amplification.rsp)
   sorry
 
 lemma register_tensor_right: \<open>register (\<lambda>a. tensor_op id_cblinfun a)\<close>
-  apply (auto simp add: comp_tensor_op register_def tensor_op_cbilinear tensor_op_adjoint)
+  apply (auto simp add: comp_tensor_op register_def tensor_op_cbilinear tensor_op_adjoint
+      bounded_cbilinear_apply_bounded_clinear tensor_op_bounded_cbilinear)
   sorry
 
 definition register_pair ::
