@@ -1778,15 +1778,10 @@ proof (intro iffI)
   qed
 qed
 
-(*
-TODO: Write to mailing list or similar to get this fixed:
- 
-lemma test: \<open>\<exists>Rep Abs. type_definition Rep Abs {0::nat} \<Longrightarrow> 1=2\<close>
-  sorry
+(* TODO: Write to mailing list or similar to get this fixed: *)
+lemma test: \<open>\<exists>Rep Abs. type_definition Rep Abs {0::nat} \<Longrightarrow> 1=2\<close> sorry
 lemmas test2 = test[cancel_type_definition]
-thm_oracles test2 (* Should show skip_proofs *) 
-*)
-
+thm_oracles test2 (* Should show skip_proof *) 
 
 (* TODO cite [register paper], Lemma 31 *)
 lemma trace_tensor: \<open>trace (a \<otimes>\<^sub>o b) = trace a * trace b\<close>
@@ -1797,7 +1792,24 @@ proof -
   then show ?thesis
   proof cases
     case tc
-    then show ?thesis sorry
+    then have *: \<open>trace_class (a \<otimes>\<^sub>o b)\<close>
+      by (simp add: trace_class_tensor)
+    have sum: \<open>(\<lambda>(x, y). ket (x, y) \<bullet>\<^sub>C ((a \<otimes>\<^sub>o b) *\<^sub>V ket (x, y))) summable_on UNIV\<close>
+      using trace_exists[OF is_onb_ket *]
+      by (simp_all add: o_def case_prod_unfold summable_on_reindex)
+
+    have \<open>trace a * trace b = (\<Sum>\<^sub>\<infinity>x. \<Sum>\<^sub>\<infinity>y. ket x \<bullet>\<^sub>C (a *\<^sub>V ket x) * (ket y \<bullet>\<^sub>C (b *\<^sub>V ket y)))\<close>
+      apply (simp add: trace_ket_sum tc flip: infsum_cmult_left')
+      by (simp flip: infsum_cmult_right')
+    also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>x. \<Sum>\<^sub>\<infinity>y. ket (x,y) \<bullet>\<^sub>C ((a \<otimes>\<^sub>o b) *\<^sub>V ket (x,y)))\<close>
+      by (simp add: tensor_op_ell2 flip: tensor_ell2_ket)
+    also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>xy\<in>UNIV. ket xy \<bullet>\<^sub>C ((a \<otimes>\<^sub>o b) *\<^sub>V ket xy))\<close>
+      apply (simp add: sum infsum_Sigma'_banach)
+      by (simp add: case_prod_unfold)
+    also have \<open>\<dots> = trace (a \<otimes>\<^sub>o b)\<close>
+      by (simp add: "*" trace_ket_sum)
+    finally show ?thesis 
+      by simp
   next
     case zero
     then show ?thesis by auto
