@@ -4,10 +4,8 @@ theory TAS_Topology
     "HOL-Types_To_Sets.T2_Spaces"
     Complex_Bounded_Operators.Extra_General
     Tensor_Product.Misc_Tensor_Product
+    Tmp_Move
 begin
-
-declare [[show_sorts=false]]
-\<comment> \<open>\<^theory>\<open>HOL-Types_To_Sets.T2_Spaces\<close> leaves @{attribute show_sorts} enabled.\<close>
 
 subsection \<open>Transferring type classes\<close>
 
@@ -77,23 +75,6 @@ lemma closed_on_with_alt_def:
   by (auto simp add: closedin_def closed_on_with_def topological_space_on_with_openin
       topological_space_on_with_topspace Diff_eq inf_commute)
 
-subsubsection \<open>\<^const>\<open>closure\<close>\<close>
-
-unoverload_definition closure_def[unfolded islimpt_def]
-
-definition closure_on_with where \<open>closure_on_with A opn S = 
-  S \<union> {x\<in>A. \<forall>T\<subseteq>A. x \<in> T \<longrightarrow> opn T \<longrightarrow> (\<exists>y\<in>S. y \<in> T \<and> y \<noteq> x)}\<close>
-
-lemma closure_with_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "((rel_set T ===> (=)) ===> rel_set T ===> rel_set T)
-         (closure_on_with (Collect (Domainp T))) closure.with"
-  unfolding closure.with_def closure_on_with_def
-  apply transfer_prover_start
-  apply transfer_step+
-  unfolding Pow_def Ball_Collect[symmetric] Ball_def Bex_def mem_Collect_eq
-  by blast
 
 lemma closure_on_with_from_topology:
   assumes \<open>S \<subseteq> topspace T\<close>
