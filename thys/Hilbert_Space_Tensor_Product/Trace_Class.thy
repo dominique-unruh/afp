@@ -196,6 +196,7 @@ lemma trace_classI:
   shows \<open>trace_class A\<close>
   using assms(1) assms(2) trace_class_def by blast
 
+(* TODO: Duplication: There is a cmod, and we have abs_summability. That's a double norm *)
 lemma trace_class_iff_summable:
   assumes \<open>is_onb E\<close>
   shows \<open>trace_class A \<longleftrightarrow> (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) abs_summable_on E\<close>

@@ -2305,6 +2305,103 @@ lemma isCont_iff_preserves_convergence:
   using assms
   by (simp add: isCont_def Lim_at_id)
 
+(* TODO cite [register paper, Lemma 31 *)
+lemma abs_op_tensor: \<open>abs_op (a \<otimes>\<^sub>o b) = abs_op a \<otimes>\<^sub>o abs_op b\<close>
+  sorry
+
+lemma abs_summable_times: 
+  fixes f :: \<open>'a \<Rightarrow> 'c::{real_normed_algebra}\<close> and g :: \<open>'b \<Rightarrow> 'c\<close>
+  assumes sum_f: \<open>f abs_summable_on A\<close>
+  assumes sum_g: \<open>g abs_summable_on B\<close>
+  shows \<open>(\<lambda>(i,j). f i * g j) abs_summable_on A \<times> B\<close>
+proof -
+  have a1: \<open>(\<lambda>j. norm (f i) * norm (g j)) abs_summable_on B\<close> if \<open>i \<in> A\<close> for i
+    using sum_g by (simp add: summable_on_cmult_right)
+  then have a2: \<open>(\<lambda>j. f i * g j) abs_summable_on B\<close> if \<open>i \<in> A\<close> for i
+    apply (rule abs_summable_on_comparison_test)
+     apply (fact that)
+    by (simp add: norm_mult_ineq)
+  from sum_f
+  have \<open>(\<lambda>x. \<Sum>\<^sub>\<infinity>y\<in>B. norm (f x) * norm (g y)) abs_summable_on A\<close>
+    by (auto simp add: infsum_cmult_right' infsum_nonneg intro!: summable_on_cmult_left)
+  then have b1: \<open>(\<lambda>x. \<Sum>\<^sub>\<infinity>y\<in>B. norm (f x * g y)) abs_summable_on A\<close>
+    apply (rule abs_summable_on_comparison_test)
+    using a1 a2 by (simp_all add: norm_mult_ineq infsum_mono infsum_nonneg)
+  from a2 b1 show ?thesis
+    apply (rule_tac abs_summable_on_Sigma_iff[THEN iffD2])
+    by auto
+qed
+
+(* TODO cite [register paper], Lemma 31 *)
+lemma trace_class_tensor: \<open>trace_class (a \<otimes>\<^sub>o b)\<close> if \<open>trace_class a\<close> and \<open>trace_class b\<close>
+proof -
+  from \<open>trace_class a\<close>
+  have a: \<open>(\<lambda>x. ket x \<bullet>\<^sub>C (abs_op a *\<^sub>V ket x)) abs_summable_on UNIV\<close>
+    by (auto simp add: trace_class_iff_summable[OF is_onb_ket] summable_on_reindex o_def)
+  from \<open>trace_class b\<close>
+  have b: \<open>(\<lambda>y. ket y \<bullet>\<^sub>C (abs_op b *\<^sub>V ket y)) abs_summable_on UNIV\<close>
+    by (auto simp add: trace_class_iff_summable[OF is_onb_ket] summable_on_reindex o_def)
+  from a b have \<open>(\<lambda>(x,y). (ket x \<bullet>\<^sub>C (abs_op a *\<^sub>V ket x)) * (ket y \<bullet>\<^sub>C (abs_op b *\<^sub>V ket y))) abs_summable_on UNIV \<times> UNIV\<close>
+    by (rule abs_summable_times)
+  then have \<open>(\<lambda>(x,y). (ket x \<otimes>\<^sub>s ket y) \<bullet>\<^sub>C ((abs_op a \<otimes>\<^sub>o abs_op b) *\<^sub>V (ket x \<otimes>\<^sub>s ket y))) abs_summable_on UNIV \<times> UNIV\<close>
+    by (simp add: tensor_op_ell2 case_prod_unfold flip: tensor_ell2_ket)
+  then have \<open>(\<lambda>xy. ket xy \<bullet>\<^sub>C ((abs_op a \<otimes>\<^sub>o abs_op b) *\<^sub>V ket xy)) abs_summable_on UNIV\<close>
+    by (simp add: case_prod_beta tensor_ell2_ket)
+  then have \<open>(\<lambda>xy. ket xy \<bullet>\<^sub>C (abs_op (a \<otimes>\<^sub>o b) *\<^sub>V ket xy)) abs_summable_on UNIV\<close>
+    by (simp add: abs_op_tensor)
+  then show \<open>trace_class (a \<otimes>\<^sub>o b)\<close>
+    by (auto simp add: trace_class_iff_summable[OF is_onb_ket] summable_on_reindex o_def)
+qed
+
+lemma trace_class_tensor_iff: \<open>trace_class (a \<otimes>\<^sub>o b) \<longleftrightarrow> (trace_class a \<and> trace_class b) \<or> a = 0 \<or> b = 0\<close>
+  sorry
+(* proof (intro iffI conjI)
+  show \<open>trace_class a \<and> trace_class b \<Longrightarrow> trace_class (a \<otimes>\<^sub>o b)\<close>
+    by (simp add: trace_class_tensor)
+  show \<open>trace_class a\<close> if \<open>trace_class (a \<otimes>\<^sub>o b)\<close>
+    sorry
+  show \<open>trace_class b\<close> if \<open>trace_class (a \<otimes>\<^sub>o b)\<close>
+(* Could be shown from previous one by symmetry if we state previous generally enough *)
+  sledgehammer
+qed
+ *)
+
+(* TODO cite [register paper], Lemma 31 *)
+lemma trace_tensor: \<open>trace (a \<otimes>\<^sub>o b) = trace a * trace b\<close>
+(* TODO nice candidate for wlog demo *)
+proof -
+  consider (tc) \<open>trace_class a\<close> \<open>trace_class b\<close> | (zero) \<open>a = 0 \<or> b = 0\<close> | (nota) \<open>a \<noteq> 0\<close> \<open>b \<noteq> 0\<close> \<open>\<not> trace_class a\<close> | (notb) \<open>a \<noteq> 0\<close> \<open>b \<noteq> 0\<close> \<open>\<not> trace_class b\<close>
+    by blast
+  then show ?thesis
+  proof cases
+    case tc
+    then show ?thesis sorry
+  next
+    case zero
+    then show ?thesis by auto
+  next
+    case nota
+    then have [simp]: \<open>trace a = 0\<close>
+      unfolding trace_def by simp
+    from nota have \<open>\<not> trace_class (a \<otimes>\<^sub>o b)\<close>
+      by (simp add: trace_class_tensor_iff)
+    then have [simp]: \<open>trace (a \<otimes>\<^sub>o b) = 0\<close>
+      unfolding trace_def by simp
+    show ?thesis 
+      by simp
+  next
+    case notb
+    then have [simp]: \<open>trace b = 0\<close>
+      unfolding trace_def by simp
+    from notb have \<open>\<not> trace_class (a \<otimes>\<^sub>o b)\<close>
+      by (simp add: trace_class_tensor_iff)
+    then have [simp]: \<open>trace (a \<otimes>\<^sub>o b) = 0\<close>
+      unfolding trace_def by simp
+    show ?thesis 
+      by simp
+  qed
+qed
+
 lemma register_inv_weak_star_continuous:
   assumes \<open>register F\<close>
   shows \<open>continuous_map (subtopology weak_star_topology (range F)) weak_star_topology (inv F)\<close>
@@ -2318,19 +2415,36 @@ proof (rule continuous_map_iff_preserves_convergence, rename_tac K a)
     from assms show \<open>register F\<close> by -
     assume \<open>\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> (\<forall>\<theta>. F \<theta> = Misc.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
     then obtain U :: \<open>('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> 
-      where \<open>unitary U\<close> and \<open>F \<theta> = Misc.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
+      where \<open>unitary U\<close> and FU: \<open>F \<theta> = Misc.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
       by auto
     define \<delta> :: \<open>'c ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> where \<open>\<delta> = selfbutter (ket (undefined))\<close>
+    then have [simp]: \<open>trace_class \<delta>\<close>
+      by simp
     define u where \<open>u t = U o\<^sub>C\<^sub>L (from_trace_class t \<otimes>\<^sub>o \<delta>) o\<^sub>C\<^sub>L U*\<close> for t
     have [simp]: \<open>trace_class (u t)\<close> for t
       unfolding u_def
       apply (rule trace_class_comp_left)
       apply (rule trace_class_comp_right)
-      (* See Lemma 31 in register paper *)
-      sorry
+      by (simp add: trace_class_tensor)
     have uF: \<open>trace (from_trace_class t o\<^sub>C\<^sub>L a) = trace (u t o\<^sub>C\<^sub>L F a)\<close> for t a 
-      (* See Lemma 38 in register paper *)
-      sorry
+    proof -
+      have \<open>trace (from_trace_class t o\<^sub>C\<^sub>L a) = trace (from_trace_class t o\<^sub>C\<^sub>L a) * trace (\<delta> o\<^sub>C\<^sub>L id_cblinfun)\<close>
+        by (simp add: \<delta>_def trace_butterfly)
+      also have \<open>\<dots> = trace ((from_trace_class t o\<^sub>C\<^sub>L a) \<otimes>\<^sub>o (\<delta> o\<^sub>C\<^sub>L id_cblinfun))\<close>
+        by (simp add: trace_class_comp_left trace_tensor)
+      also have \<open>\<dots> = trace ((from_trace_class t \<otimes>\<^sub>o \<delta>) o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o id_cblinfun))\<close>
+        by (simp add: comp_tensor_op)
+      also have \<open>\<dots> = trace (U* o\<^sub>C\<^sub>L u t o\<^sub>C\<^sub>L U o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o id_cblinfun))\<close>
+        using \<open>unitary U\<close>
+        by (simp add: u_def lift_cblinfun_comp[OF unitaryD1] cblinfun_compose_assoc)
+      also have \<open>\<dots> = trace (u t o\<^sub>C\<^sub>L U o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L U*)\<close>
+        apply (subst (2) circularity_of_trace)
+        by (simp_all add: trace_class_comp_left cblinfun_compose_assoc)
+      also have \<open>\<dots> = trace (u t o\<^sub>C\<^sub>L F a)\<close>
+        by (simp add: Misc.sandwich_def FU cblinfun_compose_assoc)
+      finally show ?thesis
+        by -
+    qed
     from limit_id
     have \<open>a \<in> range F\<close> and KrangeF: \<open>\<forall>\<^sub>F a in K. a \<in> range F\<close> and limit_id': \<open>limitin weak_star_topology id a K\<close>
       unfolding limitin_subtopology by auto
