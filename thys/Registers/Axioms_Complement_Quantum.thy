@@ -1,7 +1,7 @@
 section \<open>Quantum instantiation of complements\<close>
 
 theory Axioms_Complement_Quantum
-  imports Laws_Quantum (* With_Type.With_Type_Inst_Complex_Bounded_Operators *) Quantum_Extra Tensor_Product.Weak_Star_Topology
+  imports Laws_Quantum Quantum_Extra Tensor_Product.Weak_Star_Topology
     Tensor_Product.Partial_Trace TAS_Topology
     With_Type.With_Type Tmp_Move
 begin
@@ -11,92 +11,6 @@ no_notation Lattice.join (infixl "\<squnion>\<index>" 65)
 no_notation elt_set_eq (infix "=o" 50)
 no_notation eq_closure_of ("closure'_of\<index>")
 hide_const (open) Order.top
-
-(* lemma finite_subsets_at_top_parametric[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique R\<close>
-  shows \<open>(rel_set R ===> rel_filter (rel_set R)) finite_subsets_at_top finite_subsets_at_top\<close>
-proof -
-  have \<open>\<exists>Z. (\<forall>\<^sub>F (S', T') in Z. rel_set R S' T')
-          \<and> map_filter_on {(x, y). rel_set R x y} fst Z = finite_subsets_at_top S
-          \<and> map_filter_on {(x, y). rel_set R x y} snd Z = finite_subsets_at_top T\<close>
-    if \<open>rel_set R S T\<close> for S T
-  proof -
-    from that \<open>bi_unique R\<close>
-    obtain s2t where T_s2t_S: "T = s2t ` S" and "inj_on s2t S" and R_s2t: "\<forall>x\<in>S. R x (s2t x)"
-      using bi_unique_rel_set_lemma by blast
-    define Z where \<open>Z = filtermap (\<lambda>S. (S, s2t ` S)) (finite_subsets_at_top S)\<close>
-    have R_S2T: \<open>rel_set R S' (s2t ` S')\<close> if \<open>S' \<subseteq> S\<close> for S'
-      by (smt (verit, ccfv_threshold) R_s2t \<open>inj_on s2t S\<close> f_inv_into_f in_mono inj_on_image_mem_iff inv_into_into rel_setI that)
-    then have ev_R: \<open>\<forall>\<^sub>F (S', T') in Z. rel_set R S' T'\<close>
-      by (auto simp: Z_def eventually_filtermap intro!: eventually_finite_subsets_at_top_weakI)
-    have 1: \<open>map_filter_on {(x, y). rel_set R x y} fst Z = finite_subsets_at_top S\<close>
-      apply (simp add: filter_eq_iff eventually_map_filter_on ev_R)
-      by (simp add: Z_def eventually_filtermap R_S2T eventually_finite_subsets_at_top)
-    note More_List.no_leading_Cons[rule del]
-    have P_s2t: \<open>S' \<subseteq> S \<Longrightarrow> finite T' \<Longrightarrow> s2t ` S' \<subseteq> T' \<Longrightarrow> T' \<subseteq> T \<Longrightarrow> P T'\<close> 
-      if P: \<open>\<forall>S''. finite S'' \<and> S' \<subseteq> S'' \<and> S'' \<subseteq> S \<longrightarrow> P (s2t ` S'')\<close>
-      for S' P T'
-      using P[rule_format, of \<open>inv_into S s2t ` T'\<close>]
-      by (metis T_s2t_S \<open>inj_on s2t S\<close> equalityE finite_imageI image_inv_into_cancel image_mono inv_into_image_cancel)
-
-    have 2: \<open>map_filter_on {(x, y). rel_set R x y} snd Z = finite_subsets_at_top T\<close>
-      apply (simp add: filter_eq_iff eventually_map_filter_on ev_R)
-      apply (simp add: Z_def eventually_filtermap R_S2T eventually_finite_subsets_at_top)
-      apply (intro allI Ex_iffI[where f=\<open>image s2t\<close> and g=\<open>image (inv_into S s2t)\<close>])
-       apply (safe intro!: intro: P_s2t)
-        (* Sledgehammer proofs below *)
-           apply blast
-          using T_s2t_S apply blast
-         apply (metis P_s2t)
-        apply blast
-       apply (metis T_s2t_S in_mono inv_into_into)
-      by (metis T_s2t_S finite_imageI image_inv_into_cancel image_mono)
-
-    from ev_R 1 2
-    show ?thesis
-      by auto
-  qed
-  then show ?thesis
-    by (simp add: rel_filter.simps rel_funI)
-qed *)
-
-(* TODO: do we even need this, given sum_parametric'? *)
-(* lemma sum_weak_star_transfer[transfer_rule]:
-  includes lifting_syntax
-  fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
-  assumes [transfer_rule]: \<open>bi_unique R\<close>
-  shows \<open>((R ===> cr_cblinfun_weak_star) ===> rel_set R ===> cr_cblinfun_weak_star) sum sum\<close>
-  apply (rule sum_parametric')
-    apply transfer_step
-    apply transfer_prover
-  by transfer_prover *)
-(* proof (intro rel_funI, rename_tac f g A B)
-  fix f :: \<open>'a \<Rightarrow> 'c \<Rightarrow>\<^sub>C\<^sub>L 'd\<close> and g A B
-  assume Rfg[transfer_rule]: \<open>(R ===> cr_cblinfun_weak_star) f g\<close>
-  assume [transfer_rule]: \<open>rel_set R A B\<close>
-  with \<open>bi_unique R\<close>
-  obtain m where BFA: "B = m ` A" and inj: "inj_on m A" and Rf: "\<forall>x\<in>A. R x (m x)"
-    using bi_unique_rel_set_lemma by blast
-  show \<open>cr_cblinfun_weak_star (sum f A) (sum g B)\<close>
-    apply (subst BFA) using inj Rf
-  proof (induction A rule:infinite_finite_induct)
-    case (infinite A)
-    then show ?case
-      by (auto simp: zero_cblinfun_weak_star.transfer)
-  next
-    case empty
-    show ?case
-      by (auto simp: zero_cblinfun_weak_star.transfer)
-  next
-    case (insert x F)
-    have \<open>cr_cblinfun_weak_star (f x + a) (g y + b)\<close>
-      if [transfer_rule]: \<open>cr_cblinfun_weak_star a b\<close> and [transfer_rule]: \<open>R x y\<close> for a b y
-      by transfer_prover
-    with insert show ?case
-      by simp
-  qed
-qed *)
 
 (* TODO: can we use a generic rule similar to sum_parametric' instead? *)
 lemma has_sum_weak_star_transfer[transfer_rule]:
@@ -367,22 +281,6 @@ lemma has_sum_with_parametric[transfer_rule]:
       apply transfer_step+
   by (auto intro!: ext simp add: has_sum_with_on_def)
 
-unoverload_definition Modules.additive_def
-
-definition \<open>additive_with_on A plus1 plus2 f =
-        (\<forall>x\<in>A. \<forall>y\<in>A. f (plus1 x y) = plus2 (f x) (f y))\<close>
-  for A plus1 plus2 f
-
-lemma additive_with_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  assumes [transfer_rule]: "right_total U" "bi_unique U"
-  shows "((T ===> T ===> T) ===> (U ===> U ===> U) ===> (T ===> U) ===> (=)) 
-    (additive_with_on (Collect (Domainp T)))
-    additive.with"
-  unfolding additive.with_def additive_with_on_def
-  by transfer_prover
-
 lemma continuous_map_is_continuous_at_point:
   assumes \<open>continuous_map T U f\<close>
   shows \<open>filterlim f (nhdsin U (f l)) (atin T l)\<close>
@@ -416,8 +314,7 @@ proof -
     then interpret U: local_typedef \<open>topspace U\<close> \<open>TYPE('u)\<close>
       by unfold_locales
 
-    note has_sum_comm_additive_general[unfolded sum_with has_sum.with at_within.with nhds.with
-        additive.with]
+    note has_sum_comm_additive_general[unfolded sum_with has_sum.with at_within.with nhds.with]
     note this[unoverload_type 'b, unoverload_type 'c]
     note this[where 'b='t and 'c='u and 'a='a]
     note this[untransferred]
@@ -565,24 +462,6 @@ lemma sandwich_weak_star_cont[simp]:
   using continuous_map_compose[OF continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star]
   by (auto simp: o_def sandwich_def[abs_def])
 
-(* (* TODO: remove (use continuous_map_pullback_both from Misc_Tensor_Product instead) *)
-lemma continuous_map_pullback_both:
-  assumes cont: \<open>continuous_map T1 T2 g'\<close>
-  assumes g'g: \<open>\<And>x. f1 x \<in> topspace T1 \<and> x \<in> A1 \<Longrightarrow> g' (f1 x) = f2 (g x)\<close>
-  assumes top1: \<open>f1 -` topspace T1 \<inter> A1 \<subseteq> g -` A2\<close>
-  shows \<open>continuous_map (pullback_topology A1 f1 T1) (pullback_topology A2 f2 T2) g\<close>
-proof -
-  from cont
-  have \<open>continuous_map (pullback_topology A1 f1 T1) T2 (g' \<circ> f1)\<close>
-    by (rule continuous_map_pullback)
-  then have \<open>continuous_map (pullback_topology A1 f1 T1) T2 (f2 \<circ> g)\<close>
-    apply (rule continuous_map_eq)
-    by (simp add: g'g topspace_pullback_topology)
-  then show ?thesis
-    apply (rule continuous_map_pullback')
-    by (simp add: top1 topspace_pullback_topology)
-qed *)
-
 lemma min_power_distrib_left: \<open>(min x y) ^ n = min (x ^ n) (y ^ n)\<close> if \<open>x \<ge> 0\<close> and \<open>y \<ge> 0\<close> for x y :: \<open>_ :: linordered_semidom\<close>
   by (metis linorder_le_cases min.absorb_iff2 min.order_iff power_mono that(1) that(2))
 
@@ -691,66 +570,6 @@ qed
 lemma cmod_distrib_plus: \<open>a \<ge> 0 \<Longrightarrow> b \<ge> 0 \<Longrightarrow> cmod (a + b) = cmod a + cmod b\<close>
   by (simp add: cmod_Re)
 
-(* lemma abs_op_increasing[simp]: \<open>a \<le> abs_op a\<close> (* WRONG unless a is Hermitian *)
-  by -
-
-definition \<open>pos_part_op a = (abs_op a + a) /\<^sub>R 2\<close>
-definition \<open>neg_part_op a = (abs_op a - a) /\<^sub>R 2\<close>
-
-lemma op_decomp_pos_neg: \<open>pos_part_op a - neg_part_op a = a\<close>
-  apply (auto simp: pos_part_op_def neg_part_op_def)
-  by (metis (no_types, opaque_lifting) Extra_Ordered_Fields.sign_simps(2) Extra_Ordered_Fields.sign_simps(8) arithmetic_simps(50) cblinfun_assoc_left(3) ordered_field_class.sign_simps(11) scaleR_2 scaleR_half_double scaleR_left_commute scaleR_right_diff_distrib verit_minus_simplify(1))
-
-lemma abs_op_decomp_pos_neg: \<open>pos_part_op a + neg_part_op a = abs_op a\<close>
-  apply (auto simp: pos_part_op_def neg_part_op_def)
-  by (metis (no_types, opaque_lifting) Extra_Ordered_Fields.sign_simps(2) Extra_Ordered_Fields.sign_simps(8) add_diff_cancel_left' scaleR_half_double scaleR_right_distrib)
-
-lemma pos_part_op_leq_abs_op: \<open>pos_part_op a \<le> abs_op a\<close>
-proof -
-  have \<open>pos_part_op a - abs_op a = (a - abs_op a) /\<^sub>R 2\<close>
-    apply (auto simp: pos_part_op_def)
-    by (metis (no_types, lifting) Extra_Ordered_Fields.sign_simps(7) add_diff_cancel_left' scaleR_half_double scaleR_right_diff_distrib)
-  also have \<open>\<dots> \<le> (abs_op a - abs_op a) /\<^sub>R 2\<close>
-    apply (intro scaleR_left_mono diff_right_mono)
-    by auto
-  also have \<open>\<dots> = 0\<close>
-    by simp
-  finally show ?thesis
-    by simp
-qed
-
-lemma pos_part_op_uminus[simp]: \<open>pos_part_op (-a) = neg_part_op a\<close>
-  by (simp add: pos_part_op_def neg_part_op_def)
-
-lemma neg_part_op_uminus[simp]: \<open>neg_part_op (-a) = pos_part_op a\<close>
-  by (simp add: pos_part_op_def neg_part_op_def)
-
-lemma neg_part_op_leq_abs_op: \<open>neg_part_op a \<le> abs_op a\<close>
-  using pos_part_op_leq_abs_op[of \<open>-a\<close>]
-  by simp
-
-lemma pos_part_op_pos[simp]: \<open>pos_part_op a \<ge> 0\<close>
-  by (metis abs_op_decomp_pos_neg le_add_same_cancel2 neg_part_op_leq_abs_op)
-
-lemma neg_part_op_pos[simp]: \<open>neg_part_op a \<ge> 0\<close>
-  by (metis pos_part_op_pos pos_part_op_uminus) *)
-
-(* FALSE for non hermitian a! See quicksheets 2022, p.217 *)
-(* lemma cmod_cinner_leq_cmod_cinner_abs: \<open>cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<psi>)) \<le> cmod (\<psi> \<bullet>\<^sub>C (abs_op a *\<^sub>V \<psi>))\<close>
-proof -
-  have \<open>cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<psi>)) = cmod (\<psi> \<bullet>\<^sub>C (pos_part_op a *\<^sub>V \<psi>) - \<psi> \<bullet>\<^sub>C (neg_part_op a *\<^sub>V \<psi>))\<close>
-    by (metis cinner_simps(3) minus_cblinfun.rep_eq op_decomp_pos_neg)
-  also have \<open>\<dots> \<le> cmod (\<psi> \<bullet>\<^sub>C (pos_part_op a *\<^sub>V \<psi>)) + cmod (\<psi> \<bullet>\<^sub>C (neg_part_op a *\<^sub>V \<psi>))\<close>
-    using norm_triangle_ineq4 by blast
-  also have \<open>\<dots> = cmod (\<psi> \<bullet>\<^sub>C (pos_part_op a *\<^sub>V \<psi>) + \<psi> \<bullet>\<^sub>C (neg_part_op a *\<^sub>V \<psi>))\<close>
-    by (intro cmod_distrib_plus[symmetric] cinner_pos_if_pos pos_part_op_pos neg_part_op_pos)
-  also have \<open>\<dots> = cmod (\<psi> \<bullet>\<^sub>C (abs_op a *\<^sub>V \<psi>))\<close>
-    by (metis abs_op_decomp_pos_neg cblinfun.add_left cinner_simps(2))
-  finally show ?thesis
-    by -
-qed *)
-
-
 lemma ket_pair_split: \<open>ket x = tensor_ell2 (ket (fst x)) (ket (snd x))\<close>
   by (simp add: tensor_ell2_ket)
 
@@ -804,8 +623,6 @@ proof -
     by (simp add: o_def u'_def s'_def)
   then have infsum_u': \<open>s' e = infsum (u' e) UNIV\<close> for e
     by (metis infsumI)
-(*   have abs_sum_s': \<open>s' abs_summable_on UNIV\<close> (* TODO needed? *)
-    by - *)
   have tc_u_x[simp]: \<open>trace_class (from_trace_class (u j) o\<^sub>C\<^sub>L x)\<close> for j
     by (simp add: trace_class_comp_left)
 
@@ -899,7 +716,7 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
   define P' where \<open>P' i = \<Phi> (P i)\<close> for i :: 'a
   have proj_P': \<open>is_Proj (P' i)\<close> for i
     by (simp add: P_def P'_def butterfly_is_Proj register_projector)
-  have sumP'id2: \<open>has_sum_in weak_star_topology (\<lambda>i. P' i) UNIV id_cblinfun\<close> (* TODO: we use this one *)
+  have sumP'id2: \<open>has_sum_in weak_star_topology (\<lambda>i. P' i) UNIV id_cblinfun\<close>
   proof -
     from infsum_butterfly_ket
     have \<open>has_sum_in weak_star_topology (\<Phi> o selfbutterket) UNIV (\<Phi> id_cblinfun)\<close>
@@ -1405,7 +1222,6 @@ proof -
   have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
          (\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
               (\<forall>\<theta>. F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
-    (* using complement_exists that by blast *)
     using register_decomposition that by blast
   then have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
          norm (F a) = norm a\<close>
@@ -1512,83 +1328,6 @@ proof -
   show \<open>range G = commutant (range F)\<close>
     by (simp add: commutant_exchange commutant_tensor1)
 qed
-
-definition \<open>opensets = Collect open\<close>
-  \<comment> \<open>This behaves more nicely with the @{method transfer}-method (and friends) than \<^const>\<open>open\<close>.
-      So when rewriting a subgoal, using, e.g., \<^term>\<open>\<exists>U\<in>opensets. xxx\<close> instead of \<^term>\<open>\<exists>U. open U \<longrightarrow> xxx\<close> can make @{method transfer} work better. \<close>
-
-(* lemma opensets_parametric[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique R\<close>
-  assumes [transfer_rule]: \<open>(rel_set R ===> (\<longleftrightarrow>)) open open\<close>
-  shows \<open>(rel_set (rel_set R)) opensets opensets\<close>
-  using assms apply (simp add: opensets_def rel_set_def )
-  apply auto
-sorry
- *)
-
-(* TODO move *)
-(* TODO reprove concrete nhds transfer rules with this (or drop them?) *)
-(* lemma nhds_parametric[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique R\<close>
-  assumes [transfer_rule]: \<open>(rel_set R ===> (\<longleftrightarrow>)) open open\<close>
-  shows \<open>(R ===> rel_filter R) nhds nhds\<close>
-  sorry
- *)
-(* proof -
-  have \<open>(R ===> rel_filter R) (\<lambda>a. \<Sqinter> (principal ` Set.filter ((\<in>) a) opensets)) (\<lambda>a. \<Sqinter> (principal ` Set.filter ((\<in>) a) opensets))\<close>
-  show ?thesis
-    unfolding nhds_def
-    apply transfer_prover_start
-
-
-         apply transfer_step
-  apply transfer_step
-      apply transfer_step
-  apply transfer_step
-  apply transfer_step
-     apply (rule RelI)
-
-     apply transfer_step
-
-
-
-  term nhds *)
-
-(* lemma at_within_parametric[transfer_rule]: 
-  includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique R\<close>
-  assumes [transfer_rule]: \<open>(rel_set R ===> (\<longleftrightarrow>)) open open\<close>
-  shows \<open>(R ===> rel_set R ===> rel_filter R) at_within at_within\<close>
-  sorry *)
-(*   unfolding at_within_def
-  apply transfer_prover_start
-  apply transfer_step
-  apply transfer_step
-      apply transfer_step
-  apply transfer_step
-  apply transfer_step
-
-
-    apply transfer_step
-  apply transfer_step
-
-  
-  
-
-
-  term at_within *)
-
-
-
-(* lemma transfer_nhds_weak_star_topology[transfer_rule]:
-  includes lifting_syntax
-  shows \<open>(cr_cblinfun_weak_star ===> rel_set cr_cblinfun_weak_star ===> rel_filter cr_cblinfun_weak_star)
-     (at_within_in weak_star_topology) nhds\<close>
-  unfolding nhds_def nhdsin_def
-  apply (simp add: weak_star_topology_topspace)
-  by transfer_prover *)
 
 lemma continuous_map_iff_preserves_convergence:
   assumes \<open>\<And>F a. a \<in> topspace T \<Longrightarrow> limitin T id a F \<Longrightarrow> limitin U f (f a) F\<close>
