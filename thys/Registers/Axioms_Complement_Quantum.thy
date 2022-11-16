@@ -1268,6 +1268,7 @@ lemma sandwich_weak_star_cont[simp]:
   using continuous_map_compose[OF continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star]
   by (auto simp: o_def sandwich_def[abs_def])
 
+(* (* TODO: remove (use continuous_map_pullback_both from Misc_Tensor_Product instead) *)
 lemma continuous_map_pullback_both:
   assumes cont: \<open>continuous_map T1 T2 g'\<close>
   assumes g'g: \<open>\<And>x. f1 x \<in> topspace T1 \<and> x \<in> A1 \<Longrightarrow> g' (f1 x) = f2 (g x)\<close>
@@ -1283,7 +1284,7 @@ proof -
   then show ?thesis
     apply (rule continuous_map_pullback')
     by (simp add: top1 topspace_pullback_topology)
-qed
+qed *)
 
 lemma min_power_distrib_left: \<open>(min x y) ^ n = min (x ^ n) (y ^ n)\<close> if \<open>x \<ge> 0\<close> and \<open>y \<ge> 0\<close> for x y :: \<open>_ :: linordered_semidom\<close>
   by (metis linorder_le_cases min.absorb_iff2 min.order_iff power_mono that(1) that(2))
@@ -2291,6 +2292,70 @@ lemma at_within_parametric[transfer_rule]:
   apply (simp add: weak_star_topology_topspace)
   by transfer_prover *)
 
+lemma continuous_map_iff_preserves_convergence:
+  assumes \<open>\<And>F a. a \<in> topspace T \<Longrightarrow> limitin T id a F \<Longrightarrow> limitin U f (f a) F\<close>
+  shows \<open>continuous_map T U f\<close>
+  apply (rule continuous_map_atin[THEN iffD2], intro ballI)
+  using assms
+  by (simp add: limitin_continuous_map)
+
+lemma isCont_iff_preserves_convergence:
+  assumes \<open>\<And>F. (id \<longlongrightarrow> a) F \<Longrightarrow> (f \<longlongrightarrow> f a) F\<close>
+  shows \<open>isCont f a\<close>
+  using assms
+  by (simp add: isCont_def Lim_at_id)
+
+lemma register_inv_weak_star_continuous:
+  assumes \<open>register F\<close>
+  shows \<open>continuous_map (subtopology weak_star_topology (range F)) weak_star_topology (inv F)\<close>
+proof (rule continuous_map_iff_preserves_convergence, rename_tac K a)
+  fix K a
+  assume limit_id: \<open>limitin (subtopology weak_star_topology (range F)) id a K\<close>
+  from register_decomposition
+  have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
+        limitin weak_star_topology (inv F) (inv F a) K\<close>
+  proof (rule with_type_mp)
+    from assms show \<open>register F\<close> by -
+    assume \<open>\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> (\<forall>\<theta>. F \<theta> = Misc.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
+    then obtain U :: \<open>('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> 
+      where \<open>unitary U\<close> and \<open>F \<theta> = Misc.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
+      by auto
+    define \<delta> :: \<open>'c ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> where \<open>\<delta> = selfbutter (ket (undefined))\<close>
+    define u where \<open>u t = U o\<^sub>C\<^sub>L (from_trace_class t \<otimes>\<^sub>o \<delta>) o\<^sub>C\<^sub>L U*\<close> for t
+    have [simp]: \<open>trace_class (u t)\<close> for t
+      unfolding u_def
+      apply (rule trace_class_comp_left)
+      apply (rule trace_class_comp_right)
+      (* See Lemma 31 in register paper *)
+      sorry
+    have uF: \<open>trace (from_trace_class t o\<^sub>C\<^sub>L a) = trace (u t o\<^sub>C\<^sub>L F a)\<close> for t a 
+      (* See Lemma 38 in register paper *)
+      sorry
+    from limit_id
+    have \<open>a \<in> range F\<close> and KrangeF: \<open>\<forall>\<^sub>F a in K. a \<in> range F\<close> and limit_id': \<open>limitin weak_star_topology id a K\<close>
+      unfolding limitin_subtopology by auto
+    from \<open>a \<in> range F\<close> have FiFa: \<open>F (inv F a) = a\<close>
+      by (simp add: f_inv_into_f)
+    from KrangeF
+    have *: \<open>\<forall>\<^sub>F x in K. trace (from_trace_class t o\<^sub>C\<^sub>L F (inv F x)) = trace (from_trace_class t o\<^sub>C\<^sub>L x)\<close> for t
+      apply (rule eventually_mono)
+      by (simp add: f_inv_into_f)
+    from limit_id' have \<open>((\<lambda>a'. trace (from_trace_class t o\<^sub>C\<^sub>L a')) \<longlongrightarrow> trace (from_trace_class t o\<^sub>C\<^sub>L a)) K\<close> for t
+      unfolding limitin_weak_star_topology' by simp
+    then have *: \<open>((\<lambda>a'. trace (from_trace_class t o\<^sub>C\<^sub>L F (inv F a'))) \<longlongrightarrow> trace (from_trace_class t o\<^sub>C\<^sub>L F (inv F a))) K\<close> for t
+      unfolding FiFa using * by (rule tendsto_cong[THEN iffD2, rotated])
+    have \<open>((\<lambda>a'. trace (u t o\<^sub>C\<^sub>L F (inv F a'))) \<longlongrightarrow> trace (u t o\<^sub>C\<^sub>L F (inv F a))) K\<close> for t
+      using *[of \<open>Abs_trace_class (u t)\<close>]
+      by (simp add: Abs_trace_class_inverse)
+    then have \<open>((\<lambda>a'. trace (from_trace_class t o\<^sub>C\<^sub>L inv F a')) \<longlongrightarrow> trace (from_trace_class t o\<^sub>C\<^sub>L inv F a)) K\<close> for t
+      by (simp add: uF[symmetric])
+    then show \<open>limitin weak_star_topology (inv F) (inv F a) K\<close>
+      by (simp add: limitin_weak_star_topology')
+  qed
+  note this[cancel_with_type]
+  then show \<open>limitin weak_star_topology (inv F) (inv F a) K\<close>
+    by -
+qed
 
 lemma same_range_equivalent:
   fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G :: \<open>'b update \<Rightarrow> 'c update\<close>
@@ -2377,25 +2442,28 @@ proof -
     by (metis F_rangeG assms(1) assms(2) f_inv_into_f register_norm)
   have weak_star_I: \<open>continuous_map weak_star_topology weak_star_topology I\<close>
   proof -
-    include lifting_syntax
-    define I' where \<open>I' = to_weak_star o I o from_weak_star\<close>
-    have [transfer_rule]: \<open>(cr_cblinfun_weak_star ===> cr_cblinfun_weak_star) I I'\<close>
-      by (metis (no_types, lifting) I'_def UNIV_I cr_cblinfun_weak_star_def o_def rel_funI to_weak_star_inverse)
-    have \<open>I' \<midarrow>a\<rightarrow> I' a\<close> for a
-      apply (transfer)
-      sorry
-
-    then have \<open>isCont I' a\<close> for a
-      by (simp add: continuous_within)
-    then have \<open>continuous_on UNIV I'\<close>
-      using continuous_at_imp_continuous_on by blast
-    then have \<open>continuous_map euclidean euclidean I'\<close>
-      using continuous_map_iff_continuous2 by blast
-    then show ?thesis
-      by transfer
+    have \<open>continuous_map weak_star_topology weak_star_topology G\<close>
+      by (simp add: weak_star_cont_register)
+    then have \<open>continuous_map weak_star_topology (subtopology weak_star_topology (range G)) G\<close>
+      by (simp add: continuous_map_into_subtopology)
+    moreover have \<open>continuous_map (subtopology weak_star_topology (range F)) weak_star_topology (inv F)\<close>
+      using \<open>register F\<close> register_inv_weak_star_continuous by blast
+    ultimately show \<open>continuous_map weak_star_topology weak_star_topology I\<close>
+      unfolding \<open>range F = range G\<close> I_def
+      by (rule continuous_map_compose[unfolded o_def])
   qed
   have weak_star_J: \<open>continuous_map weak_star_topology weak_star_topology J\<close>
-    sorry
+  proof -
+    have \<open>continuous_map weak_star_topology weak_star_topology F\<close>
+      by (simp add: weak_star_cont_register)
+    then have \<open>continuous_map weak_star_topology (subtopology weak_star_topology (range F)) F\<close>
+      by (simp add: continuous_map_into_subtopology)
+    moreover have \<open>continuous_map (subtopology weak_star_topology (range G)) weak_star_topology (inv G)\<close>
+      using \<open>register G\<close> register_inv_weak_star_continuous by blast
+    ultimately show \<open>continuous_map weak_star_topology weak_star_topology J\<close>
+      unfolding \<open>range F = range G\<close> J_def
+      by (rule continuous_map_compose[unfolded o_def])
+  qed
 
   from addI scaleI unitalI multI adjI normI weak_star_I
   have \<open>register I\<close>
