@@ -2305,9 +2305,24 @@ lemma isCont_iff_preserves_convergence:
   using assms
   by (simp add: isCont_def Lim_at_id)
 
-(* TODO cite [register paper, Lemma 31 *)
+(* TODO cite [register paper], Lemma 17 *)
+lemma tensor_op_pos: \<open>a \<otimes>\<^sub>o b \<ge> 0\<close> if [simp]: \<open>a \<ge> 0\<close> \<open>b \<ge> 0\<close>
+  for a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+proof -
+  have \<open>(sqrt_op a \<otimes>\<^sub>o sqrt_op b)* o\<^sub>C\<^sub>L (sqrt_op a \<otimes>\<^sub>o sqrt_op b) = a \<otimes>\<^sub>o b\<close>
+    by (simp add: tensor_op_adjoint comp_tensor_op)
+  then show \<open>a \<otimes>\<^sub>o b \<ge> 0\<close>
+    by (metis positive_cblinfun_squareI)
+qed
+
+(* TODO cite [register paper], Lemma 17 *)
 lemma abs_op_tensor: \<open>abs_op (a \<otimes>\<^sub>o b) = abs_op a \<otimes>\<^sub>o abs_op b\<close>
-  sorry
+proof -
+  have \<open>(abs_op a \<otimes>\<^sub>o abs_op b)* o\<^sub>C\<^sub>L (abs_op a \<otimes>\<^sub>o abs_op b) = (a \<otimes>\<^sub>o b)* o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o b)\<close>
+    by (simp add: tensor_op_adjoint comp_tensor_op abs_op_def positive_cblinfun_squareI)
+  then show ?thesis
+    by (metis abs_opI abs_op_pos tensor_op_pos)
+qed
 
 lemma abs_summable_times: 
   fixes f :: \<open>'a \<Rightarrow> 'c::{real_normed_algebra}\<close> and g :: \<open>'b \<Rightarrow> 'c\<close>
@@ -2353,11 +2368,39 @@ proof -
     by (auto simp add: trace_class_iff_summable[OF is_onb_ket] summable_on_reindex o_def)
 qed
 
+lemma tensor_ell2_is_ortho_set:
+  assumes \<open>is_ortho_set A\<close> \<open>is_ortho_set B\<close>
+  shows \<open>is_ortho_set {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B}\<close>
+  using assms unfolding is_ortho_set_def
+  apply auto
+   apply fast
+  by (metis tensor_ell2_nonzero)
+
 lemma tensor_ell2_is_onb:
   assumes \<open>is_onb A\<close> \<open>is_onb B\<close>
   shows \<open>is_onb {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B}\<close>
-  thm tensor_ell2_dense
-  sorry 
+proof (subst is_onb_def, intro conjI ballI)
+  show \<open>is_ortho_set {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B}\<close>
+    apply (rule tensor_ell2_is_ortho_set)
+    using assms by (auto simp: is_onb_def)
+  from \<open>is_onb A\<close>
+  have \<open>ccspan A = \<top>\<close>
+    by (simp add: is_onb_def)
+  then have Adense: \<open>closure (cspan A) = UNIV\<close>
+    apply (transfer' fixing: A)
+    by simp
+  from \<open>is_onb B\<close>
+  have \<open>ccspan B = \<top>\<close>
+    by (simp add: is_onb_def)
+  then have Bdense: \<open>closure (cspan B) = UNIV\<close>
+    apply (transfer' fixing: B)
+    by simp
+  show \<open>ccspan {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B} = \<top>\<close>
+    apply (transfer fixing: A B)
+    using Adense Bdense by (rule tensor_ell2_dense)
+  show \<open>ab \<in> {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B} \<Longrightarrow> norm ab = 1\<close> for ab
+    using \<open>is_onb A\<close> \<open>is_onb B\<close> by (auto simp: is_onb_def norm_tensor_ell2)
+qed
 
 lemma trace_class_tensor_op_swap: \<open>trace_class (a \<otimes>\<^sub>o b) \<longleftrightarrow> trace_class (b \<otimes>\<^sub>o a)\<close>
   sorry
