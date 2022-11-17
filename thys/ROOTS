@@ -34,6 +34,7 @@ AutoFocus-Stream
 Automated_Stateful_Protocol_Verification
 Automatic_Refinement
 AxiomaticCategoryTheory
+Balog_Szemeredi_Gowers
 BDD
 BD_Security_Compositional
 BNF_CC
@@ -105,6 +106,7 @@ Coinductive
 Coinductive_Languages
 Collections
 Combinable_Wands
+Combinatorial_Enumeration_Algorithms
 Combinatorics_Words
 Combinatorics_Words_Graph_Lemma
 Combinatorics_Words_Lyndon
