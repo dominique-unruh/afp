@@ -267,7 +267,7 @@ qed
 
 
 
-lemma amplification_weak_star_cont[simp]:
+lemma right_amplification_weak_star_cont[simp]:
   \<open>continuous_map weak_star_topology weak_star_topology (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)\<close>
   \<comment> \<open>Logically does not belong in this theory but uses the partial trace in the proof.\<close>
 proof (unfold weak_star_topology_def', rule continuous_map_pullback_both)
@@ -282,6 +282,18 @@ proof (unfold weak_star_topology_def', rule continuous_map_pullback_both)
   show \<open>g' (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) =
          (\<lambda>t. trace (from_trace_class t o\<^sub>C\<^sub>L x \<otimes>\<^sub>o id_cblinfun))\<close> for x
     by (auto intro!: ext simp: g'_def trace_partial_trace_compose_eq_trace_compose_tensor_id)
+qed
+
+lemma left_amplification_weak_star_cont[simp]:
+  \<open>continuous_map weak_star_topology weak_star_topology (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b :: ('c\<times>'a) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('c\<times>'b) ell2)\<close>
+  \<comment> \<open>Logically does not belong in this theory but uses the partial trace in the proof.\<close>
+proof -
+  have \<open>continuous_map weak_star_topology weak_star_topology (
+        (\<lambda>x. x o\<^sub>C\<^sub>L swap_ell2) o (\<lambda>x. swap_ell2 o\<^sub>C\<^sub>L x) o (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun :: ('a\<times>'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b\<times>'c) ell2))\<close>
+    by (auto intro!: continuous_map_compose[where X'=weak_star_topology]
+        continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star)
+  then show ?thesis
+    by (auto simp: o_def)
 qed
 
 end

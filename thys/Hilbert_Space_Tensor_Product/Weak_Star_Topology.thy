@@ -639,6 +639,11 @@ proof (rule has_sum_in_weak_star[THEN iffD2, rule_format])
     by (simp add: trace_butterfly_comp')
 qed
 
+lemma sandwich_weak_star_cont[simp]:
+  \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
+  using continuous_map_compose[OF continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star]
+  by (auto simp: o_def sandwich_apply[abs_def])
+
 unbundle no_cblinfun_notation
 
 end

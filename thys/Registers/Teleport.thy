@@ -5,7 +5,7 @@ theory Teleport
     QHoare
     Real_Impl.Real_Impl
     "HOL-Library.Code_Target_Numeral"
-    Finite_Tensor_Product_Matrices
+    (* Finite_Tensor_Product_Matrices *)
     "HOL-Library.Word"
 begin
 
@@ -20,11 +20,11 @@ unbundle no_vec_syntax
 unbundle no_inner_syntax
 
 
-locale teleport_locale = qhoare "TYPE('mem::finite)" +
-  fixes X :: "bit update \<Rightarrow> 'mem::finite update"
+locale teleport_locale = qhoare "TYPE('mem)" +
+  fixes X :: "bit update \<Rightarrow> 'mem update"
     and \<Phi> :: "(bit*bit) update \<Rightarrow> 'mem update"
-    and A :: "'atype::finite update \<Rightarrow> 'mem update"
-    and B :: "'btype::finite update \<Rightarrow> 'mem update"
+    and A :: "'atype update \<Rightarrow> 'mem update"
+    and B :: "'btype update \<Rightarrow> 'mem update"
   assumes compat[register]: "mutually compatible (X,\<Phi>,A,B)"
 begin
 

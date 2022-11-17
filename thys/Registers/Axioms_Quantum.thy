@@ -27,9 +27,9 @@ section \<open>Quantum instantiation of registers\<close>
 theory Axioms_Quantum
   imports Jordan_Normal_Form.Matrix_Impl "HOL-Library.Rewrite"
           Complex_Bounded_Operators.Complex_L2
-          (* Finite_Tensor_Product *)
           Tensor_Product.Hilbert_Space_Tensor_Product
           Tensor_Product.Weak_Star_Topology
+          Tensor_Product.Partial_Trace
 begin
 
 
@@ -57,6 +57,7 @@ lemma id_preregister: \<open>preregister id\<close>
 
 lemma tensor_extensionality:
   \<open>preregister F \<Longrightarrow> preregister G \<Longrightarrow> (\<And>a b. F (tensor_op a b) = G (tensor_op a b)) \<Longrightarrow> F = G\<close>
+(* Use: weak_star_clinear_eq_butterfly_ketI *)
   sorry
 
 definition register :: \<open>('a update \<Rightarrow> 'b update) \<Rightarrow> bool\<close> where
@@ -86,39 +87,45 @@ lemma register_mult: "register F \<Longrightarrow> cblinfun_compose (F a) (F b) 
 
 lemma register_tensor_left: \<open>register (\<lambda>a. tensor_op a id_cblinfun)\<close>
   apply (auto simp add: comp_tensor_op register_def tensor_op_cbilinear tensor_op_adjoint)
-   apply (metis eq_onp_def right_amplification.rsp)
-  sorry
+  by (metis eq_onp_def right_amplification.rsp)
 
 lemma register_tensor_right: \<open>register (\<lambda>a. tensor_op id_cblinfun a)\<close>
-  apply (auto simp add: comp_tensor_op register_def tensor_op_cbilinear tensor_op_adjoint
+  by (auto simp add: comp_tensor_op register_def tensor_op_cbilinear tensor_op_adjoint
       bounded_cbilinear_apply_bounded_clinear tensor_op_bounded_cbilinear)
-  sorry
 
 definition register_pair ::
   \<open>('a update \<Rightarrow> 'c update) \<Rightarrow> ('b update \<Rightarrow> 'c update)
          \<Rightarrow> (('a\<times>'b) update \<Rightarrow> 'c update)\<close> where
   \<open>register_pair F G = (if register F \<and> register G \<and> (\<forall>a b. F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a) then 
-                        SOME R. (\<forall>a b. register R \<and> R (a\<otimes>\<^sub>ob) = F a o\<^sub>C\<^sub>L G b) else (\<lambda>_. 0))\<close>
+                        SOME R. (\<forall>a b. register R \<and> R (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b) else (\<lambda>_. 0))\<close>
 
 lemma cbilinear_F_comp_G[simp]: \<open>clinear F \<Longrightarrow> clinear G \<Longrightarrow> cbilinear (\<lambda>a b. F a o\<^sub>C\<^sub>L G b)\<close>
   unfolding cbilinear_def
   by (auto simp add: clinear_iff bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right)
 
-lemma register_pair_apply: 
+lemma 
+  fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G
   assumes [simp]: \<open>register F\<close> \<open>register G\<close>
   assumes \<open>\<And>a b. F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close>
-  shows \<open>(register_pair F G) (tensor_op a b) = F a o\<^sub>C\<^sub>L G b\<close>
-(*   unfolding register_pair_def
-  apply (simp flip: assms(3))
-  by (metis assms(1) assms(2) cbilinear_F_comp_G register_preregister tensor_lift_correct)x *)
-  sorry
+  shows register_pair_apply: \<open>(register_pair F G) (tensor_op a b) = F a o\<^sub>C\<^sub>L G b\<close>
+    and register_pair_is_register: \<open>register (register_pair F G)\<close>
+proof -
+  have *: \<open>register_pair F G = (SOME R. \<forall>a b. register R \<and> R (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b)\<close>
+    using assms unfolding register_pair_def by simp
+  have \<open>\<exists>R. \<forall>a b. register R \<and> R (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close>
+    sorry
+  then have \<open>\<forall>a b. register (register_pair F G) \<and> (register_pair F G) (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close>
+    unfolding * by (smt (verit) someI_ex)
+  then show \<open>(register_pair F G) (tensor_op a b) = F a o\<^sub>C\<^sub>L G b\<close> and \<open>register (register_pair F G)\<close>
+    by auto
+qed
 
-lemma register_pair_is_register:
+(* lemma register_pair_is_register:
   fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G
   assumes [simp]: \<open>register F\<close> and [simp]: \<open>register G\<close>
   assumes \<open>\<And>a b. F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close>
   shows \<open>register (register_pair F G)\<close> 
-  sorry
+  sorry *)
 (* proof (unfold register_def, intro conjI allI)
   have [simp]: \<open>clinear F\<close> \<open>clinear G\<close>
     using assms register_def by blast+

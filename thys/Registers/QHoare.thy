@@ -7,7 +7,7 @@ begin
 no_notation Order.top ("\<top>\<index>")
 
 locale qhoare =
-  fixes memory_type :: "'mem::finite itself"
+  fixes memory_type :: "'mem itself"
 begin
 
 definition "apply U R = R U" for R :: \<open>'a update \<Rightarrow> 'mem update\<close>

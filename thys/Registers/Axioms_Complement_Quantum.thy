@@ -12,11 +12,12 @@ no_notation elt_set_eq (infix "=o" 50)
 no_notation eq_closure_of ("closure'_of\<index>")
 hide_const (open) Order.top
 
-(* TODO get rid of the Register-sandwich-variant before moving this *)
-lemma sandwich_weak_star_cont[simp]:
+(* TODO: Get rid of Misc.sandwich and delete this. *)
+lemma sandwich_weak_star_cont'[simp]:
   \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
-  using continuous_map_compose[OF continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star]
-  by (auto simp: o_def sandwich_def[abs_def])
+  using sandwich_weak_star_cont
+  by (auto simp add: Complex_Bounded_Linear_Function.sandwich_apply[abs_def] Misc.sandwich_def[abs_def]
+      simp del: sandwich_weak_star_cont)
 
 (* TODO: can we use a generic rule similar to sum_parametric' instead? *)
 lemma has_sum_weak_star_transfer[transfer_rule]:
@@ -692,7 +693,7 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
     have \<open>U* o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L U = \<theta> \<otimes>\<^sub>o id_cblinfun\<close> 
       if \<open>\<theta> \<in> (weak_star_topology closure_of (cspan {butterket \<xi> \<eta> | \<xi> \<eta>. True}))\<close> for \<theta>
       apply (rule closure_of_eqI[OF _ _ that])
-      using * cont1 amplification_weak_star_cont by auto
+      using * cont1 left_amplification_weak_star_cont by auto
     with butterkets_weak_star_dense show ?thesis
       by auto
   qed
