@@ -15,6 +15,8 @@ class AFP_Structure private(val base_dir: Path) {
 
   val thys_dir = base_dir + Path.basic("thys")
 
+  def entry_thy_dir(name: Metadata.Entry.Name): Path = thys_dir + Path.basic(name)
+
   val authors_file = metadata_dir + Path.basic("authors.toml")
 
   val releases_file = metadata_dir + Path.basic("releases.toml")
@@ -59,9 +61,7 @@ class AFP_Structure private(val base_dir: Path) {
 
   def load(): List[Metadata.Entry] = {
     val authors = load_authors.map(author => author.id -> author).toMap
-    def sub_topics(topic: Metadata.Topic): List[Metadata.Topic] =
-      topic :: topic.sub_topics.flatMap(sub_topics)
-    val topics = Utils.grouped_sorted(load_topics.flatMap(sub_topics), (t: Metadata.Topic) => t.id)
+    val topics = Utils.grouped_sorted(load_topics.flatMap(_.all_topics), (t: Metadata.Topic) => t.id)
     val licenses = load_licenses.map(license => license.id -> license).toMap
     val releases = load_releases.groupBy(_.entry)
     entries.map(name => load_entry(name, authors, topics, licenses, releases))
@@ -71,7 +71,7 @@ class AFP_Structure private(val base_dir: Path) {
   /* save */
 
   private def save(file: Path, content: afp.TOML.T): Unit = {
-    file.file.mkdirs()
+    file.dir.file.mkdirs()
     File.write(file, TOML.Format(content))
   }
 
@@ -90,16 +90,19 @@ class AFP_Structure private(val base_dir: Path) {
 
   /* sessions */
 
-  def entries: List[Metadata.Entry.Name] = {
+  def entries_unchecked: List[Metadata.Entry.Name] = {
     val Entry = """([a-zA-Z0-9+_-]+)\.toml""".r
-    val file_entries = File.read_dir(entries_dir).map {
+    File.read_dir(entries_dir).map {
       case Entry(name) => name
       case f => error("Unrecognized file in metadata: " + f)
     }
+  }
+  
+  def entries: List[Metadata.Entry.Name] = {
     val session_entries = Sessions.parse_roots(thys_dir + Path.basic("ROOTS"))
 
     val session_set = session_entries.toSet
-    val metadata_set = file_entries.toSet
+    val metadata_set = entries_unchecked.toSet
 
     if (session_set != metadata_set) {
       val inter = session_set.intersect(metadata_set)

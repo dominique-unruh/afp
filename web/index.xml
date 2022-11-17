@@ -6,7 +6,25 @@
     <description>Recent content on Archive of Formal Proofs</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
-    <lastBuildDate>Tue, 04 Oct 2022 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 11 Nov 2022 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Combinatorial Enumeration Algorithms</title>
+      <link>/entries/Combinatorial_Enumeration_Algorithms.html</link>
+      <pubDate>Fri, 11 Nov 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Combinatorial_Enumeration_Algorithms.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>The Balog–Szemerédi–Gowers Theorem</title>
+      <link>/entries/Balog_Szemeredi_Gowers.html</link>
+      <pubDate>Fri, 11 Nov 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Balog_Szemeredi_Gowers.html</guid>
+      <description></description>
+    </item>
+    
     <item>
       <title>Verification of Query Optimization Algorithms</title>
       <link>/entries/Query_Optimization.html</link>
@@ -6723,6 +6741,15 @@ The archive repository is hosted on Heptapod to provide easy free access to arch
     </item>
     
     <item>
+      <title>Balog_Szemeredi_Gowers</title>
+      <link>/theories/balog_szemeredi_gowers/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/balog_szemeredi_gowers/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Banach_Steinhaus</title>
       <link>/theories/banach_steinhaus/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -7304,6 +7331,15 @@ The archive repository is hosted on Heptapod to provide easy free access to arch
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/theories/combinable_wands/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Combinatorial_Enumeration_Algorithms</title>
+      <link>/theories/combinatorial_enumeration_algorithms/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/combinatorial_enumeration_algorithms/</guid>
       <description></description>
     </item>
     
@@ -12241,7 +12277,7 @@ Referring to AFP Entries in Isabelle/JEdit Once you have downloaded the AFP, you
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/statistics/</guid>
-      <description>709 Entries   430 Authors   ~225,800 Lemmas   ~3,656,500 Lines of Code   Most used AFP entries:   Name Used by ? entries   1. List-Index 22   2. Collections 19   3. Show 16   4. Deriving 13   5. Coinductive 12   6. Jordan_Normal_Form 12   7. Polynomial_Factorization 12   8. Regular-Sets 12   9.</description>
+      <description>711 Entries   432 Authors   ~226,100 Lemmas   ~3,661,800 Lines of Code   Most used AFP entries:   Name Used by ? entries   1. List-Index 22   2. Collections 19   3. Show 16   4. Deriving 13   5. Coinductive 12   6. Jordan_Normal_Form 12   7. Polynomial_Factorization 12   8. Regular-Sets 12   9.</description>
     </item>
     
     <item>
@@ -12377,6 +12413,24 @@ Referring to AFP Entries in Isabelle/JEdit Once you have downloaded the AFP, you
       
       <guid>/theories/stuttering_equivalence/</guid>
       <description></description>
+    </item>
+    
+    <item>
+      <title>Submission</title>
+      <link>/webapp/submission/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/webapp/submission/</guid>
+      <description>{if (Number.isInteger(event.data)) {this.style.height=event.data + 32 + &#34;px&#34;}})}).call(this)&#39;const base = &#39;https:\/\/ci.isabelle.systems\/afp-submission&#39;document.getElementById(&#34;iframe&#34;).src = base + &#39;/submission&#39; + window.location.search</description>
+    </item>
+    
+    <item>
+      <title>Submission</title>
+      <link>/webapp/submit/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/webapp/submit/</guid>
+      <description>{if (Number.isInteger(event.data)) {this.style.height=event.data + 32 + &#34;px&#34;}})}).call(this)&#39;const base = &#39;https:\/\/ci.isabelle.systems\/afp-submission&#39;document.getElementById(&#34;iframe&#34;).src = base + &#39;/submit&#39; + window.location.search</description>
     </item>
     
     <item>
