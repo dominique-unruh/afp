@@ -19,17 +19,6 @@ attribute_setup axiom = \<open>Scan.lift Parse.name_position >> (fn name_pos => 
 
 subsection \<open>Auxiliary lemmas\<close>
 
-(* Simplify with these theorems to (try to) change all \<open>\<forall>x. ...\<close> into \<open>\<forall>x\<in>S. ...\<close>
-  to enable automated creation of parametricity rules without `bi_total` assumptions. *)
-lemma make_balls:
-  shows \<open>(\<forall>x. P \<longrightarrow> Q x) \<longleftrightarrow> (P \<longrightarrow> (\<forall>x. Q x))\<close>
-    and \<open>(\<forall>x. x \<in> S \<longrightarrow> Q x) \<longleftrightarrow> (\<forall>x\<in>S. Q x)\<close>
-    and \<open>(\<forall>x\<subseteq>S. R x) \<longleftrightarrow> (\<forall>x\<in>Pow S. R x)\<close>
-    and \<open>{x\<in>S. Q x} = Set.filter Q S\<close>
-    and \<open>{x. x \<subseteq> S \<and> R x} = Set.filter R (Pow S)\<close>
-  by auto
-
-
 locale local_typedef = fixes S ::"'b set" and s::"'s itself"
   assumes Ex_type_definition_S: "\<exists>(Rep::'s \<Rightarrow> 'b) (Abs::'b \<Rightarrow> 's). type_definition Rep Abs S"
 begin
@@ -59,7 +48,6 @@ lemma complete_space_as_set[simp]: \<open>complete (space_as_set V)\<close> for 
   by (simp add: complete_eq_closed)
 
 definition \<open>transfer_ball_range A P \<longleftrightarrow> (\<forall>f. range f \<subseteq> A \<longrightarrow> P f)\<close>
-(* TODO: add symmetric def to make_balls *)
 
 lemma Domainp_conversep: \<open>Domainp (conversep R) = Rangep R\<close>
   by (auto simp add: Domainp_iff[abs_def])
@@ -360,6 +348,19 @@ qed
 lemma csubspace_nonempty: \<open>csubspace X \<Longrightarrow> X \<noteq> {}\<close>
   using complex_vector.subspace_0 by auto
 
+
+(* Simplify with these theorems to (try to) change all \<open>\<forall>x. ...\<close> into \<open>\<forall>x\<in>S. ...\<close>
+  to enable automated creation of parametricity rules without `bi_total` assumptions. *)
+lemma make_parametricity_proof_friendly:
+  shows \<open>(\<forall>x. P \<longrightarrow> Q x) \<longleftrightarrow> (P \<longrightarrow> (\<forall>x. Q x))\<close>
+    and \<open>(\<forall>x. x \<in> S \<longrightarrow> Q x) \<longleftrightarrow> (\<forall>x\<in>S. Q x)\<close>
+    and \<open>(\<forall>x\<subseteq>S. R x) \<longleftrightarrow> (\<forall>x\<in>Pow S. R x)\<close>
+    and \<open>{x\<in>S. Q x} = Set.filter Q S\<close>
+    and \<open>{x. x \<subseteq> S \<and> R x} = Set.filter R (Pow S)\<close>
+    and \<open>\<And>P. (\<forall>f. range f \<subseteq> A \<longrightarrow> P f) = transfer_ball_range A P\<close>
+    and \<open>\<And>A B. A \<times> B = transfer_Times A B\<close>
+  by (auto simp: transfer_ball_range_def transfer_Times_def)
+
 subsection \<open>ETTS compatibility\<close>
 
 lemma [simp]: \<open>VS_Groups.semigroup_add_ow = SML_Semigroups.semigroup_add_ow\<close>
@@ -380,9 +381,9 @@ lemma [simp]: \<open>VS_Groups.ab_group_add_ow = SML_Groups.ab_group_add_ow\<clo
       VS_Groups.ab_group_add_ow_axioms_def minus_ow_def uminus_ow_def SML_Groups.ab_group_add_ow_axioms_def)
   by (metis SML_Monoids.comm_monoid_add_ow.axioms(1) SML_Semigroups.ab_semigroup_add_ow.axioms(1) plus_ow.plus_closed semigroup_add_ow.axioms(1))
 
-ctr parametricity in VS_Groups.ab_group_add_ow_def[simplified VS_Groups.ab_group_add_ow_axioms_def make_balls]
-ctr parametricity in vector_space_ow_def[simplified vector_space_ow_axioms_def make_balls]
-ctr parametricity in minus_ow_def[unfolded make_balls]
+ctr parametricity in VS_Groups.ab_group_add_ow_def[simplified VS_Groups.ab_group_add_ow_axioms_def make_parametricity_proof_friendly]
+ctr parametricity in vector_space_ow_def[simplified vector_space_ow_axioms_def make_parametricity_proof_friendly]
+ctr parametricity in minus_ow_def[unfolded make_parametricity_proof_friendly]
 
 subsection \<open>\<^class>\<open>scaleR\<close>\<close>
 
@@ -451,7 +452,7 @@ locale open_uniformity_ow = "open" "open" + uniformity uniformity
   assumes open_uniformity:
     "\<And>U. U \<subseteq> A \<Longrightarrow> open U \<longleftrightarrow> (\<forall>x\<in>U. eventually (\<lambda>(x', y). x' = x \<longrightarrow> y \<in> U) uniformity)"
 
-ctr parametricity in open_uniformity_ow_def[simplified make_balls]
+ctr parametricity in open_uniformity_ow_def[simplified make_parametricity_proof_friendly]
 
 lemma class_open_uniformity_ud[ud_with]: \<open>class.open_uniformity = open_uniformity_ow UNIV\<close>
   by (auto intro!: ext simp: class.open_uniformity_def open_uniformity_ow_def)
@@ -523,7 +524,7 @@ proof -
           uniformity = transfer_bounded_filter_Inf (transfer_Times U U)
               ((\<lambda>e. principal (Set.filter (\<lambda>(x,y). dist x y < e) (transfer_Times U U))) ` {0<..})"
   for  U dist uniformity
-    unfolding uniformity_dist_ow_def transfer_Times_def[symmetric] make_balls case_prod_unfold
+    unfolding uniformity_dist_ow_def make_parametricity_proof_friendly case_prod_unfold
       prod.collapse
     apply (subst Inf_bounded_transfer_bounded_filter_Inf[where B=\<open>U\<times>U\<close>])
     by (auto simp: transfer_Times_def)
@@ -655,7 +656,7 @@ subsection \<open>\<^const>\<open>nhds\<close>\<close>
 definition nhds_ow where \<open>nhds_ow U open a = (INF S\<in>{S. S \<subseteq> U \<and> open S \<and> a \<in> S}. principal S) \<sqinter> principal U\<close>
   for U "open"
 
-ctr parametricity in nhds_ow_def[folded transfer_bounded_filter_Inf_def, unfolded make_balls]
+ctr parametricity in nhds_ow_def[folded transfer_bounded_filter_Inf_def, unfolded make_parametricity_proof_friendly]
 
 lemma topological_space_nhds_ud[ud_with]: \<open>topological_space.nhds = nhds_ow UNIV\<close>
   by (auto intro!: ext simp add: nhds_ow_def [[axiom topological_space.nhds_def_raw]])
@@ -747,14 +748,14 @@ lemma class_complete_space_ud[ud_with]: \<open>class.complete_space = complete_s
   by (auto intro!: ext simp: class.complete_space_def class.complete_space_axioms_def complete_space_ow_def complete_space_ow_axioms_def ud_with)
 
 (* Not good enough *)
-(* ctr parametricity in complete_space_ow_def[unfolded make_balls transfer_ball_range_def[symmetric]] *)
+(* ctr parametricity in complete_space_ow_def[unfolded make_parametricity_proof_friendly transfer_ball_range_def[symmetric]] *)
 
 lemma complete_space_ow_parametric[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: "bi_unique T"
   shows "(rel_set T ===> (T ===> T ===> (=)) ===> rel_filter (rel_prod T T) ===> (rel_set T ===> (=)) ===> (=)) 
     complete_space_ow complete_space_ow"
-  unfolding complete_space_ow_def complete_space_ow_axioms_def make_balls  transfer_ball_range_def[symmetric]
+  unfolding complete_space_ow_def complete_space_ow_axioms_def make_parametricity_proof_friendly
   by transfer_prover
 
 lemma complete_space_ow_typeclass[simp]:
@@ -930,7 +931,7 @@ lemma closure_ow_parametric[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: \<open>bi_unique T\<close>
   shows \<open>(rel_set T ===> (rel_set T ===> (=)) ===> rel_set T ===> rel_set T) closure_ow closure_ow\<close>
-  unfolding closure_ow_def make_balls
+  unfolding closure_ow_def make_parametricity_proof_friendly
   by transfer_prover
 
 subsection \<open>\<^const>\<open>is_onb\<close>\<close>
