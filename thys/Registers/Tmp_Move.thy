@@ -10,10 +10,12 @@ unbundle lattice_syntax
 
 subsection \<open>Retrieving axioms\<close>
 
-attribute_setup axiom = \<open>Scan.lift Parse.name >> (fn name => Thm.rule_attribute [] 
-    (fn context => fn _ => Thm.axiom (Context.theory_of context) name))\<close>
-  \<comment> \<open>Retrieves an axiom by name. E.g., write @{thm [source] [[axiom HOL.refl]]}.
-      The fully qualified name is required.\<close>
+attribute_setup axiom = \<open>Scan.lift Parse.name_position >> (fn name_pos => Thm.rule_attribute [] 
+    (fn context => fn _ =>
+       let val thy = Context.theory_of context
+           val (full_name, _) = Name_Space.check context (Theory.axiom_table thy) name_pos
+       in Thm.axiom thy full_name end))\<close>
+  \<comment> \<open>Retrieves an axiom by name. E.g., write @{thm [source] [[axiom HOL.refl]]}.\<close>
 
 subsection \<open>Auxiliary lemmas\<close>
 
@@ -656,8 +658,7 @@ definition nhds_ow where \<open>nhds_ow U open a = (INF S\<in>{S. S \<subseteq> 
 ctr parametricity in nhds_ow_def[folded transfer_bounded_filter_Inf_def, unfolded make_balls]
 
 lemma topological_space_nhds_ud[ud_with]: \<open>topological_space.nhds = nhds_ow UNIV\<close>
-  by (auto intro!: ext simp add: nhds_ow_def 
-      [[axiom Topological_Spaces.topological_space.nhds_def_raw]])
+  by (auto intro!: ext simp add: nhds_ow_def [[axiom topological_space.nhds_def_raw]])
 
 lemma nhds_ud[ud_with]: \<open>nhds = nhds_ow UNIV open\<close>
   by (auto intro!: ext simp add: nhds_ow_def nhds_def)
@@ -698,7 +699,7 @@ lemma convergent_ud[ud_with]: \<open>convergent = convergent_ow UNIV open\<close
   by (auto simp: convergent_ow_def[abs_def] convergent_def[abs_def] ud_with)
 
 lemma topological_space_convergent_ud[ud_with]: \<open>topological_space.convergent = convergent_ow UNIV\<close>
-  by (auto intro!: ext simp: [[axiom Topological_Spaces.topological_space.convergent_def_raw]]
+  by (auto intro!: ext simp: [[axiom topological_space.convergent_def_raw]]
       convergent_ow_def ud_with)
 
 lemma convergent_ow_topology[simp]:
@@ -711,7 +712,7 @@ lemma convergent_ow_typeclass[simp]:
 
 subsection \<open>\<^const>\<open>uniform_space.cauchy_filter\<close>\<close>
 
-(* ctr parametricity in [[axiom Topological_Spaces.uniform_space.cauchy_filter_def_raw, where ?'a='a]] *)
+(* ctr parametricity in [[axiom uniform_space.cauchy_filter_def_raw, where ?'a='a]] *)
 
 lemma cauchy_filter_parametric[transfer_rule]:
   includes lifting_syntax
@@ -719,12 +720,12 @@ lemma cauchy_filter_parametric[transfer_rule]:
   shows "(rel_filter (rel_prod T T) ===> rel_filter T ===> (=)) 
     uniform_space.cauchy_filter
     uniform_space.cauchy_filter"
-  unfolding [[axiom Topological_Spaces.uniform_space.cauchy_filter_def_raw]]
+  unfolding [[axiom uniform_space.cauchy_filter_def_raw]]
   by transfer_prover
 
 subsection \<open>\<^const>\<open>uniform_space.Cauchy\<close>\<close>
 
-(* ctr parametricity in [[axiom Topological_Spaces.uniform_space.Cauchy_uniform_raw, where ?'a='a]] *)
+(* ctr parametricity in [[axiom uniform_space.Cauchy_uniform_raw, where ?'a='a]] *)
 
 lemma uniform_space_Cauchy_parametric[transfer_rule]:
   includes lifting_syntax
@@ -732,7 +733,7 @@ lemma uniform_space_Cauchy_parametric[transfer_rule]:
   shows "(rel_filter (rel_prod T T) ===> ((=) ===> T) ===> (=)) 
     uniform_space.Cauchy
     uniform_space.Cauchy"
-  unfolding [[axiom Topological_Spaces.uniform_space.Cauchy_uniform_raw]]
+  unfolding [[axiom uniform_space.Cauchy_uniform_raw]]
   using filtermap_parametric[transfer_rule] apply fail?
   by transfer_prover
 
@@ -769,9 +770,9 @@ proof (rule complete_space_ow.intro)
   proof -
     from cauchy
     have \<open>uniform_space.cauchy_filter (uniformity_on V) (filtermap X sequentially)\<close>
-      by (simp add: [[axiom Topological_Spaces.uniform_space.Cauchy_uniform_raw]])
+      by (simp add: [[axiom uniform_space.Cauchy_uniform_raw]])
     then have \<open>cauchy_filter (filtermap X sequentially)\<close>
-      by (auto simp: cauchy_filter_def [[axiom Topological_Spaces.uniform_space.cauchy_filter_def_raw]])
+      by (auto simp: cauchy_filter_def [[axiom uniform_space.cauchy_filter_def_raw]])
     then have \<open>Cauchy X\<close>
       by (simp add: Cauchy_uniform)
     with \<open>complete V\<close> XV obtain l where l: \<open>X \<longlonglongrightarrow> l\<close> \<open>l \<in> V\<close>
@@ -858,7 +859,7 @@ lemma subspace_ow_parametric[transfer_rule]:
   by transfer_prover
 
 lemma module_subspace_ud[ud_with]: \<open>module.subspace = subspace_ow plus 0\<close>
-  by (auto intro!: ext simp: [[axiom Modules.module.subspace_def_raw]] subspace_ow_def)
+  by (auto intro!: ext simp: [[axiom module.subspace_def_raw]] subspace_ow_def)
 
 lemma csubspace_ud[ud_with]: \<open>csubspace = subspace_ow (+) 0 (*\<^sub>C)\<close>
   by (simp add: csubspace_raw_def module_subspace_ud)
@@ -1019,6 +1020,5 @@ proof -
   ultimately show ?thesis
     using \<open>S \<subseteq> B\<close> by auto
 qed
-
 
 end
