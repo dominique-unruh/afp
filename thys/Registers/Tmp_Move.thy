@@ -2,15 +2,12 @@
 theory Tmp_Move
   imports
     Complex_Bounded_Operators.Complex_Bounded_Linear_Function
-    "HOL-Types_To_Sets.T2_Spaces"
+    (* "HOL-Types_To_Sets.T2_Spaces" *)
     Conditional_Transfer_Rule.CTR
     Types_To_Sets_Extension.SML_Topological_Space
     Types_To_Sets_Extension.SML_Groups
     Types_To_Sets_Extension.VS_Vector_Spaces
 begin
-
-declare [[show_sorts=false]]
-\<comment> \<open>\<^theory>\<open>HOL-Types_To_Sets.T2_Spaces\<close> leaves @{attribute show_sorts} enabled.\<close>
 
 unbundle lattice_syntax
 
@@ -20,114 +17,6 @@ attribute_setup axiom = \<open>Scan.lift Parse.name >> (fn name => Thm.rule_attr
     (fn context => fn _ => Thm.axiom (Context.theory_of context) name))\<close>
   \<comment> \<open>Retrieves an axiom by name. E.g., write @{thm [source] [[axiom HOL.refl]]}.
       The fully qualified name is required.\<close>
-
-subsection \<open>\<open>class.semigroup_add\<close>\<close>
-
-(* (* TODO minimize assumptions *)
-ctr relativization
-  synthesis 
-  assumes [transfer_domain_rule]: \<open>Domainp A = (\<lambda>x. x\<in>U)\<close> 
-    and [transfer_rule]: "right_total A"
-    and [transfer_rule]: "bi_unique A"
-  trp (?'a A)
-in class.semigroup_add_def *)
-
-(* definition \<open>semigroup_add_on A plus \<longleftrightarrow>
-        (\<forall>a\<in>A.
-           \<forall>b\<in>A. \<forall>c\<in>A. plus (plus a b) c = plus a (plus b c))\<close>
-  for A plus
-
-lemma semigroup_add_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "((T ===> T ===> T) ===> (=))  
-    (semigroup_add_on (Collect (Domainp T)))
-    class.semigroup_add"
-  unfolding class.semigroup_add_def
-  apply transfer_prover_start
-       apply transfer_step+
-  by (simp add: semigroup_add_on_def[abs_def]) *)
-
-(* lemma semigroup_add_on_typeclass[simp]: 
-  \<open>semigroup_add_on V (+)\<close> for V :: \<open>_::semigroup_add set\<close>
-  by (auto simp: semigroup_add_on_def ordered_field_class.sign_simps) *)
-
-subsection \<open>\<open>class.ab_semigroup_add\<close>\<close>
-
-(* ctr relativization
-  synthesis 
-  assumes [transfer_domain_rule]: \<open>Domainp A = (\<lambda>x. x\<in>U)\<close> 
-    and [transfer_rule]: "right_total A"
-    and [transfer_rule]: "bi_unique A"
-  trp (?'a A)
-in class.ab_semigroup_add_def
- *)
-
-thm ab_semigroup_add_ow_def
-
-(* definition \<open>ab_semigroup_add_on A plus \<longleftrightarrow>
-        semigroup_add_on A plus \<and>
-        (\<forall>a\<in>A. \<forall>b\<in>A. plus a b = plus b a)\<close>
-  for A plus
-
-lemma ab_semigroup_add_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "((T ===> T ===> T) ===> (=))  
-    (ab_semigroup_add_on (Collect (Domainp T)))
-    class.ab_semigroup_add"
-  unfolding class.ab_semigroup_add_def class.ab_semigroup_add_axioms_def
-  apply transfer_prover_start
-       apply transfer_step+
-  by (simp add: ab_semigroup_add_on_def[abs_def]) *)
-
-(* lemma ab_semigroup_add_on_typeclass[simp]: \<open>ab_semigroup_add_on V (+)\<close> for V :: \<open>_::ab_semigroup_add set\<close>
-  by (auto simp: ab_semigroup_add_on_def Groups.add_ac) *)
-
-subsection \<open>\<open>class.comm_monoid_add\<close>\<close>
-
-(* definition \<open>comm_monoid_add_on A plus zero \<longleftrightarrow>
-        ab_semigroup_add_on A plus \<and> (\<forall>a\<in>A. plus zero a = a)\<close>
-  for A plus zero
-
-lemma comm_monoid_add_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "((T ===> T ===> T) ===> T ===> (=))  
-    (comm_monoid_add_on (Collect (Domainp T)))
-    class.comm_monoid_add"
-  unfolding class.comm_monoid_add_def class.comm_monoid_add_axioms_def
-  apply transfer_prover_start
-       apply transfer_step+
-  by (simp add: comm_monoid_add_on_def[abs_def])
-
-lemma comm_monoid_add_on_typeclass[simp]: \<open>comm_monoid_add_on V (+) 0\<close> for V :: \<open>_::comm_monoid_add set\<close>
-  by (auto simp: comm_monoid_add_on_def) *)
-
-subsection \<open>\<open>class.ab_group_add\<close>\<close>
-
-(* definition \<open>ab_group_add_on A plus zero minus uminus \<longleftrightarrow>
-        comm_monoid_add_on A plus zero \<and>
-        (\<forall>a\<in>A. plus (uminus a) a = zero) \<and>
-        (\<forall>a\<in>A. \<forall>b\<in>A. minus a b = plus a (uminus b))\<close>
-  for A plus zero minus uminus
-
-lemma ab_group_add_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "((T ===> T ===> T) ===> T
-      ===> (T ===> T ===> T) ===> (T ===> T) ===> (=))  
-    (ab_group_add_on (Collect (Domainp T)))
-    class.ab_group_add"
-  unfolding class.ab_group_add_def class.ab_group_add_axioms_def
-  apply transfer_prover_start
-       apply transfer_step+
-  by (simp add: ab_group_add_on_def[abs_def]) *)
-
-(* lemma ab_group_add_on_typeclass[simp]: \<open>ab_group_add_on V (+) 0 (-) uminus\<close> for V :: \<open>_::ab_group_add set\<close>
-  by (auto simp: ab_group_add_on_def) *)
-
-thm ab_group_add_ow_def
 
 subsection \<open>\<open>class.scaleC\<close>\<close>
 
@@ -143,47 +32,19 @@ locale scaleC_ow = scaleR_ow +
   assumes scaleC_closed: \<open>\<forall>a\<in>U. scaleC c a \<in> U\<close>
   assumes \<open>\<forall>a\<in>U. scaleR r a = scaleC (complex_of_real r) a\<close>
 
-(* definition \<open>scaleC_on A scaleR scaleC \<longleftrightarrow> (\<forall>r. \<forall>a\<in>A. scaleR r a = scaleC (complex_of_real r) a)\<close>
-  for scaleR scaleC *)
-
 lemma class_scaleC_ow_typeclass: \<open>class.scaleC scaleR scaleC = scaleC_ow UNIV scaleR scaleC\<close> for scaleR scaleC
   by (auto simp add: class.scaleC_def scaleC_ow_def scaleC_ow_axioms_def)
 
 lemma aux: \<open>P \<equiv> Q \<Longrightarrow> P \<equiv> (\<forall>x\<in>UNIV. \<forall>y\<in>UNIV. f x y \<in> UNIV) \<and> Q\<close>
   by simp         
 
-(* We would like to use `ctr parametricity in scaleR_ow_def` here but that command produces
-   an unnecessary `bi_total A` assumption. Similarly for many other ctr-commands below. *)
-ctr relativization
-synthesis ctr_blank
-assumes [transfer_rule]: \<open>bi_unique A\<close>
-trp (?'a A)
-in scaleR_ow_def
-
-(* lemma scaleR_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "bi_unique T"
-  shows "(rel_set T ===> ((=) ===> T ===> T) ===> (=)) scaleR_ow scaleR_ow"
-  unfolding scaleR_ow_def 
-  by transfer_prover *)
+ctr parametricity in scaleR_ow_def
 
 ctr relativization
 synthesis ctr_blank
 assumes [transfer_rule]: \<open>bi_unique A\<close>
 trp (?'a A)
 in scaleC_ow_def[unfolded scaleC_ow_axioms_def]
-
-(* lemma scaleC_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "(rel_set T ===> ((=) ===> T ===> T) ===> ((=) ===> T ===> T) ===> (=))  
-    scaleC_ow
-    scaleC_ow"
-  unfolding scaleC_ow_def scaleC_ow_axioms_def
-  by transfer_prover *)
-
-(* lemma scaleC_on_typeclass[simp]: \<open>scaleC_on V ( *\<^sub>R) ( *\<^sub>C)\<close>
-  by (auto simp: scaleC_ow_def scaleR_scaleC) *)
 
 subsection \<open>\<open>class.complex_vector\<close>\<close>
 
@@ -205,9 +66,8 @@ lemma [simp]: \<open>VS_Groups.ab_group_add_ow = SML_Groups.ab_group_add_ow\<clo
       VS_Groups.ab_group_add_ow_axioms_def minus_ow_def uminus_ow_def SML_Groups.ab_group_add_ow_axioms_def)
   by (metis SML_Monoids.comm_monoid_add_ow.axioms(1) SML_Semigroups.ab_semigroup_add_ow.axioms(1) plus_ow.plus_closed semigroup_add_ow.axioms(1))
 
-lemma class_real_vector_with[ud_with]: \<open>class.real_vector plus zero minus uminus scaleR \<longleftrightarrow> vector_space_ow UNIV plus zero minus uminus scaleR\<close>
-  for plus zero minus uminus scaleR
-  by (auto simp add: class.real_vector_def ab_group_add_ow vector_space_ow_def
+lemma class_real_vector_with[ud_with]: \<open>class.real_vector = vector_space_ow UNIV\<close>
+  by (auto intro!: ext simp add: class.real_vector_def ab_group_add_ow vector_space_ow_def
       class.real_vector_axioms_def vector_space_ow_axioms_def)
 
 locale complex_vector_ow = vector_space_ow U plus zero minus uminus scaleC + scaleC_ow U scaleR scaleC
@@ -216,38 +76,10 @@ locale complex_vector_ow = vector_space_ow U plus zero minus uminus scaleC + sca
 lemma class_scaleC_with[ud_with]: \<open>class.scaleC = scaleC_ow UNIV\<close>
   by (auto intro!: ext simp: class.scaleC_def scaleC_ow_def scaleR_ow_def scaleC_ow_axioms_def)
 
-lemma class_complex_vector_with[ud_with]: \<open>class.complex_vector scaleR scaleC plus zero minus uminus 
-  \<longleftrightarrow> complex_vector_ow UNIV scaleR scaleC plus zero minus uminus\<close>
-  for scaleR scaleC plus zero minus uminus
-  by (auto simp: class.complex_vector_def vector_space_ow_def vector_space_ow_axioms_def
+lemma class_complex_vector_with[ud_with]: \<open>class.complex_vector = complex_vector_ow UNIV\<close>
+  by (auto intro!: ext simp: class.complex_vector_def vector_space_ow_def vector_space_ow_axioms_def
       class.complex_vector_axioms_def class.scaleC_def complex_vector_ow_def
       SML_Groups.ab_group_add_ow class_scaleC_with)
-
-(* definition \<open>complex_vector_on A scaleR scaleC plus zero minus uminus \<longleftrightarrow>
-        scaleC_on A scaleR scaleC \<and>
-        ab_group_add_on A plus zero minus uminus \<and>
-                 (\<forall>a. \<forall>x\<in>A. \<forall>y\<in>A. scaleC a (plus x y) = plus (scaleC a x) (scaleC a y)) \<and>
-          (\<forall>a. \<forall>b. \<forall>x\<in>A. scaleC (a + b) x = plus (scaleC a x) (scaleC b x)) \<and>
-         (\<forall>a. \<forall>b. \<forall>x\<in>A. scaleC a (scaleC b x) = scaleC (a * b) x) \<and> (\<forall>x\<in>A. scaleC 1 x = x)\<close>
-  for A scaleR scaleC plus zero minus uminus
-*)
-
-thm class.complex_vector_def
-
-(* ctr parametricity in vector_space_ow_axioms_def *)
-(* ctr parametricity in vector_space_ow_def *)
-(* 
-lemma vector_space_ow[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "bi_unique T"
-  shows \<open>(rel_set T ===>
-      (T ===> T ===> T) ===>
-      T ===> (T ===> T ===> T) ===> (T ===> T) ===> ((=) ===> T ===> T) ===> (=))
-      vector_space_ow vector_space_ow\<close>
-  unfolding vector_space_ow_def vector_space_ow_axioms_def
-  apply transfer_prover_start
-       apply transfer_step+
- *)
 
 (* Simplify with these theorems to (try to) change all \<open>\<forall>x. ...\<close> into \<open>\<forall>x\<in>S. ...\<close>
   to enable automated creation of parametricity rules without `bi_total` assumptions. *)
@@ -265,24 +97,6 @@ ctr parametricity in VS_Groups.comm_monoid_add_ow_def[simplified VS_Groups.comm_
 ctr parametricity in VS_Groups.ab_group_add_ow_def[simplified VS_Groups.ab_group_add_ow_axioms_def make_balls]
 ctr parametricity in vector_space_ow_def[simplified vector_space_ow_axioms_def make_balls]
 ctr parametricity in complex_vector_ow_def
-
-(* lemma complex_vector_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "(rel_set T ===> ((=) ===> T ===> T) ===> ((=) ===> T ===> T) ===> (T ===> T ===> T) ===> T
-      ===> (T ===> T ===> T) ===> (T ===> T) ===> (=))  
-    complex_vector_ow
-    complex_vector_ow"
-  unfolding complex_vector_ow_def class.complex_vector_def class.complex_vector_axioms_def
-  apply transfer_prover_start
-       apply transfer_step+
-  by (simp add: complex_vector_ow_def[abs_def]) *)
-
-
-(* lemma complex_vector_on_typeclass[simp]: 
-  \<open>complex_vector_on V ( *\<^sub>R) ( *\<^sub>C) (+) 0 (-) uminus\<close> for V :: \<open>_::complex_vector set\<close>
-  by (auto simp add: complex_vector_on_def complex_vector.vector_space_assms)
- *)
 
 lemma module_on_typeclass[simp]: \<open>module_on V (*\<^sub>C)\<close> if [simp]: \<open>csubspace V\<close>
   by (auto simp add: module_on_def scaleC_add_right scaleC_add_left
@@ -302,7 +116,7 @@ lemma complex_vector_ow_typeclass[simp]:
       scaleC_ow_axioms_def scaleR_ow_def scaleR_scaleC complex_vector.subspace_scale)
 
 lemma csubspace_nonempty: \<open>csubspace X \<Longrightarrow> X \<noteq> {}\<close>
-  sorry
+  using complex_vector.subspace_0 by auto
 
 subsection \<open>class.open_uniformity\<close>
 
@@ -313,32 +127,8 @@ locale open_uniformity_ow = "open" "open" + uniformity uniformity
 
 ctr parametricity in open_uniformity_ow_def[simplified make_balls]
 
-(* ctr relativization
-  synthesis ctr_simps
-  assumes [transfer_domain_rule]: \<open>Domainp A = (\<lambda>x. x\<in>U)\<close> 
-    and [transfer_rule]: "right_total A"
-    and [transfer_rule]: "bi_unique A"
-  trp (?'a A)
-in class.open_uniformity_def *)
-
-(* 
-definition \<open>open_uniformity_on A open uniformity \<longleftrightarrow>
-  (\<forall>U\<subseteq>A. open U = (\<forall>x\<in>U. \<forall>\<^sub>F (x', y) in uniformity. x' = x \<longrightarrow> y \<in> U))\<close>
-  for A "open" uniformity
-*)
-
-lemma class_open_uniformity_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "((rel_set T ===> (=)) ===> rel_filter (rel_prod T T) ===> (=)) 
-    (open_uniformity_ow (Collect (Domainp T)))
-    class.open_uniformity"
-  unfolding class.open_uniformity_def
-  apply transfer_prover_start
-  apply transfer_step+
-  apply (auto intro!: ext simp: open_uniformity_ow_def)
-  by blast+
-
+lemma [ud_with]: \<open>class.open_uniformity = open_uniformity_ow UNIV\<close>
+  by (auto intro!: ext simp: class.open_uniformity_def open_uniformity_ow_def)
 
 lemma open_uniformity_on_typeclass[simp]: 
   fixes V :: \<open>_::open_uniformity set\<close>
@@ -438,7 +228,6 @@ qed
 lemma Inf_filter_parametric'[transfer_rule]:
   includes lifting_syntax
   fixes r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
-  (* assumes \<open>Domainp r = S\<close> *)
   assumes [transfer_rule]: \<open>bi_unique r\<close> \<open>right_total r\<close>
   shows \<open>(rel_set (rel_filter r) ===> rel_filter r)
      (\<lambda>M. inf (Inf M) (principal (Collect (Domainp r))))
@@ -480,15 +269,11 @@ proof (rule rel_funI)
   qed
 qed
 
-
 locale uniformity_dist_ow = dist dist + uniformity uniformity for U dist uniformity +
   assumes uniformity_dist: "uniformity = (\<Sqinter>e\<in>{0<..}. principal {(x, y)\<in>U\<times>U. dist x y < e})"
 
-
-(* definition \<open>transfer_bounded_Collect B P = {x\<in>B. P x}\<close>
-lemma transfer_bounded_Collect_parametricity[transfer_rule]:
-  includes lifting_syntax
-  shows \<open>(rel_set T ===> (T ===> bool) ===> rel_set T) transfer_bounded_Collect transfer_bounded_Collect\<close> *)
+lemma [ud_with]: \<open>class.uniformity_dist = uniformity_dist_ow UNIV\<close>
+  by (auto intro!: ext simp: class.uniformity_dist_def uniformity_dist_ow_def)
 
 definition \<open>transfer_Times A B = A \<times> B\<close>
 lemma transfer_Times_parametricity[transfer_rule]:
@@ -676,13 +461,6 @@ proof (intro rel_funI, unfold transfer_bounded_filter_Inf_def)
   qed
 qed
 
-(* 
-
-definition \<open>transfer_bounded_Inf B S = Inf (B \<inter> S)\<close>
-thm transfer_bounded_Inf_def
-term transfer_bounded_Inf
-
- *)
 lemma uniformity_dist_ow_def2:
   fixes U dist uniformity
   shows "uniformity_dist_ow U dist uniformity \<longleftrightarrow> 
@@ -693,43 +471,7 @@ lemma uniformity_dist_ow_def2:
   apply (subst Inf_bounded_transfer_bounded_filter_Inf[where B=\<open>U\<times>U\<close>])
   by (auto simp: transfer_Times_def)
 
-(* (* `ctr parametricity in uniformity_dist_ow_def` says `Unexpected format. Not of form Const (HOL.Trueprop, _) $ _`
-   so we do things by hand. *)
-lemma class_uniformity_dist_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "bi_unique T"
-  shows "(rel_set T ===> (T ===> T ===> (=)) ===> rel_filter (rel_prod T T) ===> (=)) 
-    uniformity_dist_ow uniformity_dist_ow"
-  unfolding uniformity_dist_ow_def2 transfer_Times_def[symmetric] make_balls case_prod_unfold
-    prod.collapse
-  apply transfer_prover_start
-              apply transfer_step+
-  by simp
- *)
-
 ctr parametricity in uniformity_dist_ow_def2
-
-(* definition \<open>uniformity_dist_on A dist uniformity \<longleftrightarrow>
-        uniformity = (\<Sqinter>e\<in>{0<..}. principal {(x, y)\<in>A\<times>A. dist x y < e})\<close>
-  for dist uniformity *)
-
-thm class.uniformity_dist_def
-
-(* lemma class_uniformity_dist_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "((T ===> T ===> (=)) ===> rel_filter (rel_prod T T) ===> (=)) 
-    (uniformity_dist_ow (Collect (Domainp T)))
-    class.uniformity_dist"
-  unfolding class.uniformity_dist_def 
-  apply transfer_prover_start
-  apply transfer_step+
-  apply (intro ext)
-  apply (simp add: case_prod_unfold pred_prod_beta uniformity_dist_ow_def
-        flip: INF_inf_const2)
-  apply (rule arg_cong[where f=\<open>\<lambda>\<gamma>. _ = (INF x\<in>_. principal (\<gamma> x))\<close>])
-  by (auto intro!: ext simp: prod.Domainp_rel) *)
-
 
 lemma uniformity_dist_on_typeclass[simp]: \<open>uniformity_dist_ow V dist (uniformity_on V)\<close> for V :: \<open>_::uniformity_dist set\<close>
   apply (auto simp add: uniformity_dist_ow_def uniformity_dist simp flip: INF_inf_const2)
@@ -744,35 +486,18 @@ locale sgn_ow =
 
 ctr parametricity in sgn_ow_def
 
-(* lemma sgn_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "bi_unique T"
-  shows "(rel_set T ===> (T ===> T) ===> (=))  
-    sgn_ow sgn_ow"
-  unfolding sgn_ow_def
-  by transfer_prover *)
+locale sgn_div_norm_ow = scaleR_ow U scaleR + norm norm + sgn_ow U sgn for U sgn norm scaleR +
+  assumes "\<forall>x\<in>U. sgn x = scaleR (inverse (norm x)) x"
 
-locale sgn_div_norm_ow = scaleR_ow U scaleR + norm norm + sgn_ow U sgn for U norm sgn scaleR +
-  assumes sgn_div_norm: "\<forall>x\<in>U. sgn x = scaleR (inverse (norm x)) x"
-
-(* definition \<open>sgn_div_norm_on A sgn norm scaleR
-                  \<longleftrightarrow> (\<forall>x\<in>A. sgn x = scaleR (inverse (norm x)) x)\<close>
-  for A sgn norm scaleR *)
+lemma [ud_with]: \<open>class.sgn_div_norm = sgn_div_norm_ow UNIV\<close>
+  by (auto intro!: ext simp: class.sgn_div_norm_def sgn_div_norm_ow_def sgn_div_norm_ow_axioms_def ud_with sgn_ow_def)
 
 ctr parametricity in sgn_div_norm_ow_def[unfolded sgn_div_norm_ow_axioms_def]
-
-lemma sgn_div_norm_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "(rel_set T ===> (T ===> (=)) ===> (T ===> T) ===> ((=) ===> T ===> T) ===> (=))  
-    sgn_div_norm_ow sgn_div_norm_ow"
-  unfolding sgn_div_norm_ow_def sgn_div_norm_ow_axioms_def
-  by transfer_prover
 
 lemma sgn_div_norm_on_typeclass[simp]: 
   fixes V :: \<open>_::sgn_div_norm set\<close>
   assumes \<open>\<And>v r. v\<in>V \<Longrightarrow> scaleR r v \<in> V\<close>
-  shows \<open>sgn_div_norm_ow V norm sgn (*\<^sub>R)\<close> 
+  shows \<open>sgn_div_norm_ow V sgn norm (*\<^sub>R)\<close> 
   using assms 
   by (auto simp add: sgn_ow_def sgn_div_norm_ow_axioms_def scaleR_ow_def sgn_div_norm_ow_def sgn_div_norm)
 
@@ -780,47 +505,27 @@ subsection \<open>\<open>class.dist_norm\<close>\<close>
 
 ctr parametricity in minus_ow_def[unfolded make_balls]
 
-locale dist_norm_ow = dist dist + norm norm + minus_ow U minus for U dist norm minus +
+locale dist_norm_ow = dist dist + norm norm + minus_ow U minus for U minus dist norm +
   assumes dist_norm: "\<forall>x\<in>U. \<forall>y\<in>U. dist x y = norm (minus x y)"
 
+thm class.dist_norm_def
+
+lemma [ud_with]: \<open>class.dist_norm = dist_norm_ow UNIV\<close>
+  by (auto intro!: ext simp: class.dist_norm_def dist_norm_ow_def dist_norm_ow_axioms_def
+      minus_ow_def ud_with)
+
 ctr parametricity in dist_norm_ow_def[unfolded dist_norm_ow_axioms_def]
-
-(* ctr relativization
-  synthesis ctr_simps
-  assumes [transfer_domain_rule]: \<open>Domainp A = (\<lambda>x. x\<in>U)\<close> 
-    and [transfer_rule]: "right_total A"
-    and [transfer_rule]: "bi_unique A"
-  trp (?'a A)
-in class.dist_norm_def *)
-
-(* 
-definition \<open>dist_norm_on A minus dist norm \<longleftrightarrow>
-  (\<forall>x\<in>A. \<forall>y\<in>A. dist x y = norm (minus x y))\<close>
-  for A minus dist norm
-
-lemma dist_norm_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "((T ===> T ===> T) ===> (T ===> T ===> (=)) ===> (T ===> (=)) ===> (=))  
-    (dist_norm_on (Collect (Domainp T)))
-    class.dist_norm"
-  unfolding class.dist_norm_def
-  apply transfer_prover_start
-       apply transfer_step+
-  by (simp add: dist_norm_on_def[abs_def]) *)
 
 lemma dist_norm_ow_typeclass[simp]: 
   fixes A :: \<open>_::dist_norm set\<close>
   assumes \<open>\<And>a b. \<lbrakk> a \<in> A; b \<in> A \<rbrakk> \<Longrightarrow> a - b \<in> A\<close>
-  shows \<open>dist_norm_ow A dist norm (-)\<close> 
+  shows \<open>dist_norm_ow A (-) dist norm\<close> 
   by (auto simp add: assms dist_norm_ow_def minus_ow_def dist_norm_ow_axioms_def dist_norm)
 
 subsection \<open>\<open>class.complex_inner\<close>\<close>
 
-thm class.complex_inner_def
-
 locale complex_inner_ow = complex_vector_ow U scaleR scaleC plus zero minus uminus
-  + dist_norm_ow U dist norm minus + sgn_div_norm_ow U norm sgn scaleR
+  + dist_norm_ow U minus dist norm + sgn_div_norm_ow U sgn norm scaleR
   + uniformity_dist_ow U dist uniformity
   + open_uniformity_ow U "open" uniformity
   for U scaleR scaleC plus zero minus uminus dist norm sgn uniformity "open" +
@@ -832,26 +537,11 @@ locale complex_inner_ow = complex_vector_ow U scaleR scaleC plus zero minus umin
     and "\<forall>x\<in>U. cinner x x = 0 \<longleftrightarrow> x = zero"
     and "\<forall>x\<in>U. norm x = sqrt (cmod (cinner x x))"
 
+lemma [ud_with]: \<open>class.complex_inner = complex_inner_ow UNIV\<close>
+  apply (intro ext)
+  by (simp add: class.complex_inner_def class.complex_inner_axioms_def complex_inner_ow_def complex_inner_ow_axioms_def ud_with)
 
-(* definition \<open>complex_inner_on A scaleR scaleC plusa zeroa minus uminus dist norm sgn uniformity open cinner \<longleftrightarrow>
-        (vector_space_ow A plusa zeroa minus uminus scaleC \<and>
-         scaleC_ow A scaleR scaleC \<and>
-         dist_norm_on A minus dist norm \<and>
-         sgn_div_norm_on A sgn norm scaleR) \<and>
-        uniformity_dist_on A dist uniformity \<and>
-class.open_uniformity.transferred A open uniformity \<and>
-        ((\<forall>x\<in>A. \<forall>y\<in>A. cinner x y = cnj (cinner y x)) \<and>
-         (\<forall>x\<in>A.
-             \<forall>y\<in>A.
-                \<forall>z\<in>A. cinner (plusa x y) z = cinner x z + cinner y z) \<and>
-         (\<forall>r. \<forall>x\<in>A.
-                 \<forall>y\<in>A. cinner (scaleC r x) y = cnj r * cinner x y)) \<and>
-        (\<forall>x\<in>A. 0 \<le> cinner x x) \<and>
-        (\<forall>x\<in>A. (cinner x x = 0) = (x = zeroa)) \<and>
-        (\<forall>x\<in>A. norm x = sqrt (cmod (cinner x x)))\<close>
-  for A scaleR scaleC plusa zeroa minus uminus dist norm sgn uniformity "open" cinner *)
-
-(* Does manage *)
+(* Does not manage *)
 (* ctr parametricity in complex_inner_ow_def[unfolded complex_inner_ow_axioms_def] *)
 
 lemma complex_inner_ow_parametricity[transfer_rule]:
@@ -876,18 +566,13 @@ lemma complex_inner_ow_typeclass[simp]:
 
 subsection \<open>\<open>is_ortho_set.with\<close>\<close>
 
-definition (in complex_inner_ow) is_ortho_set where \<open>is_ortho_set x S \<longleftrightarrow> 
+definition (in complex_inner_ow) is_ortho_set_ow where \<open>is_ortho_set_ow S \<longleftrightarrow> 
   ((\<forall>x\<in>S. \<forall>y\<in>S. x \<noteq> y \<longrightarrow> cinner x y = 0) \<and> zero \<notin> S)\<close>
 
-(* ud is_ortho_set is_ortho_set *)
+ctr parametricity in [[axiom Tmp_Move.complex_inner_ow.is_ortho_set_ow_def_raw, where ?'a='a]]
 
-ctr parametricity in [[axiom Tmp_Move.complex_inner_ow.is_ortho_set_def_raw, where ?'a='a and ?'b='b]]
-
-(* ctr relativization
-  synthesis ctr_simps
-  assumes [transfer_rule]: "bi_unique A"
-  trp (?'a A)
-in is_ortho_set_ow: is_ortho_set.with_def *)
+lemma [abs_def, ud_with]: \<open>is_ortho_set E \<longleftrightarrow> complex_inner_ow.is_ortho_set_ow 0 cinner E\<close>
+  by (auto simp: [[axiom Tmp_Move.complex_inner_ow.is_ortho_set_ow_def_raw]] is_ortho_set_def)
 
 subsection \<open>\<open>class.metric_space\<close>\<close>
 
@@ -898,25 +583,8 @@ locale metric_space_ow = uniformity_dist_ow U dist uniformity + open_uniformity_
 
 ctr parametricity in metric_space_ow_def[unfolded metric_space_ow_axioms_def]
 
-(* 
-definition \<open>metric_space_on A dist uniformity open \<longleftrightarrow>
-        uniformity_dist_on A dist uniformity \<and>
-        open_uniformity_on A open uniformity \<and>
-        (\<forall>x\<in>A. (\<forall>y\<in>A. (dist x y = 0) \<longleftrightarrow> (x = y))) \<and>
-        (\<forall>x\<in>A. (\<forall>y\<in>A. (\<forall>z\<in>A. dist x y \<le> dist x z + dist y z)))\<close>
-  for A dist uniformity "open"
-*)
-
-(* lemma class_metric_space_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "((T ===> T ===> (=)) ===> rel_filter (rel_prod T T) ===> (rel_set T ===> (=)) ===> (=)) 
-    (metric_space_ow (Collect (Domainp T)))
-    class.metric_space"
-  unfolding class.metric_space_def class.metric_space_axioms_def
-  apply transfer_prover_start
-       apply transfer_step+
-  by (simp add: metric_space_ow_def[abs_def] metric_space_ow_axioms_def) *)
+lemma [ud_with]: \<open>class.metric_space = metric_space_ow UNIV\<close>
+  by (auto intro!: ext simp: class.metric_space_def class.metric_space_axioms_def metric_space_ow_def metric_space_ow_axioms_def ud_with)
 
 lemma metric_space_ow_typeclass[simp]:
   fixes V :: \<open>_::metric_space set\<close>
@@ -926,45 +594,24 @@ lemma metric_space_ow_typeclass[simp]:
 
 subsection \<open>\<open>topological_space.nhds\<close>\<close>
 
-ud topological_space.nhds topological_space.nhds
+definition (in topological_space_ow) nhds where \<open>nhds a = (INF S\<in>{S. S \<subseteq> U \<and> \<tau> S \<and> a \<in> S}. principal S) \<sqinter> principal U\<close>
 
-ctr relativization
-  synthesis ctr_simps
-  assumes [transfer_domain_rule]: \<open>Domainp A = (\<lambda>x. x\<in>U)\<close>
-    and [transfer_rule]: "right_total A" "bi_unique A"
-  trp (?'a A)
-in topological_space.nhds.with_def
+ctr parametricity in [[axiom Tmp_Move.topological_space_ow.nhds_def_raw, where ?'at='at, 
+      folded transfer_bounded_filter_Inf_def, 
+      unfolded make_balls]]
 
+lemma [ud_with]: \<open>topological_space.nhds = topological_space_ow.nhds UNIV\<close>
+  by (auto intro!: ext simp add: [[axiom Tmp_Move.topological_space_ow.nhds_def_raw]] 
+      [[axiom Topological_Spaces.topological_space.nhds_def_raw]])
 
-(* Without the prepocessing, rule has too strong conditions like `(?A2.0 ===> rel_filter ?A3.0 ===> ?A4.0) (\<sqinter>) (\<sqinter>)` *)
-ctr parametricity in topological_space.nhds.with.transferred_def[folded transfer_bounded_filter_Inf_def, unfolded make_balls]
-
-(* lemma topological_space_nhds_with_transferred_def_parametric[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique A\<close>
-  shows \<open>(rel_set A ===> (rel_set A ===> (=)) ===> A ===> rel_filter A) topological_space.nhds.with.transferred topological_space.nhds.with.transferred\<close>
-  unfolding topological_space.nhds.with.transferred_def
-transfer_bounded_filter_Inf_def[symmetric] make_balls
-  apply transfer_prover_start
-  apply transfer_step
-  apply transfer_step
-  apply transfer_step
-  apply transfer_step
-  apply transfer_step
-  apply transfer_step
-  apply transfer_step
-
-  term  topological_space.nhds.with.transferred *)
-
-ud nhds nhds
+lemma [ud_with]: \<open>nhds = topological_space_ow.nhds UNIV open\<close>
+  by (auto intro!: ext simp add: [[axiom Tmp_Move.topological_space_ow.nhds_def_raw]] nhds_def)
 
 lemma fix_Domainp: \<open>Domainp X = (\<lambda>x. x\<in>Collect (Domainp X))\<close>
   by auto
 
-declare topological_space.nhds.with.transferred.transfer[OF fix_Domainp, transfer_rule]
-
-lemma nhds_on_topology[simp]: \<open>topological_space.nhds.with.transferred (topspace T) (openin T) x = nhdsin T x\<close> if \<open>x \<in> topspace T\<close>
-  using that apply (auto intro!: ext simp add: topological_space.nhds.with.transferred_def[abs_def] nhdsin_def[abs_def])
+lemma nhds_on_topology[simp]: \<open>topological_space_ow.nhds (topspace T) (openin T) x = nhdsin T x\<close> if \<open>x \<in> topspace T\<close>
+  using that apply (auto intro!: ext simp add: [[axiom Tmp_Move.topological_space_ow.nhds_def_raw]] nhdsin_def[abs_def])
    apply (subst INF_inf_const2[symmetric])
   using openin_subset by (auto intro!: INF_cong)
 
@@ -979,105 +626,28 @@ lemma filterlim_parametric[transfer_rule]:
   unfolding filterlim_def
   by transfer_prover
 
+ctr parametricity in filterlim_def
 
 subsection \<open>\<open>topological_space.convergent\<close>\<close>
 
-ud topological_space.convergent topological_space.convergent
-(* ud convergent convergent *)
+definition (in topological_space_ow) convergent_ow where
+  \<open>convergent_ow X \<longleftrightarrow> (\<exists>L\<in>U. filterlim X (nhds L) sequentially)\<close>
 
-definition \<open>convergent' X = (\<exists>L\<in>\<Union>(Collect open). filterlim X (nhds L) sequentially)\<close>
-lemma [ud_with]: \<open>convergent = convergent'\<close>
-  unfolding convergent'_def convergent_def
-  apply (subst asm_rl[of \<open>\<Union> (Collect open) = UNIV\<close>])
-  by auto
-
-ud convergent convergent'
-
-ctr relativization
-synthesis ctr_simps
-assumes [transfer_domain_rule]: \<open>Domainp A = (\<lambda>x. x\<in>U)\<close>
-  and [transfer_rule]: "right_total A" "bi_unique A"
-in thm convergent.with_def[unfolded ud_with]
-
-
-
-(* We don't do the following because it just defines a new constant that is equal to `topological_space.convergent` *)
-(* ud convergent convergent *)
-(* The following basically has the effect of the `ud` *)
-declare topological_space_class.convergent_dict[ud_with]
-
-lemma \<open>topological_space.convergent open X \<longleftrightarrow> (\<exists>L. filterlim X (topological_space.nhds open L) sequentially)\<close> for "open" X
-  unfolding [[axiom Topological_Spaces.topological_space.convergent_def_raw]]
-  oops
-
-(* Fails *)
-(* ctr relativization
-synthesis ctr_simps
-assumes [transfer_domain_rule]: \<open>Domainp A = (\<lambda>x. x\<in>U)\<close>
-  and [transfer_rule]: "right_total A" "bi_unique A"
-in convergent.with_def *)
-
-definition \<open>convergent_ow S = (\<lambda>open X.
-        \<exists>L\<in>\<Union> {x. x \<subseteq> S \<and> open x}.
-           filterlim X (topological_space.nhds.with.transferred S open L) sequentially)\<close>
-
-lemma convergent_with_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total A" "bi_unique A"
-  shows \<open>((rel_set A ===> (=)) ===> ((=) ===> A) ===> (=)) (convergent_ow (Collect (Domainp A))) convergent.with\<close>
-  unfolding convergent.with_def convergent_ow_def
-  apply transfer_prover_start
-        apply transfer_step+
-  by (simp add: conj_commute Ball_Collect)
-
-ctr parametricity in filterlim_def
-
-(* Too restrictive rule (has an equality in the last argument of `convergent_ow` *)
-(* ctr parametricity in convergent_ow_def[unfolded make_balls] *)
+(* ctr parametricity in [[axiom Tmp_Move.topological_space_ow.convergent_ow_def_raw, where ?'at='at]] *)
 
 lemma convergent_ow_parametric[transfer_rule]:
   includes lifting_syntax
-  assumes [transfer_rule]:  "bi_unique A"
-  shows \<open>(rel_set A ===> (rel_set A ===> (=)) ===> ((=) ===> A) ===> (=)) 
-             convergent_ow convergent_ow\<close>
-  unfolding convergent_ow_def make_balls
+  assumes [transfer_rule]: \<open>bi_unique T\<close>
+  shows \<open>(rel_set T ===> (rel_set T ===> (=)) ===> ((=) ===> T) ===> (\<longleftrightarrow>))
+           topological_space_ow.convergent_ow topological_space_ow.convergent_ow\<close>
+  unfolding [[axiom Tmp_Move.topological_space_ow.convergent_ow_def_raw]]
   by transfer_prover
 
+lemma [ud_with]: \<open>convergent = topological_space_ow.convergent_ow UNIV open\<close>
+  by (auto simp: [[axiom Tmp_Move.topological_space_ow.convergent_ow_def_raw]] convergent_def[abs_def] ud_with)
 
-thm [[axiom Topological_Spaces.topological_space.convergent_def_raw]]
-
-(* ctr parametricity in [[axiom Topological_Spaces.topological_space.convergent_def_raw]] *)
-
-(* ctr relativization
-synthesis ctr_simps
-in thm [[axiom Topological_Spaces.topological_space.convergent_def_raw, where 'a=\<open>'a\<close>]]
-
-definition \<open>convergent_with_transferred A open X = (\<exists>L\<in>A. filterlim X (topological_space.nhds.with.transferred A open L) sequentially)\<close>
-  for A "open" X
-
-lemma topological_space_convergent_parametric[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]:  "bi_unique T"
-  shows "(rel_set T ===> (rel_set T ===> (=)) ===> ((=) ===> T) ===> (=))
-    topological_space.convergent topological_space.convergent"
-  unfolding [[axiom Topological_Spaces.topological_space.convergent_def_raw]] topological_space.nhds.with
-  apply transfer_prover_start
-      apply transfer_step+
-  by (simp add: convergent_with_transferred_def[abs_def]) *)
-
-(*
-lemma convergent_transfer[transfer_rule]:
-  includes lifting_syntax
-  (* assumes [transfer_domain_rule]: \<open>Domainp T = (\<lambda>x. x \<in> U)\<close> *)
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "((rel_set T ===> (=)) ===> ((=) ===> T) ===> (=)) 
-    (convergent_with_transferred (Collect (Domainp T)))
-    topological_space.convergent"
-  unfolding [[axiom Topological_Spaces.topological_space.convergent_def_raw]] topological_space.nhds.with
-  apply transfer_prover_start
-      apply transfer_step+
-  by (simp add: convergent_with_transferred_def[abs_def])
- *)
+lemma [ud_with]: \<open>topological_space.convergent = topological_space_ow.convergent_ow UNIV\<close>
+  by (auto intro!: ext simp: [[axiom Topological_Spaces.topological_space.convergent_def_raw]] [[axiom Tmp_Move.topological_space_ow.convergent_ow_def_raw]] ud_with)
 
 (* TODO: Duplicated with Misc_Tensor_Product *)
 lemma filterlim_nhdsin_iff_limitin:
@@ -1088,19 +658,21 @@ lemma filterlim_nhdsin_iff_limitin:
    apply meson
   by (metis (mono_tags, lifting) eventually_mono)
 
-(* lemma convergent_on_topology[simp]:
-  \<open>convergent_with_transferred (topspace T) (openin T) f \<longleftrightarrow> (\<exists>l. limitin T f l sequentially)\<close>
-  by (auto simp: convergent_with_transferred_def simp flip: filterlim_nhdsin_iff_limitin)
+lemma convergent_ow_topology[simp]:
+  \<open>topological_space_ow.convergent_ow (topspace T) (openin T) f \<longleftrightarrow> (\<exists>l. limitin T f l sequentially)\<close>
+  by (auto simp: [[axiom Tmp_Move.topological_space_ow.convergent_ow_def_raw]] simp flip: filterlim_nhdsin_iff_limitin)
 
-lemma convergent_on_typeclass[simp]:
-  \<open>convergent_with_transferred V (openin (top_of_set V)) f \<longleftrightarrow> (\<exists>l. limitin (top_of_set V) f l sequentially)\<close>
-  by (simp add: flip: convergent_on_topology) *)
+lemma convergent_ow_typeclass[simp]:
+  \<open>topological_space_ow.convergent_ow V (openin (top_of_set V)) f \<longleftrightarrow> (\<exists>l. limitin (top_of_set V) f l sequentially)\<close>
+  by (simp flip: convergent_ow_topology)
 
 subsection \<open>\<open>uniform_space.cauchy_filter\<close>\<close>
 
+(* ctr parametricity in [[axiom Topological_Spaces.uniform_space.cauchy_filter_def_raw, where ?'a='a]] *)
+
 lemma cauchy_filter_parametric[transfer_rule]:
   includes lifting_syntax
-  assumes [transfer_rule]: (* "right_total T" *) "bi_unique T"
+  assumes [transfer_rule]: "bi_unique T"
   shows "(rel_filter (rel_prod T T) ===> rel_filter T ===> (=)) 
     uniform_space.cauchy_filter
     uniform_space.cauchy_filter"
@@ -1109,9 +681,11 @@ lemma cauchy_filter_parametric[transfer_rule]:
 
 subsection \<open>\<open>uniform_space.Cauchy\<close>\<close>
 
+(* ctr parametricity in [[axiom Topological_Spaces.uniform_space.Cauchy_uniform_raw, where ?'a='a]] *)
+
 lemma Cauchy_parametric[transfer_rule]:
   includes lifting_syntax
-  assumes [transfer_rule]: (* "right_total T" *) "bi_unique T"
+  assumes [transfer_rule]: "bi_unique T"
   shows "(rel_filter (rel_prod T T) ===> ((=) ===> T) ===> (=)) 
     uniform_space.Cauchy
     uniform_space.Cauchy"
@@ -1123,19 +697,10 @@ subsection \<open>\<open>class.complete_space\<close>\<close>
 
 locale complete_space_ow = metric_space_ow U dist uniformity "open"
   for U dist uniformity "open" +
-  assumes \<open>range X \<subseteq> U \<longrightarrow> uniform_space.Cauchy uniformity X \<longrightarrow> convergent_ow U open X\<close>
+  assumes \<open>range X \<subseteq> U \<longrightarrow> uniform_space.Cauchy uniformity X \<longrightarrow> topological_space_ow.convergent_ow U open X\<close>
 
-(* definition \<open>complete_space_on A dist uniformity open \<longleftrightarrow>
-        metric_space_on A dist uniformity open \<and>
-        (\<forall>X. (\<forall>n. X n \<in> A) \<longrightarrow>
-            uniform_space.Cauchy uniformity X \<longrightarrow> convergent_on A open X)\<close>
-  for A dist uniformity "open" *)
-
-(* definition \<open>transfer_funcset A B = {f. f ` A \<subseteq> B}\<close>
-lemma transfer_funcset: \<open>A \<rightarrow> B = transfer_funcset A B\<close>
-  by (simp add: image_subset_iff_funcset transfer_funcset_def)
-
-definition \<open>transfer_ball_funcset A B P \<longleftrightarrow> (\<forall>f. f ` A \<subseteq> B \<longrightarrow> P f)\<close> *)
+lemma [ud_with]: \<open>class.complete_space = complete_space_ow UNIV\<close>
+  by (auto intro!: ext simp: class.complete_space_def class.complete_space_axioms_def complete_space_ow_def complete_space_ow_axioms_def ud_with)
 
 definition \<open>transfer_ball_range A P \<longleftrightarrow> (\<forall>f. range f \<subseteq> A \<longrightarrow> P f)\<close>
 (* TODO: add symmetric def to make_balls *)
@@ -1209,158 +774,6 @@ proof -
     by (smt (verit) rel_funE rev_implies_def)
 qed
 
-(* lemma transfer_ball_funcset_parametric'[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule, simp]: \<open>bi_unique T\<close> \<open>bi_total T\<close> (* TODO minimize *)
-  shows \<open>(rel_set T ===> rel_set U ===> ((T ===> U) ===> (\<longrightarrow>)) ===> (\<longrightarrow>)) transfer_ball_funcset transfer_ball_funcset\<close>
-proof (intro rel_funI impI, rename_tac AP AQ BP BQ P Q)
-  have [simp]: \<open>left_unique T\<close> \<open>right_unique T\<close> \<open>left_total T\<close> \<open>right_total T\<close>
-    by -
-  fix AP AQ BP BQ P Q
-  assume TA: \<open>rel_set T AP AQ\<close>
-  assume UB: \<open>rel_set U BP BQ\<close>
-  assume TUPQ: \<open>((T ===> U) ===> (\<longrightarrow>)) P Q\<close>
-  assume \<open>transfer_ball_funcset AP BP P\<close>
-  then have Pf: \<open>P f\<close> if \<open>f ` AP \<subseteq> BP\<close> for f
-    unfolding transfer_ball_funcset_def using that by auto
-  have \<open>Q g\<close> if \<open>g ` AQ \<subseteq> BQ\<close> for g
-  proof -
-    from that
-    have \<open>Rangep (T ===> U) g\<close>
-      apply (auto simp add: conversep_rel_fun Domainp_pred_fun_eq simp flip: Domainp_conversep)
-      apply (simp add: Domainp_conversep)
-  try0
-  by -
-
-      apply (subst Domainp_pred_fun_eq)
-       apply simp
-      apply simp
-      apply simp
-      thm fun.rel_conversep
-      apply (subst fun.rel_conversep[symmetric])
-      apply (rule_tac Rangep.intros)
-      by -
-    then obtain f where TUfg: \<open>(T ===> U) f g\<close>
-      by blast
-    then have \<open>f ` AP \<subseteq> BP\<close>
-      try0
-      by -
-    then have \<open>P f\<close>
-      by (simp add: Pf)
-    then show \<open>Q g\<close>
-      by (metis TUPQ TUfg apply_rsp')
-  qed
-  then show \<open>transfer_ball_funcset AQ BQ Q\<close>
-    by (simp add: transfer_ball_funcset_def)
-qed
-
-lemma transfer_ball_funcset_parametric[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique T\<close> \<open>bi_total T\<close> (* TODO minimize *)
-  shows \<open>(rel_set T ===> rel_set U ===> ((T ===> U) ===> (\<longleftrightarrow>)) ===> (\<longleftrightarrow>)) transfer_ball_funcset transfer_ball_funcset\<close>
-proof -
-  have 1: \<open>(rel_set T ===> rel_set U ===> ((T ===> U) ===> (\<longrightarrow>)) ===> (\<longrightarrow>)) transfer_ball_funcset transfer_ball_funcset\<close>
-    by -
-  then have 2: \<open>(rel_set T ===> rel_set U ===> ((T ===> U) ===> (\<longleftrightarrow>)) ===> (\<longrightarrow>)) transfer_ball_funcset transfer_ball_funcset\<close>
-    apply (rule rev_mp)
-    apply (intro rel_fun_mono')
-    by auto
-    
-  have 3: \<open>(rel_set T ===> rel_set U ===> ((T ===> U) ===> (rev_implies)) ===> (rev_implies)) transfer_ball_funcset transfer_ball_funcset\<close>
-    by -
-  then have 4: \<open>(rel_set T ===> rel_set U ===> ((T ===> U) ===> (\<longleftrightarrow>)) ===> (rev_implies)) transfer_ball_funcset transfer_ball_funcset\<close>
-    apply (rule rev_mp)
-    apply (intro rel_fun_mono')
-    by (auto simp: rev_implies_def)
-
-  from 2 4 show ?thesis
-    apply (auto intro!: rel_funI)
-     apply (smt (z3) rel_funE)
-    by (smt (verit) rel_funE rev_implies_def)
-qed
-
-lemma Pi_parametric[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique T\<close> \<open>bi_total T\<close>
-  shows \<open>(rel_set T ===> rel_set U ===> rel_set (T ===> U)) transfer_funcset transfer_funcset\<close>
-proof (intro rel_funI rel_setI)
-  fix A1 A2 assume \<open>rel_set T A1 A2\<close>
-  fix B1 B2 assume \<open>rel_set U B1 B2\<close>
-  fix f2 assume \<open>f2 \<in> transfer_funcset A2 B2\<close>
-  define DT RT where \<open>DT = Collect (Domainp T)\<close> and \<open>RT = Collect (Rangep T)\<close>
-(*   have \<open>rel_set T UNIV UNIV\<close>
-    by (simp add: UNIV_transfer assms(2))
-  from bi_unique_rel_set_lemma[OF \<open>bi_unique T\<close> \<open>rel_set T UNIV UNIV\<close>]
-  obtain m where \<open>UNIV = range m\<close> and [simp]: \<open>inj m\<close> and Tm: \<open>T x (m x)\<close> for x
-    by auto
-  then have \<open>\<exists>x'. U x' (f2 (m x))\<close> for x
-  sledgehammer
-  try0
-  by -
-
-  proof -
-    have \<open>m x \<in> RT\<close>
-  using \<open>RT = m ` DT\<close> that by blast
-  try0
-  by -
-  then have \<open>f2 (m x) \<in> \<close>
-    by -
-  then obtain f1 where Uf1f2: \<open>U (f1 x) (f2 (m x))\<close> if \<open>x \<in> DT\<close> for x
-    apply atomize_elim
-    by metis
-    apply (intro choice allI)
-  sledgehammer
-  try0
-  by -
-  then have \<open>U (f1 x) (f2 y)\<close> if \<open>T x y\<close> for x y
-    using DT_def Tm assms bi_uniqueDr that by fastforce
-
-
-  sledgehammer x
-  try0
-  by -
- *)
-  obtain m where \<open>A2 = m ` A1\<close> and [simp]: \<open>inj_on m A1\<close> and Tm: \<open>x\<in>A1 \<Longrightarrow> T x (m x)\<close> for x
-    using bi_unique_rel_set_lemma
-    by (metis \<open>rel_set T A1 A2\<close> assms)
-  have \<open>\<exists>x'. U x' (f2 (m x))\<close> if \<open>x \<in> A1\<close> for x
-    by -
-  then obtain f1a where Uf1f2: \<open>U (f1a x) (f2 (m x))\<close>(*  and \<open>f2 x \<in> B2\<close> *) if \<open>x \<in> A1\<close> for x
-    apply atomize_elim 
-    by metis
-  then have \<open>U (f1a x) (f2 y)\<close> if \<open>T x y\<close> and \<open>x \<in> A1\<close> for x y
-    by (metis Tm assms bi_uniqueDr that(1) that(2))
-  
-
-  obtain f2b where \<open>U (f1 x) (f2b y)\<close> if \<open>T x y\<close> for x y
-  sledgehammer x
-  try0
-  by -
-  define f2 where \<open>f2 x = \<close>
-
-  then have \<open>f2 \<in> transfer_funcset A2 B2\<close>
-    by (metis funcsetI transfer_funcset)
-  moreover have \<open>(T ===> U) f1 f2\<close>
-  proof (rule rel_funI)
-    fix x y assume \<open>T x y\<close>
-    then have \<open>x \<in> A1\<close>
-  sledgehammer
-  try0
-  by -
-  then obtain x' where \<open>x' \<in> A2\<close> and \<open>m x' = x\<close>
-    using \<open>A1 = m ` A2\<close> by blast
-  then show \<open>U (f1 x) (f2 y)\<close>
-  sledgehammer
-  try0
-  by -
-
-  
-  ultimately show \<open>\<exists>f2\<in>transfer_funcset A2 B2. (T ===> U) f1 f2\<close>
-    by metis
-
-
-  unfolding Pi_def *)
-
 (* TODO not good enough *)
 (* ctr parametricity in complete_space_ow_def[unfolded make_balls transfer_ball_range_def[symmetric]] *)
 
@@ -1375,7 +788,7 @@ lemma complete_space_ow_parametric[transfer_rule]:
 lemma complete_space_as_set[simp]: \<open>complete (space_as_set V)\<close> for V :: \<open>_::cbanach ccsubspace\<close>
   by (simp add: complete_eq_closed)
 
-lemma complete_space_on_typeclass[simp]:
+lemma complete_space_ow_typeclass[simp]:
   fixes V :: \<open>_::uniform_space set\<close>
   assumes \<open>complete V\<close>
   shows \<open>complete_space_ow V dist (uniformity_on V) (openin (top_of_set V))\<close>
@@ -1401,30 +814,14 @@ proof (rule complete_space_ow.intro)
   qed
   then show \<open>complete_space_ow_axioms V (uniformity_on V) (openin (top_of_set V))\<close>
     apply (auto simp: complete_space_ow_axioms_def complete_imp_closed assms)
-  by -
+    by blast
 qed
 
 subsection \<open>\<open>class.chilbert_space\<close>\<close>
 
 locale chilbert_space_ow = complex_inner_ow + complete_space_ow
 
-(* definition \<open>chilbert_space_on A scaleR scaleC plus zero minus uminus dist norm sgn uniformity open cinner \<longleftrightarrow>
-        complex_inner_on A scaleR scaleC plus zero minus uminus dist norm sgn
-         uniformity open cinner \<and>
-        complete_space_on A dist uniformity open\<close>
-  for  A scaleR scaleC plus zero minus uminus dist norm sgn uniformity "open" cinner
-*)
-
-lemma class_chilbert_space_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "(rel_set T ===> ((=) ===> T ===> T) ===> ((=) ===> T ===> T) ===> (T ===> T ===> T) ===> T
-      ===> (T ===> T ===> T) ===> (T ===> T) ===> (T ===> T ===> (=)) ===> (T ===> (=))
-      ===> (T ===> T) ===> rel_filter (rel_prod T T) ===> (rel_set T ===> (=))
-      ===> (T ===> T ===> (=)) ===> (=)) 
-chilbert_space_ow chilbert_space_ow"
-  unfolding class.chilbert_space_def chilbert_space_ow_def
-  by transfer_prover
+ctr parametricity in chilbert_space_ow_def
 
 lemma chilbert_space_on_typeclass[simp]:
   fixes V :: \<open>_::complex_inner set\<close>
@@ -1434,15 +831,51 @@ lemma chilbert_space_on_typeclass[simp]:
   by (auto intro!: chilbert_space_ow.intro complex_inner_ow_typeclass
       simp: assms complete_imp_closed)
 
-lemma chilbert_space_add_ow[ud_with]:
+lemma [ud_with]:
   \<open>class.chilbert_space = chilbert_space_ow UNIV\<close>
-  by (simp add: class.chilbert_space_def chilbert_space_ow_def ud_with)
+  by (auto intro!: ext simp add: class.chilbert_space_def chilbert_space_ow_def ud_with)
 
 subsection \<open>\<open>hull\<close>\<close>
 
-definition \<open>hull_on A S s = \<Inter> {x. (S x \<and> s \<subseteq> x) \<and> x \<subseteq> A} \<inter> A\<close>
+definition \<open>hull_ow A S s = ((\<lambda>x. S x \<and> x \<subseteq> A) hull s) \<inter> A\<close>
 
-lemma hull_transfer[transfer_rule]:
+lemma hull_ow_nondegenerate: \<open>hull_ow A S s = ((\<lambda>x. S x \<and> x \<subseteq> A) hull s)\<close> if \<open>x \<subseteq> A\<close> and \<open>s \<subseteq> x\<close> and \<open>S x\<close>
+proof -
+  have \<open>((\<lambda>x. S x \<and> x \<subseteq> A) hull s) \<subseteq> x\<close>
+    apply (rule hull_minimal)
+    using that by auto
+  also note \<open>x \<subseteq> A\<close>
+  finally show ?thesis
+    unfolding hull_ow_def by auto
+qed
+
+definition \<open>transfer_bounded_Inf B M = Inf M \<sqinter> B\<close>
+
+lemma transfer_bounded_Inf_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes \<open>bi_unique T\<close>
+  shows \<open>(rel_set T ===> rel_set (rel_set T) ===> rel_set T) transfer_bounded_Inf transfer_bounded_Inf\<close>
+  apply (auto intro!: rel_funI simp: transfer_bounded_Inf_def rel_set_def Bex_def)
+  apply (metis (full_types) assms bi_uniqueDr)
+  by (metis (full_types) assms bi_uniqueDl)
+
+lemma hull_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: "bi_unique T"
+  shows "(rel_set T ===> (rel_set T ===> (=)) ===> rel_set T ===> rel_set T) 
+    hull_ow hull_ow"
+proof -
+  have *: \<open>hull_ow A S s = transfer_bounded_Inf A (Set.filter (\<lambda>x. S x \<and> s \<subseteq> x) (Pow A))\<close> for A S s
+    by (auto simp add: hull_ow_def hull_def transfer_bounded_Inf_def)
+  show ?thesis
+    unfolding *
+    by transfer_prover      
+qed
+
+lemma hull_ow_ud_with[ud_with]: \<open>(hull) = hull_ow UNIV\<close>
+  unfolding hull_def hull_ow_def by auto
+
+(* lemma hull_transfer[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: "right_total T" "bi_unique T"
   shows "((rel_set T ===> (=)) ===> rel_set T ===> rel_set T) 
@@ -1452,56 +885,66 @@ lemma hull_transfer[transfer_rule]:
   apply transfer_prover_start
       apply transfer_step+
   apply (intro ext)
-  by (auto simp: hull_on_def)
+  by (auto simp: hull_on_def) *)
 
+
+subsection \<open>\<open>csubspace\<close>\<close>
+
+definition (in module_ow)
+  \<open>subspace_ow S = (zero\<^sub>M \<in> S \<and> (\<forall>x\<in>S. \<forall>y\<in>S. x +\<^sub>M y \<in> S) \<and> (\<forall>c. \<forall>x\<in>S. c *s\<^sub>M x \<in> S))\<close>
+
+lemma subspace_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique T\<close>
+  shows \<open>((T ===> T ===> T) ===> T ===> ((=) ===> T ===> T) ===> rel_set T ===> (=))
+           module_ow.subspace_ow module_ow.subspace_ow\<close>
+  unfolding [[axiom Tmp_Move.module_ow.subspace_ow_def_raw]]
+  by transfer_prover
+
+lemma module_subspace_ud_with[ud_with]: \<open>module.subspace = module_ow.subspace_ow plus 0\<close>
+  by (auto intro!: ext simp: [[axiom Modules.module.subspace_def_raw]] [[axiom Tmp_Move.module_ow.subspace_ow_def_raw]])
+
+lemma csubspace_ud_with[ud_with]: \<open>csubspace = module_ow.subspace_ow (+) 0 (*\<^sub>C)\<close>
+  by (simp add: csubspace_raw_def module_subspace_ud_with)
 
 subsection \<open>\<open>cspan.with\<close>\<close>
 
-ud cspan cspan
+definition (in module_ow) 
+  \<open>span_ow b = hull_ow U\<^sub>M subspace_ow b\<close>
 
 
+lemma span_ow_on_typeclass: 
+  assumes \<open>csubspace U\<close>
+  assumes \<open>B \<subseteq> U\<close>
+  shows \<open>module_ow.span_ow U plus 0 scaleC B = cspan B\<close>
+proof -
+  have \<open>module_ow.span_ow U plus 0 scaleC B = (\<lambda>x. csubspace x \<and> x \<subseteq> U) hull B\<close>
+    using assms by (auto simp add: [[axiom Tmp_Move.module_ow.span_ow_def_raw]] hull_ow_nondegenerate[where x=U] csubspace_raw_def  simp flip:  csubspace_ud_with )
+  also have \<open>(\<lambda>x. csubspace x \<and> x \<subseteq> U) hull B = cspan B\<close>
+    apply (rule hull_unique)
+    using assms(2) complex_vector.span_superset apply force
+    by (simp_all add: assms complex_vector.span_minimal)
+  finally show ?thesis
+    by -
+qed
 
-(* unoverload_definition complex_vector.span_def *)
+lemma (in module) span_ud_with[ud_with]: \<open>span = module_ow.span_ow UNIV plus 0 scale\<close>
+  by (auto intro!: ext simp: span_def [[axiom Tmp_Move.module_ow.span_ow_def_raw]]
+      module_subspace_ud_with hull_ow_ud_with)
 
-(* definition \<open>cspan_on A zero plus scaleC = hull_on A (module.subspace.with zero plus scaleC)\<close>
-  for A zero plus scaleC
-
-lemma cspan_transfer[transfer_rule]:
+declare complex_vector.span_ud_with[ud_with]
+  
+lemma span_ow_parametric[transfer_rule]:
   includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "(T ===> (T ===> T ===> T) ===> ((=) ===> T ===> T) ===> rel_set T ===> rel_set T) 
-    (cspan_on (Collect (Domainp T)))
-    cspan.with"
-  unfolding cspan.with_def
-  apply transfer_prover_start
-    apply transfer_step+
-  by (auto intro!: ext simp: cspan_on_def) *)
+  assumes [transfer_rule]: \<open>bi_unique T\<close>
+  shows \<open>(rel_set T ===> (T ===> T ===> T) ===> T ===> ((=) ===> T ===> T) ===> rel_set T ===> rel_set T)
+           module_ow.span_ow module_ow.span_ow\<close>
+  unfolding [[axiom Tmp_Move.module_ow.span_ow_def_raw]]
+  by transfer_prover
 
-(* TODO Trivial *)
-lemma cspan_on_typeclass: \<open>span.with 0 (+) (*\<^sub>C) B = cspan B\<close>
-  by (metis cspan.with)
 
 subsubsection \<open>\<^const>\<open>closure\<close>\<close>
 
-(* unoverload_definition closure_def[unfolded islimpt_def] *)
-
-thm closure_def
-thm islimpt_def
-thm closure.with_def
-
-(* definition closure_on_with where \<open>closure_on_with A opn S = 
-  S \<union> {x\<in>A. \<forall>T\<subseteq>A. x \<in> T \<longrightarrow> opn T \<longrightarrow> (\<exists>y\<in>S. y \<in> T \<and> y \<noteq> x)}\<close>
-
-lemma closure_with_transfer[transfer_rule]:
-  includes lifting_syntax
-  assumes [transfer_rule]: "right_total T" "bi_unique T"
-  shows "((rel_set T ===> (=)) ===> rel_set T ===> rel_set T)
-         (closure_on_with (Collect (Domainp T))) closure.with"
-  unfolding closure.with_def closure_on_with_def
-  apply transfer_prover_start
-  apply transfer_step+
-  unfolding Pow_def Ball_Collect[symmetric] Ball_def Bex_def mem_Collect_eq
-  by blast *)
 
 lemma closure_on_with_typeclass[simp]: 
   \<open>closure_ow X (openin (top_of_set X)) S = (X \<inter> closure (X \<inter> S)) \<union> S\<close>
@@ -1517,94 +960,77 @@ proof -
     by -
 qed
 
-subsection \<open>\<open>is_onb.with\<close>\<close>
-
-(* definition \<open>is_onb_on U E \<longleftrightarrow> is_ortho_set E \<and> (\<forall>b\<in>E. norm b = 1) \<and> closure (cspan E) = U\<close>
-
-lemma [ud_with]: \<open>is_onb = is_onb_on UNIV\<close>
-  unfolding is_onb_def is_onb_on_def apply transfer by auto *)
-
-(*  definition (* TODO make hidden *)
-  \<open>is_onb_no_ccsubspace E \<longleftrightarrow> is_ortho_set E \<and> (\<forall>b\<in>E. norm b = 1) \<and> closure (cspan E) = UNIV\<close>
-lemma is_onb_with[ud_with]: \<open>is_onb = is_onb_no_ccsubspace\<close>
-  unfolding is_onb_def is_onb_no_ccsubspace_def apply transfer by auto 
- *)
-(*
-lemma is_onb_def_no_ccsubspace:
-  \<open>is_onb E \<longleftrightarrow> is_ortho_set E \<and> (\<forall>b\<in>E. norm b = 1) \<and> closure (cspan E) = UNIV\<close>
-  unfolding is_onb_def apply transfer by simp 
-*)
-
-definition (* TODO make hidden *)
-  \<open>is_onb_no_ccsubspace E \<longleftrightarrow> is_ortho_set E \<and> (\<forall>b\<in>E. norm b = 1) \<and> closure (cspan E) = UNIV\<close>
-lemma [ud_with]:
-  \<open>is_onb = is_onb_no_ccsubspace\<close>
-  unfolding is_onb_def is_onb_no_ccsubspace_def apply transfer by auto
-
-(* ud is_onb_no_ccsubspace is_onb_no_ccsubspace *)
-
-ud is_onb_no_ccsubspace is_onb_no_ccsubspace
-(* 
-declare is_ortho_set.with[unoverload_def]
-declare cspan.with[unoverload_def]
-declare closure.with[unoverload_def]
-unoverload_definition is_onb_def_no_ccsubspace
-print_theorems
-declare is_onb.with[ud_with] *)
-
 declare closure_ow.transfer[OF fix_Domainp, transfer_rule]
 
-ctr relativization
-  synthesis ctr_simps
-  assumes [transfer_rule]: "bi_unique A" "right_total A"
-in thm is_onb_no_ccsubspace.with_def
-
-schematic_goal [transfer_rule]:
+lemma islimpt_ow_parametric[transfer_rule]:
   includes lifting_syntax
-  fixes A :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
-  assumes [transfer_rule]: "bi_unique A" "right_total A"
-  shows "(((=) ===> A ===> A) ===> (A ===> A ===> A) ===> (rel_set A ===> (=)) ===> (A ===> (=)) ===> (A ===> A ===> (=)) ===> T ===> rel_set T ===> (=))
-   (?X::_) is_onb_no_ccsubspace.with"
-  unfolding is_onb_no_ccsubspace.with_def
-  apply transfer_prover_start
-            apply transfer_step+
+  assumes [transfer_rule]: \<open>bi_unique T\<close>
+  shows \<open>(rel_set T ===> (rel_set T ===> (=)) ===> T ===> rel_set T ===> (\<longleftrightarrow>)) islimpt_ow islimpt_ow\<close>
+  unfolding islimpt_ow_def
   by transfer_prover
 
-(* ctr relativization
-  synthesis ctr_simps 
-  assumes [transfer_domain_rule]: \<open>Domainp A = (\<lambda>x. x\<in>U)\<close> 
-  assumes [transfer_rule]: "right_total A"
-    and [transfer_rule]: "bi_unique A"
-  trp (?'a A)
-in is_onb.with_def *)
-
-(* thm is_onb.with_def *)
-
-(* definition \<open>is_onb_on A cinner zero norm open plus scaleC E \<longleftrightarrow>
-        is_ortho_set.with cinner zero E \<and>
-        (\<forall>b\<in>E. norm b = 1) \<and>
-        closure_on_with A open (cspan_on A zero plus scaleC E) = A\<close>
-  for A cinner zero norm "open" plus scaleC E
-*)
-
-(* lemma is_onb_with_transfer[transfer_rule]:
+lemma closure_ow_parametric[transfer_rule]:
   includes lifting_syntax
-  assumes [transfer_rule]: "bi_unique T"
-  shows "(rel_set T ===> (T ===> T ===> (=)) ===> T ===> (T ===> (=)) ===> (rel_set T ===> (=))
-     ===> (T ===> T ===> T) ===> ((=) ===> T ===> T) ===> rel_set T ===> (=)) 
-    is_onb_no_ccsubspace.with
-    is_onb_no_ccsubspace.with"
-  using right_total_UNIV_transfer[transfer_rule] apply fail?
-  unfolding is_onb.with_def 
-  apply transfer_prover_start
-       apply transfer_step+
-  by (simp add: is_onb_on_def[abs_def]) *)
+  assumes [transfer_rule]: \<open>bi_unique T\<close>
+  shows \<open>(rel_set T ===> (rel_set T ===> (=)) ===> rel_set T ===> rel_set T) closure_ow closure_ow\<close>
+  unfolding closure_ow_def make_balls
+  by transfer_prover
 
+subsection \<open>\<open>is_onb.with\<close>\<close>
+
+definition (in complex_inner_ow) 
+  \<open>is_onb_ow E \<longleftrightarrow> is_ortho_set_ow E \<and> (\<forall>b\<in>E. norm b = 1) \<and> 
+    closure_ow U open (module_ow.span_ow U plus zero scaleC E) = U\<close>
+
+(* ctr parametricity in [[axiom Tmp_Move.complex_inner_ow.is_onb_ow_def_raw, where ?'a='a]] *)
+
+lemma is_onb_ow_parametricity[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique T\<close>
+  shows \<open>(rel_set T ===> ((=) ===> T ===> T) ===> (T ===> T ===> T) ===> T ===> (T ===> (=))
+           ===> (rel_set T ===> (=)) ===> (T ===> T ===> (=)) ===> rel_set T ===> (=))
+           complex_inner_ow.is_onb_ow complex_inner_ow.is_onb_ow\<close>
+  unfolding [[axiom Tmp_Move.complex_inner_ow.is_onb_ow_def_raw]]
+  by transfer_prover
+
+lemma [ud_with]:
+  \<open>is_onb = complex_inner_ow.is_onb_ow UNIV scaleC plus 0 norm open cinner\<close>
+
+  unfolding is_onb_def [[axiom Tmp_Move.complex_inner_ow.is_onb_ow_def_raw]]
+  apply (subst asm_rl[of \<open>\<And>E. ccspan E = \<top> \<longleftrightarrow> closure (cspan E) = UNIV\<close>, rule_format])
+   apply (transfer, rule)
+  unfolding ud_with
+  apply transfer by auto
 
 subsection \<open>Transferring a theorem\<close>
 
 (* The original theorem: *)
 print_statement orthonormal_basis_exists
+
+locale local_typedef = fixes S ::"'b set" and s::"'s itself"
+  assumes Ex_type_definition_S: "\<exists>(Rep::'s \<Rightarrow> 'b) (Abs::'b \<Rightarrow> 's). type_definition Rep Abs S"
+begin
+definition "Rep = fst (SOME (Rep::'s \<Rightarrow> 'b, Abs). type_definition Rep Abs S)"
+definition "Abs = snd (SOME (Rep::'s \<Rightarrow> 'b, Abs). type_definition Rep Abs S)"
+lemma type_definition_S: "type_definition Rep Abs S"
+  unfolding Abs_def Rep_def split_beta'
+  by (rule someI_ex) (use Ex_type_definition_S in auto)
+lemma rep_in_S[simp]: "Rep x \<in> S"
+  and rep_inverse[simp]: "Abs (Rep x) = x"
+  and Abs_inverse[simp]: "y \<in> S \<Longrightarrow> Rep (Abs y) = y"
+  using type_definition_S
+  unfolding type_definition_def by auto
+definition cr_S where "cr_S \<equiv> \<lambda>s b. s = Rep b"
+lemmas Domainp_cr_S = type_definition_Domainp[OF type_definition_S cr_S_def, transfer_domain_rule]
+lemmas right_total_cr_S = typedef_right_total[OF type_definition_S cr_S_def, transfer_rule]
+  and bi_unique_cr_S = typedef_bi_unique[OF type_definition_S cr_S_def, transfer_rule]
+  and left_unique_cr_S = typedef_left_unique[OF type_definition_S cr_S_def, transfer_rule]
+  and right_unique_cr_S = typedef_right_unique[OF type_definition_S cr_S_def, transfer_rule]
+lemma cr_S_Rep[intro, simp]: "cr_S (Rep a) a" by (simp add: cr_S_def)
+lemma cr_S_Abs[intro, simp]: "a\<in>S \<Longrightarrow> cr_S a (Abs a)" by (simp add: cr_S_def)
+lemma UNIV_transfer[transfer_rule]: \<open>rel_set cr_S S UNIV\<close>
+  using Domainp_cr_S right_total_cr_S right_total_UNIV_transfer by fastforce
+end
 
 lemma orthonormal_subspace_basis_exists:
   fixes S :: \<open>'a::chilbert_space set\<close>
@@ -1633,17 +1059,16 @@ proof -
     \<le> principal (Collect (pred_prod (\<lambda>x. x \<in> space_as_set V) (\<lambda>x. x \<in> space_as_set V)))\<close>
     by (auto simp: uniformity_dist intro!: le_infI2)
   have \<open>\<exists>B\<in>{A. \<forall>x\<in>A. x \<in> space_as_set V}.
-     S \<subseteq> B \<and> is_onb_on {x. x \<in> space_as_set V} (\<bullet>\<^sub>C) 0 norm (openin (top_of_set (space_as_set V))) (+) (*\<^sub>C) B\<close>
+     S \<subseteq> B \<and> complex_inner_ow.is_onb_ow (space_as_set V) (*\<^sub>C) (+) 0 norm (openin (top_of_set (space_as_set V))) (\<bullet>\<^sub>C) B\<close>
     apply (rule * )
     using \<open>S \<subseteq> space_as_set V\<close> \<open>is_ortho_set S\<close>
-    by (auto simp add: simp flip: is_ortho_set.with
+    by (auto simp flip: ud_with
         intro!: complex_vector.subspace_scale real_vector.subspace_scale csubspace_is_subspace
         csubspace_nonempty complex_vector.subspace_add complex_vector.subspace_diff
         complex_vector.subspace_neg sgn_in_spaceI 1 norm)
-x
 
   then obtain B where \<open>B \<subseteq> space_as_set V\<close> and \<open>S \<subseteq> B\<close>
-    and is_onb: \<open>is_onb_on (space_as_set V) (\<bullet>\<^sub>C) 0 norm (openin (top_of_set (space_as_set V))) (+) (*\<^sub>C) B\<close>
+    and is_onb: \<open>complex_inner_ow.is_onb_ow (space_as_set V) (*\<^sub>C) (+) 0 norm (openin (top_of_set (space_as_set V))) (\<bullet>\<^sub>C) B\<close>
     by auto
 
   from \<open>B \<subseteq> space_as_set V\<close>
@@ -1656,15 +1081,16 @@ x
     by (metis Int_absorb1 ccspan.rep_eq ccspan_leqI less_eq_ccsubspace.rep_eq)
   have [simp]: \<open>closure X \<union> X = closure X\<close> for X :: \<open>'z::topological_space set\<close>
     using closure_subset by blast
-  
+
   from is_onb have \<open>is_ortho_set B\<close>
-    by (auto simp: is_onb_on_def is_ortho_set.with)
+    by (auto simp: [[axiom Tmp_Move.complex_inner_ow.is_onb_ow_def_raw]] ud_with)
 
   moreover from is_onb have \<open>norm x = 1\<close> if \<open>x \<in> B\<close> for x
-    by (auto simp: is_onb_on_def that)
+    by (auto simp: [[axiom Tmp_Move.complex_inner_ow.is_onb_ow_def_raw]] that)
 
   moreover from is_onb have \<open>closure (cspan B) = space_as_set V\<close>
-    by (simp add: is_onb_on_def \<open>B \<subseteq> space_as_set V\<close> cspan_on_typeclass closure_on_with_typeclass)
+    by (simp add: [[axiom Tmp_Move.complex_inner_ow.is_onb_ow_def_raw]] \<open>B \<subseteq> space_as_set V\<close>
+        closure_on_with_typeclass span_ow_on_typeclass flip: ud_with)
   then have \<open>ccspan B = V\<close>
     by (simp add: ccspan.abs_eq space_as_set_inverse)
 
