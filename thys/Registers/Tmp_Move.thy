@@ -913,7 +913,7 @@ lemma islimpt_ow_parametric[transfer_rule]:
 
 subsubsection \<open>\<^const>\<open>closure\<close>\<close>
 
-lemma closure_on_with_typeclass[simp]: 
+lemma closure_ow_with_typeclass[simp]: 
   \<open>closure_ow X (openin (top_of_set X)) S = (X \<inter> closure (X \<inter> S)) \<union> S\<close>
 proof -
   have \<open>closure_ow X (openin (top_of_set X)) S = (top_of_set X) closure_of S \<union> S\<close>
@@ -1014,7 +1014,7 @@ proof -
 
   moreover from is_onb have \<open>closure (cspan B) = space_as_set V\<close>
     by (simp add: is_onb_ow_def \<open>B \<subseteq> space_as_set V\<close>
-        closure_on_with_typeclass span_ow_on_typeclass flip: ud_with)
+        closure_ow_with_typeclass span_ow_on_typeclass flip: ud_with)
   then have \<open>ccspan B = V\<close>
     by (simp add: ccspan.abs_eq space_as_set_inverse)
 

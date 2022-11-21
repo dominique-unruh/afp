@@ -84,6 +84,66 @@ lemma map_filter_on_id: \<open>map_filter_on S (\<lambda>x. x) F = F\<close> if 
 lemma inverse_real_inverse: \<open>inverse_real_inst.inverse_real = inverse\<close>
   by (simp add: HOL.nitpick_unfold)
 
+lemma top_filter_parametric':
+  assumes \<open>Domainp r = S\<close>
+  assumes \<open>right_total r\<close>
+  shows \<open>rel_filter r (principal (Collect S)) \<top>\<close>
+proof (rule rel_filter.intros)
+  define Z where \<open>Z = principal {(x,y). r x y}\<close>
+  show \<open>\<forall>\<^sub>F (x, y) in Z. r x y\<close>
+    by (simp add: eventually_principal Z_def)
+  show \<open>map_filter_on {(x, y). r x y} fst Z = principal (Collect S)\<close>
+    using \<open>Domainp r = S\<close> by (auto simp add: filter_eq_iff eventually_principal Z_def eventually_map_filter_on)
+  show \<open>map_filter_on {(x, y). r x y} snd Z = \<top>\<close>
+    apply (auto simp add: filter_eq_iff eventually_principal Z_def eventually_map_filter_on)
+    by (metis assms(2) right_totalE)
+qed
+
+
+lemma Inf_filter_parametric'[transfer_rule]:
+  includes lifting_syntax
+  fixes r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
+  assumes \<open>Domainp r = S\<close>
+  assumes [transfer_rule]: \<open>bi_unique r\<close> \<open>right_total r\<close>
+  shows \<open>(rel_set (rel_filter r) ===> rel_filter r)
+     (\<lambda>M. inf (Inf M) (principal (Collect S)))
+     Inf\<close>
+proof (rule rel_funI)
+  fix Fs Gs
+  assume asm[transfer_rule]: \<open>rel_set (rel_filter r) Fs Gs\<close>
+  show \<open>rel_filter r (inf (Inf Fs) (principal (Collect S))) (Inf Gs)\<close>
+  proof (cases \<open>Fs = {}\<close>)
+    case True
+    then have \<open>Gs = {}\<close>
+      by (metis asm empty_iff equals0I rel_setD2)
+    show ?thesis
+      using assms by (simp add: True \<open>Gs = {}\<close> top_filter_parametric')
+  next
+    case False
+    then have \<open>Gs \<noteq> {}\<close>
+      by (metis asm ex_in_conv rel_setD1)
+    have dom: \<open>Domainp (rel_filter r) F = (F \<le> principal (Collect S))\<close> for F
+      by (simp add: Domainp_rel_filter assms(1))
+    have 1: \<open>(rel_filter r)
+       (Sup {F. Ball Fs ((\<le>) F) \<and> Domainp (rel_filter r) F})
+       (Inf Gs)\<close> (is \<open>(rel_filter r) ?I _\<close>)
+      unfolding Inf_filter_def[abs_def]
+      by transfer_prover
+    have \<open>F \<le> principal (Collect S)\<close> if \<open>F \<in> Fs\<close> for F
+      by (meson DomainPI asm dom rel_setD1 that)
+    have \<open>?I = (inf (Inf Fs) (principal (Collect S)))\<close>
+      unfolding dom Inf_filter_def
+      apply auto
+      apply (rule antisym)
+      apply auto
+        apply (simp add: Collect_mono_iff Sup_subset_mono)
+      apply (metis (no_types, lifting) Sup_least mem_Collect_eq)
+      by (smt (verit, del_insts) Collect_mono False Sup_subset_mono \<open>\<And>Fa. Fa \<in> Fs \<Longrightarrow> Fa \<le> principal (Collect S)\<close> bot.extremum_unique dual_order.refl inf.bounded_iff order_trans subsetI)
+    show ?thesis
+      using "1" \<open>Sup {F. Ball Fs ((\<le>) F) \<and> Domainp (rel_filter r) F} = inf (Inf Fs) (principal (Collect S))\<close> by fastforce
+  qed
+qed
+
 
 
 lemma inf_filter_parametric'[transfer_rule]:
@@ -106,18 +166,19 @@ qed
 
 
 
-lemma convergent_on_typeclass2[simp]:
+lemma convergent_ow_typeclass2[simp]:
   assumes \<open>open V\<close>
-  shows \<open>convergent_on V (openin (top_of_set V)) f \<longleftrightarrow> (\<exists>l. f \<longlonglongrightarrow> l \<and> l \<in> V)\<close>
+  shows \<open>convergent_ow V (openin (top_of_set V)) f \<longleftrightarrow> (\<exists>l. f \<longlonglongrightarrow> l \<and> l \<in> V)\<close>
   by (simp add: limitin_canonical_iff_gen assms)
 
 lemma convergent_on_typeclass3[simp]:
   assumes \<open>open V\<close> \<open>closed V\<close> \<open>range f \<subseteq> V\<close>
-  shows \<open>convergent_on V (openin (top_of_set V)) f \<longleftrightarrow> convergent f\<close>
+  shows \<open>convergent_ow V (openin (top_of_set V)) f \<longleftrightarrow> convergent f\<close>
   apply (simp add: assms)
   by (meson assms(2) assms(3) closed_sequentially convergent_def range_subsetD)
 
-definition \<open>sum_with plus zero f A = (if finite A then foldr (\<lambda>i s. plus (f i) s) (SOME l. set l = A \<and> distinct l) zero else zero)\<close>
+(* TODO: Should we use sum_with from ETTS instead? *)
+definition sum_with where \<open>sum_with plus zero f A = (if finite A then foldr (\<lambda>i s. plus (f i) s) (SOME l. set l = A \<and> distinct l) zero else zero)\<close>
   for plus :: \<open>'a \<Rightarrow> 'a \<Rightarrow> 'a\<close> and zero :: 'a
 
 lemma sum_with[unoverload_def]: \<open>sum \<equiv> sum_with plus 0\<close>
@@ -286,6 +347,22 @@ lemma continuous_map_is_continuous_at_point:
   shows \<open>filterlim f (nhdsin U (f l)) (atin T l)\<close>
   by (metis assms atin_degenerate bot.extremum continuous_map_atin filterlim_iff_le_filtercomap filterlim_nhdsin_iff_limitin)
 
+(* 
+lemma [simp]: \<open>plus_ow (topspace U) (+)\<close>
+  apply (simp add: plus_ow_def)
+
+lemma semigroup_add_ow_from_typeclass[simp]: \<open>SML_Semigroups.semigroup_add_ow (topspace U) (+)\<close>
+  apply (simp add: SML_Semigroups.semigroup_add_ow_def semigroup_add_ow_axioms_def)
+
+lemma ab_semigroup_add_ow_from_typeclass[simp]: \<open>SML_Semigroups.ab_semigroup_add_ow (topspace U) (+)\<close>
+  apply (simp add: SML_Semigroups.ab_semigroup_add_ow_def SML_Semigroups.ab_semigroup_add_ow_axioms_def)
+
+lemma comm_monoid_add_ow_from_typeclass[simp]: \<open>SML_Monoids.comm_monoid_add_ow (topspace U) (+) 0\<close>
+  apply (simp add: SML_Monoids.comm_monoid_add_ow_def)
+  try0
+  by - *)
+
+
 (* TODO move *)
 lemma has_sum_in_comm_additive_general:
   fixes f :: \<open>'a \<Rightarrow> 'b :: comm_monoid_add\<close>
@@ -372,9 +449,16 @@ proof -
   from T0 grange g0 have [simp]: \<open>0 \<in> topspace U\<close>
     by auto
 
+  have [simp]: \<open>SML_Monoids.comm_monoid_add_ow (topspace T) (+) 0\<close>
+    \<open>SML_Monoids.comm_monoid_add_ow (topspace U) (+) 0\<close>
+    by (simp_all add: SML_Monoids.comm_monoid_add_ow_def SML_Semigroups.ab_semigroup_add_ow_def
+        SML_Semigroups.semigroup_add_ow_def plus_ow_def semigroup_add_ow_axioms_def zero_ow_def
+        neutral_ow_def SML_Semigroups.ab_semigroup_add_ow_axioms_def SML_Monoids.comm_monoid_add_ow_axioms_def
+        Groups.add_ac)
+
   have \<open>has_sum_with_on (topspace U) (+) 0 (openin U) (g' \<circ> f') S (g' l)\<close>
     apply (rule *)
-    by (auto simp: topological_space_on_with_from_topology sum_gf sumf'
+    by (auto simp: topological_space_ow_from_topology sum_gf sumf'
         nhds_with_on_topology sum_with_typeclass has_sum_with_on_topology
         at_within_with_on_topology contg' sumf'T)
 
@@ -495,8 +579,11 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
     have \<open>has_sum_in weak_star_topology (\<Phi> o selfbutterket) UNIV (\<Phi> id_cblinfun)\<close>
       apply (rule has_sum_in_comm_additive[rotated -1])
       using assms 
-      by (auto simp: complex_vector.linear_add register_def Modules.additive_def
+         apply simp_all
+       apply (auto simp: complex_vector.linear_add register_def Modules.additive_def 
           intro!: continuous_map_is_continuous_at_point complex_vector.linear_0 \<open>clinear \<Phi>\<close>)
+      using assms preregister_def register_preregister by blast
+
     then show ?thesis
       by (simp add: P'_def P_def o_def)
   qed
