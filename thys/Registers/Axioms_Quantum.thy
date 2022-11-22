@@ -103,6 +103,12 @@ lemma cbilinear_F_comp_G[simp]: \<open>clinear F \<Longrightarrow> clinear G \<L
   unfolding cbilinear_def
   by (auto simp add: clinear_iff bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right)
 
+(* Things that are probably missing to do the proof from page 44 in the register-paper:
+
+- Existence of T(a\<otimes>\<^sub>ob) = F(a)\<otimes>\<^sub>oG(b) [proven via completely pos. maps and Takesaki; maybe we can do it easier with the explicit representation of F,G?]
+- Inverse of (- \<otimes>\<^sub>o d) is weak*-continuous (shown in Conway-op, Prop 46.6).  [Similar to register_inv_weak_star_continuous?]
+
+*)
 lemma 
   fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G
   assumes [simp]: \<open>register F\<close> \<open>register G\<close>
