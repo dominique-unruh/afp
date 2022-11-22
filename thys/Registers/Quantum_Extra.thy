@@ -157,7 +157,9 @@ lemma register_mult':
 
 lemma register_scaleC:
   assumes \<open>register F\<close> shows \<open>F (c *\<^sub>C a) = c *\<^sub>C F a\<close>
-  using assms by (auto simp: register_def intro: bounded_clinear.clinear clinear.scaleC)
+  using assms [[simproc del: Laws_Quantum.compatibility_warn]] 
+  unfolding register_def
+  by (simp add: bounded_clinear.clinear clinear.scaleC)
 
 lemma register_bounded_clinear: \<open>register F \<Longrightarrow> bounded_clinear F\<close>
   using preregister_def register_preregister by blast

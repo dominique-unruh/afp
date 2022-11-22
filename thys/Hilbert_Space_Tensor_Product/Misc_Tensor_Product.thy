@@ -6,6 +6,7 @@ theory Misc_Tensor_Product
     "HOL-Analysis.Infinite_Sum" "HOL-Analysis.Harmonic_Numbers" 
     Complex_Bounded_Operators.Extra_General
     Complex_Bounded_Operators.Extra_Vector_Spaces
+    Misc_Tensor_Product_TTS
 begin
 
 (* TODO explain *)
@@ -334,8 +335,6 @@ definition \<open>summable_on_in T f A \<longleftrightarrow> (\<exists>x. has_su
 definition \<open>infsum_in T f A = (let L = Collect (has_sum_in T f A) in if card L = 1 then the_elem L else 0)\<close>
 (* The reason why we return 0 also in the case that there are several solutions is to make sure infsum_in is parametric.
 (See lemma 'infsum_in_parametric' below. *)
-
-definition hausdorff where \<open>hausdorff T \<longleftrightarrow> (\<forall>x \<in> topspace T. \<forall>y \<in> topspace T. x \<noteq> y \<longrightarrow> (\<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
 
 lemma hausdorffI: 
   assumes \<open>\<And>x y. x \<in> topspace T \<Longrightarrow> y \<in> topspace T \<Longrightarrow> x \<noteq> y \<Longrightarrow> \<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}\<close>
@@ -1566,5 +1565,61 @@ proof -
     by auto
 qed
 
+
+lemma closure_of_eqI:
+  fixes f g :: \<open>'a \<Rightarrow> 'b\<close> and T :: \<open>'a topology\<close> and U :: \<open>'b topology\<close>
+  assumes hausdorff: \<open>hausdorff U\<close>
+  assumes f_eq_g: \<open>\<And>x. x \<in> S \<Longrightarrow> f x = g x\<close>
+  assumes x: \<open>x \<in> T closure_of S\<close>
+  assumes f: \<open>continuous_map T U f\<close> and g: \<open>continuous_map T U g\<close>
+  shows \<open>f x = g x\<close>
+proof -
+  have \<open>topspace T \<noteq> {}\<close>
+    by (metis assms(3) equals0D in_closure_of)
+  have \<open>topspace U \<noteq> {}\<close>
+    using \<open>topspace T \<noteq> {}\<close> assms(5) continuous_map_image_subset_topspace by blast
+
+  {
+    assume "\<exists>(Rep :: 't \<Rightarrow> 'a) Abs. type_definition Rep Abs (topspace T)"
+    then interpret T: local_typedef \<open>topspace T\<close> \<open>TYPE('t)\<close>
+      by unfold_locales
+    assume "\<exists>(Rep :: 'u \<Rightarrow> 'b) Abs. type_definition Rep Abs (topspace U)"
+    then interpret U: local_typedef \<open>topspace U\<close> \<open>TYPE('u)\<close>
+      by unfold_locales
+
+    note on_closure_eqI
+    note this[unfolded ud_with]
+    note this[unoverload_type 'b, unoverload_type 'a]
+    note this[unfolded ud_with]
+    note this[where 'a='t and 'b='u]
+    note this[untransferred]
+    note this[where f=f and g=g and S=\<open>S \<inter> topspace T\<close> and x=x and ?open="openin T" and opena=\<open>openin U\<close>]
+    note this[simplified]
+  }
+  note * = this[cancel_type_definition, OF \<open>topspace T \<noteq> {}\<close>, cancel_type_definition, OF \<open>topspace U \<noteq> {}\<close>]
+
+  have 2: \<open>f ` topspace T \<subseteq> topspace U\<close>
+  by (meson assms(4) continuous_map_image_subset_topspace)
+  have 3: \<open>g ` topspace T \<subseteq> topspace U\<close>
+    by (simp add: continuous_map_image_subset_topspace g)
+  have 4: \<open>x \<in> topspace T\<close>
+    by (meson assms(3) in_closure_of)
+  have 5: \<open>topological_space_ow (topspace T) (openin T)\<close>
+    by simp
+  have 6: \<open>t2_space_ow (topspace U) (openin U)\<close>
+    by (simp add: hausdorff)
+  from x have \<open>x \<in> T closure_of (S \<inter> topspace T)\<close>
+    by (metis closure_of_restrict inf_commute)
+  then have 7: \<open>x \<in> closure_ow (topspace T) (openin T) (S \<inter> topspace T)\<close>
+    by (simp add: closure_ow_from_topology)
+  have 8: \<open>continuous_on_ow (topspace T) (topspace U) (openin T) (openin U) (topspace T) f\<close>
+     by (meson "2" continuous_on_ow_from_topology f)
+  have 9: \<open>continuous_on_ow (topspace T) (topspace U) (openin T) (openin U) (topspace T) g\<close>
+    by (simp add: "3" continuous_on_ow_from_topology g)
+
+  show ?thesis
+    apply (rule * )
+    using 2 3 4 5 6 f_eq_g 7 8 9 by auto
+qed
 
 end

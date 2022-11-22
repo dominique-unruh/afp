@@ -2,8 +2,8 @@ section \<open>Quantum instantiation of complements\<close>
 
 theory Axioms_Complement_Quantum
   imports Laws_Quantum Quantum_Extra Tensor_Product.Weak_Star_Topology
-    Tensor_Product.Partial_Trace TAS_Topology
-    With_Type.With_Type Tmp_Move
+    Tensor_Product.Partial_Trace
+    With_Type.With_Type
 begin
 
 no_notation m_inv ("inv\<index> _" [81] 80)
