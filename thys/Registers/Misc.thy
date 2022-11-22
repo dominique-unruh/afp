@@ -8,6 +8,7 @@ theory Misc
     Complex_Bounded_Operators.Cblinfun_Code
     "HOL-Library.Z2"
     Jordan_Normal_Form.Matrix
+    Tensor_Product.Weak_Star_Topology
 begin
 
 \<comment> \<open>Remove notation that collides with the notation we use\<close>
@@ -20,9 +21,8 @@ unbundle no_inner_syntax
 unbundle cblinfun_notation
 unbundle jnf_notation
 
-
-abbreviation "butterket i j \<equiv> butterfly (ket i) (ket j)"
-abbreviation "selfbutterket i \<equiv> butterfly (ket i) (ket i)"
+(* abbreviation "butterket i j \<equiv> butterfly (ket i) (ket j)" *)
+(* abbreviation "selfbutterket i \<equiv> butterfly (ket i) (ket i)" *)
 
 text \<open>The following declares the ML antiquotation \<^verbatim>\<open>fact\<close>. In ML code,
   \<^verbatim>\<open>@{fact f}\<close> for a theorem/fact name f is replaced by an ML string
@@ -166,5 +166,11 @@ lemma Ex_iffI:
   shows \<open>Ex P \<longleftrightarrow> Ex Q\<close>
   using assms(1) assms(2) by auto
 
+(* TODO: Get rid of Misc.sandwich and delete this. *)
+lemma sandwich_weak_star_cont'[simp]:
+  \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
+  using sandwich_weak_star_cont
+  by (auto simp add: Complex_Bounded_Linear_Function.sandwich_apply[abs_def] Misc.sandwich_def[abs_def]
+      simp del: sandwich_weak_star_cont)
 
 end

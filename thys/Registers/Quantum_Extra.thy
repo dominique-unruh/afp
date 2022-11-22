@@ -89,7 +89,6 @@ lemma compatible_proj_mult:
 
 lemma unitary_sandwich_register: \<open>unitary a \<Longrightarrow> register (sandwich a)\<close>
   apply (auto simp: sandwich_def register_def)
-  subgoal sorry
    apply (metis (no_types, lifting) cblinfun_assoc_left(1) cblinfun_compose_id_right unitaryD1)
   by (simp add: lift_cblinfun_comp(2))
 
@@ -134,15 +133,18 @@ lemma swap_sandwich: "swap = sandwich Uswap"
   apply (rule tensor_ell2_extensionality)
   by (simp add: sandwich_def cblinfun_apply_cblinfun_compose tensor_op_ell2)
 
+(* TODO move *)
+lemma unitary_tensor_op: \<open>unitary a \<Longrightarrow> unitary b \<Longrightarrow> unitary (a \<otimes>\<^sub>o b)\<close>
+  unfolding unitary_def by (simp add: tensor_op_adjoint comp_tensor_op)
+
 lemma id_tensor_sandwich: 
   fixes a :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::finite ell2"
   assumes "unitary a"
   shows "id \<otimes>\<^sub>r sandwich a = sandwich (id_cblinfun \<otimes>\<^sub>o a)"
   apply (rule tensor_extensionality) 
   using assms
-    apply (auto simp: register_tensor_is_register comp_tensor_op sandwich_def tensor_op_adjoint unitary_sandwich_register
-      intro!: register_preregister unitary_sandwich_register)
-  sorry
+  by (auto simp: register_tensor_is_register comp_tensor_op sandwich_def tensor_op_adjoint unitary_sandwich_register
+      intro!: register_preregister unitary_sandwich_register unitary_tensor_op)
 
 lemma compatible_selfbutter_join:
   assumes [register]: "compatible R S"

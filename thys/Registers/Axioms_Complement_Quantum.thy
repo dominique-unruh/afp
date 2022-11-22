@@ -12,13 +12,6 @@ no_notation elt_set_eq (infix "=o" 50)
 no_notation eq_closure_of ("closure'_of\<index>")
 hide_const (open) Order.top
 
-(* TODO: Get rid of Misc.sandwich and delete this. *)
-lemma sandwich_weak_star_cont'[simp]:
-  \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
-  using sandwich_weak_star_cont
-  by (auto simp add: Complex_Bounded_Linear_Function.sandwich_apply[abs_def] Misc.sandwich_def[abs_def]
-      simp del: sandwich_weak_star_cont)
-
 (* TODO: can we use a generic rule similar to sum_parametric' instead? *)
 lemma has_sum_weak_star_transfer[transfer_rule]:
   includes lifting_syntax
@@ -487,7 +480,7 @@ lemma has_sum_in_comm_additive:
 
 lemma infsum_butterfly_ket_a: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (a *\<^sub>V ket i) (ket i)) UNIV a\<close>
 proof -
-  have \<open>has_sum_in weak_star_topology ((\<lambda>b. a o\<^sub>C\<^sub>L b) \<circ> (\<lambda>i. Misc.selfbutterket i)) UNIV (a o\<^sub>C\<^sub>L id_cblinfun)\<close>
+  have \<open>has_sum_in weak_star_topology ((\<lambda>b. a o\<^sub>C\<^sub>L b) \<circ> (\<lambda>i. selfbutterket i)) UNIV (a o\<^sub>C\<^sub>L id_cblinfun)\<close>
     apply (rule has_sum_in_comm_additive)
     by (auto intro!: infsum_butterfly_ket continuous_map_is_continuous_at_point limitin_continuous_map
         continuous_map_left_comp_weak_star  cblinfun_compose_add_right
