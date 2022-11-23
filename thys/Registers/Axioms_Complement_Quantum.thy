@@ -278,9 +278,7 @@ lemma has_sum_in_comm_additive_general:
   assumes sumf: \<open>has_sum_in T f S l\<close>
   shows \<open>has_sum_in U (g o f) S (g l)\<close>
 proof -
-  (* TODO: Do we need the wrappers f' and g' still? *)
   define f' where \<open>f' x = (if x \<in> S then f x else 0)\<close> for x
-  define g' where \<open>g' x = (if x \<in> topspace T then g x else 0)\<close> for x
   have \<open>topspace T \<noteq> {}\<close>
     using T0 by blast
   then have \<open>topspace U \<noteq> {}\<close>
@@ -301,7 +299,7 @@ proof -
     note this[unfolded ud_with]
     thm this[no_vars]
     note this[untransferred]
-    note this[where f=g' and g=f' and zero=0 and zeroa=0 and plus=plus and plusa=plus
+    note this[where f=g and g=f' and zero=0 and zeroa=0 and plus=plus and plusa=plus
         and ?open=\<open>openin U\<close> and opena=\<open>openin T\<close> and x=l and S=S and T=\<open>topspace T\<close>]
     note this[simplified]
   }
@@ -311,8 +309,8 @@ proof -
     using frange f'_def by force
   have [simp]: \<open>l \<in> topspace T\<close>
     using sumf has_sum_in_topspace by blast
-  have [simp]: \<open>x \<in> topspace T \<Longrightarrow> g' x \<in> topspace U\<close> for x
-    using grange g'_def by auto
+  have [simp]: \<open>x \<in> topspace T \<Longrightarrow> g x \<in> topspace U\<close> for x
+    using grange by auto
   have sumf'T: \<open>(\<Sum>x\<in>F. f' x) \<in> topspace T\<close> if \<open>finite F\<close> for F
     using that apply induction
     by auto
@@ -320,12 +318,12 @@ proof -
     using that apply (induction F rule:infinite_finite_induct)
       apply auto
     by (metis Tplus f'T f'_def)
-  have sum_gf: \<open>(\<Sum>x\<in>F. g' (f' x)) = g' (\<Sum>x\<in>F. f' x)\<close> 
+  have sum_gf: \<open>(\<Sum>x\<in>F. g (f' x)) = g (\<Sum>x\<in>F. f' x)\<close> 
     if \<open>finite F\<close> and \<open>F \<subseteq> S\<close> for F
   proof -
-    have \<open>(\<Sum>x\<in>F. g' (f' x)) = (\<Sum>x\<in>F. g (f x))\<close>
+    have \<open>(\<Sum>x\<in>F. g (f' x)) = (\<Sum>x\<in>F. g (f x))\<close>
       apply (rule sum.cong)
-      using frange that by (auto simp: f'_def g'_def)
+      using frange that by (auto simp: f'_def)
     also have \<open>\<dots> = g (\<Sum>x\<in>F. f x)\<close>
       using \<open>finite F\<close> \<open>F \<subseteq> S\<close> apply induction
       using g0 frange apply auto
@@ -335,23 +333,19 @@ proof -
       apply (rule arg_cong[where f=g])
       apply (rule sum.cong)
       using that by (auto simp: f'_def)
-    also have \<open>\<dots> = g' (\<Sum>x\<in>F. f' x)\<close>
-      using g'_def sumf'T that(1) by simp
     finally show ?thesis
       by -
   qed
   from sumf have sumf': \<open>has_sum_in T f' S l\<close>
     apply (rule has_sum_in_cong[THEN iffD2, rotated])
     unfolding f'_def by auto
-  have [simp]: \<open>g' l = g l\<close>
-    by (simp add: g'_def)
   have [simp]: \<open>g l \<in> topspace U\<close>
     using grange by auto
-  from gcont have contg': \<open>filterlim g' (nhdsin U (g l)) (nhdsin T l \<sqinter> principal (topspace T - {l}))\<close>
+  from gcont have contg': \<open>filterlim g (nhdsin U (g l)) (nhdsin T l \<sqinter> principal (topspace T - {l}))\<close>
     apply (rule filterlim_cong[THEN iffD1, rotated -1])
       apply (rule refl)
      apply (simp add: atin_def)
-    by (auto intro!: exI simp add: g'_def eventually_atin)
+    by (auto intro!: exI simp add: eventually_atin)
   from T0 grange g0 have [simp]: \<open>0 \<in> topspace U\<close>
     by auto
 
@@ -363,20 +357,20 @@ proof -
         neutral_ow_def SML_Semigroups.ab_semigroup_add_ow_axioms_def SML_Monoids.comm_monoid_add_ow_axioms_def
         Groups.add_ac)
 
-  have \<open>has_sum_ow (topspace U) (+) 0 (openin U) (g' \<circ> f') S (g' l)\<close>
+  have \<open>has_sum_ow (topspace U) (+) 0 (openin U) (g \<circ> f') S (g l)\<close>
     apply (rule *)
     by (auto simp: topological_space_ow_from_topology sum_gf sumf'
         sum_ud[symmetric] at_within_ow_topology has_sum_ow_topology
         contg' sumf'T)
 
-  then have \<open>has_sum_in U (g' \<circ> f') S (g' l)\<close>
+  then have \<open>has_sum_in U (g \<circ> f') S (g l)\<close>
     apply (rule has_sum_ow_topology[THEN iffD1, rotated -1])
     by simp_all
-  then have \<open>has_sum_in U (g' \<circ> f') S (g l)\<close>
+  then have \<open>has_sum_in U (g \<circ> f') S (g l)\<close>
     by simp
   then show ?thesis
     apply (rule has_sum_in_cong[THEN iffD1, rotated])
-    unfolding f'_def g'_def using frange grange by auto
+    unfolding f'_def using frange grange by auto
 qed
 
 lemma continuous_map_is_continuous_at_point:
