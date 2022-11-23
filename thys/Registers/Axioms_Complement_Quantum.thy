@@ -11,6 +11,7 @@ no_notation Lattice.join (infixl "\<squnion>\<index>" 65)
 no_notation elt_set_eq (infix "=o" 50)
 no_notation eq_closure_of ("closure'_of\<index>")
 hide_const (open) Order.top
+declare [[eta_contract]]
 
 ctr parametricity in plus_ow_def[unfolded make_parametricity_proof_friendly]
 ctr parametricity in neutral_ow_def[unfolded make_parametricity_proof_friendly]
@@ -92,12 +93,71 @@ ctr parametricity in comm_monoid_ow_def[unfolded comm_monoid_ow_axioms_def make_
 
 definition \<open>rel_pred T P Q = rel_set T (Collect P) (Collect Q)\<close>
 
+(* Exists as comp_fun_commute_on.fold_graph_finite, but the comp_fun_commute_on is not needed. *)
+lemma fold_graph_finite:
+  assumes "fold_graph f z A y"
+  shows "finite A"
+  using assms by induct simp_all
+
 lemma fold_graph_parametric[transfer_rule]:
   includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique T\<close> (* TODO needed? *)
+  assumes [transfer_rule, simp]: \<open>bi_unique T\<close>
   shows \<open>((T ===> U ===> U) ===> U ===> rel_set T ===> rel_pred U)
           fold_graph fold_graph\<close>
-  by -
+proof (intro rel_funI, rename_tac f f' z z' A A')
+  fix f f' assume [transfer_rule, simp]: \<open>(T ===> U ===> U) f f'\<close>
+  fix z z' assume [transfer_rule, simp]: \<open>U z z'\<close>
+  fix A A' assume [transfer_rule, simp]: \<open>rel_set T A A'\<close>
+  have one_direction: \<open>\<exists>y'. fold_graph f' z' A' y' \<and> U y y'\<close> if \<open>fold_graph f z A y\<close> 
+    and [transfer_rule]: \<open>U z z'\<close> \<open>(T ===> U ===> U) f f'\<close> \<open>rel_set T A A'\<close> \<open>bi_unique T\<close>
+    for f f' z z' A A' y and U :: \<open>'c1 \<Rightarrow> 'd1 \<Rightarrow> bool\<close> and T :: \<open>'a1 \<Rightarrow> 'b1 \<Rightarrow> bool\<close>
+    using \<open>fold_graph f z A y\<close>  \<open>rel_set T A A'\<close>
+  proof (induction arbitrary: A')
+    case emptyI
+    then show ?case
+      by (metis \<open>U z z'\<close> empty_iff equals0I fold_graph.intros(1) rel_setD2)
+  next
+    case (insertI x A y)
+    from insertI have foldA: \<open>fold_graph f z A y\<close> and T_xA[transfer_rule]: \<open>rel_set T (insert x A) A'\<close> and xA: \<open>x \<notin> A\<close>
+      by simp_all
+    define DT RT where \<open>DT = Collect (Domainp T)\<close> and \<open>RT = Collect (Rangep T)\<close>
+    from T_xA have \<open>x \<in> DT\<close>
+      by (metis DT_def Domainp.simps ctr_simps_mem_Collect_eq mem_simps(1) rel_setD1)
+    then obtain x' where [transfer_rule]: \<open>T x x'\<close>
+      unfolding DT_def by blast
+    have \<open>x' \<in> A'\<close>
+      apply transfer by simp
+    define A'' where \<open>A'' = A' - {x'}\<close>
+    then have A'_def: \<open>A' = insert x' A''\<close>
+      using \<open>x' \<in> A'\<close> by fastforce
+    have \<open>x' \<notin> A''\<close>
+      unfolding A''_def by simp
+    have [transfer_rule]: \<open>rel_set T A A''\<close>
+      apply (subst asm_rl[of \<open>A = (insert x A) - {x}\<close>])
+      using insertI.hyps apply blast
+      unfolding A''_def
+      by transfer_prover
+    from insertI.IH[OF this]
+    obtain y'' where foldA'': \<open>fold_graph f' z' A'' y''\<close> and [transfer_rule]: \<open>U y y''\<close>
+      by auto
+    define y' where \<open>y' = f' x' y''\<close>
+    have \<open>fold_graph f' z' A' y'\<close>
+      unfolding A'_def y'_def
+      using \<open>x' \<notin> A''\<close> foldA''
+      by (rule fold_graph.intros)
+    moreover have \<open>U (f x y) y'\<close>
+      unfolding y'_def by transfer_prover
+    ultimately show ?case
+      by auto
+  qed
+
+  show \<open>rel_pred U (fold_graph f z A) (fold_graph f' z' A')\<close>
+    apply (auto simp: rel_pred_def rel_set_def)
+     apply (rule one_direction[of f z A _ U z' T f'])
+         apply auto[5]
+    apply (rule one_direction[of f' z' A' _ \<open>U\<inverse>\<inverse>\<close> z \<open>T\<inverse>\<inverse>\<close> f, simplified])
+    by (auto simp flip: conversep_rel_fun)
+qed
 
 lemma Collect_parametric[transfer_rule]:
   includes lifting_syntax
@@ -233,19 +293,6 @@ proof -
     then interpret U: local_typedef \<open>topspace U\<close> \<open>TYPE('u)\<close>
       by unfold_locales
 
-(*     note [[show_types]]
-    have \<open>SML_Monoids.comm_monoid_add_ow UNIV (plus::'u \<Rightarrow> 'u \<Rightarrow> 'u) (zero::'u) \<Longrightarrow>
-topological_space_ow UNIV (open::'u set \<Rightarrow> bool) \<Longrightarrow>
-SML_Monoids.comm_monoid_add_ow UNIV (plusa::'t \<Rightarrow> 't \<Rightarrow> 't) (zeroa::'t) \<Longrightarrow>
-topological_space_ow UNIV (opena::'t set \<Rightarrow> bool) \<Longrightarrow>
-(\<And>F::'a set.
-    finite F \<Longrightarrow>
-    F \<subseteq> (Sa::'a set) \<Longrightarrow> sum_ow zero plus ((fa::'t \<Rightarrow> 'u) \<circ> (ga::'a \<Rightarrow> 't)) F = fa (sum_ow zeroa plusa ga F)) \<Longrightarrow>
-(\<And>F::'a set. finite F \<Longrightarrow> sum_ow zeroa plusa ga F \<in> (Ta::'t set)) \<Longrightarrow>
-filterlim fa (nhds_ow UNIV open (fa (x::'t))) (at_within_ow UNIV opena x Ta) \<Longrightarrow>
-has_sum_ow UNIV plusa zeroa opena ga Sa x \<Longrightarrow> has_sum_ow UNIV plus zero open (fa \<circ> ga) Sa (fa x)\<close> for plus zero "open"
-      apply transfer
- *)
     note [[show_types]]
     note has_sum_comm_additive_general
     note this[unfolded ud_with]
