@@ -1,7 +1,7 @@
 section \<open>\<open>Weak_Star_Topology\<close> -- Weak* topology on complex bounded operators\<close>
 
 theory Weak_Star_Topology
-  imports Trace_Class Weak_Operator_Topology
+  imports Trace_Class Weak_Operator_Topology Misc_Tensor_Product_TTS
 begin
 
 definition weak_star_topology :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L'b::chilbert_space) topology\<close>
@@ -643,6 +643,80 @@ lemma sandwich_weak_star_cont[simp]:
   \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
   using continuous_map_compose[OF continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star]
   by (auto simp: o_def sandwich_apply[abs_def])
+
+lemma infsum_butterfly_ket_a: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (a *\<^sub>V ket i) (ket i)) UNIV a\<close>
+proof -
+  have \<open>has_sum_in weak_star_topology ((\<lambda>b. a o\<^sub>C\<^sub>L b) \<circ> (\<lambda>i. selfbutterket i)) UNIV (a o\<^sub>C\<^sub>L id_cblinfun)\<close>
+    apply (rule has_sum_in_comm_additive)
+    by (auto intro!: infsum_butterfly_ket continuous_map_is_continuous_at_point limitin_continuous_map
+        continuous_map_left_comp_weak_star  cblinfun_compose_add_right
+        simp: Modules.additive_def)
+  then show ?thesis
+    by (auto simp: o_def cblinfun_comp_butterfly)
+qed
+
+
+lemma finite_rank_weak_star_dense[simp]: \<open>weak_star_topology closure_of (Collect finite_rank) = (UNIV :: ('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) set)\<close>
+proof -
+  have \<open>x \<in> weak_star_topology closure_of (Collect finite_rank)\<close> for x :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
+  proof (rule limitin_closure_of)
+    define f :: \<open>'a \<Rightarrow> 'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> where \<open>f = (\<lambda>i. butterfly (x *\<^sub>V ket i) (ket i))\<close>
+    have \<open>has_sum_in weak_star_topology f UNIV x\<close>
+      using f_def infsum_butterfly_ket_a by blast
+    then show \<open>limitin weak_star_topology (sum f) x (finite_subsets_at_top UNIV)\<close>
+      using has_sum_in_def by blast
+    show \<open>range (sum f) \<subseteq> Collect finite_rank\<close>
+      by (auto intro!: finite_rank_sum simp: f_def)
+    show \<open>finite_subsets_at_top UNIV \<noteq> \<bottom>\<close>
+      by simp
+  qed
+  then show ?thesis
+    by auto
+qed
+
+
+lemma butterkets_weak_star_dense[simp]:
+  \<open>weak_star_topology closure_of cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True} = UNIV\<close>
+proof -
+  from continuous_map_image_closure_subset[OF weak_star_topology_weaker_than_euclidean]
+  have \<open>weak_star_topology closure_of (cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True}) \<supseteq> closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True})\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
+    by auto
+  moreover from finite_rank_dense_compact
+  have \<open>\<dots> \<supseteq> Collect finite_rank\<close>
+    by (metis closure_subset compact_op_def mem_Collect_eq subsetI subset_antisym)
+  ultimately have *: \<open>weak_star_topology closure_of (cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True}) \<supseteq> Collect finite_rank\<close>
+    by simp
+  have \<open>weak_star_topology closure_of cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}
+        = weak_star_topology closure_of (weak_star_topology closure_of cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True})\<close>
+  by simp
+  also have \<open>\<dots> \<supseteq> weak_star_topology closure_of Collect finite_rank\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
+    using * closure_of_mono by blast
+  also have \<open>\<dots> = UNIV\<close>
+    by simp
+  finally show ?thesis
+    by auto
+qed
+
+
+
+lemma weak_star_clinear_eq_butterfly_ketI:
+  fixes F G :: \<open>('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2) \<Rightarrow> 'c::complex_vector\<close>
+  assumes "clinear F" and "clinear G"
+    and \<open>continuous_map weak_star_topology T F\<close> and \<open>continuous_map weak_star_topology T G\<close>
+    and \<open>hausdorff T\<close>
+  assumes "\<And>i j. F (butterfly (ket i) (ket j)) = G (butterfly (ket i) (ket j))"
+  shows "F = G"
+proof -
+  have FG: \<open>F x = G x\<close> if \<open>x \<in> cspan {butterket i j |i j. True}\<close> for x
+    by (smt (verit, ccfv_threshold) assms(1) assms(2) assms(6) complex_vector.linear_eq_on mem_Collect_eq that)
+  show ?thesis
+    apply (rule ext)
+    using \<open>hausdorff T\<close> FG
+    apply (rule closure_of_eqI[where f=F and g=G and S=\<open>cspan {butterket i j| i j. True}\<close>])
+    using assms butterkets_weak_star_dense by auto
+qed
+
+
 
 unbundle no_cblinfun_notation
 
