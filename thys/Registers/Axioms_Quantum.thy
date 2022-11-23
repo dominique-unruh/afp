@@ -57,8 +57,8 @@ lemma id_preregister: \<open>preregister id\<close>
 
 lemma tensor_extensionality:
   \<open>preregister F \<Longrightarrow> preregister G \<Longrightarrow> (\<And>a b. F (tensor_op a b) = G (tensor_op a b)) \<Longrightarrow> F = G\<close>
-(* Use: weak_star_clinear_eq_butterfly_ketI *)
-  sorry
+  apply (rule weak_star_clinear_eq_butterfly_ketI)
+  by (auto intro!: bounded_clinear.clinear simp: preregister_def simp flip: tensor_ell2_ket tensor_butterfly)
 
 definition register :: \<open>('a update \<Rightarrow> 'b update) \<Rightarrow> bool\<close> where
   "register F \<longleftrightarrow> 
@@ -130,8 +130,7 @@ qed
   fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G
   assumes [simp]: \<open>register F\<close> and [simp]: \<open>register G\<close>
   assumes \<open>\<And>a b. F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close>
-  shows \<open>register (register_pair F G)\<close> 
-  sorry *)
+  shows \<open>register (register_pair F G)\<close> *)
 (* proof (unfold register_def, intro conjI allI)
   have [simp]: \<open>clinear F\<close> \<open>clinear G\<close>
     using assms register_def by blast+
