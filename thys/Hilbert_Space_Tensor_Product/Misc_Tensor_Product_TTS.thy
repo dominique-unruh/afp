@@ -371,7 +371,9 @@ lemma make_parametricity_proof_friendly:
     and \<open>\<And>A B. A \<times> B = transfer_Times A B\<close>
     and \<open>\<And>B P. (\<exists>A\<subseteq>B. P A) \<longleftrightarrow> (\<exists>A\<in>Pow B. P A)\<close>
     and \<open>\<And>f U s. (f -` U) \<inter> s = transfer_vimage_into f U s\<close>
-  by (auto simp: transfer_ball_range_def transfer_Times_def transfer_vimage_into_def)
+    and \<open>\<And>M B. \<Sqinter>M \<sqinter> principal B = transfer_bounded_filter_Inf B M\<close>
+  by (auto simp: transfer_ball_range_def transfer_Times_def transfer_vimage_into_def
+      transfer_bounded_filter_Inf_def)
 
 subsection \<open>ETTS compatibility\<close>
 

@@ -12,6 +12,433 @@ no_notation elt_set_eq (infix "=o" 50)
 no_notation eq_closure_of ("closure'_of\<index>")
 hide_const (open) Order.top
 
+ctr parametricity in plus_ow_def[unfolded make_parametricity_proof_friendly]
+ctr parametricity in neutral_ow_def[unfolded make_parametricity_proof_friendly]
+ctr parametricity in zero_ow_def[unfolded make_parametricity_proof_friendly]
+ctr parametricity in SML_Semigroups.semigroup_add_ow_def[unfolded SML_Semigroups.semigroup_add_ow_axioms_def make_parametricity_proof_friendly]
+ctr parametricity in SML_Semigroups.ab_semigroup_add_ow_def[unfolded SML_Semigroups.ab_semigroup_add_ow_axioms_def make_parametricity_proof_friendly]
+ctr parametricity in SML_Monoids.comm_monoid_add_ow_def[unfolded SML_Monoids.comm_monoid_add_ow_axioms_def make_parametricity_proof_friendly]
+
+definition \<open>the_default def S = (if card S = 1 then (THE x. x \<in> S) else def)\<close>
+
+lemma \<open>the_default def {x} = x\<close>
+  unfolding the_default_def by auto
+
+lemma \<open>the_default def {} = def\<close>
+  unfolding the_default_def by auto
+
+lemma the_default_parametricity[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique T\<close>
+  shows \<open>(T ===> rel_set T ===> T) the_default the_default\<close>
+proof (intro rel_funI, rename_tac def def' S S')
+  fix def def' assume [transfer_rule]: \<open>T def def'\<close>
+  fix S S' assume [transfer_rule]: \<open>rel_set T S S'\<close>
+  have card_eq: \<open>card S = card S'\<close>
+    by transfer_prover
+  show \<open>T (the_default def S) (the_default def' S')\<close>
+  proof (cases \<open>card S = 1\<close>)
+    case True
+    define theS theS' where [no_atp]: \<open>theS = (THE x. x \<in> S)\<close> and [no_atp]: \<open>theS' = (THE x. x \<in> S')\<close>
+    from True have cardS': \<open>card S' = 1\<close>
+      by (simp add: card_eq)
+    from True have \<open>theS \<in> S\<close>
+      unfolding theS_def
+      apply (rule_tac theI')
+      by (simp add: card_eq_Suc_0_ex1)
+    moreover from cardS' have \<open>theS' \<in> S'\<close>
+      unfolding theS'_def
+      apply (rule_tac theI')
+      by (simp add: card_eq_Suc_0_ex1)
+    ultimately have \<open>T theS theS'\<close>
+      using \<open>rel_set T S S'\<close> True cardS'
+      apply (auto simp: rel_set_def)
+      by (metis card_eq_Suc_0_ex1)
+    then show ?thesis
+      by (simp add: True cardS' the_default_def theS_def theS'_def)
+  next
+    case False
+    then have cardS': \<open>card S' \<noteq> 1\<close>
+      by (simp add: card_eq)
+    show ?thesis
+      using False cardS' \<open>T def def'\<close>
+      by (auto simp add: the_default_def)
+  qed
+qed
+
+definition \<open>sum_ow z plus f S = 
+  (if finite S then the_default z (Collect (fold_graph (plus o f) z S)) else z)\<close>
+  for U z plus S
+
+lemma semigroup_ow_typeclass[simp, iff]: \<open>semigroup_ow V (+)\<close>
+  if \<open>\<And>x y. x\<in>V \<Longrightarrow> y\<in>V \<Longrightarrow> x + y \<in> V\<close> for V :: \<open>'a :: semigroup_add set\<close>
+  by (auto simp: semigroup_ow_def Groups.add_ac that)
+
+lemma abel_semigroup_ow_typeclass[simp, iff]: \<open>abel_semigroup_ow V (+)\<close>
+  if \<open>\<And>x y. x\<in>V \<Longrightarrow> y\<in>V \<Longrightarrow> x + y \<in> V\<close> for V :: \<open>'a :: ab_semigroup_add set\<close>
+  by (auto simp: abel_semigroup_ow_def abel_semigroup_ow_axioms_def Groups.add_ac that)
+
+lemma neutral_ow_typeclass[simp, iff]: \<open>neutral_ow V 0\<close> 
+  if \<open>0 \<in> V\<close> for V :: \<open>'a::zero set\<close>
+  by (auto simp: neutral_ow_def that)
+
+lemma comm_monoid_ow_typeclass[simp, iff]: \<open>comm_monoid_ow V (+) 0\<close> 
+  if \<open>0 \<in> V\<close> and \<open>\<And>x y. x\<in>V \<Longrightarrow> y\<in>V \<Longrightarrow> x + y \<in> V\<close> for V :: \<open>'a :: comm_monoid_add set\<close>
+  by (auto simp: comm_monoid_ow_def comm_monoid_ow_axioms_def that)
+
+ctr parametricity in semigroup_ow_def[unfolded abel_semigroup_ow_axioms_def make_parametricity_proof_friendly]
+ctr parametricity in abel_semigroup_ow_def[unfolded abel_semigroup_ow_axioms_def make_parametricity_proof_friendly]
+ctr parametricity in comm_monoid_ow_def[unfolded comm_monoid_ow_axioms_def make_parametricity_proof_friendly]
+
+definition \<open>rel_pred T P Q = rel_set T (Collect P) (Collect Q)\<close>
+
+lemma fold_graph_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique T\<close> (* TODO needed? *)
+  shows \<open>((T ===> U ===> U) ===> U ===> rel_set T ===> rel_pred U)
+          fold_graph fold_graph\<close>
+  by -
+
+lemma Collect_parametric[transfer_rule]:
+  includes lifting_syntax
+  shows \<open>(rel_pred T ===> rel_set T) Collect Collect\<close>
+  by (auto simp: rel_pred_def)
+
+lemma sum_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique T\<close> \<open>bi_unique U\<close>
+  shows \<open>(T ===> (V ===> T ===> T) ===> (U ===> V) ===> rel_set U ===> T)
+            sum_ow sum_ow\<close>
+  unfolding sum_ow_def
+  by transfer_prover
+
+lemma the_default_The: \<open>the_default z S = (THE x. x \<in> S)\<close> if \<open>card S = 1\<close>
+  by (simp add: that the_default_def)
+
+lemma (in comm_monoid_set) comp_fun_commute_onI: \<open>Finite_Set.comp_fun_commute_on UNIV ((\<^bold>*) \<circ> g)\<close>
+  apply (rule Finite_Set.comp_fun_commute_on.intro)
+  by (simp add: o_def left_commute)
+
+lemma (in comm_monoid_set) F_via_the_default: \<open>F g A = the_default def (Collect (fold_graph ((\<^bold>*) \<circ> g) \<^bold>1 A))\<close>
+  if \<open>finite A\<close>
+proof -
+  have \<open>y = x\<close> if \<open>fold_graph ((\<^bold>*) \<circ> g) \<^bold>1 A x\<close> and \<open>fold_graph ((\<^bold>*) \<circ> g) \<^bold>1 A y\<close> for x y
+    using that apply (rule Finite_Set.comp_fun_commute_on.fold_graph_determ[rotated 2, where S=UNIV])
+    by (simp_all add: comp_fun_commute_onI)
+  then have \<open>Ex1 (fold_graph ((\<^bold>*) \<circ> g) \<^bold>1 A)\<close>
+    by (meson finite_imp_fold_graph that)
+  then have \<open>card (Collect (fold_graph ((\<^bold>*) \<circ> g) \<^bold>1 A)) = 1\<close>
+    using card_eq_Suc_0_ex1 by fastforce
+  then show ?thesis
+    using that by (auto simp add: the_default_The eq_fold Finite_Set.fold_def)
+qed
+
+(* lemma sum_ow_typeclass: \<open>sum_ow 0 plus = sum\<close> *)
+
+lemma sum_ud[ud_with]: \<open>sum = sum_ow 0 plus\<close>
+  apply (auto intro!: ext simp: sum_def sum_ow_def comm_monoid_set.F_via_the_default)
+   apply (subst comm_monoid_set.F_via_the_default)
+    apply (auto simp add: sum.comm_monoid_set_axioms)
+  by (metis comm_monoid_add_class.sum_def sum.infinite)
+
+declare sum_with[ud_with del]
+
+definition \<open>has_sum_ow U plus zero open f A x =
+        filterlim (sum_ow zero plus f) (nhds_ow U (\<lambda>S. open S) x)
+         (finite_subsets_at_top A)\<close>
+  for U plus zero "open" f A x
+
+lemma has_sum_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique T\<close> \<open>bi_unique U\<close>
+  shows \<open>(rel_set T ===> (V ===> T ===> T) ===> T ===> (rel_set T ===> (=)) ===> (U ===> V) ===> rel_set U ===> T ===> (=))
+            has_sum_ow has_sum_ow\<close>
+  unfolding has_sum_ow_def
+  by transfer_prover
+
+lemma has_sum_ud[ud_with]: \<open>has_sum = has_sum_ow UNIV plus (0::'a::{comm_monoid_add,topological_space}) open\<close>
+  by (auto intro!: ext simp: has_sum_def has_sum_ow_def ud_with)
+
+lemma has_sum_ow_topology:
+  assumes \<open>l \<in> topspace T\<close>
+  assumes \<open>0 \<in> topspace T\<close>
+  assumes \<open>\<And>x y. x \<in> topspace T \<Longrightarrow> y \<in> topspace T \<Longrightarrow> x + y \<in> topspace T\<close>
+  shows \<open>has_sum_ow (topspace T) (+) 0 (openin T) f S l \<longleftrightarrow> has_sum_in T f S l\<close>
+  using assms apply (simp add: has_sum_ow_def has_sum_in_def nhds_ow_topology sum_ud[symmetric])
+  by (metis filterlim_nhdsin_iff_limitin)
+
+definition \<open>at_within_ow U open a s = nhds_ow U open a \<sqinter> principal (s - {a})\<close>
+  for U "open" a s
+
+(* TODO: add to make_parametricity_proof_friendly *)
+definition \<open>transfer_inf_principal F M = F \<sqinter> principal M\<close>
+
+lemma transfer_inf_principal_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique T\<close>
+  shows \<open>(rel_filter T ===> rel_set T ===> rel_filter T) transfer_inf_principal transfer_inf_principal\<close>
+proof -
+  have *: \<open>transfer_inf_principal F M = transfer_bounded_filter_Inf M {F}\<close> for F :: \<open>'z filter\<close> and M
+    by (simp add: transfer_inf_principal_def[abs_def] transfer_bounded_filter_Inf_def)
+  show ?thesis
+    unfolding * by transfer_prover
+qed
+
+lemma at_within_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique T\<close>
+  shows \<open>((rel_set T) ===> (rel_set T ===> (=)) ===> T ===> rel_set T ===> rel_filter T)
+            at_within_ow at_within_ow\<close>
+  unfolding at_within_ow_def make_parametricity_proof_friendly transfer_inf_principal_def[symmetric]
+  by transfer_prover
+
+lemma at_within_ud[ud_with]: \<open>at_within = at_within_ow UNIV open\<close>
+  by (auto intro!: ext simp: at_within_def at_within_ow_def ud_with)
+
+lemma at_within_ow_topology:
+  \<open>at_within_ow (topspace T) (openin T) a S = nhdsin T a \<sqinter> principal (S - {a})\<close> 
+  if \<open>a \<in> topspace T\<close>
+  using that unfolding at_within_ow_def by (simp add: nhds_ow_topology)
+
+(* lemma class_comm_monoid_add_ud[ud_with]: \<open>class.comm_monoid_add = comm_monoid_add_ow UNIV\<close> *)
+  (* by (auto intro!: ext simp: class.comm_monoid_add_def SML_Monoids.comm_monoid_add_ow class.comm_monoid_add_axioms_def ud_with) *)
+declare SML_Monoids.comm_monoid_add_ow[ud_with]
+
+(* TODO move *)
+lemma has_sum_in_comm_additive_general:
+  fixes f :: \<open>'a \<Rightarrow> 'b :: comm_monoid_add\<close>
+    and g :: \<open>'b \<Rightarrow> 'c :: comm_monoid_add\<close>
+  assumes T0[simp]: \<open>0 \<in> topspace T\<close> and Tplus[simp]: \<open>\<And>x y. x \<in> topspace T \<Longrightarrow> y \<in> topspace T \<Longrightarrow> x+y \<in> topspace T\<close>
+  assumes Uplus[simp]: \<open>\<And>x y. x \<in> topspace U \<Longrightarrow> y \<in> topspace U \<Longrightarrow> x+y \<in> topspace U\<close>
+  assumes grange: \<open>g ` topspace T \<subseteq> topspace U\<close>
+  assumes g0: \<open>g 0 = 0\<close>
+  assumes frange: \<open>f ` S \<subseteq> topspace T\<close>
+  assumes gcont: \<open>filterlim g (nhdsin U (g l)) (atin T l)\<close>
+  assumes gadd: \<open>\<And>x y. x \<in> topspace T \<Longrightarrow> y \<in> topspace T \<Longrightarrow> g (x+y) = g x + g y\<close>
+  assumes sumf: \<open>has_sum_in T f S l\<close>
+  shows \<open>has_sum_in U (g o f) S (g l)\<close>
+proof -
+  (* TODO: Do we need the wrappers f' and g' still? *)
+  define f' where \<open>f' x = (if x \<in> S then f x else 0)\<close> for x
+  define g' where \<open>g' x = (if x \<in> topspace T then g x else 0)\<close> for x
+  have \<open>topspace T \<noteq> {}\<close>
+    using T0 by blast
+  then have \<open>topspace U \<noteq> {}\<close>
+    using grange by blast
+  {
+    assume "\<exists>(Rep :: 't \<Rightarrow> 'b) Abs. type_definition Rep Abs (topspace T)"
+    then interpret T: local_typedef \<open>topspace T\<close> \<open>TYPE('t)\<close>
+      by unfold_locales
+    assume "\<exists>(Rep :: 'u \<Rightarrow> 'c) Abs. type_definition Rep Abs (topspace U)"
+    then interpret U: local_typedef \<open>topspace U\<close> \<open>TYPE('u)\<close>
+      by unfold_locales
+
+(*     note [[show_types]]
+    have \<open>SML_Monoids.comm_monoid_add_ow UNIV (plus::'u \<Rightarrow> 'u \<Rightarrow> 'u) (zero::'u) \<Longrightarrow>
+topological_space_ow UNIV (open::'u set \<Rightarrow> bool) \<Longrightarrow>
+SML_Monoids.comm_monoid_add_ow UNIV (plusa::'t \<Rightarrow> 't \<Rightarrow> 't) (zeroa::'t) \<Longrightarrow>
+topological_space_ow UNIV (opena::'t set \<Rightarrow> bool) \<Longrightarrow>
+(\<And>F::'a set.
+    finite F \<Longrightarrow>
+    F \<subseteq> (Sa::'a set) \<Longrightarrow> sum_ow zero plus ((fa::'t \<Rightarrow> 'u) \<circ> (ga::'a \<Rightarrow> 't)) F = fa (sum_ow zeroa plusa ga F)) \<Longrightarrow>
+(\<And>F::'a set. finite F \<Longrightarrow> sum_ow zeroa plusa ga F \<in> (Ta::'t set)) \<Longrightarrow>
+filterlim fa (nhds_ow UNIV open (fa (x::'t))) (at_within_ow UNIV opena x Ta) \<Longrightarrow>
+has_sum_ow UNIV plusa zeroa opena ga Sa x \<Longrightarrow> has_sum_ow UNIV plus zero open (fa \<circ> ga) Sa (fa x)\<close> for plus zero "open"
+      apply transfer
+ *)
+    note [[show_types]]
+    note has_sum_comm_additive_general
+    note this[unfolded ud_with]
+    note this[unoverload_type 'b, unoverload_type 'c]
+    note this[where 'b='t and 'c='u and 'a='a]
+    note this[unfolded ud_with]
+    thm this[no_vars]
+    note this[untransferred]
+    note this[where f=g' and g=f' and zero=0 and zeroa=0 and plus=plus and plusa=plus
+        and ?open=\<open>openin U\<close> and opena=\<open>openin T\<close> and x=l and S=S and T=\<open>topspace T\<close>]
+    note this[simplified]
+  }
+  note * = this[cancel_type_definition, OF \<open>topspace T \<noteq> {}\<close>, cancel_type_definition, OF \<open>topspace U \<noteq> {}\<close>]
+
+  have f'T[simp]: \<open>f' x \<in> topspace T\<close> for x
+    using frange f'_def by force
+  have [simp]: \<open>l \<in> topspace T\<close>
+    using sumf has_sum_in_topspace by blast
+  have [simp]: \<open>x \<in> topspace T \<Longrightarrow> g' x \<in> topspace U\<close> for x
+    using grange g'_def by auto
+  have sumf'T: \<open>(\<Sum>x\<in>F. f' x) \<in> topspace T\<close> if \<open>finite F\<close> for F
+    using that apply induction
+    by auto
+  have [simp]: \<open>(\<Sum>x\<in>F. f x) \<in> topspace T\<close> if \<open>F \<subseteq> S\<close> for F
+    using that apply (induction F rule:infinite_finite_induct)
+      apply auto
+    by (metis Tplus f'T f'_def)
+  have sum_gf: \<open>(\<Sum>x\<in>F. g' (f' x)) = g' (\<Sum>x\<in>F. f' x)\<close> 
+    if \<open>finite F\<close> and \<open>F \<subseteq> S\<close> for F
+  proof -
+    have \<open>(\<Sum>x\<in>F. g' (f' x)) = (\<Sum>x\<in>F. g (f x))\<close>
+      apply (rule sum.cong)
+      using frange that by (auto simp: f'_def g'_def)
+    also have \<open>\<dots> = g (\<Sum>x\<in>F. f x)\<close>
+      using \<open>finite F\<close> \<open>F \<subseteq> S\<close> apply induction
+      using g0 frange apply auto
+      apply (subst gadd)
+      by (auto simp: f'_def)
+    also have \<open>\<dots> = g (\<Sum>x\<in>F. f' x)\<close>
+      apply (rule arg_cong[where f=g])
+      apply (rule sum.cong)
+      using that by (auto simp: f'_def)
+    also have \<open>\<dots> = g' (\<Sum>x\<in>F. f' x)\<close>
+      using g'_def sumf'T that(1) by simp
+    finally show ?thesis
+      by -
+  qed
+  from sumf have sumf': \<open>has_sum_in T f' S l\<close>
+    apply (rule has_sum_in_cong[THEN iffD2, rotated])
+    unfolding f'_def by auto
+  have [simp]: \<open>g' l = g l\<close>
+    by (simp add: g'_def)
+  have [simp]: \<open>g l \<in> topspace U\<close>
+    using grange by auto
+  from gcont have contg': \<open>filterlim g' (nhdsin U (g l)) (nhdsin T l \<sqinter> principal (topspace T - {l}))\<close>
+    apply (rule filterlim_cong[THEN iffD1, rotated -1])
+      apply (rule refl)
+     apply (simp add: atin_def)
+    by (auto intro!: exI simp add: g'_def eventually_atin)
+  from T0 grange g0 have [simp]: \<open>0 \<in> topspace U\<close>
+    by auto
+
+  have [simp]: 
+    \<open>SML_Monoids.comm_monoid_add_ow (topspace T) (+) 0\<close>
+    \<open>SML_Monoids.comm_monoid_add_ow (topspace U) (+) 0\<close>
+    by (simp_all add: SML_Monoids.comm_monoid_add_ow_def SML_Semigroups.ab_semigroup_add_ow_def
+        SML_Semigroups.semigroup_add_ow_def plus_ow_def semigroup_add_ow_axioms_def zero_ow_def
+        neutral_ow_def SML_Semigroups.ab_semigroup_add_ow_axioms_def SML_Monoids.comm_monoid_add_ow_axioms_def
+        Groups.add_ac)
+
+  have \<open>has_sum_ow (topspace U) (+) 0 (openin U) (g' \<circ> f') S (g' l)\<close>
+    apply (rule *)
+    by (auto simp: topological_space_ow_from_topology sum_gf sumf'
+        sum_ud[symmetric] at_within_ow_topology has_sum_ow_topology
+        contg' sumf'T)
+
+  then have \<open>has_sum_in U (g' \<circ> f') S (g' l)\<close>
+    apply (rule has_sum_ow_topology[THEN iffD1, rotated -1])
+    by simp_all
+  then have \<open>has_sum_in U (g' \<circ> f') S (g l)\<close>
+    by simp
+  then show ?thesis
+    apply (rule has_sum_in_cong[THEN iffD1, rotated])
+    unfolding f'_def g'_def using frange grange by auto
+qed
+
+lemma continuous_map_is_continuous_at_point:
+  assumes \<open>continuous_map T U f\<close>
+  shows \<open>filterlim f (nhdsin U (f l)) (atin T l)\<close>
+  by (metis assms atin_degenerate bot.extremum continuous_map_atin filterlim_iff_le_filtercomap filterlim_nhdsin_iff_limitin)
+
+lemma has_sum_in_comm_additive:
+  fixes f :: \<open>'a \<Rightarrow> 'b :: ab_group_add\<close>
+    and g :: \<open>'b \<Rightarrow> 'c :: ab_group_add\<close>
+  assumes \<open>topspace T = UNIV\<close> and \<open>topspace U = UNIV\<close>
+  assumes \<open>Modules.additive g\<close>
+  assumes gcont: \<open>continuous_map T U g\<close>
+  assumes sumf: \<open>has_sum_in T f S l\<close>
+  shows \<open>has_sum_in U (g o f) S (g l)\<close>
+  apply (rule has_sum_in_comm_additive_general[where T=T and U=U])
+  using assms
+  by (auto simp: additive.zero Modules.additive_def intro!: continuous_map_is_continuous_at_point)
+
+
+lemma infsum_butterfly_ket_a: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (a *\<^sub>V ket i) (ket i)) UNIV a\<close>
+proof -
+  have \<open>has_sum_in weak_star_topology ((\<lambda>b. a o\<^sub>C\<^sub>L b) \<circ> (\<lambda>i. selfbutterket i)) UNIV (a o\<^sub>C\<^sub>L id_cblinfun)\<close>
+    apply (rule has_sum_in_comm_additive)
+    by (auto intro!: infsum_butterfly_ket continuous_map_is_continuous_at_point limitin_continuous_map
+        continuous_map_left_comp_weak_star  cblinfun_compose_add_right
+        simp: Modules.additive_def)
+  then show ?thesis
+    by (auto simp: o_def cblinfun_comp_butterfly)
+qed
+
+
+lemma finite_rank_weak_star_dense[simp]: \<open>weak_star_topology closure_of (Collect finite_rank) = (UNIV :: ('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) set)\<close>
+proof -
+  have \<open>x \<in> weak_star_topology closure_of (Collect finite_rank)\<close> for x :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
+  proof (rule limitin_closure_of)
+    define f :: \<open>'a \<Rightarrow> 'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> where \<open>f = (\<lambda>i. butterfly (x *\<^sub>V ket i) (ket i))\<close>
+    have \<open>has_sum_in weak_star_topology f UNIV x\<close>
+      using f_def infsum_butterfly_ket_a by blast
+    then show \<open>limitin weak_star_topology (sum f) x (finite_subsets_at_top UNIV)\<close>
+      using has_sum_in_def by blast
+    show \<open>range (sum f) \<subseteq> Collect finite_rank\<close>
+      by (auto intro!: finite_rank_sum simp: f_def)
+    show \<open>finite_subsets_at_top UNIV \<noteq> \<bottom>\<close>
+      by simp
+  qed
+  then show ?thesis
+    by auto
+qed
+
+
+
+(* TODO move *)
+lemma butterkets_weak_star_dense[simp]:
+  \<open>weak_star_topology closure_of cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True} = UNIV\<close>
+proof -
+  from continuous_map_image_closure_subset[OF weak_star_topology_weaker_than_euclidean]
+  have \<open>weak_star_topology closure_of (cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True}) \<supseteq> closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True})\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
+    by auto
+  moreover from finite_rank_dense_compact
+  have \<open>\<dots> \<supseteq> Collect finite_rank\<close>
+    by (metis closure_subset compact_op_def mem_Collect_eq subsetI subset_antisym)
+  ultimately have *: \<open>weak_star_topology closure_of (cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True}) \<supseteq> Collect finite_rank\<close>
+    by simp
+  have \<open>weak_star_topology closure_of cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}
+        = weak_star_topology closure_of (weak_star_topology closure_of cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True})\<close>
+  by simp
+  also have \<open>\<dots> \<supseteq> weak_star_topology closure_of Collect finite_rank\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
+    using * closure_of_mono by blast
+  also have \<open>\<dots> = UNIV\<close>
+    by simp
+  finally show ?thesis
+    by auto
+qed
+
+
+
+lemma weak_star_clinear_eq_butterfly_ketI:
+  fixes F G :: \<open>('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2) \<Rightarrow> 'c::complex_vector\<close>
+  assumes "clinear F" and "clinear G"
+    and \<open>continuous_map weak_star_topology T F\<close> and \<open>continuous_map weak_star_topology T G\<close>
+    and \<open>hausdorff T\<close>
+  assumes "\<And>i j. F (butterfly (ket i) (ket j)) = G (butterfly (ket i) (ket j))"
+  shows "F = G"
+proof -
+  have FG: \<open>F x = G x\<close> if \<open>x \<in> cspan {butterket i j |i j. True}\<close> for x
+    by (smt (verit, ccfv_threshold) assms(1) assms(2) assms(6) complex_vector.linear_eq_on mem_Collect_eq that)
+  show ?thesis
+    apply (rule ext)
+    using \<open>hausdorff T\<close> FG
+    apply (rule closure_of_eqI[where f=F and g=G and S=\<open>cspan {butterket i j| i j. True}\<close>])
+    using assms butterkets_weak_star_dense by auto
+qed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 (* TODO: can we use a generic rule similar to sum_parametric' instead? *)
 lemma has_sum_weak_star_transfer[transfer_rule]:
   includes lifting_syntax
@@ -170,11 +597,14 @@ lemma convergent_on_typeclass3[simp]:
   apply (simp add: assms)
   by (meson assms(2) assms(3) closed_sequentially convergent_def range_subsetD)
 
+(* 
 (* TODO: Should we use sum_with from ETTS instead? *)
 definition sum_with where \<open>sum_with plus zero f A = (if finite A then foldr (\<lambda>i s. plus (f i) s) (SOME l. set l = A \<and> distinct l) zero else zero)\<close>
   for plus :: \<open>'a \<Rightarrow> 'a \<Rightarrow> 'a\<close> and zero :: 'a
 
-lemma sum_with[unoverload_def]: \<open>sum \<equiv> sum_with plus 0\<close>
+ *)
+
+(* lemma sum_with[unoverload_def]: \<open>sum \<equiv> sum_with plus 0\<close>
 proof (rule eq_reflection, rule ext, rule ext, rename_tac f A)
   fix f :: \<open>'a \<Rightarrow> 'b\<close> and A
   show \<open>sum f A = sum_with (+) 0 f A\<close>
@@ -196,8 +626,9 @@ proof (rule eq_reflection, rule ext, rule ext, rename_tac f A)
     then show ?thesis 
       by (simp add: sum_with_def)
   qed
-qed
+qed *)
 
+(* 
 lemma sum_with_typeclass: \<open>sum_with plus 0 f A = sum f A\<close>
 proof (cases \<open>finite A\<close>)
   case True
@@ -215,27 +646,27 @@ next
   then show ?thesis 
     by (simp add: sum_with_def)
 qed
+ *)
 
-
-unoverload_definition nhds_def
+(* unoverload_definition nhds_def
 unoverload_definition has_sum_def
-unoverload_definition at_within_def
+unoverload_definition at_within_def *)
 
-lemma sum_with_parametric[transfer_rule]:
+(* lemma sum_with_parametric[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: "right_total T" "bi_unique T"
   shows "((T ===> T ===> T) ===> T ===> ((=) ===> T) ===> rel_set (=) ===> T) 
     sum_with
     sum_with"
   unfolding sum_with_def
-  by transfer_prover
+  by transfer_prover *)
 
-(* TODO: we already have (different but roughly equivalent) nhds-stuff in Tmp_Move *)
+(* (* TODO: we already have (different but roughly equivalent) nhds-stuff in Tmp_Move *)
 definition \<open>nhds_with_on A open a =
         (\<Sqinter> (principal ` {x. (open x \<and> a \<in> x) \<and> x \<subseteq> A}) \<sqinter> principal A)\<close>
-  for A "open" a
+  for A "open" a *)
 
-lemma nhds_with_on_topology: \<open>nhds_with_on (topspace T) (openin T) a = 
+(* lemma nhds_with_on_topology: \<open>nhds_with_on (topspace T) (openin T) a = 
       (if a\<in>topspace T then nhdsin T a else principal (topspace T))\<close>
 proof (rule filter_eq_iff[THEN iffD2, rule_format])
   fix P
@@ -268,7 +699,7 @@ proof (rule filter_eq_iff[THEN iffD2, rule_format])
         if \<open>\<And>U. openin T U \<Longrightarrow> a \<in> U \<Longrightarrow> U \<subseteq> topspace T \<Longrightarrow> F \<le> principal (U \<inter> topspace T)\<close> for F
         using that by (simp add: Inf_filter_def eventually_Sup)
       show \<open>eventually P (nhdsin T a)\<close>
-        apply (rule *)
+        apply (rule * )
         by (simp add: INF_lower Int_absorb2 nhdsin_def)
     qed
     ultimately show ?thesis
@@ -282,9 +713,9 @@ proof (rule filter_eq_iff[THEN iffD2, rule_format])
       apply (subst aux)
       by auto
   qed
-qed
+qed *)
 
-lemma nhds_with_transfer[transfer_rule]:
+(* lemma nhds_with_transfer[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: "right_total T" "bi_unique T"
   shows \<open>((rel_set T ===> (=)) ===> T ===> rel_filter T) 
@@ -293,16 +724,18 @@ lemma nhds_with_transfer[transfer_rule]:
   apply transfer_prover_start
         apply transfer_step+
   by (auto intro!: ext simp: nhds_with_on_def Ball_Collect)
+ *)
 
-definition \<open>at_within_with_on A open a s =
+(* definition \<open>at_within_with_on A open a s =
    nhds_with_on A (\<lambda>S. open S) a \<sqinter> principal (s - {a})\<close>
   for A "open" a s
 
 lemma at_within_with_on_topology: \<open>at_within_with_on (topspace T) (openin T) a S
     = (if a \<in> topspace T then nhdsin T a \<sqinter> principal (S - {a}) else principal (topspace T \<inter> S))\<close>
   by (auto simp add: at_within_with_on_def nhds_with_on_topology)
+ *)
 
-lemma at_within_with_transfer[transfer_rule]:
+(* lemma at_within_with_transfer[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: "right_total T" "bi_unique T"
   shows \<open>((rel_set T ===> (=)) ===> T ===> rel_set T ===> rel_filter T)
@@ -311,20 +744,17 @@ lemma at_within_with_transfer[transfer_rule]:
   apply transfer_prover_start
       apply transfer_step+
   by (simp add: at_within_with_on_def[abs_def])
+ *)
 
+(*
 definition \<open>has_sum_with_on D plus zero open f A x =
         filterlim (sum_with plus zero f) (nhds_with_on D (\<lambda>S. open S) x)
          (finite_subsets_at_top A)\<close>
   for D plus zero "open" f A x
 
-lemma has_sum_with_on_topology:
-  assumes \<open>l \<in> topspace T\<close>
-  shows \<open>has_sum_with_on (topspace T) (+) 0 (openin T) f S l = has_sum_in T f S l\<close>
-  using assms apply (simp add: has_sum_with_on_def has_sum_in_def nhds_with_on_topology
-      sum_with_typeclass[abs_def])
-  by (metis filterlim_nhdsin_iff_limitin)
+ *)
 
-lemma has_sum_with_parametric[transfer_rule]:
+(* lemma has_sum_with_parametric[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: "right_total T" "bi_unique T"
   shows "((T ===> T ===> T) ===> T ===> (rel_set T ===> (=)) ===> ((=) ===> T) ===> rel_set (=) ===> T ===> (=)) 
@@ -333,12 +763,7 @@ lemma has_sum_with_parametric[transfer_rule]:
   unfolding has_sum.with_def
   apply transfer_prover_start
       apply transfer_step+
-  by (auto intro!: ext simp add: has_sum_with_on_def)
-
-lemma continuous_map_is_continuous_at_point:
-  assumes \<open>continuous_map T U f\<close>
-  shows \<open>filterlim f (nhdsin U (f l)) (atin T l)\<close>
-  by (metis assms atin_degenerate bot.extremum continuous_map_atin filterlim_iff_le_filtercomap filterlim_nhdsin_iff_limitin)
+  by (auto intro!: ext simp add: has_sum_with_on_def) *)
 
 (* 
 lemma [simp]: \<open>plus_ow (topspace U) (+)\<close>
@@ -356,179 +781,6 @@ lemma comm_monoid_add_ow_from_typeclass[simp]: \<open>SML_Monoids.comm_monoid_ad
   by - *)
 
 
-(* TODO move *)
-lemma has_sum_in_comm_additive_general:
-  fixes f :: \<open>'a \<Rightarrow> 'b :: comm_monoid_add\<close>
-    and g :: \<open>'b \<Rightarrow> 'c :: comm_monoid_add\<close>
-  assumes T0[simp]: \<open>0 \<in> topspace T\<close> and Tplus[simp]: \<open>\<And>x y. x \<in> topspace T \<Longrightarrow> y \<in> topspace T \<Longrightarrow> x+y \<in> topspace T\<close>
-  assumes Uplus[simp]: \<open>\<And>x y. x \<in> topspace U \<Longrightarrow> y \<in> topspace U \<Longrightarrow> x+y \<in> topspace U\<close>
-  assumes grange: \<open>g ` topspace T \<subseteq> topspace U\<close>
-  assumes g0: \<open>g 0 = 0\<close>
-  assumes frange: \<open>f ` S \<subseteq> topspace T\<close>
-  assumes gcont: \<open>filterlim g (nhdsin U (g l)) (atin T l)\<close>
-  assumes gadd: \<open>\<And>x y. x \<in> topspace T \<Longrightarrow> y \<in> topspace T \<Longrightarrow> g (x+y) = g x + g y\<close>
-  assumes sumf: \<open>has_sum_in T f S l\<close>
-  shows \<open>has_sum_in U (g o f) S (g l)\<close>
-proof -
-  define f' where \<open>f' x = (if x \<in> S then f x else 0)\<close> for x
-  define g' where \<open>g' x = (if x \<in> topspace T then g x else 0)\<close> for x
-  have \<open>topspace T \<noteq> {}\<close>
-    using T0 by blast
-  then have \<open>topspace U \<noteq> {}\<close>
-    using grange by blast
-  {
-    assume "\<exists>(Rep :: 't \<Rightarrow> 'b) Abs. type_definition Rep Abs (topspace T)"
-    then interpret T: local_typedef \<open>topspace T\<close> \<open>TYPE('t)\<close>
-      by unfold_locales
-    assume "\<exists>(Rep :: 'u \<Rightarrow> 'c) Abs. type_definition Rep Abs (topspace U)"
-    then interpret U: local_typedef \<open>topspace U\<close> \<open>TYPE('u)\<close>
-      by unfold_locales
-
-    note has_sum_comm_additive_general[unfolded sum_with has_sum.with at_within.with nhds.with]
-    note this[unoverload_type 'b, unoverload_type 'c]
-    note this[where 'b='t and 'c='u and 'a='a]
-    note this[untransferred]
-    note this[where f=g' and g=f' and zero=0 and zeroa=0 and plus=plus and plusa=plus
-        and ?open=\<open>openin U\<close> and opena=\<open>openin T\<close> and x=l and S=S and T=\<open>topspace T\<close>]
-    note this[simplified]
-  }    
-  note * = this[cancel_type_definition, OF \<open>topspace T \<noteq> {}\<close>, cancel_type_definition, OF \<open>topspace U \<noteq> {}\<close>]
-
-  have f'T[simp]: \<open>f' x \<in> topspace T\<close> for x
-    using frange f'_def by force
-  have [simp]: \<open>l \<in> topspace T\<close>
-    using sumf has_sum_in_topspace by blast
-  have [simp]: \<open>x \<in> topspace T \<Longrightarrow> g' x \<in> topspace U\<close> for x
-    using grange g'_def by auto
-  have sumf'T: \<open>(\<Sum>x\<in>F. f' x) \<in> topspace T\<close> if \<open>finite F\<close> for F
-    using that apply induction
-    by auto
-  have [simp]: \<open>(\<Sum>x\<in>F. f x) \<in> topspace T\<close> if \<open>F \<subseteq> S\<close> for F
-    using that apply (induction F rule:infinite_finite_induct)
-      apply auto
-    by (metis Tplus f'T f'_def)
-  have sum_gf: \<open>(\<Sum>x\<in>F. g' (f' x)) = g' (\<Sum>x\<in>F. f' x)\<close> 
-    if \<open>finite F\<close> and \<open>F \<subseteq> S\<close> for F
-  proof -
-    have \<open>(\<Sum>x\<in>F. g' (f' x)) = (\<Sum>x\<in>F. g (f x))\<close>
-      apply (rule sum.cong)
-      using frange that by (auto simp: f'_def g'_def)
-    also have \<open>\<dots> = g (\<Sum>x\<in>F. f x)\<close>
-      using \<open>finite F\<close> \<open>F \<subseteq> S\<close> apply induction
-      using g0 frange apply auto
-      apply (subst gadd)
-      by (auto simp: f'_def)
-    also have \<open>\<dots> = g (\<Sum>x\<in>F. f' x)\<close>
-      apply (rule arg_cong[where f=g])
-      apply (rule sum.cong)
-      using that by (auto simp: f'_def)
-    also have \<open>\<dots> = g' (\<Sum>x\<in>F. f' x)\<close>
-      using g'_def sumf'T that(1) by simp
-    finally show ?thesis
-      by -
-  qed
-  from sumf have sumf': \<open>has_sum_in T f' S l\<close>
-    apply (rule has_sum_in_cong[THEN iffD2, rotated])
-    unfolding f'_def by auto
-  have [simp]: \<open>g' l = g l\<close>
-    by (simp add: g'_def)
-  have [simp]: \<open>g l \<in> topspace U\<close>
-    using grange by auto
-  from gcont have contg': \<open>filterlim g' (nhdsin U (g l)) (nhdsin T l \<sqinter> principal (topspace T - {l}))\<close>
-    apply (rule filterlim_cong[THEN iffD1, rotated -1])
-      apply (rule refl)
-     apply (simp add: atin_def)
-    by (auto intro!: exI simp add: g'_def eventually_atin)
-  from T0 grange g0 have [simp]: \<open>0 \<in> topspace U\<close>
-    by auto
-
-  have [simp]: \<open>SML_Monoids.comm_monoid_add_ow (topspace T) (+) 0\<close>
-    \<open>SML_Monoids.comm_monoid_add_ow (topspace U) (+) 0\<close>
-    by (simp_all add: SML_Monoids.comm_monoid_add_ow_def SML_Semigroups.ab_semigroup_add_ow_def
-        SML_Semigroups.semigroup_add_ow_def plus_ow_def semigroup_add_ow_axioms_def zero_ow_def
-        neutral_ow_def SML_Semigroups.ab_semigroup_add_ow_axioms_def SML_Monoids.comm_monoid_add_ow_axioms_def
-        Groups.add_ac)
-
-  have \<open>has_sum_with_on (topspace U) (+) 0 (openin U) (g' \<circ> f') S (g' l)\<close>
-    apply (rule *)
-    by (auto simp: topological_space_ow_from_topology sum_gf sumf'
-        nhds_with_on_topology sum_with_typeclass has_sum_with_on_topology
-        at_within_with_on_topology contg' sumf'T)
-
-  then have \<open>has_sum_in U (g' \<circ> f') S (g' l)\<close>
-    apply (rule has_sum_with_on_topology[THEN iffD1, rotated])
-    by simp
-  then have \<open>has_sum_in U (g' \<circ> f') S (g l)\<close>
-    by simp
-  then show ?thesis
-    apply (rule has_sum_in_cong[THEN iffD1, rotated])
-    unfolding f'_def g'_def using frange grange by auto
-qed
-
-lemma has_sum_in_comm_additive:
-  fixes f :: \<open>'a \<Rightarrow> 'b :: ab_group_add\<close>
-    and g :: \<open>'b \<Rightarrow> 'c :: ab_group_add\<close>
-  assumes \<open>topspace T = UNIV\<close> and \<open>topspace U = UNIV\<close>
-  assumes \<open>Modules.additive g\<close>
-  assumes gcont: \<open>continuous_map T U g\<close>
-  assumes sumf: \<open>has_sum_in T f S l\<close>
-  shows \<open>has_sum_in U (g o f) S (g l)\<close>
-  apply (rule has_sum_in_comm_additive_general[where T=T and U=U])
-  using assms
-  by (auto simp: additive.zero Modules.additive_def intro!: continuous_map_is_continuous_at_point)
-
-
-lemma infsum_butterfly_ket_a: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (a *\<^sub>V ket i) (ket i)) UNIV a\<close>
-proof -
-  have \<open>has_sum_in weak_star_topology ((\<lambda>b. a o\<^sub>C\<^sub>L b) \<circ> (\<lambda>i. selfbutterket i)) UNIV (a o\<^sub>C\<^sub>L id_cblinfun)\<close>
-    apply (rule has_sum_in_comm_additive)
-    by (auto intro!: infsum_butterfly_ket continuous_map_is_continuous_at_point limitin_continuous_map
-        continuous_map_left_comp_weak_star  cblinfun_compose_add_right
-        simp: Modules.additive_def)
-  then show ?thesis
-    by (auto simp: o_def cblinfun_comp_butterfly)
-qed
-
-lemma finite_rank_weak_star_dense[simp]: \<open>weak_star_topology closure_of (Collect finite_rank) = (UNIV :: ('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) set)\<close>
-proof -
-  have \<open>x \<in> weak_star_topology closure_of (Collect finite_rank)\<close> for x :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
-  proof (rule limitin_closure_of)
-    define f :: \<open>'a \<Rightarrow> 'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> where \<open>f = (\<lambda>i. butterfly (x *\<^sub>V ket i) (ket i))\<close>
-    have \<open>has_sum_in weak_star_topology f UNIV x\<close>
-      using f_def infsum_butterfly_ket_a by blast
-    then show \<open>limitin weak_star_topology (sum f) x (finite_subsets_at_top UNIV)\<close>
-      using has_sum_in_def by blast
-    show \<open>range (sum f) \<subseteq> Collect finite_rank\<close>
-      by (auto intro!: finite_rank_sum simp: f_def)
-    show \<open>finite_subsets_at_top UNIV \<noteq> \<bottom>\<close>
-      by simp
-  qed
-  then show ?thesis
-    by auto
-qed
-
-(* TODO move *)
-lemma butterkets_weak_star_dense[simp]:
-  \<open>weak_star_topology closure_of cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True} = UNIV\<close>
-proof -
-  from continuous_map_image_closure_subset[OF weak_star_topology_weaker_than_euclidean]
-  have \<open>weak_star_topology closure_of (cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True}) \<supseteq> closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True})\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
-    by auto
-  moreover from finite_rank_dense_compact
-  have \<open>\<dots> \<supseteq> Collect finite_rank\<close>
-    by (metis closure_subset compact_op_def mem_Collect_eq subsetI subset_antisym)
-  ultimately have *: \<open>weak_star_topology closure_of (cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True}) \<supseteq> Collect finite_rank\<close>
-    by simp
-  have \<open>weak_star_topology closure_of cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}
-        = weak_star_topology closure_of (weak_star_topology closure_of cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True})\<close>
-  by simp
-  also have \<open>\<dots> \<supseteq> weak_star_topology closure_of Collect finite_rank\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
-    using * closure_of_mono by blast
-  also have \<open>\<dots> = UNIV\<close>
-    by simp
-  finally show ?thesis
-    by auto
-qed
 
 lemma cmod_distrib_plus: \<open>a \<ge> 0 \<Longrightarrow> b \<ge> 0 \<Longrightarrow> cmod (a + b) = cmod a + cmod b\<close>
   by (simp add: cmod_Re)
@@ -875,23 +1127,6 @@ proof -
     by -
 qed
 
-
-lemma weak_star_clinear_eq_butterfly_ketI:
-  fixes F G :: \<open>('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2) \<Rightarrow> 'c::complex_vector\<close>
-  assumes "clinear F" and "clinear G"
-    and \<open>continuous_map weak_star_topology T F\<close> and \<open>continuous_map weak_star_topology T G\<close>
-    and \<open>hausdorff T\<close>
-  assumes "\<And>i j. F (butterfly (ket i) (ket j)) = G (butterfly (ket i) (ket j))"
-  shows "F = G"
-proof -
-  have FG: \<open>F x = G x\<close> if \<open>x \<in> cspan {butterket i j |i j. True}\<close> for x
-    by (smt (verit, ccfv_threshold) assms(1) assms(2) assms(6) complex_vector.linear_eq_on mem_Collect_eq that)
-  show ?thesis
-    apply (rule ext)
-    using \<open>hausdorff T\<close> FG
-    apply (rule closure_of_eqI[where f=F and g=G and S=\<open>cspan {butterket i j| i j. True}\<close>])
-    using assms butterkets_weak_star_dense by auto
-qed
 
 lemma clinear_register: \<open>register F \<Longrightarrow> clinear F\<close>
   using bounded_clinear.clinear register_bounded_clinear by blast
