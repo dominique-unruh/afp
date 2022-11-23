@@ -4,6 +4,8 @@ theory Misc_Tensor_Product_TTS
     Types_To_Sets_Extension.SML_Topological_Space
     Types_To_Sets_Extension.SML_Groups
     Types_To_Sets_Extension.VS_Vector_Spaces
+    Misc_Tensor_Product
+    Misc_Tensor_Product_BO
 begin
 
 unbundle lattice_syntax
@@ -359,7 +361,7 @@ lemma transfer_vimage_into_parametric[transfer_rule]:
   apply (auto intro!: rel_funI simp: rel_set_def)
   by (metis Int_iff apply_rsp' assms bi_unique_def vimage_eq)+
 
-(* Simplify with these theorems to (try to) change all \<open>\<forall>x. ...\<close> into \<open>\<forall>x\<in>S. ...\<close>
+(* Simplify with these theorems to (try to) change all \<open>\<forall>x. ...\<close> into \<open>\<forall>x\<in>S. ...\<close> (and similar)
   to enable automated creation of parametricity rules without `bi_total` assumptions. *)
 lemma make_parametricity_proof_friendly:
   shows \<open>(\<forall>x. P \<longrightarrow> Q x) \<longleftrightarrow> (P \<longrightarrow> (\<forall>x. Q x))\<close>
@@ -398,6 +400,12 @@ lemma [simp]: \<open>VS_Groups.ab_group_add_ow = SML_Groups.ab_group_add_ow\<clo
 ctr parametricity in VS_Groups.ab_group_add_ow_def[simplified VS_Groups.ab_group_add_ow_axioms_def make_parametricity_proof_friendly]
 ctr parametricity in vector_space_ow_def[simplified vector_space_ow_axioms_def make_parametricity_proof_friendly]
 ctr parametricity in minus_ow_def[unfolded make_parametricity_proof_friendly]
+ctr parametricity in plus_ow_def[unfolded make_parametricity_proof_friendly]
+ctr parametricity in neutral_ow_def[unfolded make_parametricity_proof_friendly]
+ctr parametricity in zero_ow_def[unfolded make_parametricity_proof_friendly]
+ctr parametricity in SML_Semigroups.semigroup_add_ow_def[unfolded SML_Semigroups.semigroup_add_ow_axioms_def make_parametricity_proof_friendly]
+ctr parametricity in SML_Semigroups.ab_semigroup_add_ow_def[unfolded SML_Semigroups.ab_semigroup_add_ow_axioms_def make_parametricity_proof_friendly]
+ctr parametricity in SML_Monoids.comm_monoid_add_ow_def[unfolded SML_Monoids.comm_monoid_add_ow_axioms_def make_parametricity_proof_friendly]
 
 subsection \<open>\<^class>\<open>topological_space\<close>\<close>
 
@@ -410,8 +418,6 @@ lemma topological_space_ow_from_topology[simp]: \<open>topological_space_ow (top
   by (auto intro!: topological_space_ow.intro)
 
 subsection \<open>\<^class>\<open>t2_space\<close>\<close>
-
-definition hausdorff where \<open>hausdorff T \<longleftrightarrow> (\<forall>x \<in> topspace T. \<forall>y \<in> topspace T. x \<noteq> y \<longrightarrow> (\<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
 
 locale t2_space_ow = topological_space_ow +
   assumes \<open>\<forall>x\<in>U. \<forall>y\<in>U. x \<noteq> y \<longrightarrow> (\<exists>S\<subseteq>U. \<exists>T\<subseteq>U. \<tau> S \<and> \<tau> T \<and> x \<in> S \<and> y \<in> T \<and> S \<inter> T = {})\<close>
@@ -1036,6 +1042,134 @@ lemma is_onb_ud[ud_with]:
    apply (transfer, rule)
   unfolding ud_with
   apply transfer by auto
+
+
+subsection \<open>Transferring theorems\<close>
+
+
+lemma closure_of_eqI:
+  fixes f g :: \<open>'a \<Rightarrow> 'b\<close> and T :: \<open>'a topology\<close> and U :: \<open>'b topology\<close>
+  assumes hausdorff: \<open>hausdorff U\<close>
+  assumes f_eq_g: \<open>\<And>x. x \<in> S \<Longrightarrow> f x = g x\<close>
+  assumes x: \<open>x \<in> T closure_of S\<close>
+  assumes f: \<open>continuous_map T U f\<close> and g: \<open>continuous_map T U g\<close>
+  shows \<open>f x = g x\<close>
+proof -
+  have \<open>topspace T \<noteq> {}\<close>
+    by (metis assms(3) equals0D in_closure_of)
+  have \<open>topspace U \<noteq> {}\<close>
+    using \<open>topspace T \<noteq> {}\<close> assms(5) continuous_map_image_subset_topspace by blast
+
+  {
+    assume "\<exists>(Rep :: 't \<Rightarrow> 'a) Abs. type_definition Rep Abs (topspace T)"
+    then interpret T: local_typedef \<open>topspace T\<close> \<open>TYPE('t)\<close>
+      by unfold_locales
+    assume "\<exists>(Rep :: 'u \<Rightarrow> 'b) Abs. type_definition Rep Abs (topspace U)"
+    then interpret U: local_typedef \<open>topspace U\<close> \<open>TYPE('u)\<close>
+      by unfold_locales
+
+    note on_closure_eqI
+    note this[unfolded ud_with]
+    note this[unoverload_type 'b, unoverload_type 'a]
+    note this[unfolded ud_with]
+    note this[where 'a='t and 'b='u]
+    note this[untransferred]
+    note this[where f=f and g=g and S=\<open>S \<inter> topspace T\<close> and x=x and ?open="openin T" and opena=\<open>openin U\<close>]
+    note this[simplified]
+  }
+  note * = this[cancel_type_definition, OF \<open>topspace T \<noteq> {}\<close>, cancel_type_definition, OF \<open>topspace U \<noteq> {}\<close>]
+
+  have 2: \<open>f ` topspace T \<subseteq> topspace U\<close>
+  by (meson assms(4) continuous_map_image_subset_topspace)
+  have 3: \<open>g ` topspace T \<subseteq> topspace U\<close>
+    by (simp add: continuous_map_image_subset_topspace g)
+  have 4: \<open>x \<in> topspace T\<close>
+    by (meson assms(3) in_closure_of)
+  have 5: \<open>topological_space_ow (topspace T) (openin T)\<close>
+    by simp
+  have 6: \<open>t2_space_ow (topspace U) (openin U)\<close>
+    by (simp add: hausdorff)
+  from x have \<open>x \<in> T closure_of (S \<inter> topspace T)\<close>
+    by (metis closure_of_restrict inf_commute)
+  then have 7: \<open>x \<in> closure_ow (topspace T) (openin T) (S \<inter> topspace T)\<close>
+    by (simp add: closure_ow_from_topology)
+  have 8: \<open>continuous_on_ow (topspace T) (topspace U) (openin T) (openin U) (topspace T) f\<close>
+     by (meson "2" continuous_on_ow_from_topology f)
+  have 9: \<open>continuous_on_ow (topspace T) (topspace U) (openin T) (openin U) (topspace T) g\<close>
+    by (simp add: "3" continuous_on_ow_from_topology g)
+
+  show ?thesis
+    apply (rule * )
+    using 2 3 4 5 6 f_eq_g 7 8 9 by auto
+qed
+
+
+lemma orthonormal_subspace_basis_exists:
+  fixes S :: \<open>'a::chilbert_space set\<close>
+  assumes \<open>is_ortho_set S\<close> and norm: \<open>\<And>x. x\<in>S \<Longrightarrow> norm x = 1\<close> and \<open>S \<subseteq> space_as_set V\<close>
+  shows \<open>\<exists>B. B \<supseteq> S \<and> is_ortho_set B \<and> (\<forall>x\<in>B. norm x = 1) \<and> ccspan B = V\<close>
+proof -
+  {
+    assume "\<exists>(Rep :: 't \<Rightarrow> 'a) Abs. type_definition Rep Abs (space_as_set V)"
+    then interpret T: local_typedef \<open>space_as_set V\<close> \<open>TYPE('t)\<close>
+      by unfold_locales
+
+    note orthonormal_basis_exists
+    note this[unfolded ud_with]
+    note this[unoverload_type 'a]
+    note this[unfolded ud_with]
+    note this[where 'a='t]
+    note this[untransferred]
+    note this[where plus=plus and scaleC=scaleC and scaleR=scaleR and zero=0 and minus=minus
+        and uminus=uminus and sgn=sgn and S=S and norm=norm and cinner=cinner and dist=dist
+        and ?open=\<open>openin (top_of_set (space_as_set V))\<close>
+        and uniformity=\<open>uniformity_on (space_as_set V)\<close>]
+    note this[simplified Domainp_rel_filter prod.Domainp_rel T.Domainp_cr_S]
+  }    
+  note * = this[cancel_type_definition]
+  have 1: \<open>uniformity_on (space_as_set V)
+    \<le> principal (Collect (pred_prod (\<lambda>x. x \<in> space_as_set V) (\<lambda>x. x \<in> space_as_set V)))\<close>
+    by (auto simp: uniformity_dist intro!: le_infI2)
+  have \<open>\<exists>B\<in>{A. \<forall>x\<in>A. x \<in> space_as_set V}.
+     S \<subseteq> B \<and> is_onb_ow (space_as_set V) (*\<^sub>C) (+) 0 norm (openin (top_of_set (space_as_set V))) (\<bullet>\<^sub>C) B\<close>
+    apply (rule * )
+    using \<open>S \<subseteq> space_as_set V\<close> \<open>is_ortho_set S\<close>
+    by (auto simp flip: ud_with
+        intro!: complex_vector.subspace_scale real_vector.subspace_scale csubspace_is_subspace
+        csubspace_nonempty complex_vector.subspace_add complex_vector.subspace_diff
+        complex_vector.subspace_neg sgn_in_spaceI 1 norm)
+
+  then obtain B where \<open>B \<subseteq> space_as_set V\<close> and \<open>S \<subseteq> B\<close>
+    and is_onb: \<open>is_onb_ow (space_as_set V) (*\<^sub>C) (+) 0 norm (openin (top_of_set (space_as_set V))) (\<bullet>\<^sub>C) B\<close>
+    by auto
+
+  from \<open>B \<subseteq> space_as_set V\<close>
+  have [simp]: \<open>cspan B \<inter> space_as_set V = cspan B\<close>
+    by (smt (verit) basic_trans_rules(8) ccspan.rep_eq ccspan_leqI ccspan_superset complex_vector.span_span inf_absorb1 less_eq_ccsubspace.rep_eq)
+  then have [simp]: \<open>space_as_set V \<inter> cspan B = cspan B\<close>
+    by blast
+  from \<open>B \<subseteq> space_as_set V\<close>
+  have [simp]: \<open>space_as_set V \<inter> closure (cspan B) = closure (cspan B)\<close>
+    by (metis Int_absorb1 ccspan.rep_eq ccspan_leqI less_eq_ccsubspace.rep_eq)
+  have [simp]: \<open>closure X \<union> X = closure X\<close> for X :: \<open>'z::topological_space set\<close>
+    using closure_subset by blast
+
+  from is_onb have \<open>is_ortho_set B\<close>
+    by (auto simp: is_onb_ow_def ud_with)
+
+  moreover from is_onb have \<open>norm x = 1\<close> if \<open>x \<in> B\<close> for x
+    by (auto simp: is_onb_ow_def that)
+
+  moreover from is_onb have \<open>closure (cspan B) = space_as_set V\<close>
+    by (simp add: is_onb_ow_def \<open>B \<subseteq> space_as_set V\<close>
+        closure_ow_with_typeclass span_ow_on_typeclass flip: ud_with)
+  then have \<open>ccspan B = V\<close>
+    by (simp add: ccspan.abs_eq space_as_set_inverse)
+
+  ultimately show ?thesis
+    using \<open>S \<subseteq> B\<close> by auto
+qed
+
 
 
 end

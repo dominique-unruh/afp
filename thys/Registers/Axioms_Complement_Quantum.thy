@@ -4,6 +4,7 @@ theory Axioms_Complement_Quantum
   imports Laws_Quantum Quantum_Extra Tensor_Product.Weak_Star_Topology
     Tensor_Product.Partial_Trace
     With_Type.With_Type
+    Tensor_Product.Misc_Tensor_Product_TTS
 begin
 
 no_notation m_inv ("inv\<index> _" [81] 80)
@@ -13,19 +14,13 @@ no_notation eq_closure_of ("closure'_of\<index>")
 hide_const (open) Order.top
 declare [[eta_contract]]
 
-ctr parametricity in plus_ow_def[unfolded make_parametricity_proof_friendly]
-ctr parametricity in neutral_ow_def[unfolded make_parametricity_proof_friendly]
-ctr parametricity in zero_ow_def[unfolded make_parametricity_proof_friendly]
-ctr parametricity in SML_Semigroups.semigroup_add_ow_def[unfolded SML_Semigroups.semigroup_add_ow_axioms_def make_parametricity_proof_friendly]
-ctr parametricity in SML_Semigroups.ab_semigroup_add_ow_def[unfolded SML_Semigroups.ab_semigroup_add_ow_axioms_def make_parametricity_proof_friendly]
-ctr parametricity in SML_Monoids.comm_monoid_add_ow_def[unfolded SML_Monoids.comm_monoid_add_ow_axioms_def make_parametricity_proof_friendly]
 
 definition \<open>the_default def S = (if card S = 1 then (THE x. x \<in> S) else def)\<close>
 
-lemma \<open>the_default def {x} = x\<close>
+lemma the_default_singleton[simp]: \<open>the_default def {x} = x\<close>
   unfolding the_default_def by auto
 
-lemma \<open>the_default def {} = def\<close>
+lemma the_default_empty[simp]: \<open>the_default def {} = def\<close>
   unfolding the_default_def by auto
 
 lemma the_default_parametricity[transfer_rule]:
