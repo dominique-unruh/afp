@@ -3,7 +3,7 @@ section \<open>\<open>Misc_Tensor_Product\<close> -- Miscelleanous results missi
 theory Misc_Tensor_Product
   imports "HOL-Analysis.Elementary_Topology" "HOL-Analysis.Abstract_Topology"
     "HOL-Analysis.Abstract_Limits" "HOL-Analysis.Function_Topology" "HOL-Cardinals.Cardinals"
-    "HOL-Analysis.Infinite_Sum" "HOL-Analysis.Harmonic_Numbers" 
+    "HOL-Analysis.Infinite_Sum" "HOL-Analysis.Harmonic_Numbers" Containers.Containers_Auxiliary
     Complex_Bounded_Operators.Extra_General
     Complex_Bounded_Operators.Extra_Vector_Spaces
 begin
@@ -90,11 +90,17 @@ lemma Rangep_conversep[simp]: \<open>Rangep (R\<inverse>\<inverse>) = Domainp R\
 lemma Domainp_conversep[simp]: \<open>Domainp (R\<inverse>\<inverse>) = Rangep R\<close>
   by blast
 
-lemma rel_fun_conversep_eq[simp]: \<open>rel_fun (R\<inverse>\<inverse>) (=) = (rel_fun R (=))\<inverse>\<inverse>\<close>
-  by (auto intro!: ext simp: rel_fun_def)
+(* TODO remove! *)
+(* lemma rel_fun_conversep_eq[simp]: \<open>rel_fun (R\<inverse>\<inverse>) (=) = (rel_fun R (=))\<inverse>\<inverse>\<close>
+  by (auto intro!: ext simp: rel_fun_def) *)
+
+lemma conversep_rel_fun:
+  includes lifting_syntax
+  shows \<open>(T ===> U)\<inverse>\<inverse> = (T\<inverse>\<inverse>) ===> (U\<inverse>\<inverse>)\<close>
+  by (auto simp: rel_fun_def)
 
 lemma rel_topology_conversep[simp]: \<open>rel_topology (R\<inverse>\<inverse>) = ((rel_topology R)\<inverse>\<inverse>)\<close>
-  by (auto simp add: rel_topology_def[abs_def])
+  by (auto simp add: rel_topology_def[abs_def] simp flip: conversep_rel_fun[where U=\<open>(=)\<close>, simplified])
 
 lemma openin_parametric[transfer_rule]:
   includes lifting_syntax
@@ -1565,6 +1571,367 @@ proof -
     apply (rule_tac abs_summable_on_Sigma_iff[THEN iffD2])
     by auto
 qed
+
+
+definition \<open>the_default def S = (if card S = 1 then (THE x. x \<in> S) else def)\<close>
+
+lemma the_default_singleton[simp]: \<open>the_default def {x} = x\<close>
+  unfolding the_default_def by auto
+
+lemma the_default_empty[simp]: \<open>the_default def {} = def\<close>
+  unfolding the_default_def by auto
+
+lemma the_default_The: \<open>the_default z S = (THE x. x \<in> S)\<close> if \<open>card S = 1\<close>
+  by (simp add: that the_default_def)
+
+lemma the_default_parametricity[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique T\<close>
+  shows \<open>(T ===> rel_set T ===> T) the_default the_default\<close>
+proof (intro rel_funI, rename_tac def def' S S')
+  fix def def' assume [transfer_rule]: \<open>T def def'\<close>
+  fix S S' assume [transfer_rule]: \<open>rel_set T S S'\<close>
+  have card_eq: \<open>card S = card S'\<close>
+    by transfer_prover
+  show \<open>T (the_default def S) (the_default def' S')\<close>
+  proof (cases \<open>card S = 1\<close>)
+    case True
+    define theS theS' where [no_atp]: \<open>theS = (THE x. x \<in> S)\<close> and [no_atp]: \<open>theS' = (THE x. x \<in> S')\<close>
+    from True have cardS': \<open>card S' = 1\<close>
+      by (simp add: card_eq)
+    from True have \<open>theS \<in> S\<close>
+      unfolding theS_def
+      apply (rule_tac theI')
+      by (simp add: card_eq_Suc_0_ex1)
+    moreover from cardS' have \<open>theS' \<in> S'\<close>
+      unfolding theS'_def
+      apply (rule_tac theI')
+      by (simp add: card_eq_Suc_0_ex1)
+    ultimately have \<open>T theS theS'\<close>
+      using \<open>rel_set T S S'\<close> True cardS'
+      apply (auto simp: rel_set_def)
+      by (metis card_eq_Suc_0_ex1)
+    then show ?thesis
+      by (simp add: True cardS' the_default_def theS_def theS'_def)
+  next
+    case False
+    then have cardS': \<open>card S' \<noteq> 1\<close>
+      by (simp add: card_eq)
+    show ?thesis
+      using False cardS' \<open>T def def'\<close>
+      by (auto simp add: the_default_def)
+  qed
+qed
+
+definition \<open>rel_pred T P Q = rel_set T (Collect P) (Collect Q)\<close>
+
+lemma Collect_parametric[transfer_rule]:
+  includes lifting_syntax
+  shows \<open>(rel_pred T ===> rel_set T) Collect Collect\<close>
+  by (auto simp: rel_pred_def)
+
+lemma fold_graph_finite:
+\<comment> \<open>Exists as @{thm [source] comp_fun_commute_on.fold_graph_finite}, but the
+    \<^locale>\<open>comp_fun_commute_on\<close>-assumption is not needed.\<close>
+  assumes "fold_graph f z A y"
+  shows "finite A"
+  using assms by induct simp_all
+
+lemma fold_graph_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule, simp]: \<open>bi_unique T\<close>
+  shows \<open>((T ===> U ===> U) ===> U ===> rel_set T ===> rel_pred U)
+          fold_graph fold_graph\<close>
+proof (intro rel_funI, rename_tac f f' z z' A A')
+  fix f f' assume [transfer_rule, simp]: \<open>(T ===> U ===> U) f f'\<close>
+  fix z z' assume [transfer_rule, simp]: \<open>U z z'\<close>
+  fix A A' assume [transfer_rule, simp]: \<open>rel_set T A A'\<close>
+  have one_direction: \<open>\<exists>y'. fold_graph f' z' A' y' \<and> U y y'\<close> if \<open>fold_graph f z A y\<close> 
+    and [transfer_rule]: \<open>U z z'\<close> \<open>(T ===> U ===> U) f f'\<close> \<open>rel_set T A A'\<close> \<open>bi_unique T\<close>
+    for f f' z z' A A' y and U :: \<open>'c1 \<Rightarrow> 'd1 \<Rightarrow> bool\<close> and T :: \<open>'a1 \<Rightarrow> 'b1 \<Rightarrow> bool\<close>
+    using \<open>fold_graph f z A y\<close>  \<open>rel_set T A A'\<close>
+  proof (induction arbitrary: A')
+    case emptyI
+    then show ?case
+      by (metis \<open>U z z'\<close> empty_iff equals0I fold_graph.intros(1) rel_setD2)
+  next
+    case (insertI x A y)
+    from insertI have foldA: \<open>fold_graph f z A y\<close> and T_xA[transfer_rule]: \<open>rel_set T (insert x A) A'\<close> and xA: \<open>x \<notin> A\<close>
+      by simp_all
+    define DT RT where \<open>DT = Collect (Domainp T)\<close> and \<open>RT = Collect (Rangep T)\<close>
+    from T_xA have \<open>x \<in> DT\<close>
+      by (metis DT_def DomainPI insertCI mem_Collect_eq rel_set_def)
+    then obtain x' where [transfer_rule]: \<open>T x x'\<close>
+      unfolding DT_def by blast
+    have \<open>x' \<in> A'\<close>
+      apply transfer by simp
+    define A'' where \<open>A'' = A' - {x'}\<close>
+    then have A'_def: \<open>A' = insert x' A''\<close>
+      using \<open>x' \<in> A'\<close> by fastforce
+    have \<open>x' \<notin> A''\<close>
+      unfolding A''_def by simp
+    have [transfer_rule]: \<open>rel_set T A A''\<close>
+      apply (subst asm_rl[of \<open>A = (insert x A) - {x}\<close>])
+      using insertI.hyps apply blast
+      unfolding A''_def
+      by transfer_prover
+    from insertI.IH[OF this]
+    obtain y'' where foldA'': \<open>fold_graph f' z' A'' y''\<close> and [transfer_rule]: \<open>U y y''\<close>
+      by auto
+    define y' where \<open>y' = f' x' y''\<close>
+    have \<open>fold_graph f' z' A' y'\<close>
+      unfolding A'_def y'_def
+      using \<open>x' \<notin> A''\<close> foldA''
+      by (rule fold_graph.intros)
+    moreover have \<open>U (f x y) y'\<close>
+      unfolding y'_def by transfer_prover
+    ultimately show ?case
+      by auto
+  qed
+
+  show \<open>rel_pred U (fold_graph f z A) (fold_graph f' z' A')\<close>
+    apply (auto simp: rel_pred_def rel_set_def)
+     apply (rule one_direction[of f z A _ U z' T f'])
+         apply auto[5]
+    apply (rule one_direction[of f' z' A' _ \<open>U\<inverse>\<inverse>\<close> z \<open>T\<inverse>\<inverse>\<close> f, simplified])
+    by (auto simp flip: conversep_rel_fun)
+qed
+
+lemma Domainp_rel_filter:
+  assumes \<open>Domainp r = S\<close>
+  shows \<open>Domainp (rel_filter r) F \<longleftrightarrow> (F \<le> principal (Collect S))\<close>
+proof (intro iffI, elim Domainp.cases, hypsubst)
+  fix G 
+  assume \<open>rel_filter r F G\<close>
+  then obtain Z where rZ: \<open>\<forall>\<^sub>F (x, y) in Z. r x y\<close>
+    and ZF: "map_filter_on {(x, y). r x y} fst Z = F" 
+    and "map_filter_on {(x, y). r x y} snd Z = G"
+    using rel_filter.simps by blast
+  show \<open>F \<le> principal (Collect S)\<close>
+    using rZ apply (auto simp flip: ZF assms intro!: filter_leI 
+        simp: eventually_principal eventually_map_filter_on)
+    by (smt (verit, best) DomainPI case_prod_beta eventually_elim2)
+next
+  assume asm: \<open>F \<le> principal (Collect S)\<close>
+  define Z where \<open>Z = inf (filtercomap fst F) (principal {(x, y). r x y})\<close>
+  have rZ: \<open>\<forall>\<^sub>F (x, y) in Z. r x y\<close>
+    by (simp add: Z_def eventually_inf_principal)
+  moreover 
+  have \<open>(\<forall>\<^sub>F x in Z. P (fst x) \<and> (case x of (x, xa) \<Rightarrow> r x xa)) = eventually P F\<close> for P
+    using asm apply (auto simp add: le_principal Z_def eventually_inf_principal eventually_filtercomap)
+    by (smt (verit, del_insts) DomainpE assms eventually_elim2)
+  then have \<open>map_filter_on {(x, y). r x y} fst Z = F\<close>
+    by (simp add: filter_eq_iff eventually_map_filter_on rZ)
+  ultimately show \<open>Domainp (rel_filter r) F\<close>
+    by (auto simp: Domainp_iff intro!: exI rel_filter.intros)
+qed
+
+
+lemma map_filter_on_cong:
+  assumes [simp]: \<open>\<forall>\<^sub>F x in F. x \<in> D\<close>
+  assumes \<open>\<And>x. x \<in> D \<Longrightarrow> f x = g x\<close>
+  shows \<open>map_filter_on D f F = map_filter_on D g F\<close>
+  apply (rule filter_eq_iff[THEN iffD2, rule_format])
+  apply (simp add: eventually_map_filter_on)
+  apply (rule eventually_subst)
+  apply (rule always_eventually)
+  using assms(2) by auto 
+
+
+lemma filtermap_cong: 
+  assumes \<open>\<forall>\<^sub>F x in F. f x = g x\<close>
+  shows \<open>filtermap f F = filtermap g F\<close>
+  apply (rule filter_eq_iff[THEN iffD2, rule_format])
+  apply (simp add: eventually_filtermap)
+  by (smt (verit, del_insts) assms eventually_elim2)
+
+lemma filtermap_INF_eq: 
+  assumes inj_f: \<open>inj_on f X\<close>
+  assumes B_nonempty: \<open>B \<noteq> {}\<close>
+  assumes F_bounded: \<open>\<And>b. b\<in>B \<Longrightarrow> F b \<le> principal X\<close>
+  shows \<open>filtermap f (\<Sqinter> (F ` B)) = (\<Sqinter>b\<in>B. filtermap f (F b))\<close>
+proof (rule antisym)
+  show \<open>filtermap f (\<Sqinter> (F ` B)) \<le> (\<Sqinter>b\<in>B. filtermap f (F b))\<close>
+    by (rule filtermap_INF)
+  define f1 where \<open>f1 = inv_into X f\<close>
+  have f1f: \<open>x \<in> X \<Longrightarrow> f1 (f x) = x\<close> for x
+    by (simp add: inj_f f1_def)
+  have ff1: \<open>x \<in> f ` X \<Longrightarrow> x = f (f1 x)\<close> for x
+    by (simp add: f1_def f_inv_into_f)
+
+  have \<open>filtermap f (F b) \<le> principal (f ` X)\<close> if \<open>b \<in> B\<close> for b
+    by (metis F_bounded filtermap_mono filtermap_principal that)
+  then have \<open>(\<Sqinter>b\<in>B. filtermap f (F b)) \<le> (\<Sqinter>b\<in>B. principal (f ` X))\<close>
+    by (simp add: INF_greatest INF_lower2) 
+  also have \<open>\<dots> = principal (f ` X)\<close>
+    by (simp add: B_nonempty)
+  finally have \<open>\<forall>\<^sub>F x in \<Sqinter>b\<in>B. filtermap f (F b). x \<in> f ` X\<close>
+    using B_nonempty le_principal by auto
+  then have *: \<open>\<forall>\<^sub>F x in \<Sqinter>b\<in>B. filtermap f (F b). x = f (f1 x)\<close>
+    apply (rule eventually_mono)
+    by (simp add: ff1)
+
+  have \<open>\<forall>\<^sub>F x in F b. x \<in> X\<close> if \<open>b \<in> B\<close> for b
+    using F_bounded le_principal that by blast
+  then have **: \<open>\<forall>\<^sub>F x in F b. f1 (f x) = x\<close> if \<open>b \<in> B\<close> for b
+    apply (rule eventually_mono)
+    using that by (simp_all add: f1f)
+
+  have \<open>(\<Sqinter>b\<in>B. filtermap f (F b)) = filtermap f (filtermap f1 (\<Sqinter>b\<in>B. filtermap f (F b)))\<close>
+    apply (simp add: filtermap_filtermap)
+    using * by (rule filtermap_cong[where f=id, simplified])
+  also have \<open>\<dots> \<le> filtermap f (\<Sqinter>b\<in>B. filtermap f1 (filtermap f (F b)))\<close>
+    apply (rule filtermap_mono)
+    by (rule filtermap_INF)
+  also have \<open>\<dots> = filtermap f (\<Sqinter>b\<in>B. F b)\<close>
+    apply (rule arg_cong[where f=\<open>filtermap _\<close>])
+    apply (rule INF_cong, rule refl)
+    unfolding filtermap_filtermap
+    using ** by (rule filtermap_cong[where g=id, simplified])
+  finally show \<open>(\<Sqinter>b\<in>B. filtermap f (F b)) \<le> filtermap f (\<Sqinter> (F ` B))\<close>
+    by -
+qed
+
+lemma filtermap_inf_eq:
+  assumes \<open>inj_on f X\<close>
+  assumes \<open>F1 \<le> principal X\<close>
+  assumes \<open>F2 \<le> principal X\<close>
+  shows \<open>filtermap f (F1 \<sqinter> F2) = filtermap f F1 \<sqinter> filtermap f F2\<close>
+proof -
+  have \<open>filtermap f (F1 \<sqinter> F2) = filtermap f (INF F\<in>{F1,F2}. F)\<close>
+    by simp
+  also have \<open>\<dots> = (INF F\<in>{F1,F2}. filtermap f F)\<close>
+    apply (rule filtermap_INF_eq[where X=X])
+    using assms by auto
+  also have \<open>\<dots> = filtermap f F1 \<sqinter> filtermap f F2\<close>
+    by simp
+  finally show ?thesis
+    by -
+qed
+
+
+definition \<open>transfer_bounded_filter_Inf B M = Inf M \<sqinter> principal B\<close>
+
+lemma Inf_transfer_bounded_filter_Inf: \<open>Inf M = transfer_bounded_filter_Inf UNIV M\<close>
+  by (metis inf_top.right_neutral top_eq_principal_UNIV transfer_bounded_filter_Inf_def)
+
+lemma Inf_bounded_transfer_bounded_filter_Inf:
+  assumes \<open>\<And>F. F \<in> M \<Longrightarrow> F \<le> principal B\<close>
+  assumes \<open>M \<noteq> {}\<close>
+  shows \<open>Inf M = transfer_bounded_filter_Inf B M\<close>
+  by (simp add: Inf_less_eq assms(1) assms(2) inf_absorb1 transfer_bounded_filter_Inf_def)
+
+
+lemma transfer_bounded_filter_Inf_parametric[transfer_rule]:
+  includes lifting_syntax
+  fixes r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
+  assumes [transfer_rule]: \<open>bi_unique r\<close>
+  shows \<open>(rel_set r ===> rel_set (rel_filter r) ===> rel_filter r)
+     transfer_bounded_filter_Inf transfer_bounded_filter_Inf\<close>
+proof (intro rel_funI, unfold transfer_bounded_filter_Inf_def)
+  fix BF BG assume BFBG[transfer_rule]: \<open>rel_set r BF BG\<close>
+  fix Fs Gs assume FsGs[transfer_rule]: \<open>rel_set (rel_filter r) Fs Gs\<close>
+  define D R where \<open>D = Collect (Domainp r)\<close> and \<open>R = Collect (Rangep r)\<close>
+  
+  have \<open>rel_set r D R\<close>
+     by (smt (verit) D_def Domainp_iff R_def RangePI Rangep.cases mem_Collect_eq rel_setI)
+  with \<open>bi_unique r\<close>
+  obtain f where \<open>R = f ` D\<close> and [simp]: \<open>inj_on f D\<close> and rf0: \<open>x\<in>D \<Longrightarrow> r x (f x)\<close> for x
+    using bi_unique_rel_set_lemma
+    by metis
+  have rf: \<open>r x y \<longleftrightarrow> x \<in> D \<and> f x = y\<close> for x y
+    apply (auto simp: rf0)
+    using D_def apply auto[1]
+    using D_def assms bi_uniqueDr rf0 by fastforce
+
+  from BFBG
+  have \<open>BF \<subseteq> D\<close>
+     by (metis rel_setD1 rf subsetI)
+
+  have G: \<open>G = filtermap f F\<close> if \<open>rel_filter r F G\<close> for F G
+    using that proof cases
+    case (1 Z)
+    then have Z[simp]: \<open>\<forall>\<^sub>F (x, y) in Z. r x y\<close>
+      by -
+    then have \<open>filtermap f F = filtermap f (map_filter_on {(x, y). r x y} fst Z)\<close>
+      using 1 by simp
+    also have \<open>\<dots> = map_filter_on {(x, y). r x y} (f \<circ> fst) Z\<close>
+      unfolding map_filter_on_UNIV[symmetric]
+      apply (subst map_filter_on_comp)
+      using Z by simp_all
+    also have \<open>\<dots> = G\<close>
+      apply (simp add: o_def rf)
+      apply (subst map_filter_on_cong[where g=snd])
+      using Z apply (rule eventually_mono)
+      using 1 by (auto simp: rf)
+    finally show ?thesis
+      by simp
+  qed
+
+  have rf_filter: \<open>rel_filter r F G \<longleftrightarrow> F \<le> principal D \<and> filtermap f F = G\<close> for F G
+    apply (intro iffI conjI)
+      apply (metis D_def DomainPI Domainp_rel_filter)
+    using G apply simp
+    by (metis D_def Domainp_iff Domainp_rel_filter G)
+
+  have FD: \<open>F \<le> principal D\<close> if \<open>F \<in> Fs\<close> for F
+    by (meson FsGs rel_setD1 rf_filter that)
+
+  from BFBG
+  have [simp]: \<open>BG = f ` BF\<close>
+    by (auto simp: rel_set_def rf)
+
+  from FsGs
+  have [simp]: \<open>Gs = filtermap f ` Fs\<close>
+    using G apply (auto simp: rel_set_def rf)
+    by fastforce
+
+  show \<open>rel_filter r (\<Sqinter> Fs \<sqinter> principal BF) (\<Sqinter> Gs \<sqinter> principal BG)\<close>
+  proof (cases \<open>Fs = {}\<close>)
+    case True
+    then have \<open>Gs = {}\<close>
+      by transfer
+    have \<open>rel_filter r (principal BF) (principal BG)\<close>
+      by transfer_prover
+    with True \<open>Gs = {}\<close> show ?thesis
+      by simp
+  next
+    case False
+    note False[simp]
+    then have [simp]: \<open>Gs \<noteq> {}\<close>
+      by transfer
+    have \<open>rel_filter r (\<Sqinter> Fs \<sqinter> principal BF) (filtermap f (\<Sqinter> Fs \<sqinter> principal BF))\<close>
+      apply (rule rf_filter[THEN iffD2])
+      by (simp add: \<open>BF \<subseteq> D\<close> le_infI2)
+    then show ?thesis
+      using FD \<open>BF \<subseteq> D\<close>
+      by (simp add: Inf_less_eq 
+          flip: filtermap_inf_eq[where X=D] filtermap_INF_eq[where X=D] flip: filtermap_principal)
+  qed
+qed
+
+
+definition \<open>transfer_inf_principal F M = F \<sqinter> principal M\<close>
+
+lemma transfer_inf_principal_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique T\<close>
+  shows \<open>(rel_filter T ===> rel_set T ===> rel_filter T) transfer_inf_principal transfer_inf_principal\<close>
+proof -
+  have *: \<open>transfer_inf_principal F M = transfer_bounded_filter_Inf M {F}\<close> for F :: \<open>'z filter\<close> and M
+    by (simp add: transfer_inf_principal_def[abs_def] transfer_bounded_filter_Inf_def)
+  show ?thesis
+    unfolding * 
+    apply transfer_prover_start
+    apply transfer_step+
+    by transfer_prover
+qed
+
+
+lemma continuous_map_is_continuous_at_point:
+  assumes \<open>continuous_map T U f\<close>
+  shows \<open>filterlim f (nhdsin U (f l)) (atin T l)\<close>
+  by (metis assms atin_degenerate bot.extremum continuous_map_atin filterlim_iff_le_filtercomap filterlim_nhdsin_iff_limitin)
 
 
 end

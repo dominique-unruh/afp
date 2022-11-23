@@ -51,14 +51,6 @@ lemma complete_space_as_set[simp]: \<open>complete (space_as_set V)\<close> for 
 
 definition \<open>transfer_ball_range A P \<longleftrightarrow> (\<forall>f. range f \<subseteq> A \<longrightarrow> P f)\<close>
 
-lemma Domainp_conversep: \<open>Domainp (conversep R) = Rangep R\<close>
-  by (auto simp add: Domainp_iff[abs_def])
-
-lemma conversep_rel_fun:
-  includes lifting_syntax
-  shows \<open>(T ===> U)\<inverse>\<inverse> = (T\<inverse>\<inverse>) ===> (U\<inverse>\<inverse>)\<close>
-  by (auto simp: rel_fun_def)
-
 lemma transfer_ball_range_parametric'[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule, simp]: \<open>right_unique T\<close> \<open>bi_total T\<close> \<open>bi_unique U\<close>
@@ -136,216 +128,6 @@ lemma transfer_Times_parametricity[transfer_rule]:
   shows \<open>(rel_set T ===> rel_set U ===> rel_set (rel_prod T U)) transfer_Times transfer_Times\<close>
   by (auto intro!: rel_funI simp add: transfer_Times_def rel_set_def)
 
-definition \<open>transfer_bounded_filter_Inf B M = Inf M \<sqinter> principal B\<close>
-
-lemma Inf_transfer_bounded_filter_Inf: \<open>Inf M = transfer_bounded_filter_Inf UNIV M\<close>
-  by (metis inf_top.right_neutral top_eq_principal_UNIV transfer_bounded_filter_Inf_def)
-
-lemma Inf_bounded_transfer_bounded_filter_Inf:
-  assumes \<open>\<And>F. F \<in> M \<Longrightarrow> F \<le> principal B\<close>
-  assumes \<open>M \<noteq> {}\<close>
-  shows \<open>Inf M = transfer_bounded_filter_Inf B M\<close>
-  by (simp add: Inf_less_eq assms(1) assms(2) inf_absorb1 transfer_bounded_filter_Inf_def)
-
-lemma filtermap_cong: 
-  assumes \<open>\<forall>\<^sub>F x in F. f x = g x\<close>
-  shows \<open>filtermap f F = filtermap g F\<close>
-  apply (rule filter_eq_iff[THEN iffD2, rule_format])
-  apply (simp add: eventually_filtermap)
-  by (smt (verit, del_insts) assms eventually_elim2)
-
-
-lemma filtermap_INF_eq: 
-  assumes inj_f: \<open>inj_on f X\<close>
-  assumes B_nonempty: \<open>B \<noteq> {}\<close>
-  assumes F_bounded: \<open>\<And>b. b\<in>B \<Longrightarrow> F b \<le> principal X\<close>
-  shows \<open>filtermap f (\<Sqinter> (F ` B)) = (\<Sqinter>b\<in>B. filtermap f (F b))\<close>
-proof (rule antisym)
-  show \<open>filtermap f (\<Sqinter> (F ` B)) \<le> (\<Sqinter>b\<in>B. filtermap f (F b))\<close>
-    by (rule filtermap_INF)
-  define f1 where \<open>f1 = inv_into X f\<close>
-  have f1f: \<open>x \<in> X \<Longrightarrow> f1 (f x) = x\<close> for x
-    by (simp add: inj_f f1_def)
-  have ff1: \<open>x \<in> f ` X \<Longrightarrow> x = f (f1 x)\<close> for x
-    by (simp add: f1_def f_inv_into_f)
-
-  have \<open>filtermap f (F b) \<le> principal (f ` X)\<close> if \<open>b \<in> B\<close> for b
-    by (metis F_bounded filtermap_mono filtermap_principal that)
-  then have \<open>(\<Sqinter>b\<in>B. filtermap f (F b)) \<le> (\<Sqinter>b\<in>B. principal (f ` X))\<close>
-    by (simp add: INF_greatest INF_lower2) 
-  also have \<open>\<dots> = principal (f ` X)\<close>
-    by (simp add: B_nonempty)
-  finally have \<open>\<forall>\<^sub>F x in \<Sqinter>b\<in>B. filtermap f (F b). x \<in> f ` X\<close>
-    using B_nonempty le_principal by auto
-  then have *: \<open>\<forall>\<^sub>F x in \<Sqinter>b\<in>B. filtermap f (F b). x = f (f1 x)\<close>
-    apply (rule eventually_mono)
-    by (simp add: ff1)
-
-  have \<open>\<forall>\<^sub>F x in F b. x \<in> X\<close> if \<open>b \<in> B\<close> for b
-    using F_bounded le_principal that by blast
-  then have **: \<open>\<forall>\<^sub>F x in F b. f1 (f x) = x\<close> if \<open>b \<in> B\<close> for b
-    apply (rule eventually_mono)
-    using that by (simp_all add: f1f)
-
-  have \<open>(\<Sqinter>b\<in>B. filtermap f (F b)) = filtermap f (filtermap f1 (\<Sqinter>b\<in>B. filtermap f (F b)))\<close>
-    apply (simp add: filtermap_filtermap)
-    using * by (rule filtermap_cong[where f=id, simplified])
-  also have \<open>\<dots> \<le> filtermap f (\<Sqinter>b\<in>B. filtermap f1 (filtermap f (F b)))\<close>
-    apply (rule filtermap_mono)
-    by (rule filtermap_INF)
-  also have \<open>\<dots> = filtermap f (\<Sqinter>b\<in>B. F b)\<close>
-    apply (rule arg_cong[where f=\<open>filtermap _\<close>])
-    apply (rule INF_cong, rule refl)
-    unfolding filtermap_filtermap
-    using ** by (rule filtermap_cong[where g=id, simplified])
-  finally show \<open>(\<Sqinter>b\<in>B. filtermap f (F b)) \<le> filtermap f (\<Sqinter> (F ` B))\<close>
-    by -
-qed
-
-lemma filtermap_inf_eq:
-  assumes \<open>inj_on f X\<close>
-  assumes \<open>F1 \<le> principal X\<close>
-  assumes \<open>F2 \<le> principal X\<close>
-  shows \<open>filtermap f (F1 \<sqinter> F2) = filtermap f F1 \<sqinter> filtermap f F2\<close>
-proof -
-  have \<open>filtermap f (F1 \<sqinter> F2) = filtermap f (INF F\<in>{F1,F2}. F)\<close>
-    by simp
-  also have \<open>\<dots> = (INF F\<in>{F1,F2}. filtermap f F)\<close>
-    apply (rule filtermap_INF_eq[where X=X])
-    using assms by auto
-  also have \<open>\<dots> = filtermap f F1 \<sqinter> filtermap f F2\<close>
-    by simp
-  finally show ?thesis
-    by -
-qed
-
-lemma map_filter_on_cong:
-  assumes [simp]: \<open>\<forall>\<^sub>F x in F. x \<in> D\<close>
-  assumes \<open>\<And>x. x \<in> D \<Longrightarrow> f x = g x\<close>
-  shows \<open>map_filter_on D f F = map_filter_on D g F\<close>
-  apply (rule filter_eq_iff[THEN iffD2, rule_format])
-  apply (simp add: eventually_map_filter_on)
-  apply (rule eventually_subst)
-  apply (rule always_eventually)
-  using assms(2) by auto 
-
-
-lemma Domainp_rel_filter:
-  assumes \<open>Domainp r = S\<close>
-  shows \<open>Domainp (rel_filter r) F \<longleftrightarrow> (F \<le> principal (Collect S))\<close>
-proof (intro iffI, elim Domainp.cases, hypsubst)
-  fix G 
-  assume \<open>rel_filter r F G\<close>
-  then obtain Z where rZ: \<open>\<forall>\<^sub>F (x, y) in Z. r x y\<close>
-    and ZF: "map_filter_on {(x, y). r x y} fst Z = F" 
-    and "map_filter_on {(x, y). r x y} snd Z = G"
-    using rel_filter.simps by blast
-  show \<open>F \<le> principal (Collect S)\<close>
-    using rZ apply (auto simp flip: ZF assms intro!: filter_leI 
-        simp: eventually_principal eventually_map_filter_on)
-    by (smt (verit, best) DomainPI case_prod_beta eventually_elim2)
-next
-  assume asm: \<open>F \<le> principal (Collect S)\<close>
-  define Z where \<open>Z = inf (filtercomap fst F) (principal {(x, y). r x y})\<close>
-  have rZ: \<open>\<forall>\<^sub>F (x, y) in Z. r x y\<close>
-    by (simp add: Z_def eventually_inf_principal)
-  moreover 
-  have \<open>(\<forall>\<^sub>F x in Z. P (fst x) \<and> (case x of (x, xa) \<Rightarrow> r x xa)) = eventually P F\<close> for P
-    using asm apply (auto simp add: le_principal Z_def eventually_inf_principal eventually_filtercomap)
-    by (smt (verit, del_insts) DomainpE assms eventually_elim2)
-  then have \<open>map_filter_on {(x, y). r x y} fst Z = F\<close>
-    by (simp add: filter_eq_iff eventually_map_filter_on rZ)
-  ultimately show \<open>Domainp (rel_filter r) F\<close>
-    by (auto simp: Domainp_iff intro!: exI rel_filter.intros)
-qed
-
-lemma transfer_bounded_filter_Inf_parametric[transfer_rule]:
-  includes lifting_syntax
-  fixes r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
-  assumes [transfer_rule]: \<open>bi_unique r\<close>
-  shows \<open>(rel_set r ===> rel_set (rel_filter r) ===> rel_filter r)
-     transfer_bounded_filter_Inf transfer_bounded_filter_Inf\<close>
-proof (intro rel_funI, unfold transfer_bounded_filter_Inf_def)
-  fix BF BG assume BFBG[transfer_rule]: \<open>rel_set r BF BG\<close>
-  fix Fs Gs assume FsGs[transfer_rule]: \<open>rel_set (rel_filter r) Fs Gs\<close>
-  define D R where \<open>D = Collect (Domainp r)\<close> and \<open>R = Collect (Rangep r)\<close>
-  
-  have \<open>rel_set r D R\<close>
-    by (smt (verit) D_def DomainPI DomainpE R_def RangePI Rangep.simps ctr_simps_mem_Collect_eq rel_setI)
-  with \<open>bi_unique r\<close>
-  obtain f where \<open>R = f ` D\<close> and [simp]: \<open>inj_on f D\<close> and rf0: \<open>x\<in>D \<Longrightarrow> r x (f x)\<close> for x
-    using bi_unique_rel_set_lemma
-    by metis
-  have rf: \<open>r x y \<longleftrightarrow> x \<in> D \<and> f x = y\<close> for x y
-    apply (auto simp: rf0)
-    using D_def apply auto[1]
-    using D_def assms bi_uniqueDr rf0 by fastforce
-
-  from BFBG
-  have \<open>BF \<subseteq> D\<close>
-    by (metis D_def Domainp.simps Domainp_set ctr_simps_mem_Collect_eq subsetI)
-
-  have G: \<open>G = filtermap f F\<close> if \<open>rel_filter r F G\<close> for F G
-    using that proof cases
-    case (1 Z)
-    then have Z[simp]: \<open>\<forall>\<^sub>F (x, y) in Z. r x y\<close>
-      by -
-    then have \<open>filtermap f F = filtermap f (map_filter_on {(x, y). r x y} fst Z)\<close>
-      using 1 by simp
-    also have \<open>\<dots> = map_filter_on {(x, y). r x y} (f \<circ> fst) Z\<close>
-      unfolding map_filter_on_UNIV[symmetric]
-      apply (subst map_filter_on_comp)
-      using Z by simp_all
-    also have \<open>\<dots> = G\<close>
-      apply (simp add: o_def rf)
-      apply (subst map_filter_on_cong[where g=snd])
-      using Z apply (rule eventually_mono)
-      using 1 by (auto simp: rf)
-    finally show ?thesis
-      by simp
-  qed
-
-  have rf_filter: \<open>rel_filter r F G \<longleftrightarrow> F \<le> principal D \<and> filtermap f F = G\<close> for F G
-    apply (intro iffI conjI)
-      apply (metis D_def DomainPI Domainp_rel_filter)
-    using G apply simp
-    by (metis D_def Domainp_iff Domainp_rel_filter G)
-
-  have FD: \<open>F \<le> principal D\<close> if \<open>F \<in> Fs\<close> for F
-    by (meson FsGs rel_setD1 rf_filter that)
-
-  from BFBG
-  have [simp]: \<open>BG = f ` BF\<close>
-    by (auto simp: rel_set_def rf)
-
-  from FsGs
-  have [simp]: \<open>Gs = filtermap f ` Fs\<close>
-    using G apply (auto simp: rel_set_def rf)
-    by fastforce
-
-  show \<open>rel_filter r (\<Sqinter> Fs \<sqinter> principal BF) (\<Sqinter> Gs \<sqinter> principal BG)\<close>
-  proof (cases \<open>Fs = {}\<close>)
-    case True
-    then have \<open>Gs = {}\<close>
-      by transfer
-    have \<open>rel_filter r (principal BF) (principal BG)\<close>
-      by transfer_prover
-    with True \<open>Gs = {}\<close> show ?thesis
-      by simp
-  next
-    case False
-    note False[simp]
-    then have [simp]: \<open>Gs \<noteq> {}\<close>
-      by transfer
-    have \<open>rel_filter r (\<Sqinter> Fs \<sqinter> principal BF) (filtermap f (\<Sqinter> Fs \<sqinter> principal BF))\<close>
-      apply (rule rf_filter[THEN iffD2])
-      by (simp add: \<open>BF \<subseteq> D\<close> le_infI2)
-    then show ?thesis
-      using FD \<open>BF \<subseteq> D\<close>
-      by (simp add: Inf_less_eq 
-          flip: filtermap_inf_eq[where X=D] filtermap_INF_eq[where X=D] flip: filtermap_principal)
-  qed
-qed
 
 lemma csubspace_nonempty: \<open>csubspace X \<Longrightarrow> X \<noteq> {}\<close>
   using complex_vector.subspace_0 by auto
@@ -374,8 +156,9 @@ lemma make_parametricity_proof_friendly:
     and \<open>\<And>B P. (\<exists>A\<subseteq>B. P A) \<longleftrightarrow> (\<exists>A\<in>Pow B. P A)\<close>
     and \<open>\<And>f U s. (f -` U) \<inter> s = transfer_vimage_into f U s\<close>
     and \<open>\<And>M B. \<Sqinter>M \<sqinter> principal B = transfer_bounded_filter_Inf B M\<close>
+    and \<open>\<And>F M. F \<sqinter> principal M = transfer_inf_principal F M\<close>
   by (auto simp: transfer_ball_range_def transfer_Times_def transfer_vimage_into_def
-      transfer_bounded_filter_Inf_def)
+      transfer_bounded_filter_Inf_def transfer_inf_principal_def)
 
 subsection \<open>ETTS compatibility\<close>
 
@@ -405,7 +188,36 @@ ctr parametricity in neutral_ow_def[unfolded make_parametricity_proof_friendly]
 ctr parametricity in zero_ow_def[unfolded make_parametricity_proof_friendly]
 ctr parametricity in SML_Semigroups.semigroup_add_ow_def[unfolded SML_Semigroups.semigroup_add_ow_axioms_def make_parametricity_proof_friendly]
 ctr parametricity in SML_Semigroups.ab_semigroup_add_ow_def[unfolded SML_Semigroups.ab_semigroup_add_ow_axioms_def make_parametricity_proof_friendly]
-ctr parametricity in SML_Monoids.comm_monoid_add_ow_def[unfolded SML_Monoids.comm_monoid_add_ow_axioms_def make_parametricity_proof_friendly]
+
+subsection \<open>\<^locale>\<open>neutral_ow\<close>\<close>
+
+lemma neutral_ow_typeclass[simp, iff]: \<open>neutral_ow V 0\<close> 
+  if \<open>0 \<in> V\<close> for V :: \<open>'a::zero set\<close>
+  by (auto simp: neutral_ow_def that)
+
+subsection \<open>\<^locale>\<open>semigroup\<close>\<close>
+
+ctr parametricity in semigroup_ow_def[unfolded abel_semigroup_ow_axioms_def make_parametricity_proof_friendly]
+
+lemma semigroup_ow_typeclass[simp, iff]: \<open>semigroup_ow V (+)\<close>
+  if \<open>\<And>x y. x\<in>V \<Longrightarrow> y\<in>V \<Longrightarrow> x + y \<in> V\<close> for V :: \<open>'a :: semigroup_add set\<close>
+  by (auto simp: semigroup_ow_def Groups.add_ac that)
+
+subsection \<open>\<^locale>\<open>abel_semigroup\<close>\<close>
+
+ctr parametricity in abel_semigroup_ow_def[unfolded abel_semigroup_ow_axioms_def make_parametricity_proof_friendly]
+
+lemma abel_semigroup_ow_typeclass[simp, iff]: \<open>abel_semigroup_ow V (+)\<close>
+  if \<open>\<And>x y. x\<in>V \<Longrightarrow> y\<in>V \<Longrightarrow> x + y \<in> V\<close> for V :: \<open>'a :: ab_semigroup_add set\<close>
+  by (auto simp: abel_semigroup_ow_def abel_semigroup_ow_axioms_def Groups.add_ac that)
+
+subsection \<open>\<^locale>\<open>comm_monoid\<close>\<close>
+
+ctr parametricity in comm_monoid_ow_def[unfolded comm_monoid_ow_axioms_def make_parametricity_proof_friendly]
+
+lemma comm_monoid_ow_typeclass[simp, iff]: \<open>comm_monoid_ow V (+) 0\<close>
+  if \<open>0 \<in> V\<close> and \<open>\<And>x y. x\<in>V \<Longrightarrow> y\<in>V \<Longrightarrow> x + y \<in> V\<close> for V :: \<open>'a :: comm_monoid_add set\<close>
+  by (auto simp: comm_monoid_ow_def comm_monoid_ow_axioms_def that)
 
 subsection \<open>\<^class>\<open>topological_space\<close>\<close>
 
@@ -416,6 +228,52 @@ lemma class_topological_space_ud[ud_with]: \<open>class.topological_space = topo
 
 lemma topological_space_ow_from_topology[simp]: \<open>topological_space_ow (topspace T) (openin T)\<close>
   by (auto intro!: topological_space_ow.intro)
+
+subsection \<open>\<^class>\<open>comm_monoid_add\<close>\<close>
+
+ctr parametricity in SML_Monoids.comm_monoid_add_ow_def[unfolded SML_Monoids.comm_monoid_add_ow_axioms_def make_parametricity_proof_friendly]
+
+declare SML_Monoids.comm_monoid_add_ow[ud_with]
+
+subsection \<open>\<^const>\<open>sum\<close>\<close>
+
+definition \<open>sum_ow z plus f S = 
+  (if finite S then the_default z (Collect (fold_graph (plus o f) z S)) else z)\<close>
+  for U z plus S
+
+lemma sum_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique T\<close> \<open>bi_unique U\<close>
+  shows \<open>(T ===> (V ===> T ===> T) ===> (U ===> V) ===> rel_set U ===> T)
+            sum_ow sum_ow\<close>
+  unfolding sum_ow_def
+  by transfer_prover
+
+lemma (in comm_monoid_set) comp_fun_commute_onI: \<open>Finite_Set.comp_fun_commute_on UNIV ((\<^bold>*) \<circ> g)\<close>
+  apply (rule Finite_Set.comp_fun_commute_on.intro)
+  by (simp add: o_def left_commute)
+
+lemma (in comm_monoid_set) F_via_the_default: \<open>F g A = the_default def (Collect (fold_graph ((\<^bold>*) \<circ> g) \<^bold>1 A))\<close>
+  if \<open>finite A\<close>
+proof -
+  have \<open>y = x\<close> if \<open>fold_graph ((\<^bold>*) \<circ> g) \<^bold>1 A x\<close> and \<open>fold_graph ((\<^bold>*) \<circ> g) \<^bold>1 A y\<close> for x y
+    using that apply (rule Finite_Set.comp_fun_commute_on.fold_graph_determ[rotated 2, where S=UNIV])
+    by (simp_all add: comp_fun_commute_onI)
+  then have \<open>Ex1 (fold_graph ((\<^bold>*) \<circ> g) \<^bold>1 A)\<close>
+    by (meson finite_imp_fold_graph that)
+  then have \<open>card (Collect (fold_graph ((\<^bold>*) \<circ> g) \<^bold>1 A)) = 1\<close>
+    using card_eq_Suc_0_ex1 by fastforce
+  then show ?thesis
+    using that by (auto simp add: the_default_The eq_fold Finite_Set.fold_def)
+qed
+
+lemma sum_ud[ud_with]: \<open>sum = sum_ow 0 plus\<close>
+  apply (auto intro!: ext simp: sum_def sum_ow_def comm_monoid_set.F_via_the_default)
+   apply (subst comm_monoid_set.F_via_the_default)
+    apply (auto simp add: sum.comm_monoid_set_axioms)
+  by (metis comm_monoid_add_class.sum_def sum.infinite)
+
+declare sum_with[ud_with del]
 
 subsection \<open>\<^class>\<open>t2_space\<close>\<close>
 
@@ -735,16 +593,55 @@ lemma nhds_ow_topology[simp]: \<open>nhds_ow (topspace T) (openin T) x = nhdsin 
    apply (subst INF_inf_const2[symmetric])
   using openin_subset by (auto intro!: INF_cong)
 
-subsection \<open>\<^const>\<open>filterlim\<close>\<close>
+subsection \<open>\<^const>\<open>at_within\<close>\<close>
 
-(* TODO: duplicated with Misc_Tensor_Product *)
-lemma filterlim_parametric[transfer_rule]: 
+definition \<open>at_within_ow U open a s = nhds_ow U open a \<sqinter> principal (s - {a})\<close>
+  for U "open" a s
+
+lemma at_within_ow_parametric[transfer_rule]:
   includes lifting_syntax
-  assumes [transfer_rule]: \<open>bi_unique S\<close>
-  shows \<open>((R ===> S) ===> rel_filter S ===> rel_filter R ===> (=)) filterlim filterlim\<close>
-  using filtermap_parametric[transfer_rule] le_filter_parametric[transfer_rule] apply fail?
-  unfolding filterlim_def
+  assumes [transfer_rule]: \<open>bi_unique T\<close>
+  shows \<open>((rel_set T) ===> (rel_set T ===> (=)) ===> T ===> rel_set T ===> rel_filter T)
+            at_within_ow at_within_ow\<close>
+  unfolding at_within_ow_def make_parametricity_proof_friendly transfer_inf_principal_def[symmetric]
   by transfer_prover
+
+lemma at_within_ud[ud_with]: \<open>at_within = at_within_ow UNIV open\<close>
+  by (auto intro!: ext simp: at_within_def at_within_ow_def ud_with)
+
+lemma at_within_ow_topology:
+  \<open>at_within_ow (topspace T) (openin T) a S = nhdsin T a \<sqinter> principal (S - {a})\<close> 
+  if \<open>a \<in> topspace T\<close>
+  using that unfolding at_within_ow_def by (simp add: nhds_ow_topology)
+
+
+subsection \<open>\<^const>\<open>has_sum\<close>\<close>
+
+definition \<open>has_sum_ow U plus zero open f A x =
+        filterlim (sum_ow zero plus f) (nhds_ow U (\<lambda>S. open S) x)
+         (finite_subsets_at_top A)\<close>
+  for U plus zero "open" f A x
+
+lemma has_sum_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique T\<close> \<open>bi_unique U\<close>
+  shows \<open>(rel_set T ===> (V ===> T ===> T) ===> T ===> (rel_set T ===> (=)) ===> (U ===> V) ===> rel_set U ===> T ===> (=))
+            has_sum_ow has_sum_ow\<close>
+  unfolding has_sum_ow_def
+  by transfer_prover
+
+lemma has_sum_ud[ud_with]: \<open>has_sum = has_sum_ow UNIV plus (0::'a::{comm_monoid_add,topological_space}) open\<close>
+  by (auto intro!: ext simp: has_sum_def has_sum_ow_def ud_with)
+
+lemma has_sum_ow_topology:
+  assumes \<open>l \<in> topspace T\<close>
+  assumes \<open>0 \<in> topspace T\<close>
+  assumes \<open>\<And>x y. x \<in> topspace T \<Longrightarrow> y \<in> topspace T \<Longrightarrow> x + y \<in> topspace T\<close>
+  shows \<open>has_sum_ow (topspace T) (+) 0 (openin T) f S l \<longleftrightarrow> has_sum_in T f S l\<close>
+  using assms apply (simp add: has_sum_ow_def has_sum_in_def nhds_ow_topology sum_ud[symmetric])
+  by (metis filterlim_nhdsin_iff_limitin)
+
+subsection \<open>\<^const>\<open>filterlim\<close>\<close>
 
 subsection \<open>\<^const>\<open>convergent\<close>\<close>
 
@@ -1169,6 +1066,126 @@ proof -
   ultimately show ?thesis
     using \<open>S \<subseteq> B\<close> by auto
 qed
+
+lemma has_sum_in_comm_additive_general:
+  fixes f :: \<open>'a \<Rightarrow> 'b :: comm_monoid_add\<close>
+    and g :: \<open>'b \<Rightarrow> 'c :: comm_monoid_add\<close>
+  assumes T0[simp]: \<open>0 \<in> topspace T\<close> and Tplus[simp]: \<open>\<And>x y. x \<in> topspace T \<Longrightarrow> y \<in> topspace T \<Longrightarrow> x+y \<in> topspace T\<close>
+  assumes Uplus[simp]: \<open>\<And>x y. x \<in> topspace U \<Longrightarrow> y \<in> topspace U \<Longrightarrow> x+y \<in> topspace U\<close>
+  assumes grange: \<open>g ` topspace T \<subseteq> topspace U\<close>
+  assumes g0: \<open>g 0 = 0\<close>
+  assumes frange: \<open>f ` S \<subseteq> topspace T\<close>
+  assumes gcont: \<open>filterlim g (nhdsin U (g l)) (atin T l)\<close>
+  assumes gadd: \<open>\<And>x y. x \<in> topspace T \<Longrightarrow> y \<in> topspace T \<Longrightarrow> g (x+y) = g x + g y\<close>
+  assumes sumf: \<open>has_sum_in T f S l\<close>
+  shows \<open>has_sum_in U (g o f) S (g l)\<close>
+proof -
+  define f' where \<open>f' x = (if x \<in> S then f x else 0)\<close> for x
+  have \<open>topspace T \<noteq> {}\<close>
+    using T0 by blast
+  then have \<open>topspace U \<noteq> {}\<close>
+    using grange by blast
+  {
+    assume "\<exists>(Rep :: 't \<Rightarrow> 'b) Abs. type_definition Rep Abs (topspace T)"
+    then interpret T: local_typedef \<open>topspace T\<close> \<open>TYPE('t)\<close>
+      by unfold_locales
+    assume "\<exists>(Rep :: 'u \<Rightarrow> 'c) Abs. type_definition Rep Abs (topspace U)"
+    then interpret U: local_typedef \<open>topspace U\<close> \<open>TYPE('u)\<close>
+      by unfold_locales
+
+    note [[show_types]]
+    note has_sum_comm_additive_general
+    note this[unfolded ud_with]
+    note this[unoverload_type 'b, unoverload_type 'c]
+    note this[where 'b='t and 'c='u and 'a='a]
+    note this[unfolded ud_with]
+    thm this[no_vars]
+    note this[untransferred]
+    note this[where f=g and g=f' and zero=0 and zeroa=0 and plus=plus and plusa=plus
+        and ?open=\<open>openin U\<close> and opena=\<open>openin T\<close> and x=l and S=S and T=\<open>topspace T\<close>]
+    note this[simplified]
+  }
+  note * = this[cancel_type_definition, OF \<open>topspace T \<noteq> {}\<close>, cancel_type_definition, OF \<open>topspace U \<noteq> {}\<close>]
+
+  have f'T[simp]: \<open>f' x \<in> topspace T\<close> for x
+    using frange f'_def by force
+  have [simp]: \<open>l \<in> topspace T\<close>
+    using sumf has_sum_in_topspace by blast
+  have [simp]: \<open>x \<in> topspace T \<Longrightarrow> g x \<in> topspace U\<close> for x
+    using grange by auto
+  have sumf'T: \<open>(\<Sum>x\<in>F. f' x) \<in> topspace T\<close> if \<open>finite F\<close> for F
+    using that apply induction
+    by auto
+  have [simp]: \<open>(\<Sum>x\<in>F. f x) \<in> topspace T\<close> if \<open>F \<subseteq> S\<close> for F
+    using that apply (induction F rule:infinite_finite_induct)
+      apply auto
+    by (metis Tplus f'T f'_def)
+  have sum_gf: \<open>(\<Sum>x\<in>F. g (f' x)) = g (\<Sum>x\<in>F. f' x)\<close> 
+    if \<open>finite F\<close> and \<open>F \<subseteq> S\<close> for F
+  proof -
+    have \<open>(\<Sum>x\<in>F. g (f' x)) = (\<Sum>x\<in>F. g (f x))\<close>
+      apply (rule sum.cong)
+      using frange that by (auto simp: f'_def)
+    also have \<open>\<dots> = g (\<Sum>x\<in>F. f x)\<close>
+      using \<open>finite F\<close> \<open>F \<subseteq> S\<close> apply induction
+      using g0 frange apply auto
+      apply (subst gadd)
+      by (auto simp: f'_def)
+    also have \<open>\<dots> = g (\<Sum>x\<in>F. f' x)\<close>
+      apply (rule arg_cong[where f=g])
+      apply (rule sum.cong)
+      using that by (auto simp: f'_def)
+    finally show ?thesis
+      by -
+  qed
+  from sumf have sumf': \<open>has_sum_in T f' S l\<close>
+    apply (rule has_sum_in_cong[THEN iffD2, rotated])
+    unfolding f'_def by auto
+  have [simp]: \<open>g l \<in> topspace U\<close>
+    using grange by auto
+  from gcont have contg': \<open>filterlim g (nhdsin U (g l)) (nhdsin T l \<sqinter> principal (topspace T - {l}))\<close>
+    apply (rule filterlim_cong[THEN iffD1, rotated -1])
+      apply (rule refl)
+     apply (simp add: atin_def)
+    by (auto intro!: exI simp add: eventually_atin)
+  from T0 grange g0 have [simp]: \<open>0 \<in> topspace U\<close>
+    by auto
+
+  have [simp]: 
+    \<open>SML_Monoids.comm_monoid_add_ow (topspace T) (+) 0\<close>
+    \<open>SML_Monoids.comm_monoid_add_ow (topspace U) (+) 0\<close>
+    by (simp_all add: SML_Monoids.comm_monoid_add_ow_def SML_Semigroups.ab_semigroup_add_ow_def
+        SML_Semigroups.semigroup_add_ow_def plus_ow_def semigroup_add_ow_axioms_def zero_ow_def
+        neutral_ow_def SML_Semigroups.ab_semigroup_add_ow_axioms_def SML_Monoids.comm_monoid_add_ow_axioms_def
+        Groups.add_ac)
+
+  have \<open>has_sum_ow (topspace U) (+) 0 (openin U) (g \<circ> f') S (g l)\<close>
+    apply (rule *)
+    by (auto simp: topological_space_ow_from_topology sum_gf sumf'
+        sum_ud[symmetric] at_within_ow_topology has_sum_ow_topology
+        contg' sumf'T)
+
+  then have \<open>has_sum_in U (g \<circ> f') S (g l)\<close>
+    apply (rule has_sum_ow_topology[THEN iffD1, rotated -1])
+    by simp_all
+  then have \<open>has_sum_in U (g \<circ> f') S (g l)\<close>
+    by simp
+  then show ?thesis
+    apply (rule has_sum_in_cong[THEN iffD1, rotated])
+    unfolding f'_def using frange grange by auto
+qed
+
+lemma has_sum_in_comm_additive:
+  fixes f :: \<open>'a \<Rightarrow> 'b :: ab_group_add\<close>
+    and g :: \<open>'b \<Rightarrow> 'c :: ab_group_add\<close>
+  assumes \<open>topspace T = UNIV\<close> and \<open>topspace U = UNIV\<close>
+  assumes \<open>Modules.additive g\<close>
+  assumes gcont: \<open>continuous_map T U g\<close>
+  assumes sumf: \<open>has_sum_in T f S l\<close>
+  shows \<open>has_sum_in U (g o f) S (g l)\<close>
+  apply (rule has_sum_in_comm_additive_general[where T=T and U=U])
+  using assms
+  by (auto simp: additive.zero Modules.additive_def intro!: continuous_map_is_continuous_at_point)
 
 
 
