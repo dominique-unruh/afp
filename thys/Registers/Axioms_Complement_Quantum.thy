@@ -25,7 +25,7 @@ declare [[eta_contract]]
 
 
 
-(* TODO: can we use a generic rule similar to sum_parametric' instead? *)
+(* (* TODO: can we use a generic rule similar to sum_parametric' instead? *)
 lemma has_sum_weak_star_transfer[transfer_rule]:
   includes lifting_syntax
   fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
@@ -33,8 +33,9 @@ lemma has_sum_weak_star_transfer[transfer_rule]:
   shows \<open>((R ===> cr_cblinfun_weak_star) ===> (rel_set R) ===> cr_cblinfun_weak_star ===> (\<longleftrightarrow>)) (has_sum_in weak_star_topology) has_sum\<close>
   unfolding has_sum_euclidean_iff[symmetric]
   by transfer_prover
+ *)
 
-lemma summable_on_weak_star_transfer[transfer_rule]:
+(* lemma summable_on_weak_star_transfer[transfer_rule]:
   includes lifting_syntax
   fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
   assumes [transfer_rule]: \<open>bi_unique R\<close>
@@ -42,9 +43,9 @@ lemma summable_on_weak_star_transfer[transfer_rule]:
 (* TODO: can we use a generic rule similar to sum_parametric' instead? *)
   unfolding summable_on_def summable_on_in_def
   by transfer_prover
+ *)
 
-
-lemma infsum_weak_star_transfer[transfer_rule]:
+(* lemma infsum_weak_star_transfer[transfer_rule]:
   includes lifting_syntax
   fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
   assumes [transfer_rule]: \<open>bi_unique R\<close>
@@ -78,19 +79,22 @@ proof (intro rel_funI, rename_tac f g A B)
       by (simp add: False infsum_not_exists not_summable_infsum_in_0 zero_cblinfun_weak_star.transfer)
   qed
 qed
+ *)
 
 definition \<open>register_decomposition_basis \<Phi> = (SOME B. is_ortho_set B \<and> (\<forall>b\<in>B. norm b = 1) \<and> ccspan B = \<Phi> (selfbutterket undefined) *\<^sub>S \<top>)\<close> 
   for \<Phi> :: \<open>'a update \<Rightarrow> 'b update\<close>
 
 
-lemma map_filter_on_id: \<open>map_filter_on S (\<lambda>x. x) F = F\<close> if \<open>\<forall>\<^sub>F x in F. x \<in> S\<close>
+(* lemma map_filter_on_id: \<open>map_filter_on S (\<lambda>x. x) F = F\<close> if \<open>\<forall>\<^sub>F x in F. x \<in> S\<close>
   using that
   by (auto intro!: filter_eq_iff[THEN iffD2] simp: eventually_map_filter_on eventually_frequently_simps)
+ *)
 
-lemma inverse_real_inverse: \<open>inverse_real_inst.inverse_real = inverse\<close>
+(* lemma inverse_real_inverse: \<open>inverse_real_inst.inverse_real = inverse\<close>
   by (simp add: HOL.nitpick_unfold)
+ *)
 
-lemma top_filter_parametric':
+(* lemma top_filter_parametric':
   assumes \<open>Domainp r = S\<close>
   assumes \<open>right_total r\<close>
   shows \<open>rel_filter r (principal (Collect S)) \<top>\<close>
@@ -104,8 +108,9 @@ proof (rule rel_filter.intros)
     apply (auto simp add: filter_eq_iff eventually_principal Z_def eventually_map_filter_on)
     by (metis assms(2) right_totalE)
 qed
+ *)
 
-
+(* 
 lemma Inf_filter_parametric'[transfer_rule]:
   includes lifting_syntax
   fixes r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
@@ -149,9 +154,10 @@ proof (rule rel_funI)
       using "1" \<open>Sup {F. Ball Fs ((\<le>) F) \<and> Domainp (rel_filter r) F} = inf (Inf Fs) (principal (Collect S))\<close> by fastforce
   qed
 qed
+ *)
 
 
-
+(* 
 lemma inf_filter_parametric'[transfer_rule]:
   includes lifting_syntax
   fixes r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
@@ -169,23 +175,24 @@ proof (rule rel_funI, rule rel_funI, rename_tac F1 F2 G1 G2)
   with * show \<open>rel_filter r (inf F1 G1) (inf F2 G2)\<close>
     by (auto simp: inf_assoc inf.absorb_iff1)
 qed
+ *)
 
 
-
-lemma convergent_ow_typeclass2[simp]:
+(* lemma convergent_ow_typeclass2[simp]:
   assumes \<open>open V\<close>
   shows \<open>convergent_ow V (openin (top_of_set V)) f \<longleftrightarrow> (\<exists>l. f \<longlonglongrightarrow> l \<and> l \<in> V)\<close>
   by (simp add: limitin_canonical_iff_gen assms)
+ *)
 
-lemma convergent_on_typeclass3[simp]:
+(* lemma convergent_on_typeclass3[simp]:
   assumes \<open>open V\<close> \<open>closed V\<close> \<open>range f \<subseteq> V\<close>
   shows \<open>convergent_ow V (openin (top_of_set V)) f \<longleftrightarrow> convergent f\<close>
   apply (simp add: assms)
   by (meson assms(2) assms(3) closed_sequentially convergent_def range_subsetD)
+ *)
 
-
-lemma cmod_distrib_plus: \<open>a \<ge> 0 \<Longrightarrow> b \<ge> 0 \<Longrightarrow> cmod (a + b) = cmod a + cmod b\<close>
-  by (simp add: cmod_Re)
+(* lemma cmod_distrib_plus: \<open>a \<ge> 0 \<Longrightarrow> b \<ge> 0 \<Longrightarrow> cmod (a + b) = cmod a + cmod b\<close>
+  by (simp add: cmod_Re) *)
 
 lemma register_decomposition:
   fixes \<Phi> :: \<open>'a update \<Rightarrow> 'b update\<close>
@@ -529,7 +536,6 @@ proof -
     by -
 qed
 
-
 lemma clinear_register: \<open>register F \<Longrightarrow> clinear F\<close>
   using bounded_clinear.clinear register_bounded_clinear by blast
 
@@ -818,11 +824,11 @@ lemma continuous_map_iff_preserves_convergence:
   using assms
   by (simp add: limitin_continuous_map)
 
-lemma isCont_iff_preserves_convergence:
+(* lemma isCont_iff_preserves_convergence:
   assumes \<open>\<And>F. (id \<longlongrightarrow> a) F \<Longrightarrow> (f \<longlongrightarrow> f a) F\<close>
   shows \<open>isCont f a\<close>
   using assms
-  by (simp add: isCont_def Lim_at_id)
+  by (simp add: isCont_def Lim_at_id) *)
 
 
 lemma register_inv_weak_star_continuous:
