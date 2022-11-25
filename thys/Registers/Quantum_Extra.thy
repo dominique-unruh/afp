@@ -27,18 +27,6 @@ lemma register_pair_is_register_converse:
 lemma register_id'[simp]: \<open>register (\<lambda>x. x)\<close>
   using register_id by (simp add: id_def)
 
-lemma register_projector:
-  assumes "register F"
-  assumes "is_Proj a"
-  shows "is_Proj (F a)"
-  using assms unfolding register_def is_Proj_algebraic by metis
-
-lemma register_unitary:
-  assumes "register F"
-  assumes "unitary a"
-  shows "unitary (F a)"
-  using assms by (smt (verit, best) register_def unitary_def)
-
 lemma compatible_proj_intersect:
   (* I think this also holds without is_Proj premises, but my proof ideas use the Penrose-Moore 
      pseudoinverse or simultaneous diagonalization and we do not have an existence theorem for either. *)
