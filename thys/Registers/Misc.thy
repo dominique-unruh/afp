@@ -71,27 +71,28 @@ lemma mat_of_rows_list_carrier[simp]:
   "dim_col (mat_of_rows_list n vs) = n"
   unfolding mat_of_rows_list_def by auto
 
-text \<open>Overriding \<^theory>\<open>Complex_Bounded_Operators.Complex_Bounded_Linear_Function\<close>.\<^term>\<open>sandwich\<close>.
+(* text \<open>Overriding \<^theory>\<open>Complex_Bounded_Operators.Complex_Bounded_Linear_Function\<close>.\<^term>\<open>sandwich\<close>.
       The latter is the same function but defined as a \<^typ>\<open>(_,_) cblinfun\<close> which is less convenient for us.\<close>
-definition sandwich where \<open>sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\<^sub>L a*\<close>
+definition sandwich where \<open>sandwich a b = a o\<^sub>C\<^sub>L b o\<^sub>C\<^sub>L a*\<close> *)
 
-lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
+(* lemma clinear_sandwich[simp]: \<open>clinear (sandwich a)\<close>
   apply (rule clinearI)
    apply (simp add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right sandwich_def)
-  by (simp add: sandwich_def)
+  by (simp add: sandwich_apply)
 
 lemma bounded_clinear_sandwich[simp]: \<open>bounded_clinear (sandwich a)\<close>
   apply (rule bounded_clinearI[where K=\<open>norm a * norm a\<close>])
    apply (auto simp add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right sandwich_def)
-  by (smt (verit, ccfv_SIG) mult.commute mult_right_mono norm_adj norm_cblinfun_compose norm_ge_zero ordered_field_class.sign_simps(32))
+  by (smt (verit, ccfv_SIG) mult.commute mult_right_mono norm_adj norm_cblinfun_compose norm_ge_zero ordered_field_class.sign_simps(32)) *)
 
-lemma sandwich_id[simp]: \<open>sandwich id_cblinfun = id\<close>
-  by (auto simp: sandwich_def)
+(* lemma sandwich_id[simp]: \<open>sandwich id_cblinfun = id_cblinfun\<close>
+  by (auto simp: sandwich_apply) *)
 
-lemma mat_of_cblinfun_sandwich:
+(* lemma mat_of_cblinfun_sandwich:
   fixes a :: "(_::onb_enum, _::onb_enum) cblinfun"
   shows \<open>mat_of_cblinfun (sandwich a b) = (let a' = mat_of_cblinfun a in a' * mat_of_cblinfun b * mat_adjoint a')\<close>
   by (simp add: mat_of_cblinfun_compose sandwich_def Let_def mat_of_cblinfun_adj)
+ *)
 
 lemma prod_cases3' [cases type]:
   obtains (fields) a b c where "y = ((a, b), c)"
@@ -166,11 +167,13 @@ lemma Ex_iffI:
   shows \<open>Ex P \<longleftrightarrow> Ex Q\<close>
   using assms(1) assms(2) by auto
 
-(* TODO: Get rid of Misc.sandwich and delete this. *)
+(* (* TODO: Get rid of Misc.sandwich and delete this. *)
 lemma sandwich_weak_star_cont'[simp]:
   \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
   using sandwich_weak_star_cont
   by (auto simp add: Complex_Bounded_Linear_Function.sandwich_apply[abs_def] Misc.sandwich_def[abs_def]
-      simp del: sandwich_weak_star_cont)
+      simp del: sandwich_weak_star_cont) *)
+
+(* hide_const (open) Misc.sandwich *)
 
 end

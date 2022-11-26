@@ -75,51 +75,44 @@ lemma compatible_proj_mult:
    apply (metis (no_types, lifting) cblinfun_compose_assoc register_mult)
   by (simp add: assms(2) assms(3) is_proj_selfadj register_projector)
 
-lemma unitary_sandwich_register: \<open>unitary a \<Longrightarrow> register (sandwich a)\<close>
-  apply (auto simp: sandwich_def register_def)
-   apply (metis (no_types, lifting) cblinfun_assoc_left(1) cblinfun_compose_id_right unitaryD1)
-  by (simp add: lift_cblinfun_comp(2))
-
 lemma sandwich_tensor: 
   fixes a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> 
-  assumes \<open>unitary a\<close> \<open>unitary b\<close>
-  shows "sandwich (a \<otimes>\<^sub>o b) = sandwich a \<otimes>\<^sub>r sandwich b"
+  assumes [simp]: \<open>unitary a\<close> \<open>unitary b\<close>
+  shows "(*\<^sub>V) (sandwich (a \<otimes>\<^sub>o b)) = sandwich a \<otimes>\<^sub>r sandwich b"
   apply (rule tensor_extensionality)
-  using assms apply (auto simp: unitary_sandwich_register assms sandwich_def register_tensor_is_register
-      comp_tensor_op tensor_op_adjoint intro!: register_preregister unitary_sandwich_register)
-(* TODO should have lemma for this*)
-  by (metis (no_types, lifting) assms(1) assms(2) comp_tensor_op tensor_id tensor_op_adjoint unitary_def)
+  by (auto simp: unitary_sandwich_register sandwich_apply register_tensor_is_register
+      comp_tensor_op tensor_op_adjoint unitary_tensor_op intro!: register_preregister unitary_sandwich_register)
 
-lemma sandwich_grow_left: 
+lemma sandwich_grow_left:
   fixes a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
   assumes "unitary a"
   shows "sandwich a \<otimes>\<^sub>r id = sandwich (a \<otimes>\<^sub>o id_cblinfun)"
-  by (simp add: unitary_sandwich_register sandwich_tensor assms sandwich_id)
+  by (simp add: unitary_sandwich_register sandwich_tensor assms id_def)
 
 lemma register_sandwich: \<open>register F \<Longrightarrow> F (sandwich a b) = sandwich (F a) (F b)\<close>
-  by (smt (verit, del_insts) register_def sandwich_def)
+  by (smt (verit, del_insts) register_def sandwich_apply)
 
 lemma assoc_ell2_sandwich: \<open>assoc = sandwich assoc_ell2\<close>
   apply (rule tensor_extensionality3')
     apply (simp_all add: unitary_sandwich_register)[2]
   apply (rule equal_ket)
   apply (case_tac x)
-  by (simp add: sandwich_def assoc_apply cblinfun_apply_cblinfun_compose tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor
-           flip: tensor_ell2_ket)
+  by (simp add: sandwich_apply assoc_apply cblinfun_apply_cblinfun_compose tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor
+      flip: tensor_ell2_ket)
 
 lemma assoc_ell2'_sandwich: \<open>assoc' = sandwich (assoc_ell2*)\<close>
   apply (rule tensor_extensionality3)
     apply (simp_all add: unitary_sandwich_register)[2]
   apply (rule equal_ket)
   apply (case_tac x)
-  by (simp add: sandwich_def assoc'_apply cblinfun_apply_cblinfun_compose tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor 
+  by (simp add: sandwich_apply assoc'_apply cblinfun_apply_cblinfun_compose tensor_op_ell2 assoc_ell2_tensor assoc_ell2'_tensor 
            flip: tensor_ell2_ket)
 
 lemma swap_sandwich: "swap = sandwich Uswap"
   apply (rule tensor_extensionality)
-    apply (auto simp: sandwich_def unitary_sandwich_register)[2]
+    apply (auto simp: sandwich_apply unitary_sandwich_register)[2]
   apply (rule tensor_ell2_extensionality)
-  by (simp add: sandwich_def cblinfun_apply_cblinfun_compose tensor_op_ell2)
+  by (simp add: sandwich_apply cblinfun_apply_cblinfun_compose tensor_op_ell2)
 
 (* TODO move *)
 lemma unitary_tensor_op: \<open>unitary a \<Longrightarrow> unitary b \<Longrightarrow> unitary (a \<otimes>\<^sub>o b)\<close>
@@ -131,7 +124,7 @@ lemma id_tensor_sandwich:
   shows "id \<otimes>\<^sub>r sandwich a = sandwich (id_cblinfun \<otimes>\<^sub>o a)"
   apply (rule tensor_extensionality) 
   using assms
-  by (auto simp: register_tensor_is_register comp_tensor_op sandwich_def tensor_op_adjoint unitary_sandwich_register
+  by (auto simp: register_tensor_is_register comp_tensor_op sandwich_apply tensor_op_adjoint unitary_sandwich_register
       intro!: register_preregister unitary_sandwich_register unitary_tensor_op)
 
 lemma compatible_selfbutter_join:
@@ -150,9 +143,6 @@ lemma register_scaleC:
   using assms [[simproc del: Laws_Quantum.compatibility_warn]] 
   unfolding register_def
   by (simp add: bounded_clinear.clinear clinear.scaleC)
-
-lemma register_bounded_clinear: \<open>register F \<Longrightarrow> bounded_clinear F\<close>
-  using preregister_def register_preregister by blast
 
 lemma register_adjoint: "F (a*) = (F a)*" if \<open>register F\<close>
   using register_def that by blast

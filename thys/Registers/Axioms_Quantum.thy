@@ -31,11 +31,13 @@ theory Axioms_Quantum
           Tensor_Product.Weak_Star_Topology
           Tensor_Product.Partial_Trace
           With_Type.With_Type
+          Misc
 begin
 
 
 unbundle cblinfun_notation
 no_notation m_inv ("inv\<index> _" [81] 80)
+
 
 type_synonym 'a update = \<open>('a ell2, 'a ell2) cblinfun\<close>
 
@@ -430,6 +432,276 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
     by (auto simp: sandwich_apply)
 qed
 
+definition \<open>commutant F = {x. \<forall>y\<in>F. x o\<^sub>C\<^sub>L y = y o\<^sub>C\<^sub>L x}\<close>
+
+lemma commutant_tensor1: \<open>commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)) = range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
+proof (rule Set.set_eqI, rule iffI)
+  fix x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
+  fix \<gamma> :: 'a
+  assume \<open>x \<in> commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun))\<close>
+  then have comm: \<open>(a \<otimes>\<^sub>o id_cblinfun) *\<^sub>V x *\<^sub>V \<psi> = x *\<^sub>V (a \<otimes>\<^sub>o id_cblinfun) *\<^sub>V \<psi>\<close> for a \<psi>
+    by (metis (mono_tags, lifting) commutant_def mem_Collect_eq rangeI cblinfun_apply_cblinfun_compose)
+
+  define op where \<open>op = classical_operator (\<lambda>i. Some (\<gamma>,i::'b))\<close>
+  have [simp]: \<open>classical_operator_exists (\<lambda>i. Some (\<gamma>,i))\<close>
+    apply (rule classical_operator_exists_inj)
+    using inj_map_def by blast
+  define x' where \<open>x' = op* o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L op\<close>
+  have x': \<open>cinner (ket j) (x' *\<^sub>V ket l) = cinner (ket (\<gamma>,j)) (x *\<^sub>V ket (\<gamma>,l))\<close> for j l
+    by (simp add: x'_def op_def classical_operator_ket cinner_adj_right)
+
+  have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l)) = cinner (ket (i,j)) ((id_cblinfun \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close> for i j k l
+  proof -
+    have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l))
+        = cinner ((butterket i \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,j)) (x *\<^sub>V (butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
+      by (auto simp: tensor_op_ket tensor_ell2_ket)
+    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) ((butterket \<gamma> i \<otimes>\<^sub>o id_cblinfun) *\<^sub>V x *\<^sub>V (butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
+      by (metis (no_types, lifting) cinner_adj_left butterfly_adjoint id_cblinfun_adjoint tensor_op_adjoint)
+    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) (x *\<^sub>V (butterket \<gamma> i \<otimes>\<^sub>o id_cblinfun o\<^sub>C\<^sub>L butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
+      unfolding comm by (simp add: cblinfun_apply_cblinfun_compose)
+    also have \<open>\<dots> = cinner (ket i) (ket k) * cinner (ket (\<gamma>,j)) (x *\<^sub>V ket (\<gamma>,l))\<close>
+      by (simp add: comp_tensor_op tensor_op_ket tensor_op_scaleC_left cinner_ket tensor_ell2_ket)
+    also have \<open>\<dots> = cinner (ket i) (ket k) * cinner (ket j) (x' *\<^sub>V ket l)\<close>
+      by (simp add: x')
+    also have \<open>\<dots> = cinner (ket (i,j)) ((id_cblinfun \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close>
+      apply (simp add: tensor_op_ket)
+      by (simp flip: tensor_ell2_ket)
+    finally show ?thesis by -
+  qed
+  then have \<open>x = (id_cblinfun \<otimes>\<^sub>o x')\<close>
+    by (auto intro!: equal_ket cinner_ket_eqI)
+  then show \<open>x \<in> range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
+    by auto
+next
+  fix x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
+  assume \<open>x \<in> range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
+  then obtain b where x: \<open>x = id_cblinfun \<otimes>\<^sub>o b\<close>
+    by auto
+  then show \<open>x \<in> commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun))\<close>
+    by (auto simp: x commutant_def comp_tensor_op)
+qed
+
+lemma sandwich_compose: \<open>sandwich A o\<^sub>C\<^sub>L sandwich B = sandwich (A o\<^sub>C\<^sub>L B)\<close>
+  by (auto intro!: cblinfun_eqI simp: sandwich_apply)
+
+lemma inj_sandwich_isometry: \<open>inj (sandwich U)\<close> if [simp]: \<open>isometry U\<close> for U :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  apply (rule inj_on_inverseI[where g=\<open>(*\<^sub>V) (sandwich (U*))\<close>])
+  by (auto simp: sandwich_compose simp flip: cblinfun_apply_cblinfun_compose)
+
+lemma register_bounded_clinear: \<open>register F \<Longrightarrow> bounded_clinear F\<close>
+  using preregister_def register_preregister by blast
+
+lemma clinear_register: \<open>register F \<Longrightarrow> clinear F\<close>
+  using bounded_clinear.clinear register_bounded_clinear by blast
+
+lemma weak_star_cont_register: \<open>register F \<Longrightarrow> continuous_map weak_star_topology weak_star_topology F\<close>
+  using register_def by blast
+
+lemma sandwich_unitary_complement: 
+  fixes U :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  assumes [simp]: \<open>unitary U\<close>
+  shows \<open>sandwich U ` commutant X = commutant (sandwich U ` X)\<close>
+proof (rule Set.set_eqI)
+  fix x
+  let ?comm = \<open>\<lambda>a b. a o\<^sub>C\<^sub>L b = b o\<^sub>C\<^sub>L a\<close>
+  have \<open>x \<in> sandwich U ` commutant X \<longleftrightarrow> sandwich (U*) x \<in> commutant X\<close>
+    apply (subst inj_image_mem_iff[symmetric, where f=\<open>sandwich (U*)\<close>])
+    by (auto intro!: inj_sandwich_isometry simp: image_image sandwich_compose
+        simp flip: cblinfun_apply_cblinfun_compose)
+  also have \<open>\<dots> \<longleftrightarrow> (\<forall>y\<in>X. ?comm (sandwich (U*) x) y)\<close>
+    by (simp add: commutant_def)
+  also have \<open>\<dots> \<longleftrightarrow> (\<forall>y\<in>X. ?comm x (sandwich U y))\<close>
+    apply (rule ball_cong, simp)
+    apply (simp add: sandwich_apply)
+    by (smt (verit) assms cblinfun_assoc_left(1) cblinfun_compose_id_left cblinfun_compose_id_right unitaryD1 unitaryD2)
+  also have \<open>\<dots> \<longleftrightarrow> (\<forall>y\<in>sandwich U ` X. ?comm x y)\<close>
+  by fast
+  also have \<open>\<dots> \<longleftrightarrow> x \<in> commutant (sandwich U ` X)\<close>
+    by (simp add: commutant_def)
+  finally show \<open>(x \<in> (*\<^sub>V) (sandwich U) ` commutant X) \<longleftrightarrow> (x \<in> commutant ((*\<^sub>V) (sandwich U) ` X))\<close>
+    by -
+qed
+
+(* TODO move *)
+lemma continuous_map_iff_preserves_convergence:
+  assumes \<open>\<And>F a. a \<in> topspace T \<Longrightarrow> limitin T id a F \<Longrightarrow> limitin U f (f a) F\<close>
+  shows \<open>continuous_map T U f\<close>
+  apply (rule continuous_map_atin[THEN iffD2], intro ballI)
+  using assms
+  by (simp add: limitin_continuous_map)
+
+
+lemma register_inv_weak_star_continuous:
+  assumes \<open>register F\<close>
+  shows \<open>continuous_map (subtopology weak_star_topology (range F)) weak_star_topology (inv F)\<close>
+proof (rule continuous_map_iff_preserves_convergence, rename_tac K a)
+  fix K a
+  assume limit_id: \<open>limitin (subtopology weak_star_topology (range F)) id a K\<close>
+  from register_decomposition
+  have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
+        limitin weak_star_topology (inv F) (inv F a) K\<close>
+  proof (rule with_type_mp)
+    from assms show \<open>register F\<close> by -
+    assume \<open>\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> (\<forall>\<theta>. F \<theta> = Complex_Bounded_Linear_Function.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
+    then obtain U :: \<open>('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> 
+      where \<open>unitary U\<close> and FU: \<open>F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
+      by auto
+    define \<delta> :: \<open>'c ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> where \<open>\<delta> = selfbutter (ket (undefined))\<close>
+    then have [simp]: \<open>trace_class \<delta>\<close>
+      by simp
+    define u where \<open>u t = U o\<^sub>C\<^sub>L (from_trace_class t \<otimes>\<^sub>o \<delta>) o\<^sub>C\<^sub>L U*\<close> for t
+    have [simp]: \<open>trace_class (u t)\<close> for t
+      unfolding u_def
+      apply (rule trace_class_comp_left)
+      apply (rule trace_class_comp_right)
+      by (simp add: trace_class_tensor)
+    have uF: \<open>trace (from_trace_class t o\<^sub>C\<^sub>L a) = trace (u t o\<^sub>C\<^sub>L F a)\<close> for t a 
+    proof -
+      have \<open>trace (from_trace_class t o\<^sub>C\<^sub>L a) = trace (from_trace_class t o\<^sub>C\<^sub>L a) * trace (\<delta> o\<^sub>C\<^sub>L id_cblinfun)\<close>
+        by (simp add: \<delta>_def trace_butterfly)
+      also have \<open>\<dots> = trace ((from_trace_class t o\<^sub>C\<^sub>L a) \<otimes>\<^sub>o (\<delta> o\<^sub>C\<^sub>L id_cblinfun))\<close>
+        by (simp add: trace_class_comp_left trace_tensor)
+      also have \<open>\<dots> = trace ((from_trace_class t \<otimes>\<^sub>o \<delta>) o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o id_cblinfun))\<close>
+        by (simp add: comp_tensor_op)
+      also have \<open>\<dots> = trace (U* o\<^sub>C\<^sub>L u t o\<^sub>C\<^sub>L U o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o id_cblinfun))\<close>
+        using \<open>unitary U\<close>
+        by (simp add: u_def lift_cblinfun_comp[OF unitaryD1] cblinfun_compose_assoc)
+      also have \<open>\<dots> = trace (u t o\<^sub>C\<^sub>L U o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L U*)\<close>
+        apply (subst (2) circularity_of_trace)
+        by (simp_all add: trace_class_comp_left cblinfun_compose_assoc)
+      also have \<open>\<dots> = trace (u t o\<^sub>C\<^sub>L F a)\<close>
+        by (simp add: sandwich_apply FU cblinfun_compose_assoc)
+      finally show ?thesis
+        by -
+    qed
+    from limit_id
+    have \<open>a \<in> range F\<close> and KrangeF: \<open>\<forall>\<^sub>F a in K. a \<in> range F\<close> and limit_id': \<open>limitin weak_star_topology id a K\<close>
+      unfolding limitin_subtopology by auto
+    from \<open>a \<in> range F\<close> have FiFa: \<open>F (inv F a) = a\<close>
+      by (simp add: f_inv_into_f)
+    from KrangeF
+    have *: \<open>\<forall>\<^sub>F x in K. trace (from_trace_class t o\<^sub>C\<^sub>L F (inv F x)) = trace (from_trace_class t o\<^sub>C\<^sub>L x)\<close> for t
+      apply (rule eventually_mono)
+      by (simp add: f_inv_into_f)
+    from limit_id' have \<open>((\<lambda>a'. trace (from_trace_class t o\<^sub>C\<^sub>L a')) \<longlongrightarrow> trace (from_trace_class t o\<^sub>C\<^sub>L a)) K\<close> for t
+      unfolding limitin_weak_star_topology' by simp
+    then have *: \<open>((\<lambda>a'. trace (from_trace_class t o\<^sub>C\<^sub>L F (inv F a'))) \<longlongrightarrow> trace (from_trace_class t o\<^sub>C\<^sub>L F (inv F a))) K\<close> for t
+      unfolding FiFa using * by (rule tendsto_cong[THEN iffD2, rotated])
+    have \<open>((\<lambda>a'. trace (u t o\<^sub>C\<^sub>L F (inv F a'))) \<longlongrightarrow> trace (u t o\<^sub>C\<^sub>L F (inv F a))) K\<close> for t
+      using *[of \<open>Abs_trace_class (u t)\<close>]
+      by (simp add: Abs_trace_class_inverse)
+    then have \<open>((\<lambda>a'. trace (from_trace_class t o\<^sub>C\<^sub>L inv F a')) \<longlongrightarrow> trace (from_trace_class t o\<^sub>C\<^sub>L inv F a)) K\<close> for t
+      by (simp add: uF[symmetric])
+    then show \<open>limitin weak_star_topology (inv F) (inv F a) K\<close>
+      by (simp add: limitin_weak_star_topology')
+  qed
+  note this[cancel_with_type]
+  then show \<open>limitin weak_star_topology (inv F) (inv F a) K\<close>
+    by -
+qed
+
+lemma register_inj: \<open>inj F\<close> if [simp]: \<open>register F\<close>
+proof -
+  have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F. inj F\<close>
+    using register_decomposition[OF \<open>register F\<close>] 
+  proof (rule with_type_mp)
+    fix rep :: \<open>'c \<Rightarrow> 'd\<close> and abs and S
+    assume \<open>type_definition rep abs S\<close>
+    assume \<open>\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> (\<forall>\<theta>. F \<theta> = Complex_Bounded_Linear_Function.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
+    then obtain U :: \<open>('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+      where \<open>unitary U\<close> and F: \<open>F a = Complex_Bounded_Linear_Function.sandwich U (a \<otimes>\<^sub>o id_cblinfun)\<close> for a
+      apply atomize_elim by auto
+    have \<open>inj (Complex_Bounded_Linear_Function.sandwich U)\<close>
+      by (smt (verit, best) \<open>unitary U\<close> cblinfun_assoc_left inj_onI sandwich_apply cblinfun_compose_id_right cblinfun_compose_id_left unitary_def)
+    moreover have \<open>inj (\<lambda>a::'a ell2 \<Rightarrow>\<^sub>C\<^sub>L _. a \<otimes>\<^sub>o id_cblinfun)\<close>
+      by (rule inj_tensor_left, simp)
+    ultimately show \<open>inj F\<close>
+      unfolding F
+      by (smt (z3) inj_def)
+  qed
+  from this[THEN with_type_prepare_cancel, cancel_type_definition, OF with_type_nonempty, OF this]
+  show \<open>inj F\<close>
+    by -
+qed
+
+lemma register_norm: \<open>norm (F a) = norm a\<close> if \<open>register F\<close>
+proof -
+  from register_decomposition[OF that]
+  have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
+         norm (F a) = norm a\<close>
+  proof (rule with_type_mp) 
+    fix Rep :: \<open>'c \<Rightarrow> 'b ell2\<close> and Abs
+      assume \<open>type_definition Rep Abs (register_decomposition_basis F)\<close>
+    assume \<open>(\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
+              (\<forall>\<theta>. F \<theta> = Complex_Bounded_Linear_Function.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
+    then obtain U :: \<open>('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> where \<open>unitary U\<close>
+      and FU: \<open>F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
+      by metis
+    show \<open>norm (F a) = norm a\<close>
+      using \<open>unitary U\<close> by (simp add: FU sandwich_apply norm_isometry_compose norm_isometry_o' tensor_op_norm)
+  qed
+  note this[cancel_with_type]
+  then show ?thesis
+    by simp
+qed
+
+lemma sandwich_tensor_op: \<open>sandwich (a \<otimes>\<^sub>o b) (c \<otimes>\<^sub>o d) = sandwich a c \<otimes>\<^sub>o sandwich b d\<close>
+  by (simp add: sandwich_apply tensor_op_adjoint flip: cblinfun_compose_assoc comp_tensor_op)
+
+lemma unitary_sandwich_register: \<open>unitary a \<Longrightarrow> register (sandwich a)\<close>
+  apply (auto simp: sandwich_apply register_def cblinfun.bounded_clinear_right)
+   apply (metis (no_types, lifting) cblinfun_assoc_left(1) cblinfun_compose_id_right unitaryD1)
+  by (simp add: lift_cblinfun_comp(2))
+
+lemma tensor_ell2_extensionality3:
+  assumes "(\<And>s t u. a *\<^sub>V (s \<otimes>\<^sub>s t \<otimes>\<^sub>s u) = b *\<^sub>V (s \<otimes>\<^sub>s t \<otimes>\<^sub>s u))"
+  shows "a = b"
+  apply (rule equal_ket, case_tac x, hypsubst_thin)
+  by (simp add: assms flip: tensor_ell2_ket)
+
+lemma sandwich_assoc_ell2_tensor_op[simp]: \<open>sandwich assoc_ell2 ((a \<otimes>\<^sub>o b) \<otimes>\<^sub>o c) = a \<otimes>\<^sub>o (b \<otimes>\<^sub>o c)\<close>
+  by (auto intro!: tensor_ell2_extensionality3 
+      simp: sandwich_apply assoc_ell2'_tensor assoc_ell2_tensor tensor_op_ell2)
+
+lemma register_adj: \<open>register F \<Longrightarrow> F (a*) = (F a)*\<close>
+  using register_def by blast
+
+lemma unitaryI: \<open>unitary a\<close> if \<open>a* o\<^sub>C\<^sub>L a = id_cblinfun\<close> and \<open>a o\<^sub>C\<^sub>L a* = id_cblinfun\<close>
+  unfolding unitary_def using that by simp
+
+lemma unitary_tensor_op: \<open>unitary (a \<otimes>\<^sub>o b)\<close> if [simp]: \<open>unitary a\<close> \<open>unitary b\<close>
+  by (auto intro!: unitaryI simp add: tensor_op_adjoint comp_tensor_op)
+
+lemma right_register_tensor_ex: \<open>\<exists>T :: ('a \<times> 'b) update \<Rightarrow> ('a \<times> 'c) update. 
+        register T \<and> (\<forall>a b. T (a \<otimes>\<^sub>o b) = a \<otimes>\<^sub>o F b)\<close> if \<open>register F\<close>
+proof -
+  from register_decomposition[OF \<open>register F\<close>]
+  have \<open>\<forall>\<^sub>\<tau> 'g::type = register_decomposition_basis F.
+        \<exists>T :: ('a \<times> 'b) update \<Rightarrow> ('a \<times> 'c) update. 
+        register T \<and> (\<forall>a b. T (a \<otimes>\<^sub>o b) = a \<otimes>\<^sub>o F b)\<close>
+  proof (rule with_type_mp)
+    fix Rep :: \<open>'g \<Rightarrow> _\<close> and Abs
+    assume \<open>type_definition Rep Abs (register_decomposition_basis F)\<close>
+    assume \<open>\<exists>U :: ('b \<times> 'g) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2. unitary U \<and> (\<forall>\<theta>. F \<theta> = sandwich U *\<^sub>V \<theta> \<otimes>\<^sub>o id_cblinfun)\<close>
+    then obtain U :: \<open>('b \<times> 'g) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> 
+      where [simp]: \<open>unitary U\<close> and F: \<open>F \<theta> = sandwich U *\<^sub>V \<theta> \<otimes>\<^sub>o id_cblinfun\<close> for \<theta>
+      by auto
+    define T :: \<open>('a \<times> 'b) update \<Rightarrow> ('a \<times> 'c) update\<close>
+      where \<open>T = sandwich (id_cblinfun \<otimes>\<^sub>o U) o sandwich assoc_ell2 o (\<lambda>ab. ab \<otimes>\<^sub>o id_cblinfun)\<close>
+    have \<open>register T\<close>
+      by (auto intro!: register_comp register_tensor_left unitary_sandwich_register unitary_tensor_op simp add: T_def)
+    moreover have \<open>T (a \<otimes>\<^sub>o b) = a \<otimes>\<^sub>o F b\<close> for a b
+      by (simp add: T_def F sandwich_tensor_op)
+    ultimately show \<open>\<exists>T :: ('a \<times> 'b) update \<Rightarrow> ('a \<times> 'c) update. register T \<and> (\<forall>a b. T (a \<otimes>\<^sub>o b) = a \<otimes>\<^sub>o F b)\<close>
+      by auto
+  qed
+  from this[cancel_with_type]
+  show ?thesis
+    by -
+qed
+
+
+
 
 (* Things that are probably missing to do the proof from page 44 in the register-paper:
 
@@ -454,7 +726,7 @@ proof -
     assume \<open>type_definition Rep Abs (register_decomposition_basis F)\<close>
     assume \<open>(\<exists>U :: ('a \<times> 'd) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2. unitary U \<and> 
               (\<forall>\<theta>. F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
-    then obtain U :: \<open>('a \<times> 'd) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> where \<open>unitary U\<close>
+    then obtain U :: \<open>('a \<times> 'd) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> where [simp]: \<open>unitary U\<close>
       and FU: \<open>F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
       by metis
     from register_decomposition[OF \<open>register G\<close>]
@@ -465,11 +737,110 @@ proof -
       assume \<open>type_definition Rep Abs (register_decomposition_basis G)\<close>
       assume \<open>(\<exists>V :: ('b \<times> 'e) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2. unitary V \<and> 
               (\<forall>\<theta>. G \<theta> = sandwich V (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
-      then obtain V :: \<open>('b \<times> 'e) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> where \<open>unitary V\<close>
-        and FU: \<open>G \<theta> = sandwich V (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
+      then obtain V :: \<open>('b \<times> 'e) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> where [simp]: \<open>unitary V\<close>
+        and GU: \<open>G \<theta> = sandwich V (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
         by metis
-      show \<open>\<exists>R. \<forall>a b. register R \<and> R (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close>
-        sorry
+      show \<open>\<exists>FG. \<forall>a b. register FG \<and> FG (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close>
+      proof -
+        define G' and \<iota> :: \<open>'d update \<Rightarrow> ('a \<times> 'd) update\<close> and G\<^sub>1 
+          where \<open>G' = sandwich (U*) o G\<close> and \<open>\<iota> d = id_cblinfun \<otimes>\<^sub>o d\<close> and \<open>G\<^sub>1 = inv \<iota> o G'\<close> for d
+        have [simp]: \<open>register G'\<close>
+          by (simp add: G'_def register_comp unitary_sandwich_register)
+        then have [simp]: \<open>bounded_clinear G'\<close>
+          by (meson register_bounded_clinear)
+        then have [simp]: \<open>clinear G'\<close>
+          by (simp add: bounded_clinear.axioms(1))
+
+        
+        have \<open>range G' = sandwich (U*) ` range G\<close>
+          by (simp add: GU G'_def image_image)
+        also have \<open>\<dots> \<subseteq> sandwich (U*) ` commutant (range F)\<close>
+          by (auto intro!: image_mono simp: commutant_def FG_comm)
+        also have \<open>\<dots> = commutant (sandwich (U*) ` range F)\<close>
+          by (simp add: sandwich_unitary_complement)
+        also have \<open>\<dots> = commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun))\<close>
+          apply (rule arg_cong[where f=commutant])
+          by (simp add: FU image_image sandwich_compose flip: cblinfun_apply_cblinfun_compose)
+        also have \<open>\<dots> = range (\<lambda>d. id_cblinfun \<otimes>\<^sub>o d)\<close>
+          by (rule commutant_tensor1)
+        also have \<open>\<dots> = range \<iota>\<close>
+          by (simp add: \<iota>_def[abs_def])
+        finally have range_G': \<open>range G' \<subseteq> range \<iota>\<close>
+          by -
+
+        have \<open>continuous_map weak_star_topology weak_star_topology G'\<close>
+          by (auto intro!: continuous_map_compose[where X'=weak_star_topology] simp: G'_def  weak_star_cont_register)
+        then have cont_G': \<open>continuous_map weak_star_topology (subtopology weak_star_topology (range \<iota>)) G'\<close>
+          by (simp add: range_G' continuous_map_into_subtopology)
+
+        have [simp]: \<open>register \<iota>\<close>
+          by (simp add: \<iota>_def[abs_def] register_tensor_right)
+        then have cont_inv\<iota>: \<open>continuous_map (subtopology weak_star_topology (range \<iota>)) weak_star_topology (inv \<iota>)\<close>
+          by (rule register_inv_weak_star_continuous)
+        have \<iota>_inj: \<open>x = y\<close> if \<open>\<iota> x = \<iota> y\<close> for x y
+          by (metis \<open>register \<iota>\<close> invI register_inj that)
+
+        have [simp]: \<open>register G\<^sub>1\<close>
+        proof (unfold register_def, intro conjI allI)
+          from cont_G' cont_inv\<iota> 
+          show cont_G\<^sub>1: \<open>continuous_map weak_star_topology weak_star_topology G\<^sub>1\<close>
+            using G\<^sub>1_def continuous_map_compose by blast
+          have \<iota>_cancel: \<open>\<iota> (inv \<iota> x) = x\<close> if \<open>x \<in> range G'\<close> for x
+            by (meson f_inv_into_f range_G' subsetD that)
+
+          show \<open>bounded_clinear G\<^sub>1\<close>
+            using range_G' 
+            by (auto intro!: bounded_clinearI[where K=1] \<iota>_inj 
+                simp: G\<^sub>1_def complex_vector.linear_add[of \<iota>] bounded_clinear.clinear clinear_register
+                \<iota>_cancel range_subsetD complex_vector.linear_scale[of \<iota>] register_norm[of G']
+                simp flip: complex_vector.linear_add[of G'] complex_vector.linear_scale[of G']
+                register_norm[of \<iota>])
+          show \<open>G\<^sub>1 id_cblinfun = id_cblinfun\<close>
+            apply (auto intro!: \<iota>_inj simp add: G\<^sub>1_def \<iota>_cancel)
+            by (simp add: register_of_id)
+          show adj_G\<^sub>1: \<open>G\<^sub>1 (a*) = (G\<^sub>1 a)*\<close> for a
+            using range_G' 
+            by (auto intro!: \<iota>_inj 
+                simp: G\<^sub>1_def \<iota>_cancel register_adj[of \<iota>]
+                simp flip: register_adj[of G'])
+          show mult_G\<^sub>1: \<open>G\<^sub>1 (a o\<^sub>C\<^sub>L b) = G\<^sub>1 a o\<^sub>C\<^sub>L G\<^sub>1 b\<close> for a b
+            using range_G' 
+            by (auto intro!: bounded_clinearI[where K=1] \<iota>_inj 
+                simp: G\<^sub>1_def \<iota>_cancel register_mult[of G']
+                simp flip: register_mult[of \<iota>])
+        qed
+
+        obtain T :: \<open>('a \<times> 'b) update \<Rightarrow> ('a \<times> 'd) update\<close>
+          where [simp]: \<open>register T\<close> and T_apply: \<open>T (a \<otimes>\<^sub>o b) = a \<otimes>\<^sub>o G\<^sub>1 b\<close> for a b
+          using \<open>register G\<^sub>1\<close> right_register_tensor_ex by blast
+      
+        define FG where \<open>FG = sandwich U o T\<close>
+        then have [simp]: \<open>register FG\<close>
+          by (auto intro!: register_comp unitary_sandwich_register simp add: FG_def)
+
+        have \<open>FG (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close> for a b
+        proof -
+          have FG_a: \<open>FG (a \<otimes>\<^sub>o id_cblinfun) = F a\<close>
+            by (simp add: FG_def T_apply register_of_id FU)
+          have \<open>FG (id_cblinfun \<otimes>\<^sub>o b) = sandwich U (\<iota> (G\<^sub>1 b))\<close>
+            by (simp add: FG_def T_apply \<iota>_def)
+          also have \<open>\<dots> = sandwich U (G' b)\<close>
+            apply (rule arg_cong[where f=\<open>cblinfun_apply _\<close>])
+            by (metis G\<^sub>1_def UNIV_I f_inv_into_f image_subset_iff o_def range_G')
+          also have \<open>\<dots> = G b\<close>
+            by (smt (verit) G'_def \<open>unitary U\<close> cblinfun_apply_cblinfun_compose cblinfun_compose_id_left cblinfun_compose_id_right comp_def id_cblinfun_adjoint sandwich.rep_eq sandwich_compose unitaryD2)
+          finally have FG_b: \<open>FG (id_cblinfun \<otimes>\<^sub>o b) = G b\<close>
+            by -
+          have \<open>FG (a \<otimes>\<^sub>o b) = FG (a \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L FG (id_cblinfun \<otimes>\<^sub>o b)\<close>
+            by (simp add: comp_tensor_op register_mult)
+          also have \<open>\<dots> = F a o\<^sub>C\<^sub>L G b\<close>
+            by (simp add: FG_a FG_b)
+          finally show ?thesis
+            by -
+        qed
+        with \<open>register FG\<close> show ?thesis
+          by metis
+      qed
     qed
     from this[THEN with_type_prepare_cancel, cancel_type_definition, OF with_type_nonempty, OF this] (* TODO why does cancel_with_type fail here? *)
     show \<open>\<exists>R. \<forall>a b. register R \<and> R (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close>
@@ -483,64 +854,5 @@ proof -
   then show \<open>(register_pair F G) (tensor_op a b) = F a o\<^sub>C\<^sub>L G b\<close> and \<open>register (register_pair F G)\<close>
     by auto
 qed
-
-(* lemma register_pair_is_register:
-  fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G
-  assumes [simp]: \<open>register F\<close> and [simp]: \<open>register G\<close>
-  assumes \<open>\<And>a b. F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close>
-  shows \<open>register (register_pair F G)\<close> *)
-(* proof (unfold register_def, intro conjI allI)
-  have [simp]: \<open>clinear F\<close> \<open>clinear G\<close>
-    using assms register_def by blast+
-  have [simp]: \<open>F id_cblinfun = id_cblinfun\<close> \<open>G id_cblinfun = id_cblinfun\<close>
-    using assms(1,2) register_def by blast+
-  show [simp]: \<open>clinear (register_pair F G)\<close>
-    unfolding register_pair_def 
-    using assms apply auto
-    apply (rule tensor_lift_clinear)
-    by (simp flip: assms(3))
-  show \<open>register_pair F G id_cblinfun = id_cblinfun\<close>
-    apply (simp flip: tensor_id)
-    apply (subst register_pair_apply)
-    using assms by simp_all
-  have [simp]: \<open>clinear (\<lambda>y. register_pair F G (x o\<^sub>C\<^sub>L y))\<close> for x :: \<open>('a\<times>'b) update\<close>
-    apply (rule clinear_compose[unfolded o_def, where g=\<open>register_pair F G\<close>])
-    by (simp_all add: preregister_mult_left bounded_cbilinear.add_right clinearI)
-  have [simp]: \<open>clinear (\<lambda>y. x o\<^sub>C\<^sub>L register_pair F G y)\<close> for x :: \<open>'c update\<close>
-    apply (rule clinear_compose[unfolded o_def, where f=\<open>register_pair F G\<close>])
-    by (simp_all add: preregister_mult_left bounded_cbilinear.add_right clinearI)
-  have [simp]: \<open>clinear (\<lambda>x. register_pair F G (x o\<^sub>C\<^sub>L y))\<close> for y :: \<open>('a\<times>'b) update\<close>
-    apply (rule clinear_compose[unfolded o_def, where g=\<open>register_pair F G\<close>])
-    by (simp_all add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose clinearI)
-  have [simp]: \<open>clinear (\<lambda>x. register_pair F G x o\<^sub>C\<^sub>L y)\<close> for y :: \<open>'c update\<close>
-    apply (rule clinear_compose[unfolded o_def, where f=\<open>register_pair F G\<close>])
-    by (simp_all add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose clinearI)
-  have [simp]: \<open>F (x o\<^sub>C\<^sub>L y) = F x o\<^sub>C\<^sub>L F y\<close> for x y
-    by (simp add: register_mult)
-  have [simp]: \<open>G (x o\<^sub>C\<^sub>L y) = G x o\<^sub>C\<^sub>L G y\<close> for x y
-    by (simp add: register_mult)
-  have [simp]: \<open>clinear (\<lambda>a. (register_pair F G (a* ))* )\<close>
-    apply (rule antilinear_o_antilinear[unfolded o_def, where f=\<open>adj\<close>])
-     apply simp
-    apply (rule antilinear_o_clinear[unfolded o_def, where g=\<open>adj\<close>])
-    by (simp_all)
-  have [simp]: \<open>F (a* ) = (F a)*\<close> for a
-    using assms(1) register_def by blast
-  have [simp]: \<open>G (b* ) = (G b)*\<close> for b
-    using assms(2) register_def by blast
-
-  fix a b
-  show \<open>register_pair F G (a o\<^sub>C\<^sub>L b) = register_pair F G a o\<^sub>C\<^sub>L register_pair F G b\<close>
-    apply (rule tensor_extensionality[THEN fun_cong, where x=b], simp_all)
-    apply (rule tensor_extensionality[THEN fun_cong, where x=a], simp_all)
-    apply (simp_all add: comp_tensor_op register_pair_apply assms(3))
-    using assms(3)
-    by (metis cblinfun_compose_assoc)
-  have \<open>(register_pair F G (a* ))* = register_pair F G a\<close>
-    apply (rule tensor_extensionality[THEN fun_cong, where x=a])
-    by (simp_all add: tensor_op_adjoint register_pair_apply assms(3))
-  then show \<open>register_pair F G (a* ) = register_pair F G a*\<close>
-    by (metis double_adj)
-qed *)
 
 end
