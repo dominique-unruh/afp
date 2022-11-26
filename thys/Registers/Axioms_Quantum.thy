@@ -13,7 +13,8 @@ section \<open>Quantum instantiation of registers\<close>
     comp_update \<rightarrow> cblinfun_compose
     id_update \<rightarrow> id_cblinfun
     tensor_update \<rightarrow> tensor_op
-    
+    simple_complement_domain \<rightarrow> register_decomposition_basis
+
     # Lemmas
     id_update_left \<rightarrow> cblinfun_compose_id_left
     id_update_right \<rightarrow> cblinfun_compose_id_right

@@ -12,6 +12,13 @@ definition \<open>complements F G \<longleftrightarrow> compatible F G \<and> is
 lemma complementsI: \<open>compatible F G \<Longrightarrow> iso_register (F;G) \<Longrightarrow> complements F G\<close>
   using complements_def by blast
 
+lemma complement_exists: 
+  fixes F :: \<open>'a::domain update \<Rightarrow> 'b::domain update\<close>
+  assumes \<open>register F\<close>
+  shows \<open>\<forall>\<^sub>\<tau> 'c::domain = complement_domain F.
+          \<exists>G :: 'c update \<Rightarrow> 'b update. complements F G\<close>
+  by (simp add: assms complement_exists complements_def)
+
 lemma complements_sym: \<open>complements G F\<close> if \<open>complements F G\<close>
 proof (rule complementsI)
   show [simp]: \<open>compatible G F\<close>
@@ -30,7 +37,7 @@ proof (rule complementsI)
     using \<open>compatible G F\<close> iso_register_def pair_is_register by blast
 qed
 
-definition complement :: \<open>('a::domain update \<Rightarrow> 'b::simple_complement_domain update) \<Rightarrow> (('a,'b) complement_domain update \<Rightarrow> 'b update)\<close> where
+definition complement :: \<open>('a::domain update \<Rightarrow> 'b::domain_with_simple_complement update) \<Rightarrow> (('a,'b) complement_domain update \<Rightarrow> 'b update)\<close> where
   \<open>complement F = (SOME G :: ('a, 'b) complement_domain update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G))\<close>
 
 lemma register_complement[simp]: \<open>register (complement F)\<close> if \<open>register F\<close>
@@ -44,6 +51,13 @@ lemma complement_is_complement:
   by (metis (mono_tags, lifting) complement_def some_eq_imp)
 
 lemma complement_unique:
+  assumes \<open>complements F G\<close>
+  assumes \<open>complements F G'\<close>
+  shows \<open>equivalent_registers G G'\<close>
+  apply (rule complement_unique[where F=F])
+  using assms unfolding complements_def by auto
+
+lemma complement_unique':
   assumes \<open>complements F G\<close>
   shows \<open>equivalent_registers G (complement F)\<close>
   apply (rule complement_unique[where F=F])
@@ -104,49 +118,83 @@ lemma compatible_complement_right[simp]: \<open>register X \<Longrightarrow> com
 
 lemma unit_register_pair[simp]: \<open>equivalent_registers X (U; X)\<close> if [simp]: \<open>is_unit_register U\<close> \<open>register X\<close>
 proof -
-  have \<open>equivalent_registers id (U; id)\<close>
-    using complements_def is_unit_register_def iso_register_equivalent_id that(1) by blast
-  also have \<open>equivalent_registers \<dots> (U; (X; complement X))\<close>
-    apply (rule equivalent_registers_pair_right)
-     apply (auto intro!: unit_register_compatible)
-    using complement_is_complement complements_def equivalent_registersI id_comp register_id that(2) by blast
-  also have \<open>equivalent_registers \<dots> ((U; X); complement X)\<close>
-    apply (rule equivalent_registers_assoc)
-    by auto
-  finally have \<open>complements (U; X) (complement X)\<close>
-    by (auto simp: equivalent_registers_def complements_def)
-  moreover have \<open>equivalent_registers (X; complement X) id\<close>
-    by (metis complement_is_complement complements_def equivalent_registers_def iso_register_def that)
-  ultimately show ?thesis
-    by (meson complement_unique complement_is_complement complements_sym equivalent_registers_sym equivalent_registers_trans that)
+  from complement_exists[OF \<open>register X\<close>]
+  have \<open>\<forall>\<^sub>\<tau> 'x::domain = complement_domain X. equivalent_registers X (U; X)\<close>
+  proof (rule with_type_mp)
+    note [[simproc del: Laws.compatibility_warn]]
+    assume \<open>\<exists>G :: 'x update \<Rightarrow> 'b update. complements X G\<close>
+    then obtain compX :: \<open>'x update \<Rightarrow> 'b update\<close> where compX: \<open>complements X compX\<close>
+      by blast
+    then have [simp]: \<open>register compX\<close> \<open>compatible X compX\<close> \<open>compatible compX X\<close>
+      by (auto simp add: compatible_def complements_def)
+
+    have \<open>equivalent_registers id (U; id)\<close>
+      using complements_def is_unit_register_def iso_register_equivalent_id that(1) by blast
+    also have \<open>equivalent_registers \<dots> (U; (X; compX))\<close>
+      apply (rule equivalent_registers_pair_right)
+       apply (auto intro!: unit_register_compatible)
+      using compX complements_def by blast
+    also have \<open>equivalent_registers \<dots> ((U; X); compX)\<close>
+      apply (rule equivalent_registers_assoc)
+      by auto
+    finally have \<open>complements (U; X) compX\<close>
+      by (auto simp: equivalent_registers_def complements_def)
+    moreover have \<open>equivalent_registers (X; compX) id\<close>
+      using compX complements_def equivalent_registers_sym iso_register_equivalent_id by blast
+    ultimately show \<open>equivalent_registers X (U; X)\<close>
+      by (meson Laws_Complement.complement_unique compX complements_sym)
+  qed
+  from this[cancel_with_type]
+  show \<open>equivalent_registers X (U; X)\<close>
+    by -
 qed
+
 
 lemma unit_register_compose_left:
   assumes [simp]: \<open>is_unit_register U\<close>
   assumes [simp]: \<open>register A\<close>
   shows \<open>is_unit_register (A o U)\<close>
 proof -
-  have \<open>compatible (A o U) (A; complement A)\<close>
-    apply (auto intro!: compatible3')
-    by (metis assms(1) assms(2) comp_id compatible_comp_inner complements_def is_unit_register_def)
-  then have compat[simp]: \<open>compatible (A o U) id\<close>
-    by (metis assms(2) compatible_comp_right complement_is_complement complements_def iso_register_def)
-  have \<open>equivalent_registers (A o U; id) (A o U; (A; complement A))\<close>
-    apply (auto intro!: equivalent_registers_pair_right)
-    using assms(2) complement_is_complement complements_def equivalent_registers_def id_comp register_id by blast
-  also have \<open>equivalent_registers \<dots> ((A o U; A o id); complement A)\<close>
-    apply auto
-    by (metis (no_types, opaque_lifting) compat assms(1) assms(2) compatible_comp_left compatible_def compatible_register1 complement_is_complement complements_def equivalent_registers_assoc id_apply register_unit_register)
-  also have \<open>equivalent_registers \<dots> (A o (U; id); complement A)\<close>
-    by (metis (no_types, opaque_lifting) assms(1) assms(2) calculation complements_def equivalent_registers_sym equivalent_registers_trans is_unit_register_def register_comp_pair)
-  also have \<open>equivalent_registers \<dots> (A o id; complement A)\<close>
-    apply (intro equivalent_registers_pair_left equivalent_registers_comp)
-      apply (auto simp: assms)
-    using assms(1) equivalent_registers_sym register_id unit_register_pair by blast
-  also have \<open>equivalent_registers \<dots> id\<close>
-    by (metis assms(2) comp_id complement_is_complement complements_def equivalent_registers_def iso_register_inv iso_register_inv_comp2 pair_is_register)
-  finally show ?thesis
-    using compat complementsI equivalent_registers_sym is_unit_register_def iso_register_equivalent_id by blast
+  from complement_exists[OF \<open>register A\<close>]
+  have \<open>\<forall>\<^sub>\<tau> 'x::domain = complement_domain A. is_unit_register (A o U)\<close>
+  proof (rule with_type_mp)
+    note [[simproc del: Laws.compatibility_warn]]
+    assume \<open>\<exists>G :: 'x update \<Rightarrow> 'c update. complements A G\<close>
+    then obtain compA :: \<open>'x update \<Rightarrow> 'c update\<close> where compX: \<open>complements A compA\<close>
+      by blast
+    then have [simp]: \<open>register compA\<close> \<open>compatible A compA\<close> \<open>compatible compA A\<close>
+      by (auto simp add: compatible_def complements_def)
+
+    have compat'[simp]: \<open>compatible (A o U) (A; compA)\<close>
+      apply (auto intro!: compatible3')
+      by (metis assms(1) assms(2) comp_id compatible_comp_inner complements_def is_unit_register_def)
+    moreover have \<open>equivalent_registers (A; compA) id\<close>
+      using compX complements_def equivalent_registers_sym iso_register_equivalent_id by blast
+    ultimately have compat[simp]: \<open>compatible (A o U) id\<close>
+      using equivalent_registers_compatible2 by blast
+
+    have \<open>equivalent_registers (A o U; id) (A o U; (A; compA))\<close>
+      apply (auto intro!: equivalent_registers_pair_right)
+      using compX complements_def by auto
+    also have \<open>equivalent_registers \<dots> (A o U; (A o id; compA))\<close>
+      by (auto intro!: equivalent_registers_refl pair_is_register)
+    also have \<open>equivalent_registers \<dots> ((A o U; A o id); compA)\<close>
+      apply (intro equivalent_registers_assoc compatible_comp_inner)
+      by auto
+    also have \<open>equivalent_registers \<dots> (A o (U; id); compA)\<close>
+      by (metis (no_types, opaque_lifting) assms(1) assms(2) calculation complements_def equivalent_registers_sym equivalent_registers_trans is_unit_register_def register_comp_pair)
+    also have \<open>equivalent_registers \<dots> (A o id; compA)\<close>
+      apply (intro equivalent_registers_pair_left equivalent_registers_comp)
+        apply (auto simp: assms)
+      using assms(1) equivalent_registers_sym register_id unit_register_pair by blast
+    also have \<open>equivalent_registers \<dots> id\<close>
+      by (simp add: \<open>equivalent_registers (A;compA) id\<close>)
+    finally show \<open>is_unit_register (A o U)\<close>
+      using compat complementsI equivalent_registers_sym is_unit_register_def iso_register_equivalent_id by blast
+  qed
+  from this[cancel_with_type]
+  show ?thesis
+    by -
 qed
 
 lemma unit_register_compose_right:
@@ -210,7 +258,7 @@ proof -
   with \<open>is_unit_register ?U1\<close> have \<open>is_unit_register (?U1 o I)\<close>
     by (rule unit_register_compose_right)
   then show ?thesis
-    by (metis someI_ex unit_register_def)
+    by (metis someI_ex unit_register_def) x
 qed
 
 lemma unit_register_domain_tensor_unit:

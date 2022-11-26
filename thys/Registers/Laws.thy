@@ -648,6 +648,9 @@ lemma equivalent_registersI:
   shows \<open>equivalent_registers F G\<close>
   using assms unfolding equivalent_registers_def by blast
 
+lemma equivalent_registers_refl: \<open>equivalent_registers F F\<close> if \<open>register F\<close>
+  using that by (auto intro!: exI[of _ id] simp: equivalent_registers_def)
+
 lemma equivalent_registers_register_left: \<open>equivalent_registers F G \<Longrightarrow> register F\<close>
   using equivalent_registers_def by auto
 
@@ -720,6 +723,18 @@ lemma equivalent_registers_comp:
   assumes \<open>equivalent_registers F G\<close>
   shows \<open>equivalent_registers (H o F) (H o G)\<close>
   by (metis (no_types, lifting) assms(1) assms(2) comp_assoc equivalent_registers_def register_comp)
+
+lemma equivalent_registers_compatible1:
+  assumes \<open>compatible F G\<close>
+  assumes \<open>equivalent_registers F F'\<close>
+  shows \<open>compatible F' G\<close>
+  by (metis assms(1) assms(2) compatible_comp_left equivalent_registers_def iso_register_is_register)
+
+lemma equivalent_registers_compatible2:
+  assumes \<open>compatible F G\<close>
+  assumes \<open>equivalent_registers G G'\<close>
+  shows \<open>compatible F G'\<close>
+  by (metis assms(1) assms(2) compatible_comp_right equivalent_registers_def iso_register_is_register)
 
 subsection \<open>Compatibility simplification\<close>
 
