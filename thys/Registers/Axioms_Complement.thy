@@ -11,8 +11,11 @@ instance complement_domain :: (domain, domain) domain..
 typedecl some_domain
 instance some_domain :: domain..
 
+class simple_complement_domain = domain
+
 axiomatization where 
-  complement_exists: \<open>register F \<Longrightarrow> \<exists>G :: ('a, 'b) complement_domain update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close> for F :: \<open>'a::domain update \<Rightarrow> 'b::domain update\<close>
+  complement_exists_simple: \<open>register F \<Longrightarrow> \<exists>G :: ('a, 'b) complement_domain update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
+    for F :: \<open>'a::domain update \<Rightarrow> 'b::simple_complement_domain update\<close>
 
 axiomatization where complement_unique: \<open>compatible F G \<Longrightarrow> iso_register (F;G) \<Longrightarrow> compatible F H \<Longrightarrow> iso_register (F;H)
           \<Longrightarrow> equivalent_registers G H\<close> 

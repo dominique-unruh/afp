@@ -30,17 +30,17 @@ proof (rule complementsI)
     using \<open>compatible G F\<close> iso_register_def pair_is_register by blast
 qed
 
-definition complement :: \<open>('a::domain update \<Rightarrow> 'b::domain update) \<Rightarrow> (('a,'b) complement_domain update \<Rightarrow> 'b update)\<close> where
+definition complement :: \<open>('a::domain update \<Rightarrow> 'b::simple_complement_domain update) \<Rightarrow> (('a,'b) complement_domain update \<Rightarrow> 'b update)\<close> where
   \<open>complement F = (SOME G :: ('a, 'b) complement_domain update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G))\<close>
 
 lemma register_complement[simp]: \<open>register (complement F)\<close> if \<open>register F\<close>
-  using complement_exists[OF that]
+  using complement_exists_simple[OF that]
   by (metis (no_types, lifting) compatible_def complement_def some_eq_imp)
 
 lemma complement_is_complement:
   assumes \<open>register F\<close>
   shows \<open>complements F (complement F)\<close>
-  using complement_exists[OF assms] unfolding complements_def
+  using complement_exists_simple[OF assms] unfolding complements_def
   by (metis (mono_tags, lifting) complement_def some_eq_imp)
 
 lemma complement_unique:

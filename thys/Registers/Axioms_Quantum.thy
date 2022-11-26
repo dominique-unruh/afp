@@ -4,6 +4,7 @@ section \<open>Quantum instantiation of registers\<close>
 
     # Type classes
     domain \<rightarrow> type
+    simple_complement_domain \<rightarrow> finite
 
     # Types
     some_domain \<rightarrow> unit
@@ -600,7 +601,7 @@ proof (rule continuous_map_iff_preserves_convergence, rename_tac K a)
     by -
 qed
 
-lemma register_inj: \<open>inj F\<close> if [simp]: \<open>register F\<close>
+lemma register_inj: \<open>inj_on F X\<close> if [simp]: \<open>register F\<close>
 proof -
   have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F. inj F\<close>
     using register_decomposition[OF \<open>register F\<close>] 
@@ -620,8 +621,8 @@ proof -
       by (smt (z3) inj_def)
   qed
   from this[THEN with_type_prepare_cancel, cancel_type_definition, OF with_type_nonempty, OF this]
-  show \<open>inj F\<close>
-    by -
+  show \<open>inj_on F X\<close>
+    by (simp add: inj_on_def)
 qed
 
 lemma register_norm: \<open>norm (F a) = norm a\<close> if \<open>register F\<close>
