@@ -4,7 +4,7 @@ section \<open>Quantum instantiation of registers\<close>
 
     # Type classes
     domain \<rightarrow> type
-    simple_complement_domain \<rightarrow> finite
+    domain_with_simple_complement \<rightarrow> finite
 
     # Types
     some_domain \<rightarrow> unit
@@ -13,7 +13,7 @@ section \<open>Quantum instantiation of registers\<close>
     comp_update \<rightarrow> cblinfun_compose
     id_update \<rightarrow> id_cblinfun
     tensor_update \<rightarrow> tensor_op
-    simple_complement_domain \<rightarrow> register_decomposition_basis
+    cdc \<rightarrow> register_decomposition_basis
 
     # Lemmas
     id_update_left \<rightarrow> cblinfun_compose_id_left

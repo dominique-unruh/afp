@@ -26,6 +26,6 @@ proof -
     by (auto intro!: complementsI simp: is_unit_register_def)
 qed
 
-instance complement_domain :: (type, type) default ..
+instance complement_domain_simple :: (type, type) default ..
 
 end

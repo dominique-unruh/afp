@@ -19,20 +19,19 @@ With_Type.add_with_type_info_global {
   transfer = NONE
 }\<close>
 
-\<comment> \<open>We need that there is at least one object in our category. We call is \<^term>\<open>some_domain\<close>.\<close>
-typedecl some_domain
-instance some_domain :: domain..
-
 class domain_with_simple_complement = domain
 
+\<comment> \<open>We need that there is at least one object in our category. We call is \<^term>\<open>some_domain\<close>.\<close>
+typedecl some_domain
+instance some_domain :: domain_with_simple_complement ..
+
 axiomatization where 
-  complement_exists_simple: \<open>register F \<Longrightarrow> \<exists>G :: ('a, 'b) complement_domain update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
+  complement_exists_simple: \<open>register F \<Longrightarrow> \<exists>G :: ('a, 'b) complement_domain_simple update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
     for F :: \<open>'a::domain update \<Rightarrow> 'b::domain_with_simple_complement update\<close>
 
-term \<open>\<forall>\<^sub>\<tau> 'c::domain = register_decomposition_domain F. xxx\<close>
-
-axiomatization complement_domain :: \<open>('a::domain update \<Rightarrow> 'b::domain update) \<Rightarrow> ('a,'b) complement_domain set\<close> where 
-  complement_exists: \<open>register F \<Longrightarrow> \<forall>\<^sub>\<tau> 'c::domain = complement_domain F.
+(* Short for "complement domain carrier" *)
+axiomatization cdc :: \<open>('a::domain update \<Rightarrow> 'b::domain update) \<Rightarrow> ('a,'b) complement_domain set\<close> where 
+  complement_exists: \<open>register F \<Longrightarrow> \<forall>\<^sub>\<tau> 'c::domain = cdc F.
                       \<exists>G :: 'c update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
     for F :: \<open>'a::domain update \<Rightarrow> 'b::domain update\<close>
 

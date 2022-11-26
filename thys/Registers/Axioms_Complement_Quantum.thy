@@ -567,29 +567,29 @@ lemma complement_unique:
 
 subsection \<open>Finite dimensional complement\<close>
 
-typedef ('a, 'b::finite) complement_domain = \<open>{..< if CARD('b) div CARD('a) \<noteq> 0 then CARD('b) div CARD('a) else 1}\<close>
+typedef ('a, 'b::finite) complement_domain_simple = \<open>{..< if CARD('b) div CARD('a) \<noteq> 0 then CARD('b) div CARD('a) else 1}\<close>
   by auto
 
-instance complement_domain :: (type, finite) finite
+instance complement_domain_simple :: (type, finite) finite
 proof intro_classes
-  have \<open>inj Rep_complement_domain\<close>
-    by (simp add: Rep_complement_domain_inject inj_on_def)
-  moreover have \<open>finite (range Rep_complement_domain)\<close>
-    by (metis finite_lessThan type_definition.Rep_range type_definition_complement_domain)
-  ultimately show \<open>finite (UNIV :: ('a,'b) complement_domain set)\<close>
+  have \<open>inj Rep_complement_domain_simple\<close>
+    by (simp add: Rep_complement_domain_simple_inject inj_on_def)
+  moreover have \<open>finite (range Rep_complement_domain_simple)\<close>
+    by (metis finite_lessThan type_definition.Rep_range type_definition_complement_domain_simple)
+  ultimately show \<open>finite (UNIV :: ('a,'b) complement_domain_simple set)\<close>
     using finite_image_iff by blast
 qed
 
 lemma CARD_complement_domain: 
   assumes \<open>CARD('b::finite) = n * CARD('a)\<close>
-  shows \<open>CARD(('a,'b) complement_domain) = n\<close>
+  shows \<open>CARD(('a,'b) complement_domain_simple) = n\<close>
 proof -
   from assms have \<open>n > 0\<close>
     by (metis nat_0_less_mult_iff zero_less_card_finite)
-  have *: \<open>inj Rep_complement_domain\<close>
-    by (simp add: Rep_complement_domain_inject inj_on_def)
-  moreover have \<open>card (range (Rep_complement_domain :: ('a,'b) complement_domain \<Rightarrow> _)) = n\<close>
-    apply (subst type_definition.Rep_range[OF type_definition_complement_domain])
+  have *: \<open>inj Rep_complement_domain_simple\<close>
+    by (simp add: Rep_complement_domain_simple_inject inj_on_def)
+  moreover have \<open>card (range (Rep_complement_domain_simple :: ('a,'b) complement_domain_simple \<Rightarrow> _)) = n\<close>
+    apply (subst type_definition.Rep_range[OF type_definition_complement_domain_simple])
     using assms \<open>n > 0\<close> apply simp
     by force
   ultimately show ?thesis
@@ -599,7 +599,7 @@ qed
 lemma register_decomposition_finite_aux:
   fixes \<Phi> :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
   assumes [simp]: \<open>register \<Phi>\<close>
-  shows \<open>\<exists>U :: ('a \<times> ('a, 'b) complement_domain) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
+  shows \<open>\<exists>U :: ('a \<times> ('a, 'b) complement_domain_simple) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
               (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
   \<comment> \<open>Proof based on @{cite daws21unitalanswer}\<close>
 proof -
@@ -756,11 +756,11 @@ proof -
     finally show ?thesis by -
   qed
 
-  obtain f where bij_f: \<open>bij_betw f (UNIV::('a,'b) complement_domain set) (B \<xi>0)\<close>
+  obtain f where bij_f: \<open>bij_betw f (UNIV::('a,'b) complement_domain_simple set) (B \<xi>0)\<close>
     apply atomize_elim apply (rule finite_same_card_bij)
     using finiteB CARD_complement_domain[OF CARD'b] by auto
 
-  define u where \<open>u = (\<lambda>(\<xi>,\<alpha>). \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>)\<close> for \<xi> :: 'a and \<alpha> :: \<open>('a,'b) complement_domain\<close>
+  define u where \<open>u = (\<lambda>(\<xi>,\<alpha>). \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>)\<close> for \<xi> :: 'a and \<alpha> :: \<open>('a,'b) complement_domain_simple\<close>
   obtain U where Uapply: \<open>U *\<^sub>V ket \<xi>\<alpha> = u \<xi>\<alpha>\<close> for \<xi>\<alpha>
     apply atomize_elim
     apply (rule exI[of _ \<open>cblinfun_extension (range ket) (\<lambda>k. u (inv ket k))\<close>])
@@ -769,8 +769,8 @@ proof -
     by (auto simp add: inj_ket cindependent_ket)
 
   define eqa where \<open>eqa a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: 'a
-  define eqc where \<open>eqc a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: \<open>('a,'b) complement_domain\<close>
-  define eqac where \<open>eqac a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: \<open>'a * ('a,'b) complement_domain\<close>
+  define eqc where \<open>eqc a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: \<open>('a,'b) complement_domain_simple\<close>
+  define eqac where \<open>eqac a b = (if a = b then 1 else 0 :: complex)\<close> for a b :: \<open>'a * ('a,'b) complement_domain_simple\<close>
 
   have \<open>cinner (U *\<^sub>V ket \<xi>\<alpha>) (U *\<^sub>V ket \<xi>'\<alpha>') = eqac \<xi>\<alpha> \<xi>'\<alpha>'\<close> for \<xi>\<alpha> \<xi>'\<alpha>'
   proof -
@@ -808,7 +808,7 @@ proof -
 
   have \<open>sandwich (U*) (\<Phi> (butterket \<xi> \<eta>)) = butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun\<close> for \<xi> \<eta>
   proof (rule equal_ket, rename_tac \<xi>1\<alpha>)
-    fix \<xi>1\<alpha> obtain \<xi>1 :: 'a and \<alpha> :: \<open>('a,'b) complement_domain\<close> where \<xi>1\<alpha>: \<open>\<xi>1\<alpha> = (\<xi>1,\<alpha>)\<close> 
+    fix \<xi>1\<alpha> obtain \<xi>1 :: 'a and \<alpha> :: \<open>('a,'b) complement_domain_simple\<close> where \<xi>1\<alpha>: \<open>\<xi>1\<alpha> = (\<xi>1,\<alpha>)\<close> 
       apply atomize_elim by auto
     have \<open>sandwich (U*) (\<Phi> (butterket \<xi> \<eta>)) *\<^sub>V ket \<xi>1\<alpha> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta>) *\<^sub>V \<Phi> (butterket \<xi>1 \<xi>0) *\<^sub>V f \<alpha>\<close>
       by (simp add: sandwich_apply[abs_def] cblinfun_apply_cblinfun_compose \<xi>1\<alpha> Uapply u_def)
@@ -886,7 +886,7 @@ qed
 lemma register_decomposition_finite:
   fixes \<Phi> :: \<open>'a update \<Rightarrow> 'b::finite update\<close>
   assumes [simp]: \<open>register \<Phi>\<close>
-  shows \<open>\<exists>U :: ('a \<times> ('a, 'b) complement_domain) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
+  shows \<open>\<exists>U :: ('a \<times> ('a, 'b) complement_domain_simple) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
               (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
 proof -
   fix a\<^sub>0
@@ -929,13 +929,13 @@ hide_fact register_decomposition_finite_aux
 lemma complement_exists_simple:
   fixes F :: \<open>'a update \<Rightarrow> 'b::finite update\<close>
   assumes \<open>register F\<close>
-  shows \<open>\<exists>G :: ('a, 'b) complement_domain update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
+  shows \<open>\<exists>G :: ('a, 'b) complement_domain_simple update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
 proof -
   note [[simproc del: Laws_Quantum.compatibility_warn]]
-  obtain U :: \<open>('a \<times> ('a, 'b) complement_domain) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+  obtain U :: \<open>('a \<times> ('a, 'b) complement_domain_simple) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
     where [simp]: "unitary U" and F: \<open>F a = sandwich U (a \<otimes>\<^sub>o id_cblinfun)\<close> for a
     apply atomize_elim using assms by (rule register_decomposition_finite)
-  define G :: \<open>(('a, 'b) complement_domain) update \<Rightarrow> 'b update\<close> where \<open>G b = sandwich U (id_cblinfun \<otimes>\<^sub>o b)\<close> for b
+  define G :: \<open>(('a, 'b) complement_domain_simple) update \<Rightarrow> 'b update\<close> where \<open>G b = sandwich U (id_cblinfun \<otimes>\<^sub>o b)\<close> for b
   have [simp]: \<open>register G\<close>
     unfolding G_def apply (rule register_decomposition_converse) by simp
   have \<open>F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close> for a b
