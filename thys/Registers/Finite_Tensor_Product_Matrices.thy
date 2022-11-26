@@ -1,8 +1,11 @@
 section \<open>Tensor products as matrices\<close>
 
 theory Finite_Tensor_Product_Matrices
-  imports Finite_Tensor_Product
+  imports Misc Tensor_Product.Hilbert_Space_Tensor_Product
 begin
+
+hide_const (open) Finite_Cartesian_Product.vec
+hide_const (open) Finite_Cartesian_Product.mat
 
 definition tensor_pack :: "nat \<Rightarrow> nat \<Rightarrow> (nat \<times> nat) \<Rightarrow> nat"
   where "tensor_pack X Y = (\<lambda>(x, y). x * Y + y)"
@@ -50,7 +53,7 @@ lemma enum_prod_nth_tensor_unpack:
         (let (i1,i2) = tensor_unpack CARD('a) CARD('b) i in 
               (Enum.enum ! i1, Enum.enum ! i2))"
   using assms 
-  by (simp add: enum_prod_def card_UNIV_length_enum product_nth tensor_unpack_def)
+  by (simp add: enum_prod_def product_nth tensor_unpack_def)
 
 lemma vec_of_basis_enum_tensor_state_index:
   fixes \<psi> :: \<open>'a::enum ell2\<close> and \<phi> :: \<open>'b::enum ell2\<close>
@@ -148,7 +151,7 @@ lemma mat_of_cblinfun_tensor_op:
 
 
 lemma mat_of_cblinfun_assoc_ell2'[simp]: 
-  \<open>mat_of_cblinfun (assoc_ell2' :: (('a::enum\<times>('b::enum\<times>'c::enum)) ell2 \<Rightarrow>\<^sub>C\<^sub>L _)) = one_mat (CARD('a)*CARD('b)*CARD('c))\<close>
+  \<open>mat_of_cblinfun (assoc_ell2* :: (('a::enum\<times>('b::enum\<times>'c::enum)) ell2 \<Rightarrow>\<^sub>C\<^sub>L _)) = one_mat (CARD('a)*CARD('b)*CARD('c))\<close>
   (is "mat_of_cblinfun ?assoc = _")
 proof  (rule mat_eq_iff[THEN iffD2], intro conjI allI impI)
 
@@ -208,12 +211,12 @@ proof  (rule mat_eq_iff[THEN iffD2], intro conjI allI impI)
         i23_def[symmetric] j12_def[symmetric] j1'
         prod_eq_iff tensor_unpack_fstsnd tensor_unpack_sndsnd)
 
-  have \<open>mat_of_cblinfun ?assoc $$ (i, j) = Rep_ell2 (assoc_ell2' *\<^sub>V ket ?j) ?i\<close>
+  have \<open>mat_of_cblinfun ?assoc $$ (i, j) = Rep_ell2 (assoc_ell2* *\<^sub>V ket ?j) ?i\<close>
     by (subst mat_of_cblinfun_ell2_component, auto)
   also have \<open>\<dots> = Rep_ell2 ((ket ?j1 \<otimes>\<^sub>s ket ?j2) \<otimes>\<^sub>s ket ?j3) ?i\<close>
     by (simp add: j assoc_ell2'_tensor flip: tensor_ell2_ket)
   also have \<open>\<dots> = (if (?i1,?i2,?i3) = (?j1,?j2,?j3) then 1 else 0)\<close>
-    by (auto simp add: ket.rep_eq i)
+    by (auto simp add: ket.rep_eq i tensor_ell2_ket)
   also have \<open>\<dots> = (if i=j then 1 else 0)\<close>
     using ijeq by simp
   finally
@@ -222,11 +225,11 @@ proof  (rule mat_eq_iff[THEN iffD2], intro conjI allI impI)
     by auto
 qed
 
-lemma assoc_ell2'_inv: "assoc_ell2 o\<^sub>C\<^sub>L assoc_ell2' = id_cblinfun"
+lemma assoc_ell2'_inv: "assoc_ell2 o\<^sub>C\<^sub>L assoc_ell2* = id_cblinfun"
   apply (rule equal_ket, case_tac x, hypsubst)
   by (simp flip: tensor_ell2_ket add: cblinfun_apply_cblinfun_compose assoc_ell2'_tensor assoc_ell2_tensor)
 
-lemma assoc_ell2_inv: "assoc_ell2' o\<^sub>C\<^sub>L assoc_ell2 = id_cblinfun"
+lemma assoc_ell2_inv: "assoc_ell2* o\<^sub>C\<^sub>L assoc_ell2 = id_cblinfun"
   apply (rule equal_ket, case_tac x, hypsubst)
   by (simp flip: tensor_ell2_ket add: cblinfun_apply_cblinfun_compose assoc_ell2'_tensor assoc_ell2_tensor)
 
@@ -234,7 +237,7 @@ lemma mat_of_cblinfun_assoc_ell2[simp]:
   \<open>mat_of_cblinfun (assoc_ell2 :: ((('a::enum\<times>'b::enum)\<times>'c::enum) ell2 \<Rightarrow>\<^sub>C\<^sub>L _)) = one_mat (CARD('a)*CARD('b)*CARD('c))\<close>
   (is "mat_of_cblinfun ?assoc = _")
 proof -
-  let ?assoc' = "assoc_ell2' :: (('a::enum\<times>('b::enum\<times>'c::enum)) ell2 \<Rightarrow>\<^sub>C\<^sub>L _)"
+  let ?assoc' = "assoc_ell2* :: (('a::enum\<times>('b::enum\<times>'c::enum)) ell2 \<Rightarrow>\<^sub>C\<^sub>L _)"
   have "one_mat (CARD('a)*CARD('b)*CARD('c)) = mat_of_cblinfun (?assoc o\<^sub>C\<^sub>L ?assoc')"
     by (simp add: mult.assoc mat_of_cblinfun_id)
   also have \<open>\<dots> = mat_of_cblinfun ?assoc * mat_of_cblinfun ?assoc'\<close>

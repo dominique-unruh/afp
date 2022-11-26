@@ -5,7 +5,7 @@ theory Teleport
     QHoare
     Real_Impl.Real_Impl
     "HOL-Library.Code_Target_Numeral"
-    (* Finite_Tensor_Product_Matrices *)
+    Finite_Tensor_Product_Matrices
     "HOL-Library.Word"
 begin
 
@@ -146,7 +146,7 @@ proof -
   have O5': "O5 = (1/2) *\<^sub>C \<Phi>2 (XZ*) o\<^sub>C\<^sub>L X\<Phi>2 Uswap o\<^sub>C\<^sub>L \<Phi> (butterfly (ket a \<otimes>\<^sub>s ket b) \<beta>00)"
     unfolding O7 O5_def O4_def O3_def O2_def O1_def 
     apply (simp split del: if_split only: to_X\<Phi> register_mult[of X\<Phi>])
-    apply (simp split del: if_split add: register_mult[of X\<Phi>] 
+    apply (simp split del: if_split add: register_mult[of X\<Phi>] clinear_register
                 flip: complex_vector.linear_scale
                 del: comp_apply)
     apply (rule arg_cong[of _ _ X\<Phi>])
@@ -156,7 +156,7 @@ proof -
                      mat_of_cblinfun_adj vec_of_basis_enum_ket mat_of_cblinfun_id
                      swap_sandwich[abs_def] mat_of_cblinfun_scaleR mat_of_cblinfun_scaleC
                      id_tensor_sandwich vec_of_basis_enum_tensor_state mat_of_cblinfun_cblinfun_apply
-                     mat_of_cblinfun_sandwich)
+                     mat_of_cblinfun_sandwich) X
     by normalization
 
   have [simp]: "unitary XZ"
@@ -169,7 +169,7 @@ proof -
     by (simp add: cblinfun_compose_assoc[symmetric] register_mult[of \<Phi>2] del: comp_apply)
 
   have "O7 *\<^sub>S pre = X\<Phi>2 Uswap *\<^sub>S XAB (selfbutter \<psi>) *\<^sub>S \<Phi> (butterfly (ket (a, b)) \<beta>00) *\<^sub>S \<top>"
-    apply (simp add: O7' pre_def EQ_def cblinfun_compose_image)
+    apply (simp add: O7' pre_def EQ_def cblinfun_compose_image tensor_ell2_ket)
     apply (subst lift_cblinfun_comp[OF swap_registers[where R=\<Phi> and S=XAB]], simp)
     by (simp add: cblinfun_assoc_left(2))
   also have \<open>\<dots> \<le> X\<Phi>2 Uswap *\<^sub>S XAB (selfbutter \<psi>) *\<^sub>S \<top>\<close>
@@ -180,7 +180,7 @@ proof -
   also have \<open>\<dots> = \<Phi>2AB (selfbutter \<psi>) *\<^sub>S X\<Phi>2 Uswap *\<^sub>S \<top>\<close>
     apply (simp add: swap_sandwich sandwich_grow_left to_X\<Phi>2_AB   
         cblinfun_compose_image[symmetric] register_mult)
-    by (simp add: sandwich_def cblinfun_compose_assoc[symmetric] comp_tensor_op tensor_op_adjoint)
+    by (simp add: sandwich_apply cblinfun_compose_assoc[symmetric] comp_tensor_op tensor_op_adjoint)
   also have \<open>\<dots> \<le> \<Phi>2AB =\<^sub>q \<psi>\<close>
     by (simp add: EQ_def cblinfun_image_mono)
   finally have \<open>O7 *\<^sub>S pre \<le> \<Phi>2AB =\<^sub>q \<psi>\<close>
