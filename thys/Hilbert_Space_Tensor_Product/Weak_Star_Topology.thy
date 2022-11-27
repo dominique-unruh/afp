@@ -627,6 +627,7 @@ proof -
     by (simp add: * has_sum_def has_sum_in_def limitin_weak_star_topology)
 qed
 
+(* TODO rename \<rightarrow> has_sum... *)
 lemma infsum_butterfly_ket: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (ket i) (ket i)) UNIV id_cblinfun\<close>
 proof (rule has_sum_in_weak_star[THEN iffD2, rule_format])
   fix t :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
