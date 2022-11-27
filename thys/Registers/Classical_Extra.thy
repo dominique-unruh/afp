@@ -49,6 +49,8 @@ proof (intro allI iffI)
     apply (rule_tac compatible_setter)
     unfolding compatible_def by auto
 next
+  note ETTS.rep_inverse[simp del]
+  note ETTS.Abs_inverse[simp del]
   assume commute[rule_format, THEN fun_cong, unfolded o_def]: \<open>\<forall>a b. setter F a \<circ> setter G b = setter G b \<circ> setter F a\<close>
   have \<open>valid_getter_setter (getter F) (setter F)\<close>
     by auto
@@ -58,7 +60,8 @@ next
     apply (subst (2) register_from_getter_setter_of_getter_setter[symmetric, of G], simp)
     apply (subst (1) register_from_getter_setter_of_getter_setter[symmetric, of G], simp)
     unfolding register_from_getter_setter_def valid_getter_setter_def
-    apply (auto intro!: ext simp: option.case_eq_if map_comp_def) (* Sledgehammer: *)
+    apply (auto intro!: ext simp: option.case_eq_if map_comp_def)
+      (* Sledgehammer: *)
           apply ((metis commute option.distinct option.simps)+)[4]
       apply (smt (verit, ccfv_threshold) assms(2) commute valid_getter_setter_def valid_getter_setter_getter_setter)
      apply (smt (verit, ccfv_threshold) assms(2) commute valid_getter_setter_def valid_getter_setter_getter_setter)

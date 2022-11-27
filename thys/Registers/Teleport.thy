@@ -19,6 +19,8 @@ no_notation Order.top ("\<top>\<index>")
 unbundle no_vec_syntax
 unbundle no_inner_syntax
 
+declare ETTS.rep_inverse[simp del]
+declare ETTS.Abs_inverse[simp del]
 
 locale teleport_locale = qhoare "TYPE('mem)" +
   fixes X :: "bit update \<Rightarrow> 'mem update"
@@ -156,7 +158,7 @@ proof -
                      mat_of_cblinfun_adj vec_of_basis_enum_ket mat_of_cblinfun_id
                      swap_sandwich[abs_def] mat_of_cblinfun_scaleR mat_of_cblinfun_scaleC
                      id_tensor_sandwich vec_of_basis_enum_tensor_state mat_of_cblinfun_cblinfun_apply
-                     mat_of_cblinfun_sandwich) X
+                     mat_of_cblinfun_sandwich)
     by normalization
 
   have [simp]: "unitary XZ"
