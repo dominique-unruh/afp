@@ -2,11 +2,11 @@ section \<open>Quantum teleportation\<close>
 
 theory Teleport
   imports 
-    QHoare
     Real_Impl.Real_Impl
     "HOL-Library.Code_Target_Numeral"
-    Finite_Tensor_Product_Matrices
     "HOL-Library.Word"
+    QHoare
+    Tensor_Product_Matrices
 begin
 
 hide_const (open) Finite_Cartesian_Product.vec

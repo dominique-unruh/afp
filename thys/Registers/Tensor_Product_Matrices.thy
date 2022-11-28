@@ -1,6 +1,6 @@
 section \<open>Tensor products as matrices\<close>
 
-theory Finite_Tensor_Product_Matrices
+theory Tensor_Product_Matrices
   imports Misc Tensor_Product.Hilbert_Space_Tensor_Product
 begin
 

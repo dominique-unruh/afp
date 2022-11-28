@@ -2,7 +2,6 @@ section \<open>Quantum mechanics basics\<close>
 
 theory Quantum
   imports
-    (* Finite_Tensor_Product *)
     Misc
     Tensor_Product.Hilbert_Space_Tensor_Product
     "HOL-Library.Z2"
