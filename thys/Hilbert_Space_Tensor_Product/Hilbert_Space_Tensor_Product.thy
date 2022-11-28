@@ -116,6 +116,7 @@ lemma tensor_ell2_sum_right: \<open>a \<otimes>\<^sub>s (\<Sum>x\<in>X. b x) = (
   apply (induction X rule:infinite_finite_induct)
   by (auto simp: tensor_ell2_add2)
 
+(* TODO: duplicated *) thm tensor_ell2_norm (* Use name norm_tensor_ell2 *)
 lemma norm_tensor_ell2: \<open>norm (a \<otimes>\<^sub>s b) = norm a * norm b\<close>
 proof transfer
   fix a :: \<open>'a \<Rightarrow> complex\<close> and b :: \<open>'b \<Rightarrow> complex\<close>

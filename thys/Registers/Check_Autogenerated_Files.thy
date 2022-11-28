@@ -22,9 +22,9 @@ in
   check "Source" "Axioms_Classical.thy" "72388b1ddd9b0570c9f0761063a13e5e777551e3";
   check "Source" "Axioms_Quantum.thy" "228024ddd375f16a02c7197b0e87c240d36526e0";
   check "Source" "Laws.thy" "83f19ec3f5710b3b914a5d69ecee9a202479b0c3";
-  check "Source" "Laws_Complement.thy" "7a881a6ad768deb79a243cf4f9dd710f3e3ec813";
+  check "Source" "Laws_Complement.thy" "5ba70f38590214499d1dbf91e09c92b45d18365a";
   check "Generated" "Laws_Classical.thy" "74f6acabbc93f6885969d4630adda5f25ad26feb";
-  check "Generated" "Laws_Complement_Quantum.thy" "8c2b826a681771bdfc4b05619e59b7137d863726";
+  check "Generated" "Laws_Complement_Quantum.thy" "50c6edbbd9d6cd1b7e55dd8a2e233d4874962575";
   check "Generated" "Laws_Quantum.thy" "ef1832567324b54a2855a8f09ecfe448575b77a9"
 end
 \<close>

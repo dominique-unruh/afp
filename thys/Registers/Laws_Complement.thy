@@ -44,7 +44,7 @@ lemma register_complement[simp]: \<open>register (complement F)\<close> if \<ope
   using complement_exists_simple[OF that]
   by (metis (no_types, lifting) compatible_def complement_def some_eq_imp)
 
-lemma complement_is_complement:
+lemma complement_is_complement[simp]:
   assumes \<open>register F\<close>
   shows \<open>complements F (complement F)\<close>
   using complement_exists_simple[OF assms] unfolding complements_def

@@ -23,7 +23,7 @@ proof -
     by (metis butterfly_0_right complex_vector.scale_zero_right inj_selfbutter_upto_phase)
   then have \<open>F (selfbutter \<eta>\<^sub>F) \<noteq> 0\<close>
     using register_inj[OF \<open>register F\<close>, THEN injD, where y=0]
-    by (auto simp: complex_vector.linear_0)
+    by (auto simp: complex_vector.linear_0 clinear_register)
   then obtain \<psi>' where \<psi>': \<open>F (selfbutter \<eta>\<^sub>F) *\<^sub>V \<psi>' \<noteq> 0\<close>
     by (meson cblinfun_eq_0_on_UNIV_span complex_vector.span_UNIV)
   have ex: \<open>\<exists>\<psi>. norm \<psi> = 1 \<and> \<psi> \<in> range ((*\<^sub>V) (F (selfbutter \<eta>\<^sub>F)))\<close>
@@ -120,7 +120,7 @@ proof -
   from \<open>complements F G\<close>
   obtain I where cFI: \<open>complement F o I = G\<close> and \<open>iso_register I\<close>
     apply atomize_elim
-    by (meson Laws_Complement_Quantum.complement_unique equivalent_registers_def equivalent_registers_sym)
+    using complement_unique' equivalent_registers_def equivalent_registers_sym by blast
   have \<open>(F; complement F) (selfbutterket default \<otimes>\<^sub>o I a) = (F; G) (selfbutterket default \<otimes>\<^sub>o a)\<close>
     using cFI by (auto simp: register_pair_apply)
   also have \<open>\<dots> = selfbutterket default\<close>
@@ -152,9 +152,9 @@ proof -
 
   have \<open>complements F (G; complement (F;G))\<close>
     apply (rule complements_complement_pair)
-    by simp
+    by simp_all
   then have \<open>equivalent_registers (complement F) (G; complement (F;G))\<close>
-    using Laws_Complement_Quantum.complement_unique equivalent_registers_sym by blast
+    using complement_unique' equivalent_registers_sym by blast
   then obtain I where [simp]: \<open>iso_register I\<close> and I: \<open>(G; complement (F;G)) = complement F o I\<close>
     by (metis equivalent_registers_def)
   then have [simp]: \<open>register I\<close>
@@ -176,11 +176,11 @@ proof -
 
   have *: \<open>complements G (F; complement (F;G))\<close>
     apply (rule complements_complement_pair')
-    by simp
+    by simp_all
   then have [simp]: \<open>compatible G (F; complement (F;G))\<close>
     using complements_def by blast
   from * have \<open>equivalent_registers (complement G) (F; complement (F;G))\<close>
-    using complement_unique equivalent_registers_sym by blast
+    using complement_unique' equivalent_registers_sym by blast
   then obtain J where [simp]: \<open>iso_register J\<close> and I: \<open>(F; complement (F;G)) = complement G o J\<close>
     by (metis equivalent_registers_def)
   then have [simp]: \<open>register J\<close>
@@ -236,7 +236,7 @@ proof -
   obtain c where *: \<open>selfbutterket (default::'c) \<otimes>\<^sub>o swap (inv J aG) = selfbutterket default \<otimes>\<^sub>o c \<otimes>\<^sub>o selfbutterket default\<close>
     apply atomize_elim
     apply (rule overlapping_tensor)
-    using * unfolding assoc_ell2_sandwich sandwich_def
+    using * unfolding assoc_ell2_sandwich sandwich_apply
     by auto
 
   have \<open>t1 = ((swap \<otimes>\<^sub>r id) o assoc') t3\<close>
@@ -247,7 +247,7 @@ proof -
     unfolding * by simp
   also have \<open>\<dots> = selfbutterket default \<otimes>\<^sub>o c\<close>
     apply (simp del: tensor_butterfly)
-    by (simp add: default_prod_def)
+    by (simp add: default_prod_def tensor_ell2_ket)
   finally have \<open>t1 = selfbutterket default \<otimes>\<^sub>o c\<close>
     by -
 
@@ -267,7 +267,7 @@ proof -
   have \<open>complements (F o G) (complement F; F o complement G)\<close>
     by (simp add: complements_chain)
   then have \<open>equivalent_registers (complement F; F o complement G) (complement (F o G))\<close>
-    using complement_unique by blast
+    using complement_unique' by blast
   then obtain J where [simp]: \<open>iso_register J\<close> and 1: \<open>(complement F; F o complement G) o J = (complement (F o G))\<close>
     using equivalent_registers_def by blast
   have [simp]: \<open>register J\<close>
@@ -403,12 +403,12 @@ qed
 
 lemma Fst_regular[simp]: \<open>regular_register Fst\<close>
   apply (rule regular_registerI[where a=\<open>selfbutterket default\<close> and G=Snd])
-  by (auto simp: pair_Fst_Snd default_prod_def)
+  by (auto simp: pair_Fst_Snd default_prod_def tensor_ell2_ket)
 
 lemma Snd_regular[simp]: \<open>regular_register Snd\<close>
   apply (rule regular_registerI[where a=\<open>selfbutterket default\<close> and G=Fst])
     apply auto[2]
-  apply (auto simp only: default_prod_def swap_apply simp flip: swap_def)
+  apply (auto simp only: default_prod_def swap_apply simp flip: swap_def tensor_ell2_ket)
   by auto
 
 lemma id_regular[simp]: \<open>regular_register id\<close>
@@ -438,12 +438,12 @@ proof -
 
   from \<eta>_cond
   have \<open>c \<noteq> 0\<close>
-    by (simp add: \<eta>'_def F sandwich_def c_def cinner_adj_right)
+    by (simp add: \<eta>'_def F sandwich_apply c_def cinner_adj_right cblinfun.scaleC_right)
 
   have \<open>cspan ((\<lambda>z. pure_state' F (g z) \<eta>) ` X) = cspan ((\<lambda>z. F (butterfly (g z) \<eta>) *\<^sub>V \<eta>') ` X)\<close>
     by (simp add: \<eta>'_def pure_state'_def)
   also have \<open>\<dots> = cspan ((\<lambda>z. (butterfly (U *\<^sub>V g z) (U *\<^sub>V \<eta>)) *\<^sub>V \<eta>') ` X)\<close>
-    by (simp add: F sandwich_def cinner_adj_right)
+    by (simp add: F sandwich_apply cinner_adj_right cblinfun.scaleC_right)
   also have \<open>\<dots> = cspan ((\<lambda>z. c *\<^sub>C U *\<^sub>V g z) ` X)\<close>
     by (simp add: c_def)
   also have \<open>\<dots> = (\<lambda>z. c *\<^sub>C U *\<^sub>V z) ` cspan (g ` X)\<close>
@@ -453,7 +453,7 @@ proof -
     using assms(2) by presburger
   also have \<open>\<dots> = UNIV\<close>
     apply (rule surjI[where f=\<open>\<lambda>z. (U* *\<^sub>V z) /\<^sub>C c\<close>])
-    using \<open>c \<noteq> 0\<close> by (auto simp flip: cblinfun_apply_cblinfun_compose)
+    using \<open>c \<noteq> 0\<close> by (auto simp flip: cblinfun_apply_cblinfun_compose cblinfun.scaleC_right)
   finally show ?thesis
     by -
 qed
@@ -523,7 +523,7 @@ proof -
     using assms compatible_complement_pair1 compatible_complement_pair2 compatible_sym by blast+
 
   have [simp]: \<open>iso_register (F;(G;Z))\<close>
-    using Z_def assms complements_complement_pair complements_def by blast
+    using Z_def assms complement_is_complement complements_complement_pair complements_def pair_is_register by blast
 
   have eq1: \<open>((F;G) CNOT o\<^sub>C\<^sub>L (G;F) CNOT o\<^sub>C\<^sub>L (F;G) CNOT) *\<^sub>V (F(ket f) \<otimes>\<^sub>p G(ket g) \<otimes>\<^sub>p Z(ket z))
            = (F;G) swap_ell2 *\<^sub>V (F(ket f) \<otimes>\<^sub>p G(ket g) \<otimes>\<^sub>p Z(ket z))\<close> for f g z
@@ -531,17 +531,17 @@ proof -
     have \<open>(F(ket f) \<otimes>\<^sub>p G(ket g) \<otimes>\<^sub>p Z(ket z)) = ((F;G) (ket f \<otimes>\<^sub>s ket g) \<otimes>\<^sub>p Z(ket z))\<close>
       by pure_state_eq
     also have \<open>(F;G) CNOT *\<^sub>V \<dots> = ((F;G) (ket f \<otimes>\<^sub>s ket (g+f)) \<otimes>\<^sub>p Z(ket z))\<close>
-      apply (subst state_apply1) by auto
+      apply (subst state_apply1) by (auto simp: tensor_ell2_ket)
     also have \<open>\<dots> = ((G;F) (ket (g+f) \<otimes>\<^sub>s ket f) \<otimes>\<^sub>p Z(ket z))\<close>
       by pure_state_eq
     also have \<open>(G;F) CNOT *\<^sub>V \<dots> = ((G;F) (ket (g+f) \<otimes>\<^sub>s ket g) \<otimes>\<^sub>p Z ket z)\<close>
-      apply (subst state_apply1) by auto
+      apply (subst state_apply1) by (auto simp: tensor_ell2_ket)
     also have \<open>\<dots> = ((F;G) (ket g \<otimes>\<^sub>s ket (g+f)) \<otimes>\<^sub>p Z ket z)\<close>
       by pure_state_eq
     also have \<open>(F;G) CNOT *\<^sub>V \<dots> = ((F;G) ket g \<otimes>\<^sub>s ket f \<otimes>\<^sub>p Z ket z)\<close>
       apply (subst state_apply1)
-      apply simp
-      using add_right_imp_eq by fastforce
+       apply simp
+      by (metis add_diff_cancel_left' cnot_apply minus_bit_def tensor_ell2_ket)
     also have \<open>\<dots> = (F(ket g) \<otimes>\<^sub>p G(ket f) \<otimes>\<^sub>p Z(ket z))\<close>
       by pure_state_eq
     finally have 1: \<open>((F;G) CNOT o\<^sub>C\<^sub>L (G;F) CNOT o\<^sub>C\<^sub>L (F;G) CNOT) *\<^sub>V (F(ket f) \<otimes>\<^sub>p G(ket g) \<otimes>\<^sub>p Z(ket z)) = (F(ket g) \<otimes>\<^sub>p G(ket f) \<otimes>\<^sub>p Z(ket z))\<close>
@@ -568,7 +568,7 @@ proof -
     apply (simp only: double_exists setcompr_eq_image full_SetCompr_eq)
     apply simp
     apply (rule cspan_pure_state)
-    by auto
+    by (auto simp: tensor_ell2_ket)
 
   ultimately show ?thesis
     using cblinfun_eq_on_UNIV_span by blast
