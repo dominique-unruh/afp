@@ -30,7 +30,7 @@ text \<open>We define the canonical isomorphism between vectors in some complex 
   This is possible if \<^typ>\<open>'a\<close>, \<^typ>\<open>'b\<close> are of class \<^class>\<open>basis_enum\<close>
   since that class fixes a finite canonical basis. Vector are represented using
   the \<^typ>\<open>complex vec\<close> type from \<^session>\<open>Jordan_Normal_Form\<close>.
-  (The isomorphism will be called \<^term>\<open>vec_of_onb_enum\<close> below.)\<close>
+  (The isomorphism will be called \<^term>\<open>vec_of_onb_basis\<close> below.)\<close>
 
 definition vec_of_basis_enum :: \<open>'a::basis_enum \<Rightarrow> complex vec\<close> where
   \<comment> \<open>Maps \<^term>\<open>v\<close> to a \<^typ>\<open>'a vec\<close> represented in basis \<^const>\<open>canonical_basis\<close>\<close>
@@ -1492,29 +1492,11 @@ proof -
     apply (rule butterfly_eq_proj)
     using norm_Snorm by simp
   also have "\<dots> = mat_of_cblinfun (Proj (ccspan (set Snorm)))"
-    apply (rule arg_cong[of _ _ mat_of_cblinfun])
-  proof (insert ortho_Snorm, insert \<open>distinct Snorm\<close>, induction Snorm)
-    case Nil
-    show ?case
-      by simp
-  next
-    case (Cons a Snorm)
-    from Cons.prems have [simp]: "a \<notin> set Snorm"
-      by simp
-
-    have "sum proj (set (a # Snorm))
-        = proj a + sum proj (set Snorm)"
-      by auto
-    also have "\<dots> = proj a + Proj (ccspan (set Snorm))"
-      apply (subst Cons.IH)
-      using Cons.prems apply auto
-      by (meson Cons.prems(1) is_ortho_set_antimono set_subset_Cons)
-    also have "\<dots> = Proj (ccspan ({a} \<union> set Snorm))"
-      apply (rule Proj_orthog_ccspan_union[symmetric])
-      by (metis Cons.prems(1) \<open>a \<notin> set Snorm\<close> is_ortho_set_def list.set_intros(1) list.set_intros(2) singleton_iff)
-    finally show ?case
-      by simp
-  qed
+    apply (rule arg_cong[where f=mat_of_cblinfun])
+    using ortho_Snorm \<open>distinct Snorm\<close> apply (induction Snorm)
+     apply auto
+    apply (subst Proj_orthog_ccspan_insert[where Y=\<open>set _\<close>])
+    by (auto simp: is_ortho_set_def)
   also have "\<dots> = mat_of_cblinfun (Proj (ccspan (set S)))"
     unfolding Span_Snorm by simp
   finally show ?thesis

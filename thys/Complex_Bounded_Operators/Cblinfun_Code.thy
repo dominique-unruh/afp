@@ -47,17 +47,12 @@ text \<open>The following lemma registers cblinfun as an abstract datatype with
   and in the rhs we define the matrix that corresponds to the sum of A,B.
   In the rhs, we can access the matrices corresponding to A,B by
   writing \<^term>\<open>mat_of_cblinfun B\<close>.
-  (See, e.g., lemma \<open>cblinfun_of_mat_plusOp\<close> below).
+  (See, e.g., lemma @{thm [source] mat_of_cblinfun_plus}.)
 
   See @{cite "code-generation-tutorial"} for more information on 
   @{theory_text \<open>[code abstype]\<close>}.\<close>
 
 declare mat_of_cblinfun_inverse [code abstype]
-
-
-text \<open>This lemma defines addition. By writing \<^term>\<open>mat_of_cblinfun (M + N)\<close>
-on the left hand side, we get access to the\<close>
-
 
 declare mat_of_cblinfun_plus[code]
   \<comment> \<open>Code equation for addition of cblinfuns\<close>
