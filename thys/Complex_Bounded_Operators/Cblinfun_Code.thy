@@ -155,6 +155,7 @@ lemma vec_of_ell2_ket[code]:
   for i::"'a::enum"
   using vec_of_ell2_def vec_of_basis_enum_ket by metis
 
+(* TODO rename \<rightarrow> ..._scaleC *)
 lemma vec_of_ell2_timesScalarVec[code]: 
   \<comment> \<open>Code equation for multiplying a vector with a complex scalar\<close>
   "vec_of_ell2 (scaleC a \<psi>) = smult_vec a (vec_of_ell2 \<psi>)"
@@ -182,6 +183,7 @@ lemma ell2_of_vec_uminus[code]:
   "vec_of_ell2 (- y) =  - (vec_of_ell2 y)" for y :: "'a::enum ell2"
   by (simp add: vec_of_ell2_def vec_of_basis_enum_uminus)
 
+(* TODO: remove the ' in name *)
 lemma cinner_ell2_code' [code]: "cinner \<psi> \<phi> = cscalar_prod (vec_of_ell2 \<phi>) (vec_of_ell2 \<psi>)"
   \<comment> \<open>Code equation for the inner product of vectors\<close>
   by (simp add: cscalar_prod_vec_of_basis_enum vec_of_ell2_def)
@@ -192,6 +194,7 @@ lemma norm_ell2_code [code]:
     sqrt (\<Sum> i \<in> {0 ..< dim_vec \<psi>'}. let z = vec_index \<psi>' i in (Re z)\<^sup>2 + (Im z)\<^sup>2))"
   by (simp add: norm_ell2_vec_of_basis_enum vec_of_ell2_def)
 
+(* TODO: remove the ' in name *)
 lemma times_ell2_code'[code]: 
   \<comment> \<open>Code equation for the product in the algebra of one-dimensional vectors\<close>
   fixes \<psi> \<phi> :: "'a::{CARD_1,enum} ell2"
@@ -199,6 +202,7 @@ lemma times_ell2_code'[code]:
    = vec_of_list [vec_index (vec_of_ell2 \<psi>) 0 * vec_index (vec_of_ell2 \<phi>) 0]"
   by (simp add: vec_of_ell2_def vec_of_basis_enum_times)
 
+(* TODO: remove the ' in name *)
 lemma divide_ell2_code'[code]: 
   \<comment> \<open>Code equation for the product in the algebra of one-dimensional vectors\<close>
   fixes \<psi> \<phi> :: "'a::{CARD_1,enum} ell2"
@@ -206,6 +210,7 @@ lemma divide_ell2_code'[code]:
    = vec_of_list [vec_index (vec_of_ell2 \<psi>) 0 / vec_index (vec_of_ell2 \<phi>) 0]"
   by (simp add: vec_of_ell2_def vec_of_basis_enum_divide)
 
+(* TODO: remove the ' in name *)
 lemma inverse_ell2_code'[code]: 
   \<comment> \<open>Code equation for the product in the algebra of one-dimensional vectors\<close>
   fixes \<psi> :: "'a::{CARD_1,enum} ell2"
@@ -213,6 +218,7 @@ lemma inverse_ell2_code'[code]:
    = vec_of_list [inverse (vec_index (vec_of_ell2 \<psi>) 0)]"
   by (simp add: vec_of_ell2_def vec_of_basis_enum_to_inverse)
 
+(* TODO: remove the ' in name *)
 lemma one_ell2_code'[code]: 
   \<comment> \<open>Code equation for the unit in the algebra of one-dimensional vectors\<close>
   "vec_of_ell2 (1 :: 'a::{CARD_1,enum} ell2) = vec_of_list [1]"
@@ -224,7 +230,7 @@ text \<open>We proceed to give code equations for operations involving both
   operators (cblinfun) and vectors. As explained above, we have to restrict
   the equations to vectors of type \<^typ>\<open>'a ell2\<close> even though the theory is available
   for any type of class \<^class>\<open>onb_enum\<close>. As a consequence, we run into an
-  addition technicality now. For example, to define a code equation for applying
+  additional technicality now. For example, to define a code equation for applying
   an operator to a vector, we might try to give the following lemma:
 
 \<^theory_text>\<open>lemma cblinfun_apply_code[code]:
@@ -241,7 +247,7 @@ text \<open>We proceed to give code equations for operations involving both
   and we add code generation for \<open>cblinfun_apply_code\<close> instead of \<^term>\<open>(*\<^sub>V)\<close>.
 \<close>
 
-
+(* TODO rename \<rightarrow> cblinfun_apply_ell2 *)
 definition cblinfun_apply_code :: "'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2 \<Rightarrow> 'a ell2 \<Rightarrow> 'b ell2" 
   where [code del, code_abbrev]: "cblinfun_apply_code = (*\<^sub>V)"
     \<comment> \<open>@{attribute code_abbrev} instructs the code generation to replace the

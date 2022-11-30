@@ -182,6 +182,7 @@ lemma cscalar_prod_vec_of_basis_enum: "cscalar_prod (vec_of_basis_enum \<phi>) (
   apply (subst cinner_basis_enum_of_vec[symmetric, where 'a='a])
   by simp_all
 
+(* TODO: Introduce a definition for the rhs. (i.e., norm on vec's) *)
 lemma norm_ell2_vec_of_basis_enum: "norm \<psi> =
   (let \<psi>' = vec_of_basis_enum \<psi> in
     sqrt (\<Sum> i \<in> {0 ..< dim_vec \<psi>'}. let z = vec_index \<psi>' i in (Re z)\<^sup>2 + (Im z)\<^sup>2))"
