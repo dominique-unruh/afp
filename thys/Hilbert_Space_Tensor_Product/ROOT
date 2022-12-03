@@ -1,7 +1,7 @@
 session Tensor_Product = Complex_Bounded_Operators +
   options [quick_and_dirty = true, document = pdf, document_output = "output", 
            document_variants="document:outline=/proof,/ML"]
-  sessions Ordinary_Differential_Equations
+  sessions Ordinary_Differential_Equations Types_To_Sets_Extension
   theories Hilbert_Space_Tensor_Product Weak_Star_Topology
   document_files
     "root.tex" "root.bib"
