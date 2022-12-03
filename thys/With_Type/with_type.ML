@@ -180,7 +180,8 @@ fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
   val abs = Free("abs_" ^ typname, dummyT)
   val prop = Syntax_Trans.abs_tr [rep, Syntax_Trans.abs_tr [abs, prop]]
   val propT = (typ --> dummyT) --> (dummyT --> typ) --> HOLogic.boolT
-  val prop = Const(\<^syntax_const>\<open>_constrain\<close>, dummyT) $ prop $ Syntax_Phases.term_of_typ ctxt propT
+  (* The "Config.put show_sorts true" is necessary because otherwise "term_of_typ" ignores sorts. *)
+  val prop = Const(\<^syntax_const>\<open>_constrain\<close>, dummyT) $ prop $ Syntax_Phases.term_of_typ (Config.put show_sorts true ctxt) propT
   in Const(\<^const_name>\<open>with_type\<close>, dummyT) $ Const(#rep_class_data info, dummyT) $ 
         (Const(\<^const_name>\<open>Pair\<close>, dummyT) $ carrier $ ops) $ prop end
 
