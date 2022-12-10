@@ -287,6 +287,19 @@ lemma tensor_ell2_is_ortho_set:
    apply fast
   by (metis tensor_ell2_nonzero)
 
+lemma tensor_ell2_dense': \<open>ccspan {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B} = \<top>\<close> if \<open>ccspan A = \<top>\<close> and \<open>ccspan B = \<top>\<close>
+proof -
+  from that have Adense: \<open>closure (cspan A) = UNIV\<close>
+    apply (transfer' fixing: A)
+    by simp
+  from that have Bdense: \<open>closure (cspan B) = UNIV\<close>
+    apply (transfer' fixing: B)
+    by simp
+  show \<open>ccspan {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B} = \<top>\<close>
+    apply (transfer fixing: A B)
+    using Adense Bdense by (rule tensor_ell2_dense)
+qed
+
 lemma tensor_ell2_is_onb:
   assumes \<open>is_onb A\<close> \<open>is_onb B\<close>
   shows \<open>is_onb {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B}\<close>
@@ -294,21 +307,9 @@ proof (subst is_onb_def, intro conjI ballI)
   show \<open>is_ortho_set {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B}\<close>
     apply (rule tensor_ell2_is_ortho_set)
     using assms by (auto simp: is_onb_def)
-  from \<open>is_onb A\<close>
-  have \<open>ccspan A = \<top>\<close>
-    by (simp add: is_onb_def)
-  then have Adense: \<open>closure (cspan A) = UNIV\<close>
-    apply (transfer' fixing: A)
-    by simp
-  from \<open>is_onb B\<close>
-  have \<open>ccspan B = \<top>\<close>
-    by (simp add: is_onb_def)
-  then have Bdense: \<open>closure (cspan B) = UNIV\<close>
-    apply (transfer' fixing: B)
-    by simp
   show \<open>ccspan {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B} = \<top>\<close>
-    apply (transfer fixing: A B)
-    using Adense Bdense by (rule tensor_ell2_dense)
+    apply (rule tensor_ell2_dense')
+    using \<open>is_onb A\<close> \<open>is_onb B\<close> by (simp_all add: is_onb_def)
   show \<open>ab \<in> {a \<otimes>\<^sub>s b |a b. a \<in> A \<and> b \<in> B} \<Longrightarrow> norm ab = 1\<close> for ab
     using \<open>is_onb A\<close> \<open>is_onb B\<close> by (auto simp: is_onb_def norm_tensor_ell2)
 qed
@@ -1443,6 +1444,43 @@ proof -
   qed
 qed
 
+subsection \<open>Tensor product of subspaces\<close>
 
+definition tensor_ccsubspace (infixr "\<otimes>\<^sub>S" 70) where
+  \<open>tensor_ccsubspace A B = ccspan {\<psi> \<otimes>\<^sub>s \<phi> | \<psi> \<phi>. \<psi> \<in> space_as_set A \<and> \<phi> \<in> space_as_set B}\<close>
+
+(* TODO move to BO next to cblinfun_image_ccspan; if keep *)
+lemma cblinfun_image_def2: \<open>A *\<^sub>S S = ccspan ((*\<^sub>V) A ` space_as_set S)\<close>
+  apply (simp add: flip: cblinfun_image_ccspan)
+  by (metis ccspan_leqI ccspan_superset less_eq_ccsubspace.rep_eq order_class.order_eq_iff)
+
+(* TODO move to BO*)
+lemma ccspan_UNIV[simp]: \<open>ccspan UNIV = \<top>\<close>
+  by (simp add: ccspan.abs_eq top_ccsubspace_def)
+
+lemma tensor_ccsubspace_via_Proj: \<open>A \<otimes>\<^sub>S B = (Proj A \<otimes>\<^sub>o Proj B) *\<^sub>S \<top>\<close>
+proof (rule antisym)
+  have \<open>\<psi> \<otimes>\<^sub>s \<phi> \<in> space_as_set ((Proj A \<otimes>\<^sub>o Proj B) *\<^sub>S \<top>)\<close> if \<open>\<psi> \<in> space_as_set A\<close> and \<open>\<phi> \<in> space_as_set B\<close> for \<psi> \<phi>
+    by (metis Proj_fixes_image cblinfun_apply_in_image tensor_op_ell2 that(1) that(2))
+  then show \<open>A \<otimes>\<^sub>S B \<le> (Proj A \<otimes>\<^sub>o Proj B) *\<^sub>S \<top>\<close>
+    by (auto intro!: ccspan_leqI simp: tensor_ccsubspace_def)
+  have *: \<open>ccspan {\<psi> \<otimes>\<^sub>s \<phi> | (\<psi>::'a ell2) (\<phi>::'b ell2). True} = \<top>\<close>
+    using tensor_ell2_dense'[where A=\<open>UNIV :: 'a ell2 set\<close> and B=\<open>UNIV :: 'b ell2 set\<close>]
+    by auto
+  have \<open>(Proj A \<otimes>\<^sub>o Proj B) *\<^sub>V \<psi> \<otimes>\<^sub>s \<phi> \<in> space_as_set (A \<otimes>\<^sub>S B)\<close> for \<psi> \<phi>
+    apply (simp add: tensor_op_ell2 tensor_ccsubspace_def)
+    by (smt (verit) Proj_range cblinfun_apply_in_image ccspan_superset ctr_simps_mem_Collect_eq subsetD)
+  then show \<open>(Proj A \<otimes>\<^sub>o Proj B) *\<^sub>S \<top> \<le> A \<otimes>\<^sub>S B\<close>
+    by (auto intro!: ccspan_leqI simp: cblinfun_image_ccspan simp flip: *)
+qed
+
+lemma tensor_ccsubspace_top[simp]: \<open>\<top> \<otimes>\<^sub>S \<top> = \<top>\<close>
+  by (simp add: tensor_ccsubspace_via_Proj)
+
+lemma tensor_ccsubspace_0_left[simp]: \<open>0 \<otimes>\<^sub>S X = 0\<close>
+  by (simp add: tensor_ccsubspace_via_Proj)
+
+lemma tensor_ccsubspace_0_right[simp]: \<open>X \<otimes>\<^sub>S 0 = 0\<close>
+  by (simp add: tensor_ccsubspace_via_Proj)
 
 end
