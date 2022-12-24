@@ -3,8 +3,6 @@ theory Misc_Tensor_Product_TTS
     Complex_Bounded_Operators.Complex_Bounded_Linear_Function
     Misc_Tensor_Product
     Misc_Tensor_Product_BO
-    "Conditional_Transfer_Rule.CTR"
-
 begin
 
 unbundle lattice_syntax
@@ -19,6 +17,8 @@ attribute_setup axiom = \<open>Scan.lift Parse.name_position >> (fn name_pos => 
   \<open>Retrieve an axiom by name. E.g., write @{thm [source] [[axiom HOL.refl]]}.\<close>
 
 subsection \<open>Auxiliary lemmas\<close>
+
+named_theorems unoverload_def
 
 locale local_typedef = fixes S ::"'b set" and s::"'s itself"
   assumes Ex_type_definition_S: "\<exists>(Rep::'s \<Rightarrow> 'b) (Abs::'b \<Rightarrow> 's). type_definition Rep Abs S"
@@ -209,7 +209,7 @@ lemma semigroup_ow_typeclass[simp, iff]: \<open>semigroup_ow V (+)\<close>
   if \<open>\<And>x y. x\<in>V \<Longrightarrow> y\<in>V \<Longrightarrow> x + y \<in> V\<close> for V :: \<open>'a :: semigroup_add set\<close>
   by (auto intro!: plus_ow.intro semigroup_ow.intro semigroup_ow_axioms.intro simp: Groups.add_ac that)
 
-lemma class_semigroup_add_ud[ud_with]: \<open>class.semigroup_add = semigroup_ow UNIV\<close>
+lemma class_semigroup_add_ud[unoverload_def]: \<open>class.semigroup_add = semigroup_ow UNIV\<close>
   by (auto intro!: ext plus_ow.intro simp: class.semigroup_add_def semigroup_ow_def semigroup_ow_axioms_def)
 
 subsection \<open>\<^locale>\<open>abel_semigroup\<close>\<close>
@@ -217,13 +217,19 @@ subsection \<open>\<^locale>\<open>abel_semigroup\<close>\<close>
 locale abel_semigroup_ow = semigroup_ow U plus for U plus +
   assumes \<open>\<forall>x\<in>U. \<forall>y\<in>U. plus x y = plus y x\<close>
 
-ctr parametricity in abel_semigroup_ow_def[unfolded abel_semigroup_ow_axioms_def make_parametricity_proof_friendly]
+lemma abel_semigroup_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (A ===> A ===> A) ===> (=))
+     abel_semigroup_ow abel_semigroup_ow\<close>
+  unfolding abel_semigroup_ow_def abel_semigroup_ow_axioms_def make_parametricity_proof_friendly
+  by transfer_prover
 
 lemma abel_semigroup_ow_typeclass[simp, iff]: \<open>abel_semigroup_ow V (+)\<close>
   if \<open>\<And>x y. x\<in>V \<Longrightarrow> y\<in>V \<Longrightarrow> x + y \<in> V\<close> for V :: \<open>'a :: ab_semigroup_add set\<close>
   by (auto simp: abel_semigroup_ow_def abel_semigroup_ow_axioms_def Groups.add_ac that)
 
-lemma class_ab_semigroup_add_ud[ud_with]: \<open>class.ab_semigroup_add = abel_semigroup_ow UNIV\<close>
+lemma class_ab_semigroup_add_ud[unoverload_def]: \<open>class.ab_semigroup_add = abel_semigroup_ow UNIV\<close>
   by (auto intro!: ext simp: class.ab_semigroup_add_def abel_semigroup_ow_def 
       class_semigroup_add_ud abel_semigroup_ow_axioms_def class.ab_semigroup_add_axioms_def)
 
@@ -234,13 +240,19 @@ locale comm_monoid_ow = abel_semigroup_ow U plus for U plus +
   assumes \<open>zero \<in> U\<close>
   assumes \<open>\<forall>x\<in>U. plus x zero = x\<close>
 
-ctr parametricity in comm_monoid_ow_def[unfolded comm_monoid_ow_axioms_def make_parametricity_proof_friendly]
+lemma comm_monoid_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (A ===> A ===> A) ===> A ===> (=))
+     comm_monoid_ow comm_monoid_ow\<close>
+  unfolding comm_monoid_ow_def comm_monoid_ow_axioms_def make_parametricity_proof_friendly
+  by transfer_prover
 
 lemma comm_monoid_ow_typeclass[simp, iff]: \<open>comm_monoid_ow V (+) 0\<close>
   if \<open>0 \<in> V\<close> and \<open>\<And>x y. x\<in>V \<Longrightarrow> y\<in>V \<Longrightarrow> x + y \<in> V\<close> for V :: \<open>'a :: comm_monoid_add set\<close>
   by (auto simp: comm_monoid_ow_def comm_monoid_ow_axioms_def that)
 
-lemma class_comm_monoid_add_ud[ud_with]: \<open>class.comm_monoid_add = comm_monoid_ow UNIV\<close>
+lemma class_comm_monoid_add_ud[unoverload_def]: \<open>class.comm_monoid_add = comm_monoid_ow UNIV\<close>
   apply (auto intro!: ext simp: class.comm_monoid_add_def comm_monoid_ow_def
       class_ab_semigroup_add_ud class.comm_monoid_add_axioms_def comm_monoid_ow_axioms_def)
   by (simp_all add: abel_semigroup_ow_def abel_semigroup_ow_axioms_def)
@@ -261,24 +273,11 @@ lemma topological_space_ow_parametricity[transfer_rule]:
   unfolding topological_space_ow_def make_parametricity_proof_friendly
   by transfer_prover
 
-lemma class_topological_space_ud[ud_with]: \<open>class.topological_space = topological_space_ow UNIV\<close>
+lemma class_topological_space_ud[unoverload_def]: \<open>class.topological_space = topological_space_ow UNIV\<close>
   by (auto intro!: ext simp: class.topological_space_def topological_space_ow_def)
 
 lemma topological_space_ow_from_topology[simp]: \<open>topological_space_ow (topspace T) (openin T)\<close>
   by (auto intro!: topological_space_ow.intro)
-
-(* subsection \<open>\<^class>\<open>comm_monoid_add\<close>\<close>
-
-ctr parametricity in comm_monoid_add_ow_def[unfolded SML_Monoids.comm_monoid_add_ow_axioms_def make_parametricity_proof_friendly]
-
-declare SML_Monoids.comm_monoid_add_ow[ud_with]
-
-lemma comm_monoid_add_ow_typeclass[simp]: 
-  \<open>comm_monoid_add_ow V (+) 0\<close> 
-  if \<open>0 \<in> V\<close> \<open>\<forall>x\<in>V. \<forall>y\<in>V. x + y \<in> V\<close>
-  for V :: \<open>_ :: comm_monoid_add set\<close>
-  using that by (auto intro!: comm_monoid_add_ow.intro ab_semigroup_add_ow_typeclass
-      zero_ow.intro comm_monoid_add_ow_axioms.intro) *)
 
 subsection \<open>\<^const>\<open>sum\<close>\<close>
 
@@ -312,13 +311,13 @@ proof -
     using that by (auto simp add: the_default_The eq_fold Finite_Set.fold_def)
 qed
 
-lemma sum_ud[ud_with]: \<open>sum = sum_ow 0 plus\<close>
+lemma sum_ud[unoverload_def]: \<open>sum = sum_ow 0 plus\<close>
   apply (auto intro!: ext simp: sum_def sum_ow_def comm_monoid_set.F_via_the_default)
    apply (subst comm_monoid_set.F_via_the_default)
     apply (auto simp add: sum.comm_monoid_set_axioms)
   by (metis comm_monoid_add_class.sum_def sum.infinite)
 
-(* declare sum_with[ud_with del] *)
+(* declare sum_with[unoverload_def del] *)
 
 subsection \<open>\<^class>\<open>t2_space\<close>\<close>
 
@@ -333,10 +332,7 @@ lemma t2_space_ow_parametric[transfer_rule]:
   unfolding t2_space_ow_def t2_space_ow_axioms_def make_parametricity_proof_friendly
   by transfer_prover
 
-
-ctr parametricity in t2_space_ow_def[unfolded t2_space_ow_axioms_def make_parametricity_proof_friendly]
-
-lemma class_t2_space_ud[ud_with]: \<open>class.t2_space = t2_space_ow UNIV\<close>
+lemma class_t2_space_ud[unoverload_def]: \<open>class.t2_space = t2_space_ow UNIV\<close>
   by (auto intro!: ext simp: class.t2_space_def class.t2_space_axioms_def t2_space_ow_def
       t2_space_ow_axioms_def class_topological_space_ud)
 
@@ -351,7 +347,7 @@ definition continuous_on_ow where \<open>continuous_on_ow A B opnA opnB s f
   \<longleftrightarrow> (\<forall>U\<subseteq>B. opnB U \<longrightarrow> (\<exists>V\<subseteq>A. opnA V \<and> (V \<inter> s) = (f -` U) \<inter> s))\<close>
   for f :: \<open>'a \<Rightarrow> 'b\<close>
 
-lemma continuous_on_ud[ud_with]: \<open>continuous_on s f \<longleftrightarrow> continuous_on_ow UNIV UNIV open open s f\<close>
+lemma continuous_on_ud[unoverload_def]: \<open>continuous_on s f \<longleftrightarrow> continuous_on_ow UNIV UNIV open open s f\<close>
   for f :: \<open>'a::topological_space \<Rightarrow> 'b::topological_space\<close>
   unfolding continuous_on_ow_def continuous_on_open_invariant by auto
 
@@ -372,7 +368,13 @@ locale scaleR_ow =
 lemma scaleR_ow_typeclass[simp]: \<open>scaleR_ow UNIV scaleR\<close> for scaleR
   by (simp add: scaleR_ow_def)
 
-ctr parametricity in scaleR_ow_def
+lemma scaleR_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> ((=) ===> A ===> A) ===> (=))
+     scaleR_ow scaleR_ow\<close>
+  unfolding scaleR_ow_def make_parametricity_proof_friendly
+  by transfer_prover
 
 subsection \<open>\<^class>\<open>scaleC\<close>\<close>
 
@@ -381,14 +383,15 @@ locale scaleC_ow = scaleR_ow +
   assumes scaleC_closed: \<open>\<forall>a\<in>U. scaleC c a \<in> U\<close>
   assumes \<open>\<forall>a\<in>U. scaleR r a = scaleC (complex_of_real r) a\<close>
 
-(* `ctr parametricity scaleC_ow_def` doesn't find this rule *)
-ctr relativization
-synthesis ctr_blank
-assumes [transfer_rule]: \<open>bi_unique A\<close>
-trp (?'a A)
-in scaleC_ow_def[unfolded scaleC_ow_axioms_def]
+lemma scaleC_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> ((=) ===> A ===> A) ===> ((=) ===> A ===> A) ===> (=))
+     scaleC_ow scaleC_ow\<close>
+  unfolding scaleC_ow_def scaleC_ow_axioms_def make_parametricity_proof_friendly
+  by transfer_prover
 
-lemma class_scaleC_ud[ud_with]: \<open>class.scaleC = scaleC_ow UNIV\<close>
+lemma class_scaleC_ud[unoverload_def]: \<open>class.scaleC = scaleC_ow UNIV\<close>
   by (auto intro!: ext simp: class.scaleC_def scaleC_ow_def scaleR_ow_def scaleC_ow_axioms_def)
 
 subsection \<open>\<^class>\<open>ab_group_add\<close>\<close>
@@ -418,7 +421,7 @@ lemma ab_group_add_ow_typeclass[simp]:
       minus_ow.intro uminus_ow.intro)
   by force
 
-lemma class_ab_group_add_ud[ud_with]: \<open>class.ab_group_add = ab_group_add_ow UNIV\<close>
+lemma class_ab_group_add_ud[unoverload_def]: \<open>class.ab_group_add = ab_group_add_ow UNIV\<close>
   by (auto intro!: ext simp: class.ab_group_add_def ab_group_add_ow_def class_comm_monoid_add_ud
       minus_ow_def uminus_ow_def ab_group_add_ow_axioms_def class.ab_group_add_axioms_def)
 
@@ -449,9 +452,16 @@ subsection \<open>\<^class>\<open>complex_vector\<close>\<close>
 locale complex_vector_ow = vector_space_ow U plus zero minus uminus scaleC + scaleC_ow U scaleR scaleC
   for U scaleR scaleC plus zero minus uminus
 
-ctr parametricity in complex_vector_ow_def
+lemma complex_vector_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> ((=) ===> A ===> A) ===> ((=) ===> A ===> A) ===> (A ===> A ===> A) ===>
+     A ===> (A ===> A ===> A) ===> (A ===> A) ===> (=))
+     complex_vector_ow complex_vector_ow\<close>
+  unfolding complex_vector_ow_def make_parametricity_proof_friendly
+  by transfer_prover
 
-lemma class_complex_vector_ud[ud_with]: \<open>class.complex_vector = complex_vector_ow UNIV\<close>
+lemma class_complex_vector_ud[unoverload_def]: \<open>class.complex_vector = complex_vector_ow UNIV\<close>
   by (auto intro!: ext simp: class.complex_vector_def vector_space_ow_def vector_space_ow_axioms_def
       class.complex_vector_axioms_def class.scaleC_def complex_vector_ow_def
       class_scaleC_ud class_ab_group_add_ud)
@@ -477,9 +487,15 @@ locale open_uniformity_ow = "open" "open" + uniformity uniformity
   assumes open_uniformity:
     "\<And>U. U \<subseteq> A \<Longrightarrow> open U \<longleftrightarrow> (\<forall>x\<in>U. eventually (\<lambda>(x', y). x' = x \<longrightarrow> y \<in> U) uniformity)"
 
-ctr parametricity in open_uniformity_ow_def[simplified make_parametricity_proof_friendly]
+lemma open_uniformity_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (rel_set A ===> (=)) ===> rel_filter (rel_prod A A) ===> (=)) 
+     open_uniformity_ow open_uniformity_ow\<close>
+  unfolding open_uniformity_ow_def make_parametricity_proof_friendly
+  by transfer_prover
 
-lemma class_open_uniformity_ud[ud_with]: \<open>class.open_uniformity = open_uniformity_ow UNIV\<close>
+lemma class_open_uniformity_ud[unoverload_def]: \<open>class.open_uniformity = open_uniformity_ow UNIV\<close>
   by (auto intro!: ext simp: class.open_uniformity_def open_uniformity_ow_def)
 
 lemma open_uniformity_on_typeclass[simp]: 
@@ -536,7 +552,7 @@ subsection \<open>\<^class>\<open>uniformity_dist\<close>\<close>
 locale uniformity_dist_ow = dist dist + uniformity uniformity for U dist uniformity +
   assumes uniformity_dist: "uniformity = (\<Sqinter>e\<in>{0<..}. principal {(x, y)\<in>U\<times>U. dist x y < e})"
 
-lemma class_uniformity_dist_ud[ud_with]: \<open>class.uniformity_dist = uniformity_dist_ow UNIV\<close>
+lemma class_uniformity_dist_ud[unoverload_def]: \<open>class.uniformity_dist = uniformity_dist_ow UNIV\<close>
   by (auto intro!: ext simp: class.uniformity_dist_def uniformity_dist_ow_def)
 
 lemma uniformity_dist_ow_parametric[transfer_rule]:
@@ -569,17 +585,29 @@ locale sgn_ow =
   fixes U and sgn :: \<open>'a \<Rightarrow> 'a\<close>
   assumes sgn_closed: \<open>\<forall>a\<in>U. sgn a \<in> U\<close>
 
-ctr parametricity in sgn_ow_def
+lemma sgn_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (A ===> A) ===> (=)) 
+     sgn_ow sgn_ow\<close>
+  unfolding sgn_ow_def
+  by transfer_prover
 
 subsection \<open>\<^class>\<open>sgn_div_norm\<close>\<close>
 
 locale sgn_div_norm_ow = scaleR_ow U scaleR + norm norm + sgn_ow U sgn for U sgn norm scaleR +
   assumes "\<forall>x\<in>U. sgn x = scaleR (inverse (norm x)) x"
 
-lemma class_sgn_div_norm_ud[ud_with]: \<open>class.sgn_div_norm = sgn_div_norm_ow UNIV\<close>
-  by (auto intro!: ext simp: class.sgn_div_norm_def sgn_div_norm_ow_def sgn_div_norm_ow_axioms_def ud_with sgn_ow_def)
+lemma class_sgn_div_norm_ud[unoverload_def]: \<open>class.sgn_div_norm = sgn_div_norm_ow UNIV\<close>
+  by (auto intro!: ext simp: class.sgn_div_norm_def sgn_div_norm_ow_def sgn_div_norm_ow_axioms_def unoverload_def sgn_ow_def)
 
-ctr parametricity in sgn_div_norm_ow_def[unfolded sgn_div_norm_ow_axioms_def]
+lemma sgn_div_norm_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (A ===> A) ===> (A ===> (=)) ===> ((=) ===> A ===> A) ===> (=)) 
+     sgn_div_norm_ow sgn_div_norm_ow\<close>
+  unfolding sgn_div_norm_ow_def sgn_div_norm_ow_axioms_def make_parametricity_proof_friendly
+  by transfer_prover
 
 lemma sgn_div_norm_on_typeclass[simp]: 
   fixes V :: \<open>_::sgn_div_norm set\<close>
@@ -593,11 +621,17 @@ subsection \<open>\<^class>\<open>dist_norm\<close>\<close>
 locale dist_norm_ow = dist dist + norm norm + minus_ow U minus for U minus dist norm +
   assumes dist_norm: "\<forall>x\<in>U. \<forall>y\<in>U. dist x y = norm (minus x y)"
 
-lemma dist_norm_ud[ud_with]: \<open>class.dist_norm = dist_norm_ow UNIV\<close>
+lemma dist_norm_ud[unoverload_def]: \<open>class.dist_norm = dist_norm_ow UNIV\<close>
   by (auto intro!: ext simp: class.dist_norm_def dist_norm_ow_def dist_norm_ow_axioms_def
-      minus_ow_def ud_with)
+      minus_ow_def unoverload_def)
 
-ctr parametricity in dist_norm_ow_def[unfolded dist_norm_ow_axioms_def]
+lemma dist_norm_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (A ===> A ===> A) ===> (A ===> A ===> (=)) ===> (A ===> (=)) ===> (=))
+     dist_norm_ow dist_norm_ow\<close>
+  unfolding dist_norm_ow_def dist_norm_ow_axioms_def make_parametricity_proof_friendly
+  by transfer_prover
 
 lemma dist_norm_ow_typeclass[simp]: 
   fixes A :: \<open>_::dist_norm set\<close>
@@ -620,12 +654,9 @@ locale complex_inner_ow = complex_vector_ow U scaleR scaleC plus zero minus umin
     and "\<forall>x\<in>U. cinner x x = 0 \<longleftrightarrow> x = zero"
     and "\<forall>x\<in>U. norm x = sqrt (cmod (cinner x x))"
 
-lemma class_complex_inner_ud[ud_with]: \<open>class.complex_inner = complex_inner_ow UNIV\<close>
+lemma class_complex_inner_ud[unoverload_def]: \<open>class.complex_inner = complex_inner_ow UNIV\<close>
   apply (intro ext)
-  by (simp add: class.complex_inner_def class.complex_inner_axioms_def complex_inner_ow_def complex_inner_ow_axioms_def ud_with)
-
-(* Does not manage *)
-(* ctr parametricity in complex_inner_ow_def[unfolded complex_inner_ow_axioms_def] *)
+  by (simp add: class.complex_inner_def class.complex_inner_axioms_def complex_inner_ow_def complex_inner_ow_axioms_def unoverload_def)
 
 lemma complex_inner_ow_parametricity[transfer_rule]:
   includes lifting_syntax
@@ -653,9 +684,15 @@ definition is_ortho_set_ow where \<open>is_ortho_set_ow zero cinner S \<longleft
   ((\<forall>x\<in>S. \<forall>y\<in>S. x \<noteq> y \<longrightarrow> cinner x y = 0) \<and> zero \<notin> S)\<close>
   for zero cinner
 
-ctr parametricity in is_ortho_set_ow_def
+lemma is_ortho_set_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(A ===> (A ===> A ===> (=)) ===> rel_set A ===> (=))
+     is_ortho_set_ow is_ortho_set_ow\<close>
+  unfolding is_ortho_set_ow_def make_parametricity_proof_friendly
+  by transfer_prover
 
-lemma is_ortho_set_ud[ud_with]: \<open>is_ortho_set = is_ortho_set_ow 0 cinner\<close>
+lemma is_ortho_set_ud[unoverload_def]: \<open>is_ortho_set = is_ortho_set_ow 0 cinner\<close>
   by (auto simp: is_ortho_set_ow_def is_ortho_set_def)
 
 subsection \<open>\<^class>\<open>metric_space\<close>\<close>
@@ -665,10 +702,17 @@ locale metric_space_ow = uniformity_dist_ow U dist uniformity + open_uniformity_
   assumes "\<forall>x \<in> U. \<forall>y \<in> U. dist x y = 0 \<longleftrightarrow> x = y"
     and "\<forall>x\<in>U. \<forall>y\<in>U. \<forall>z\<in>U. dist x y \<le> dist x z + dist y z"
 
-ctr parametricity in metric_space_ow_def[unfolded metric_space_ow_axioms_def]
+lemma metric_space_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (A ===> A ===> (=)) ===> rel_filter (rel_prod A A) ===>
+            (rel_set A ===> (=)) ===> (=))
+     metric_space_ow metric_space_ow\<close>
+  unfolding metric_space_ow_def metric_space_ow_axioms_def make_parametricity_proof_friendly
+  by transfer_prover
 
-lemma class_metric_space_ud[ud_with]: \<open>class.metric_space = metric_space_ow UNIV\<close>
-  by (auto intro!: ext simp: class.metric_space_def class.metric_space_axioms_def metric_space_ow_def metric_space_ow_axioms_def ud_with)
+lemma class_metric_space_ud[unoverload_def]: \<open>class.metric_space = metric_space_ow UNIV\<close>
+  by (auto intro!: ext simp: class.metric_space_def class.metric_space_axioms_def metric_space_ow_def metric_space_ow_axioms_def unoverload_def)
 
 lemma metric_space_ow_typeclass[simp]:
   fixes V :: \<open>_::metric_space set\<close>
@@ -681,12 +725,18 @@ subsection \<open>\<^const>\<open>nhds\<close>\<close>
 definition nhds_ow where \<open>nhds_ow U open a = (INF S\<in>{S. S \<subseteq> U \<and> open S \<and> a \<in> S}. principal S) \<sqinter> principal U\<close>
   for U "open"
 
-ctr parametricity in nhds_ow_def[folded transfer_bounded_filter_Inf_def, unfolded make_parametricity_proof_friendly]
+lemma nhds_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (rel_set A ===> (=)) ===> A ===> rel_filter A) 
+     nhds_ow nhds_ow\<close>
+  unfolding nhds_ow_def[folded transfer_bounded_filter_Inf_def] make_parametricity_proof_friendly
+  by transfer_prover
 
-lemma topological_space_nhds_ud[ud_with]: \<open>topological_space.nhds = nhds_ow UNIV\<close>
+lemma topological_space_nhds_ud[unoverload_def]: \<open>topological_space.nhds = nhds_ow UNIV\<close>
   by (auto intro!: ext simp add: nhds_ow_def [[axiom topological_space.nhds_def_raw]])
 
-lemma nhds_ud[ud_with]: \<open>nhds = nhds_ow UNIV open\<close>
+lemma nhds_ud[unoverload_def]: \<open>nhds = nhds_ow UNIV open\<close>
   by (auto intro!: ext simp add: nhds_ow_def nhds_def)
 
 lemma nhds_ow_topology[simp]: \<open>nhds_ow (topspace T) (openin T) x = nhdsin T x\<close> if \<open>x \<in> topspace T\<close>
@@ -707,8 +757,8 @@ lemma at_within_ow_parametric[transfer_rule]:
   unfolding at_within_ow_def make_parametricity_proof_friendly transfer_inf_principal_def[symmetric]
   by transfer_prover
 
-lemma at_within_ud[ud_with]: \<open>at_within = at_within_ow UNIV open\<close>
-  by (auto intro!: ext simp: at_within_def at_within_ow_def ud_with)
+lemma at_within_ud[unoverload_def]: \<open>at_within = at_within_ow UNIV open\<close>
+  by (auto intro!: ext simp: at_within_def at_within_ow_def unoverload_def)
 
 lemma at_within_ow_topology:
   \<open>at_within_ow (topspace T) (openin T) a S = nhdsin T a \<sqinter> principal (S - {a})\<close> 
@@ -731,8 +781,8 @@ lemma has_sum_ow_parametric[transfer_rule]:
   unfolding has_sum_ow_def
   by transfer_prover
 
-lemma has_sum_ud[ud_with]: \<open>has_sum = has_sum_ow UNIV plus (0::'a::{comm_monoid_add,topological_space}) open\<close>
-  by (auto intro!: ext simp: has_sum_def has_sum_ow_def ud_with)
+lemma has_sum_ud[unoverload_def]: \<open>has_sum = has_sum_ow UNIV plus (0::'a::{comm_monoid_add,topological_space}) open\<close>
+  by (auto intro!: ext simp: has_sum_def has_sum_ow_def unoverload_def)
 
 lemma has_sum_ow_topology:
   assumes \<open>l \<in> topspace T\<close>
@@ -750,8 +800,6 @@ definition convergent_ow where
   \<open>convergent_ow U open X \<longleftrightarrow> (\<exists>L\<in>U. filterlim X (nhds_ow U open L) sequentially)\<close>
 for U "open"
 
-(* ctr parametricity in convergent_ow_def *)
-
 lemma convergent_ow_parametric[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: \<open>bi_unique T\<close>
@@ -760,12 +808,12 @@ lemma convergent_ow_parametric[transfer_rule]:
   unfolding convergent_ow_def
   by transfer_prover
 
-lemma convergent_ud[ud_with]: \<open>convergent = convergent_ow UNIV open\<close>
-  by (auto simp: convergent_ow_def[abs_def] convergent_def[abs_def] ud_with)
+lemma convergent_ud[unoverload_def]: \<open>convergent = convergent_ow UNIV open\<close>
+  by (auto simp: convergent_ow_def[abs_def] convergent_def[abs_def] unoverload_def)
 
-lemma topological_space_convergent_ud[ud_with]: \<open>topological_space.convergent = convergent_ow UNIV\<close>
+lemma topological_space_convergent_ud[unoverload_def]: \<open>topological_space.convergent = convergent_ow UNIV\<close>
   by (auto intro!: ext simp: [[axiom topological_space.convergent_def_raw]]
-      convergent_ow_def ud_with)
+      convergent_ow_def unoverload_def)
 
 lemma convergent_ow_topology[simp]:
   \<open>convergent_ow (topspace T) (openin T) f \<longleftrightarrow> (\<exists>l. limitin T f l sequentially)\<close>
@@ -777,8 +825,6 @@ lemma convergent_ow_typeclass[simp]:
 
 subsection \<open>\<^const>\<open>uniform_space.cauchy_filter\<close>\<close>
 
-(* ctr parametricity in [[axiom uniform_space.cauchy_filter_def_raw, where ?'a='a]] *)
-
 lemma cauchy_filter_parametric[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: "bi_unique T"
@@ -789,8 +835,6 @@ lemma cauchy_filter_parametric[transfer_rule]:
   by transfer_prover
 
 subsection \<open>\<^const>\<open>uniform_space.Cauchy\<close>\<close>
-
-(* ctr parametricity in [[axiom uniform_space.Cauchy_uniform_raw, where ?'a='a]] *)
 
 lemma uniform_space_Cauchy_parametric[transfer_rule]:
   includes lifting_syntax
@@ -808,11 +852,8 @@ locale complete_space_ow = metric_space_ow U dist uniformity "open"
   for U dist uniformity "open" +
   assumes \<open>range X \<subseteq> U \<longrightarrow> uniform_space.Cauchy uniformity X \<longrightarrow> convergent_ow U open X\<close>
 
-lemma class_complete_space_ud[ud_with]: \<open>class.complete_space = complete_space_ow UNIV\<close>
-  by (auto intro!: ext simp: class.complete_space_def class.complete_space_axioms_def complete_space_ow_def complete_space_ow_axioms_def ud_with)
-
-(* Not good enough *)
-(* ctr parametricity in complete_space_ow_def[unfolded make_parametricity_proof_friendly transfer_ball_range_def[symmetric]] *)
+lemma class_complete_space_ud[unoverload_def]: \<open>class.complete_space = complete_space_ow UNIV\<close>
+  by (auto intro!: ext simp: class.complete_space_def class.complete_space_axioms_def complete_space_ow_def complete_space_ow_axioms_def unoverload_def)
 
 lemma complete_space_ow_parametric[transfer_rule]:
   includes lifting_syntax
@@ -855,7 +896,15 @@ subsection \<open>\<^class>\<open>chilbert_space\<close>\<close>
 
 locale chilbert_space_ow = complex_inner_ow + complete_space_ow
 
-ctr parametricity in chilbert_space_ow_def
+lemma chilbert_space_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> ((=) ===> A ===> A) ===> ((=) ===> A ===> A) ===> (A ===> A ===> A) ===>
+     A ===> (A ===> A ===> A) ===> (A ===> A) ===> (A ===> A ===> (=)) ===> (A ===> (=)) ===>
+     (A ===> A) ===> rel_filter (rel_prod A A) ===> (rel_set A ===> (=)) ===> (A ===> A ===> (=)) ===> (=))
+     chilbert_space_ow chilbert_space_ow\<close>
+  unfolding chilbert_space_ow_def make_parametricity_proof_friendly
+  by transfer_prover
 
 lemma chilbert_space_on_typeclass[simp]:
   fixes V :: \<open>_::complex_inner set\<close>
@@ -865,9 +914,9 @@ lemma chilbert_space_on_typeclass[simp]:
   by (auto intro!: chilbert_space_ow.intro complex_inner_ow_typeclass
       simp: assms complete_imp_closed)
 
-lemma class_chilbert_space_ud[ud_with]:
+lemma class_chilbert_space_ud[unoverload_def]:
   \<open>class.chilbert_space = chilbert_space_ow UNIV\<close>
-  by (auto intro!: ext simp add: class.chilbert_space_def chilbert_space_ow_def ud_with)
+  by (auto intro!: ext simp add: class.chilbert_space_def chilbert_space_ow_def unoverload_def)
 
 subsection \<open>\<^const>\<open>hull\<close>\<close>
 
@@ -906,7 +955,7 @@ proof -
     by transfer_prover      
 qed
 
-lemma hull_ow_ud[ud_with]: \<open>(hull) = hull_ow UNIV\<close>
+lemma hull_ow_ud[unoverload_def]: \<open>(hull) = hull_ow UNIV\<close>
   unfolding hull_def hull_ow_def by auto
 
 subsection \<open>\<^const>\<open>csubspace\<close>\<close>
@@ -923,10 +972,10 @@ lemma subspace_ow_parametric[transfer_rule]:
   unfolding subspace_ow_def
   by transfer_prover
 
-lemma module_subspace_ud[ud_with]: \<open>module.subspace = subspace_ow plus 0\<close>
+lemma module_subspace_ud[unoverload_def]: \<open>module.subspace = subspace_ow plus 0\<close>
   by (auto intro!: ext simp: [[axiom module.subspace_def_raw]] subspace_ow_def)
 
-lemma csubspace_ud[ud_with]: \<open>csubspace = subspace_ow (+) 0 (*\<^sub>C)\<close>
+lemma csubspace_ud[unoverload_def]: \<open>csubspace = subspace_ow (+) 0 (*\<^sub>C)\<close>
   by (simp add: csubspace_raw_def module_subspace_ud)
 
 subsection \<open>\<^const>\<open>cspan\<close>\<close>
@@ -952,11 +1001,11 @@ proof -
     by -
 qed
 
-lemma (in module) span_ud[ud_with]: \<open>span = span_ow UNIV plus 0 scale\<close>
+lemma (in module) span_ud[unoverload_def]: \<open>span = span_ow UNIV plus 0 scale\<close>
   by (auto intro!: ext simp: span_def span_ow_def
       module_subspace_ud hull_ow_ud)
 
-lemmas cspan_ud[ud_with] = complex_vector.span_ud
+lemmas cspan_ud[unoverload_def] = complex_vector.span_ud
 
 lemma span_ow_parametric[transfer_rule]:
   includes lifting_syntax
@@ -1014,7 +1063,7 @@ lemma closure_ow_from_topology: \<open>closure_ow (topspace T) (openin T) S = T 
   apply (meson in_closure_of islimptin_def)
   by (metis islimptin_def)
 
-lemma closure_ud[ud_with]: \<open>closure = closure_ow UNIV open\<close>
+lemma closure_ud[unoverload_def]: \<open>closure = closure_ow UNIV open\<close>
   unfolding closure_def closure_ow_def islimpt_def islimpt_ow_def by auto
 
 subsection \<open>\<^const>\<open>continuous\<close>\<close>
@@ -1023,8 +1072,8 @@ lemma continuous_on_ow_from_topology: \<open>continuous_on_ow (topspace T) (tops
   if \<open>f ` topspace T \<subseteq> topspace U\<close>
   apply (simp add: continuous_on_ow_def continuous_map_def)
   apply safe
-  apply (meson image_subset_iff that)
-  apply (smt (verit) Collect_mono_iff Int_def ctr_simps_mem_Collect_eq inf_absorb1 openin_subopen openin_subset vimage_eq)
+    apply (meson image_subset_iff that)
+   apply (smt (verit) Collect_mono_iff Int_def inf_absorb1 mem_Collect_eq openin_subopen openin_subset vimage_eq)
   by blast
 
 subsection \<open>\<^const>\<open>is_onb\<close>\<close>
@@ -1034,14 +1083,24 @@ definition
     closure_ow U open (span_ow U plus zero scaleC E) = U\<close>
   for U scaleC plus zero norm "open" cinner
 
-ctr parametricity in is_onb_ow_def
+lemma is_onb_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===>
+     ((=) ===> A ===> A) ===>
+     (A ===> A ===> A) ===>
+     A ===>
+     (A ===> (=)) ===> (rel_set A ===> (=)) ===> (A ===> A ===> (=)) ===> rel_set A ===> (=))
+     is_onb_ow is_onb_ow\<close>
+  unfolding is_onb_ow_def
+  by transfer_prover
 
-lemma is_onb_ud[ud_with]:
+lemma is_onb_ud[unoverload_def]:
   \<open>is_onb = is_onb_ow UNIV scaleC plus 0 norm open cinner\<close>
   unfolding is_onb_def is_onb_ow_def
   apply (subst asm_rl[of \<open>\<And>E. ccspan E = \<top> \<longleftrightarrow> closure (cspan E) = UNIV\<close>, rule_format])
    apply (transfer, rule)
-  unfolding ud_with
+  unfolding unoverload_def
   apply transfer by auto
 
 
@@ -1069,9 +1128,9 @@ proof -
       by unfold_locales
 
     note on_closure_eqI
-    note this[unfolded ud_with]
+    note this[unfolded unoverload_def]
     note this[unoverload_type 'b, unoverload_type 'a]
-    note this[unfolded ud_with]
+    note this[unfolded unoverload_def]
     note this[where 'a='t and 'b='u]
     note this[untransferred]
     note this[where f=f and g=g and S=\<open>S \<inter> topspace T\<close> and x=x and ?open="openin T" and opena=\<open>openin U\<close>]
@@ -1115,9 +1174,9 @@ proof -
       by unfold_locales
 
     note orthonormal_basis_exists
-    note this[unfolded ud_with]
+    note this[unfolded unoverload_def]
     note this[unoverload_type 'a]
-    note this[unfolded ud_with]
+    note this[unfolded unoverload_def]
     note this[where 'a='t]
     note this[untransferred]
     note this[where plus=plus and scaleC=scaleC and scaleR=scaleR and zero=0 and minus=minus
@@ -1134,7 +1193,7 @@ proof -
      S \<subseteq> B \<and> is_onb_ow (space_as_set V) (*\<^sub>C) (+) 0 norm (openin (top_of_set (space_as_set V))) (\<bullet>\<^sub>C) B\<close>
     apply (rule * )
     using \<open>S \<subseteq> space_as_set V\<close> \<open>is_ortho_set S\<close>
-    by (auto simp flip: ud_with
+    by (auto simp flip: unoverload_def
         intro!: complex_vector.subspace_scale real_vector.subspace_scale csubspace_is_subspace
         csubspace_nonempty complex_vector.subspace_add complex_vector.subspace_diff
         complex_vector.subspace_neg sgn_in_spaceI 1 norm)
@@ -1155,14 +1214,14 @@ proof -
     using closure_subset by blast
 
   from is_onb have \<open>is_ortho_set B\<close>
-    by (auto simp: is_onb_ow_def ud_with)
+    by (auto simp: is_onb_ow_def unoverload_def)
 
   moreover from is_onb have \<open>norm x = 1\<close> if \<open>x \<in> B\<close> for x
     by (auto simp: is_onb_ow_def that)
 
   moreover from is_onb have \<open>closure (cspan B) = space_as_set V\<close>
     by (simp add: is_onb_ow_def \<open>B \<subseteq> space_as_set V\<close>
-        closure_ow_with_typeclass span_ow_on_typeclass flip: ud_with)
+        closure_ow_with_typeclass span_ow_on_typeclass flip: unoverload_def)
   then have \<open>ccspan B = V\<close>
     by (simp add: ccspan.abs_eq space_as_set_inverse)
 
@@ -1198,10 +1257,10 @@ proof -
 
     note [[show_types]]
     note has_sum_comm_additive_general
-    note this[unfolded ud_with]
+    note this[unfolded unoverload_def]
     note this[unoverload_type 'b, unoverload_type 'c]
     note this[where 'b='t and 'c='u and 'a='a]
-    note this[unfolded ud_with]
+    note this[unfolded unoverload_def]
     thm this[no_vars]
     note this[untransferred]
     note this[where f=g and g=f' and zero=0 and zeroa=0 and plus=plus and plusa=plus

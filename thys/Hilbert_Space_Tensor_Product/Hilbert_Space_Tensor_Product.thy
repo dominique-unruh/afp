@@ -1469,7 +1469,7 @@ proof (rule antisym)
     by auto
   have \<open>(Proj A \<otimes>\<^sub>o Proj B) *\<^sub>V \<psi> \<otimes>\<^sub>s \<phi> \<in> space_as_set (A \<otimes>\<^sub>S B)\<close> for \<psi> \<phi>
     apply (simp add: tensor_op_ell2 tensor_ccsubspace_def)
-    by (smt (verit) Proj_range cblinfun_apply_in_image ccspan_superset ctr_simps_mem_Collect_eq subsetD)
+     by (smt (verit) Proj_range cblinfun_apply_in_image ccspan_superset mem_Collect_eq subsetD)
   then show \<open>(Proj A \<otimes>\<^sub>o Proj B) *\<^sub>S \<top> \<le> A \<otimes>\<^sub>S B\<close>
     by (auto intro!: ccspan_leqI simp: cblinfun_image_ccspan simp flip: *)
 qed
