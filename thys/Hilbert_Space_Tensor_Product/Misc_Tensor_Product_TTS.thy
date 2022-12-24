@@ -2,8 +2,8 @@ theory Misc_Tensor_Product_TTS
   imports
     Complex_Bounded_Operators.Complex_Bounded_Linear_Function
     Types_To_Sets_Extension.SML_Topological_Space
-    Types_To_Sets_Extension.SML_Groups
-    Types_To_Sets_Extension.VS_Vector_Spaces
+    (* Types_To_Sets_Extension.SML_Groups *)
+    (* Types_To_Sets_Extension.VS_Vector_Spaces *)
     Misc_Tensor_Product
     Misc_Tensor_Product_BO
 begin
@@ -162,48 +162,73 @@ lemma make_parametricity_proof_friendly:
 
 subsection \<open>ETTS compatibility\<close>
 
-lemma [simp]: \<open>VS_Groups.semigroup_add_ow = SML_Semigroups.semigroup_add_ow\<close>
+(* lemma [simp]: \<open>VS_Groups.semigroup_add_ow = SML_Semigroups.semigroup_add_ow\<close>
   by (auto intro!: ext simp: SML_Semigroups.semigroup_add_ow_def VS_Groups.semigroup_add_ow_def
-      plus_ow_def semigroup_add_ow_axioms_def)
+      plus_ow_def semigroup_add_ow_axioms_def) *)
 
-lemma [simp]: \<open>VS_Groups.ab_semigroup_add_ow = SML_Semigroups.ab_semigroup_add_ow\<close>
+(* lemma [simp]: \<open>VS_Groups.ab_semigroup_add_ow = SML_Semigroups.ab_semigroup_add_ow\<close>
   by (auto intro!: ext simp: SML_Semigroups.ab_semigroup_add_ow_def VS_Groups.ab_semigroup_add_ow_def
-      VS_Groups.ab_semigroup_add_ow_axioms_def SML_Semigroups.ab_semigroup_add_ow_axioms_def)
+      VS_Groups.ab_semigroup_add_ow_axioms_def SML_Semigroups.ab_semigroup_add_ow_axioms_def) *)
 
-lemma [simp]: \<open>VS_Groups.comm_monoid_add_ow = SML_Monoids.comm_monoid_add_ow\<close>
+(* lemma [simp]: \<open>VS_Groups.comm_monoid_add_ow = SML_Monoids.comm_monoid_add_ow\<close>
   by (auto intro!: ext simp: SML_Monoids.comm_monoid_add_ow_def VS_Groups.comm_monoid_add_ow_def
       VS_Groups.comm_monoid_add_ow_axioms_def SML_Semigroups.ab_semigroup_add_ow_axioms_def
-      zero_ow_def neutral_ow_def SML_Monoids.comm_monoid_add_ow_axioms_def)
+      zero_ow_def neutral_ow_def SML_Monoids.comm_monoid_add_ow_axioms_def) *)
 
-lemma [simp]: \<open>VS_Groups.ab_group_add_ow = SML_Groups.ab_group_add_ow\<close>
+(* lemma [simp]: \<open>VS_Groups.ab_group_add_ow = SML_Groups.ab_group_add_ow\<close>
   apply (auto intro!: ext simp: SML_Groups.ab_group_add_ow_def VS_Groups.ab_group_add_ow_def
       VS_Groups.ab_group_add_ow_axioms_def minus_ow_def uminus_ow_def SML_Groups.ab_group_add_ow_axioms_def)
-  by (metis SML_Monoids.comm_monoid_add_ow.axioms(1) SML_Semigroups.ab_semigroup_add_ow.axioms(1) plus_ow.plus_closed semigroup_add_ow.axioms(1))
+  by (metis SML_Monoids.comm_monoid_add_ow.axioms(1) SML_Semigroups.ab_semigroup_add_ow.axioms(1) plus_ow.plus_closed semigroup_add_ow.axioms(1)) *)
 
-ctr parametricity in VS_Groups.ab_group_add_ow_def[simplified VS_Groups.ab_group_add_ow_axioms_def make_parametricity_proof_friendly]
-ctr parametricity in vector_space_ow_def[simplified vector_space_ow_axioms_def make_parametricity_proof_friendly]
-ctr parametricity in minus_ow_def[unfolded make_parametricity_proof_friendly]
+(* ctr parametricity in VS_Groups.ab_group_add_ow_def[simplified VS_Groups.ab_group_add_ow_axioms_def make_parametricity_proof_friendly]
+ctr parametricity in vector_space_ow_def[simplified vector_space_ow_axioms_def make_parametricity_proof_friendly] *)
+(* ctr parametricity in minus_ow_def[unfolded make_parametricity_proof_friendly]
+ctr parametricity in uminus_ow_def[unfolded make_parametricity_proof_friendly]
 ctr parametricity in plus_ow_def[unfolded make_parametricity_proof_friendly]
 ctr parametricity in neutral_ow_def[unfolded make_parametricity_proof_friendly]
 ctr parametricity in zero_ow_def[unfolded make_parametricity_proof_friendly]
 ctr parametricity in SML_Semigroups.semigroup_add_ow_def[unfolded SML_Semigroups.semigroup_add_ow_axioms_def make_parametricity_proof_friendly]
-ctr parametricity in SML_Semigroups.ab_semigroup_add_ow_def[unfolded SML_Semigroups.ab_semigroup_add_ow_axioms_def make_parametricity_proof_friendly]
+ctr parametricity in SML_Semigroups.ab_semigroup_add_ow_def[unfolded SML_Semigroups.ab_semigroup_add_ow_axioms_def make_parametricity_proof_friendly] *)
 
-subsection \<open>\<^locale>\<open>neutral_ow\<close>\<close>
+(* subsection \<open>\<^locale>\<open>neutral_ow\<close>\<close>
 
 lemma neutral_ow_typeclass[simp, iff]: \<open>neutral_ow V 0\<close> 
   if \<open>0 \<in> V\<close> for V :: \<open>'a::zero set\<close>
-  by (auto simp: neutral_ow_def that)
+  by (auto simp: neutral_ow_def that) *)
 
 subsection \<open>\<^locale>\<open>semigroup\<close>\<close>
 
-ctr parametricity in semigroup_ow_def[unfolded abel_semigroup_ow_axioms_def make_parametricity_proof_friendly]
+(* TODO move up *)
+locale plus_ow = 
+  fixes U plus
+  assumes \<open>\<forall>x\<in>U. \<forall>y\<in>U. plus x y \<in> U\<close>
+lemma plus_ow_parametricity[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (A ===> A ===> A) ===> (=)) 
+     plus_ow plus_ow\<close>
+  unfolding plus_ow_def
+  by transfer_prover
+
+locale semigroup_ow = plus_ow U plus for U plus +
+  assumes \<open>\<forall>x\<in>U. \<forall>y\<in>U. \<forall>z\<in>U. plus x (plus y z) = plus (plus x y) z\<close>
+
+lemma semigroup_ow_parametricity[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (A ===> A ===> A) ===> (=)) 
+     semigroup_ow semigroup_ow\<close>
+  unfolding semigroup_ow_def semigroup_ow_axioms_def
+  by transfer_prover
 
 lemma semigroup_ow_typeclass[simp, iff]: \<open>semigroup_ow V (+)\<close>
   if \<open>\<And>x y. x\<in>V \<Longrightarrow> y\<in>V \<Longrightarrow> x + y \<in> V\<close> for V :: \<open>'a :: semigroup_add set\<close>
-  by (auto simp: semigroup_ow_def Groups.add_ac that)
+  by (auto intro!: plus_ow.intro semigroup_ow.intro semigroup_ow_axioms.intro simp: Groups.add_ac that)
 
 subsection \<open>\<^locale>\<open>abel_semigroup\<close>\<close>
+
+locale abel_semigroup_ow = semigroup_ow U plus for U plus +
+  assumes \<open>\<forall>x\<in>U. \<forall>y\<in>U. plus x y = plus y x\<close>
 
 ctr parametricity in abel_semigroup_ow_def[unfolded abel_semigroup_ow_axioms_def make_parametricity_proof_friendly]
 
@@ -212,6 +237,11 @@ lemma abel_semigroup_ow_typeclass[simp, iff]: \<open>abel_semigroup_ow V (+)\<cl
   by (auto simp: abel_semigroup_ow_def abel_semigroup_ow_axioms_def Groups.add_ac that)
 
 subsection \<open>\<^locale>\<open>comm_monoid\<close>\<close>
+
+locale comm_monoid_ow = abel_semigroup_ow U plus for U plus +
+  fixes zero
+  assumes \<open>zero \<in> U\<close>
+  assumes \<open>\<forall>x\<in>U. plus x zero = x\<close>
 
 ctr parametricity in comm_monoid_ow_def[unfolded comm_monoid_ow_axioms_def make_parametricity_proof_friendly]
 
@@ -229,11 +259,18 @@ lemma class_topological_space_ud[ud_with]: \<open>class.topological_space = topo
 lemma topological_space_ow_from_topology[simp]: \<open>topological_space_ow (topspace T) (openin T)\<close>
   by (auto intro!: topological_space_ow.intro)
 
-subsection \<open>\<^class>\<open>comm_monoid_add\<close>\<close>
+(* subsection \<open>\<^class>\<open>comm_monoid_add\<close>\<close>
 
-ctr parametricity in SML_Monoids.comm_monoid_add_ow_def[unfolded SML_Monoids.comm_monoid_add_ow_axioms_def make_parametricity_proof_friendly]
+ctr parametricity in comm_monoid_add_ow_def[unfolded SML_Monoids.comm_monoid_add_ow_axioms_def make_parametricity_proof_friendly]
 
 declare SML_Monoids.comm_monoid_add_ow[ud_with]
+
+lemma comm_monoid_add_ow_typeclass[simp]: 
+  \<open>comm_monoid_add_ow V (+) 0\<close> 
+  if \<open>0 \<in> V\<close> \<open>\<forall>x\<in>V. \<forall>y\<in>V. x + y \<in> V\<close>
+  for V :: \<open>_ :: comm_monoid_add set\<close>
+  using that by (auto intro!: comm_monoid_add_ow.intro ab_semigroup_add_ow_typeclass
+      zero_ow.intro comm_monoid_add_ow_axioms.intro) *)
 
 subsection \<open>\<^const>\<open>sum\<close>\<close>
 
@@ -273,7 +310,7 @@ lemma sum_ud[ud_with]: \<open>sum = sum_ow 0 plus\<close>
     apply (auto simp add: sum.comm_monoid_set_axioms)
   by (metis comm_monoid_add_class.sum_def sum.infinite)
 
-declare sum_with[ud_with del]
+(* declare sum_with[ud_with del] *)
 
 subsection \<open>\<^class>\<open>t2_space\<close>\<close>
 
@@ -337,7 +374,87 @@ in scaleC_ow_def[unfolded scaleC_ow_axioms_def]
 lemma class_scaleC_ud[ud_with]: \<open>class.scaleC = scaleC_ow UNIV\<close>
   by (auto intro!: ext simp: class.scaleC_def scaleC_ow_def scaleR_ow_def scaleC_ow_axioms_def)
 
-(* XXXX *)
+subsection \<open>\<^class>\<open>ab_group_add\<close>\<close>
+
+(* TODO move up *)
+locale minus_ow = fixes U minus assumes \<open>\<forall>x\<in>U. \<forall>y\<in>U. minus x y \<in> U\<close>
+lemma minus_ow_parametricity[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (A ===> A ===> A) ===> (=)) 
+     minus_ow minus_ow\<close>
+  unfolding minus_ow_def
+  by transfer_prover
+locale uminus_ow = fixes U uminus assumes \<open>\<forall>x\<in>U. uminus x \<in> U\<close>
+lemma uminus_ow_parametricity[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (A ===> A) ===> (=)) 
+     uminus_ow uminus_ow\<close>
+  unfolding uminus_ow_def
+  by transfer_prover
+
+locale ab_group_add_ow = comm_monoid_ow U plus zero + minus_ow U minus + uminus_ow U uminus
+  for U plus zero minus uminus +
+  assumes \<open>\<forall>a\<in>U. uminus a \<in> U\<close>
+  assumes "\<forall>a\<in>U. plus (uminus a) a = zero"
+  assumes "\<forall>a\<in>U. \<forall>b\<in>U. minus a b = plus a (uminus b)"
+
+lemma ab_group_add_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (A ===> A ===> A) ===> A ===> (A ===> A ===> A) ===> (A ===> A) ===> (=)) 
+     ab_group_add_ow ab_group_add_ow\<close>
+  unfolding ab_group_add_ow_def ab_group_add_ow_axioms_def
+  apply transfer_prover_start
+  apply transfer_step+
+  by transfer_prover
+
+lemma ab_group_add_ow_typeclass[simp]: 
+  \<open>ab_group_add_ow V (+) 0 (-) uminus\<close> 
+  if \<open>0 \<in> V\<close> \<open>\<forall>x\<in>V. -x \<in> V\<close> \<open>\<forall>x\<in>V. \<forall>y\<in>V. x + y \<in> V\<close>
+  for V :: \<open>_ :: ab_group_add set\<close>
+  using that
+  apply (auto intro!: ab_group_add_ow.intro ab_group_add_ow_axioms.intro comm_monoid_ow_typeclass
+      minus_ow.intro uminus_ow.intro)
+  by force
+
+(* TODO move up *)
+lemma class_semigroup_add_ud[ud_with]: \<open>class.semigroup_add = semigroup_ow UNIV\<close>
+  by (auto intro!: ext plus_ow.intro simp: class.semigroup_add_def semigroup_ow_def semigroup_ow_axioms_def)
+lemma class_ab_semigroup_add_ud[ud_with]: \<open>class.ab_semigroup_add = abel_semigroup_ow UNIV\<close>
+  by (auto intro!: ext simp: class.ab_semigroup_add_def abel_semigroup_ow_def 
+      class_semigroup_add_ud abel_semigroup_ow_axioms_def class.ab_semigroup_add_axioms_def)
+lemma class_comm_monoid_add_ud[ud_with]: \<open>class.comm_monoid_add = comm_monoid_ow UNIV\<close>
+  apply (auto intro!: ext simp: class.comm_monoid_add_def comm_monoid_ow_def
+      class_ab_semigroup_add_ud class.comm_monoid_add_axioms_def comm_monoid_ow_axioms_def)
+  by (simp_all add: abel_semigroup_ow_def abel_semigroup_ow_axioms_def)
+
+lemma class_ab_group_add_ud[ud_with]: \<open>class.ab_group_add = ab_group_add_ow UNIV\<close>
+  by (auto intro!: ext simp: class.ab_group_add_def ab_group_add_ow_def class_comm_monoid_add_ud
+      minus_ow_def uminus_ow_def ab_group_add_ow_axioms_def class.ab_group_add_axioms_def)
+
+subsection \<open>\<^locale>\<open>vector_space\<close>\<close>
+
+locale vector_space_ow = ab_group_add_ow U plus zero minus uminus
+  for U plus zero minus uminus +
+  fixes scale :: "'f::field \<Rightarrow> 'a \<Rightarrow> 'a"
+  assumes
+    \<open>\<forall>x\<in>U. scale a x \<in> U\<close>
+    "\<forall>x\<in>U. \<forall>y\<in>U. scale a (plus x y) = plus (scale a x) (scale a y)"
+    "\<forall>x\<in>U. scale (a + b) x = plus (scale a x) (scale b x)"
+    "\<forall>x\<in>U. scale a (scale b x) = scale (a * b) x"
+    "\<forall>x\<in>U. scale 1 x = x"
+
+lemma vector_space_ow_parametric[transfer_rule]:
+  includes lifting_syntax
+  assumes [transfer_rule]: \<open>bi_unique A\<close>
+  shows \<open>(rel_set A ===> (A ===> A ===> A) ===> A ===> (A ===> A ===> A) ===> (A ===> A) ===> ((=) ===> A ===> A) ===> (=)) 
+     vector_space_ow vector_space_ow\<close>
+  unfolding vector_space_ow_def vector_space_ow_axioms_def
+  apply transfer_prover_start
+                      apply transfer_step+
+  by simp
 
 subsection \<open>\<^class>\<open>complex_vector\<close>\<close>
 
@@ -349,19 +466,15 @@ ctr parametricity in complex_vector_ow_def
 lemma class_complex_vector_ud[ud_with]: \<open>class.complex_vector = complex_vector_ow UNIV\<close>
   by (auto intro!: ext simp: class.complex_vector_def vector_space_ow_def vector_space_ow_axioms_def
       class.complex_vector_axioms_def class.scaleC_def complex_vector_ow_def
-      SML_Groups.ab_group_add_ow class_scaleC_ud)
-
-lemma module_on_typeclass[simp]: \<open>module_on V (*\<^sub>C)\<close> if [simp]: \<open>csubspace V\<close>
-  by (auto simp add: module_on_def scaleC_add_right scaleC_add_left
-      complex_vector.subspace_add complex_vector.subspace_0 complex_vector.subspace_scale)
-
-lemma vector_space_on_typeclass[simp]: \<open>vector_space_on V (*\<^sub>C)\<close> if [simp]: \<open>csubspace V\<close>
-  by (simp add: vector_space_on_def)
+      class_scaleC_ud class_ab_group_add_ud)
 
 lemma vector_space_ow_typeclass[simp]: 
-  \<open>vector_space_ow V (+) 0 (-) uminus (*\<^sub>C)\<close> if [simp]: \<open>csubspace V\<close>
+  \<open>vector_space_ow V (+) 0 (-) uminus (*\<^sub>C)\<close> 
+  if [simp]: \<open>csubspace V\<close>
   for V :: \<open>_::complex_vector set\<close>
-  by (simp add: implicit_vector_space_ow)
+  by (auto intro!: vector_space_ow.intro ab_group_add_ow_typeclass scaleC_left.add
+      vector_space_ow_axioms.intro complex_vector.subspace_neg scaleC_add_right
+      complex_vector.subspace_add complex_vector.subspace_scale complex_vector.subspace_0)
 
 lemma complex_vector_ow_typeclass[simp]:
   \<open>complex_vector_ow V (*\<^sub>R) (*\<^sub>C) (+) 0 (-) uminus\<close> if [simp]: \<open>csubspace V\<close>
@@ -1152,12 +1265,11 @@ proof -
     by auto
 
   have [simp]: 
-    \<open>SML_Monoids.comm_monoid_add_ow (topspace T) (+) 0\<close>
-    \<open>SML_Monoids.comm_monoid_add_ow (topspace U) (+) 0\<close>
-    by (simp_all add: SML_Monoids.comm_monoid_add_ow_def SML_Semigroups.ab_semigroup_add_ow_def
-        SML_Semigroups.semigroup_add_ow_def plus_ow_def semigroup_add_ow_axioms_def zero_ow_def
-        neutral_ow_def SML_Semigroups.ab_semigroup_add_ow_axioms_def SML_Monoids.comm_monoid_add_ow_axioms_def
-        Groups.add_ac)
+    \<open>comm_monoid_ow (topspace T) (+) 0\<close>
+    \<open>comm_monoid_ow (topspace U) (+) 0\<close>
+    by (simp_all add: comm_monoid_ow_def abel_semigroup_ow_def
+        semigroup_ow_def plus_ow_def semigroup_ow_axioms_def
+        comm_monoid_ow_axioms_def Groups.add_ac abel_semigroup_ow_axioms_def)
 
   have \<open>has_sum_ow (topspace U) (+) 0 (openin U) (g \<circ> f') S (g l)\<close>
     apply (rule *)
