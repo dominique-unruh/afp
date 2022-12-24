@@ -19,9 +19,6 @@ no_notation Order.top ("\<top>\<index>")
 unbundle no_vec_syntax
 unbundle no_inner_syntax
 
-declare ETTS.rep_inverse[simp del]
-declare ETTS.Abs_inverse[simp del]
-
 locale teleport_locale = qhoare "TYPE('mem)" +
   fixes X :: "bit update \<Rightarrow> 'mem update"
     and \<Phi> :: "(bit*bit) update \<Rightarrow> 'mem update"

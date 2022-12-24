@@ -49,8 +49,6 @@ proof (intro allI iffI)
     apply (rule_tac compatible_setter)
     unfolding compatible_def by auto
 next
-  note ETTS.rep_inverse[simp del]
-  note ETTS.Abs_inverse[simp del]
   assume commute[rule_format, THEN fun_cong, unfolded o_def]: \<open>\<forall>a b. setter F a \<circ> setter G b = setter G b \<circ> setter F a\<close>
   have \<open>valid_getter_setter (getter F) (setter F)\<close>
     by auto
