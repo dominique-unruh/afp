@@ -650,14 +650,14 @@ lift_definition tensor_ell2_left :: \<open>'a ell2 \<Rightarrow> ('b ell2 \<Righ
   \<open>\<lambda>\<psi> \<phi>. \<psi> \<otimes>\<^sub>s \<phi>\<close>
   by (simp add: bounded_cbilinear.bounded_clinear_right bounded_cbilinear_tensor_ell2)
 
-lemma tensor_ell2_left_apply: \<open>tensor_ell2_left \<psi> *\<^sub>V \<phi> = \<psi> \<otimes>\<^sub>s \<phi>\<close>
+lemma tensor_ell2_left_apply[simp]: \<open>tensor_ell2_left \<psi> *\<^sub>V \<phi> = \<psi> \<otimes>\<^sub>s \<phi>\<close>
   apply (transfer fixing: \<psi> \<phi>) by simp
 
 lift_definition tensor_ell2_right :: \<open>'a ell2 \<Rightarrow> ('b ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b\<times>'a) ell2)\<close> is
   \<open>\<lambda>\<psi> \<phi>. \<phi> \<otimes>\<^sub>s \<psi>\<close>
   by (simp add: bounded_clinear_tensor_ell22)
 
-lemma tensor_ell2_right_apply: \<open>tensor_ell2_right \<psi> *\<^sub>V \<phi> = \<phi> \<otimes>\<^sub>s \<psi>\<close>
+lemma tensor_ell2_right_apply[simp]: \<open>tensor_ell2_right \<psi> *\<^sub>V \<phi> = \<phi> \<otimes>\<^sub>s \<psi>\<close>
   apply (transfer fixing: \<psi> \<phi>) by simp
 
 
