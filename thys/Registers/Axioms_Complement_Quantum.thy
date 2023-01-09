@@ -405,102 +405,53 @@ qed
   by (simp add: isCont_def Lim_at_id) *)
 
 
-lemma same_range_equivalent:
-  fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G :: \<open>'b update \<Rightarrow> 'c update\<close>
-  assumes [simp]: \<open>register F\<close> and [simp]: \<open>register G\<close>
-  assumes \<open>range F = range G\<close>
-  shows \<open>equivalent_registers F G\<close>
+lemma register_inv_G_o_F: 
+  assumes [simp]: \<open>register F\<close> and [simp]: \<open>register G\<close> and range_FG: \<open>range F \<subseteq> range G\<close>
+  shows \<open>register (inv G \<circ> F)\<close>
 proof -
-  have G_rangeF[simp]: \<open>G x \<in> range F\<close> for x
-    by (simp add: assms)
+  note [[simproc del: Laws_Quantum.compatibility_warn]]
+  define GF where \<open>GF = inv G o F\<close>
   have F_rangeG[simp]: \<open>F x \<in> range G\<close> for x
-    by (simp add: assms(3)[symmetric])
+   using range_FG by auto
   have [simp]: \<open>inj F\<close> and [simp]: \<open>inj G\<close>
     by (simp_all add: register_inj)
   have [simp]: \<open>bounded_clinear F\<close> \<open>bounded_clinear G\<close>
     by (simp_all add: register_bounded_clinear)
   have [simp]: \<open>clinear F\<close> \<open>clinear G\<close>
     by (simp_all add: bounded_clinear.clinear)
-  define I J where \<open>I x = inv F (G x)\<close> and \<open>J y = inv G (F y)\<close> for x y
-  have addI: \<open>I (x + y) = I x + I y\<close> for x y
-    unfolding I_def
-    apply (rule injD[OF \<open>inj F\<close>])
-    apply (subst complex_vector.linear_add[OF \<open>clinear F\<close>])
-    apply (subst Hilbert_Choice.f_inv_into_f[where f=F], simp)+
-    by (simp add: complex_vector.linear_add)
-  have addJ: \<open>J (x + y) = J x + J y\<close> for x y
-    unfolding J_def
+  have addJ: \<open>GF (x + y) = GF x + GF y\<close> for x y
+    unfolding GF_def o_def
     apply (rule injD[OF \<open>inj G\<close>])
     apply (subst complex_vector.linear_add[OF \<open>clinear G\<close>])
     apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)+
     by (simp add: complex_vector.linear_add)
-  have scaleI: \<open>I (r *\<^sub>C x) = r *\<^sub>C I x\<close> for r x
-    unfolding I_def
-    apply (rule injD[OF \<open>inj F\<close>])
-    apply (subst complex_vector.linear_scale[OF \<open>clinear F\<close>])
-    apply (subst Hilbert_Choice.f_inv_into_f[where f=F], simp)+
-    by (simp add: complex_vector.linear_scale)
-  have scaleJ: \<open>J (r *\<^sub>C x) = r *\<^sub>C J x\<close> for r x
-    unfolding J_def
+  have scaleJ: \<open>GF (r *\<^sub>C x) = r *\<^sub>C GF x\<close> for r x
+    unfolding GF_def o_def
     apply (rule injD[OF \<open>inj G\<close>])
     apply (subst complex_vector.linear_scale[OF \<open>clinear G\<close>])
     apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)+
     by (simp add: complex_vector.linear_scale)
-  have unitalI: \<open>I id_cblinfun = id_cblinfun\<close>
-    unfolding I_def
-    apply (rule injD[OF \<open>inj F\<close>])
-    apply (subst Hilbert_Choice.f_inv_into_f[where f=F])
-     apply auto
-    by (metis register_of_id G_rangeF assms(2))
-  have unitalJ: \<open>J id_cblinfun = id_cblinfun\<close>
-    unfolding J_def
+  have unitalJ: \<open>GF id_cblinfun = id_cblinfun\<close>
+    unfolding GF_def o_def
     apply (rule injD[OF \<open>inj G\<close>])
     apply (subst Hilbert_Choice.f_inv_into_f[where f=G])
-     apply auto
-    by (metis register_of_id F_rangeG assms(1))
-  have multI: \<open>I (a o\<^sub>C\<^sub>L b) = I a o\<^sub>C\<^sub>L I b\<close> for a b
-    unfolding I_def
-    apply (rule injD[OF \<open>inj F\<close>])
-    apply (subst register_mult[symmetric, OF \<open>register F\<close>])
-    apply (subst Hilbert_Choice.f_inv_into_f[where f=F], simp)+
-    by (simp add: register_mult)
-  have multJ: \<open>J (a o\<^sub>C\<^sub>L b) = J a o\<^sub>C\<^sub>L J b\<close> for a b
-    unfolding J_def
+    by (auto intro!: range_eqI[of _ _ id_cblinfun]) 
+  have multJ: \<open>GF (a o\<^sub>C\<^sub>L b) = GF a o\<^sub>C\<^sub>L GF b\<close> for a b
+    unfolding GF_def o_def
     apply (rule injD[OF \<open>inj G\<close>])
     apply (subst register_mult[symmetric, OF \<open>register G\<close>])
     apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)+
     by (simp add: register_mult)
-  have adjI: \<open>I (a*) = (I a)*\<close> for a
-    unfolding I_def
-    apply (rule injD[OF \<open>inj F\<close>])
-    apply (subst register_adjoint[OF \<open>register F\<close>])
-    apply (subst Hilbert_Choice.f_inv_into_f[where f=F], simp)+
-    using assms(2) register_adjoint by blast
-  have adjJ: \<open>J (a*) = (J a)*\<close> for a
-    unfolding J_def
+  have adjJ: \<open>GF (a*) = (GF a)*\<close> for a
+    unfolding GF_def o_def
     apply (rule injD[OF \<open>inj G\<close>])
     apply (subst register_adjoint[OF \<open>register G\<close>])
     apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)+
-    using assms(1) register_adjoint by blast
-  have normI: \<open>norm (I a) = norm a\<close> for a
-    unfolding I_def
-    by (metis G_rangeF assms(1) assms(2) f_inv_into_f register_norm)
-  have normJ: \<open>norm (J a) = norm a\<close> for a
-    unfolding J_def
-    by (metis F_rangeG assms(1) assms(2) f_inv_into_f register_norm)
-  have weak_star_I: \<open>continuous_map weak_star_topology weak_star_topology I\<close>
-  proof -
-    have \<open>continuous_map weak_star_topology weak_star_topology G\<close>
-      by (simp add: weak_star_cont_register)
-    then have \<open>continuous_map weak_star_topology (subtopology weak_star_topology (range G)) G\<close>
-      by (simp add: continuous_map_into_subtopology)
-    moreover have \<open>continuous_map (subtopology weak_star_topology (range F)) weak_star_topology (inv F)\<close>
-      using \<open>register F\<close> register_inv_weak_star_continuous by blast
-    ultimately show \<open>continuous_map weak_star_topology weak_star_topology I\<close>
-      unfolding \<open>range F = range G\<close> I_def
-      by (rule continuous_map_compose[unfolded o_def])
-  qed
-  have weak_star_J: \<open>continuous_map weak_star_topology weak_star_topology J\<close>
+    using \<open>register F\<close> register_adjoint by blast
+  have normJ: \<open>norm (GF a) = norm a\<close> for a
+    unfolding GF_def
+    by (metis F_rangeG \<open>register F\<close> \<open>register G\<close> f_inv_into_f o_def register_norm)
+  have weak_star_J: \<open>continuous_map weak_star_topology weak_star_topology GF\<close>
   proof -
     have \<open>continuous_map weak_star_topology weak_star_topology F\<close>
       by (simp add: weak_star_cont_register)
@@ -508,39 +459,41 @@ proof -
       by (simp add: continuous_map_into_subtopology)
     moreover have \<open>continuous_map (subtopology weak_star_topology (range G)) weak_star_topology (inv G)\<close>
       using \<open>register G\<close> register_inv_weak_star_continuous by blast
-    ultimately show \<open>continuous_map weak_star_topology weak_star_topology J\<close>
-      unfolding \<open>range F = range G\<close> J_def
-      by (rule continuous_map_compose[unfolded o_def])
+    ultimately show \<open>continuous_map weak_star_topology weak_star_topology GF\<close>
+      by (simp add: GF_def range_FG continuous_map_compose continuous_map_from_subtopology_mono)
   qed
 
-  from addI scaleI unitalI multI adjI normI weak_star_I
-  have \<open>register I\<close>
-    unfolding register_def by (auto intro!: bounded_clinearI[where K=1])
   from addJ scaleJ unitalJ multJ adjJ normJ weak_star_J
-  have \<open>register J\<close>
+  show \<open>register GF\<close>
     unfolding register_def by (auto intro!: bounded_clinearI[where K=1])
+qed
 
-  have \<open>I o J = id\<close>
-    unfolding I_def J_def o_def
-    apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)
-    apply (subst Hilbert_Choice.inv_f_f[OF \<open>inj F\<close>])
-    by auto
-  have \<open>J o I = id\<close>
-    unfolding I_def J_def o_def
-    apply (subst Hilbert_Choice.f_inv_into_f[where f=F], simp)
-    apply (subst Hilbert_Choice.inv_f_f[OF \<open>inj G\<close>])
-    by auto
 
-  from \<open>I o J = id\<close> \<open>J o I = id\<close> \<open>register I\<close> \<open>register J\<close>
-  have \<open>iso_register I\<close>
-    using iso_register_def by blast
-
-  have \<open>F o I = G\<close>
-    unfolding I_def o_def
-    by (subst Hilbert_Choice.f_inv_into_f[where f=F], auto)
-
-  with \<open>iso_register I\<close> show ?thesis
-    unfolding equivalent_registers_def by auto
+lemma same_range_equivalent:
+  fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G :: \<open>'b update \<Rightarrow> 'c update\<close>
+  assumes [simp]: \<open>register F\<close> and [simp]: \<open>register G\<close>
+  assumes range_FG: \<open>range F = range G\<close>
+  shows \<open>equivalent_registers F G\<close>
+proof -
+  note [[simproc del: Laws_Quantum.compatibility_warn]]
+  have regGF: \<open>register (inv G o F)\<close>
+    using assms by (auto intro!: register_inv_G_o_F)
+  have regFG: \<open>register (inv F o G)\<close>
+    using assms by (auto intro!: register_inv_G_o_F)
+  have \<open>inj G\<close>
+    by (simp add: register_inj)
+  with range_FG have GFFG: \<open>(inv G o F) o (inv F o G) = id\<close>
+    by (smt (verit) assms(1) f_inv_into_f invI isomorphism_expand o_def rangeI register_inj)
+  have \<open>inj F\<close>
+    by (simp add: register_inj)
+  with range_FG have FGGF: \<open>(inv F o G) o (inv G o F) = id\<close>
+    by (metis GFFG fun.set_map image_inv_f_f left_right_inverse_eq surj_iff)
+  from regGF regFG GFFG FGGF have iso_FG: \<open>iso_register (inv F o G)\<close>
+    using iso_registerI by auto
+  have FFG: \<open>F o (inv F o G) = G\<close>
+    by (smt (verit) FGGF GFFG fun.inj_map_strong fun.map_comp fun.set_map image_inv_f_f inj_on_imageI2 inv_id inv_into_injective inv_o_cancel o_inv_o_cancel range_FG surj_id surj_imp_inj_inv)
+  from FFG iso_FG show \<open>equivalent_registers F G\<close>
+    by (simp add: equivalent_registersI)
 qed
 
 lemma complement_unique:

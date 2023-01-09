@@ -1280,6 +1280,7 @@ lemma is_projection_on_unique:
   using smallest_dist_unique[OF assms(1)] using assms(2,3)
   unfolding is_projection_on_def by blast
 
+(* TODO: use = *)
 definition projection :: \<open>'a::metric_space set \<Rightarrow> ('a \<Rightarrow> 'a)\<close> where
   \<open>projection M \<equiv> SOME \<pi>. is_projection_on \<pi> M\<close>
 
