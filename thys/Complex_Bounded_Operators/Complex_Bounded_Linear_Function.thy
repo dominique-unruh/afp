@@ -370,6 +370,7 @@ proof -
     using \<open>0 \<le> b\<close> by auto
 qed
 
+(* TODO: move to Complex_Vector *)
 lemma dense_span_separating: \<open>closure (cspan S) = UNIV \<Longrightarrow> bounded_clinear F \<Longrightarrow> bounded_clinear G \<Longrightarrow> (\<forall>x\<in>S. F x = G x) \<Longrightarrow> F = G\<close>
 proof -
   fix F G :: \<open>'a \<Rightarrow> 'b\<close>
@@ -543,7 +544,10 @@ text \<open>A variant of @{thm [source] Series.Cauchy_product_sums} with \<^term
    Differently from @{thm [source] Series.Cauchy_product_sums}, we do not require absolute summability
    of \<^term>\<open>a\<close> and \<^term>\<open>b\<close> individually but only unconditional summability of \<^term>\<open>a\<close>, \<^term>\<open>b\<close>, and their product.
    While on, e.g., reals, unconditional summability is equivalent to absolute summability, in
-   general unconditional summability is a weaker requirement.\<close>
+   general unconditional summability is a weaker requirement.
+
+  Logically belong in \<^theory>\<open>Complex_Bounded_Operators.Complex_Inner_Product\<close>
+  but the proof uses facts from this theory.\<close>
 lemma 
   fixes a b :: "nat \<Rightarrow> 'a::complex_inner"
   assumes asum: \<open>a summable_on UNIV\<close>
@@ -837,6 +841,7 @@ lemma clinear_blinfun_compose_left: \<open>clinear (\<lambda>x. blinfun_compose 
   by (auto intro!: clinearI simp: blinfun_eqI scaleC_blinfun.rep_eq bounded_bilinear.add_left
                                   bounded_bilinear_blinfun_compose)
 
+(* TODO: Just instance *)
 instantiation blinfun :: (real_normed_vector, cbanach) "cbanach"
 begin
 instance..
@@ -1214,7 +1219,7 @@ lemma adj_uminus: \<open>(-A)* = - (A*)\<close>
 
 lemma cinner_real_hermiteanI:
   \<comment> \<open>Prop. II.2.12 in @{cite conway2013course}\<close>
-  assumes \<open>\<And>\<psi>. cinner \<psi> (A *\<^sub>V \<psi>) \<in> \<real>\<close>
+  assumes \<open>\<And>\<psi>. \<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>) \<in> \<real>\<close>
   shows \<open>A = A*\<close>
 proof -
   { fix g h :: 'a
@@ -1481,6 +1486,11 @@ lemma norm_isometry:
 
 lemma norm_preserving_isometry: \<open>isometry U\<close> if \<open>\<And>\<psi>. norm (U *\<^sub>V \<psi>) = norm \<psi>\<close>
   by (smt (verit, ccfv_SIG) cblinfun_cinner_eqI cblinfun_id_cblinfun_apply cinner_adj_right cnorm_eq isometry_def simp_a_oCL_b' that)
+
+(* TODO: Add this *)
+(* lemma \<open>isometry U \<Longrightarrow> cinner (U x) (U y) = cinner x y\<close>
+  by (metis (no_types, lifting) cblinfun_apply_cblinfun_compose cblinfun_id_cblinfun_apply cinner_adj_right isometryD) *)
+
 
 subsection \<open>Product spaces\<close>
 
@@ -2014,6 +2024,10 @@ lemma cblinfun_image_bot_zero[simp]: \<open>A *\<^sub>S top = bot \<longleftrigh
   by (metis Complex_Bounded_Linear_Function.zero_cblinfun_image bot_ccsubspace.rep_eq cblinfun_apply_in_image cblinfun_eqI empty_iff insert_iff zero_ccsubspace_def)
 
 lemma surj_isometry_is_unitary:
+  \<comment> \<open>This lemma is a bit stronger than its name suggests:
+      We actually only require that the image of U is dense.
+
+      The converse is @{thm [source] unitary_surj}\<close>
   fixes U :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
   assumes \<open>isometry U\<close>
   assumes \<open>U *\<^sub>S \<top> = \<top>\<close>

@@ -34,7 +34,7 @@ lemma of_complex_inner_1' [simp]:
   by (metis cinner_commute complex_cnj_cnj of_complex_inner_1)
 
 
-class chilbert_space =  complex_inner + complete_space
+class chilbert_space = complex_inner + complete_space
 begin
 subclass cbanach by standard
 end
@@ -492,6 +492,7 @@ lift_definition minus_ccsubspace :: "'a ccsubspace \<Rightarrow> 'a ccsubspace \
 instance..
 end
 
+(* TODO write with \<longleftrightarrow> *)
 definition is_ortho_set :: "'a::complex_inner set \<Rightarrow> bool" where
   \<comment> \<open>Orthogonal set\<close>
   \<open>is_ortho_set S = ((\<forall>x\<in>S. \<forall>y\<in>S. x \<noteq> y \<longrightarrow> (x \<bullet>\<^sub>C y) = 0) \<and> 0 \<notin> S)\<close>
@@ -1280,6 +1281,7 @@ lemma is_projection_on_unique:
   using smallest_dist_unique[OF assms(1)] using assms(2,3)
   unfolding is_projection_on_def by blast
 
+(* TODO: Use = instead of \<equiv> *)
 definition projection :: \<open>'a::metric_space set \<Rightarrow> ('a \<Rightarrow> 'a)\<close> where
   \<open>projection M \<equiv> SOME \<pi>. is_projection_on \<pi> M\<close>
 
@@ -2382,6 +2384,9 @@ lemma cinner_canonical_basis:
   assumes \<open>j < length (canonical_basis :: 'a::onb_enum list)\<close>
   shows \<open>cinner (canonical_basis!i :: 'a) (canonical_basis!j) = (if i=j then 1 else 0)\<close>
   by (metis assms(1) assms(2) distinct_canonical_basis is_normal is_ortho_set_def is_orthonormal nth_eq_iff_index_eq nth_mem of_real_1 power2_norm_eq_cinner power_one)
+
+lemma canonical_basis_is_onb[simp]: \<open>is_onb (set canonical_basis :: 'a::onb_enum set)\<close>
+  by (simp add: is_normal is_onb_def is_orthonormal)
 
 instance onb_enum \<subseteq> chilbert_space
 proof
