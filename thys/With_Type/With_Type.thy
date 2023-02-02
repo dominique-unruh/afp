@@ -181,6 +181,7 @@ term \<open>\<forall>\<^sub>\<tau>'t::type = N. (rep_t = rep_t)\<close>
 subsection \<open>Automatic configuration of new class\<close>
 
 ML \<open>
+(* TODO: check if Term.strip_comb is a replacement *)
 fun dest_args args (t $ u) = dest_args (u :: args) t
   | dest_args args hd = (hd,args)
 \<close>

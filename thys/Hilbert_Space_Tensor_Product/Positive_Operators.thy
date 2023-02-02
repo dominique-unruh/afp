@@ -15,7 +15,15 @@ lemma cinner_pos_if_pos: \<open>f \<bullet>\<^sub>C (A *\<^sub>V f) \<ge> 0\<clo
   using less_eq_cblinfun_def that by force
 
 definition sqrt_op :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'a)\<close> where
-  \<open>sqrt_op a = (SOME b. b \<ge> 0 \<and> b* o\<^sub>C\<^sub>L b = a)\<close>
+  \<open>sqrt_op a = (if (\<exists>b :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'a. b \<ge> 0 \<and> b* o\<^sub>C\<^sub>L b = a) then (SOME b. b \<ge> 0 \<and> b* o\<^sub>C\<^sub>L b = a) else 0)\<close>
+
+lemma sqrt_op_nonpos: \<open>sqrt_op a = 0\<close> if \<open>\<not> a \<ge> 0\<close>
+proof -
+  have \<open>\<not> (\<exists>b. b \<ge> 0 \<and> b* o\<^sub>C\<^sub>L b = a)\<close>
+    using positive_cblinfun_squareI that by blast
+  then show ?thesis
+    by (auto simp add: sqrt_op_def)
+qed
 
 (* lemma nonneg_quadratic_function_discriminant:
   fixes a b c :: real

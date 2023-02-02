@@ -912,6 +912,7 @@ lemma orthogonal_ket[simp]:
   \<open>is_orthogonal (ket i) (ket j) \<longleftrightarrow> i \<noteq> j\<close>
   by (simp add: cinner_ket_left ket.rep_eq)
 
+(* TODO: Restate as \<open>(ket i \<bullet>\<^sub>C ket j) = of_bool (i=j)\<close> *)
 lemma cinner_ket: \<open>(ket i \<bullet>\<^sub>C ket j) = (if i=j then 1 else 0)\<close>
   by (simp add: cinner_ket_left ket.rep_eq)
 
