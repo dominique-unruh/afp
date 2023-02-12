@@ -3,9 +3,11 @@ theory Misc_Tensor_Product_TTS
     Complex_Bounded_Operators.Complex_Bounded_Linear_Function
     Misc_Tensor_Product
     Misc_Tensor_Product_BO
+    With_Type.With_Type
 begin
 
 unbundle lattice_syntax
+unbundle cblinfun_notation
 
 subsection \<open>Retrieving axioms\<close>
 
@@ -1347,5 +1349,70 @@ lemma has_sum_in_comm_additive:
   apply (rule has_sum_in_comm_additive_general[where T=T and U=U])
   using assms
   by (auto simp: additive.zero Modules.additive_def intro!: continuous_map_is_continuous_at_point)
+
+
+section \<open>Stuff relying on the above lifting\<close>
+
+(* TODO: Let some_chilbert_basis abbreviate some_chilbert_basis_of UNIV *)
+definition \<open>some_chilbert_basis_of X = (SOME B. is_ortho_set B \<and> (\<forall>b\<in>B. norm b = 1) \<and> ccspan B = X)\<close>
+
+lemma
+  fixes X :: \<open>'a::chilbert_space ccsubspace\<close>
+  shows some_chilbert_basis_of_is_ortho_set[simp]: \<open>is_ortho_set (some_chilbert_basis_of X)\<close>
+    and some_chilbert_basis_of_norm1: \<open>b \<in> some_chilbert_basis_of X \<Longrightarrow> norm b = 1\<close>
+    and some_chilbert_basis_of_ccspan[simp]: \<open>ccspan (some_chilbert_basis_of X) = X\<close>
+proof -
+  let ?P = \<open>\<lambda>B. is_ortho_set B \<and> (\<forall>b\<in>B. norm b = 1) \<and> ccspan B = X\<close>
+  have \<open>Ex ?P\<close>
+    using orthonormal_subspace_basis_exists[where S=\<open>{}\<close> and V=X]
+    by auto
+  then have \<open>?P (some_chilbert_basis_of X)\<close>
+    by (simp add: some_chilbert_basis_of_def verit_sko_ex)
+  then show is_ortho_set_some_chilbert_basis_of: \<open>is_ortho_set (some_chilbert_basis_of X)\<close>
+    and \<open>b \<in> some_chilbert_basis_of X \<Longrightarrow> norm b = 1\<close>
+    and \<open>ccspan (some_chilbert_basis_of X) = X\<close>
+    by auto
+qed
+
+lemma ccsubspace_as_whole_type:
+  fixes X :: \<open>'a::chilbert_space ccsubspace\<close>
+  assumes \<open>X \<noteq> 0\<close>
+  shows \<open>\<forall>\<^sub>\<tau> 'b::type = some_chilbert_basis_of X.
+         \<exists>U::'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a. isometry U \<and> U *\<^sub>S \<top> = X\<close>
+proof (rule with_typeI)
+  show \<open>fst (some_chilbert_basis_of X, ()) \<noteq> {}\<close>
+    using some_chilbert_basis_of_ccspan[of X] assms
+    by (auto simp del: some_chilbert_basis_of_ccspan)
+  show \<open>fst with_type_type_class (fst (some_chilbert_basis_of X, ()))
+     (snd (some_chilbert_basis_of X, ()))\<close>
+    by (simp add: with_type_type_class_def)
+  show \<open>with_type_compat_rel (fst with_type_type_class) (fst (some_chilbert_basis_of X, ()))
+     (snd with_type_type_class)\<close>
+    by (auto simp add: with_type_type_class_def with_type_compat_rel_def)
+  fix Rep :: \<open>'b \<Rightarrow> 'a\<close> and Abs
+  assume \<open>type_definition Rep Abs (fst (some_chilbert_basis_of X, ()))\<close>
+  then interpret type_definition Rep Abs \<open>some_chilbert_basis_of X\<close>
+    by simp
+  define U where \<open>U = cblinfun_extension (range ket) (Rep o inv ket)\<close>
+  have [simp]: \<open>Rep i \<bullet>\<^sub>C Rep j = 0\<close> if \<open>i \<noteq> j\<close> for i j
+    using Rep some_chilbert_basis_of_is_ortho_set[unfolded is_ortho_set_def] that
+    by (smt (verit) Rep_inverse)
+  moreover have [simp]: \<open>norm (Rep i) = 1\<close> for i
+    using Rep[of i] some_chilbert_basis_of_norm1
+    by auto
+  ultimately have \<open>cblinfun_extension_exists (range ket) (Rep o inv ket)\<close>
+    apply (rule_tac cblinfun_extension_exists_ortho)
+    by auto
+  then have U_ket[simp]: \<open>U (ket i) = Rep i\<close> for i
+    by (auto simp: cblinfun_extension_apply U_def)
+  have \<open>isometry U\<close>
+    apply (rule orthogonal_on_basis_is_isometry[where B=\<open>range ket\<close>])
+    by (auto simp: cinner_ket simp flip: cnorm_eq_1)
+  moreover have \<open>U *\<^sub>S ccspan (range ket) = X\<close>
+    apply (subst cblinfun_image_ccspan)
+    by (simp add: Rep_range image_image)
+  ultimately show \<open>\<exists>U :: 'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a. isometry U \<and> U *\<^sub>S \<top> = X\<close>
+    by auto
+qed
 
 end

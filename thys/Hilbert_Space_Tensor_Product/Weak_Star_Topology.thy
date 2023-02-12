@@ -717,6 +717,39 @@ proof -
     using assms butterkets_weak_star_dense by auto
 qed
 
+lemma continuous_map_scaleC_weak_star'[continuous_intros]:
+  assumes \<open>continuous_map T weak_star_topology f\<close>
+  shows \<open>continuous_map T weak_star_topology (\<lambda>x. scaleC c (f x))\<close>
+  using continuous_map_compose[OF assms continuous_map_scaleC_weak_star]
+  by (simp add: o_def)
+
+lemma continuous_map_uminus_weak_star[continuous_intros]:
+  assumes \<open>continuous_map T weak_star_topology f\<close>
+  shows \<open>continuous_map T weak_star_topology (\<lambda>x. - f x)\<close>
+  apply (subst scaleC_minus1_left[abs_def,symmetric])
+  by (intro continuous_map_scaleC_weak_star' assms)
+
+lemma continuous_map_add_weak_star[continuous_intros]: 
+  assumes \<open>continuous_map T weak_star_topology f\<close>
+  assumes \<open>continuous_map T weak_star_topology g\<close>
+  shows \<open>continuous_map T weak_star_topology (\<lambda>x. f x + g x)\<close>
+proof -
+  have \<open>continuous_map T euclidean (\<lambda>x. trace (t o\<^sub>C\<^sub>L f x))\<close> if \<open>trace_class t\<close> for t
+    using assms(1) continuous_on_weak_star_topo_iff_coordinatewise that by auto
+  moreover have \<open>continuous_map T euclidean (\<lambda>x. trace (t o\<^sub>C\<^sub>L g x))\<close> if \<open>trace_class t\<close> for t
+    using assms(2) continuous_on_weak_star_topo_iff_coordinatewise that by auto
+  ultimately show ?thesis
+    by (auto intro!: continuous_map_add simp add: continuous_on_weak_star_topo_iff_coordinatewise
+        cblinfun_compose_add_right trace_class_comp_left trace_plus)
+qed
+
+lemma continuous_map_minus_weak_star[continuous_intros]: 
+  assumes \<open>continuous_map T weak_star_topology f\<close>
+  assumes \<open>continuous_map T weak_star_topology g\<close>
+  shows \<open>continuous_map T weak_star_topology (\<lambda>x. f x - g x)\<close>
+  apply (subst diff_conv_add_uminus)
+  by (intro assms continuous_intros)
+
 
 
 unbundle no_cblinfun_notation

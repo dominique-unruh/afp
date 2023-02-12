@@ -953,4 +953,93 @@ proof -
     by simp
 qed
 
+
+(* TODO move to partial_isometry-theory *)
+(* TODO might replace partial_isometry_square_proj by this *)
+lemma partial_isometry_iff_square_proj:
+  \<comment> \<open>@{cite conway2013course}, Exercise VIII.3.15\<close>
+  fixes A :: \<open>'a :: chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b :: chilbert_space\<close>
+  shows \<open>partial_isometry A \<longleftrightarrow> is_Proj (A* o\<^sub>C\<^sub>L A)\<close>
+proof (rule iffI)
+  show \<open>is_Proj (A* o\<^sub>C\<^sub>L A)\<close> if \<open>partial_isometry A\<close>
+    by (simp add: partial_isometry_square_proj that)
+next
+  show \<open>partial_isometry A\<close> if \<open>is_Proj (A* o\<^sub>C\<^sub>L A)\<close>
+  proof (rule partial_isometryI)
+    fix h
+    from that have \<open>norm (A* o\<^sub>C\<^sub>L A) \<le> 1\<close>
+      using norm_is_Proj by blast
+    then have normA: \<open>norm A \<le> 1\<close> and normAadj: \<open>norm (A*) \<le> 1\<close>
+      by (simp_all add: norm_AadjA abs_square_le_1)
+    assume \<open>h \<in> space_as_set (- kernel A)\<close>
+    also have \<open>\<dots> = space_as_set (- kernel (A* o\<^sub>C\<^sub>L A))\<close>
+      by (metis (no_types, lifting) abs_opI is_Proj_algebraic kernel_abs_op positive_cblinfun_squareI that)
+    also have \<open>\<dots> = space_as_set ((A* o\<^sub>C\<^sub>L A) *\<^sub>S \<top>)\<close>
+      by (simp add: kernel_compl_adj_range)
+    finally have \<open>A* *\<^sub>V A *\<^sub>V h = h\<close>
+      by (metis Proj_fixes_image Proj_on_own_range that cblinfun_apply_cblinfun_compose)
+    then have \<open>norm h = norm (A* *\<^sub>V A *\<^sub>V h)\<close>
+      by simp
+    also have \<open>\<dots> \<le> norm (A *\<^sub>V h)\<close>
+      by (smt (verit) normAadj mult_left_le_one_le norm_cblinfun norm_ge_zero)
+    also have \<open>\<dots> \<le> norm h\<close>
+      by (smt (verit) normA mult_left_le_one_le norm_cblinfun norm_ge_zero)
+    ultimately show \<open>norm (A *\<^sub>V h) = norm h\<close>
+      by simp
+  qed
+qed
+
+lemma abs_op_square: \<open>(abs_op A)* o\<^sub>C\<^sub>L abs_op A = A* o\<^sub>C\<^sub>L A\<close>
+  by (simp add: abs_op_def positive_cblinfun_squareI)
+
+(* TODO move to polar_decomposition-definition theory *)
+lemma polar_decomposition_0[simp]: \<open>polar_decomposition 0 = (0 :: 'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space)\<close>
+proof -
+  have \<open>polar_decomposition (0 :: 'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) *\<^sub>S \<top> = 0 *\<^sub>S \<top>\<close>
+    by (simp add: polar_decomposition_final_space)
+  then show ?thesis
+    by simp
+qed
+
+(* TODO move to polar_decomposition-definition theory *)
+lemma polar_decomposition_unique:
+  fixes A :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  assumes ker: \<open>kernel X = kernel A\<close>
+  assumes comp: \<open>X o\<^sub>C\<^sub>L abs_op A = A\<close>
+  shows \<open>X = polar_decomposition A\<close>
+proof -
+  have \<open>X \<psi> = polar_decomposition A \<psi>\<close> if \<open>\<psi> \<in> space_as_set (kernel A)\<close> for \<psi>
+  proof -
+    have \<open>\<psi> \<in> space_as_set (kernel X)\<close>
+      by (simp add: ker that)
+    then have \<open>X \<psi> = 0\<close>
+      by (simp add: kernel.rep_eq)
+    moreover
+    have \<open>\<psi> \<in> space_as_set (kernel (polar_decomposition A))\<close>
+      by (simp add: polar_decomposition_initial_space that)
+    then have \<open>polar_decomposition A \<psi> = 0\<close>
+      by (simp add: kernel.rep_eq del: polar_decomposition_initial_space)
+    ultimately show ?thesis
+      by simp
+  qed
+  then have 1: \<open>X o\<^sub>C\<^sub>L Proj (kernel A) = polar_decomposition A o\<^sub>C\<^sub>L Proj (kernel A)\<close>
+    by (metis assms(1) cblinfun_compose_Proj_kernel polar_decomposition_initial_space)
+  have *: \<open>abs_op A *\<^sub>S \<top> = - kernel A\<close>
+    by (metis (mono_tags, opaque_lifting) abs_op_pos kernel_abs_op kernel_compl_adj_range ortho_involution positive_hermitianI)
+  
+  have \<open>X o\<^sub>C\<^sub>L abs_op A = polar_decomposition A o\<^sub>C\<^sub>L abs_op A\<close>
+    by (simp add: comp polar_decomposition_correct)
+  then have \<open>X \<psi> = polar_decomposition A \<psi>\<close> if \<open>\<psi> \<in> space_as_set (abs_op A *\<^sub>S \<top>)\<close> for \<psi>
+    by (simp add: cblinfun_same_on_image that)
+  then have 2: \<open>X o\<^sub>C\<^sub>L Proj (- kernel A) = polar_decomposition A o\<^sub>C\<^sub>L Proj (- kernel A)\<close>
+    using *
+    by (metis (no_types, opaque_lifting) Proj_idempotent cblinfun_eqI lift_cblinfun_comp(4) norm_Proj_apply)
+  from 1 2 have \<open>X o\<^sub>C\<^sub>L Proj (- kernel A) + X o\<^sub>C\<^sub>L Proj (kernel A)
+           = polar_decomposition A o\<^sub>C\<^sub>L Proj (- kernel A) + polar_decomposition A o\<^sub>C\<^sub>L Proj (kernel A)\<close>
+    by simp
+  then show ?thesis
+    by (simp add: Proj_ortho_compl flip: cblinfun_compose_add_right)
+qed
+
+
 end
