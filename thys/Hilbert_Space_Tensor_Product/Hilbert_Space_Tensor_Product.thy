@@ -353,6 +353,99 @@ proof -
     using lip cont by (rule Lipschitz.continuous_on_TimesI)
 qed
 
+lemma summable_on_tensor_ell2_right: \<open>\<phi> summable_on A \<Longrightarrow> (\<lambda>x. \<psi> \<otimes>\<^sub>s \<phi> x) summable_on A\<close>
+  apply (rule summable_on_bounded_linear[unfolded o_def, where f=\<open>\<lambda>x. \<psi> \<otimes>\<^sub>s x\<close>])
+  by (intro bounded_linear_intros)
+
+lemma summable_on_tensor_ell2_left: \<open>\<phi> summable_on A \<Longrightarrow> (\<lambda>x. \<phi> x \<otimes>\<^sub>s \<psi>) summable_on A\<close>
+  apply (rule summable_on_bounded_linear[unfolded o_def, where f=\<open>\<lambda>x. x \<otimes>\<^sub>s \<psi>\<close>])
+  by (intro bounded_linear_intros)
+
+lift_definition tensor_ell2_left :: \<open>'a ell2 \<Rightarrow> ('b ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>'b) ell2)\<close> is
+  \<open>\<lambda>\<psi> \<phi>. \<psi> \<otimes>\<^sub>s \<phi>\<close>
+  by (simp add: bounded_cbilinear.bounded_clinear_right bounded_cbilinear_tensor_ell2)
+
+lemma tensor_ell2_left_apply[simp]: \<open>tensor_ell2_left \<psi> *\<^sub>V \<phi> = \<psi> \<otimes>\<^sub>s \<phi>\<close>
+  apply (transfer fixing: \<psi> \<phi>) by simp
+
+lift_definition tensor_ell2_right :: \<open>'a ell2 \<Rightarrow> ('b ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b\<times>'a) ell2)\<close> is
+  \<open>\<lambda>\<psi> \<phi>. \<phi> \<otimes>\<^sub>s \<psi>\<close>
+  by (simp add: bounded_clinear_tensor_ell22)
+
+lemma tensor_ell2_right_apply[simp]: \<open>tensor_ell2_right \<psi> *\<^sub>V \<phi> = \<phi> \<otimes>\<^sub>s \<psi>\<close>
+  apply (transfer fixing: \<psi> \<phi>) by simp
+
+lemma isometry_tensor_ell2_right: \<open>isometry (tensor_ell2_right \<psi>)\<close> if \<open>norm \<psi> = 1\<close>
+  apply (rule norm_preserving_isometry)
+  by (simp add: tensor_ell2_right_apply norm_tensor_ell2 that)
+
+lemma isometry_tensor_ell2_left: \<open>isometry (tensor_ell2_left \<psi>)\<close> if \<open>norm \<psi> = 1\<close>
+  apply (rule norm_preserving_isometry)
+  by (simp add: tensor_ell2_left_apply norm_tensor_ell2 that)
+
+lemma tensor_ell2_right_scale: \<open>tensor_ell2_right (a *\<^sub>C \<psi>) = a *\<^sub>C tensor_ell2_right \<psi>\<close>
+  apply transfer by (auto intro!: ext simp: tensor_ell2_scaleC2)
+lemma tensor_ell2_left_scale: \<open>tensor_ell2_left (a *\<^sub>C \<psi>) = a *\<^sub>C tensor_ell2_left \<psi>\<close>
+  apply transfer by (auto intro!: ext simp: tensor_ell2_scaleC1)
+
+lemma tensor_ell2_right_0[simp]: \<open>tensor_ell2_right 0 = 0\<close>
+  by (auto intro!: cblinfun_eqI simp: tensor_ell2_right_apply)
+lemma tensor_ell2_left_0[simp]: \<open>tensor_ell2_left 0 = 0\<close>
+  by (auto intro!: cblinfun_eqI simp: tensor_ell2_left_apply)
+
+lemma tensor_ell2_right_adj_apply[simp]: \<open>(tensor_ell2_right \<psi>*) *\<^sub>V (\<alpha> \<otimes>\<^sub>s \<beta>) = (\<psi> \<bullet>\<^sub>C \<beta>) *\<^sub>C \<alpha>\<close>
+  apply (rule cinner_extensionality)
+  by (simp add: cinner_adj_right tensor_ell2_right_apply)
+lemma tensor_ell2_left_adj_apply[simp]: \<open>(tensor_ell2_left \<psi>*) *\<^sub>V (\<alpha> \<otimes>\<^sub>s \<beta>) = (\<psi> \<bullet>\<^sub>C \<alpha>) *\<^sub>C \<beta>\<close>
+  apply (rule cinner_extensionality)
+  by (simp add: cinner_adj_right tensor_ell2_right_apply)
+
+
+lemma infsum_tensor_ell2_right: \<open>\<psi> \<otimes>\<^sub>s (\<Sum>\<^sub>\<infinity>x\<in>A. \<phi> x) = (\<Sum>\<^sub>\<infinity>x\<in>A. \<psi> \<otimes>\<^sub>s \<phi> x)\<close>
+proof -
+  consider (summable) \<open>\<phi> summable_on A\<close> | (summable') \<open>\<psi> \<noteq> 0\<close> \<open>(\<lambda>x. \<psi> \<otimes>\<^sub>s \<phi> x) summable_on A\<close>
+    | (\<psi>0) \<open>\<psi> = 0\<close>
+    | (not_summable) \<open>\<not> \<phi> summable_on A\<close> \<open>\<not> (\<lambda>x. \<psi> \<otimes>\<^sub>s \<phi> x) summable_on A\<close>
+    by auto
+  then show ?thesis
+  proof cases
+    case summable
+    then show ?thesis
+      apply (rule infsum_bounded_linear[symmetric, unfolded o_def, rotated])
+      by (intro bounded_linear_intros)
+  next
+    case summable'
+    then have *: \<open>(\<psi> /\<^sub>R (norm \<psi>)\<^sup>2) \<bullet>\<^sub>C \<psi> = 1\<close>
+      by (simp add: scaleR_scaleC cdot_square_norm)
+    from summable'(2) have \<open>(\<lambda>x. (tensor_ell2_left (\<psi> /\<^sub>R (norm \<psi>)\<^sup>2))* *\<^sub>V (\<psi> \<otimes>\<^sub>s \<phi> x)) summable_on A\<close>
+      apply (rule summable_on_bounded_linear[unfolded o_def, rotated])
+      by (intro bounded_linear_intros)
+    with * have \<open>\<phi> summable_on A\<close>
+      by (simp add: tensor_ell2_left_adj_apply)
+    then show ?thesis
+      apply (rule infsum_bounded_linear[symmetric, unfolded o_def, rotated])
+      by (intro bounded_linear_intros)
+  next
+    case \<psi>0
+    then show ?thesis
+      by simp
+  next
+    case not_summable
+    then show ?thesis 
+      by (simp add: infsum_not_exists)
+  qed
+qed
+
+lemma infsum_tensor_ell2_left: \<open>(\<Sum>\<^sub>\<infinity>x\<in>A. \<phi> x) \<otimes>\<^sub>s \<psi> = (\<Sum>\<^sub>\<infinity>x\<in>A. \<phi> x \<otimes>\<^sub>s \<psi>)\<close>
+proof -
+  from infsum_tensor_ell2_right
+  have \<open>swap_ell2 *\<^sub>V (\<psi> \<otimes>\<^sub>s (\<Sum>\<^sub>\<infinity>x\<in>A. \<phi> x)) = swap_ell2 *\<^sub>V (\<Sum>\<^sub>\<infinity>x\<in>A. \<psi> \<otimes>\<^sub>s \<phi> x)\<close>
+    by metis
+  then show ?thesis
+    by (simp add: flip: infsum_cblinfun_apply_isometry)
+qed
+
+
 subsection \<open>Tensor product of operators on \<^typ>\<open>_ ell2\<close>\<close>
 
 definition tensor_op :: \<open>('a ell2, 'b ell2) cblinfun \<Rightarrow> ('c ell2, 'd ell2) cblinfun
@@ -684,45 +777,6 @@ lift_definition right_amplification :: \<open>('a ell2 \<Rightarrow>\<^sub>C\<^s
 lift_definition left_amplification :: \<open>('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2) \<Rightarrow>\<^sub>C\<^sub>L (('c\<times>'a) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('c\<times>'b) ell2)\<close> is
   \<open>\<lambda>a. id_cblinfun \<otimes>\<^sub>o a\<close>
   by (simp add: bounded_cbilinear.bounded_clinear_right)
-
-lift_definition tensor_ell2_left :: \<open>'a ell2 \<Rightarrow> ('b ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>'b) ell2)\<close> is
-  \<open>\<lambda>\<psi> \<phi>. \<psi> \<otimes>\<^sub>s \<phi>\<close>
-  by (simp add: bounded_cbilinear.bounded_clinear_right bounded_cbilinear_tensor_ell2)
-
-lemma tensor_ell2_left_apply[simp]: \<open>tensor_ell2_left \<psi> *\<^sub>V \<phi> = \<psi> \<otimes>\<^sub>s \<phi>\<close>
-  apply (transfer fixing: \<psi> \<phi>) by simp
-
-lift_definition tensor_ell2_right :: \<open>'a ell2 \<Rightarrow> ('b ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b\<times>'a) ell2)\<close> is
-  \<open>\<lambda>\<psi> \<phi>. \<phi> \<otimes>\<^sub>s \<psi>\<close>
-  by (simp add: bounded_clinear_tensor_ell22)
-
-lemma tensor_ell2_right_apply[simp]: \<open>tensor_ell2_right \<psi> *\<^sub>V \<phi> = \<phi> \<otimes>\<^sub>s \<psi>\<close>
-  apply (transfer fixing: \<psi> \<phi>) by simp
-
-lemma isometry_tensor_ell2_right: \<open>isometry (tensor_ell2_right \<psi>)\<close> if \<open>norm \<psi> = 1\<close>
-  apply (rule norm_preserving_isometry)
-  by (simp add: tensor_ell2_right_apply norm_tensor_ell2 that)
-
-lemma isometry_tensor_ell2_left: \<open>isometry (tensor_ell2_left \<psi>)\<close> if \<open>norm \<psi> = 1\<close>
-  apply (rule norm_preserving_isometry)
-  by (simp add: tensor_ell2_left_apply norm_tensor_ell2 that)
-
-lemma tensor_ell2_right_scale: \<open>tensor_ell2_right (a *\<^sub>C \<psi>) = a *\<^sub>C tensor_ell2_right \<psi>\<close>
-  apply transfer by (auto intro!: ext simp: tensor_ell2_scaleC2)
-lemma tensor_ell2_left_scale: \<open>tensor_ell2_left (a *\<^sub>C \<psi>) = a *\<^sub>C tensor_ell2_left \<psi>\<close>
-  apply transfer by (auto intro!: ext simp: tensor_ell2_scaleC1)
-
-lemma tensor_ell2_right_0[simp]: \<open>tensor_ell2_right 0 = 0\<close>
-  by (auto intro!: cblinfun_eqI simp: tensor_ell2_right_apply)
-lemma tensor_ell2_left_0[simp]: \<open>tensor_ell2_left 0 = 0\<close>
-  by (auto intro!: cblinfun_eqI simp: tensor_ell2_left_apply)
-
-lemma tensor_ell2_right_adj_apply[simp]: \<open>(tensor_ell2_right \<psi>*) *\<^sub>V (\<alpha> \<otimes>\<^sub>s \<beta>) = (\<psi> \<bullet>\<^sub>C \<beta>) *\<^sub>C \<alpha>\<close>
-  apply (rule cinner_extensionality)
-  by (simp add: cinner_adj_right tensor_ell2_right_apply)
-lemma tensor_ell2_left_adj_apply[simp]: \<open>(tensor_ell2_left \<psi>*) *\<^sub>V (\<alpha> \<otimes>\<^sub>s \<beta>) = (\<psi> \<bullet>\<^sub>C \<alpha>) *\<^sub>C \<beta>\<close>
-  apply (rule cinner_extensionality)
-  by (simp add: cinner_adj_right tensor_ell2_right_apply)
 
 
 
@@ -1385,6 +1439,13 @@ qed
 lemma swap_tensor_op[simp]: \<open>swap_ell2 o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o b) o\<^sub>C\<^sub>L swap_ell2 = b \<otimes>\<^sub>o a\<close>
   by (auto intro!: equal_ket simp add: tensor_op_ell2 simp flip: tensor_ell2_ket)
 
+lemma swap_tensor_op_sandwich[simp]: \<open>sandwich swap_ell2 (a \<otimes>\<^sub>o b) = b \<otimes>\<^sub>o a\<close>
+  by (simp add: sandwich_apply swap_tensor_op)
+
+lemma swap_ell2_commute_tensor_op: 
+  \<open>swap_ell2 o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o b) = (b \<otimes>\<^sub>o a) o\<^sub>C\<^sub>L swap_ell2\<close>
+  by (auto intro!: tensor_ell2_extensionality simp: tensor_op_ell2)
+
 lemma trace_class_tensor_op_swap: \<open>trace_class (a \<otimes>\<^sub>o b) \<longleftrightarrow> trace_class (b \<otimes>\<^sub>o a)\<close>
 proof (rule iffI)
   assume \<open>trace_class (a \<otimes>\<^sub>o b)\<close>
@@ -1522,19 +1583,59 @@ lemma isometry_tensor_op: \<open>isometry (U \<otimes>\<^sub>o V)\<close> if \<o
 lemma is_Proj_tensor_op: \<open>is_Proj a \<Longrightarrow> is_Proj b \<Longrightarrow> is_Proj (a \<otimes>\<^sub>o b)\<close>
   by (simp add: comp_tensor_op is_Proj_algebraic tensor_op_adjoint)
 
+lemma isometry_tensor_id_right[simp]:
+  fixes U :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+  shows \<open>isometry (U \<otimes>\<^sub>o (id_cblinfun :: 'c ell2 \<Rightarrow>\<^sub>C\<^sub>L _)) \<longleftrightarrow> isometry U\<close>
+proof (rule iffI)
+  assume \<open>isometry U\<close>
+  then show \<open>isometry (U \<otimes>\<^sub>o id_cblinfun)\<close>
+    unfolding isometry_def
+    by (auto simp add: tensor_op_adjoint comp_tensor_op)
+next
+  let ?id = \<open>id_cblinfun :: 'c ell2 \<Rightarrow>\<^sub>C\<^sub>L _\<close>
+  assume asm: \<open>isometry (U \<otimes>\<^sub>o ?id)\<close>
+  then have \<open>(U* o\<^sub>C\<^sub>L U) \<otimes>\<^sub>o ?id = id_cblinfun \<otimes>\<^sub>o ?id\<close>
+    by (simp add: isometry_def tensor_op_adjoint comp_tensor_op)
+  then have \<open>U* o\<^sub>C\<^sub>L U = id_cblinfun\<close>
+    apply (rule inj_tensor_left[of ?id, unfolded inj_def, rule_format, rotated])
+    by simp
+  then show \<open>isometry U\<close>
+    by (simp add: isometry_def)
+qed
+
+lemma isometry_tensor_id_left[simp]: 
+  fixes U :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+  shows \<open>isometry ((id_cblinfun :: 'c ell2 \<Rightarrow>\<^sub>C\<^sub>L _) \<otimes>\<^sub>o U) \<longleftrightarrow> isometry U\<close>
+proof (rule iffI)
+  assume \<open>isometry U\<close>
+  then show \<open>isometry (id_cblinfun \<otimes>\<^sub>o U)\<close>
+    unfolding isometry_def
+    by (auto simp add: tensor_op_adjoint comp_tensor_op)
+next
+  let ?id = \<open>id_cblinfun :: 'c ell2 \<Rightarrow>\<^sub>C\<^sub>L _\<close>
+  assume asm: \<open>isometry (?id \<otimes>\<^sub>o U)\<close>
+  then have \<open>?id \<otimes>\<^sub>o (U* o\<^sub>C\<^sub>L U) = ?id \<otimes>\<^sub>o id_cblinfun\<close>
+    by (simp add: isometry_def tensor_op_adjoint comp_tensor_op)
+  then have \<open>U* o\<^sub>C\<^sub>L U = id_cblinfun\<close>
+    apply (rule inj_tensor_right[of ?id, unfolded inj_def, rule_format, rotated])
+    by simp
+  then show \<open>isometry U\<close>
+    by (simp add: isometry_def)
+qed
+
+lemma unitary_tensor_id_right[simp]: \<open>unitary (U \<otimes>\<^sub>o id_cblinfun) \<longleftrightarrow> unitary U\<close>
+  unfolding unitary_twosided_isometry
+  by (simp add: tensor_op_adjoint)
+
+lemma unitary_tensor_id_left[simp]: \<open>unitary (id_cblinfun \<otimes>\<^sub>o U) \<longleftrightarrow> unitary U\<close>
+  unfolding unitary_twosided_isometry
+  by (simp add: tensor_op_adjoint)
+
+
 subsection \<open>Tensor product of subspaces\<close>
 
 definition tensor_ccsubspace (infixr "\<otimes>\<^sub>S" 70) where
   \<open>tensor_ccsubspace A B = ccspan {\<psi> \<otimes>\<^sub>s \<phi> | \<psi> \<phi>. \<psi> \<in> space_as_set A \<and> \<phi> \<in> space_as_set B}\<close>
-
-(* TODO move to BO next to cblinfun_image_ccspan; if keep *)
-lemma cblinfun_image_def2: \<open>A *\<^sub>S S = ccspan ((*\<^sub>V) A ` space_as_set S)\<close>
-  apply (simp add: flip: cblinfun_image_ccspan)
-  by (metis ccspan_leqI ccspan_superset less_eq_ccsubspace.rep_eq order_class.order_eq_iff)
-
-(* TODO move to BO*)
-lemma ccspan_UNIV[simp]: \<open>ccspan UNIV = \<top>\<close>
-  by (simp add: ccspan.abs_eq top_ccsubspace_def)
 
 lemma tensor_ccsubspace_via_Proj: \<open>A \<otimes>\<^sub>S B = (Proj A \<otimes>\<^sub>o Proj B) *\<^sub>S \<top>\<close>
 proof (rule antisym)
@@ -1748,6 +1849,10 @@ proof -
     using \<open>a \<noteq> 0\<close> by (rule tensor_ell2_mem_tensor_ccsubspace_left)
 qed
 
+lemma tensor_ell2_in_tensor_ccsubspace: \<open>a \<otimes>\<^sub>s b \<in> space_as_set (A \<otimes>\<^sub>S B)\<close> if \<open>a \<in> space_as_set A\<close> and \<open>b \<in> space_as_set B\<close>
+  \<comment> \<open>Converse is @{thm [source] tensor_ell2_mem_tensor_ccsubspace_left} and \<open>\<dots>_right\<close>.\<close>
+  using that by (auto intro!: ccspan_superset[THEN subsetD] simp add: tensor_ccsubspace_def)
+
 lemma tensor_ccsubspace_INF_left_top:
   fixes S :: \<open>'a \<Rightarrow> 'b ell2 ccsubspace\<close>
   shows \<open>(INF x\<in>X. S x) \<otimes>\<^sub>S (\<top>::'c ell2 ccsubspace) = (INF x\<in>X. S x \<otimes>\<^sub>S \<top>)\<close>
@@ -1938,5 +2043,214 @@ proof -
     by (simp_all add: swap_ell2_tensor_ccsubspace cblinfun_image_INF_eq)
 qed
 
+lemma tensor_ccsubspace_ccspan: \<open>ccspan X \<otimes>\<^sub>S ccspan Y = ccspan {x \<otimes>\<^sub>s y | x y. x \<in> X \<and> y \<in> Y}\<close>
+proof (rule antisym)
+  show \<open>ccspan {x \<otimes>\<^sub>s y |x y. x \<in> X \<and> y \<in> Y} \<le> ccspan X \<otimes>\<^sub>S ccspan Y\<close>
+    apply (auto intro!: ccspan_mono Collect_mono ex_mono simp add: tensor_ccsubspace_def)
+    using ccspan_superset by auto
+next
+  have \<open>{\<psi> \<otimes>\<^sub>s \<phi> |\<psi> \<phi>. \<psi> \<in> space_as_set (ccspan X) \<and> \<phi> \<in> space_as_set (ccspan Y)}
+       \<subseteq> closure {x \<otimes>\<^sub>s y |x y. x \<in> cspan X \<and> y \<in> cspan Y}\<close>
+  proof (rule subsetI)
+    fix \<gamma>
+    assume \<open>\<gamma> \<in> {\<psi> \<otimes>\<^sub>s \<phi> |\<psi> \<phi>. \<psi> \<in> space_as_set (ccspan X) \<and> \<phi> \<in> space_as_set (ccspan Y)}\<close>
+    then obtain \<psi> \<phi> where \<psi>: \<open>\<psi> \<in> space_as_set (ccspan X)\<close> and \<phi>: \<open>\<phi> \<in> space_as_set (ccspan Y)\<close> and \<gamma>_def: \<open>\<gamma> = \<psi> \<otimes>\<^sub>s \<phi>\<close>
+      by blast
+    from \<psi>
+    obtain \<psi>' where lim1: \<open>\<psi>' \<longlonglongrightarrow> \<psi>\<close> and \<psi>'X: \<open>\<psi>' n \<in> cspan X\<close> for n
+      apply atomize_elim
+      apply (auto simp: ccspan.rep_eq)
+      using closure_sequential by blast
+    from \<phi>
+    obtain \<phi>' where lim2: \<open>\<phi>' \<longlonglongrightarrow> \<phi>\<close> and \<phi>'Y: \<open>\<phi>' n \<in> cspan Y\<close> for n
+      apply atomize_elim
+      apply (auto simp: ccspan.rep_eq)
+      using closure_sequential by blast
+    interpret tensor: bounded_cbilinear tensor_ell2
+      by (rule bounded_cbilinear_tensor_ell2)
+    from lim1 lim2 have \<open>(\<lambda>n. \<psi>' n \<otimes>\<^sub>s \<phi>' n) \<longlonglongrightarrow> \<psi> \<otimes>\<^sub>s \<phi>\<close>
+      by (rule tensor.tendsto)
+    moreover have \<open>\<psi>' n \<otimes>\<^sub>s \<phi>' n \<in> {x \<otimes>\<^sub>s y |x y. x \<in> cspan X \<and> y \<in> cspan Y}\<close> for n
+      using \<psi>'X \<phi>'Y by auto
+    ultimately show \<open>\<gamma> \<in> closure {x \<otimes>\<^sub>s y |x y. x \<in> cspan X \<and> y \<in> cspan Y}\<close>
+      unfolding \<gamma>_def
+      by (meson closure_sequential)
+  qed
+  also have \<open>closure {x \<otimes>\<^sub>s y |x y. x \<in> cspan X \<and> y \<in> cspan Y}
+          \<subseteq> closure (cspan {x \<otimes>\<^sub>s y |x y. x \<in> X \<and> y \<in> Y})\<close>
+  proof (intro closure_mono subsetI)
+    fix \<gamma>
+    assume \<open>\<gamma> \<in> {x \<otimes>\<^sub>s y |x y. x \<in> cspan X \<and> y \<in> cspan Y}\<close>
+    then obtain x y where \<gamma>_def: \<open>\<gamma> = x \<otimes>\<^sub>s y\<close> and \<open>x \<in> cspan X\<close> and \<open>y \<in> cspan Y\<close>
+      by blast
+    from \<open>x \<in> cspan X\<close>
+    obtain X' x' where \<open>finite X'\<close> and \<open>X' \<subseteq> X\<close> and x_def: \<open>x = (\<Sum>i\<in>X'. x' i *\<^sub>C i)\<close>
+      using complex_vector.span_explicit[of X] apply atomize_elim
+      by auto
+    from \<open>y \<in> cspan Y\<close>
+    obtain Y' y' where \<open>finite Y'\<close> and \<open>Y' \<subseteq> Y\<close> and y_def: \<open>y = (\<Sum>j\<in>Y'. y' j *\<^sub>C j)\<close>
+      using complex_vector.span_explicit[of Y] apply atomize_elim
+      by auto
+    from x_def y_def \<gamma>_def
+    have \<open>\<gamma> = (\<Sum>i\<in>X'. x' i *\<^sub>C i) \<otimes>\<^sub>s (\<Sum>j\<in>Y'. y' j *\<^sub>C j)\<close>
+      by simp
+    also have \<open>\<dots> = (\<Sum>i\<in>X'. \<Sum>j\<in>Y'. (x' i *\<^sub>C i) \<otimes>\<^sub>s (y' j *\<^sub>C j))\<close>
+      by (smt (verit) sum.cong tensor_ell2_sum_left tensor_ell2_sum_right)
+    also have \<open>\<dots> = (\<Sum>i\<in>X'. \<Sum>j\<in>Y'. (x' i * y' j) *\<^sub>C (i \<otimes>\<^sub>s j))\<close>
+      by (metis (no_types, lifting) scaleC_scaleC sum.cong tensor_ell2_scaleC1 tensor_ell2_scaleC2)
+    also have \<open>\<dots> \<in> cspan {x \<otimes>\<^sub>s y |x y. x \<in> X \<and> y \<in> Y}\<close>
+      using \<open>X' \<subseteq> X\<close> \<open>Y' \<subseteq> Y\<close>
+      by (auto intro!: complex_vector.span_sum complex_vector.span_scale
+          complex_vector.span_base[of \<open>_ \<otimes>\<^sub>s _\<close>])
+    finally show \<open>\<gamma> \<in> cspan {x \<otimes>\<^sub>s y |x y. x \<in> X \<and> y \<in> Y}\<close>
+      by -
+  qed
+  also have \<open>\<dots> = space_as_set (ccspan {x \<otimes>\<^sub>s y |x y. x \<in> X \<and> y \<in> Y})\<close>
+    using ccspan.rep_eq by blast
+  finally show \<open>ccspan X \<otimes>\<^sub>S ccspan Y \<le> ccspan {x \<otimes>\<^sub>s y |x y. x \<in> X \<and> y \<in> Y}\<close>
+    by (auto intro!: ccspan_leqI simp add: tensor_ccsubspace_def)
+qed
+
+lemma tensor_ccsubspace_mono: \<open>A \<otimes>\<^sub>S B \<le> C \<otimes>\<^sub>S D\<close> if \<open>A \<le> C\<close> and \<open>B \<le> D\<close>
+  apply (auto intro!: ccspan_mono simp add: tensor_ccsubspace_def)
+  using that
+  by (auto simp add: less_eq_ccsubspace_def)
+
+lemma tensor_ccsubspace_element_as_infsum:
+  fixes A :: \<open>'a ell2 ccsubspace\<close> and B :: \<open>'b ell2 ccsubspace\<close>
+  assumes \<open>\<psi> \<in> space_as_set (A \<otimes>\<^sub>S B)\<close>
+  shows \<open>\<exists>\<phi> \<delta>. (\<forall>n::nat. \<phi> n \<in> space_as_set A) \<and> (\<forall>n. \<delta> n \<in> space_as_set B)
+       \<and> has_sum (\<lambda>n. \<phi> n \<otimes>\<^sub>s \<delta> n) UNIV \<psi>\<close>
+proof -
+  obtain A' where spanA': \<open>ccspan A' = A\<close> and orthoA': \<open>is_ortho_set A'\<close> and normA': \<open>a \<in> A' \<Longrightarrow> norm a = 1\<close> for a
+    using some_chilbert_basis_of_ccspan some_chilbert_basis_of_is_ortho_set some_chilbert_basis_of_norm1
+    by blast
+  obtain B' where spanB': \<open>ccspan B' = B\<close> and orthoB': \<open>is_ortho_set B'\<close> and normB': \<open>b \<in> B' \<Longrightarrow> norm b = 1\<close> for b
+    using some_chilbert_basis_of_ccspan some_chilbert_basis_of_is_ortho_set some_chilbert_basis_of_norm1
+    by blast
+  define AB' where \<open>AB' = {a \<otimes>\<^sub>s b | a b. a \<in> A' \<and> b \<in> B'}\<close>
+  define ABnon0 where \<open>ABnon0 = {ab \<in> AB'. (ab \<bullet>\<^sub>C \<psi>) *\<^sub>C ab \<noteq> 0}\<close>
+  have ABnon0_def': \<open>ABnon0 = {ab \<in> AB'. (norm (ab \<bullet>\<^sub>C \<psi>))\<^sup>2 \<noteq> 0}\<close>
+    by (auto simp: ABnon0_def)
+  have \<open>is_ortho_set AB'\<close>
+    by (simp add: AB'_def orthoA' orthoB' tensor_ell2_is_ortho_set)
+  have normAB': \<open>ab \<in> AB' \<Longrightarrow> norm ab = 1\<close> for ab
+    by (auto simp add: AB'_def norm_tensor_ell2 normA' normB')
+  have spanAB': \<open>ccspan AB' = A \<otimes>\<^sub>S B\<close>
+    by (simp add: tensor_ccsubspace_ccspan AB'_def flip: spanA' spanB')
+  have sum1: \<open>has_sum (\<lambda>ab. (ab \<bullet>\<^sub>C \<psi>) *\<^sub>C ab) AB' \<psi>\<close>
+    apply (rule basis_projections_reconstruct_has_sum)
+    by (simp_all add: spanAB' \<open>is_ortho_set AB'\<close> normAB' assms)
+  have \<open>(\<lambda>ab. (norm (ab \<bullet>\<^sub>C \<psi>))\<^sup>2) summable_on AB'\<close>
+    apply (rule summable_on_norm_on_basis)
+    by (simp_all add: spanAB' \<open>is_ortho_set AB'\<close> normAB' assms)
+  then have \<open>countable ABnon0\<close>
+    using ABnon0_def' summable_countable_real by blast
+  obtain f and N :: \<open>nat set\<close> where bij_f: \<open>bij_betw f N ABnon0\<close>
+    using \<open>countable ABnon0\<close> countableE_bij by blast
+  then obtain \<phi>0 \<delta>0 where f_def: \<open>f n = \<phi>0 n \<otimes>\<^sub>s \<delta>0 n\<close> and \<phi>0A': \<open>\<phi>0 n \<in> A'\<close> and \<delta>0B': \<open>\<delta>0 n \<in> B'\<close> if \<open>n \<in> N\<close> for n
+    apply atomize_elim 
+    apply (subst all_conj_distrib[symmetric] choice_iff[symmetric])+
+    apply (simp add: bij_betw_def ABnon0_def)
+    using AB'_def \<open>bij_betw f N ABnon0\<close> bij_betwE mem_Collect_eq by blast
+  define c where \<open>c n = (\<phi>0 n \<otimes>\<^sub>s \<delta>0 n) \<bullet>\<^sub>C \<psi>\<close> for n
+  from sum1 have \<open>has_sum (\<lambda>ab. (ab \<bullet>\<^sub>C \<psi>) *\<^sub>C ab) ABnon0 \<psi>\<close>
+    apply (rule has_sum_cong_neutral[THEN iffD1, rotated -1])
+    by (auto simp: ABnon0_def)
+  then have \<open>has_sum (\<lambda>n. (f n \<bullet>\<^sub>C \<psi>) *\<^sub>C f n) N \<psi>\<close>
+    by (rule has_sum_reindex_bij_betw[OF bij_f, THEN iffD2])
+  then have sum2: \<open>has_sum (\<lambda>n. c n *\<^sub>C (\<phi>0 n \<otimes>\<^sub>s \<delta>0 n)) N \<psi>\<close>
+    apply (rule has_sum_cong[THEN iffD1, rotated])
+    by (simp add: f_def c_def)
+  define \<phi> \<delta> where \<open>\<phi> n = (if n\<in>N then c n *\<^sub>C \<phi>0 n else 0)\<close> and \<open>\<delta> n = (if n\<in>N then \<delta>0 n else 0)\<close> for n
+  then have 1: \<open>\<phi> n \<in> space_as_set A\<close> and 2: \<open>\<delta> n \<in> space_as_set B\<close> for n
+    using \<phi>0A' \<delta>0B' spanA' spanB' ccspan_superset 
+    by (auto intro!: complex_vector.subspace_scale simp: \<phi>_def \<delta>_def)
+  from sum2 have sum3: \<open>has_sum (\<lambda>n. \<phi> n \<otimes>\<^sub>s \<delta> n) UNIV \<psi>\<close>
+    apply (rule has_sum_cong_neutral[THEN iffD2, rotated -1])
+    by (auto simp: \<phi>_def \<delta>_def tensor_ell2_scaleC1)
+  from 1 2 sum3 show ?thesis
+    by auto
+qed
+
+lemma ortho_tensor_ccsubspace_right: \<open>- (\<top> \<otimes>\<^sub>S A) = \<top> \<otimes>\<^sub>S (- A)\<close>
+proof -
+  have [simp]: \<open>is_Proj (id_cblinfun \<otimes>\<^sub>o Proj X)\<close> for X
+    by (metis Proj_is_Proj Proj_top is_Proj_tensor_op)
+  
+  have \<open>Proj (- (\<top> \<otimes>\<^sub>S A)) = id_cblinfun - Proj (\<top> \<otimes>\<^sub>S A)\<close>
+    by (simp add: Proj_ortho_compl)
+  also have \<open>\<dots> = id_cblinfun - (id_cblinfun \<otimes>\<^sub>o Proj A)\<close>
+    by (simp add: tensor_ccsubspace_via_Proj Proj_on_own_range)
+  also have \<open>\<dots> = id_cblinfun \<otimes>\<^sub>o (id_cblinfun - Proj A)\<close>
+    by (metis cblinfun.diff_right left_amplification.rep_eq tensor_id)
+  also have \<open>\<dots> = Proj \<top> \<otimes>\<^sub>o Proj (- A)\<close>
+    by (simp add: Proj_ortho_compl)
+  also have \<open>\<dots> = Proj (\<top> \<otimes>\<^sub>S (- A))\<close>
+    by (simp add: tensor_ccsubspace_via_Proj Proj_on_own_range)
+  finally show ?thesis
+    using Proj_inj by blast
+qed
+
+lemma ortho_tensor_ccsubspace_left: \<open>- (A \<otimes>\<^sub>S \<top>) = (- A) \<otimes>\<^sub>S \<top>\<close>
+proof -
+  have \<open>- (A \<otimes>\<^sub>S \<top>) = swap_ell2 *\<^sub>S (- (\<top> \<otimes>\<^sub>S A))\<close>
+    by (simp add: unitary_image_ortho_compl swap_ell2_tensor_ccsubspace)
+  also have \<open>\<dots> = swap_ell2 *\<^sub>S (\<top> \<otimes>\<^sub>S (- A))\<close>
+    by (simp add: ortho_tensor_ccsubspace_right)
+  also have \<open>\<dots> = (- A) \<otimes>\<^sub>S \<top>\<close>
+    by (simp add: swap_ell2_tensor_ccsubspace)
+  finally show ?thesis
+    by -
+qed
+
+lemma kernel_tensor_id_left: \<open>kernel (id_cblinfun \<otimes>\<^sub>o A) = \<top> \<otimes>\<^sub>S kernel A\<close>
+proof -
+  have \<open>kernel (id_cblinfun \<otimes>\<^sub>o A) = - ((id_cblinfun \<otimes>\<^sub>o A)* *\<^sub>S \<top>)\<close>
+    by (rule kernel_compl_adj_range)
+  also have \<open>\<dots> = - (id_cblinfun *\<^sub>S \<top> \<otimes>\<^sub>S A* *\<^sub>S \<top>)\<close>
+    by (metis cblinfun_image_id id_cblinfun_adjoint tensor_ccsubspace_image tensor_ccsubspace_top tensor_op_adjoint)
+  also have \<open>\<dots> = \<top> \<otimes>\<^sub>S (- (A* *\<^sub>S \<top>))\<close>
+    by (simp add: ortho_tensor_ccsubspace_right)
+  also have \<open>\<dots> = \<top> \<otimes>\<^sub>S kernel A\<close>
+    by (simp add: kernel_compl_adj_range)
+  finally show ?thesis
+    by -
+qed
+
+lemma kernel_tensor_id_right: \<open>kernel (A \<otimes>\<^sub>o id_cblinfun) = kernel A \<otimes>\<^sub>S \<top>\<close>
+proof -
+  have ker_swap: \<open>kernel swap_ell2 = 0\<close>
+    by (simp add: kernel_isometry)
+  have \<open>kernel (id_cblinfun \<otimes>\<^sub>o A) = \<top> \<otimes>\<^sub>S kernel A\<close>
+    by (rule kernel_tensor_id_left)
+  from this[THEN arg_cong, of \<open>cblinfun_image swap_ell2\<close>]
+  show ?thesis
+    by (simp add: swap_ell2_tensor_ccsubspace cblinfun_image_kernel_unitary
+        flip: swap_ell2_commute_tensor_op kernel_cblinfun_compose[OF ker_swap])
+qed
+
+
+lemma eigenspace_tensor_id_left: \<open>eigenspace c (id_cblinfun \<otimes>\<^sub>o A) = \<top> \<otimes>\<^sub>S eigenspace c A\<close>
+proof -
+  have \<open>eigenspace c (id_cblinfun \<otimes>\<^sub>o A) = kernel (id_cblinfun \<otimes>\<^sub>o (A - c *\<^sub>C id_cblinfun))\<close>
+    apply (simp add: eigenspace_def)
+    by (metis (no_types, lifting) complex_vector.scale_minus_left tensor_id tensor_op_right_add tensor_op_scaleC_right uminus_add_conv_diff)
+  also have \<open>kernel (id_cblinfun \<otimes>\<^sub>o (A - c *\<^sub>C id_cblinfun)) = \<top> \<otimes>\<^sub>S kernel (A - c *\<^sub>C id_cblinfun)\<close>
+    by (simp add: kernel_tensor_id_left)
+  also have \<open>\<dots> = \<top> \<otimes>\<^sub>S eigenspace c A\<close>
+    by (simp add: eigenspace_def)
+  finally show ?thesis
+    by -
+qed
+
+lemma eigenspace_tensor_id_right: \<open>eigenspace c (A \<otimes>\<^sub>o id_cblinfun) = eigenspace c A \<otimes>\<^sub>S \<top>\<close>
+proof -
+  have \<open>eigenspace c (id_cblinfun \<otimes>\<^sub>o A) = \<top> \<otimes>\<^sub>S eigenspace c A\<close>
+    by (rule eigenspace_tensor_id_left)
+  from this[THEN arg_cong, of \<open>cblinfun_image swap_ell2\<close>]
+  show ?thesis
+    by (simp add: swap_ell2_commute_tensor_op cblinfun_image_eigenspace_unitary swap_ell2_tensor_ccsubspace)
+qed
 
 end

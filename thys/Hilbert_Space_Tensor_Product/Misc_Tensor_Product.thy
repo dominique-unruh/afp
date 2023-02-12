@@ -6,7 +6,10 @@ theory Misc_Tensor_Product
     "HOL-Analysis.Infinite_Sum" "HOL-Analysis.Harmonic_Numbers" Containers.Containers_Auxiliary
     Complex_Bounded_Operators.Extra_General
     Complex_Bounded_Operators.Extra_Vector_Spaces
+    Complex_Bounded_Operators.BO_Unsorted
 begin
+
+unbundle lattice_syntax
 
 (* TODO explain *)
 lemma local_defE: "(\<And>x. x=y \<Longrightarrow> P) \<Longrightarrow> P" by metis
@@ -1164,12 +1167,6 @@ proof -
     using sums_def_le by blast
 qed
 
-lemma has_sumI_metric:
-  fixes l :: \<open>'a :: {metric_space, comm_monoid_add}\<close>
-  assumes \<open>\<And>e. e > 0 \<Longrightarrow> \<exists>X. finite X \<and> X \<subseteq> A \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> A \<longrightarrow> dist (sum f Y) l < e)\<close>
-  shows \<open>has_sum f A l\<close>
-  unfolding has_sum_metric using assms by simp
-
 lemma sums_has_sum:
   fixes s :: \<open>'a :: banach\<close>
   assumes sums: \<open>f sums s\<close>
@@ -1259,11 +1256,6 @@ proof -
   then show ?thesis
     by simp
 qed
-
-lemma summable_onI:
-  assumes \<open>has_sum f A s\<close>
-  shows \<open>f summable_on A\<close>
-  using assms summable_on_def by blast
 
 lemma gbinomial_abs_summable:
   fixes a :: real
@@ -1391,7 +1383,8 @@ proof (rule nonneg_bdd_above_summable_on, simp, rule bdd_aboveI2, rename_tac F)
     unfolding norm_mult
     by (smt mult_left_mono mult_nonneg_nonneg mult_right_mono norm_ge_zero)
   hence "(\<Sum>i\<in>F. norm (x i * y i)) \<le> (\<Sum>i\<in>F. norm ((x i)\<^sup>2) + norm ((y i)\<^sup>2))"
-    by (simp add: power2_eq_square sum_mono)
+    using [[simp_trace]]
+    by (simp add: power2_eq_square sum_mono del: VS_Connect.class_semiring.add.finprod_multf)
   also have "\<dots> = (\<Sum>i\<in>F. norm ((x i)\<^sup>2)) + (\<Sum>i\<in>F. norm ((y i)\<^sup>2))"
     by (simp add: sum.distrib)
   also have "\<dots> \<le> (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((x i)\<^sup>2)) + (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((y i)\<^sup>2))"
@@ -1938,5 +1931,18 @@ lemma set_compr_2_image_collect: \<open>{f x y |x y. P x y} = case_prod f ` Coll
 
 lemma closure_image_closure: \<open>continuous_on (closure S) f \<Longrightarrow> closure (f ` closure S) = closure (f ` S)\<close>
   by (smt (verit) closed_closure closure_closure closure_mono closure_subset image_closure_subset image_mono set_eq_subset)
+
+
+lemma has_sum_reindex_bij_betw:
+  assumes "bij_betw g A B"
+  shows   "has_sum (\<lambda>x. f (g x)) A l \<longleftrightarrow> has_sum f B l"
+proof -
+  have \<open>has_sum (\<lambda>x. f (g x)) A l \<longleftrightarrow> has_sum f (g ` A) l\<close>
+    apply (rule has_sum_reindex[symmetric, unfolded o_def])
+    using assms bij_betw_imp_inj_on by blast
+  also have \<open>\<dots> \<longleftrightarrow> has_sum f B l\<close>
+    using assms bij_betw_imp_surj_on by blast
+  finally show ?thesis .
+qed
 
 end
