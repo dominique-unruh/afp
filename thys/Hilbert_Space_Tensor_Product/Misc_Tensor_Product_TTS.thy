@@ -1001,7 +1001,7 @@ proof -
     by -
 qed
 
-lemma (in module) span_ud[unoverload_def]: \<open>span = span_ow UNIV plus 0 scale\<close>
+lemma (in Modules.module) span_ud[unoverload_def]: \<open>span = span_ow UNIV plus 0 scale\<close>
   by (auto intro!: ext simp: span_def span_ow_def
       module_subspace_ud hull_ow_ud)
 
