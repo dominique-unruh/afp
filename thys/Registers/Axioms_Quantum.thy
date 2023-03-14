@@ -499,6 +499,7 @@ lemma clinear_register: \<open>register F \<Longrightarrow> clinear F\<close>
 lemma weak_star_cont_register: \<open>register F \<Longrightarrow> continuous_map weak_star_topology weak_star_topology F\<close>
   using register_def by blast
 
+(* TODO rename \<rightarrow> sandwich_unitary_commutant *)
 lemma sandwich_unitary_complement: 
   fixes U :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
   assumes [simp]: \<open>unitary U\<close>

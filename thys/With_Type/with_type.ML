@@ -83,22 +83,26 @@ fun get_all_type_info ctxt = With_Type_Data.get (Context.Proof ctxt)
 
 (* Like Unoverload_Type.unoverload_type, but works if the theorem contains assumptions from the current context. *)
 fun unoverload_type_local ctxt tvars thm = let
-  val hyps = Assumption.all_assms_of ctxt |> map Thm.term_of
+  val chyps = Thm.chyps_of thm
+  val hyps = map Thm.term_of chyps
   val tvars_hyps = fold Term.add_tvars hyps [] |> map fst
   val bad_tvars = inter (op=) (distinct (op=) tvars_hyps) tvars
   val _ = null bad_tvars orelse
           raise THM ("unoverload_type_local: context assumptions contain type variables " ^
                 String.concatWith ", " (map string_of_indexname bad_tvars) ^
                 " that we are trying to unoverload", 0, [thm])
-  val global_ctxt = Proof_Context.init_global (Proof_Context.theory_of ctxt)
-  val thm' = Proof_Context.export ctxt global_ctxt [thm] |> hd
-  val thm'' = Unoverload_Type.unoverload_type (Context.Proof ctxt) tvars thm'
-  val skip_nprems = Thm.nprems_of thm'' - Thm.nprems_of thm'
+  val thm_no_assm = fold Thm.implies_intr chyps thm
+  val (tfree_subst, thm_no_tfree) = Thm.varifyT_global' TFrees.empty thm_no_assm 
+  val thm_unover = Unoverload_Type.unoverload_type (Context.Proof ctxt) tvars thm_no_tfree
+  val skip_nprems = Thm.nprems_of thm_unover - Thm.nprems_of thm_no_tfree
   val _ = skip_nprems >= 0 orelse error ("unoverload_type_local: skip_nprems is negative")
-  fun remove_hyp (i,hyp) thm : thm = case Seq.pull (solve_tac ctxt [hyp] (i+skip_nprems+1) thm) of
-    NONE => raise THM ("unoverload_type_local: solving assumption failed", i+skip_nprems+1, [thm,hyp])
+  val tfree_subst' = map (fn ((n,s),ni) => ((ni,s), TFree (n,s) |> Thm.ctyp_of ctxt)) tfree_subst |> TVars.make
+  val thm_tfree = Thm.instantiate (tfree_subst', Vars.empty) thm_unover
+  val all_prems = Assumption.all_prems_of ctxt
+  fun remove_hyp i thm : thm = case Seq.pull (solve_tac ctxt all_prems (i+skip_nprems+1) thm) of
+    NONE => raise THM ("unoverload_type_local: solving assumption failed", i+skip_nprems+1, thm :: all_prems)
   | SOME (thm,_) => thm
-  val thm''' = fold remove_hyp (Assumption.all_prems_of ctxt |> map_index I |> rev) thm''
+  val thm''' = fold remove_hyp (hyps |> map_index fst |> rev) thm_tfree
   in thm''' end
 
 fun with_type_cancel ctxt thm = let
