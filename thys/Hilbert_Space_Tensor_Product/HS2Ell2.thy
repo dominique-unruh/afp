@@ -38,7 +38,7 @@ proof (rule order.antisym)
     by (simp add: Rep_chilbert2ell2 is_normal_some_chilbert_basis)
 qed
 
-lemma unitary_ell2_to_hilbert: \<open>unitary ell2_to_hilbert\<close>
+lemma unitary_ell2_to_hilbert[simp]: \<open>unitary ell2_to_hilbert\<close>
 proof (rule surj_isometry_is_unitary)
   show \<open>isometry (ell2_to_hilbert :: 'a chilbert2ell2 ell2 \<Rightarrow>\<^sub>C\<^sub>L _)\<close>
   proof (rule orthogonal_on_basis_is_isometry)
