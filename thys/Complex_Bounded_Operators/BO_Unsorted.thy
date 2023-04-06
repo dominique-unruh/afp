@@ -832,6 +832,52 @@ lemma unitary_nonzero[simp]: \<open>\<not> unitary (0 :: 'a::{chilbert_space, no
 lemma kernel_member_iff: \<open>x \<in> space_as_set (kernel A) \<longleftrightarrow> A *\<^sub>V x = 0\<close>
   using kernel_memberD kernel_memberI by blast
 
+(* TODO move next to *) thm abs_summable_on_cblinfun_apply
+lemma summable_on_cblinfun_apply:
+  assumes \<open>g summable_on S\<close>
+  shows \<open>(\<lambda>x. A *\<^sub>V g x) summable_on S\<close>
+  using bounded_clinear.bounded_linear[OF cblinfun.bounded_clinear_right] assms
+  by (rule summable_on_bounded_linear[unfolded o_def])
+
+(* TODO move next to *) thm abs_summable_on_cblinfun_apply
+lemma summable_on_cblinfun_apply_left:
+  assumes \<open>A summable_on S\<close>
+  shows \<open>(\<lambda>x. A x *\<^sub>V g) summable_on S\<close>
+  using bounded_clinear.bounded_linear[OF cblinfun.bounded_clinear_left] assms
+  by (rule summable_on_bounded_linear[unfolded o_def])
+lemma abs_summable_on_cblinfun_apply_left:
+  assumes \<open>A abs_summable_on S\<close>
+  shows \<open>(\<lambda>x. A x *\<^sub>V g) abs_summable_on S\<close>
+  using bounded_clinear.bounded_linear[OF cblinfun.bounded_clinear_left] assms
+  by (rule abs_summable_on_bounded_linear[unfolded o_def])
+lemma infsum_cblinfun_apply_left:
+  assumes \<open>A summable_on S\<close>
+  shows \<open>infsum (\<lambda>x. A x *\<^sub>V g) S = (infsum A S) *\<^sub>V g\<close>
+  apply (rule infsum_bounded_linear[unfolded o_def, of \<open>\<lambda>A. cblinfun_apply A g\<close>])
+  using assms 
+  by (auto simp add: bounded_clinear.bounded_linear bounded_cbilinear_cblinfun_apply)
+lemma has_sum_cblinfun_apply_left:
+  assumes \<open>has_sum A S x\<close>
+  shows \<open>has_sum (\<lambda>x. A x *\<^sub>V g) S (x *\<^sub>V g)\<close>
+  apply (rule has_sum_bounded_linear[unfolded o_def, of \<open>\<lambda>A. cblinfun_apply A g\<close>])
+  using assms by (auto simp add: bounded_clinear.bounded_linear cblinfun.bounded_clinear_left)
+
+lemma clinear_scaleR[simp]: \<open>clinear (scaleR x)\<close>
+  by (simp add: complex_vector.linear_scale_self scaleR_scaleC)
+
+lemma additive_cblinfun_compose_left[simp]: \<open>Modules.additive (\<lambda>x. x o\<^sub>C\<^sub>L a)\<close>
+  by (simp add: Modules.additive_def cblinfun_compose_add_left)
+lemma additive_cblinfun_compose_right[simp]: \<open>Modules.additive (\<lambda>x. a o\<^sub>C\<^sub>L x)\<close>
+  by (simp add: Modules.additive_def cblinfun_compose_add_right)
+lemma isCont_cblinfun_compose_left: \<open>isCont (\<lambda>x. x o\<^sub>C\<^sub>L a) y\<close>
+  apply (rule clinear_continuous_at)
+  by (rule bounded_clinear_cblinfun_compose_left)
+lemma isCont_cblinfun_compose_right: \<open>isCont (\<lambda>x. a o\<^sub>C\<^sub>L x) y\<close>
+  apply (rule clinear_continuous_at)
+  by (rule bounded_clinear_cblinfun_compose_right)
+
+
+
 unbundle
   no_cblinfun_notation
   no_jnf_notation

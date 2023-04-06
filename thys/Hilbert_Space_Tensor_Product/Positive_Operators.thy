@@ -142,12 +142,15 @@ next
     by -
 qed
 
+
+
 (* Proof follows https://link.springer.com/article/10.1007%2FBF01448052,
       @{cite wecken35linearer} *)
 lemma sqrt_op_existence:
   fixes A :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a::chilbert_space\<close>
   assumes Apos: \<open>A \<ge> 0\<close>
-  shows \<open>\<exists>B. B \<ge> 0 \<and> B o\<^sub>C\<^sub>L B = A \<and> (\<forall>F. A o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L A \<longrightarrow> B o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L B)\<close>
+  shows \<open>\<exists>B. B \<ge> 0 \<and> B o\<^sub>C\<^sub>L B = A \<and> (\<forall>F. A o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L A \<longrightarrow> B o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L B)
+          \<and> B \<in> closure (cspan (range (cblinfun_power A)))\<close>
 proof -
   define k S where \<open>k = norm A\<close> and \<open>S = A /\<^sub>R k - id_cblinfun\<close>
   have \<open>S \<le> 0\<close>
@@ -197,48 +200,54 @@ proof -
     by (induction n, auto simp: cblinfun_power_Suc' intro: order.trans)
   have fSnf: \<open>cmod (f \<bullet>\<^sub>C (cblinfun_power S n *\<^sub>V f)) \<le> cmod (f \<bullet>\<^sub>C f)\<close> for f n
     by (smt (verit, ccfv_SIG) Re_complex_of_real cinner_ge_zero complex_inner_class.Cauchy_Schwarz_ineq2 complex_of_real_cmod mult_left_mono norm_Snf norm_ge_zero power2_eq_square power2_norm_eq_cinner')
+  from norm_Snf have norm_Sn: \<open>norm (cblinfun_power S n) \<le> 1\<close> for n
+    apply (rule_tac norm_cblinfun_bound)
+    by auto
   define b where \<open>b = (\<lambda>n. (1/2 gchoose n) *\<^sub>R cblinfun_power S n)\<close>
-  define B0 B where \<open>B0 = infsum_in cstrong_operator_topology b UNIV\<close> and \<open>B = sqrt k *\<^sub>R B0\<close>
-  have summable_sot_b: \<open>summable_on_in cstrong_operator_topology b UNIV\<close>    
-  proof (rule summable_sot_absI)
+  define B0 B where \<open>B0 = infsum b UNIV\<close> and \<open>B = sqrt k *\<^sub>R B0\<close>
+
+  have sum_norm_b: \<open>(\<Sum>n\<in>F. norm (b n)) \<le> 3\<close> (is \<open>?lhs \<le> ?rhs\<close>) if \<open>finite F\<close> for F
+  proof -
     have [simp]: \<open>\<lceil>1 / 2 :: real\<rceil> = 1\<close>
       by (simp add: ceiling_eq_iff)
-    fix F :: \<open>nat set\<close> and f :: \<open>'a\<close> assume \<open>finite F\<close>
-    then obtain d where \<open>F \<subseteq> {..d}\<close> and [simp]: \<open>d > 0\<close>
+    from \<open>finite F\<close> obtain d where \<open>F \<subseteq> {..d}\<close> and [simp]: \<open>d > 0\<close>
       by (metis Icc_subset_Iic_iff atLeast0AtMost bot_nat_0.extremum bot_nat_0.not_eq_extremum dual_order.trans finite_nat_iff_bounded_le less_one)
-    show \<open>(\<Sum>n\<in>F. norm (b n *\<^sub>V f)) \<le> 3 * norm f\<close> (is \<open>?lhs \<le> ?rhs\<close>)
-    proof -
-      have \<open>?lhs = (\<Sum>n\<in>F. norm ((1 / 2 gchoose n) *\<^sub>R (cblinfun_power S n *\<^sub>V f)))\<close>
-        by (simp add: b_def scaleR_cblinfun.rep_eq)
-      also have \<open>\<dots> \<le> (\<Sum>n\<in>F. norm ((1 / 2 gchoose n) *\<^sub>R f))\<close>
-        by (simp add: mult_left_mono norm_Snf sum_mono)
-      also have \<open>\<dots> = (\<Sum>n\<in>F. abs (1/2 gchoose n)) * norm f\<close>
-        by (simp add: vector_space_over_itself.scale_sum_left)
-      also have \<open>\<dots> \<le> (\<Sum>n\<le>d. abs (1/2 gchoose n)) * norm f\<close>
-        using \<open>F \<subseteq> {..d}\<close> by (auto intro!: mult_right_mono sum_mono2)
-      also have \<open>\<dots> = (2 - (- 1) ^ d * (- (1 / 2) gchoose d)) * norm f\<close>
-        apply (subst gbinomial_sum_lower_abs)
-        by auto
-      also have \<open>\<dots> \<le> (2 + norm (- (1/2) gchoose d :: real)) * norm f\<close>
-        apply (auto intro!: mult_right_mono)
-        by (smt (verit) left_minus_one_mult_self mult.assoc mult_minus_left power2_eq_iff power2_eq_square)
-      also have \<open>\<dots> \<le> 3 * norm f\<close>
-        apply (subgoal_tac \<open>abs (- (1/2) gchoose d :: real) \<le> 1\<close>)
-        apply (metis add_le_cancel_left is_num_normalize(1) mult.commute mult_left_mono norm_ge_zero numeral_Bit0 numeral_Bit1 one_add_one real_norm_def)
-        apply (rule abs_gbinomial_leq1)
-        by auto
-      finally show ?thesis
-        by -
-    qed
+
+    have \<open>?lhs = (\<Sum>n\<in>F. norm ((1 / 2 gchoose n) *\<^sub>R (cblinfun_power S n)))\<close>
+      by (simp add: b_def scaleR_cblinfun.rep_eq)
+    also have \<open>\<dots> \<le> (\<Sum>n\<in>F. abs ((1 / 2 gchoose n)))\<close>
+      apply (auto intro!: sum_mono)
+      using norm_Sn
+      by (metis norm_cmul_rule_thm norm_scaleR verit_prod_simplify(2))
+    also have \<open>\<dots> \<le> (\<Sum>n\<le>d. abs (1/2 gchoose n))\<close>
+      using \<open>F \<subseteq> {..d}\<close> by (auto intro!: mult_right_mono sum_mono2)
+    also have \<open>\<dots> = (2 - (- 1) ^ d * (- (1 / 2) gchoose d))\<close>
+      apply (subst gbinomial_sum_lower_abs)
+      by auto
+    also have \<open>\<dots> \<le> (2 + norm (- (1/2) gchoose d :: real))\<close>
+      apply (auto intro!: mult_right_mono)
+      by (smt (verit) left_minus_one_mult_self mult.assoc mult_minus_left power2_eq_iff power2_eq_square)
+    also have \<open>\<dots> \<le> 3\<close>
+      apply (subgoal_tac \<open>abs (- (1/2) gchoose d :: real) \<le> 1\<close>)
+      apply (metis add_le_cancel_left is_num_normalize(1) mult.commute mult_left_mono norm_ge_zero numeral_Bit0 numeral_Bit1 one_add_one real_norm_def)
+      apply (rule abs_gbinomial_leq1)
+      by auto
+    finally show ?thesis
+      by -
   qed
-  then have has_sum_b: \<open>has_sum_in cstrong_operator_topology b UNIV B0\<close>
-    using B0_def has_sum_in_infsum_in hausdorff_sot by blast
+
+  have has_sum_b: \<open>has_sum b UNIV B0\<close>
+    apply (auto intro!: has_sum_infsum abs_summable_summable[where f=b] bdd_aboveI[where M=3] simp: B0_def abs_summable_iff_bdd_above)
+    using sum_norm_b
+    by simp
+
   have \<open>B0 \<ge> 0\<close>
   proof (rule positive_cblinfunI)
     fix f :: 'a assume [simp]: \<open>norm f = 1\<close>
     from has_sum_b
     have sum1: \<open>(\<lambda>n. f \<bullet>\<^sub>C (b n *\<^sub>V f)) summable_on UNIV\<close>
-      using has_sum_cinner_left has_sum_in_cstrong_operator_topology summable_on_def by blast
+      apply (intro summable_on_cinner_left summable_on_cblinfun_apply_left)
+      by (simp add: summable_onI)
     have sum2: \<open>(\<lambda>x. - (complex_of_real \<bar>1 / 2 gchoose x\<bar> * (f \<bullet>\<^sub>C f))) summable_on UNIV - {0}\<close>
       apply (rule abs_summable_summable)
       using gbinomial_abs_summable_1[of \<open>1/2\<close>]
@@ -253,7 +262,7 @@ proof -
 
     from has_sum_b
     have \<open>f \<bullet>\<^sub>C (B0 *\<^sub>V f) = (\<Sum>\<^sub>\<infinity>n. f \<bullet>\<^sub>C (b n *\<^sub>V f))\<close>
-      by (metis has_sum_cinner_left has_sum_in_cstrong_operator_topology infsumI)
+      by (metis B0_def infsum_cblinfun_apply_left infsum_cinner_left summable_on_cblinfun_apply_left summable_on_def)
     moreover have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>n\<in>UNIV-{0}. f \<bullet>\<^sub>C (b n *\<^sub>V f)) + f \<bullet>\<^sub>C (b 0 *\<^sub>V f)\<close>
       apply (subst infsum_Diff)
       using sum1 by auto
@@ -315,7 +324,7 @@ proof -
       by (auto simp: bb_simp)
 
     from has_sum_b have b\<psi>_sum: \<open>(\<lambda>n. b n *\<^sub>V \<psi>) summable_on UNIV\<close>
-      using has_sum_in_cstrong_operator_topology summable_on_def by blast
+      by (simp add: summable_onI summable_on_cblinfun_apply_left)
 
     have b2_pos: \<open>(b i *\<^sub>V \<psi>) \<bullet>\<^sub>C (b j *\<^sub>V \<psi>) \<ge> 0\<close> if \<open>i\<noteq>0\<close> \<open>j\<noteq>0\<close> for i j
     proof -
@@ -371,7 +380,7 @@ proof -
     have \<open>s = (B0 *\<^sub>V \<psi>) \<bullet>\<^sub>C (B0 *\<^sub>V \<psi>)\<close>
       by (metis \<open>0 \<le> B0\<close> cblinfun_apply_cblinfun_compose cinner_adj_left positive_hermitianI s_def)
     also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>n. b n *\<^sub>V \<psi>) \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>n. b n *\<^sub>V \<psi>)\<close>
-      by (metis has_sum_b has_sum_in_cstrong_operator_topology infsumI)
+      by (metis B0_def has_sum_b infsum_cblinfun_apply_left summable_onI)
     also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>n. bb n)\<close>
       using b\<psi>_sum b\<psi>_sum unfolding bb_def
       apply (rule Cauchy_cinner_product_infsum[symmetric])
@@ -395,7 +404,6 @@ proof -
     by -
   have BF_comm: \<open>B o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L B\<close> if \<open>A o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L A\<close> for F
   proof -
-    define b' F' where \<open>b' n = Abs_cblinfun_sot (b n)\<close> and \<open>F' = Abs_cblinfun_sot F\<close> for n
     have \<open>S o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L S\<close>
       by (simp add: S_def that[symmetric] cblinfun_compose_minus_right cblinfun_compose_minus_left 
           flip: cblinfun_compose_assoc)
@@ -403,35 +411,101 @@ proof -
       apply (induction n)
        apply (simp_all add: cblinfun_power_Suc' cblinfun_compose_assoc)
       by (simp flip: cblinfun_compose_assoc)
-    then have \<open>b n o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L b n\<close> for n
+    then have *: \<open>b n o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L b n\<close> for n
       by (simp add: b_def)
-    then have *: \<open>cblinfun_compose_sot (b' n) F' = cblinfun_compose_sot F' (b' n)\<close> for n
-      unfolding b'_def F'_def apply transfer by simp
-    have \<open>cblinfun_compose_sot (\<Sum>\<^sub>\<infinity>n. b' n) F' = cblinfun_compose_sot F' (\<Sum>\<^sub>\<infinity>n. b' n)\<close>
+    have \<open>(\<Sum>\<^sub>\<infinity>n. b n) o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L (\<Sum>\<^sub>\<infinity>n. b n)\<close>
     proof -
-      have [simp]: \<open>b' summable_on UNIV\<close>
-        unfolding b'_def apply (transfer fixing: b)
-        by (rule summable_sot_b)
-      have \<open>cblinfun_compose_sot (\<Sum>\<^sub>\<infinity>n. b' n) F' = (\<Sum>\<^sub>\<infinity>n. cblinfun_compose_sot (b' n) F')\<close>
-        apply (subst infsum_comm_additive[where f=\<open>\<lambda>x. cblinfun_compose_sot x F'\<close>, symmetric])
-        by (auto simp: o_def)
-      also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>n. cblinfun_compose_sot F' (b' n))\<close>
-        by (simp add: *)
-      also have \<open>\<dots> = cblinfun_compose_sot F' (\<Sum>\<^sub>\<infinity>n. b' n)\<close>
-        apply (subst infsum_comm_additive[where f=\<open>\<lambda>x. cblinfun_compose_sot F' x\<close>, symmetric])
-        by (auto simp: o_def)
+      have [simp]: \<open>b summable_on UNIV\<close>
+        using has_sum_b by (auto simp add: summable_on_def)
+      have \<open>(\<Sum>\<^sub>\<infinity>n. b n) o\<^sub>C\<^sub>L F = (\<Sum>\<^sub>\<infinity>n. (b n) o\<^sub>C\<^sub>L F)\<close>
+        apply (subst infsum_comm_additive[where f=\<open>\<lambda>x. x o\<^sub>C\<^sub>L F\<close>, symmetric])
+        by (auto simp: o_def isCont_cblinfun_compose_left)
+      also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>n. F o\<^sub>C\<^sub>L (b n))\<close>
+        by (simp add: * )
+      also have \<open>\<dots> = F o\<^sub>C\<^sub>L (\<Sum>\<^sub>\<infinity>n. b n)\<close>
+        apply (subst infsum_comm_additive[where f=\<open>\<lambda>x. F o\<^sub>C\<^sub>L x\<close>, symmetric])
+        by (auto simp: o_def isCont_cblinfun_compose_right)
       finally show ?thesis
         by -
     qed
     then have \<open>B0 o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L B0\<close>
-      unfolding B0_def b'_def F'_def
+      unfolding B0_def
       unfolding infsum_euclidean_eq[abs_def, symmetric]
       apply (transfer fixing: b F)
       by simp
     then show ?thesis
       by (auto simp: B_def)
   qed
-  from \<open>B \<ge> 0\<close> B2A BF_comm
+  have B_closure: \<open>B \<in> closure (cspan (range (cblinfun_power A)))\<close>
+  proof (cases \<open>k = 0\<close>)
+    case True
+    then show ?thesis 
+      unfolding B_def using closure_subset complex_vector.span_zero by auto
+  next
+    case False
+    then have \<open>k \<noteq> 0\<close>
+      by -
+    from has_sum_b
+    have limit: \<open>(sum b \<longlongrightarrow> B0) (finite_subsets_at_top UNIV)\<close>
+      by (simp add: has_sum_def)
+    have \<open>cblinfun_power (A /\<^sub>R k - id_cblinfun) n \<in> cspan (range (cblinfun_power A))\<close> for n
+    proof (induction n)
+      case 0
+      then show ?case 
+        by (auto intro!: complex_vector.span_base range_eqI[where x=0])
+    next
+      case (Suc n)
+      define pow_n where \<open>pow_n = cblinfun_power (A /\<^sub>R k - id_cblinfun) n\<close>
+      have pow_n_span: \<open>pow_n \<in> cspan (range (cblinfun_power A))\<close>
+        using Suc by (simp add: pow_n_def)
+      have A_pow_n_span: \<open>A o\<^sub>C\<^sub>L pow_n \<in> cspan (range (cblinfun_power A))\<close>
+      proof -
+        from pow_n_span
+        obtain F r where \<open>finite F\<close> and F_A: \<open>F \<subseteq> range (cblinfun_power A)\<close>
+          and pow_n_sum: \<open>pow_n = (\<Sum>a\<in>F. r a *\<^sub>C a)\<close>
+          by (auto simp add: complex_vector.span_explicit)
+        have \<open>A o\<^sub>C\<^sub>L a \<in> range (cblinfun_power A)\<close> if \<open>a \<in> F\<close> for a
+        proof -
+          from that obtain m where \<open>a = cblinfun_power A m\<close>
+            using F_A by auto
+          then have \<open>A o\<^sub>C\<^sub>L a = cblinfun_power A (Suc m)\<close>
+            by (simp add: cblinfun_power_Suc')
+          then show ?thesis
+            by auto
+        qed
+        then have \<open>(\<Sum>a\<in>F. r a *\<^sub>C (A o\<^sub>C\<^sub>L a)) \<in> cspan (range (cblinfun_power A))\<close>
+          by (meson basic_trans_rules(31) complex_vector.span_scale complex_vector.span_sum complex_vector.span_superset)
+        moreover have \<open>A o\<^sub>C\<^sub>L pow_n = (\<Sum>a\<in>F. r a *\<^sub>C (A o\<^sub>C\<^sub>L a))\<close>
+          by (simp add: pow_n_sum cblinfun_compose_sum_right flip: cblinfun.scaleC_left)
+        ultimately show ?thesis
+          by simp
+      qed
+      have \<open>cblinfun_power (A /\<^sub>R k - id_cblinfun) (Suc n) = (A o\<^sub>C\<^sub>L pow_n) /\<^sub>R k - pow_n\<close>
+        by (simp add: cblinfun_power_Suc' cblinfun_compose_minus_left flip: pow_n_def)
+      also from pow_n_span A_pow_n_span 
+      have \<open>\<dots> \<in> cspan (range (cblinfun_power A))\<close>
+        by (auto intro!: complex_vector.span_diff complex_vector.span_scale 
+            simp: scaleR_scaleC)
+      finally show ?case
+        by -
+    qed
+    then have b_range: \<open>b n \<in> cspan (range (cblinfun_power A))\<close> for n
+      by (simp add: b_def S_def scaleR_scaleC complex_vector.span_scale)
+    have sum_bF: \<open>sum b F \<in> cspan (range (cblinfun_power A))\<close> if \<open>finite F\<close> for F
+      using that apply induction
+      using b_range complex_vector.span_add complex_vector.span_zero by auto
+    have \<open>B0 \<in> closure (cspan (range (cblinfun_power A)))\<close>
+      using limit apply (rule limit_in_closure)
+      using sum_bF by (simp_all add: eventually_finite_subsets_at_top_weakI)
+    also have \<open>\<dots> = closure ((\<lambda>x. inverse (sqrt k) *\<^sub>R x) ` cspan (range (cblinfun_power A)))\<close>
+      using \<open>k \<noteq> 0\<close> by (simp add: scaleR_scaleC csubspace_scaleC_invariant)
+    also have \<open>\<dots> = (\<lambda>x. inverse (sqrt k) *\<^sub>R x) ` closure (cspan (range (cblinfun_power A)))\<close>
+      by (simp add: closure_scaleR)
+    finally show ?thesis
+      apply (simp add: B_def image_def)
+      using \<open>k \<noteq> 0\<close> by force
+  qed
+  from \<open>B \<ge> 0\<close> B2A BF_comm B_closure
   show ?thesis
     by metis
 qed
@@ -523,9 +597,8 @@ lemma TODO_name:
       \<and> (\<forall>f. A *\<^sub>V f = 0 \<longrightarrow> E *\<^sub>V f = f)\<close>
 proof -
   obtain B where \<open>B \<ge> 0\<close> and B2A2: \<open>B o\<^sub>C\<^sub>L B = A* o\<^sub>C\<^sub>L A\<close> and AAF: \<open>A* o\<^sub>C\<^sub>L A o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L (A* o\<^sub>C\<^sub>L A) \<Longrightarrow> B o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L B\<close> for F
-    apply atomize_elim
-    apply (rule sqrt_op_existence)
-    by (simp add: positive_cblinfun_squareI)
+    using sqrt_op_existence
+    by (meson positive_cblinfun_squareI sqrt_op_existence)
   from \<open>B \<ge> 0\<close> have \<open>B = B*\<close>
     by (simp add: comparable_hermitean)
   from AAF have \<open>B o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L B\<close> if \<open>A o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L A\<close> for F
@@ -558,17 +631,33 @@ proof -
     by auto
 qed
 
-lemma 
+lemma sqrt_op_pos[simp]: \<open>sqrt_op a \<ge> 0\<close>
+proof (cases \<open>a \<ge> 0\<close>)
+  case True
+  from sqrt_op_existence[OF True]
+  have *: \<open>\<exists>b::'a \<Rightarrow>\<^sub>C\<^sub>L 'a. b \<ge> 0 \<and> b* o\<^sub>C\<^sub>L b = a\<close>
+    by (metis positive_hermitianI)
+  then show ?thesis
+    using * by (smt (verit, ccfv_threshold) someI_ex sqrt_op_def)
+next
+  case False
+  then show ?thesis
+    by (simp add: sqrt_op_nonpos)
+qed
+
+lemma sqrt_op_square[simp]: 
   assumes \<open>a \<ge> 0\<close>
-  shows sqrt_op_pos[simp]: \<open>sqrt_op a \<ge> 0\<close>
-    and sqrt_op_square[simp]: \<open>(sqrt_op a)* o\<^sub>C\<^sub>L sqrt_op a = a\<close>
+  shows \<open>sqrt_op a o\<^sub>C\<^sub>L sqrt_op a = a\<close>
 proof -
   from sqrt_op_existence[OF assms]
   have *: \<open>\<exists>b::'a \<Rightarrow>\<^sub>C\<^sub>L 'a. b \<ge> 0 \<and> b* o\<^sub>C\<^sub>L b = a\<close>
     by (metis positive_hermitianI)
-  show \<open>sqrt_op a \<ge>0\<close> and \<open>(sqrt_op a)* o\<^sub>C\<^sub>L sqrt_op a = a\<close>
-    using * apply (smt (verit, ccfv_threshold) someI_ex sqrt_op_def)
+  have \<open>sqrt_op a o\<^sub>C\<^sub>L sqrt_op a = (sqrt_op a)* o\<^sub>C\<^sub>L sqrt_op a\<close>
+    by (metis positive_hermitianI sqrt_op_pos)
+  also have \<open>(sqrt_op a)* o\<^sub>C\<^sub>L sqrt_op a = a\<close>
     using * by (metis (mono_tags, lifting) someI_ex sqrt_op_def)
+  finally show ?thesis
+    by -
 qed
 
 (* Also in @{cite wecken35linearer} *)
@@ -621,12 +710,34 @@ proof -
   qed
   
   from eq_sq have \<open>sqrt_op a = sq\<close>
-    by (simp add: \<open>0 \<le> a\<close>)
+    by (simp add: \<open>0 \<le> a\<close> comparable_hermitean)
   moreover from eq_sq have \<open>b = sq\<close>
     by (simp add: assms(1) assms(2))
   ultimately show \<open>b = sqrt_op a\<close>
     by simp
 qed
+
+lemma sqrt_op_in_closure: \<open>sqrt_op a \<in> closure (cspan (range (cblinfun_power a)))\<close>
+proof (cases \<open>a \<ge> 0\<close>)
+  case True
+  from sqrt_op_existence[OF True]
+  obtain B :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a\<close> where \<open>B \<ge> 0\<close> and \<open>B o\<^sub>C\<^sub>L B = a\<close>
+    and B_closure: \<open>B \<in> closure (cspan (range (cblinfun_power a)))\<close>
+    by metis
+  then have \<open>sqrt_op a = B\<close>
+    by (metis positive_hermitianI sqrt_op_unique)
+  with B_closure show ?thesis
+    by simp
+next
+  case False
+  then have \<open>sqrt_op a = 0\<close>
+    by (simp add: sqrt_op_nonpos)
+  also have \<open>0 \<in> closure (cspan (range (cblinfun_power a)))\<close>
+    using closure_subset complex_vector.span_zero by blast
+  finally show ?thesis
+    by -
+qed
+
 
 lemma sqrt_op_commute:
   assumes \<open>A \<ge> 0\<close>
@@ -642,8 +753,8 @@ lemma sqrt_op_scaleC:
   assumes \<open>c \<ge> 0\<close> and \<open>a \<ge> 0\<close>
   shows \<open>sqrt_op (c *\<^sub>C a) = sqrt c *\<^sub>C sqrt_op a\<close>
   apply (rule sqrt_op_unique[symmetric])
-  using assms apply (auto simp: split_scaleC_pos_le)
-  by (metis of_real_power power2_eq_square real_sqrt_pow2)
+  using assms apply (auto simp: split_scaleC_pos_le simp flip: positive_hermitianI)
+  by (metis of_real_power power2_eq_square real_sqrt_pow2 )
 
 definition abs_op :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner \<Rightarrow> 'a \<Rightarrow>\<^sub>C\<^sub>L 'a\<close> where \<open>abs_op a = sqrt_op (a* o\<^sub>C\<^sub>L a)\<close>
 
@@ -716,7 +827,7 @@ proof (rule ccsubspace_eqI)
   also have \<open>\<dots> \<longleftrightarrow> x \<bullet>\<^sub>C ((abs_op a)* o\<^sub>C\<^sub>L abs_op a) x = 0\<close>
     by (simp add: cinner_adj_right)
   also have \<open>\<dots> \<longleftrightarrow> x \<bullet>\<^sub>C (a* o\<^sub>C\<^sub>L a) x = 0\<close>
-    by (simp add: abs_op_def positive_cblinfun_squareI)
+    by (simp add: abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
   also have \<open>\<dots> \<longleftrightarrow> a x \<bullet>\<^sub>C a x = 0\<close>
     by (simp add: cinner_adj_right)
   also have \<open>\<dots> \<longleftrightarrow> a x = 0\<close>
@@ -747,7 +858,7 @@ proof -
     also have \<open>\<dots> = (A* o\<^sub>C\<^sub>L A) h \<bullet>\<^sub>C h\<close>
       by (simp add: cinner_adj_left)
     also have \<open>\<dots> = ((abs_op A)* o\<^sub>C\<^sub>L abs_op A) h \<bullet>\<^sub>C h\<close>
-      by (simp add: abs_op_def positive_cblinfun_squareI)
+      by (simp add: abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
     also have \<open>\<dots> = abs_op A h \<bullet>\<^sub>C abs_op A h\<close>
       by (simp add: cinner_adj_left)
     also have \<open>\<dots> = complex_of_real ((norm (abs_op A h))\<^sup>2)\<close>
@@ -776,7 +887,7 @@ proof -
     also have \<open>\<dots> = (A* o\<^sub>C\<^sub>L A) h \<bullet>\<^sub>C h\<close>
       by (simp add: cinner_adj_left)
     also have \<open>\<dots> = ((abs_op A)* o\<^sub>C\<^sub>L abs_op A) h \<bullet>\<^sub>C h\<close>
-      by (simp add: abs_op_def positive_cblinfun_squareI)
+      by (simp add: abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
     also have \<open>\<dots> = abs_op A h \<bullet>\<^sub>C abs_op A h\<close>
       by (simp add: cinner_adj_left)
     also have \<open>\<dots> = complex_of_real ((norm (abs_op A h))\<^sup>2)\<close>
@@ -946,7 +1057,7 @@ proof -
   have \<open>(norm (abs_op a))\<^sup>2 = norm (abs_op a* o\<^sub>C\<^sub>L abs_op a)\<close>
     by simp
   also have \<open>\<dots> = norm (a* o\<^sub>C\<^sub>L a)\<close>
-    by (simp add: abs_op_def positive_cblinfun_squareI)
+    by (simp add: abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
   also have \<open>\<dots> = (norm a)\<^sup>2\<close>
     by simp
   finally show ?thesis
@@ -990,7 +1101,7 @@ next
 qed
 
 lemma abs_op_square: \<open>(abs_op A)* o\<^sub>C\<^sub>L abs_op A = A* o\<^sub>C\<^sub>L A\<close>
-  by (simp add: abs_op_def positive_cblinfun_squareI)
+  by (simp add: abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
 
 (* TODO move to polar_decomposition-definition theory *)
 lemma polar_decomposition_0[simp]: \<open>polar_decomposition 0 = (0 :: 'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space)\<close>

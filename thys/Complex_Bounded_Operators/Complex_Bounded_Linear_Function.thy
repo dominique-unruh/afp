@@ -3155,6 +3155,7 @@ end
 lemma positive_id_cblinfun[simp]: "id_cblinfun \<ge> 0"
   unfolding less_eq_cblinfun_def using cinner_ge_zero by auto
 
+(* TODO: change to \<open>A* = A\<close> (so it's usable as a simp-rule) *)
 lemma positive_hermitianI: \<open>A = A*\<close> if \<open>A \<ge> 0\<close>
   apply (rule cinner_real_hermiteanI)
   using that by (auto simp: complex_is_real_iff_compare0 less_eq_cblinfun_def)

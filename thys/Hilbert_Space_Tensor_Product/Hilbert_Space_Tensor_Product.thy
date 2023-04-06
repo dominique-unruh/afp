@@ -1401,7 +1401,7 @@ lemma tensor_op_pos: \<open>a \<otimes>\<^sub>o b \<ge> 0\<close> if [simp]: \<o
   for a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
 proof -
   have \<open>(sqrt_op a \<otimes>\<^sub>o sqrt_op b)* o\<^sub>C\<^sub>L (sqrt_op a \<otimes>\<^sub>o sqrt_op b) = a \<otimes>\<^sub>o b\<close>
-    by (simp add: tensor_op_adjoint comp_tensor_op)
+    by (simp add: tensor_op_adjoint comp_tensor_op flip: positive_hermitianI)
   then show \<open>a \<otimes>\<^sub>o b \<ge> 0\<close>
     by (metis positive_cblinfun_squareI)
 qed
@@ -1410,7 +1410,7 @@ qed
 lemma abs_op_tensor: \<open>abs_op (a \<otimes>\<^sub>o b) = abs_op a \<otimes>\<^sub>o abs_op b\<close>
 proof -
   have \<open>(abs_op a \<otimes>\<^sub>o abs_op b)* o\<^sub>C\<^sub>L (abs_op a \<otimes>\<^sub>o abs_op b) = (a \<otimes>\<^sub>o b)* o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o b)\<close>
-    by (simp add: tensor_op_adjoint comp_tensor_op abs_op_def positive_cblinfun_squareI)
+    by (simp add: tensor_op_adjoint comp_tensor_op abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
   then show ?thesis
     by (metis abs_opI abs_op_pos tensor_op_pos)
 qed
