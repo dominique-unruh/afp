@@ -23,7 +23,7 @@ unbundle no_notation_blinfun_apply
 
 subsection \<open>l2 norm of functions\<close>
 
-definition "has_ell2_norm (x::_\<Rightarrow>complex) \<longleftrightarrow> (\<lambda>i. (x i)\<^sup>2) abs_summable_on UNIV"
+definition \<open>has_ell2_norm (x::_\<Rightarrow>complex) \<longleftrightarrow> (\<lambda>i. (x i)\<^sup>2) abs_summable_on UNIV\<close>
 
 lemma has_ell2_norm_bdd_above: \<open>has_ell2_norm x \<longleftrightarrow> bdd_above (sum (\<lambda>xa. norm ((x xa)\<^sup>2)) ` Collect finite)\<close>
   by (simp add: has_ell2_norm_def abs_summable_iff_bdd_above)
