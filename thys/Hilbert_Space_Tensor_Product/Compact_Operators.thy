@@ -3,6 +3,8 @@ theory Compact_Operators
     Sqrt_Babylonian.Sqrt_Babylonian_Auxiliary
 begin
 
+unbundle cblinfun_notation
+
 definition rank1 where \<open>rank1 A \<longleftrightarrow> (\<exists>x y. A = butterfly x y)\<close>
 
 lemma rank1_0[simp]: \<open>rank1 0\<close>

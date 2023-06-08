@@ -3034,11 +3034,10 @@ lemma heterogenous_same_type_cblinfun[simp]: \<open>heterogenous_same_type_cblin
   unfolding heterogenous_same_type_cblinfun_def by auto
 
 instantiation cblinfun :: (chilbert_space, chilbert_space) ord begin
-definition less_eq_cblinfun :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b) \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) \<Rightarrow> bool\<close>
-  where less_eq_cblinfun_def_heterogenous: \<open>less_eq_cblinfun A B =
+definition less_eq_cblinfun_def_heterogenous: \<open>A \<le> B =
   (if heterogenous_same_type_cblinfun TYPE('a) TYPE('b) then
     \<forall>\<psi>::'b. cinner \<psi> ((B-A) *\<^sub>V heterogenous_cblinfun_id *\<^sub>V \<psi>) \<ge> 0 else (A=B))\<close>
-definition \<open>less_cblinfun (A :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'b) B \<longleftrightarrow> A \<le> B \<and> \<not> B \<le> A\<close>
+definition \<open>(A :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'b) < B \<longleftrightarrow> A \<le> B \<and> \<not> B \<le> A\<close>
 instance..
 end
 
@@ -3750,33 +3749,49 @@ next
     by simp
 qed
 
-(* Probably true without restricting to chilbert_space using a different proof. *)
 lemma rank1_compose_left: \<open>rank1 (a o\<^sub>C\<^sub>L b)\<close> if \<open>rank1 b\<close> and \<open>a o\<^sub>C\<^sub>L b \<noteq> 0\<close>
-  for b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close> and a :: \<open>'b \<Rightarrow>\<^sub>C\<^sub>L 'c::chilbert_space\<close>
-  using that apply (auto simp: rank1_iff_butterfly cblinfun_comp_butterfly)
-  by blast
+proof -
+  from \<open>rank1 b\<close>
+  obtain \<psi> where \<open>b *\<^sub>S \<top> = ccspan {\<psi>}\<close>
+    using rank1_def by blast
+  then have *: \<open>(a o\<^sub>C\<^sub>L b) *\<^sub>S \<top> = ccspan {a \<psi>}\<close>
+    by (metis cblinfun_assoc_left(2) cblinfun_image_ccspan image_empty image_insert)
+  with \<open>a o\<^sub>C\<^sub>L b \<noteq> 0\<close> have \<open>a \<psi> \<noteq> 0\<close>
+    by auto
+  with * show \<open>rank1 (a o\<^sub>C\<^sub>L b)\<close>
+    using rank1_def by blast
+qed
 
-(* Probably true without restricting to chilbert_space using a different proof. *)
 lemma rank1_compose_right: \<open>rank1 (a o\<^sub>C\<^sub>L b)\<close> if \<open>rank1 a\<close> and \<open>a o\<^sub>C\<^sub>L b \<noteq> 0\<close>
-  for b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close> and a :: \<open>'b \<Rightarrow>\<^sub>C\<^sub>L 'c::chilbert_space\<close>
-  using that apply (auto simp: rank1_iff_butterfly butterfly_comp_cblinfun)
-  by blast
+proof -
+  from \<open>rank1 a\<close>
+  obtain \<psi> where \<open>a *\<^sub>S \<top> = ccspan {\<psi>}\<close> and \<open>\<psi> \<noteq> 0\<close>
+    using rank1_def by blast
+  then have *: \<open>(a o\<^sub>C\<^sub>L b) *\<^sub>S \<top> \<le> ccspan {\<psi>}\<close>
+    by (metis cblinfun_assoc_left(2) cblinfun_image_mono top_greatest)
+  from \<open>a o\<^sub>C\<^sub>L b \<noteq> 0\<close> obtain \<phi> where \<phi>_ab: \<open>\<phi> \<in> space_as_set ((a o\<^sub>C\<^sub>L b) *\<^sub>S \<top>)\<close> and \<open>\<phi> \<noteq> 0\<close>
+    by (metis cblinfun.real.zero_left cblinfun_apply_in_image cblinfun_eqI)
+  with * have \<open>\<phi> \<in> space_as_set (ccspan {\<psi>})\<close>
+    using less_eq_ccsubspace.rep_eq by blast
+  with \<open>\<phi> \<noteq> 0\<close> obtain c where \<open>\<phi> = c *\<^sub>C \<psi>\<close> and \<open>c \<noteq> 0\<close>
+    apply (simp add: ccspan.rep_eq)
+    by (auto simp add: complex_vector.span_singleton)
+  with \<phi>_ab have \<open>(a o\<^sub>C\<^sub>L b) *\<^sub>S \<top> \<ge> ccspan {\<psi>}\<close>
+    by (metis ccspan_leqI ccspan_singleton_scaleC empty_subsetI insert_subset)
+  with * have \<open>(a o\<^sub>C\<^sub>L b) *\<^sub>S \<top> = ccspan {\<psi>}\<close>
+    by fastforce
+  with \<open>\<psi> \<noteq> 0\<close> show \<open>rank1 (a o\<^sub>C\<^sub>L b)\<close>
+    using rank1_def by blast
+qed
 
-(* Probably true without restricting to chilbert_space using a different proof. *)
 lemma rank1_scaleC: \<open>rank1 (c *\<^sub>C a)\<close> if \<open>rank1 a\<close> and \<open>c \<noteq> 0\<close>
-  for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
-  using that apply (auto simp: rank1_iff_butterfly)
-  by (metis butterfly_scaleC_left)
+  using rank1_compose_left[OF \<open>rank1 a\<close>, where a=\<open>c *\<^sub>C id_cblinfun\<close>]
+  using that by force
 
-(* Probably true without restricting to chilbert_space using a different proof. *)
 lemma rank1_uminus: \<open>rank1 (-a)\<close> if \<open>rank1 a\<close>
-  for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
-  using that rank1_scaleC[where c=\<open>-1\<close> and a=a]
-  by simp
+  using that rank1_scaleC[where c=\<open>-1\<close> and a=a] by simp
 
-(* Probably true without restricting to chilbert_space using a different proof. *)
 lemma rank1_uminus_iff[simp]: \<open>rank1 (-a) \<longleftrightarrow> rank1 a\<close>
-  for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
   using rank1_uminus by force
 
 lemma rank1_adj: \<open>rank1 (a*)\<close> if \<open>rank1 a\<close>
@@ -3793,7 +3808,8 @@ theorem cbanach_steinhaus:
   fixes F :: \<open>'c \<Rightarrow> 'a::cbanach \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
   assumes \<open>\<And>x. \<exists>M. \<forall>n.  norm ((F n) *\<^sub>V x) \<le> M\<close>
   shows  \<open>\<exists>M. \<forall> n. norm (F n) \<le> M\<close>
-  using cblinfun_blinfun_transfer[transfer_rule] apply fail? (* Deletes current facts *)
+  using cblinfun_blinfun_transfer[transfer_rule]
+  apply fail? (* Clears "current facts" *)
 proof (use assms in transfer)
   fix F :: \<open>'c \<Rightarrow> 'a \<Rightarrow>\<^sub>L 'b\<close> assume \<open>(\<And>x. \<exists>M. \<forall>n. norm (F n *\<^sub>v x) \<le> M)\<close>
   hence \<open>\<And>x. bounded (range (\<lambda>n. blinfun_apply (F n) x))\<close>
@@ -3873,7 +3889,7 @@ proof transfer
 qed
 
 definition the_riesz_rep :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L complex) \<Rightarrow> 'a\<close> where
-  \<open>the_riesz_rep f = (SOME t. \<forall>x. f x = (t \<bullet>\<^sub>C x))\<close>
+  \<open>the_riesz_rep f = (SOME t. \<forall>x. f *\<^sub>V x = t \<bullet>\<^sub>C x)\<close>
 
 lemma the_riesz_rep[simp]: \<open>the_riesz_rep f \<bullet>\<^sub>C x = f *\<^sub>V x\<close>
   unfolding the_riesz_rep_def
@@ -3900,13 +3916,13 @@ lemma the_riesz_rep_norm[simp]: \<open>norm (the_riesz_rep f) = norm f\<close>
 lemma bounded_antilinear_the_riesz_rep[bounded_antilinear]: \<open>bounded_antilinear the_riesz_rep\<close>
   by (metis (no_types, opaque_lifting) bounded_antilinear_intro dual_order.refl mult.commute mult_1 the_riesz_rep_add the_riesz_rep_norm the_riesz_rep_scaleC)
 
-lift_definition the_riesz_rep_sesqui:: \<open>('a::complex_normed_vector \<Rightarrow> 'b::chilbert_space \<Rightarrow> complex) \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'b)\<close> is
+lift_definition the_riesz_rep_sesqui :: \<open>('a::complex_normed_vector \<Rightarrow> 'b::chilbert_space \<Rightarrow> complex) \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'b)\<close> is
   \<open>\<lambda>p. if bounded_sesquilinear p then the_riesz_rep o CBlinfun o p else 0\<close>
   by (metis (mono_tags, lifting) Cblinfun_comp_bounded_sesquilinear bounded_antilinear_o_bounded_antilinear' bounded_antilinear_the_riesz_rep bounded_clinear_0 fun.map_comp)
 
 lemma the_riesz_rep_sesqui_apply:
   assumes \<open>bounded_sesquilinear p\<close>
-  shows \<open>(the_riesz_rep_sesqui p x) \<bullet>\<^sub>C y = p x y\<close>
+  shows \<open>(the_riesz_rep_sesqui p *\<^sub>V x) \<bullet>\<^sub>C y = p x y\<close>
   apply (transfer fixing: p x y)
   by (auto simp add: CBlinfun_inverse bounded_sesquilinear_apply_bounded_clinear assms)
 
@@ -4410,7 +4426,7 @@ text \<open>Some of the theorems here logically belong into \<^theory>\<open>Com
 lemma all_ortho_bases_same_card:
   \<comment> \<open>Follows @{cite conway2013course}, Proposition 4.14\<close>
   fixes E F :: \<open>'a::chilbert_space set\<close>
-  assumes \<open>is_ortho_set E\<close> \<open>is_ortho_set F\<close> \<open>ccspan E = top\<close> \<open>ccspan F = top\<close>
+  assumes \<open>is_ortho_set E\<close> \<open>is_ortho_set F\<close> \<open>ccspan E = \<top>\<close> \<open>ccspan F = \<top>\<close>
   shows \<open>\<exists>f. bij_betw f E F\<close>
 proof -
   have \<open>|F| \<le>o |E|\<close> if \<open>infinite E\<close> and
@@ -4530,10 +4546,10 @@ lemma all_onbs_same_card:
 
 definition bij_between_bases where \<open>bij_between_bases E F = (SOME f. bij_betw f E F)\<close> for E F :: \<open>'a::chilbert_space set\<close>
 
-lemma
+lemma bij_between_bases_bij:
   fixes E F :: \<open>'a::chilbert_space set\<close>
   assumes \<open>is_onb E\<close> \<open>is_onb F\<close>
-  shows bij_between_bases_bij: \<open>bij_betw (bij_between_bases E F) E F\<close>
+  shows \<open>bij_betw (bij_between_bases E F) E F\<close>
   using all_onbs_same_card
   by (metis assms(1) assms(2) bij_between_bases_def someI)
 
@@ -4614,6 +4630,7 @@ notation cblinfun_compose (infixl "o\<^sub>C\<^sub>L" 67)
 notation cblinfun_apply (infixr "*\<^sub>V" 70)
 notation cblinfun_image (infixr "*\<^sub>S" 70)
 notation adj ("_*" [99] 100)
+type_notation cblinfun ("(_ \<Rightarrow>\<^sub>C\<^sub>L /_)" [22, 21] 21)
 end
 
 bundle no_cblinfun_notation begin
@@ -4621,17 +4638,12 @@ no_notation cblinfun_compose (infixl "o\<^sub>C\<^sub>L" 67)
 no_notation cblinfun_apply (infixr "*\<^sub>V" 70)
 no_notation cblinfun_image (infixr "*\<^sub>S" 70)
 no_notation adj ("_*" [99] 100)
-end
-
-bundle blinfun_notation begin
-notation blinfun_apply (infixr "*\<^sub>V" 70)
-end
-
-bundle no_blinfun_notation begin
-no_notation blinfun_apply (infixr "*\<^sub>V" 70)
+no_type_notation cblinfun ("(_ \<Rightarrow>\<^sub>C\<^sub>L /_)" [22, 21] 21)
 end
 
 unbundle no_cblinfun_notation
 unbundle no_lattice_syntax
+
+term \<open>a \<bullet>\<^sub>C b\<close>
 
 end
