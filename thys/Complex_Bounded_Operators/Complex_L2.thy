@@ -55,7 +55,7 @@ next
     by (simp add: norm_power)
 qed
 
-definition ell2_norm :: \<open>('a \<Rightarrow> complex) \<Rightarrow> real\<close> where \<open>ell2_norm x = sqrt (\<Sum>\<^sub>\<infinity>i. norm (x i)^2)\<close>
+definition ell2_norm :: \<open>('a \<Rightarrow> complex) \<Rightarrow> real\<close> where \<open>ell2_norm f = sqrt (\<Sum>\<^sub>\<infinity>x. norm (f x)^2)\<close>
 
 lemma ell2_norm_SUP:
   assumes \<open>has_ell2_norm x\<close>
@@ -86,11 +86,11 @@ proof-
     using assms by (auto simp: ell2_norm_SUP L2_set_def)
 qed
 
-lemma has_ell2_norm_finite[simp]: "has_ell2_norm (x::'a::finite\<Rightarrow>_)"
+lemma has_ell2_norm_finite[simp]: "has_ell2_norm (f::'a::finite\<Rightarrow>_)"
   unfolding has_ell2_norm_def by simp
 
 lemma ell2_norm_finite: 
-  "ell2_norm (x::'a::finite\<Rightarrow>complex) = sqrt (sum (\<lambda>i. (norm(x i))^2) UNIV)"
+  "ell2_norm (f::'a::finite\<Rightarrow>complex) = sqrt (\<Sum>x\<in>UNIV. (norm (f x))^2)"
   by (simp add: ell2_norm_def)
 
 lemma ell2_norm_finite_L2_set: "ell2_norm (x::'a::finite\<Rightarrow>complex) = L2_set (norm o x) UNIV"
