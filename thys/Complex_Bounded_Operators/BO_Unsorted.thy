@@ -216,7 +216,7 @@ lemma trunc_ell2_insert: \<open>trunc_ell2 (insert x M) \<phi> = Rep_ell2 \<phi>
   using that by (auto simp: trunc_ell2_singleton)
 
 
-lemma ell2_decompose_has_sum: \<open>has_sum (\<lambda>x. Rep_ell2 \<phi> x *\<^sub>C ket x) UNIV \<phi>\<close>
+lemma ell2_decompose_has_sum: \<open>((\<lambda>x. Rep_ell2 \<phi> x *\<^sub>C ket x) has_sum \<phi>) UNIV\<close>
 proof (unfold has_sum_def)
   have *: \<open>trunc_ell2 M \<phi> = (\<Sum>x\<in>M. Rep_ell2 \<phi> x *\<^sub>C ket x)\<close> if \<open>finite M\<close> for M
     using that apply induction
@@ -472,12 +472,12 @@ qed
 lemma has_sumI_metric:
   fixes l :: \<open>'a :: {metric_space, comm_monoid_add}\<close>
   assumes \<open>\<And>e. e > 0 \<Longrightarrow> \<exists>X. finite X \<and> X \<subseteq> A \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> A \<longrightarrow> dist (sum f Y) l < e)\<close>
-  shows \<open>has_sum f A l\<close>
+  shows \<open>(f has_sum l) A\<close>
   unfolding has_sum_metric using assms by simp
 
 lemma basis_projections_reconstruct_has_sum:
   assumes \<open>is_ortho_set B\<close> and normB: \<open>\<And>b. b\<in>B \<Longrightarrow> norm b = 1\<close> and \<psi>B: \<open>\<psi> \<in> space_as_set (ccspan B)\<close>
-  shows \<open>has_sum (\<lambda>b. (b \<bullet>\<^sub>C \<psi>) *\<^sub>C b) B \<psi>\<close>
+  shows \<open>((\<lambda>b. (b \<bullet>\<^sub>C \<psi>) *\<^sub>C b) has_sum \<psi>) B\<close>
 proof (rule has_sumI_metric)
   fix e :: real assume \<open>e > 0\<close>
   define e2 where \<open>e2 = e/2\<close>
@@ -575,7 +575,7 @@ lemma basis_projections_reconstruct_summable:
 (* TODO move (this replaces Trace_Class.parseval_infsum) *)
 lemma has_sum_norm_on_basis:
   assumes \<open>is_ortho_set B\<close> and normB: \<open>\<And>b. b\<in>B \<Longrightarrow> norm b = 1\<close> and \<open>\<psi> \<in> space_as_set (ccspan B)\<close>
-  shows \<open>has_sum (\<lambda>b. (norm (b \<bullet>\<^sub>C \<psi>))\<^sup>2) B ((norm \<psi>)\<^sup>2)\<close>
+  shows \<open>((\<lambda>b. (norm (b \<bullet>\<^sub>C \<psi>))\<^sup>2) has_sum (norm \<psi>)\<^sup>2) B\<close>
 proof -
   have *: \<open>(\<lambda>v. (norm v)\<^sup>2) (\<Sum>b\<in>F. (b \<bullet>\<^sub>C \<psi>) *\<^sub>C b) = (\<Sum>b\<in>F. (norm (b \<bullet>\<^sub>C \<psi>))\<^sup>2)\<close> if \<open>finite F\<close> and \<open>F \<subseteq> B\<close> for F
     apply (subst pythagorean_theorem_sum)
@@ -583,7 +583,7 @@ proof -
       apply (auto intro!: sum.cong[OF refl] simp: is_ortho_set_def)
     by blast
   
-  from assms have \<open>has_sum (\<lambda>b. (b \<bullet>\<^sub>C \<psi>) *\<^sub>C b) B \<psi>\<close>
+  from assms have \<open>((\<lambda>b. (b \<bullet>\<^sub>C \<psi>) *\<^sub>C b) has_sum \<psi>) B\<close>
     by (simp add: basis_projections_reconstruct_has_sum)
   then have \<open>((\<lambda>F. \<Sum>b\<in>F. (b \<bullet>\<^sub>C \<psi>) *\<^sub>C b) \<longlongrightarrow> \<psi>) (finite_subsets_at_top B)\<close>
     by (simp add: has_sum_def)
@@ -594,12 +594,12 @@ proof -
     apply (rule tendsto_cong[THEN iffD2, rotated])
     apply (rule eventually_finite_subsets_at_top_weakI)
     by (simp add: *)
-  then show \<open>has_sum (\<lambda>b. (norm (b \<bullet>\<^sub>C \<psi>))\<^sup>2) B ((norm \<psi>)\<^sup>2)\<close>
+  then show \<open>((\<lambda>b. (norm (b \<bullet>\<^sub>C \<psi>))\<^sup>2) has_sum (norm \<psi>)\<^sup>2) B\<close>
     by (simp add: has_sum_def)
 qed
 
 lemma summable_onI:
-  assumes \<open>has_sum f A s\<close>
+  assumes \<open>(f has_sum s) A\<close>
   shows \<open>f summable_on A\<close>
   using assms summable_on_def by blast
 
@@ -857,8 +857,8 @@ lemma infsum_cblinfun_apply_left:
   using assms 
   by (auto simp add: bounded_clinear.bounded_linear bounded_cbilinear_cblinfun_apply)
 lemma has_sum_cblinfun_apply_left:
-  assumes \<open>has_sum A S x\<close>
-  shows \<open>has_sum (\<lambda>x. A x *\<^sub>V g) S (x *\<^sub>V g)\<close>
+  assumes \<open>(A has_sum x) S\<close>
+  shows \<open>((\<lambda>x. A x *\<^sub>V g) has_sum (x *\<^sub>V g)) S\<close>
   apply (rule has_sum_bounded_linear[unfolded o_def, of \<open>\<lambda>A. cblinfun_apply A g\<close>])
   using assms by (auto simp add: bounded_clinear.bounded_linear cblinfun.bounded_clinear_left)
 

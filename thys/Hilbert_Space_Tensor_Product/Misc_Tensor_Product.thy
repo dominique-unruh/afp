@@ -502,7 +502,7 @@ proof -
 qed
 
 
-lemma has_sum_euclidean_iff: \<open>has_sum_in euclidean f A s \<longleftrightarrow> has_sum f A s\<close>
+lemma has_sum_euclidean_iff: \<open>has_sum_in euclidean f A s \<longleftrightarrow> (f has_sum s) A\<close>
   by (simp add: has_sum_def has_sum_in_def)
 
 lemma summable_on_euclidean_eq: \<open>summable_on_in euclidean f A \<longleftrightarrow> f summable_on A\<close>
@@ -1171,7 +1171,7 @@ lemma sums_has_sum:
   fixes s :: \<open>'a :: banach\<close>
   assumes sums: \<open>f sums s\<close>
   assumes abs_sum: \<open>summable (\<lambda>n. norm (f n))\<close>
-  shows \<open>has_sum f UNIV s\<close>
+  shows \<open>(f has_sum s) UNIV\<close>
 proof (rule has_sumI_metric)
   fix e :: real assume \<open>0 < e\<close>
   define e' where \<open>e' = e/2\<close>
@@ -1229,7 +1229,7 @@ lemma sums_has_sum_pos:
   fixes s :: real
   assumes \<open>f sums s\<close>
   assumes \<open>\<And>n. f n \<ge> 0\<close>
-  shows \<open>has_sum f UNIV s\<close>
+  shows \<open>(f has_sum s) UNIV\<close>
   apply (rule sums_has_sum)
   apply (simp add: assms(1))
   using assms(1) assms(2) summable_def by auto
@@ -1237,7 +1237,7 @@ lemma sums_has_sum_pos:
 lemma gbinomial_abs_has_sum:
   fixes a :: real
   assumes \<open>a > 0\<close> and \<open>a \<le> 1\<close>
-  shows \<open>has_sum (\<lambda>n. abs (a gchoose n)) UNIV 2\<close>
+  shows \<open>((\<lambda>n. abs (a gchoose n)) has_sum 2) UNIV\<close>
   apply (rule sums_has_sum_pos)
    apply (rule gbinomial_abs_sum)
   using assms by auto
@@ -1245,9 +1245,9 @@ lemma gbinomial_abs_has_sum:
 lemma gbinomial_abs_has_sum_1:
   fixes a :: real
   assumes \<open>a > 0\<close> and \<open>a \<le> 1\<close>
-  shows \<open>has_sum (\<lambda>n. abs (a gchoose n)) (UNIV-{0}) 1\<close>
+  shows \<open>((\<lambda>n. abs (a gchoose n)) has_sum 1) (UNIV-{0})\<close>
 proof -
-  have \<open>has_sum (\<lambda>n. abs (a gchoose n)) (UNIV-{0}) (2-(\<Sum>n\<in>{0}. abs (a gchoose n)))\<close>
+  have \<open>((\<lambda>n. abs (a gchoose n)) has_sum 2-(\<Sum>n\<in>{0}. abs (a gchoose n))) (UNIV-{0})\<close>
     apply (rule has_sum_Diff)
       apply (rule gbinomial_abs_has_sum)
     using assms apply auto[2]
@@ -1269,18 +1269,18 @@ lemma gbinomial_abs_summable_1:
   shows \<open>(\<lambda>n. (a gchoose n)) abs_summable_on UNIV-{0}\<close>
   using assms by (auto intro!: summable_onI gbinomial_abs_has_sum_1)
 
-lemma has_sum_singleton[simp]: \<open>has_sum f {x} y \<longleftrightarrow> f x = y\<close> for y :: \<open>'a :: {comm_monoid_add, t2_space}\<close>
+lemma has_sum_singleton[simp]: \<open>(f has_sum y) {x} \<longleftrightarrow> f x = y\<close> for y :: \<open>'a :: {comm_monoid_add, t2_space}\<close>
   using has_sum_finite[of \<open>{x}\<close>]
   apply auto
   by (metis infsumI)
 
 
-lemma has_sum_sums: \<open>f sums s\<close> if \<open>has_sum f UNIV s\<close>
+lemma has_sum_sums: \<open>f sums s\<close> if \<open>(f has_sum s) UNIV\<close>
 proof -
   have \<open>(\<lambda>n. sum f {..<n}) \<longlonglongrightarrow> s\<close>
   proof (simp add: tendsto_def, intro allI impI)
     fix S assume \<open>open S\<close> and \<open>s \<in> S\<close>
-    with \<open>has_sum f UNIV s\<close>
+    with \<open>(f has_sum s) UNIV\<close>
     have \<open>\<forall>\<^sub>F F in finite_subsets_at_top UNIV. sum f F \<in> S\<close>
       using has_sum_def tendsto_def by blast
     then
@@ -1339,15 +1339,15 @@ lemma has_sum_in_0[simp]: \<open>has_sum_in T (\<lambda>_. 0) A 0\<close> if [si
 
 lemma has_sum_diff:
   fixes f g :: "'a \<Rightarrow> 'b::{topological_ab_group_add}"
-  assumes \<open>has_sum f A a\<close>
-  assumes \<open>has_sum g A b\<close>
-  shows \<open>has_sum (\<lambda>x. f x - g x) A (a - b)\<close>
+  assumes \<open>(f has_sum a) A\<close>
+  assumes \<open>(g has_sum b) A\<close>
+  shows \<open>((\<lambda>x. f x - g x) has_sum (a - b)) A\<close>
   by (auto intro!: has_sum_add has_sum_uminus[THEN iffD2] assms simp add: simp flip: add_uminus_conv_diff)
 
 lemma has_sum_of_real:
   fixes f :: "'a \<Rightarrow> real"
-  assumes \<open>has_sum f A a\<close>
-  shows \<open>has_sum (\<lambda>x. of_real (f x)) A (of_real a :: 'b::{real_algebra_1,real_normed_vector})\<close>
+  assumes \<open>(f has_sum a) A\<close>
+  shows \<open>((\<lambda>x. of_real (f x)) has_sum (of_real a :: 'b::{real_algebra_1,real_normed_vector})) A\<close>
   apply (rule has_sum_comm_additive[unfolded o_def, where f=of_real])
   by (auto intro!: additive.intro assms tendsto_of_real)
 
@@ -1935,12 +1935,12 @@ lemma closure_image_closure: \<open>continuous_on (closure S) f \<Longrightarrow
 
 lemma has_sum_reindex_bij_betw:
   assumes "bij_betw g A B"
-  shows   "has_sum (\<lambda>x. f (g x)) A l \<longleftrightarrow> has_sum f B l"
+  shows   "((\<lambda>x. f (g x)) has_sum l) A \<longleftrightarrow> (f has_sum l) B"
 proof -
-  have \<open>has_sum (\<lambda>x. f (g x)) A l \<longleftrightarrow> has_sum f (g ` A) l\<close>
+  have \<open>((\<lambda>x. f (g x)) has_sum l) A \<longleftrightarrow> (f has_sum l) (g ` A)\<close>
     apply (rule has_sum_reindex[symmetric, unfolded o_def])
     using assms bij_betw_imp_inj_on by blast
-  also have \<open>\<dots> \<longleftrightarrow> has_sum f B l\<close>
+  also have \<open>\<dots> \<longleftrightarrow> (f has_sum l) B\<close>
     using assms bij_betw_imp_surj_on by blast
   finally show ?thesis .
 qed

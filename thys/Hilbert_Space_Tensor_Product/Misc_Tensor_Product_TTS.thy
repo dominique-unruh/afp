@@ -783,7 +783,7 @@ lemma has_sum_ow_parametric[transfer_rule]:
   unfolding has_sum_ow_def
   by transfer_prover
 
-lemma has_sum_ud[unoverload_def]: \<open>has_sum = has_sum_ow UNIV plus (0::'a::{comm_monoid_add,topological_space}) open\<close>
+lemma has_sum_ud[unoverload_def]: \<open>HAS_SUM = has_sum_ow UNIV plus (0::'a::{comm_monoid_add,topological_space}) open\<close>
   by (auto intro!: ext simp: has_sum_def has_sum_ow_def unoverload_def)
 
 lemma has_sum_ow_topology:

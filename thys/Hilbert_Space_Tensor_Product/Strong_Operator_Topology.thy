@@ -364,7 +364,7 @@ lemma has_sum_closed_cstrong_operator_topology:
   assumes aA: \<open>\<And>i. a i \<in> A\<close>
   assumes closed: \<open>closedin cstrong_operator_topology A\<close>
   assumes subspace: \<open>csubspace A\<close>
-  assumes has_sum: \<open>\<And>\<psi>. has_sum (\<lambda>i. a i *\<^sub>V \<psi>) I (b *\<^sub>V \<psi>)\<close>
+  assumes has_sum: \<open>\<And>\<psi>. ((\<lambda>i. a i *\<^sub>V \<psi>) has_sum (b *\<^sub>V \<psi>)) I\<close>
   shows \<open>b \<in> A\<close>
 proof -
   have 1: \<open>range (sum a) \<subseteq> A\<close>
@@ -388,7 +388,7 @@ qed
 
 
 lemma has_sum_in_cstrong_operator_topology:
-  \<open>has_sum_in cstrong_operator_topology f A l \<longleftrightarrow> (\<forall>\<psi>. has_sum (\<lambda>i. f i *\<^sub>V \<psi>) A (l *\<^sub>V \<psi>))\<close>
+  \<open>has_sum_in cstrong_operator_topology f A l \<longleftrightarrow> (\<forall>\<psi>. ((\<lambda>i. f i *\<^sub>V \<psi>) has_sum (l *\<^sub>V \<psi>)) A)\<close>
   by (simp add: cblinfun.sum_left has_sum_in_def limitin_cstrong_operator_topology has_sum_def)
 
 lemma summable_sot_absI:
@@ -396,26 +396,26 @@ lemma summable_sot_absI:
   assumes \<open>\<And>F f. finite F \<Longrightarrow> (\<Sum>n\<in>F. norm (b n *\<^sub>V f)) \<le> K * norm f\<close>
   shows \<open>summable_on_in cstrong_operator_topology b UNIV\<close>
 proof -
-  obtain B' where B': \<open>has_sum (\<lambda>n. b n *\<^sub>V f) UNIV (B' f)\<close> for f
+  obtain B' where B': \<open>((\<lambda>n. b n *\<^sub>V f) has_sum (B' f)) UNIV\<close> for f
   proof (atomize_elim, intro choice allI)
     fix f
     have \<open>(\<lambda>n. b n *\<^sub>V f) abs_summable_on UNIV\<close>
       apply (rule nonneg_bdd_above_summable_on)
       using assms by (auto intro!: bdd_aboveI[where M=\<open>K * norm f\<close>])
-    then show \<open>\<exists>l. has_sum (\<lambda>n. b n *\<^sub>V f) UNIV l\<close>
+    then show \<open>\<exists>l. ((\<lambda>n. b n *\<^sub>V f) has_sum l) UNIV\<close>
       by (metis abs_summable_summable summable_on_def)
   qed
   have \<open>bounded_clinear B'\<close>
   proof (intro bounded_clinearI allI)
     fix x y :: 'b and c :: complex
     from B'[of x] B'[of y]
-    have \<open>has_sum (\<lambda>n. b n *\<^sub>V x + b n *\<^sub>V y) UNIV (B' x + B' y)\<close>
+    have \<open>((\<lambda>n. b n *\<^sub>V x + b n *\<^sub>V y) has_sum B' x + B' y) UNIV\<close>
       by (simp add: has_sum_add)
     with B'[of \<open>x + y\<close>]
     show \<open>B' (x + y) = B' x + B' y\<close>
       by (metis (no_types, lifting) cblinfun.add_right has_sum_cong infsumI)
     from B'[of x]
-    have \<open>has_sum (\<lambda>n. c *\<^sub>C (b n *\<^sub>V x)) UNIV (c *\<^sub>C B' x)\<close>
+    have \<open>((\<lambda>n. c *\<^sub>C (b n *\<^sub>V x)) has_sum c *\<^sub>C B' x) UNIV\<close>
       by (metis cblinfun_scaleC_right.rep_eq has_sum_cblinfun_apply)
     with B'[of \<open>c *\<^sub>C x\<close>]
     show \<open>B' (c *\<^sub>C x) = c *\<^sub>C B' x\<close>

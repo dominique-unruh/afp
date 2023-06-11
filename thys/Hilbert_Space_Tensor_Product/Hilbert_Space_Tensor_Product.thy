@@ -792,7 +792,7 @@ lemma tensor_op_adjoint: \<open>(tensor_op a b)* = tensor_op (a*) (b*)\<close>
   apply (auto simp flip: tensor_ell2_ket simp: tensor_op_ell2)
   by (simp add: cinner_adj_left)
 
-lemma has_sum_id_tensor_butterfly_ket: \<open>has_sum (\<lambda>i. (id_cblinfun \<otimes>\<^sub>o selfbutterket i) *\<^sub>V \<psi>) UNIV \<psi>\<close>
+lemma has_sum_id_tensor_butterfly_ket: \<open>((\<lambda>i. (id_cblinfun \<otimes>\<^sub>o selfbutterket i) *\<^sub>V \<psi>) has_sum \<psi>) UNIV\<close>
 proof -
   have *: \<open>(\<Sum>i\<in>F. (id_cblinfun \<otimes>\<^sub>o selfbutterket i) *\<^sub>V \<psi>) = trunc_ell2 (UNIV \<times> F) \<psi>\<close> if \<open>finite F\<close> for F
   proof (rule Rep_ell2_inject[THEN iffD1], rule ext, rename_tac xy)
@@ -883,14 +883,14 @@ proof (intro order.antisym subset_UNIV subsetI)
   qed
   with * have AB1: \<open>(id_cblinfun \<otimes>\<^sub>o selfbutterket i) o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j) \<in> AB\<close> for i j
     by simp
-  have \<open>has_sum (\<lambda>i. ((id_cblinfun \<otimes>\<^sub>o selfbutterket i) o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j)) *\<^sub>V \<psi>)
-            UNIV ((c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j)) *\<^sub>V \<psi>)\<close> for j \<psi>
+  have \<open>((\<lambda>i. ((id_cblinfun \<otimes>\<^sub>o selfbutterket i) o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j)) *\<^sub>V \<psi>)
+            has_sum (c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j)) *\<^sub>V \<psi>) UNIV\<close> for j \<psi>
     apply simp by (rule has_sum_id_tensor_butterfly_ket)
   then have AB2: \<open>(c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j)) \<in> AB\<close> for j
     apply (rule has_sum_closed_cstrong_operator_topology[rotated -1])
     using AB1 by auto
 
-  have \<open>has_sum (\<lambda>j. (c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j)) *\<^sub>V \<psi>) UNIV (c *\<^sub>V \<psi>)\<close> for \<psi>
+  have \<open>((\<lambda>j. (c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j)) *\<^sub>V \<psi>) has_sum c *\<^sub>V \<psi>) UNIV\<close> for \<psi>
     apply simp
     apply (rule has_sum_cblinfun_apply)
     by (rule has_sum_id_tensor_butterfly_ket)
@@ -2120,7 +2120,7 @@ lemma tensor_ccsubspace_element_as_infsum:
   fixes A :: \<open>'a ell2 ccsubspace\<close> and B :: \<open>'b ell2 ccsubspace\<close>
   assumes \<open>\<psi> \<in> space_as_set (A \<otimes>\<^sub>S B)\<close>
   shows \<open>\<exists>\<phi> \<delta>. (\<forall>n::nat. \<phi> n \<in> space_as_set A) \<and> (\<forall>n. \<delta> n \<in> space_as_set B)
-       \<and> has_sum (\<lambda>n. \<phi> n \<otimes>\<^sub>s \<delta> n) UNIV \<psi>\<close>
+       \<and> ((\<lambda>n. \<phi> n \<otimes>\<^sub>s \<delta> n) has_sum \<psi>) UNIV\<close>
 proof -
   obtain A' where spanA': \<open>ccspan A' = A\<close> and orthoA': \<open>is_ortho_set A'\<close> and normA': \<open>a \<in> A' \<Longrightarrow> norm a = 1\<close> for a
     using some_chilbert_basis_of_ccspan some_chilbert_basis_of_is_ortho_set some_chilbert_basis_of_norm1
@@ -2138,7 +2138,7 @@ proof -
     by (auto simp add: AB'_def norm_tensor_ell2 normA' normB')
   have spanAB': \<open>ccspan AB' = A \<otimes>\<^sub>S B\<close>
     by (simp add: tensor_ccsubspace_ccspan AB'_def flip: spanA' spanB')
-  have sum1: \<open>has_sum (\<lambda>ab. (ab \<bullet>\<^sub>C \<psi>) *\<^sub>C ab) AB' \<psi>\<close>
+  have sum1: \<open>((\<lambda>ab. (ab \<bullet>\<^sub>C \<psi>) *\<^sub>C ab) has_sum \<psi>) AB'\<close>
     apply (rule basis_projections_reconstruct_has_sum)
     by (simp_all add: spanAB' \<open>is_ortho_set AB'\<close> normAB' assms)
   have \<open>(\<lambda>ab. (norm (ab \<bullet>\<^sub>C \<psi>))\<^sup>2) summable_on AB'\<close>
@@ -2154,19 +2154,19 @@ proof -
     apply (simp add: bij_betw_def ABnon0_def)
     using AB'_def \<open>bij_betw f N ABnon0\<close> bij_betwE mem_Collect_eq by blast
   define c where \<open>c n = (\<phi>0 n \<otimes>\<^sub>s \<delta>0 n) \<bullet>\<^sub>C \<psi>\<close> for n
-  from sum1 have \<open>has_sum (\<lambda>ab. (ab \<bullet>\<^sub>C \<psi>) *\<^sub>C ab) ABnon0 \<psi>\<close>
+  from sum1 have \<open>((\<lambda>ab. (ab \<bullet>\<^sub>C \<psi>) *\<^sub>C ab) has_sum \<psi>) ABnon0\<close>
     apply (rule has_sum_cong_neutral[THEN iffD1, rotated -1])
     by (auto simp: ABnon0_def)
-  then have \<open>has_sum (\<lambda>n. (f n \<bullet>\<^sub>C \<psi>) *\<^sub>C f n) N \<psi>\<close>
+  then have \<open>((\<lambda>n. (f n \<bullet>\<^sub>C \<psi>) *\<^sub>C f n) has_sum \<psi>) N\<close>
     by (rule has_sum_reindex_bij_betw[OF bij_f, THEN iffD2])
-  then have sum2: \<open>has_sum (\<lambda>n. c n *\<^sub>C (\<phi>0 n \<otimes>\<^sub>s \<delta>0 n)) N \<psi>\<close>
+  then have sum2: \<open>((\<lambda>n. c n *\<^sub>C (\<phi>0 n \<otimes>\<^sub>s \<delta>0 n)) has_sum \<psi>) N\<close>
     apply (rule has_sum_cong[THEN iffD1, rotated])
     by (simp add: f_def c_def)
   define \<phi> \<delta> where \<open>\<phi> n = (if n\<in>N then c n *\<^sub>C \<phi>0 n else 0)\<close> and \<open>\<delta> n = (if n\<in>N then \<delta>0 n else 0)\<close> for n
   then have 1: \<open>\<phi> n \<in> space_as_set A\<close> and 2: \<open>\<delta> n \<in> space_as_set B\<close> for n
     using \<phi>0A' \<delta>0B' spanA' spanB' ccspan_superset 
     by (auto intro!: complex_vector.subspace_scale simp: \<phi>_def \<delta>_def)
-  from sum2 have sum3: \<open>has_sum (\<lambda>n. \<phi> n \<otimes>\<^sub>s \<delta> n) UNIV \<psi>\<close>
+  from sum2 have sum3: \<open>((\<lambda>n. \<phi> n \<otimes>\<^sub>s \<delta> n) has_sum \<psi>) UNIV\<close>
     apply (rule has_sum_cong_neutral[THEN iffD2, rotated -1])
     by (auto simp: \<phi>_def \<delta>_def tensor_ell2_scaleC1)
   from 1 2 sum3 show ?thesis

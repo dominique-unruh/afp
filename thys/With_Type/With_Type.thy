@@ -917,7 +917,7 @@ fun define_stuff pos class lthy = let
     rep_class_data_thm = NONE, (* TODO put something here? *)
     transfer = SOME (gen_thm lthy transfer_thm')
   }
-  val lthy = Local_Theory.declaration {syntax=false, pervasive=true} (fn m => fn context =>
+  val lthy = Local_Theory.declaration {syntax=false, pervasive=true, pos=pos} (fn m => fn context =>
     With_Type.add_with_type_info_generic (With_Type.morphism m info) context) lthy 
 in
   lthy

@@ -339,7 +339,7 @@ lemma has_sum_closed_cweak_operator_topology:
   assumes aA: \<open>\<And>i. a i \<in> A\<close>
   assumes closed: \<open>closedin cweak_operator_topology A\<close>
   assumes subspace: \<open>csubspace A\<close>
-  assumes has_sum: \<open>\<And>\<phi> \<psi>. has_sum (\<lambda>i. \<phi> \<bullet>\<^sub>C (a i *\<^sub>V \<psi>)) I (\<phi> \<bullet>\<^sub>C (b *\<^sub>V \<psi>))\<close>
+  assumes has_sum: \<open>\<And>\<phi> \<psi>. ((\<lambda>i. \<phi> \<bullet>\<^sub>C (a i *\<^sub>V \<psi>)) has_sum \<phi> \<bullet>\<^sub>C (b *\<^sub>V \<psi>)) I\<close>
   shows \<open>b \<in> A\<close>
 proof -
   have 1: \<open>range (sum a) \<subseteq> A\<close>

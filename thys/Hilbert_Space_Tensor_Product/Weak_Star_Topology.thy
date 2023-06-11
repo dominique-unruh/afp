@@ -594,7 +594,7 @@ lemma has_sum_closed_weak_star_topology:
   assumes aA: \<open>\<And>i. a i \<in> A\<close>
   assumes closed: \<open>closedin weak_star_topology A\<close>
   assumes subspace: \<open>csubspace A\<close>
-  assumes has_sum: \<open>\<And>t. trace_class t \<Longrightarrow> has_sum (\<lambda>i. trace (t o\<^sub>C\<^sub>L a i)) I (trace (t o\<^sub>C\<^sub>L b))\<close>
+  assumes has_sum: \<open>\<And>t. trace_class t \<Longrightarrow> ((\<lambda>i. trace (t o\<^sub>C\<^sub>L a i)) has_sum trace (t o\<^sub>C\<^sub>L b)) I\<close>
   shows \<open>b \<in> A\<close>
 proof -
   have 1: \<open>range (sum a) \<subseteq> A\<close>
@@ -612,13 +612,15 @@ proof -
   then have \<open>limitin weak_star_topology (\<lambda>F. \<Sum>i\<in>F. a i) b (finite_subsets_at_top I)\<close>
     by (auto simp add: limitin_weak_star_topology cblinfun_compose_sum_right trace_sum trace_class_comp_left)
   then show \<open>b \<in> A\<close>
-    using 1 closed apply (rule limitin_closedin)
-    by simp
+    using closed
+    apply (rule limitin_closedin)
+    apply (rule eventually_finite_subsets_at_top_weakI)
+    using 1 by auto
 qed
 
 lemma has_sum_in_weak_star:
   \<open>has_sum_in weak_star_topology f A l \<longleftrightarrow> 
-     (\<forall>t. trace_class t \<longrightarrow> has_sum (\<lambda>i. trace (t o\<^sub>C\<^sub>L f i)) A (trace (t o\<^sub>C\<^sub>L l)))\<close>
+     (\<forall>t. trace_class t \<longrightarrow> ((\<lambda>i. trace (t o\<^sub>C\<^sub>L f i)) has_sum trace (t o\<^sub>C\<^sub>L l)) A)\<close>
 proof -
   have *: \<open>trace (t o\<^sub>C\<^sub>L sum f F) = sum (\<lambda>i. trace (t o\<^sub>C\<^sub>L f i)) F\<close> if \<open>trace_class t\<close> 
     for t F
@@ -633,10 +635,10 @@ proof (rule has_sum_in_weak_star[THEN iffD2, rule_format])
   fix t :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
   assume [simp]: \<open>trace_class t\<close>
   from trace_has_sum[OF is_onb_ket \<open>trace_class t\<close>]
-  have \<open>has_sum (\<lambda>i. ket i \<bullet>\<^sub>C (t *\<^sub>V ket i)) UNIV (trace t)\<close>
+  have \<open>((\<lambda>i. ket i \<bullet>\<^sub>C (t *\<^sub>V ket i)) has_sum trace t) UNIV\<close>
     apply (subst (asm) has_sum_reindex)
     by (auto simp: o_def)
-  then show \<open>has_sum (\<lambda>i. trace (t o\<^sub>C\<^sub>L selfbutterket i)) UNIV (trace (t o\<^sub>C\<^sub>L id_cblinfun))\<close>
+  then show \<open>((\<lambda>i. trace (t o\<^sub>C\<^sub>L selfbutterket i)) has_sum trace (t o\<^sub>C\<^sub>L id_cblinfun)) UNIV\<close>
     by (simp add: trace_butterfly_comp')
 qed
 

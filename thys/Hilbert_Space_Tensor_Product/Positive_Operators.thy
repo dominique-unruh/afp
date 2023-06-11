@@ -236,7 +236,7 @@ proof -
       by -
   qed
 
-  have has_sum_b: \<open>has_sum b UNIV B0\<close>
+  have has_sum_b: \<open>(b has_sum B0) UNIV\<close>
     apply (auto intro!: has_sum_infsum abs_summable_summable[where f=b] bdd_aboveI[where M=3] simp: B0_def abs_summable_iff_bdd_above)
     using sum_norm_b
     by simp

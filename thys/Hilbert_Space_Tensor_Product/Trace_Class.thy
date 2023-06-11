@@ -87,9 +87,9 @@ qed
 lemma TODO_name1:
   fixes E :: \<open>'a::complex_inner set\<close> and F :: \<open>'b::chilbert_space set\<close>
   assumes \<open>is_onb E\<close> and \<open>is_onb F\<close>
-  shows \<open>has_sum (\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) E t \<longleftrightarrow> has_sum (\<lambda>(e,f). (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) (E\<times>F) t\<close>
+  shows \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E \<longleftrightarrow> ((\<lambda>(e,f). (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) has_sum t) (E\<times>F)\<close>
 proof
-  assume asm: \<open>has_sum (\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) E t\<close>
+  assume asm: \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E\<close>
   have sum1: \<open>t = (\<Sum>\<^sub>\<infinity>e\<in>E. (norm (A *\<^sub>V e))\<^sup>2)\<close>
     using asm infsumI by blast
   have abs1: \<open>(\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) abs_summable_on E\<close>
@@ -113,10 +113,10 @@ proof
     apply (subst infsum_Sigma'_banach[symmetric])
     using abs3 abs_summable_summable apply blast
     by auto
-  then show \<open>has_sum (\<lambda>(e,f). (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) (E\<times>F) t\<close>
+  then show \<open>((\<lambda>(e,f). (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) has_sum t) (E\<times>F)\<close>
     using abs3 abs_summable_summable has_sum_infsum by blast
 next
-  assume asm: \<open>has_sum (\<lambda>(e,f). (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) (E\<times>F) t\<close>
+  assume asm: \<open>((\<lambda>(e,f). (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) has_sum t) (E\<times>F)\<close>
   have abs3: \<open>(\<lambda>(x, y). (cmod ((A *\<^sub>V x) \<bullet>\<^sub>C y))\<^sup>2) abs_summable_on E \<times> F\<close>
     using asm summable_on_def summable_on_iff_abs_summable_on_real by blast
   have sum3: \<open>t = (\<Sum>\<^sub>\<infinity>(e,f)\<in>E\<times>F. (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2)\<close>
@@ -131,7 +131,7 @@ next
     using assms(2) parseval_infsum by blast
   have abs1: \<open>(\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) abs_summable_on E\<close>
     using abs2 assms(2) parseval_infsum by fastforce
-  show \<open>has_sum (\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) E t\<close>
+  show \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E\<close>
     using abs1 sum1 by auto
 qed
 
@@ -139,19 +139,19 @@ qed
 lemma TODO_name2:
   fixes E :: \<open>'a::chilbert_space set\<close> and F :: \<open>'b::chilbert_space set\<close>
   assumes \<open>is_onb E\<close> and \<open>is_onb F\<close>
-  shows \<open>has_sum (\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) E t \<longleftrightarrow> has_sum (\<lambda>f. (norm (A* *\<^sub>V f))\<^sup>2) F t\<close>
+  shows \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E \<longleftrightarrow> ((\<lambda>f. (norm (A* *\<^sub>V f))\<^sup>2) has_sum t) F\<close>
 proof -
-  have \<open>has_sum (\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) E t \<longleftrightarrow> has_sum (\<lambda>(e,f). (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) (E\<times>F) t\<close>
+  have \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E \<longleftrightarrow> ((\<lambda>(e,f). (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) has_sum t) (E\<times>F)\<close>
     using TODO_name1 assms by blast
-  also have \<open>\<dots> \<longleftrightarrow> has_sum (\<lambda>(e,f). (cmod ((A* *\<^sub>V f) \<bullet>\<^sub>C e))\<^sup>2) (E\<times>F) t\<close>
+  also have \<open>\<dots> \<longleftrightarrow> ((\<lambda>(e,f). (cmod ((A* *\<^sub>V f) \<bullet>\<^sub>C e))\<^sup>2) has_sum t) (E\<times>F)\<close>
     apply (subst cinner_adj_left) apply (subst cinner_commute)
     apply (subst complex_mod_cnj) by rule
-  also have \<open>\<dots> \<longleftrightarrow> has_sum (\<lambda>(f,e). (cmod ((A* *\<^sub>V f) \<bullet>\<^sub>C e))\<^sup>2) (F\<times>E) t\<close>
+  also have \<open>\<dots> \<longleftrightarrow> ((\<lambda>(f,e). (cmod ((A* *\<^sub>V f) \<bullet>\<^sub>C e))\<^sup>2) has_sum t) (F\<times>E)\<close>
     apply (subst asm_rl[of \<open>F\<times>E = prod.swap ` (E\<times>F)\<close>])
      apply force
     apply (subst has_sum_reindex)
     by (auto simp: o_def)
-  also have \<open>\<dots> \<longleftrightarrow> has_sum (\<lambda>f. (norm (A* *\<^sub>V f))\<^sup>2) F t\<close>
+  also have \<open>\<dots> \<longleftrightarrow> ((\<lambda>f. (norm (A* *\<^sub>V f))\<^sup>2) has_sum t) F\<close>
     using TODO_name1 assms by blast
   finally show ?thesis
     by -
@@ -161,7 +161,7 @@ subsection \<open>Trace-norm and trace-class\<close>
 
 lemma trace_norm_basis_invariance:
   assumes \<open>is_onb E\<close> and \<open>is_onb F\<close>
-  shows \<open>has_sum (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) E t \<longleftrightarrow> has_sum (\<lambda>f. cmod (f \<bullet>\<^sub>C (abs_op A *\<^sub>V f))) F t\<close>
+  shows \<open>((\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) has_sum t) E \<longleftrightarrow> ((\<lambda>f. cmod (f \<bullet>\<^sub>C (abs_op A *\<^sub>V f))) has_sum t) F\<close>
     \<comment> \<open>@{cite "conway00operator"}, Corollary 18.2\<close>
 proof -
   define B where \<open>B = sqrt_op (abs_op A)\<close>
@@ -175,14 +175,14 @@ proof -
   finally have *: \<open>cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e)) = (norm (B *\<^sub>V e))\<^sup>2\<close> for e
     by (metis Re_complex_of_real)
 
-  have \<open>has_sum (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) E t \<longleftrightarrow> has_sum (\<lambda>e. (norm (B *\<^sub>V e))\<^sup>2) E t\<close>
+  have \<open>((\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) has_sum t) E \<longleftrightarrow> ((\<lambda>e. (norm (B *\<^sub>V e))\<^sup>2) has_sum t) E\<close>
     by (simp add: *)
-  also have \<open>\<dots> = has_sum (\<lambda>f. (norm (B* *\<^sub>V f))\<^sup>2) F t\<close>
+  also have \<open>\<dots> = ((\<lambda>f. (norm (B* *\<^sub>V f))\<^sup>2) has_sum t) F\<close>
     apply (subst TODO_name2[where F=F])
     by (simp_all add: assms)
-  also have \<open>\<dots> = has_sum (\<lambda>f. (norm (B *\<^sub>V f))\<^sup>2) F t\<close>
+  also have \<open>\<dots> = ((\<lambda>f. (norm (B *\<^sub>V f))\<^sup>2) has_sum t) F\<close>
     using TODO_name2 assms(2) by blast
-  also have \<open>\<dots> = has_sum (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) F t\<close>
+  also have \<open>\<dots> = ((\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) has_sum t) F\<close>
     by (simp add: *)
   finally show ?thesis
     by simp
@@ -409,12 +409,12 @@ lemma hilbert_schmidt_norm_pos[simp]: \<open>hilbert_schmidt_norm a \<ge> 0\<clo
 lemma has_sum_hilbert_schmidt_norm_square:
   \<comment> \<open>@{cite conway00operator}, Proposition 18.6 (a)\<close>
   assumes \<open>is_onb B\<close> and \<open>hilbert_schmidt a\<close>
-  shows \<open>has_sum (\<lambda>x. (norm (a *\<^sub>V x))\<^sup>2) B ((hilbert_schmidt_norm a)\<^sup>2)\<close>
+  shows \<open>((\<lambda>x. (norm (a *\<^sub>V x))\<^sup>2) has_sum (hilbert_schmidt_norm a)\<^sup>2) B\<close>
 proof -
   from \<open>hilbert_schmidt a\<close>
   have \<open>trace_class (a* o\<^sub>C\<^sub>L a)\<close>
   using hilbert_schmidt_def by blast
-  with \<open>is_onb B\<close> have \<open>has_sum (\<lambda>x. cmod (x \<bullet>\<^sub>C ((a* o\<^sub>C\<^sub>L a) *\<^sub>V x))) B (trace_norm (a* o\<^sub>C\<^sub>L a))\<close>
+  with \<open>is_onb B\<close> have \<open>((\<lambda>x. cmod (x \<bullet>\<^sub>C ((a* o\<^sub>C\<^sub>L a) *\<^sub>V x))) has_sum trace_norm (a* o\<^sub>C\<^sub>L a)) B\<close>
     by (metis (no_types, lifting) abs_op_def has_sum_cong has_sum_infsum positive_cblinfun_squareI sqrt_op_unique trace_class_def trace_norm_alt_def trace_norm_basis_invariance)
   then show ?thesis
     by (auto simp: cinner_adj_right cdot_square_norm of_real_power norm_power hilbert_schmidt_norm_def)
@@ -529,15 +529,15 @@ lemma hilbert_schmidt_norm_adj[simp]:
   shows \<open>hilbert_schmidt_norm (a*) = hilbert_schmidt_norm a\<close>
 proof (cases \<open>hilbert_schmidt a\<close>)
   case True
-  then have \<open>has_sum (\<lambda>x. (norm (a *\<^sub>V x))\<^sup>2) some_chilbert_basis ((hilbert_schmidt_norm a)\<^sup>2)\<close>
+  then have \<open>((\<lambda>x. (norm (a *\<^sub>V x))\<^sup>2) has_sum (hilbert_schmidt_norm a)\<^sup>2) some_chilbert_basis\<close>
     by (simp add: has_sum_hilbert_schmidt_norm_square)
-  then have 1: \<open>has_sum (\<lambda>x. (norm (a* *\<^sub>V x))\<^sup>2) some_chilbert_basis ((hilbert_schmidt_norm a)\<^sup>2)\<close>
+  then have 1: \<open>((\<lambda>x. (norm (a* *\<^sub>V x))\<^sup>2) has_sum (hilbert_schmidt_norm a)\<^sup>2) some_chilbert_basis\<close>
     by (metis TODO_name2 is_onb_some_chilbert_basis)
 
   from True
   have \<open>hilbert_schmidt (a*)\<close>
     by simp
-  then have 2: \<open>has_sum (\<lambda>x. (norm (a* *\<^sub>V x))\<^sup>2) some_chilbert_basis ((hilbert_schmidt_norm (a*))\<^sup>2)\<close>
+  then have 2: \<open>((\<lambda>x. (norm (a* *\<^sub>V x))\<^sup>2) has_sum (hilbert_schmidt_norm (a*))\<^sup>2) some_chilbert_basis\<close>
     by (simp add: has_sum_hilbert_schmidt_norm_square)
 
   from 1 2 show ?thesis
@@ -1042,10 +1042,10 @@ lemma
                       \<i> * (of_real (hilbert_schmidt_norm (((c*) + \<i> *\<^sub>C b))))\<^sup>2 +
                       \<i> * (of_real (hilbert_schmidt_norm (((c*) - \<i> *\<^sub>C b))))\<^sup>2) / 4\<close>
 proof -
-  have ecbe_has_sum: \<open>has_sum (\<lambda>e. e \<bullet>\<^sub>C ((c o\<^sub>C\<^sub>L b) *\<^sub>V e)) B
-          (((of_real (hilbert_schmidt_norm ((c*) + b)))\<^sup>2 - (of_real (hilbert_schmidt_norm ((c*) - b)))\<^sup>2 -
+  have ecbe_has_sum: \<open>((\<lambda>e. e \<bullet>\<^sub>C ((c o\<^sub>C\<^sub>L b) *\<^sub>V e)) has_sum
+          ((of_real (hilbert_schmidt_norm ((c*) + b)))\<^sup>2 - (of_real (hilbert_schmidt_norm ((c*) - b)))\<^sup>2 -
             \<i> * (of_real (hilbert_schmidt_norm ((c*) + \<i> *\<^sub>C b)))\<^sup>2 +
-            \<i> * (of_real (hilbert_schmidt_norm ((c*) - \<i> *\<^sub>C b)))\<^sup>2) / 4)\<close>
+            \<i> * (of_real (hilbert_schmidt_norm ((c*) - \<i> *\<^sub>C b)))\<^sup>2) / 4) B\<close>
     if \<open>is_onb B\<close> and \<open>hilbert_schmidt c\<close> and \<open>hilbert_schmidt b\<close> for B :: \<open>'y::chilbert_space set\<close> and c :: \<open>'x::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'y\<close> and b
     apply (simp flip: cinner_adj_left[of c])
     apply (subst cdot_norm)
@@ -1121,7 +1121,7 @@ qed
 lemma trace_has_sum:
   assumes \<open>is_onb E\<close>
   assumes \<open>trace_class t\<close>
-  shows \<open>has_sum (\<lambda>e. e \<bullet>\<^sub>C (t *\<^sub>V e)) E (trace t)\<close>
+  shows \<open>((\<lambda>e. e \<bullet>\<^sub>C (t *\<^sub>V e)) has_sum trace t) E\<close>
   using assms(1) assms(2) trace_alt_def trace_exists by fastforce
 
 
@@ -1892,7 +1892,7 @@ the subset of trace-class operators \<^term>\<open>A\<close> constructed in that
     have \<open>trace_class (from_trace_class t)\<close> and \<open>norm t = trace_norm (from_trace_class t)\<close>
       using from_trace_class
       by (auto simp add: norm_trace_class.rep_eq)
-    then have \<open>has_sum (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op (from_trace_class t) *\<^sub>V e))) some_chilbert_basis (norm t)\<close>      
+    then have \<open>((\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op (from_trace_class t) *\<^sub>V e))) has_sum norm t) some_chilbert_basis\<close>      
       by (metis (no_types, lifting) has_sum_cong has_sum_infsum is_onb_some_chilbert_basis trace_class_def trace_norm_alt_def trace_norm_basis_invariance)
     then have lim: \<open>(s \<longlongrightarrow> norm t) (finite_subsets_at_top some_chilbert_basis)\<close>
       by (simp add: filterlim_iff has_sum_def s_def)
