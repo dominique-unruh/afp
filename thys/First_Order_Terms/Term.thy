@@ -25,6 +25,27 @@ lemma is_FunE [elim]:
   "is_Fun t \<Longrightarrow> (\<And>f ts. t = Fun f ts \<Longrightarrow> P) \<Longrightarrow> P"
   by (cases t) auto
 
+lemma inj_on_Var[simp]: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "inj_on Var A"
+  by (rule inj_onI) simp
+
+lemma member_image_the_Var_image_subst: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes is_var_\<sigma>: "\<forall>x. is_Var (\<sigma> x)"
+  shows "x \<in> the_Var ` \<sigma> ` V \<longleftrightarrow> Var x \<in> \<sigma> ` V"
+  using is_var_\<sigma> image_iff
+  by (metis (no_types, opaque_lifting) term.collapse(1) term.sel(1))
+
+lemma image_the_Var_image_subst_renaming_eq: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes is_var_\<sigma>: "\<forall>x. is_Var (\<rho> x)"
+  shows "the_Var ` \<rho> ` V = (\<Union>x \<in> V. vars_term (\<rho> x))"
+proof (rule Set.equalityI; rule Set.subsetI)
+  from is_var_\<sigma> show "\<And>x. x \<in> the_Var ` \<rho> ` V \<Longrightarrow> x \<in> (\<Union>x\<in>V. vars_term (\<rho> x))"
+    using term.set_sel(3) by force
+next
+  from is_var_\<sigma> show "\<And>x. x \<in> (\<Union>x\<in>V. vars_term (\<rho> x)) \<Longrightarrow> x \<in> the_Var ` \<rho> ` V"
+    by (smt (verit, best) Term.term.simps(17) UN_iff image_eqI singletonD term.collapse(1))
+qed
+
 text \<open>Reorient equations of the form @{term "Var x = t"} and @{term "Fun f ss = t"} to facilitate
   simplification.\<close>
 setup \<open>
@@ -34,8 +55,8 @@ setup \<open>
     (fn Const (@{const_name Fun}, _) $ _ $ _ => true | _ => false)
 \<close>
 
-simproc_setup reorient_Var ("Var x = t") = Reorient_Proc.proc
-simproc_setup reorient_Fun ("Fun f ss = t") = Reorient_Proc.proc
+simproc_setup reorient_Var ("Var x = t") = \<open>K Reorient_Proc.proc\<close>
+simproc_setup reorient_Fun ("Fun f ss = t") = \<open>K Reorient_Proc.proc\<close>
 
 text \<open>The \emph{root symbol} of a term is defined by:\<close>
 fun root :: "('f, 'v) term \<Rightarrow> ('f \<times> nat) option"
@@ -124,9 +145,88 @@ definition range_vars :: "('f, 'v) subst \<Rightarrow> 'v set"
 where
   "range_vars \<sigma> = \<Union>(vars_term ` subst_range \<sigma>)"
 
+lemma mem_range_varsI: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes "\<sigma> x = Var y" and "x \<noteq> y"
+  shows "y \<in> range_vars \<sigma>"
+  unfolding range_vars_def UN_iff
+proof (rule bexI[of _ "Var y"])
+  show "y \<in> vars_term (Var y)"
+    by simp
+next
+  from assms show "Var y \<in> subst_range \<sigma>"
+    by (simp_all add: subst_domain_def)
+qed
+
+lemma subst_domain_Var [simp]:
+  "subst_domain Var = {}"
+  by (simp add: subst_domain_def)
+
+lemma subst_range_Var[simp]: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "subst_range Var = {}"
+  by simp
+
+lemma range_vars_Var[simp]: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "range_vars Var = {}"
+  by (simp add: range_vars_def)
+
+lemma subst_apply_term_ident: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "vars_term t \<inter> subst_domain \<sigma> = {} \<Longrightarrow> t \<cdot> \<sigma> = t"
+proof (induction t)
+  case (Var x)
+  thus ?case
+    by (simp add: subst_domain_def)
+next
+  case (Fun f ts)
+  thus ?case
+    by (auto intro: list.map_ident_strong)
+qed
+
+lemma vars_term_subst_apply_term: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "vars_term (t \<cdot> \<sigma>) = (\<Union>x \<in> vars_term t. vars_term (\<sigma> x))"
+  by (induction t) (auto simp add: insert_Diff_if subst_domain_def)
+
+corollary vars_term_subst_apply_term_subset: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "vars_term (t \<cdot> \<sigma>) \<subseteq> vars_term t - subst_domain \<sigma> \<union> range_vars \<sigma>"
+  unfolding vars_term_subst_apply_term
+proof (induction t)
+  case (Var x)
+  show ?case
+    by (cases "\<sigma> x = Var x") (auto simp add: range_vars_def subst_domain_def)
+next
+  case (Fun f xs)
+  thus ?case by auto
+qed
+
 definition is_renaming :: "('f, 'v) subst \<Rightarrow> bool"
   where
     "is_renaming \<sigma> \<longleftrightarrow> (\<forall>x. is_Var (\<sigma> x)) \<and> inj_on \<sigma> (subst_domain \<sigma>)"
+
+lemma inv_renaming_sound: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes is_var_\<rho>: "\<forall>x. is_Var (\<rho> x)" and "inj \<rho>"
+  shows "\<rho> \<circ>\<^sub>s (Var \<circ> (inv (the_Var \<circ> \<rho>))) = Var"
+proof -
+  define \<rho>' where "\<rho>' = the_Var \<circ> \<rho>"
+  have \<rho>_def: "\<rho> = Var \<circ> \<rho>'"
+    unfolding \<rho>'_def using is_var_\<rho> by auto
+
+  from is_var_\<rho> \<open>inj \<rho>\<close> have "inj \<rho>'"
+    unfolding inj_def \<rho>_def comp_def by fast
+  hence "inv \<rho>' \<circ> \<rho>' = id"
+    using inv_o_cancel[of \<rho>'] by simp
+  hence "Var \<circ> (inv \<rho>' \<circ> \<rho>') = Var"
+    by simp
+  hence "\<forall>x. (Var \<circ> (inv \<rho>' \<circ> \<rho>')) x = Var x"
+    by metis
+  hence "\<forall>x. ((Var \<circ> \<rho>') \<circ>\<^sub>s (Var \<circ> (inv \<rho>'))) x = Var x"
+    unfolding subst_compose_def by auto
+  thus "\<rho> \<circ>\<^sub>s (Var \<circ> (inv \<rho>')) = Var"
+    using \<rho>_def by auto
+qed
+
+lemma ex_inverse_of_renaming: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes "\<forall>x. is_Var (\<rho> x)" and "inj \<rho>"
+  shows "\<exists>\<tau>. \<rho> \<circ>\<^sub>s \<tau> = Var"
+  using inv_renaming_sound[OF assms] by blast
 
 lemma vars_term_subst:
   "vars_term (t \<cdot> \<sigma>) = \<Union>(vars_term ` \<sigma> ` vars_term t)"
@@ -211,10 +311,6 @@ lemma subst_compose: "(\<sigma> \<circ>\<^sub>s \<tau>) x = \<sigma> x \<cdot> \
 
 lemmas subst_subst = subst_subst_compose [symmetric]
 
-lemma subst_domain_Var [simp]:
-  "subst_domain Var = {}"
-  by (simp add: subst_domain_def)
-
 lemma subst_apply_eq_Var:
   assumes "s \<cdot> \<sigma> = Var x"
   obtains y where "s = Var y" and "\<sigma> y = Var x"
@@ -228,7 +324,7 @@ lemma subst_domain_subst_compose:
 
 
 text \<open>A substitution is idempotent iff the variables in its range are disjoint from its domain.
-  (See also "Term Rewriting and All That" \cite[Lemma 4.5.7]{AllThat}.)\<close>
+  (See also "Term Rewriting and All That" \<^cite>\<open>\<open>Lemma 4.5.7\<close> in "AllThat"\<close>.)\<close>
 lemma subst_idemp_iff:
   "\<sigma> \<circ>\<^sub>s \<sigma> = \<sigma> \<longleftrightarrow> subst_domain \<sigma> \<inter> range_vars \<sigma> = {}"
 proof
@@ -253,6 +349,68 @@ next
   qed
   then show "\<sigma> \<circ>\<^sub>s \<sigma> = \<sigma>"
     by (simp add: subst_compose_def term_subst_eq_conv [symmetric])
+qed
+
+lemma subst_compose_apply_eq_apply_lhs: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes
+    "range_vars \<sigma> \<inter> subst_domain \<delta> = {}"
+    "x \<notin> subst_domain \<delta>"
+  shows "(\<sigma> \<circ>\<^sub>s \<delta>) x = \<sigma> x"
+proof (cases "\<sigma> x")
+  case (Var y)
+  show ?thesis
+  proof (cases "x = y")
+    case True
+    with Var have \<open>\<sigma> x = Var x\<close>
+      by simp
+    moreover from \<open>x \<notin> subst_domain \<delta>\<close> have "\<delta> x = Var x"
+      by (simp add: disjoint_iff subst_domain_def)
+    ultimately show ?thesis
+      by (simp add: subst_compose_def)
+  next
+    case False
+    have "y \<in> range_vars \<sigma>"
+      unfolding range_vars_def UN_iff
+    proof (rule bexI)
+      show "y \<in> vars_term (Var y)"
+        by simp
+    next
+      from Var False show "Var y \<in> subst_range \<sigma>"
+        by (simp_all add: subst_domain_def)
+    qed
+    hence "y \<notin> subst_domain \<delta>"
+      using \<open>range_vars \<sigma> \<inter> subst_domain \<delta> = {}\<close>
+      by (simp add: disjoint_iff)
+    with Var show ?thesis
+      unfolding subst_compose_def
+      by (simp add: subst_domain_def)
+  qed
+next
+  case (Fun f ys)
+  hence "Fun f ys \<in> subst_range \<sigma> \<or> (\<forall>y\<in>set ys. y \<in> subst_range \<sigma>)"
+    using subst_domain_def by fastforce
+  hence "\<forall>x \<in> vars_term (Fun f ys). x \<in> range_vars \<sigma>"
+    by (metis UN_I range_vars_def term.distinct(1) term.sel(4) term.set_cases(2))
+  hence "Fun f ys \<cdot> \<delta> = Fun f ys \<cdot> Var"
+    unfolding term_subst_eq_conv
+    using \<open>range_vars \<sigma> \<inter> subst_domain \<delta> = {}\<close>
+    by (simp add: disjoint_iff subst_domain_def)
+  hence "Fun f ys \<cdot> \<delta> = Fun f ys"
+    by simp
+  with Fun show ?thesis
+    by (simp add: subst_compose_def)
+qed
+
+lemma subst_apply_term_subst_apply_term_eq_subst_apply_term_lhs: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes "range_vars \<sigma> \<inter> subst_domain \<delta> = {}" and "vars_term t \<inter> subst_domain \<delta> = {}"
+  shows "t \<cdot> \<sigma> \<cdot> \<delta> = t \<cdot> \<sigma>"
+proof -
+  from assms have "\<And>x. x \<in> vars_term t \<Longrightarrow> (\<sigma> \<circ>\<^sub>s \<delta>) x = \<sigma> x"
+    using subst_compose_apply_eq_apply_lhs by fastforce
+  hence "t \<cdot> \<sigma> \<circ>\<^sub>s \<delta> = t \<cdot> \<sigma>"
+    using term_subst_eq_conv[of t "\<sigma> \<circ>\<^sub>s \<delta>" \<sigma>] by metis
+  thus ?thesis
+    by simp
 qed
 
 fun num_funs :: "('f, 'v) term \<Rightarrow> nat"
@@ -328,5 +486,174 @@ lemma vars_term_subset_subst_eq:
     and "s \<cdot> \<sigma> = s \<cdot> \<tau>"
   shows "t \<cdot> \<sigma> = t \<cdot> \<tau>"
   using assms by (induct t) (induct s, auto)
+
+
+subsection \<open>Restrict the Domain of a Substitution\<close>
+
+definition restrict_subst_domain where \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "restrict_subst_domain V \<sigma> x \<equiv> (if x \<in> V then \<sigma> x else Var x)"
+
+lemma restrict_subst_domain_empty[simp]: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "restrict_subst_domain {} \<sigma> = Var"
+  unfolding restrict_subst_domain_def by auto
+
+lemma restrict_subst_domain_Var[simp]: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "restrict_subst_domain V Var = Var"
+  unfolding restrict_subst_domain_def by auto
+
+lemma subst_domain_restrict_subst_domain[simp]: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "subst_domain (restrict_subst_domain V \<sigma>) = V \<inter> subst_domain \<sigma>"
+  unfolding restrict_subst_domain_def subst_domain_def by auto
+
+lemma subst_apply_term_restrict_subst_domain: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "vars_term t \<subseteq> V \<Longrightarrow> t \<cdot> restrict_subst_domain V \<sigma> = t \<cdot> \<sigma>"
+  by (rule term_subst_eq) (simp add: restrict_subst_domain_def subsetD)
+
+
+subsection \<open>Rename the Domain of a Substitution\<close>
+
+definition rename_subst_domain where \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "rename_subst_domain \<rho> \<sigma> x =
+    (if Var x \<in> \<rho> ` subst_domain \<sigma> then
+      \<sigma> (the_inv \<rho> (Var x))
+    else
+      Var x)"
+
+lemma rename_subst_domain_Var_lhs[simp]: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "rename_subst_domain Var \<sigma> = \<sigma>"
+  by (rule ext) (simp add: rename_subst_domain_def inj_image_mem_iff the_inv_f_f subst_domain_def)
+
+lemma rename_subst_domain_Var_rhs[simp]: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "rename_subst_domain \<rho> Var = Var"
+  by (rule ext) (simp add: rename_subst_domain_def)
+
+lemma subst_domain_rename_subst_domain_subset: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes is_var_\<rho>: "\<forall>x. is_Var (\<rho> x)"
+  shows "subst_domain (rename_subst_domain \<rho> \<sigma>) \<subseteq> the_Var ` \<rho> ` subst_domain \<sigma>"
+  by (auto simp add: subst_domain_def rename_subst_domain_def
+      member_image_the_Var_image_subst[OF is_var_\<rho>])
+
+lemma subst_range_rename_subst_domain_subset: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes "inj \<rho>"
+  shows "subst_range (rename_subst_domain \<rho> \<sigma>) \<subseteq> subst_range \<sigma>"
+proof (intro Set.equalityI Set.subsetI)
+  fix t assume "t \<in> subst_range (rename_subst_domain \<rho> \<sigma>)"
+  then obtain x where
+    t_def: "t = rename_subst_domain \<rho> \<sigma> x" and
+    "rename_subst_domain \<rho> \<sigma> x \<noteq> Var x"
+    by (auto simp: image_iff subst_domain_def)
+
+  show "t \<in> subst_range \<sigma>"
+  proof (cases \<open>Var x \<in> \<rho> ` subst_domain \<sigma>\<close>)
+    case True
+    then obtain x' where "\<rho> x' = Var x" and "x' \<in> subst_domain \<sigma>"
+      by auto
+    then show ?thesis
+      using the_inv_f_f[OF \<open>inj \<rho>\<close>, of x']
+      by (simp add: t_def rename_subst_domain_def)
+  next
+    case False
+    hence False
+      using \<open>rename_subst_domain \<rho> \<sigma> x \<noteq> Var x\<close>
+      by (simp add: t_def rename_subst_domain_def)
+    thus ?thesis ..
+  qed
+qed
+
+lemma range_vars_rename_subst_domain_subset: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes "inj \<rho>"
+  shows "range_vars (rename_subst_domain \<rho> \<sigma>) \<subseteq> range_vars \<sigma>"
+  unfolding range_vars_def
+  using subst_range_rename_subst_domain_subset[OF \<open>inj \<rho>\<close>]
+  by (metis Union_mono image_mono)
+
+lemma renaming_cancels_rename_subst_domain: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes is_var_\<rho>: "\<forall>x. is_Var (\<rho> x)" and "inj \<rho>" and vars_t: "vars_term t \<subseteq> subst_domain \<sigma>"
+  shows "t \<cdot> \<rho> \<cdot> rename_subst_domain \<rho> \<sigma> = t \<cdot> \<sigma>"
+  unfolding subst_subst
+proof (intro term_subst_eq ballI)
+  fix x assume "x \<in> vars_term t"
+  with vars_t have x_in: "x \<in> subst_domain \<sigma>"
+    by blast
+
+  obtain x' where \<rho>_x: "\<rho> x = Var x'"
+    using is_var_\<rho> by (meson is_Var_def)
+  with x_in have x'_in: "Var x' \<in> \<rho> ` subst_domain \<sigma>"
+    by (metis image_eqI)
+
+  have "(\<rho> \<circ>\<^sub>s rename_subst_domain \<rho> \<sigma>) x = \<rho> x \<cdot> rename_subst_domain \<rho> \<sigma>"
+    by (simp add: subst_compose_def)
+  also have "\<dots> = rename_subst_domain \<rho> \<sigma> x'"
+    using \<rho>_x by simp
+  also have "\<dots> = \<sigma> (the_inv \<rho> (Var x'))"
+    by (simp add: rename_subst_domain_def if_P[OF x'_in])
+  also have "\<dots> = \<sigma> (the_inv \<rho> (\<rho> x))"
+    by (simp add: \<rho>_x)
+  also have "\<dots> = \<sigma> x"
+    using \<open>inj \<rho>\<close> by (simp add: the_inv_f_f)
+  finally show "(\<rho> \<circ>\<^sub>s rename_subst_domain \<rho> \<sigma>) x = \<sigma> x"
+    by simp
+qed
+
+
+subsection \<open>Rename the Domain and Range of a Substitution\<close>
+
+definition rename_subst_domain_range where \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "rename_subst_domain_range \<rho> \<sigma> x =
+    (if Var x \<in> \<rho> ` subst_domain \<sigma> then
+      ((Var o the_inv \<rho>) \<circ>\<^sub>s \<sigma> \<circ>\<^sub>s \<rho>) (Var x)
+    else
+      Var x)"
+
+lemma rename_subst_domain_range_Var_lhs[simp]: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "rename_subst_domain_range Var \<sigma> = \<sigma>"
+  by (rule ext) (simp add: rename_subst_domain_range_def inj_image_mem_iff the_inv_f_f
+      subst_domain_def subst_compose_def)
+
+lemma rename_subst_domain_range_Var_rhs[simp]: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "rename_subst_domain_range \<rho> Var = Var"
+  by (rule ext) (simp add: rename_subst_domain_range_def)
+
+lemma subst_compose_renaming_rename_subst_domain_range: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  fixes \<sigma> \<rho> :: "('f, 'v) subst"
+  assumes is_var_\<rho>: "\<forall>x. is_Var (\<rho> x)" and "inj \<rho>"
+  shows "\<rho> \<circ>\<^sub>s rename_subst_domain_range \<rho> \<sigma> = \<sigma> \<circ>\<^sub>s \<rho>"
+proof (rule ext)
+  fix x
+  from is_var_\<rho> obtain x' where "\<rho> x = Var x'"
+    by (meson is_Var_def is_renaming_def)
+  with \<open>inj \<rho>\<close> have inv_\<rho>_x': "the_inv \<rho> (Var x') = x"
+    by (metis the_inv_f_f)
+
+  show "(\<rho> \<circ>\<^sub>s rename_subst_domain_range \<rho> \<sigma>) x = (\<sigma> \<circ>\<^sub>s \<rho>) x"
+  proof (cases "x \<in> subst_domain \<sigma>")
+    case True
+    hence "Var x' \<in> \<rho> ` subst_domain \<sigma>"
+      using \<open>\<rho> x = Var x'\<close> by (metis imageI)
+    thus ?thesis
+      by (simp add: \<open>\<rho> x = Var x'\<close> rename_subst_domain_range_def subst_compose_def inv_\<rho>_x')
+  next
+    case False
+    hence "Var x' \<notin> \<rho> ` subst_domain \<sigma>"
+    proof (rule contrapos_nn)
+      assume "Var x' \<in> \<rho> ` subst_domain \<sigma>"
+      hence "\<rho> x \<in> \<rho> ` subst_domain \<sigma>"
+        unfolding \<open>\<rho> x = Var x'\<close> .
+      thus "x \<in> subst_domain \<sigma>"
+        unfolding inj_image_mem_iff[OF \<open>inj \<rho>\<close>] .
+    qed
+    with False \<open>\<rho> x = Var x'\<close> show ?thesis
+      by (simp add: subst_compose_def subst_domain_def rename_subst_domain_range_def)
+  qed
+qed
+
+corollary subst_apply_term_renaming_rename_subst_domain_range: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  \<comment> \<open>This might be easier to find with @{command find_theorems}.\<close>
+  fixes t :: "('f, 'v) term" and \<sigma> \<rho> :: "('f, 'v) subst"
+  assumes is_var_\<rho>: "\<forall>x. is_Var (\<rho> x)" and "inj \<rho>"
+  shows "t \<cdot> \<rho> \<cdot> rename_subst_domain_range \<rho> \<sigma> = t \<cdot> \<sigma> \<cdot> \<rho>"
+  unfolding subst_subst
+  unfolding subst_compose_renaming_rename_subst_domain_range[OF assms]
+  by (rule refl)
 
 end

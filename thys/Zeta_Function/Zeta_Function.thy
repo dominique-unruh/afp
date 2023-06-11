@@ -16,66 +16,6 @@ begin
 
 subsection \<open>Preliminary facts\<close>
 
-(* TODO Move once Landau symbols are in the distribution *)
-lemma holomorphic_on_extend:
-  assumes "f holomorphic_on S - {\<xi>}" "\<xi> \<in> interior S" "f \<in> O[at \<xi>](\<lambda>_. 1)"
-  shows   "(\<exists>g. g holomorphic_on S \<and> (\<forall>z\<in>S - {\<xi>}. g z = f z))"
-  by (subst holomorphic_on_extend_bounded) (insert assms, auto elim!: landau_o.bigE)
-
-lemma removable_singularities:
-  assumes "finite X" "X \<subseteq> interior S" "f holomorphic_on (S - X)"
-  assumes "\<And>z. z \<in> X \<Longrightarrow> f \<in> O[at z](\<lambda>_. 1)"
-  shows   "\<exists>g. g holomorphic_on S \<and> (\<forall>z\<in>S-X. g z = f z)"
-  using assms
-proof (induction arbitrary: f rule: finite_induct)
-  case empty
-  thus ?case by auto
-next
-  case (insert z0 X f)
-  from insert.prems and insert.hyps have z0: "z0 \<in> interior (S - X)"
-    by (auto simp: interior_diff finite_imp_closed)
-  hence "\<exists>g. g holomorphic_on (S - X) \<and> (\<forall>z\<in>S - X - {z0}. g z = f z)"
-    using insert.prems insert.hyps by (intro holomorphic_on_extend) auto
-  then obtain g where g: "g holomorphic_on (S - X)" "\<forall>z\<in>S - X - {z0}. g z = f z" by blast
-  have "\<exists>h. h holomorphic_on S \<and> (\<forall>z\<in>S - X. h z = g z)"
-  proof (rule insert.IH)
-    fix z0' assume z0': "z0' \<in> X"
-    hence "eventually (\<lambda>z. z \<in> interior S - (X - {z0'}) - {z0}) (nhds z0')"
-      using insert.prems insert.hyps
-      by (intro eventually_nhds_in_open open_Diff finite_imp_closed) auto
-    hence ev: "eventually (\<lambda>z. z \<in> S - X - {z0}) (at z0')"
-      unfolding eventually_at_filter 
-      by eventually_elim (insert z0' insert.hyps interior_subset[of S], auto)
-    have "g \<in> \<Theta>[at z0'](f)"
-      by (intro bigthetaI_cong eventually_mono[OF ev]) (insert g, auto)
-    also have "f \<in> O[at z0'](\<lambda>_. 1)"
-      using z0' by (intro insert.prems) auto
-    finally show "g \<in> \<dots>" .
-  qed (insert insert.prems g, auto)
-  then obtain h where "h holomorphic_on S" "\<forall>z\<in>S - X. h z = g z" by blast
-  with g have "h holomorphic_on S" "\<forall>z\<in>S - insert z0 X. h z = f z" by auto
-  thus ?case by blast
-qed
-
-lemma continuous_imp_bigo_1:
-  assumes "continuous (at x within A) f"
-  shows   "f \<in> O[at x within A](\<lambda>_. 1)"
-proof (rule bigoI_tendsto)
-  from assms show "((\<lambda>x. f x / 1) \<longlongrightarrow> f x) (at x within A)"
-    by (auto simp: continuous_within)
-qed auto
-
-lemma taylor_bigo_linear:
-  assumes "f field_differentiable at x0 within A"
-  shows   "(\<lambda>x. f x - f x0) \<in> O[at x0 within A](\<lambda>x. x - x0)"
-proof -
-  from assms obtain f' where "(f has_field_derivative f') (at x0 within A)"
-    by (auto simp: field_differentiable_def)
-  hence "((\<lambda>x. (f x - f x0) / (x - x0)) \<longlongrightarrow> f') (at x0 within A)"
-    by (auto simp: has_field_derivative_iff)
-  thus ?thesis by (intro bigoI_tendsto[where c = f']) (auto simp: eventually_at_filter)
-qed
-(* END TODO *)
 
 (* TODO Move? *)
 lemma powr_add_minus_powr_asymptotics:
@@ -690,17 +630,16 @@ proof -
 qed
 
 corollary is_pole_zeta: "is_pole zeta 1"
-  unfolding zeta_def by (rule is_pole_hurwitz_zeta) auto
+  by (simp add: is_pole_hurwitz_zeta zeta_def)
 
 theorem zorder_hurwitz_zeta: 
   assumes "a > 0"
   shows   "zorder (hurwitz_zeta a) 1 = -1"
 proof (rule zorder_eqI[of UNIV])
-  fix w :: complex assume "w \<in> UNIV" "w \<noteq> 1"
-  thus "hurwitz_zeta a w = (pre_zeta a w * (w - 1) + a powr (1 - w)) * (w - 1) powr (of_int (-1))"
-    apply (subst (1) powr_of_int)
+  fix w :: complex assume "w \<noteq> 1"
+  thus "hurwitz_zeta a w = (pre_zeta a w * (w - 1) + a powr (1 - w)) * (w - 1) powi -1"
     by (auto simp add: hurwitz_zeta_def field_simps)
-qed (insert assms, auto intro!: holomorphic_intros)
+qed (use assms in \<open>auto intro!: holomorphic_intros\<close>)
 
 corollary zorder_zeta: "zorder zeta 1 = - 1"
   unfolding zeta_def by (rule zorder_hurwitz_zeta) auto
@@ -1072,8 +1011,8 @@ qed
 subsection \<open>The non-vanishing of $\zeta$ for $\mathfrak{R}(s) \geq 1$\<close>
 
 text \<open>
-  This proof is based on a sketch by Newman~\cite{newman1998analytic}, which was previously
-  formalised in HOL Light by Harrison~\cite{harrison2009pnt}, albeit in a much more concrete
+  This proof is based on a sketch by Newman~\<^cite>\<open>"newman1998analytic"\<close>, which was previously
+  formalised in HOL Light by Harrison~\<^cite>\<open>"harrison2009pnt"\<close>, albeit in a much more concrete
   and low-level style.
 
   Our aim here is to reproduce Newman's proof idea cleanly and on the same high level of
@@ -1835,7 +1774,7 @@ qed
 subsection \<open>The periodic zeta function\<close>
 
 text \<open>
-  The periodic zeta function $F(s, q)$ (as described e.\,g.\ by Apostol~\cite{apostol1976analytic} 
+  The periodic zeta function $F(s, q)$ (as described e.\,g.\ by Apostol~\<^cite>\<open>"apostol1976analytic"\<close> 
   is related to the Hurwitz zeta function. It is periodic in \<open>q\<close> with period 1 and it can be 
   represented by a Dirichlet series that is absolutely convergent for $\mathfrak{R}(s) > 1$.
    If \<open>q \<notin> \<int>\<close>, it furthermore convergent for $\mathfrak{R}(s) > 0$.

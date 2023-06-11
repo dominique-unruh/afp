@@ -586,7 +586,7 @@ structure Deep0 = struct
 fun apply_hs_code_identifiers ml_module thy =
   let fun mod_hs (fic, ml_module) = Code_Symbol.Module (fic, [("Haskell", SOME ml_module)]) in
   fold (Code_Target.set_identifiers o mod_hs)
-    (map (fn x => (Context.theory_name x, ml_module))
+    (map (fn x => (Context.theory_base_name x, ml_module))
          (* list of .hs files that will be merged together in "ml_module" *)
          ( thy
            :: (* we over-approximate the set of compiler files *)
@@ -751,7 +751,7 @@ val compiler = let open Export_code_env in
         val ml_ext_ml = "ML" in
     ( "SML", ml_ext_ml, File, SML.Filename.function
     , check [ let val isa = "isabelle" in
-              ( Path.implode (Path.expand (Path.append (Path.variable "ISABELLE_HOME") (Path.make ["bin", isa]))) ^ " version"
+              ( File.standard_path (Path.append (Path.variable "ISABELLE_HOME") (Path.make ["bin", isa])) ^ " version"
               , isa ^ " is not installed (required for compiling a SML project)")
               end ]
     , fn mk_fic => fn ml_module => fn mk_free => fn thy =>
@@ -806,14 +806,14 @@ val compiler = let open Export_code_env in
         let
             val stdout_file = Isabelle_System.create_tmp_path "stdout_file" "thy"
             val () = File.write (Path.append tmp_export_code (Path.make [SML.Filename.stdout ml_ext_ml]))
-                                (Path.implode (Path.expand stdout_file))
+                                (File.standard_path stdout_file)
             val (l, (_, exit_st)) =
               compile
                 [ "mv " ^ tmp_file ^ " " ^ Path.implode (Path.append tmp_export_code
                                                            (Path.make [SML.Filename.argument ml_ext_ml]))
                 , "cd " ^ Path.implode tmp_export_code ^
                   " && echo 'use_thy \"" ^ SML.main ^ "\";' | " ^
-                  Path.implode (Path.expand (Path.append (Path.variable "ISABELLE_HOME") (Path.make ["bin", "isabelle"]))) ^
+                  File.standard_path (Path.append (Path.variable "ISABELLE_HOME") (Path.make ["bin", "isabelle"])) ^
                   " console" ]
                 "true"
             val stdout =
@@ -870,7 +870,7 @@ fun export_code_tmp_file seris g =
   fold
     (fn ((ml_compiler, ml_module), export_arg) => fn f => fn g =>
       f (fn accu =>
-        let val tmp_name = Context.theory_name @{theory} in
+        let val tmp_name = Context.theory_base_name @{theory} in
         (if Deep0.Find.export_mode ml_compiler = Deep0.Export_code_env.Directory then
            Isabelle_System.with_tmp_dir tmp_name
          else
@@ -1047,7 +1047,7 @@ fun f_command l_mode =
                                    , skip_exportation)) => fn thy =>
         let val _ =
               warning ("After closing Isabelle/jEdit, we may still need to remove this directory (by hand): " ^
-                       Path.implode (Path.expand tmp_export_code))
+                       File.standard_path tmp_export_code)
             val seri_args' = List_mapi (fn i => fn ((ml_compiler, ml_module), export_arg) =>
               let val tmp_export_code = Deep.mk_path_export_code tmp_export_code ml_compiler i
                   fun mk_fic s = Path.append tmp_export_code (Path.make [s])

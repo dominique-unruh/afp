@@ -13,7 +13,7 @@ by (metis Poly_coeffs coeffs_Poly)
 
 
 
-locale kyber_ntt = kyber_spec "TYPE('a :: qr_spec)" "TYPE('k::finite)" +
+locale kyber_ntt = kyber_spec _ _ _ _"TYPE('a :: qr_spec)" "TYPE('k::finite)" +
 fixes type_a :: "('a :: qr_spec) itself" 
   and type_k :: "('k ::finite) itself" 
   and \<omega> :: "('a::qr_spec) mod_ring"
@@ -655,9 +655,8 @@ proof -
       have eq: "(\<lambda>j. x' j i) ` {..<n} = {..<n}" unfolding x'_def 
       proof (safe, goal_cases)
         case (1 _ j)
-        then show ?case 
-        using Euclidean_Division.pos_mod_bound Euclidean_Division.pos_mod_sign 
-        n_gt_zero nat_less_iff by blast
+        with n_gt_zero show ?case
+          by (simp add: nat_less_iff)
       next
         case (2 x)
         define j where "j = (x+i) mod n"
@@ -670,10 +669,11 @@ proof -
       have inj: "inj_on (\<lambda>j. x' j i) {..<n}" unfolding x'_def inj_on_def 
       proof (safe, goal_cases)
         case (1 x y)
-        then show ?case 
-        by (smt (verit, best) Euclidean_Division.pos_mod_sign int_nat_eq 
-          less_imp_le_nat mod_diff_cong mod_pos_pos_trivial of_nat_0_less_iff 
-          of_nat_diff of_nat_eq_iff of_nat_less_0_iff zero_less_diff)
+        then have "((int x - int i) mod int n) = ((int y - int i) mod int n)"
+          by (meson eq_nat_nat_iff mod_int_pos_iff n_gt_zero)
+        then have "int x mod int n = int y mod int n"
+          by (smt (z3) mod_diff_cong)
+        then show ?case using 1 by auto
       qed
       show ?thesis unfolding * by (subst sum.reindex_cong[OF inj eq[symmetric], 
         of "(\<lambda>x. poly.coeff (of_qr g) x * \<psi> ^ (x * (2 * l + 1)))" 

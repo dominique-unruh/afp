@@ -10,10 +10,10 @@ begin
 
 subsection "Introduction"
 
-text\<open>Braun, Rem and Hoogerwoord \cite{BraunRem,Hoogerwoord} used
+text\<open>Braun, Rem and Hoogerwoord \<^cite>\<open>"BraunRem" and "Hoogerwoord"\<close> used
 specific balanced binary trees, often called Braun trees (where in
 each node with subtrees $l$ and $r$, $size(r) \le size(l) \le
-size(r)+1$), to implement flexible arrays. Paulson \cite{Paulson}
+size(r)+1$), to implement flexible arrays. Paulson \<^cite>\<open>"Paulson"\<close>
 (based on code supplied by Okasaki)
 implemented priority queues via Braun trees. This theory verifies
 Paulsons's implementation, with small simplifications.\<close>
@@ -124,7 +124,10 @@ function (sequential) sift_down :: "'a::linorder tree \<Rightarrow> 'a \<Rightar
         else Node t1 x2 (sift_down l2 a r2))"
 by pat_completeness auto
 termination
+by (relation "measure (%(l,a,r). max(height l) (height r))") (auto simp: max_def)
+(* An alternative:
 by (relation "measure (%(l,a,r). size l + size r)") auto
+*)
 
 end
 
@@ -220,6 +223,84 @@ next
   case 7 thus ?case by(simp add: heap_insert braun_insert)
 next
   case 8 thus ?case by(simp add: heap_del_min braun_del_min)
+qed
+
+
+subsection "Running Time Analysis"
+
+fun T_insert :: "'a::linorder \<Rightarrow> 'a tree \<Rightarrow> nat" where
+"T_insert a Leaf = 1" |
+"T_insert a (Node l x r) =
+ (1 + (if a < x then T_insert x r else T_insert a r))"
+
+lemma T_insert: "T_insert a t \<le> height t + 1"
+apply(induction t arbitrary: a)
+by (auto simp: max_def not_less_eq_eq intro: order.trans le_SucI)
+
+fun T_del_left :: "'a tree \<Rightarrow> nat" where
+"T_del_left (Node Leaf x r) = 1" |
+"T_del_left (Node l x r) = 1 + T_del_left l"
+
+lemma T_del_left_height: "t \<noteq> Leaf \<Longrightarrow> T_del_left t \<le> height t"
+by(induction t rule: T_del_left.induct)auto
+
+function (sequential) T_sift_down :: "'a::linorder tree \<Rightarrow> 'a \<Rightarrow> 'a tree \<Rightarrow> nat" where
+"T_sift_down Leaf a _ = 1" |
+"T_sift_down (Node Leaf x _) a Leaf = 1" |
+"T_sift_down (Node l1 x1 r1) a (Node l2 x2 r2) =
+  1 + (if a \<le> x1 \<and> a \<le> x2 then 1
+   else if x1 \<le> x2 then T_sift_down l1 a r1
+        else T_sift_down l2 a r2)"
+by pat_completeness auto
+termination
+apply (relation "measure (%(l,a,r). max(height l) (height r))")
+apply (auto simp: max_def)
+done
+
+lemma T_sift_down_height: "braun(Node l a r) \<Longrightarrow> T_sift_down l x r \<le> max(height l) (height r) + 1"
+apply(induction l x r rule: T_sift_down.induct)
+apply(auto)
+done
+
+fun T_del_min :: "'a::linorder tree \<Rightarrow> nat" where
+"T_del_min Leaf = 1" |
+"T_del_min (Node Leaf x r) = 1" |
+"T_del_min (Node l x r) = 1 + (let (y,l') = del_left l in T_del_left l + T_sift_down r y l')"
+
+lemma del_left_height: "\<lbrakk> del_left t = (x, t'); t \<noteq> \<langle>\<rangle> \<rbrakk> \<Longrightarrow> height t' \<le> height t"
+by(induction t arbitrary: x t' rule: del_left.induct) (auto split: prod.splits)
+
+lemma T_del_min_neq_Leaf: "l \<noteq> Leaf \<Longrightarrow>
+  T_del_min (Node l x r) = 1 + (let (y,l') = del_left l in T_del_left l + T_sift_down r y l')"
+by (auto simp add: neq_Leaf_iff)
+
+lemma T_del_min: assumes "braun t" shows "T_del_min t \<le> 2*height t + 1"
+proof(cases t)
+  case Leaf then show ?thesis by simp
+next
+  case [simp]: (Node l x r)
+  show ?thesis
+  proof (cases)
+    assume "l = Leaf" then show ?thesis by simp
+  next
+    assume "l \<noteq> Leaf"
+    obtain y l' where [simp]: "del_left l = (y,l')" by fastforce
+    have 1: "height l' \<le> height l" by (simp add: \<open>l \<noteq> \<langle>\<rangle>\<close> del_left_height)
+    have "braun \<langle>r, y, l'\<rangle>" using del_left_braun[of l y l'] \<open>l \<noteq> \<langle>\<rangle>\<close> assms del_left_size[of l] by auto
+    have "T_del_min t = 1 + T_del_left l + T_sift_down r y l'"
+      using \<open>l \<noteq> Leaf\<close> by(simp add: T_del_min_neq_Leaf)
+    also have "\<dots> \<le> 1 + height l + T_sift_down r y l'"
+      using T_del_left_height[OF \<open>l \<noteq> Leaf\<close>] by linarith
+    also have "\<dots> \<le> 1 + height l + max(height r) (height l') + 1"
+      using T_sift_down_height[OF \<open>braun \<langle>r, y, l'\<rangle>\<close>, of y] by linarith
+    also have "\<dots> \<le> height l + max(height r) (height l) + 2"
+      using 1 by linarith
+    also have "\<dots> \<le> 2 * (max(height r) (height l) + 1)"
+      by simp
+    also have "\<dots> \<le> 2 * height t + 1"
+      by simp
+    finally show ?thesis .
+  qed
 qed
 
 end

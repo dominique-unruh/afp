@@ -2,6 +2,7 @@
     Author:      Dmitriy Traytel <traytel at inf.ethz.ch>, 2014
     Author:      Jasmin Blanchette <j.c.blanchette at vu.nl>, 2014, 2017
     Author:      Anders Schlichtkrull <andschl at dtu.dk>, 2016, 2017
+    Author:      Martin Desharnais <desharnais at mpi-inf.mpg.de>, 2022
     Maintainer:  Anders Schlichtkrull <andschl at dtu.dk>
 *)
 
@@ -784,6 +785,23 @@ lemma is_ground_cls_list_is_ground_cls_sum_list[simp]:
   by (meson in_mset_sum_list2 is_ground_cls_def is_ground_cls_list_def)
 
 
+paragraph \<open>Grounding simplifications\<close>
+
+lemma grounding_of_clss_empty[simp]: "grounding_of_clss {} = {}"
+  by (simp add: grounding_of_clss_def)
+
+lemma grounding_of_clss_singleton[simp]: "grounding_of_clss {C} = grounding_of_cls C"
+  by (simp add: grounding_of_clss_def)
+
+lemma grounding_of_clss_insert:
+  "grounding_of_clss (insert C N) = grounding_of_cls C \<union> grounding_of_clss N"
+  by (simp add: grounding_of_clss_def)
+
+lemma grounding_of_clss_union:
+  "grounding_of_clss (A \<union> B) = grounding_of_clss A \<union> grounding_of_clss B"
+  by (simp add: grounding_of_clss_def)
+
+
 paragraph \<open>Grounding monotonicity\<close>
 
 lemma is_ground_cls_mono: "C \<subseteq># D \<Longrightarrow> is_ground_cls D \<Longrightarrow> is_ground_cls C"
@@ -879,6 +897,36 @@ lemma is_ground_subst_lit_iff: "is_ground_lit L \<longleftrightarrow> (\<forall>
 lemma is_ground_subst_cls_iff: "is_ground_cls C \<longleftrightarrow> (\<forall>\<sigma>. C = C \<cdot> \<sigma>)"
   by (metis ex_ground_subst ground_subst_ground_cls is_ground_subst_cls)
 
+paragraph \<open>Grounding of substitutions\<close>
+
+lemma grounding_of_subst_cls_subset: "grounding_of_cls (C \<cdot> \<mu>) \<subseteq> grounding_of_cls C"
+proof (rule subsetI)
+  fix D
+  assume "D \<in> grounding_of_cls (C \<cdot> \<mu>)"
+  then obtain \<gamma> where D_def: "D = C \<cdot> \<mu> \<cdot> \<gamma>" and gr_\<gamma>: "is_ground_subst \<gamma>"
+    unfolding grounding_of_cls_def mem_Collect_eq by auto
+
+  show "D \<in> grounding_of_cls C"
+    unfolding grounding_of_cls_def mem_Collect_eq D_def
+    using is_ground_comp_subst[OF gr_\<gamma>, of \<mu>]
+    by force
+qed
+
+lemma grounding_of_subst_clss_subset: "grounding_of_clss (CC \<cdot>cs \<mu>) \<subseteq> grounding_of_clss CC"
+  using grounding_of_subst_cls_subset
+  by (auto simp: grounding_of_clss_def subst_clss_def)
+
+lemma grounding_of_subst_cls_renaming_ident[simp]:
+  assumes "is_renaming \<rho>"
+  shows "grounding_of_cls (C \<cdot> \<rho>) = grounding_of_cls C"
+  by (metis (no_types, lifting) assms subset_antisym subst_cls_comp_subst
+      subst_cls_eq_grounding_of_cls_subset_eq subst_cls_id_subst is_renaming_def)
+
+lemma grounding_of_subst_clss_renaming_ident[simp]:
+  assumes "is_renaming \<rho>"
+  shows "grounding_of_clss (CC \<cdot>cs \<rho>) = grounding_of_clss CC"
+  by (metis assms dual_order.eq_iff grounding_of_subst_clss_subset
+      is_renaming_inv_renaming_cancel_clss)
 
 paragraph \<open>Members of ground expressions are ground\<close>
 
@@ -897,12 +945,19 @@ lemma is_ground_cls_is_ground_atms_atms_of[simp]: "is_ground_cls C \<Longrightar
 lemma grounding_ground: "C \<in> grounding_of_clss M \<Longrightarrow> is_ground_cls C"
   unfolding grounding_of_clss_def grounding_of_cls_def by auto
 
+lemma is_ground_cls_if_in_grounding_of_cls: "C' \<in> grounding_of_cls C \<Longrightarrow> is_ground_cls C'"
+  using grounding_ground grounding_of_clss_singleton by blast
+
 lemma in_subset_eq_grounding_of_clss_is_ground_cls[simp]:
   "C \<in> CC \<Longrightarrow> CC \<subseteq> grounding_of_clss DD \<Longrightarrow> is_ground_cls C"
   unfolding grounding_of_clss_def grounding_of_cls_def by auto
 
 lemma is_ground_cls_empty[simp]: "is_ground_cls {#}"
   unfolding is_ground_cls_def by simp
+
+lemma is_ground_cls_add_mset[simp]:
+  "is_ground_cls (add_mset L C) \<longleftrightarrow> is_ground_lit L \<and> is_ground_cls C"
+  by (auto simp: is_ground_cls_def)
 
 lemma grounding_of_cls_ground: "is_ground_cls C \<Longrightarrow> grounding_of_cls C = {C}"
   unfolding grounding_of_cls_def by (simp add: ex_ground_subst)
@@ -913,11 +968,27 @@ lemma grounding_of_cls_empty[simp]: "grounding_of_cls {#} = {{#}}"
 lemma union_grounding_of_cls_ground: "is_ground_clss (\<Union> (grounding_of_cls ` N))"
   by (simp add: grounding_ground grounding_of_clss_def is_ground_clss_def)
 
+lemma is_ground_clss_grounding_of_clss[simp]: "is_ground_clss (grounding_of_clss N)"
+  using grounding_of_clss_def union_grounding_of_cls_ground by metis
+
 
 paragraph \<open>Grounding idempotence\<close>
 
 lemma grounding_of_grounding_of_cls: "E \<in> grounding_of_cls D \<Longrightarrow> D \<in> grounding_of_cls C \<Longrightarrow> E = D"
   using grounding_of_cls_def by auto
+
+lemma image_grounding_of_cls_grounding_of_cls:
+  "grounding_of_cls ` grounding_of_cls C = (\<lambda>x. {x}) ` grounding_of_cls C"
+proof (rule image_cong)
+  show "\<And>x. x \<in> grounding_of_cls C \<Longrightarrow> grounding_of_cls x = {x}"
+    using grounding_of_cls_ground is_ground_cls_if_in_grounding_of_cls by blast
+qed simp
+
+lemma grounding_of_clss_grounding_of_clss[simp]:
+  "grounding_of_clss (grounding_of_clss N) = grounding_of_clss N"
+  unfolding grounding_of_clss_def UN_UN_flatten
+  unfolding image_grounding_of_cls_grounding_of_cls
+  by simp
 
 
 subsubsection \<open>Subsumption\<close>
@@ -1015,8 +1086,15 @@ lemma strict_subset_subst_strictly_subsumes: "C \<cdot> \<eta> \<subset># D \<Lo
   by (metis leD mset_subset_size size_mset_mono size_subst strictly_subsumes_def
       subset_mset.dual_order.strict_implies_order substitution_ops.subsumes_def)
 
-lemma generalizes_refl: "generalizes C C"
-  unfolding generalizes_def by (rule exI[of _ id_subst]) auto
+lemma generalizes_lit_refl[simp]: "generalizes_lit L L"
+  unfolding generalizes_lit_def by (rule exI[of _ id_subst]) simp
+
+lemma generalizes_lit_trans:
+  "generalizes_lit L1 L2 \<Longrightarrow> generalizes_lit L2 L3 \<Longrightarrow> generalizes_lit L1 L3"
+  unfolding generalizes_lit_def using subst_lit_comp_subst by blast
+
+lemma generalizes_refl[simp]: "generalizes C C"
+  unfolding generalizes_def by (rule exI[of _ id_subst]) simp
 
 lemma generalizes_trans: "generalizes C D \<Longrightarrow> generalizes D E \<Longrightarrow> generalizes C E"
   unfolding generalizes_def using subst_cls_comp_subst by blast

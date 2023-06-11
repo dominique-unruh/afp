@@ -21,7 +21,7 @@ text \<open>Every finite abelian group is also finitely generated.\<close>
 sublocale finite_comm_group \<subseteq> fin_gen_comm_group G "carrier G"
   using generate_incl generate_sincl by (unfold_locales, auto)
 
-text \<open>This lemma contains the proof of Kemper from his lecture notes on algebra~\cite{kemper}.
+text \<open>This lemma contains the proof of Kemper from his lecture notes on algebra~\<^cite>\<open>"kemper"\<close>.
 However, the proof is not done in the context of a finitely generated group but for a finitely
 generated subgroup in a commutative group.\<close>
 
@@ -207,7 +207,7 @@ proof (induction "card A" arbitrary: A rule: nat_less_induct)
           define q::int where q: "q = rel x div rel g"
           from r rg x have "r > 0"
             using mod_int_pos_iff[of "rel x" "rel g"] mod_eq_0_iff_dvd by force
-          moreover have "r < rel g" using r rg Euclidean_Division.pos_mod_bound by blast
+          moreover have "r < rel g" using r rg by simp
           moreover have "rel x = q * rel g + r" using r q by presburger
           ultimately have rq: "rel x = q * (rel g) + r" "0 < r" "r < rel g" by auto
           define t where t: "t = g \<otimes> x [^] q"
@@ -530,10 +530,12 @@ proof (induction "card A" arbitrary: A rule: nat_less_induct)
               have "ord tau dvd ord a"
               proof (rule ccontr)
                 assume nd: "\<not> ord tau dvd ord a"
+                then have \<open>0 < ord a mod ord tau\<close>
+                  using mod_eq_0_iff_dvd by auto
                 have "int (ord tau) > 0" using otnz by simp
-                with nd obtain r q::int where rq: "ord a = q * (ord tau) + r" "0 < r" "r < ord tau"
-                  using Euclidean_Division.pos_mod_bound div_mult_mod_eq mod_int_pos_iff mod_0_imp_dvd
-                  by (metis linorder_not_le of_nat_le_0_iff of_nat_mod)
+                obtain r q :: int where rq: "ord a = q * (ord tau) + r" "0 < r" "r < ord tau"
+                  by (rule that [of \<open>ord a div ord tau\<close> \<open>ord a mod ord tau\<close>])
+                    (use otnz \<open>0 < ord a mod ord tau\<close> in \<open>simp_all add: div_mult_mod_eq flip: of_nat_mult of_nat_add\<close>)
                 define b where b: "b = tau \<otimes> a [^] q"
                 hence bc: "b \<in> carrier G" using hsc tc Cons by auto
                 have g: "generate G (set (b#hs)) = generate G (set l)"

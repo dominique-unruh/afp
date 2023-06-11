@@ -4,7 +4,7 @@
 
 section \<open>Monadic references\<close>
 
-text \<open>This theory is an adaptation of \<open>HOL/Imperative_HOL/Array_Time.thy\<close>,
+text \<open>This theory is an adaptation of \<open>HOL/Imperative_HOL/Ref.thy\<close>,
  adding time bookkeeping.\<close>
 
 theory Ref_Time
@@ -13,8 +13,8 @@ begin
 
 text \<open>
   Imperative reference operations; modeled after their ML counterparts.
-  See \<^url>\<open>http://caml.inria.fr/pub/docs/manual-caml-light/node14.15.html\<close>
-  and \<^url>\<open>http://www.smlnj.org/doc/Conversion/top-level-comparison.html\<close>.
+  See \<^url>\<open>https://caml.inria.fr/pub/docs/manual-caml-light/node14.15.html\<close>
+  and \<^url>\<open>https://www.smlnj.org/doc/Conversion/top-level-comparison.html\<close>.
 \<close>
 
 subsection \<open>Primitives\<close>

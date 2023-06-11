@@ -5,6 +5,9 @@ imports Main "HOL-Computational_Algebra.Computational_Algebra"
   "Berlekamp_Zassenhaus.Poly_Mod_Finite_Field"
 
 begin
+hide_type Matrix.vec
+hide_const Matrix.vec_index
+
 section \<open>Type Class for Factorial Ring $\mathbb{Z}_q[x]/(x^n+1)$.\<close>
 text \<open>The Kyber algorithms work over the quotient ring $\mathbb{Z}_q[x]/(x^n+1)$
 where $q$ is a prime with $q\equiv 1 \mod 4$ and $n$ is a power of $2$.
@@ -314,95 +317,31 @@ lemma of_nat_qr_eq_0_iff [simp]:
 
 
 section \<open>Specification of Kyber\<close>
-text \<open>
-We now define a locale for the specification parameters of Kyber as in \cite{kyber}.
-The specifications use the parameters:
-
-\begin{tabular}{r l}
-$n$ & $=256 = 2^{n'}$\\
-$n'$ & $= 8$\\
-$q$ & $= 7681$ or $3329$\\
-$k$ & $= 3$\\
-\end{tabular}
-
-It is important, that $q$ is a prime with the property $q\equiv 1\mod 4$.
-\<close>
 
 
 
-
-locale kyber_spec =
-fixes "type_a" :: "('a :: qr_spec) itself" 
-  and "type_k" :: "('k ::finite) itself" 
-  and n q::int and k n'::nat
-assumes
-n_powr_2: "n = 2 ^ n'" and
-n'_gr_0: "n' > 0" and 
-q_gr_two: "q > 2" and
-q_mod_4: "q mod 4 = 1" and 
-q_prime : "prime q" and
-CARD_a: "int (CARD('a :: qr_spec)) = q" and
-CARD_k: "int (CARD('k :: finite)) = k" and
-qr_poly'_eq: "qr_poly' TYPE('a) = Polynomial.monom 1 (nat n) + 1"
-
-begin
-text \<open>Some properties of the modulus q.\<close>
-
-lemma q_nonzero: "q \<noteq> 0" 
-using kyber_spec_axioms kyber_spec_def by (smt (z3))
-
-lemma q_gt_zero: "q>0" 
-using kyber_spec_axioms kyber_spec_def by (smt (z3))
-
-lemma q_gt_two: "q>2"
-using kyber_spec_axioms kyber_spec_def by (smt (z3))
-
-lemma q_odd: "odd q"
-using kyber_spec_axioms kyber_spec_def
- prime_odd_int by blast
-
-lemma nat_q: "nat q = q"
-using q_gt_zero by force
-
-text \<open>Some properties of the degree n.\<close>
-
-lemma n_gt_1: "n > 1"
-using kyber_spec_axioms kyber_spec_def
-  by (simp add: n'_gr_0 n_powr_2)
-
-lemma n_nonzero: "n \<noteq> 0" 
-using n_gt_1 by auto
-
-lemma n_gt_zero: "n>0" 
-using n_gt_1 by auto
-
-lemma nat_n: "nat n = n"
-using n_gt_zero by force
+definition to_module :: "int \<Rightarrow> 'a ::qr_spec qr" where
+  "to_module x = to_qr (Poly [of_int_mod_ring x ::'a mod_ring])"
 
 text \<open>Properties in the ring \<open>'a qr\<close>. A good representative has degree up to n.\<close>
 lemma deg_mod_qr_poly:
-  assumes "degree x < deg_qr TYPE('a)"
+  assumes "degree x < deg_qr TYPE('a::qr_spec)"
   shows "x mod (qr_poly :: 'a mod_ring poly) = x"
 using mod_poly_less[of x qr_poly] unfolding deg_qr_def
 by (metis assms degree_qr_poly) 
 
 lemma of_qr_to_qr': 
-  assumes "degree x < deg_qr TYPE('a)"
+  assumes "degree x < deg_qr TYPE('a::qr_spec)"
   shows "of_qr (to_qr x) = (x ::'a mod_ring poly)"
 using deg_mod_qr_poly[OF assms] of_qr_to_qr[of x] by simp
 
-lemma deg_qr_n: 
-  "deg_qr TYPE('a) = n"
-unfolding deg_qr_def using qr_poly'_eq n_gt_1
-by (simp add: degree_add_eq_left degree_monom_eq)
+
 
 lemma deg_of_qr: 
-  "degree (of_qr (x ::'a qr)) < deg_qr TYPE('a)"
+  "degree (of_qr (x ::'a qr)) < deg_qr TYPE('a::qr_spec)"
 by (metis deg_qr_pos degree_0 degree_qr_poly degree_mod_less' 
   qr_poly_nz of_qr.rep_eq)
 
-definition to_module :: "int \<Rightarrow> 'a qr" where
-  "to_module x = to_qr (Poly [of_int_mod_ring x ::'a mod_ring])"
 
 lemma to_qr_smult_to_module: 
   "to_qr (Polynomial.smult a p) = (to_qr (Poly [a])) * (to_qr p)"
@@ -414,6 +353,81 @@ lemma of_qr_to_qr_smult:
   Polynomial.smult a (of_qr (to_qr p))"
 by (simp add: mod_smult_left of_qr_to_qr)
 
+text \<open>The following locale comprehends all variables used in crypto schemes over $R_q$ like
+Kyber and Dilithium.\<close>
+
+locale module_spec =
+fixes "type_a" :: "('a :: qr_spec) itself" 
+  and "type_k" :: "('k ::finite) itself" 
+  and n q::int and k n'::nat
+assumes
+n_powr_2: "n = 2 ^ n'" and
+n'_gr_0: "n' > 0" and 
+q_gr_two: "q > 2" and
+q_prime : "prime q" and
+CARD_a: "int (CARD('a :: qr_spec)) = q" and
+CARD_k: "int (CARD('k :: finite)) = k" and
+qr_poly'_eq: "qr_poly' TYPE('a) = Polynomial.monom 1 (nat n) + 1"
+
+begin
+text \<open>Some properties of the modulus q.\<close>
+
+lemma q_nonzero: "q \<noteq> 0" 
+using module_spec_axioms module_spec_def  by (smt (z3))
+
+lemma q_gt_zero: "q>0" 
+using module_spec_axioms module_spec_def by (smt (z3))
+
+lemma q_gt_two: "q>2"
+using module_spec_axioms module_spec_def by (smt (z3))
+
+lemma q_odd: "odd q"
+using module_spec_axioms module_spec_def prime_odd_int by blast
+
+lemma nat_q: "nat q = q"
+using q_gt_zero by force
+
+text \<open>Some properties of the degree n.\<close>
+
+lemma n_gt_1: "n > 1"
+using module_spec_axioms module_spec_def
+  by (simp add: n'_gr_0 n_powr_2)
+
+lemma n_nonzero: "n \<noteq> 0" 
+using n_gt_1 by auto
+
+lemma n_gt_zero: "n>0" 
+using n_gt_1 by auto
+
+lemma nat_n: "nat n = n"
+using n_gt_zero by force
+
+lemma deg_qr_n: 
+  "deg_qr TYPE('a) = n"
+unfolding deg_qr_def using qr_poly'_eq n_gt_1
+by (simp add: degree_add_eq_left degree_monom_eq)
 
 end
+
+text \<open>
+We now define a locale for the specification parameters of Kyber as in \cite{kyber}.
+The specifications use the parameters:
+
+\begin{tabular}{r l}
+$n$ & $=256 = 2^{n'}$\\
+$n'$ & $= 8$\\
+$q$ & $= 7681$ or $3329$\\
+$k$ & $= 3$\\
+\end{tabular}
+
+Additionally, we need that $q$ is a prime with the property $q\equiv 1\mod 4$.
+\<close>
+
+locale kyber_spec = module_spec "TYPE ('a ::qr_spec)" "TYPE ('k::finite)" +
+fixes type_a :: "('a :: qr_spec) itself" 
+  and type_k :: "('k ::finite) itself" 
+assumes q_mod_4: "q mod 4 = 1"
+begin 
+end
+
 end

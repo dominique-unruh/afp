@@ -88,7 +88,7 @@ val Type(u,v) = @{typ unit}
 \<close>
 
 (* could also be local variable, we flipped a coin and it became this way *)
-global_vars state
+global_vars (state)
    tm    :: int
    i     :: int
    sqsum :: int
@@ -230,6 +230,6 @@ txt\<open>Instead of testing, we @{emph \<open>prove\<close>} that the test case
  *) 
 oops
 
-text\<open>TODO: re-establish  automatic test-coverage tactics of @{cite "DBLP:conf/tap/Keller18"}.\<close>
+text\<open>TODO: re-establish  automatic test-coverage tactics of \<^cite>\<open>"DBLP:conf/tap/Keller18"\<close>.\<close>
 
 end

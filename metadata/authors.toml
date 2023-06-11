@@ -95,6 +95,14 @@ host = [
 
 [ammer.homepages]
 
+[andreka]
+name = "Hajnal Andreka"
+
+[andreka.emails]
+
+[andreka.homepages]
+andreka_homepage = "https://renyi.hu/en/researchers/hajnal-andreka"
+
 [andronick]
 name = "June Andronick"
 
@@ -1066,6 +1074,13 @@ name = "L. Chen"
 
 [chen.homepages]
 
+[chevalier]
+name = "Loïc Chevalier"
+
+[chevalier.emails]
+
+[chevalier.homepages]
+
 [clouston]
 name = "Ranald Clouston"
 
@@ -1152,7 +1167,7 @@ host = [
 [cohen.homepages]
 
 [cordwell]
-name = "Katherine Cordwell"
+name = "Katherine Kosaian"
 
 [cordwell.emails]
 
@@ -1219,6 +1234,31 @@ host = [
 
 [crighton.homepages]
 
+[dalvit]
+name = "Christian Dalvit"
+
+[dalvit.emails]
+
+[dalvit.homepages]
+
+[danilkin]
+name = "Anton Danilkin"
+
+[danilkin.emails]
+
+[danilkin.emails.danilkin_email]
+user = [
+  "anton",
+  "danilkin",
+]
+host = [
+  "ens",
+  "psl",
+  "eu",
+]
+
+[danilkin.homepages]
+
 [dardinier]
 name = "Thibault Dardinier"
 
@@ -1279,6 +1319,22 @@ name = "Sára Decova"
 
 [decova.homepages]
 
+[delemazure]
+name = "Théo Delemazure"
+
+[delemazure.emails]
+
+[delemazure.homepages]
+delemazure_homepage = "https://theo.delemazure.fr/"
+
+[demeulemeester]
+name = "Tom Demeulemeester"
+
+[demeulemeester.emails]
+
+[demeulemeester.homepages]
+demeulemeester_homepage = "https://www.kuleuven.be/wieiswie/en/person/00131528"
+
 [derrick]
 name = "John Derrick"
 
@@ -1309,6 +1365,16 @@ user = [
 ]
 host = [
   "unibw",
+  "de",
+]
+
+[desharnais.emails.desharnais_email1]
+user = [
+  "desharnais",
+]
+host = [
+  "mpi-inf",
+  "mpg",
   "de",
 ]
 
@@ -2527,6 +2593,13 @@ host = [
 
 [hibon.homepages]
 
+[higgins]
+name = "Edward Higgins"
+
+[higgins.emails]
+
+[higgins.homepages]
+
 [hirata]
 name = "Michikazu Hirata"
 
@@ -2757,6 +2830,14 @@ host = [
 
 [immler.homepages]
 immler_homepage = "https://home.in.tum.de/~immler/"
+
+[israel]
+name = "Jonas Israel"
+
+[israel.emails]
+
+[israel.homepages]
+israel_homepage = "https://www.algo.tu-berlin.de/menue/people/jonas_israel/"
 
 [ito]
 name = "Yosuke Ito"
@@ -3117,6 +3198,24 @@ host = [
 [kerber.homepages]
 kerber_homepage = "http://www.cs.bham.ac.uk/~mmk"
 
+[keskin]
+name = "Ata Keskin"
+orcid = "0000-0002-8296-1766"
+
+[keskin.emails]
+
+[keskin.emails.keskin_email]
+user = [
+  "ata",
+  "keskin",
+]
+host = [
+  "tum",
+  "de",
+]
+
+[keskin.homepages]
+
 [ketland]
 name = "Jeffrey Ketland"
 
@@ -3132,6 +3231,14 @@ host = [
 ]
 
 [ketland.homepages]
+
+[kim]
+name = "Sunpill Kim"
+orcid = "0000-0002-7767-4084"
+
+[kim.emails]
+
+[kim.homepages]
 
 [kirchner]
 name = "Daniel Kirchner"
@@ -3444,6 +3551,25 @@ name = "Andrea Lattuada"
 [lattuada.homepages]
 lattuada_homepage = "https://andrea.lattuada.me"
 
+[lauermann]
+name = "Nils Lauermann"
+
+[lauermann.emails]
+
+[lauermann.emails.lauermann_email]
+user = [
+  "Nils",
+  "Lauermann",
+]
+host = [
+  "cl",
+  "cam",
+  "ac",
+  "uk",
+]
+
+[lauermann.homepages]
+
 [laursen]
 name = "Christian Pardillo-Laursen"
 
@@ -3461,6 +3587,14 @@ host = [
 ]
 
 [laursen.homepages]
+
+[lederer]
+name = "Patrick Lederer"
+
+[lederer.emails]
+
+[lederer.homepages]
+lederer_homepage = "https://www.cs.cit.tum.de/en/dss/members/patrick-lederer/"
 
 [lee]
 name = "Holden Lee"
@@ -3757,6 +3891,14 @@ host = [
 
 [lux.homepages]
 
+[madarasz]
+name = "Judit Madarasz"
+
+[madarasz.emails]
+
+[madarasz.homepages]
+madarasz_homepage = "https://users.renyi.hu/~madarasz/"
+
 [makarios]
 name = "T. J. M. Makarios"
 
@@ -3934,6 +4076,24 @@ host = [
 
 [matache.homepages]
 
+[mateo]
+name = "Adrián Doña Mateo"
+
+[mateo.emails]
+
+[mateo.emails.mateo_email]
+user = [
+  "adrian",
+  "dona",
+]
+host = [
+  "ed",
+  "ac",
+  "uk",
+]
+
+[mateo.homepages]
+
 [matichuk]
 name = "Daniel Matichuk"
 
@@ -4028,6 +4188,22 @@ host = [
 ]
 
 [messner.homepages]
+
+[mhalla]
+name = "Mehdi Mhalla"
+
+[mhalla.emails]
+
+[mhalla.emails.mhalla_email]
+user = [
+  "mhallam",
+]
+host = [
+  "univ-grenoble-alpes",
+  "fr",
+]
+
+[mhalla.homepages]
 
 [michaelis]
 name = "Julius Michaelis"
@@ -4157,6 +4333,23 @@ name = "Bernhard Möller"
 [moeller.homepages]
 moeller_homepage = "https://www.informatik.uni-augsburg.de/en/chairs/dbis/pmi/staff/moeller/"
 
+[mori]
+name = "Coraline Mori"
+
+[mori.emails]
+
+[mori.emails.mori_email]
+user = [
+  "coraline",
+  "mori",
+]
+host = [
+  "grenoble-inp",
+  "org",
+]
+
+[mori.homepages]
+
 [muendler]
 name = "Niels Mündler"
 
@@ -4253,6 +4446,23 @@ host = [
 
 [murray.homepages]
 murray_homepage = "https://people.eng.unimelb.edu.au/tobym/"
+
+[myreen]
+name = "Magnus O. Myreen"
+orcid = "0000-0002-9504-4107"
+
+[myreen.emails]
+
+[myreen.emails.myreen_email]
+user = [
+  "myreen",
+]
+host = [
+  "chalmers",
+  "se",
+]
+
+[myreen.homepages]
 
 [nagashima]
 name = "Yutaka Nagashima"
@@ -4632,6 +4842,27 @@ host = [
 
 [palmer.homepages]
 
+[park]
+name = "Seung Hoon Park"
+orcid = "0000-0001-7165-6857"
+
+[park.emails]
+
+[park.emails.park_email]
+user = [
+  "seunghoon",
+  "park",
+]
+host = [
+  "cs",
+  "ox",
+  "ac",
+  "uk",
+]
+
+[park.homepages]
+park_homepage = "https://www.cs.ox.ac.uk/people/simon.park/"
+
 [parkinson]
 name = "Matthew Parkinson"
 
@@ -4778,6 +5009,17 @@ name = "Johannes Åman Pohjola"
 
 [pohjola.emails]
 
+[pohjola.emails.pohjola_email]
+user = [
+  "j",
+  "amanpohjola",
+]
+host = [
+  "unsw",
+  "edu",
+  "au",
+]
+
 [pohjola.homepages]
 
 [pollak]
@@ -4884,6 +5126,23 @@ name = "Cornelia Pusch"
 [pusch.emails]
 
 [pusch.homepages]
+
+[qiu]
+name = "Qi Qiu"
+
+[qiu.emails]
+
+[qiu.emails.qiu_email]
+user = [
+  "qi",
+  "qiu",
+]
+host = [
+  "univ-lyon1",
+  "fr",
+]
+
+[qiu.homepages]
 
 [rabe]
 name = "Markus N. Rabe"
@@ -5052,6 +5311,16 @@ host = [
 name = "Rodrigo Raya"
 
 [raya.emails]
+
+[raya.emails.raya_email]
+user = [
+  "rodrigo",
+  "raya",
+]
+host = [
+  "epfl",
+  "ch",
+]
 
 [raya.homepages]
 raya_homepage = "https://people.epfl.ch/rodrigo.raya"
@@ -5742,6 +6011,33 @@ host = [
 
 [sprenger.homepages]
 
+[staats]
+name = "Charles Staats"
+
+[staats.emails]
+
+[staats.emails.staats_email]
+user = [
+  "cstaats",
+]
+host = [
+  "google",
+  "com",
+]
+
+[staats.emails.staats_email1]
+user = [
+  "charles",
+  "staats",
+  "iii",
+]
+host = [
+  "gmail",
+  "com",
+]
+
+[staats.homepages]
+
 [stannett]
 name = "Mike Stannett"
 
@@ -5795,6 +6091,13 @@ host = [
 
 [starosta.homepages]
 starosta_homepage = "https://users.fit.cvut.cz/~staroste/"
+
+[steen]
+name = "Alexander Steen"
+
+[steen.emails]
+
+[steen.homepages]
 
 [steinberg]
 name = "Matías Steinberg"
@@ -6049,6 +6352,13 @@ host = [
 
 [sulejmani.homepages]
 
+[sutcliffe]
+name = "Geoff Sutcliffe"
+
+[sutcliffe.emails]
+
+[sutcliffe.homepages]
+
 [sylvestre]
 name = "Jeremy Sylvestre"
 
@@ -6075,6 +6385,14 @@ host = [
 
 [sylvestre.homepages]
 sylvestre_homepage = "http://ualberta.ca/~jsylvest/"
+
+[szekely]
+name = "Gergely Szekely"
+
+[szekely.emails]
+
+[szekely.homepages]
+szekely_homepage = "https://users.renyi.hu/~turms/"
 
 [taha]
 name = "Safouan Taha"
@@ -6110,6 +6428,24 @@ host = [
 
 [tan.homepages]
 tan_homepage = "https://www.cs.cmu.edu/~yongkiat/"
+
+[tanaka]
+name = "Miki Tanaka"
+
+[tanaka.emails]
+
+[tanaka.emails.tanaka_email]
+user = [
+  "miki",
+  "tanaka",
+]
+host = [
+  "unsw",
+  "edu",
+  "au",
+]
+
+[tanaka.homepages]
 
 [tasch]
 name = "Markus Tasch"
@@ -6674,6 +7010,13 @@ host = [
 ]
 
 [weidner.homepages]
+
+[wenninger]
+name = "Elias Wenninger"
+
+[wenninger.emails]
+
+[wenninger.homepages]
 
 [wenzel]
 name = "Makarius Wenzel"

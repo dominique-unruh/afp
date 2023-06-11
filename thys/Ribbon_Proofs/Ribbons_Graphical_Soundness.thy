@@ -301,14 +301,14 @@ proof (insert assms, unfold initial_ps2_def, transfer)
   apply (unfold fun_eq_iff initials_def)
   apply (unfold G_def G'_def V'_def E'_def)
   apply (unfold edges.simps vertices.simps)
-  apply (simp add: less_eq_fset.rep_eq fmember.rep_eq e_in_E)
+  apply (simp add: less_eq_fset.rep_eq e_in_E)
   apply safe
   apply (insert \<open>thd3 e |\<inter>| initials G = {||}\<close>)[1]
   apply (insert S_initials, fold fset_cong)[2]
   apply (unfold less_eq_fset.rep_eq initials_def filter_fset)
-  apply (auto simp add: fmember.rep_eq G_def e_in_E)[1]
-  apply (auto simp add: fmember.rep_eq G_def e_in_E)[1]
-  apply (auto simp add: fmember.rep_eq G_def e_in_E)[1]
+  apply (auto simp add: G_def e_in_E)[1]
+  apply (auto simp add: G_def e_in_E)[1]
+  apply (auto simp add: G_def e_in_E)[1]
   apply (insert wf_G)[1]
   apply (unfold G_def vertices.simps edges.simps)
   apply (drule wf_dia_inv(3))
@@ -324,7 +324,7 @@ proof (insert assms, unfold initial_ps2_def, transfer)
   apply (unfold G_def vertices.simps edges.simps)
   apply (drule wf_dia_inv(3))
   apply (metis (lifting) e_in_E G_def empty_iff fset_simps(1)
-    finter_iff linearityD(2) notin_fset wf_G wf_dia_inv(4))
+    finter_iff linearityD(2) wf_G wf_dia_inv(4))
   apply (insert wf_G)[1]
   apply (unfold G_def vertices.simps edges.simps)
   apply (drule wf_dia_inv(4))
@@ -335,7 +335,7 @@ proof (insert assms, unfold initial_ps2_def, transfer)
   apply (unfold G_def vertices.simps edges.simps)
   apply (drule wf_dia_inv(3))
   apply (metis (lifting) e_in_E G_def empty_iff fset_simps(1)
-    finter_iff linearityD(2) notin_fset wf_G wf_dia_inv(4))
+    finter_iff linearityD(2) wf_G wf_dia_inv(4))
   apply (insert wf_G)
   apply (unfold G_def vertices.simps edges.simps)
   apply (drule wf_dia_inv(5))
@@ -456,8 +456,6 @@ text \<open>We wish to prove that every proofstate chain that can be obtained fr
   nodes in @{term G}, plus the number of edges, minus the number of nodes in
   @{term S}.\<close>
 
-lemmas [simp] = fmember.rep_eq
-
 lemma wf_chains2:
   fixes k
   assumes "S |\<subseteq>| initials G"
@@ -570,8 +568,8 @@ next
       proof (intro Suc.hyps[of "S'"])
         show "S' |\<subseteq>| initials G"
         apply (unfold S'_def, auto)
-        apply (metis fmember.rep_eq fminus_iff v_initial_not_S)
-        by (metis Suc.prems(1) fmember.rep_eq fset_rev_mp)
+        apply (metis fminus_iff v_initial_not_S)
+        by (metis Suc.prems(1) fset_rev_mp)
      next
         show "wf_dia G" by (rule Suc.prems(2))
       next
@@ -681,7 +679,7 @@ next
 
       have "ws |\<inter>| (initials G) = {||}"
       apply (insert e_in_V[OF e_in_E])
-      apply (unfold initials_def less_eq_fset.rep_eq fmember.rep_eq, fold fset_cong)
+      apply (unfold initials_def less_eq_fset.rep_eq, fold fset_cong)
       apply (unfold ws_def G_def, auto simp add: e_in_E)
       done
 
@@ -720,7 +718,7 @@ next
         apply (unfold vs_def)
         apply (intro wf_dia)
         apply (unfold linearity_def initials_def G_def)
-        apply (fold fset_cong, unfold less_eq_fset.rep_eq fmember.rep_eq)
+        apply (fold fset_cong, unfold less_eq_fset.rep_eq)
         apply (simp, simp)
         apply (unfold acyclicity_def, rule acyclic_subset)
         apply (auto simp add: distinct_removeAll)
@@ -810,7 +808,7 @@ next
         defer 1
         apply (simp, simp)
         apply (fold fset_cong)
-        apply (unfold less_eq_fset.rep_eq fmember.rep_eq, simp)
+        apply (unfold less_eq_fset.rep_eq, simp)
         apply (elim conjE)
         apply (intro set_eqI iffI, simp_all)
         apply (elim conjE, intro disjI conjI ballI, simp)
@@ -1054,7 +1052,7 @@ next
           (lookup ([ {|v|} |=> Top ] ++\<^sub>f \<sigma>) va) (\<Lambda> va) =
           case_topbot top_ass bot_ass (lookup ([{|v|} |=> Bot] ++\<^sub>f \<sigma>) va)(\<Lambda> va)")
         apply (unfold iter_hcomp_cong, simp)
-        apply (metis fmember.rep_eq lookup_union1, simp)
+        apply (metis lookup_union1, simp)
         done
       next
         case (Inr e)
@@ -1070,45 +1068,53 @@ next
           thd_\<Pi>i: "thd3 (nthtriple \<Pi> i) = [ thd3 e |=> Top ] ++\<^sub>f \<sigma>"
         by (auto simp add: inf_sup_distrib2)
 
+
+        let ?F = "\<Otimes>v|\<in>|fmdom \<sigma>.
+          case_topbot top_ass bot_ass (lookup ([ fst3 e |=> Bot ] ++\<^sub>f \<sigma>) v) (\<Lambda> v)"
+
         show "prov_triple (asn (ps_to_int G (fst3 (nthtriple \<Pi> i))),
                    cs ! i, asn (ps_to_int G (thd3 (nthtriple \<Pi> i))))"
-        apply (intro prov_edge[where e=e])
-        apply (subgoal_tac "Inr e \<in> set \<pi>")
-        apply (metis Inr_not_Inl PlusE edges.simps lins(2) sum.simps(2))
-        apply (metis Inr \<open>i < length \<pi>\<close> nth_mem)
-        apply (metis (no_types) Inr \<open>i < length \<pi>\<close> \<pi>_cs o_def sum.simps(6))
-        apply (unfold fst_\<Pi>i thd_\<Pi>i)
-        apply (unfold ps_to_int_def)
-        apply (unfold G_def labelling.simps)
-        apply (unfold fmdom_add fdom_make_fmap)
-        apply (insert fst_e_disjoint_\<sigma>)
-        apply (unfold iter_hcomp_union)
-        apply (subgoal_tac "\<forall>v \<in> fset (fst3 e). case_topbot top_ass bot_ass
+        proof (intro prov_edge[where e=e])
+          show "e \<in> set E"
+            apply (subgoal_tac "Inr e \<in> set \<pi>")
+             apply (metis Inr_not_Inl PlusE edges.simps lins(2) sum.simps(2))
+            by (metis Inr \<open>i < length \<pi>\<close> nth_mem)
+        next
+          show "coms_com (snd3 e) (cs ! i)"
+            by (metis (no_types) Inr \<open>i < length \<pi>\<close> \<pi>_cs o_def sum.simps(6))
+        next
+          show "ps_to_int G (fst3 (nthtriple \<Pi> i)) = ((\<Otimes>v|\<in>|fst3 e. bot_ass (\<Lambda> v)) \<otimes> ?F)"
+            unfolding fst_\<Pi>i ps_to_int_def G_def labelling.simps fmdom_add fdom_make_fmap
+            apply (insert fst_e_disjoint_\<sigma>)
+            apply (unfold iter_hcomp_union)
+            apply (subgoal_tac "\<forall>v \<in> fset (fst3 e). case_topbot top_ass bot_ass
           (lookup ([ fst3 e |=> Bot ] ++\<^sub>f \<sigma>) v) (\<Lambda> v) = bot_ass (\<Lambda> v)")
-        apply (unfold iter_hcomp_cong)
-        apply (simp)
-        apply (intro ballI)
-        apply (subgoal_tac "v |\<notin>| fmdom \<sigma>")
-        apply (unfold lookup_union2)
-        apply (metis lookup_make_fmap topbot.simps(4))
-        apply (metis fempty_iff finterI fmember.rep_eq)
-        apply (insert thd_e_disjoint_\<sigma>)
-        apply (unfold iter_hcomp_union)
-        apply (subgoal_tac "\<forall>v \<in> fset (thd3 e). case_topbot top_ass bot_ass
+             apply (unfold iter_hcomp_cong)
+             apply (simp)
+            apply (intro ballI)
+            apply (subgoal_tac "v |\<notin>| fmdom \<sigma>")
+             apply (unfold lookup_union2)
+             apply (metis lookup_make_fmap topbot.simps(4))
+            by (metis fempty_iff finterI)
+        next
+          show "ps_to_int G (thd3 (nthtriple \<Pi> i)) = ((\<Otimes>v|\<in>|thd3 e. top_ass (\<Lambda> v)) \<otimes> ?F)"
+            unfolding thd_\<Pi>i ps_to_int_def G_def labelling.simps fmdom_add fdom_make_fmap
+            apply (insert thd_e_disjoint_\<sigma>)
+            apply (unfold iter_hcomp_union)
+            apply (subgoal_tac "\<forall>v \<in> fset (thd3 e). case_topbot top_ass bot_ass
           (lookup ([ thd3 e |=> Top ] ++\<^sub>f \<sigma>) v) (\<Lambda> v) = top_ass (\<Lambda> v)")
-        apply (unfold iter_hcomp_cong)
-        apply (subgoal_tac "\<forall>v \<in> fset (fmdom \<sigma>). case_topbot top_ass bot_ass
+             apply (unfold iter_hcomp_cong)
+             apply (subgoal_tac "\<forall>v \<in> fset (fmdom \<sigma>). case_topbot top_ass bot_ass
           (lookup ([ thd3 e |=> Top ] ++\<^sub>f \<sigma>) v) (\<Lambda> v) =
           case_topbot top_ass bot_ass (lookup ([fst3 e |=> Bot] ++\<^sub>f \<sigma>) v) (\<Lambda> v)")
-        apply (unfold iter_hcomp_cong)
-        apply simp
-        apply (intro ballI)
-        apply (subgoal_tac "v |\<in>| fmdom \<sigma>")
-        apply (unfold lookup_union1, auto)
-        apply (subgoal_tac "v |\<notin>| fmdom \<sigma>")
-        apply (unfold lookup_union2)
-        apply (metis lookup_make_fmap topbot.simps(3))
-        by (metis fempty_iff finterI fmember.rep_eq)
+              apply (unfold iter_hcomp_cong)
+              apply simp
+            subgoal
+              by (simp add: lookup_union1)
+            subgoal
+              by (simp add: fdisjoint_iff lookup_union2 lookup_make_fmap)
+            done
+        qed
       qed
     qed
   qed

@@ -5,8 +5,6 @@ session Complex_Bounded_Operators(AFP) = "Complex_Bounded_Operators_Dependencies
   directories
     extra
   theories
-    Complex_L2
-    Cblinfun_Code
     Cblinfun_Code_Examples
   document_files
     root.tex

@@ -25,7 +25,7 @@ theory Decreasing_Diagrams imports "HOL-Library.Multiset" "Abstract-Rewriting.Ab
 
 subsection  \<open>Valley Version\<close>
 
-text \<open>This section follows~\cite{vO94}.\<close>
+text \<open>This section follows~\<^cite>\<open>"vO94"\<close>.\<close>
 
 subsubsection \<open>Appendix\<close>
 
@@ -1093,7 +1093,7 @@ shows "set (labels (t,ss)) \<subseteq> ds ((ars^+)\<inverse>) {\<alpha>}" using 
 next
  case (Cons x xs)
  from this obtain \<beta> u where x:"x = (\<beta>,u)" using surjective_pairing by metis
- have t: "trans ((ars^+)\<inverse>)" by (metis trans_converse trans_trancl)
+ have t: "trans ((ars\<^sup>+)\<inverse>)" by (metis trans_on_converse trans_trancl)
  from Cons(1) x have s0: "(s, \<alpha>, t) \<in> lrs" and cs:"(t,(\<beta>,u)#xs) \<in> seq lrs" using Cons.prems seq_tail1(1) snd_conv fst_conv seq_tail1(2) by auto
  have ih: "set (labels (u, xs)) \<subseteq> ds ((ars^+)\<inverse>) {\<beta>}" using Cons(1)[OF cs] by auto
  have key: "{\<beta>} \<subseteq> ds ((ars^+)\<inverse>) {\<alpha>}" using s0 cs seq_tail1(2)[OF cs] unfolding ds_def lab_eq by auto
@@ -1105,7 +1105,7 @@ lemma newman: assumes "WCR ars" and "SN ars" shows "CR ars"  proof -
  from assms obtain lrs where lab_eq: "(lrs  = {(a,c,b). c = a \<and> (a,b) \<in> ars})" by auto
 
  have lab: "ars = unlabel lrs" unfolding unlabel_def lab_eq by auto
- have t: "trans ((ars^+)\<inverse>)" using trans_converse trans_trancl by auto
+ have t: "trans ((ars\<^sup>+)\<inverse>)" using trans_on_converse trans_trancl by auto
  have w: "wf ((ars^+)\<inverse>)" using assms(2) wf_trancl trancl_converse unfolding SN_iff_wf by metis
  have ps: "\<forall>P. (local_peak lrs P --> (\<exists> \<sigma>' \<tau>'. DD lrs ((ars^+)\<inverse>) (fst P,snd P,\<sigma>',\<tau>')))" proof
   fix P show "local_peak lrs P --> (\<exists> \<sigma>' \<tau>'. DD lrs ((ars^+)\<inverse>) (fst P,snd P,\<sigma>',\<tau>'))" proof
@@ -1148,7 +1148,7 @@ lemma newman: assumes "WCR ars" and "SN ars" shows "CR ars"  proof -
 qed
 
 subsection \<open>Conversion Version\<close>
-text \<open>This section follows~\cite{vO08a}.\<close>
+text \<open>This section follows~\<^cite>\<open>"vO08a"\<close>.\<close>
 text \<open>auxiliary results on multisets\<close>
 lemma mul_eq_add_right: "(M,M+P) \<in> mul_eq r" proof -
  have "M = M + {#}" "set_mset {#} \<subseteq> dm r P" by auto

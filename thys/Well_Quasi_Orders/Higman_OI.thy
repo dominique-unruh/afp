@@ -28,9 +28,9 @@ by (force simp: strict_suffix_def po_on_def transp_on_def irreflp_on_def)
 subsection \<open>Lexicographic Order on Infinite Sequences\<close>
 
 lemma antisymp_on_LEX:
-  assumes "irreflp_on P A" and "antisymp_on P A"
-  shows "antisymp_on (LEX P) (SEQ A)"
-proof
+  assumes "irreflp_on A P" and "antisymp_on A P"
+  shows "antisymp_on (SEQ A) (LEX P)"
+proof (rule antisymp_onI)
   fix f g assume SEQ: "f \<in> SEQ A" "g \<in> SEQ A" and "LEX P f g" and "LEX P g f"
   then obtain i j where "P (f i) (g i)" and "P (g j) (f j)"
     and "\<forall>k<i. f k = g k" and "\<forall>k<j. g k = f k" by (auto simp: LEX_def)
@@ -40,14 +40,14 @@ proof
 qed
 
 lemma LEX_trans:
-  assumes "transp_on P A" and "f \<in> SEQ A" and "g \<in> SEQ A" and "h \<in> SEQ A"
+  assumes "transp_on A P" and "f \<in> SEQ A" and "g \<in> SEQ A" and "h \<in> SEQ A"
     and "LEX P f g" and "LEX P g h"
   shows "LEX P f h"
 using assms by (auto simp: LEX_def transp_on_def) (metis less_trans linorder_neqE_nat)
 
 lemma qo_on_LEXEQ:
-  "transp_on P A \<Longrightarrow> qo_on (LEXEQ P) (SEQ A)"
-by (auto simp: qo_on_def reflp_on_def transp_on_def [of "LEXEQ P"] dest: LEX_trans)
+  "transp_on A P \<Longrightarrow> qo_on (LEXEQ P) (SEQ A)"
+by (auto simp: qo_on_def reflp_on_def transp_on_def [of _ "LEXEQ P"] dest: LEX_trans)
 
 context minimal_element
 begin

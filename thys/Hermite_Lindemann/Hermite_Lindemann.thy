@@ -16,6 +16,9 @@ imports
   Misc_HLW
 begin
 
+hide_const (open) Henstock_Kurzweil_Integration.content  Module.smult
+
+
 text \<open>
   The Hermite--Lindemann--Weierstraß theorem answers questions about the transcendence of
   the exponential function and other related complex functions. It proves that a large number of
@@ -1029,7 +1032,7 @@ proof
         using \<open>D > 0\<close> by simp
       also have "(\<lambda>p. D ^ (p - 1)) \<in> o(\<lambda>p. fact (p - 1))"
         by (intro smalloI_tendsto[OF filterlim_compose[OF power_over_fact_tendsto_0]]
-                  filterlim_minus_nat_at_top) auto
+                  filterlim_minus_const_nat_at_top) auto
       finally show "(\<lambda>p. D ^ p) \<in> o(\<lambda>x. fact (x - 1))" .
     qed fact+
     finally have smallo: "(\<lambda>p. C' * C p ^ n) \<in> o(\<lambda>p. fact (p - 1) ^ n)" .
@@ -1702,7 +1705,7 @@ proof (rule ccontr)
     We now take more or less the same approach as before, except that now we find a polynomial
     that has all of the conjugates of the coefficients \<open>\<beta>\<close> as roots. Note that this is a slight
     deviation from Baker's proof, who picks one polynomial for each \<open>\<beta>\<close> independently. I did it
-    this way because, as Bernard~\cite{bernard} observed, it makes the proof a bit easier.
+    this way because, as Bernard~\<^cite>\<open>"bernard"\<close> observed, it makes the proof a bit easier.
   \<close>
   define P :: "int poly" where "P = \<Prod>((min_int_poly \<circ> \<beta>) ` X)"
   define Roots :: "complex set" where "Roots = {x. ipoly P x = 0}"

@@ -5,8 +5,8 @@
 section \<open>Resolvable Designs\<close>
 text \<open>Resolvable designs have further structure, and can be "resolved" into a set of resolution 
 classes. A resolution class is a subset of blocks which exactly partitions the point set. 
-Definitions based off the handbook \cite{colbournHandbookCombinatorialDesigns2007}
- and Stinson \cite{stinsonCombinatorialDesignsConstructions2004}.
+Definitions based off the handbook \<^cite>\<open>"colbournHandbookCombinatorialDesigns2007"\<close>
+ and Stinson \<^cite>\<open>"stinsonCombinatorialDesignsConstructions2004"\<close>.
 This theory includes a proof of an alternate statement of Bose's theorem\<close>
 
 theory Resolvable_Designs imports BIBD
@@ -158,9 +158,11 @@ qed
 subsubsection \<open>Bose's Inequality\<close>
 text \<open>Boses inequality is an important theorem on RBIBD's. This is a proof 
 of an alternate statement of the thm, which does not require a linear algebraic approach, 
-taken directly from Stinson \cite{stinsonCombinatorialDesignsConstructions2004}\<close>
+taken directly from Stinson \<^cite>\<open>"stinsonCombinatorialDesignsConstructions2004"\<close>\<close>
 theorem bose_inequality_alternate: "\<b> \<ge> \<v> + \<r> - 1 \<longleftrightarrow> \<r> \<ge> \<k> + \<Lambda>"
 proof - 
+  from necessary_condition_two v_non_zero have r: \<open>\<r> = \<b> * \<k> div \<v>\<close>
+    by (metis div_mult_self1_is_m)
   define k b v l r where intdefs: "k \<equiv> (int \<k>)" "b \<equiv> int \<b>" "v = int \<v>" "l \<equiv> int \<Lambda>" "r \<equiv> int \<r>"
   have kdvd: "k dvd (v * (r - k))"
     using intdefs
@@ -178,8 +180,9 @@ proof -
     using necessary_condition_two k_non_zero intdefs
     by (metis (no_types, lifting) nonzero_mult_div_cancel_right not_one_le_zero of_nat_eq_0_iff of_nat_mult)
   also have  "... \<longleftrightarrow> (((v * r) - (v * k)) div k \<ge> r - 1)"
-    using  k_non_zero div_mult_self3 k_non_zero necessary_condition_two intdefs
-    by (smt (verit, ccfv_SIG) Euclidean_Division.div_eq_0_iff b_non_zero bibd_block_number mult_is_0 of_nat_eq_0_iff)
+    using k_non_zero k_non_zero r intdefs
+    by (simp add: of_nat_div algebra_simps)
+      (smt (verit, ccfv_threshold) One_nat_def div_mult_self4 of_nat_1 of_nat_mono)
   also have f2: " ... \<longleftrightarrow> ((v * ( r - k)) div k \<ge> ( r - 1))"
     using int_distrib(3) by (simp add: mult.commute)
   also have f2: " ... \<longleftrightarrow> ((v * ( r - k)) \<ge> k * ( r - 1))" 
@@ -194,7 +197,7 @@ proof -
   also have " ... \<longleftrightarrow> (((r - k) * (r * (k - 1) + l ))  \<ge>  l * (k * (r - 1)))" 
     using ldvd[of "(r - k)"] dvd_mult_div_cancel index_not_zero mult_strict_left_mono intdefs
     by (smt (verit) b_non_zero bibd_block_number bot_nat_0.extremum_strict div_0 less_eq_nat.simps(1) 
-mult_eq_0_iff mult_left_le_imp_le mult_left_mono of_nat_0 of_nat_le_0_iff of_nat_le_iff of_nat_less_iff)
+      mult_eq_0_iff mult_left_le_imp_le mult_left_mono of_nat_0 of_nat_le_0_iff of_nat_le_iff of_nat_less_iff)
   also have 1: "... \<longleftrightarrow> (((r - k) * (r * (k - 1))) + ((r - k) * l )  \<ge>  l * (k * (r - 1)))" 
     by (simp add: distrib_left) 
   also have "... \<longleftrightarrow> (((r - k) * r * (k - 1)) \<ge> l * k * (r - 1) - ((r - k) * l ))" 

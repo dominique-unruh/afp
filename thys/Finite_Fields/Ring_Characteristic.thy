@@ -121,7 +121,7 @@ next
   thus "?rhs \<subseteq> ?lhs" by auto
 qed
 
-text \<open>The following theorem can be found in Lidl and Niederreiter~\cite[Theorem 1.31]{lidl1986}.\<close>
+text \<open>The following theorem can be found in Lidl and Niederreiter~\<^cite>\<open>\<open>Theorem 1.31\<close> in "lidl1986"\<close>.\<close>
 
 theorem finite_domains_are_fields:
   assumes "domain R"
@@ -187,10 +187,9 @@ proof -
   proof -
     obtain y where y_def: "x = I +>\<^bsub>\<Z>\<^esub> y"
       using a unfolding ZFact_def FactRing_simps by auto
-    obtain z where z_def: "(int z) mod (int n) = y mod (int n)" "z < n"
-      by (metis Euclidean_Division.pos_mod_sign mod_mod_trivial 
-          nonneg_int_cases of_nat_0_less_iff of_nat_mod n_gt_0
-          unique_euclidean_semiring_numeral_class.pos_mod_bound)
+    define z where \<open>z = nat (y mod int n)\<close>
+    with n_gt_0 have z_def: \<open>int z mod int n = y mod int n\<close> \<open>z < n\<close>
+      by (simp_all add: z_def nat_less_iff)
     have "x = I  +>\<^bsub>\<Z>\<^esub> y"
       by (simp add:y_def)
     also have "... = I +>\<^bsub>\<Z>\<^esub> (int z)"
@@ -397,7 +396,7 @@ definition char where
 
 text \<open>This is a non-standard definition for the characteristic of a ring. 
 
-Commonly~\cite[Definition 1.43]{lidl1986} it is defined to be the smallest natural number $n$ such
+Commonly~\<^cite>\<open>\<open>Definition 1.43\<close> in "lidl1986"\<close> it is defined to be the smallest natural number $n$ such
 that n-times repeated addition of any number is zero. If no such number exists then it is defined 
 to be $0$. In the case of rings with unit elements --- not that the locale @{locale "ring"} requires
 unit elements --- the above definition can be simplified to the number of times the unit elements
@@ -531,7 +530,7 @@ next
   finally show ?thesis by simp
 qed
 
-text \<open>This result can be found in \cite[Theorem 1.44]{lidl1986}.\<close>
+text \<open>This result can be found in \<^cite>\<open>\<open>Theorem 1.44\<close> in "lidl1986"\<close>.\<close>
 
 lemma (in domain) characteristic_is_prime:
   assumes "char R > 0"
@@ -732,7 +731,7 @@ proof -
 qed
 
 text \<open>The following theorem is somtimes called Freshman's dream for obvious reasons,
-it can be found in Lidl and Niederreiter~\cite[Theorem 1.46]{lidl1986}.\<close>
+it can be found in Lidl and Niederreiter~\<^cite>\<open>\<open>Theorem 1.46\<close> in "lidl1986"\<close>.\<close>
 
 lemma (in domain) freshmans_dream_ext:
   fixes m
@@ -971,7 +970,7 @@ proof -
 qed
 
 text \<open>The size of a finite field must be a prime power.
-This can be found in Ireland and Rosen~\cite[Proposition 7.1.3]{ireland1982}.\<close>
+This can be found in Ireland and Rosen~\<^cite>\<open>\<open>Proposition 7.1.3\<close> in "ireland1982"\<close>.\<close>
 
 theorem (in finite_field) finite_field_order:
   "\<exists>n. order R = char R ^ n \<and> n > 0"

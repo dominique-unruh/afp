@@ -18,15 +18,7 @@ begin
 subsection \<open>Trivialities\<close>
 
 (* move to Relation.thy? *)
-lemma asymI2: "(\<And>a b. (a,b) \<in> R \<Longrightarrow> (b,a) \<notin> R) \<Longrightarrow> asym R"
-by (metis asymI irrefl_def)
-
-(* move to Relation.thy? *)
 abbreviation "strict_order R \<equiv> irrefl R \<and> trans R"
-
-(* move to Relation.thy? *)
-lemma order_asym: "trans R \<Longrightarrow> asym R = irrefl R"
-unfolding asym.simps irrefl_def trans_def by meson
 
 (* move to Relation.thy? *)
 lemma strict_order_strict: "strict_order q \<Longrightarrow> strict (\<lambda>a b. (a, b) \<in> q\<^sup>=) = (\<lambda>a b. (a, b) \<in> q)"
@@ -39,10 +31,6 @@ by (auto simp add: mono_def)
 (* move to Wellfounded.thy? *)
 lemma mono_lex2: "mono (lex_prod r)"
 by (auto simp add: mono_def)
-
-(* move to Wellfounded.thy? *)
-lemma irrefl_lex_prod: "irrefl R \<Longrightarrow> irrefl S \<Longrightarrow> irrefl (R <*lex*> S)"
-by (auto simp add: lex_prod_def irrefl_def)
 
 lemmas converse_inward = rtrancl_converse[symmetric] converse_Un converse_UNION converse_relcomp
   converse_converse converse_Id
@@ -94,13 +82,13 @@ qed
 lemma asym_Sup_of_chain:
   assumes "set_chain C" and asym: "\<And> R. R \<in> C \<Longrightarrow> asym R"
   shows "asym (Sup C)"
-proof (intro asymI2 notI)
+proof (intro asymI notI)
   fix a b
   assume "(a,b) \<in> Sup C" then obtain "R" where "R \<in> C" and "(a,b) \<in> R" by blast
   assume "(b,a) \<in> Sup C" then obtain "S" where "S \<in> C" and "(b,a) \<in> S" by blast
   from \<open>R \<in> C\<close> and \<open>S \<in> C\<close> and \<open>set_chain C\<close> have "R \<union> S = R \<or> R \<union> S = S" by blast
   with \<open>R \<in> C\<close> and \<open>S \<in> C\<close> have "R \<union> S \<in> C" by fastforce
-  with \<open>(a,b) \<in> R\<close> and \<open>(b,a) \<in> S\<close> and asym show "False" unfolding asym.simps by blast
+  with \<open>(a,b) \<in> R\<close> and \<open>(b,a) \<in> S\<close> and asym[THEN asymD] show "False" by blast
 qed
 
 lemma strict_order_lfp:
@@ -109,7 +97,9 @@ lemma strict_order_lfp:
 proof (intro lfp_chain_induct[of f strict_order])
   fix C :: "('b \<times> 'b) set set"
   assume "set_chain C" and "\<forall>R \<in> C. strict_order R"
-  from this show "strict_order (Sup C)" by (metis asym_Sup_of_chain trans_Sup_of_chain order_asym)
+  from this show "strict_order (Sup C)"
+    using asym_on_iff_irrefl_on_if_trans_on[of UNIV]
+    by (metis asym_Sup_of_chain trans_Sup_of_chain)
 qed fact+
 
 lemma trans_lfp:
@@ -213,9 +203,9 @@ lemma well_order_implies_wqo:
   assumes "well_order r"
   shows "wqo_on (\<lambda>a b. (a, b) \<in> r) UNIV"
 proof (intro wqo_onI almost_full_onI)
-  show "transp_on (\<lambda>a b. (a, b) \<in> r) UNIV" using assms
+  show "transp (\<lambda>a b. (a, b) \<in> r)" using assms
   by (auto simp only: well_order_on_def linear_order_on_def partial_order_on_def preorder_on_def
-    trans_def transp_on_def)
+    trans_def transp_def)
 next
   fix f :: "nat \<Rightarrow> 'a"
   show "good (\<lambda>a b. (a, b) \<in> r) f"

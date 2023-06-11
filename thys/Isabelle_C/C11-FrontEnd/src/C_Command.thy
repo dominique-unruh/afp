@@ -492,7 +492,7 @@ fun C_export_file (pos, _) lthy =
       Path.binding
         ( Path.appends [ Path.basic C_Generated_Files.c_dir
                        , Path.basic (string_of_int (length c_sources))
-                       , lthy |> Proof_Context.theory_of |> Context.theory_name |> Path.explode
+                       , lthy |> Proof_Context.theory_of |> Context.theory_base_name |> Path.explode
                               |> Path.ext C_Generated_Files.c_ext ]
         , pos)
   in
@@ -1008,7 +1008,7 @@ fun C_diag source state =
 fun diag_state ctxt =
   (case Diag_State.get ctxt of
     SOME st => st
-  | NONE => Toplevel.init_toplevel ());
+  | NONE => Toplevel.make_state NONE);
 
 val diag_goal = Proof.goal o Toplevel.proof_of o diag_state;
 

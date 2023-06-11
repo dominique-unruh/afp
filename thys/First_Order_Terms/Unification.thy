@@ -17,6 +17,10 @@ definition
       (Fun f ss, Fun g ts) \<Rightarrow> if f = g then zip_option ss ts else None
     | _ \<Rightarrow> None)"
 
+lemma decompose_same_Fun[simp]: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "decompose (Fun f ss) (Fun f ss) = Some (zip ss ss)"
+  by (simp add: decompose_def)
+
 lemma decompose_Some [dest]:
   "decompose (Fun f ss) (Fun g ts) = Some E \<Longrightarrow>
     f = g \<and> length ss = length ts \<and> E = zip ss ts"
@@ -61,12 +65,89 @@ termination
   by (standard, rule wf_inv_image [of "unif\<inverse>" "mset \<circ> fst", OF wf_converse_unif])
      (force intro: UNIF1.intros simp: unif_def union_commute)+
 
+lemma unify_append_prefix_same: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "(\<forall>e \<in> set es1. fst e = snd e) \<Longrightarrow> unify (es1 @ es2) bs = unify es2 bs"
+proof (induction "es1 @ es2" bs arbitrary: es1 es2 bs rule: unify.induct)
+  case (1 bs)
+  thus ?case by simp
+next
+  case (2 f ss g ts E bs)
+  show ?case
+  proof (cases es1)
+    case Nil
+    thus ?thesis by simp
+  next
+    case (Cons e es1')
+    hence e_def: "e = (Fun f ss, Fun g ts)" and E_def: "E = es1' @ es2"
+      using "2" by simp_all
+    hence "f = g" and "ss = ts"
+      using "2.prems" local.Cons by auto
+    hence "unify (es1 @ es2) bs = unify ((zip ts ts @ es1') @ es2) bs"
+      by (simp add: Cons e_def)
+    also have "\<dots> = unify es2 bs"
+    proof (rule "2.hyps"(1))
+      show "decompose (Fun f ss) (Fun g ts) = Some (zip ts ts)"
+        by (simp add: \<open>f = g\<close> \<open>ss = ts\<close>)
+    next
+      show "zip ts ts @ E = (zip ts ts @ es1') @ es2"
+        by (simp add: E_def)
+    next
+      show "\<forall>e\<in>set (zip ts ts @ es1'). fst e = snd e"
+        using "2.prems" by (auto simp: Cons zip_same)
+    qed
+    finally show ?thesis .
+  qed
+next
+  case (3 x t E bs)
+  show ?case
+  proof (cases es1)
+    case Nil
+    thus ?thesis by simp
+  next
+    case (Cons e es1')
+    hence e_def: "e = (Var x, t)" and E_def: "E = es1' @ es2"
+      using 3 by simp_all
+    show ?thesis
+    proof (cases "t = Var x")
+      case True
+      show ?thesis
+        using 3(1)[OF True E_def]
+        using "3.hyps"(3) "3.prems" local.Cons by fastforce
+    next
+      case False
+      thus ?thesis
+        using "3.prems" e_def local.Cons by force
+    qed
+  qed
+next
+  case (4 v va x E bs)
+  then show ?case
+  proof (cases es1)
+    case Nil
+    thus ?thesis by simp
+  next
+    case (Cons e es1')
+    hence e_def: "e = (Fun v va, Var x)" and E_def: "E = es1' @ es2"
+      using 4 by simp_all
+    thus ?thesis
+      using "4.prems" local.Cons by fastforce
+  qed
+qed
+
+corollary unify_Cons_same: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "fst e = snd e \<Longrightarrow> unify (e # es) bs = unify es bs"
+  by (rule unify_append_prefix_same[of "[_]", simplified])
+
+corollary unify_same: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "(\<forall>e \<in> set es. fst e = snd e) \<Longrightarrow> unify es bs = Some bs"
+  by (rule unify_append_prefix_same[of _ "[]", simplified])
+
 definition subst_of :: "('v \<times> ('f, 'v) term) list \<Rightarrow> ('f, 'v) subst"
   where
     "subst_of ss = List.foldr (\<lambda>(x, t) \<sigma>. \<sigma> \<circ>\<^sub>s subst x t) ss Var"
 
 text \<open>Computing the mgu of two terms.\<close>
-fun mgu :: "('f, 'v) term \<Rightarrow> ('f, 'v) term \<Rightarrow> ('f, 'v) subst option" where
+definition mgu :: "('f, 'v) term \<Rightarrow> ('f, 'v) term \<Rightarrow> ('f, 'v) subst option" where
   "mgu s t =
     (case unify [(s, t)] [] of
       None \<Rightarrow> None
@@ -150,6 +231,17 @@ proof -
     show ?thesis
       by (auto simp add: is_imgu_def is_mgu_def)
          (metis subst_compose_assoc)
+qed
+
+lemma mgu_sound:
+  assumes "mgu s t = Some \<sigma>"
+  shows "is_imgu \<sigma> {(s, t)}"
+proof -
+  obtain ss where "unify [(s, t)] [] = Some ss"
+    and "\<sigma> = subst_of ss"
+    using assms by (auto simp: mgu_def split: option.splits)
+  then have "is_imgu \<sigma> (set [(s, t)])" by (metis unify_sound)
+  then show ?thesis by simp
 qed
 
 text \<open>If \<open>unify\<close> gives up, then the given set of equations
@@ -294,13 +386,32 @@ proof -
     by (auto simp: unifiable_def)
 qed
 
+corollary ex_unify_if_unifiers_not_empty: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "unifiers es \<noteq> {} \<Longrightarrow> set xs = es \<Longrightarrow> \<exists>ys. unify xs [] = Some ys"
+  using unify_complete by auto
+
 lemma mgu_complete:
   "mgu s t = None \<Longrightarrow> unifiers {(s, t)} = {}"
 proof -
   assume "mgu s t = None"
-  then have "unify [(s, t)] [] = None" by (cases "unify [(s, t)] []", auto)
+  then have "unify [(s, t)] [] = None" by (cases "unify [(s, t)] []", auto simp: mgu_def)
   then have "unifiers (set [(s, t)]) = {}" by (rule unify_complete)
   then show ?thesis by simp
+qed
+
+corollary ex_mgu_if_unifiers_not_empty: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "unifiers {(t,u)} \<noteq> {} \<Longrightarrow> \<exists>\<mu>. mgu t u = Some \<mu>"
+  using mgu_complete by auto
+
+corollary ex_mgu_if_subst_apply_term_eq_subst_apply_term: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  fixes t u :: "('f, 'v) Term.term" and \<sigma> :: "('f, 'v) subst"
+  assumes t_eq_u: "t \<cdot> \<sigma> = u \<cdot> \<sigma>"
+  shows "\<exists>\<mu> :: ('f, 'v) subst. Unification.mgu t u = Some \<mu>"
+proof -
+  from t_eq_u have "unifiers {(t, u)} \<noteq> {}"
+    unfolding unifiers_def by auto
+  thus ?thesis
+    by (rule ex_mgu_if_unifiers_not_empty)
 qed
 
 lemma finite_subst_domain_subst_of:
@@ -313,32 +424,281 @@ proof (induct xs)
     by (simp del: subst_subst_domain) (metis finite_subset infinite_Un)
 qed simp
 
+lemma unify_subst_domain: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes unif: "unify E [] = Some xs"
+  shows "subst_domain (subst_of xs) \<subseteq> (\<Union>e \<in> set E. vars_term (fst e) \<union> vars_term (snd e))"
+proof -
+  from unify_Some_UNIF[OF unif] obtain xs' where
+    "subst_of xs = compose xs'" and "UNIF xs' (mset E) {#}"
+    by auto
+  thus ?thesis
+    using UNIF_subst_domain_subset
+    by (metis (mono_tags, lifting) multiset.set_map set_mset_mset vars_mset_def)
+qed
+
 lemma mgu_subst_domain:
   assumes "mgu s t = Some \<sigma>"
   shows "subst_domain \<sigma> \<subseteq> vars_term s \<union> vars_term t"
 proof -
-  obtain xs where *: "unify [(s, t)] [] = Some xs" and [simp]: "subst_of xs = \<sigma>"
-    using assms by (simp split: option.splits)
-  from unify_Some_UNIF [OF *] obtain ss
-    where "compose ss = \<sigma>" and "UNIF ss {#(s, t)#} {#}" by auto
-  with UNIF_subst_domain_subset [of ss "{#(s, t)#}" "{#}"]
-  show ?thesis using vars_mset_singleton by fastforce
+  obtain xs where "unify [(s, t)] [] = Some xs" and "\<sigma> = subst_of xs"
+    using assms by (simp add: mgu_def split: option.splits)
+  thus ?thesis
+    using unify_subst_domain by fastforce
 qed
 
 lemma mgu_finite_subst_domain:
   "mgu s t = Some \<sigma> \<Longrightarrow> finite (subst_domain \<sigma>)"
-  by (cases "unify [(s, t)] []")
-    (auto simp: finite_subst_domain_subst_of)
+  by (drule mgu_subst_domain) (simp add: finite_subset)
 
-lemma mgu_sound:
-  assumes "mgu s t = Some \<sigma>"
-  shows "is_imgu \<sigma> {(s, t)}"
+lemma unify_range_vars: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes unif: "unify E [] = Some xs"
+  shows "range_vars (subst_of xs) \<subseteq> (\<Union>e \<in> set E. vars_term (fst e) \<union> vars_term (snd e))"
 proof -
-  obtain ss where "unify [(s, t)] [] = Some ss"
-    and "\<sigma> = subst_of ss"
-    using assms by (auto split: option.splits)
-  then have "is_imgu \<sigma> (set [(s, t)])" by (metis unify_sound)
-  then show ?thesis by simp
+  from unify_Some_UNIF[OF unif] obtain xs' where
+    "subst_of xs = compose xs'" and "UNIF xs' (mset E) {#}"
+    by auto
+  thus ?thesis
+    using UNIF_range_vars_subset
+    by (metis (mono_tags, lifting) multiset.set_map set_mset_mset vars_mset_def)
+qed
+
+lemma mgu_range_vars: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes "mgu s t = Some \<mu>"
+  shows "range_vars \<mu> \<subseteq> vars_term s \<union> vars_term t"
+proof -
+  obtain xs where "unify [(s, t)] [] = Some xs" and "\<mu> = subst_of xs"
+    using assms by (simp add: mgu_def split: option.splits)
+  thus ?thesis
+    using unify_range_vars by fastforce
+qed
+
+lemma unify_subst_domain_range_vars_disjoint: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes unif: "unify E [] = Some xs"
+  shows "subst_domain (subst_of xs) \<inter> range_vars (subst_of xs) = {}"
+proof -
+  from unify_Some_UNIF[OF unif] obtain xs' where
+    "subst_of xs = compose xs'" and "UNIF xs' (mset E) {#}"
+    by auto
+  thus ?thesis
+    using UNIF_subst_domain_range_vars_Int by metis
+qed
+
+lemma mgu_subst_domain_range_vars_disjoint: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes "mgu s t = Some \<mu>"
+  shows "subst_domain \<mu> \<inter> range_vars \<mu> = {}"
+proof -
+  obtain xs where "unify [(s, t)] [] = Some xs" and "\<mu> = subst_of xs"
+    using assms by (simp add: mgu_def split: option.splits)
+  thus ?thesis
+    using unify_subst_domain_range_vars_disjoint by metis
+qed
+
+corollary subst_apply_term_eq_subst_apply_term_if_mgu: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  assumes mgu_t_u: "mgu t u = Some \<mu>"
+  shows "t \<cdot> \<mu> = u \<cdot> \<mu>"
+  using mgu_sound[OF mgu_t_u]
+  by (simp add: is_imgu_def unifiers_def)
+
+lemma mgu_same: "mgu t t = Some Var" \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  by (simp add: mgu_def unify_same)
+
+lemma mgu_is_Var_if_not_in_equations: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  fixes \<mu> :: "('f, 'v) subst" and E :: "('f, 'v) equations" and x :: 'v
+  assumes
+    mgu_\<mu>: "is_mgu \<mu> E" and
+    x_not_in: "x \<notin> (\<Union>e\<in>E. vars_term (fst e) \<union> vars_term (snd e))"
+  shows "is_Var (\<mu> x)"
+proof -
+  from mgu_\<mu> have unif_\<mu>: "\<mu> \<in> unifiers E" and minimal_\<mu>: "\<forall>\<tau> \<in> unifiers E. \<exists>\<gamma>. \<tau> = \<mu> \<circ>\<^sub>s \<gamma>"
+    by (simp_all add: is_mgu_def)
+
+  define \<tau> :: "('f, 'v) subst" where
+    "\<tau> = (\<lambda>x. if x \<in> (\<Union>e \<in> E. vars_term (fst e) \<union> vars_term (snd e)) then \<mu> x else Var x)"
+
+  have \<open>\<tau> \<in> unifiers E\<close>
+    unfolding unifiers_def mem_Collect_eq
+  proof (rule ballI)
+    fix e assume "e \<in> E"
+    with unif_\<mu> have "fst e \<cdot> \<mu> = snd e \<cdot> \<mu>"
+      by blast
+    moreover from \<open>e \<in> E\<close> have "fst e \<cdot> \<tau> = fst e \<cdot> \<mu>" and "snd e \<cdot> \<tau> = snd e \<cdot> \<mu>"
+      unfolding term_subst_eq_conv
+      by (auto simp: \<tau>_def)
+    ultimately show "fst e \<cdot> \<tau> = snd e \<cdot> \<tau>"
+      by simp
+  qed
+  with minimal_\<mu> obtain \<gamma> where "\<mu> \<circ>\<^sub>s \<gamma> = \<tau>"
+    by auto
+  with x_not_in have "(\<mu> \<circ>\<^sub>s \<gamma>) x = Var x"
+    by (simp add: \<tau>_def)
+  thus "is_Var (\<mu> x)"
+    by (metis subst_apply_eq_Var subst_compose term.disc(1))
+qed
+
+corollary mgu_ball_is_Var: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  "is_mgu \<mu> E \<Longrightarrow> \<forall>x \<in> - (\<Union>e\<in>E. vars_term (fst e) \<union> vars_term (snd e)). is_Var (\<mu> x)"
+  by (rule ballI) (rule mgu_is_Var_if_not_in_equations[folded Compl_iff])
+
+lemma mgu_inj_on: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  fixes \<mu> :: "('f, 'v) subst" and E :: "('f, 'v) equations"
+  assumes mgu_\<mu>: "is_mgu \<mu> E"
+  shows "inj_on \<mu> (- (\<Union>e \<in> E. vars_term (fst e) \<union> vars_term (snd e)))"
+proof (rule inj_onI)
+  fix x y
+  assume
+    x_in: "x \<in> - (\<Union>e\<in>E. vars_term (fst e) \<union> vars_term (snd e))" and
+    y_in: "y \<in> - (\<Union>e\<in>E. vars_term (fst e) \<union> vars_term (snd e))" and
+    "\<mu> x = \<mu> y"
+
+  from mgu_\<mu> have unif_\<mu>: "\<mu> \<in> unifiers E" and minimal_\<mu>: "\<forall>\<tau> \<in> unifiers E. \<exists>\<gamma>. \<tau> = \<mu> \<circ>\<^sub>s \<gamma>"
+    by (simp_all add: is_mgu_def)
+
+  define \<tau> :: "('f, 'v) subst" where
+    "\<tau> = (\<lambda>x. if x \<in> (\<Union>e \<in> E. vars_term (fst e) \<union> vars_term (snd e)) then \<mu> x else Var x)"
+
+  have \<open>\<tau> \<in> unifiers E\<close>
+    unfolding unifiers_def mem_Collect_eq
+  proof (rule ballI)
+    fix e assume "e \<in> E"
+    with unif_\<mu> have "fst e \<cdot> \<mu> = snd e \<cdot> \<mu>"
+      by blast
+    moreover from \<open>e \<in> E\<close> have "fst e \<cdot> \<tau> = fst e \<cdot> \<mu>" and "snd e \<cdot> \<tau> = snd e \<cdot> \<mu>"
+      unfolding term_subst_eq_conv
+      by (auto simp: \<tau>_def)
+    ultimately show "fst e \<cdot> \<tau> = snd e \<cdot> \<tau>"
+      by simp
+  qed
+  with minimal_\<mu> obtain \<gamma> where "\<mu> \<circ>\<^sub>s \<gamma> = \<tau>"
+    by auto
+  hence "(\<mu> \<circ>\<^sub>s \<gamma>) x = Var x" and "(\<mu> \<circ>\<^sub>s \<gamma>) y = Var y"
+    using ComplD[OF x_in] ComplD[OF y_in]
+    by (simp_all add: \<tau>_def)
+  with \<open>\<mu> x = \<mu> y\<close> show "x = y"
+    by (simp add: subst_compose_def)
+qed
+
+lemma imgu_subst_domain_subset: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  fixes \<mu> :: "('f, 'v) subst" and E :: "('f, 'v) equations" and Evars :: "'v set"
+  assumes imgu_\<mu>: "is_imgu \<mu> E" and fin_E: "finite E"
+  defines "Evars \<equiv> (\<Union>e \<in> E. vars_term (fst e) \<union> vars_term (snd e))"
+  shows "subst_domain \<mu> \<subseteq> Evars"
+proof (intro Set.subsetI)
+  from imgu_\<mu> have unif_\<mu>: "\<mu> \<in> unifiers E" and minimal_\<mu>: "\<forall>\<tau> \<in> unifiers E. \<mu> \<circ>\<^sub>s \<tau> = \<tau>"
+    by (simp_all add: is_imgu_def)
+
+  from fin_E obtain es :: "('f, 'v) equation list" where
+    "set es = E"
+    using finite_list by auto
+  then obtain xs :: "('v \<times> ('f, 'v) Term.term) list" where
+    unify_es: "unify es [] = Some xs"
+    using unif_\<mu> ex_unify_if_unifiers_not_empty by blast
+
+  define \<tau> :: "('f, 'v) subst" where
+    "\<tau> = subst_of xs"
+
+  have dom_\<tau>: "subst_domain \<tau> \<subseteq> Evars"
+    using unify_subst_domain[OF unify_es, unfolded \<open>set es = E\<close>, folded Evars_def \<tau>_def] .
+  have range_vars_\<tau>: "range_vars \<tau> \<subseteq> Evars"
+    using unify_range_vars[OF unify_es, unfolded \<open>set es = E\<close>, folded Evars_def \<tau>_def] .
+
+  have "\<tau> \<in> unifiers E"
+    using \<open>set es = E\<close> unify_es \<tau>_def is_imgu_def unify_sound by blast
+  with minimal_\<mu> have \<mu>_comp_\<tau>: "\<And>x. (\<mu> \<circ>\<^sub>s \<tau>) x = \<tau> x"
+    by auto
+
+  fix x :: 'v assume "x \<in> subst_domain \<mu>"
+  hence "\<mu> x \<noteq> Var x"
+    by (simp add: subst_domain_def)
+
+  show "x \<in> Evars"
+  proof (cases "x \<in> subst_domain \<tau>")
+    case True
+    thus ?thesis
+      using dom_\<tau> by auto
+  next
+    case False
+    hence "\<tau> x = Var x"
+      by (simp add: subst_domain_def)
+    hence "\<mu> x \<cdot> \<tau> = Var x"
+      using \<mu>_comp_\<tau>[of x] by (simp add: subst_compose)
+    thus ?thesis
+    proof (rule subst_apply_eq_Var[of "\<mu> x" \<tau> x])
+      show "\<And>y. \<mu> x = Var y \<Longrightarrow> \<tau> y = Var x \<Longrightarrow> ?thesis"
+        using \<open>\<mu> x \<noteq> Var x\<close> range_vars_\<tau> mem_range_varsI[of \<tau> _ x] by auto
+    qed
+  qed
+qed
+
+lemma imgu_range_vars_of_equations_vars_subset: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  fixes \<mu> :: "('f, 'v) subst" and E :: "('f, 'v) equations" and Evars :: "'v set"
+  assumes imgu_\<mu>: "is_imgu \<mu> E" and fin_E: "finite E"
+  defines "Evars \<equiv> (\<Union>e \<in> E. vars_term (fst e) \<union> vars_term (snd e))"
+  shows "(\<Union>x \<in> Evars. vars_term (\<mu> x)) \<subseteq> Evars"
+proof (rule Set.subsetI)
+  from imgu_\<mu> have unif_\<mu>: "\<mu> \<in> unifiers E" and minimal_\<mu>: "\<forall>\<tau> \<in> unifiers E. \<mu> \<circ>\<^sub>s \<tau> = \<tau>"
+    by (simp_all add: is_imgu_def)
+
+  from fin_E obtain es :: "('f, 'v) equation list" where
+    "set es = E"
+    using finite_list by auto
+  then obtain xs :: "('v \<times> ('f, 'v) Term.term) list" where
+    unify_es: "unify es [] = Some xs"
+    using unif_\<mu> ex_unify_if_unifiers_not_empty by blast
+
+  define \<tau> :: "('f, 'v) subst" where
+    "\<tau> = subst_of xs"
+
+  have dom_\<tau>: "subst_domain \<tau> \<subseteq> Evars"
+    using unify_subst_domain[OF unify_es, unfolded \<open>set es = E\<close>, folded Evars_def \<tau>_def] .
+  have range_vars_\<tau>: "range_vars \<tau> \<subseteq> Evars"
+    using unify_range_vars[OF unify_es, unfolded \<open>set es = E\<close>, folded Evars_def \<tau>_def] .
+  hence ball_vars_apply_\<tau>_subset: "\<forall>x \<in> subst_domain \<tau>. vars_term (\<tau> x) \<subseteq> Evars"
+    unfolding range_vars_def
+    by (simp add: SUP_le_iff)
+
+  have "\<tau> \<in> unifiers E"
+    using \<open>set es = E\<close> unify_es \<tau>_def is_imgu_def unify_sound by blast
+  with minimal_\<mu> have \<mu>_comp_\<tau>: "\<And>x. (\<mu> \<circ>\<^sub>s \<tau>) x = \<tau> x"
+    by auto
+
+  fix y :: 'v assume "y \<in> (\<Union>x \<in> Evars. vars_term (\<mu> x))"
+  then obtain x :: 'v where
+    x_in: "x \<in> Evars" and y_in: "y \<in> vars_term (\<mu> x)"
+    by (auto simp: subst_domain_def)
+  have vars_\<tau>_x: "vars_term (\<tau> x) \<subseteq> Evars"
+    using ball_vars_apply_\<tau>_subset subst_domain_def x_in by fastforce
+
+  show "y \<in> Evars"
+  proof (rule ccontr)
+    assume "y \<notin> Evars"
+    hence "y \<notin> vars_term (\<tau> x)"
+      using vars_\<tau>_x by blast
+    moreover have "y \<in> vars_term ((\<mu> \<circ>\<^sub>s \<tau>) x)"
+    proof -
+      have "\<tau> y = Var y"
+        using \<open>y \<notin> Evars\<close> dom_\<tau>
+        by (auto simp add: subst_domain_def)
+      thus ?thesis
+        unfolding subst_compose_def vars_term_subst_apply_term UN_iff
+        using y_in by force
+    qed
+    ultimately show False
+      using \<mu>_comp_\<tau>[of x] by simp
+  qed
+qed
+
+lemma imgu_range_vars_subset: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  fixes \<mu> :: "('f, 'v) subst" and E :: "('f, 'v) equations"
+  assumes imgu_\<mu>: "is_imgu \<mu> E" and fin_E: "finite E"
+  shows "range_vars \<mu> \<subseteq> (\<Union>e \<in> E. vars_term (fst e) \<union> vars_term (snd e))"
+proof -
+  have "range_vars \<mu> = (\<Union>x \<in> subst_domain \<mu>. vars_term (\<mu> x))"
+    by (simp add: range_vars_def)
+  also have "\<dots> \<subseteq> (\<Union>x \<in> (\<Union>e \<in> E. vars_term (fst e) \<union> vars_term (snd e)). vars_term (\<mu> x))"
+    using imgu_subst_domain_subset[OF imgu_\<mu> fin_E] by fast
+  also have "\<dots> \<subseteq> (\<Union>e \<in> E. vars_term (fst e) \<union> vars_term (snd e))"
+    using imgu_range_vars_of_equations_vars_subset[OF imgu_\<mu> fin_E] by metis
+  finally show ?thesis .
 qed
 
 end

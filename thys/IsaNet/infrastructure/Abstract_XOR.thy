@@ -16,7 +16,7 @@ theory "Abstract_XOR"
   imports
     "HOL.Finite_Set" "HOL-Library.FSet" "Message"
 (*the latter half of this theory uses msgterm. If split it off, we have to add
-  declare fmember.rep_eq[simp]
+  declare fmember_iff_member_fset[simp]
 in order to show the first half*)
 begin
 
@@ -85,7 +85,7 @@ lemma FS_contains_elem:
   shows "elem \<in> fset zs_b"
   using assms(1)
   apply(auto simp add: xor_def)
-  using FS_mono assms notin_fset xor_singleton(1)
+  using FS_mono assms xor_singleton(1)
   by (metis)
 
 lemma FS_is_finsert_elem:

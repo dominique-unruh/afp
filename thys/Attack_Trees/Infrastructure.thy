@@ -21,7 +21,7 @@ type_synonym policy = "((actor \<Rightarrow> bool) * action set)"
 
 definition ID :: "[actor, string] \<Rightarrow> bool"
   where "ID a s \<equiv> (a = Actor s)"
-text \<open>The Decentralised Label Model (DLM) \cite{ml:98} introduced the idea to
+text \<open>The Decentralised Label Model (DLM) \<^cite>\<open>"ml:98"\<close> introduced the idea to
 label data by owners and readers. We pick up this idea and formalize
 a new type to encode the owner and the set of readers as a pair.
 The first element is the owner of a data item, the second one is the
@@ -258,7 +258,7 @@ definition
    state_transition_infra_def: "(i \<rightarrow>\<^sub>i i') =  (i \<rightarrow>\<^sub>n (i' :: infrastructure))"
 
 instance
-  by (rule MC.class.MC.state.of_class.intro)
+  by (rule state.intro_of_class)
 
 definition state_transition_in_refl ("(_ \<rightarrow>\<^sub>n* _)" 50)
 where "s \<rightarrow>\<^sub>n* s' \<equiv> ((s,s') \<in> {(x,y). state_transition_in x y}\<^sup>*)"

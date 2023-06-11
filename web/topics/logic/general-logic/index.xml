@@ -7,6 +7,105 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language><atom:link href="/topics/logic/general-logic/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>MLSS Decision Procedure</title>
+      <link>/entries/MLSS_Decision_Proc.html</link>
+      <pubDate>Fri, 05 May 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/MLSS_Decision_Proc.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>MLSS Decision Procedure</title>
+      <link>/entries/MLSS_Decision_Proc.html</link>
+      <pubDate>Fri, 05 May 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/MLSS_Decision_Proc.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>A Formalization of the SCL(FOL) Calculus: Simple Clause Learning for First-Order Logic</title>
+      <link>/entries/Simple_Clause_Learning.html</link>
+      <pubDate>Thu, 20 Apr 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Simple_Clause_Learning.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>A Sound and Complete Calculus for Probability Inequalities</title>
+      <link>/entries/Probability_Inequality_Completeness.html</link>
+      <pubDate>Mon, 20 Feb 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Probability_Inequality_Completeness.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>A Sound and Complete Calculus for Probability Inequalities</title>
+      <link>/entries/Probability_Inequality_Completeness.html</link>
+      <pubDate>Mon, 20 Feb 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Probability_Inequality_Completeness.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Given Clause Loops</title>
+      <link>/entries/Given_Clause_Loops.html</link>
+      <pubDate>Wed, 25 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Given_Clause_Loops.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Suppes&#39; Theorem For Probability Logic</title>
+      <link>/entries/Suppes_Theorem.html</link>
+      <pubDate>Sun, 22 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Suppes_Theorem.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Synthetic Completeness</title>
+      <link>/entries/Synthetic_Completeness.html</link>
+      <pubDate>Mon, 09 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Synthetic_Completeness.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Class-based Classical Propositional Logic</title>
+      <link>/entries/Propositional_Logic_Class.html</link>
+      <pubDate>Thu, 15 Dec 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Propositional_Logic_Class.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Automation of Boolos&#39; Curious Inference in Isabelle/HOL</title>
+      <link>/entries/Boolos_Curious_Inference_Automated.html</link>
+      <pubDate>Mon, 05 Dec 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Boolos_Curious_Inference_Automated.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Abstract Object Theory</title>
+      <link>/entries/AOT.html</link>
+      <pubDate>Mon, 28 Nov 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/AOT.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Making Arbitrary Relational Calculus Queries Safe-Range</title>
       <link>/entries/Safe_Range_RC.html</link>
       <pubDate>Wed, 28 Sep 2022 00:00:00 +0000</pubDate>

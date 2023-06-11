@@ -8,9 +8,9 @@ theory Sophomores_Dream
 begin
 
 text \<open>
-  This formalisation mostly follows the very clear proof sketch from Wikipedia~\cite{wikipedia}.
+  This formalisation mostly follows the very clear proof sketch from Wikipedia~\<^cite>\<open>"wikipedia"\<close>.
   That article also provides an interesting historical perspective. A more detailed 
-  exploration of Bernoulli's historical proof can be found in the book by Dunham~\cite{dunham}.
+  exploration of Bernoulli's historical proof can be found in the book by Dunham~\<^cite>\<open>"dunham"\<close>.
 
   The name `Sophomore's Dream' apparently comes from a book by Borwein et al., in analogy to
   the `Freshman's Dream' equation $(x+y)^n = x^n + y^n$ (which is generally \<^emph>\<open>not\<close> true except
@@ -333,16 +333,16 @@ proof -
     using sophomores_dream_aux1 by (simp add: sums_iff)
   moreover have "summable (\<lambda>n. norm (1 / real (Suc n ^ Suc n)))"
     by (subst summable_Suc_iff) (use abs_summable_sophomores_dream in \<open>auto simp: field_simps\<close>)
-  ultimately have "has_sum (\<lambda>n::nat. 1 / (n+1)^(n+1)) UNIV ?I"
+  ultimately have "((\<lambda>n::nat. 1 / (n+1)^(n+1)) has_sum ?I) UNIV"
     by (intro norm_summable_imp_has_sum) auto
-  also have "?this \<longleftrightarrow> has_sum ((\<lambda>n::nat. 1 / n^n) \<circ> Suc) UNIV ?I"
+  also have "?this \<longleftrightarrow> (((\<lambda>n::nat. 1 / n^n) \<circ> Suc) has_sum ?I) UNIV"
     by (simp add: o_def field_simps)
-  also have "\<dots> \<longleftrightarrow> has_sum (\<lambda>n::nat. 1 / n ^ n) (Suc ` UNIV) ?I"
+  also have "\<dots> \<longleftrightarrow> ((\<lambda>n::nat. 1 / n^n) has_sum ?I) (Suc ` UNIV)"
     by (intro has_sum_reindex [symmetric]) auto
   also have "Suc ` UNIV = {1..}"
     using greaterThan_0 by auto
-  also have "has_sum (\<lambda>n::nat. (1 / real (n ^ n))) {1..} ?I \<longleftrightarrow>
-             has_sum (\<lambda>n::nat. n powi (-n)) {1..} ?I"
+  also have "((\<lambda>n::nat. (1 / real (n ^ n))) has_sum ?I) {1..} \<longleftrightarrow>
+             ((\<lambda>n::nat. n powi (-n)) has_sum ?I) {1..}"
     by (intro has_sum_cong) (auto simp: power_int_minus field_simps power_minus')
   finally show "integral {0..1} (\<lambda>x. x powr (-x)) = (\<Sum>\<^sub>\<infinity>k\<in>{(1::nat)..}. k powi (-k))"
     by (auto dest!: infsumI simp: algebra_simps)
@@ -422,18 +422,18 @@ proof -
     by (subst summable_Suc_iff) (use abs_summable_sophomores_dream in \<open>auto simp: field_simps\<close>)
   hence "summable (\<lambda>n. norm ((- 1) ^ n / real (Suc n ^ Suc n)))"
     by simp
-  ultimately have "has_sum (\<lambda>n::nat. (-1)^n / (n+1)^(n+1)) UNIV ?I"
+  ultimately have "((\<lambda>n::nat. (-1)^n / (n+1)^(n+1)) has_sum ?I) UNIV"
     by (intro norm_summable_imp_has_sum) auto
-  also have "?this \<longleftrightarrow> has_sum ((\<lambda>n::nat. -((-1)^n / n^n)) \<circ> Suc) UNIV ?I"
+  also have "?this \<longleftrightarrow> (((\<lambda>n::nat. -((-1)^n / n^n)) \<circ> Suc) has_sum ?I) UNIV"
     by (simp add: o_def field_simps)
-  also have "\<dots> \<longleftrightarrow> has_sum (\<lambda>n::nat. -((-1)^n / n ^ n)) (Suc ` UNIV) ?I"
+  also have "\<dots> \<longleftrightarrow> ((\<lambda>n::nat. -((-1)^n / n ^ n)) has_sum ?I) (Suc ` UNIV)"
     by (intro has_sum_reindex [symmetric]) auto
   also have "Suc ` UNIV = {1..}"
     using greaterThan_0 by auto
-  also have "has_sum (\<lambda>n::nat. -((- 1) ^ n / real (n ^ n))) {1..} ?I \<longleftrightarrow>
-             has_sum (\<lambda>n::nat. -((-n) powi (-n))) {1..} ?I"
+  also have "((\<lambda>n::nat. -((- 1) ^ n / real (n ^ n))) has_sum ?I) {1..} \<longleftrightarrow>
+             ((\<lambda>n::nat. -((-n) powi (-n))) has_sum ?I) {1..}"
     by (intro has_sum_cong) (auto simp: power_int_minus field_simps power_minus')
-  also have "\<dots> \<longleftrightarrow> has_sum (\<lambda>n::nat. (-n) powi (-n)) {1..} (-?I)"
+  also have "\<dots> \<longleftrightarrow> ((\<lambda>n::nat. (-n) powi (-n)) has_sum (-?I)) {1..}"
     by (simp add: has_sum_uminus)
   finally show "integral {0..1} (\<lambda>x. x powr x) = -(\<Sum>\<^sub>\<infinity>k\<in>{(1::nat)..}. (-k) powi (-k))"
     by (auto dest!: infsumI simp: algebra_simps)

@@ -115,8 +115,8 @@ structure Hide_Tvar : HIDE_TVAR = struct
 
   fun update_mode typ_str print_mode parse_mode thy   =
     let       
-      val ctx = Toplevel.context_of(Toplevel.theory_toplevel thy)
-      val typ   = Syntax.parse_typ ctx typ_str (* no type checking *)
+      val ctxt = Proof_Context.init_global thy
+      val typ = Syntax.parse_typ ctxt typ_str (* no type checking *)
       val name = case typ of 
                    Type(name,_) => name
                  | _ => error("Complex type not (yet) supported.")
@@ -235,10 +235,9 @@ structure Hide_Tvar : HIDE_TVAR = struct
   val key_of_term' = key_of_term o normalize_typvar_term'
   
 
-  fun hide_tvar_tr' tname ctx terms =
+  fun hide_tvar_tr' tname ctxt terms =
       let
-
-        val mtyp   = Syntax.parse_typ ctx tname (* no type checking *) 
+        val mtyp = Syntax.parse_typ ctxt tname (* no type checking *) 
 
         val (fq_name, _) = case mtyp of
                      Type(s,ts) => (s,ts)
@@ -253,7 +252,7 @@ structure Hide_Tvar : HIDE_TVAR = struct
         val actual_tvars_key = key_of_term reg_type_as_term
 
       in
-        case lookup (Proof_Context.theory_of ctx) fq_name of 
+        case lookup (Proof_Context.theory_of ctxt) fq_name of 
           NONE   => raise Match
         | SOME e => let
                       val (tname,default_tvars_key) = 
@@ -270,9 +269,9 @@ structure Hide_Tvar : HIDE_TVAR = struct
                    end  
       end
   
-  fun hide_tvar_ast_tr ctx ast= 
+  fun hide_tvar_ast_tr ctxt ast= 
       let 
-        val thy = Proof_Context.theory_of ctx
+        val thy = Proof_Context.theory_of ctxt
 
         fun parse_ast ((Ast.Constant const)::[]) = (const,NONE)
           | parse_ast ((Ast.Constant sort)::(Ast.Constant const)::[]) 
@@ -306,12 +305,12 @@ structure Hide_Tvar : HIDE_TVAR = struct
 
   fun register typ_str print_mode parse_mode thy   =
     let   
-      val ctx = Toplevel.context_of(Toplevel.theory_toplevel thy)
-      val typ   = Syntax.parse_typ ctx typ_str
+      val ctxt = Proof_Context.init_global thy
+      val typ = Syntax.parse_typ ctxt typ_str
       val (name,tvars) = case typ  of Type(name,tvars) => (name,tvars)
                              | _             => error("Unsupported type structure.")
       
-      val base_typ   = Syntax.read_typ ctx typ_str
+      val base_typ   = Syntax.read_typ ctxt typ_str
       val (base_name,base_tvars) = case base_typ  of Type(name,tvars) => (name,tvars)
                              | _             => error("Unsupported type structure.")
 
@@ -372,10 +371,9 @@ structure Hide_Tvar : HIDE_TVAR = struct
      handle Symtab.DUP _ => error("Type shorthand already registered: "^name)
     end
 
-  fun  hide_tvar_subst_ast_tr hole ctx (ast::[]) =
+  fun hide_tvar_subst_ast_tr hole ctxt (ast::[]) =
       let 
-
-        val thy = Proof_Context.theory_of ctx
+        val thy = Proof_Context.theory_of ctxt
         val (decorated_name, args) = case ast
                of (Ast.Appl ((Ast.Constant s)::args)) => (s, args)
                 | _ =>  error "Error in obtaining type constructor."
@@ -398,8 +396,8 @@ structure Hide_Tvar : HIDE_TVAR = struct
       end   
     | hide_tvar_subst_ast_tr _ _ _ = error("hide_tvar_subst_ast_tr: empty AST.")
 
-  fun hide_tvar_subst_return_ast_tr hole ctx (retval::constructor::[]) = 
-         hide_tvar_subst_ast_tr hole ctx [Ast.Appl (constructor::retval::[])]
+  fun hide_tvar_subst_return_ast_tr hole ctxt (retval::constructor::[]) = 
+         hide_tvar_subst_ast_tr hole ctxt [Ast.Appl (constructor::retval::[])]
     | hide_tvar_subst_return_ast_tr _ _ _ = 
            error("hide_tvar_subst_return_ast_tr: error in parsing AST")
 
@@ -531,7 +529,7 @@ definition hide_tvar_X :: "(_, 'retval::linorder) hide_tvar_baz
 subsection\<open>Introduction\<close>
 text\<open>
   When modelling object-oriented data models in HOL with the goal of preserving \<^emph>\<open>extensibility\<close> 
-  (e.g., as described in~\cite{brucker.ea:extensible:2008-b,brucker:interactive:2007}) one needs 
+  (e.g., as described in~\<^cite>\<open>"brucker.ea:extensible:2008-b" and "brucker:interactive:2007"\<close>) one needs 
   to define type constructors with a large number of type variables. This can reduce the readability
   of the overall formalization. Thus, we use a short-hand notation in cases were the names of 
   the type variables are known from the context. In more detail, this theory  sets up both 

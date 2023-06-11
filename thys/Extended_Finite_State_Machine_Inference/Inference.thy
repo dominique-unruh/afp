@@ -121,7 +121,7 @@ lemma make_pta_aux_fold [code]:
   by(induct l arbitrary: e, auto)
 
 subsection\<open>Integrating Heuristics\<close>
-text\<open>A key contribution of the inference technique presented in \cite{foster2019} is the ability to
+text\<open>A key contribution of the inference technique presented in \<^cite>\<open>"foster2019"\<close> is the ability to
 introduce \emph{internal variables} to the model to generalise behaviours and allow transitions to
 be merged. This is done by providing the inference technique with a set of \emph{heuristics}. The
 aim here is not to create a ``one size fits all'' magic oracle, rather to recognise particular
@@ -199,9 +199,9 @@ lemma paths_of_length_1: "paths_of_length 1 e s = fimage (\<lambda>(d, t, id). [
   apply (simp add: outgoing_transitions_def comp_def One_nat_def[symmetric])
   apply (rule fBall_ffilter2)
    defer
-   apply (simp add: ffilter_def ffUnion_def fBall_def Abs_fset_inverse)
+   apply (simp add: ffilter_def ffUnion_def Abs_fset_inverse)
    apply auto[1]
-  apply (simp add: ffilter_def ffUnion_def fBall_def Abs_fset_inverse fset_both_sides)
+  apply (simp add: ffilter_def ffUnion_def Abs_fset_inverse fset_both_sides)
   by force
 
 fun step_score :: "(tids \<times> tids) list \<Rightarrow> iEFSM \<Rightarrow> strategy \<Rightarrow> nat" where
@@ -512,9 +512,7 @@ function inference_step :: "(cfstate \<times> cfstate) set \<Rightarrow> iEFSM \
   )"
   by auto
 termination
-  apply (relation "measures [\<lambda>(_, _, s, _, _, _). size s]")
-   apply simp
-  by (simp add: card_minus_fMin)
+  by (relation "measures [\<lambda>(_, _, s, _, _, _). size s]") (auto dest!: card_minus_fMin)
 
 (* Takes an iEFSM and iterates inference_step until no further states can be successfully merged  *)
 (* @param e - an iEFSM dest be generalised                                                        *)

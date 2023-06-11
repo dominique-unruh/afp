@@ -554,7 +554,7 @@ lemma register_decomposition_finite_aux:
   assumes [simp]: \<open>register \<Phi>\<close>
   shows \<open>\<exists>U :: ('a \<times> ('a, 'b) complement_domain_simple) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
               (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
-  \<comment> \<open>Proof based on @{cite daws21unitalanswer}\<close>
+  \<comment> \<open>Proof based on \<^cite>\<open>daws21unitalanswer\<close>\<close>
 proof -
   note [[simproc del: compatibility_warn]]
   fix \<xi>0 :: 'a

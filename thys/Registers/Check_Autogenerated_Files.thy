@@ -21,11 +21,11 @@ let
 in
   check "Source" "Axioms_Classical.thy" "72388b1ddd9b0570c9f0761063a13e5e777551e3";
   check "Source" "Axioms_Quantum.thy" "0caf33da98042713422bfba8320f5a7683fb5bec";
-  check "Source" "Laws.thy" "83f19ec3f5710b3b914a5d69ecee9a202479b0c3";
+  check "Source" "Laws.thy" "1db2088f827e04309e9ba20810c3a274cebeabab";
   check "Source" "Laws_Complement.thy" "5ba70f38590214499d1dbf91e09c92b45d18365a";
-  check "Generated" "Laws_Classical.thy" "74f6acabbc93f6885969d4630adda5f25ad26feb";
+  check "Generated" "Laws_Classical.thy" "3d37a81779a1277e9ca5bb387eab03c3d401e691";
   check "Generated" "Laws_Complement_Quantum.thy" "50c6edbbd9d6cd1b7e55dd8a2e233d4874962575";
-  check "Generated" "Laws_Quantum.thy" "ef1832567324b54a2855a8f09ecfe448575b77a9"
+  check "Generated" "Laws_Quantum.thy" "f135807fac134b786da7c8b9c479147c4d2d9780"
 end
 \<close>
 

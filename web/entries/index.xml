@@ -6,7 +6,340 @@
     <description>Recent content in Entries on Archive of Formal Proofs</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
-    <lastBuildDate>Fri, 11 Nov 2022 00:00:00 +0000</lastBuildDate><atom:link href="/entries/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 01 Jun 2023 00:00:00 +0000</lastBuildDate><atom:link href="/entries/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>A Verified Efficient Implementation of the Weighted Path Order</title>
+      <link>/entries/Efficient_Weighted_Path_Order.html</link>
+      <pubDate>Thu, 01 Jun 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Efficient_Weighted_Path_Order.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Tree Enumeration</title>
+      <link>/entries/Tree_Enumeration.html</link>
+      <pubDate>Tue, 09 May 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Tree_Enumeration.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>MLSS Decision Procedure</title>
+      <link>/entries/MLSS_Decision_Proc.html</link>
+      <pubDate>Fri, 05 May 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/MLSS_Decision_Proc.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Three Squares Theorem</title>
+      <link>/entries/Three_Squares.html</link>
+      <pubDate>Wed, 03 May 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Three_Squares.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>The Halting Problem is Soluble in Malament-Hogarth Spacetimes</title>
+      <link>/entries/MHComputation.html</link>
+      <pubDate>Sat, 29 Apr 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/MHComputation.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>The Schwartz-Zippel Lemma</title>
+      <link>/entries/Schwartz_Zippel.html</link>
+      <pubDate>Thu, 27 Apr 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Schwartz_Zippel.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>A Formalization of the SCL(FOL) Calculus: Simple Clause Learning for First-Order Logic</title>
+      <link>/entries/Simple_Clause_Learning.html</link>
+      <pubDate>Thu, 20 Apr 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Simple_Clause_Learning.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>The CHSH inequality: Tsirelson&#39;s upper-bound and other results</title>
+      <link>/entries/TsirelsonBound.html</link>
+      <pubDate>Tue, 18 Apr 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/TsirelsonBound.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Distributed Distinct Elements</title>
+      <link>/entries/Distributed_Distinct_Elements.html</link>
+      <pubDate>Mon, 03 Apr 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Distributed_Distinct_Elements.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Formalization of Hyper Hoare Logic: A Logic to (Dis-)Prove Program Hyperproperties</title>
+      <link>/entries/HyperHoareLogic.html</link>
+      <pubDate>Mon, 03 Apr 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/HyperHoareLogic.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Positional Notation for Natural Numbers in an Arbitrary Base</title>
+      <link>/entries/DigitsInBase.html</link>
+      <pubDate>Mon, 03 Apr 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/DigitsInBase.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Formalization of CommCSL: A Relational Concurrent Separation Logic for Proving Information Flow Security in Concurrent Programs</title>
+      <link>/entries/CommCSL.html</link>
+      <pubDate>Wed, 15 Mar 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/CommCSL.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>No Faster-Than-Light Observers (GenRel)</title>
+      <link>/entries/No_FTL_observers_Gen_Rel.html</link>
+      <pubDate>Sun, 05 Mar 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/No_FTL_observers_Gen_Rel.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Expander Graphs</title>
+      <link>/entries/Expander_Graphs.html</link>
+      <pubDate>Fri, 03 Mar 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Expander_Graphs.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Renaming-Enriched Sets (Rensets) and Renaming-Based Recursion</title>
+      <link>/entries/Rensets.html</link>
+      <pubDate>Tue, 28 Feb 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Rensets.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>A Sound and Complete Calculus for Probability Inequalities</title>
+      <link>/entries/Probability_Inequality_Completeness.html</link>
+      <pubDate>Mon, 20 Feb 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Probability_Inequality_Completeness.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Group Law of Edwards Elliptic Curves</title>
+      <link>/entries/Edwards_Elliptic_Curves_Group.html</link>
+      <pubDate>Thu, 16 Feb 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Edwards_Elliptic_Curves_Group.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Hardness of Lattice Problems</title>
+      <link>/entries/CVP_Hardness.html</link>
+      <pubDate>Thu, 02 Feb 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/CVP_Hardness.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>ABY3 Multiplication and Array Shuffling</title>
+      <link>/entries/ABY3_Protocols.html</link>
+      <pubDate>Fri, 27 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/ABY3_Protocols.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Given Clause Loops</title>
+      <link>/entries/Given_Clause_Loops.html</link>
+      <pubDate>Wed, 25 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Given_Clause_Loops.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Suppes&#39; Theorem For Probability Logic</title>
+      <link>/entries/Suppes_Theorem.html</link>
+      <pubDate>Sun, 22 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Suppes_Theorem.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>A Hoare Logic for Diverging Programs</title>
+      <link>/entries/HoareForDivergence.html</link>
+      <pubDate>Fri, 20 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/HoareForDivergence.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Strict Omega Categories</title>
+      <link>/entries/StrictOmegaCategories.html</link>
+      <pubDate>Sat, 14 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/StrictOmegaCategories.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Synthetic Completeness</title>
+      <link>/entries/Synthetic_Completeness.html</link>
+      <pubDate>Mon, 09 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Synthetic_Completeness.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>The Cook-Levin theorem</title>
+      <link>/entries/Cook_Levin.html</link>
+      <pubDate>Sun, 08 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Cook_Levin.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Binary codes that do not preserve primitivity</title>
+      <link>/entries/Binary_Code_Imprimitive.html</link>
+      <pubDate>Tue, 03 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Binary_Code_Imprimitive.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Intersection of two monoids generated by two element codes</title>
+      <link>/entries/Two_Generated_Word_Monoids_Intersection.html</link>
+      <pubDate>Tue, 03 Jan 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Two_Generated_Word_Monoids_Intersection.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>A First Complete Algorithm for Real Quantifier Elimination in Isabelle/HOL</title>
+      <link>/entries/Quantifier_Elimination_Hybrid.html</link>
+      <pubDate>Thu, 15 Dec 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Quantifier_Elimination_Hybrid.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Class-based Classical Propositional Logic</title>
+      <link>/entries/Propositional_Logic_Class.html</link>
+      <pubDate>Thu, 15 Dec 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Propositional_Logic_Class.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Birkhoff&#39;s Representation Theorem For Finite Distributive Lattices</title>
+      <link>/entries/Birkhoff_Finite_Distributive_Lattices.html</link>
+      <pubDate>Tue, 06 Dec 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Birkhoff_Finite_Distributive_Lattices.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Automation of Boolos&#39; Curious Inference in Isabelle/HOL</title>
+      <link>/entries/Boolos_Curious_Inference_Automated.html</link>
+      <pubDate>Mon, 05 Dec 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Boolos_Curious_Inference_Automated.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>A Verified Translation of Multitape Turing Machines into Singletape Turing Machines</title>
+      <link>/entries/Multitape_To_Singletape_TM.html</link>
+      <pubDate>Wed, 30 Nov 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Multitape_To_Singletape_TM.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Abstract Object Theory</title>
+      <link>/entries/AOT.html</link>
+      <pubDate>Mon, 28 Nov 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/AOT.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>A Formal CHERI-C Memory Model</title>
+      <link>/entries/CHERI-C_Memory_Model.html</link>
+      <pubDate>Fri, 25 Nov 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/CHERI-C_Memory_Model.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Sauer-Shelah Lemma</title>
+      <link>/entries/Sauer_Shelah_Lemma.html</link>
+      <pubDate>Thu, 24 Nov 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Sauer_Shelah_Lemma.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Kneser&#39;s Theorem and the Cauchy–Davenport Theorem</title>
+      <link>/entries/Kneser_Cauchy_Davenport.html</link>
+      <pubDate>Mon, 21 Nov 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Kneser_Cauchy_Davenport.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Turán&#39;s Graph Theorem</title>
+      <link>/entries/Turans_Graph_Theorem.html</link>
+      <pubDate>Mon, 14 Nov 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Turans_Graph_Theorem.html</guid>
+      <description></description>
+    </item>
+    
     <item>
       <title>Combinatorial Enumeration Algorithms</title>
       <link>/entries/Combinatorial_Enumeration_Algorithms.html</link>
@@ -22,6 +355,15 @@
       <pubDate>Fri, 11 Nov 2022 00:00:00 +0000</pubDate>
       
       <guid>/entries/Balog_Szemeredi_Gowers.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>The Incompatibility of Strategy-Proofness and Representation in Party-Approval Multi-Winner Elections</title>
+      <link>/entries/PAPP_Impossibility.html</link>
+      <pubDate>Thu, 10 Nov 2022 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/PAPP_Impossibility.html</guid>
       <description></description>
     </item>
     
@@ -2537,7 +2879,7 @@
     </item>
     
     <item>
-      <title>The Budan-Fourier Theorem and Counting Real Roots with Multiplicity</title>
+      <title>The Budan–Fourier Theorem and Counting Real Roots with Multiplicity</title>
       <link>/entries/Budan_Fourier.html</link>
       <pubDate>Sun, 02 Sep 2018 00:00:00 +0000</pubDate>
       
@@ -4616,7 +4958,7 @@
     </item>
     
     <item>
-      <title>The Sturm-Tarski Theorem</title>
+      <title>The Sturm–Tarski Theorem</title>
       <link>/entries/Sturm_Tarski.html</link>
       <pubDate>Fri, 19 Sep 2014 00:00:00 +0000</pubDate>
       

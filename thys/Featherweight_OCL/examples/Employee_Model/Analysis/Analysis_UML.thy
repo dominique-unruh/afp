@@ -64,7 +64,7 @@ text\<open>
 text\<open>Such generic function or ``compiler'' can be implemented in
   Isabelle on the ML level.  This has been done, for a semantics
   following the open-world assumption, for UML 2.0
-  in~\cite{brucker.ea:extensible:2008-b, brucker:interactive:2007}. In
+  in~\<^cite>\<open>"brucker.ea:extensible:2008-b" and "brucker:interactive:2007"\<close>. In
   this paper, we follow another approach for UML 2.4: we define the
   concepts of the compilation informally, and present a concrete
   example which is verified in Isabelle/HOL.\<close>
@@ -73,7 +73,7 @@ subsection\<open>Outlining the Example\<close>
 
 text\<open>We are presenting here an ``analysis-model'' of the (slightly
 modified) example Figure 7.3, page 20 of
-the OCL standard~\cite{omg:ocl:2012}.
+the OCL standard~\<^cite>\<open>"omg:ocl:2012"\<close>.
 Here, analysis model means that associations
 were really represented as relation on objects on the state---as is
 intended by the standard---rather by pointers between objects as is
@@ -91,7 +91,7 @@ text\<open>
 \begin{figure}
   \centering\scalebox{.3}{\includegraphics{figures/person.png}}%
   \caption{A simple UML class model drawn from Figure 7.3,
-  page 20 of~\cite{omg:ocl:2012}. \label{fig:person-ana}}
+  page 20 of~\<^cite>\<open>"omg:ocl:2012"\<close>. \label{fig:person-ana}}
 \end{figure}
 \<close>
 
@@ -1054,27 +1054,27 @@ definition "person9 \<equiv> mk\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n 
 text_raw\<open>\endisatagafp\<close>
 
 definition
-      "\<sigma>\<^sub>1  \<equiv> \<lparr> heap = Map.empty(oid0 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n (mk\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n oid0 \<lfloor>1000\<rfloor>))
-                           (oid1 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n (mk\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n oid1 \<lfloor>1200\<rfloor>))
+      "\<sigma>\<^sub>1  \<equiv> \<lparr> heap = Map.empty(oid0 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n (mk\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n oid0 \<lfloor>1000\<rfloor>),
+                           oid1 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n (mk\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n oid1 \<lfloor>1200\<rfloor>),
                            \<^cancel>\<open>oid2\<close>
-                           (oid3 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n (mk\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n oid3 \<lfloor>2600\<rfloor>))
-                           (oid4 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person5)
-                           (oid5 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n (mk\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n oid5 \<lfloor>2300\<rfloor>))
+                           oid3 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n (mk\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n oid3 \<lfloor>2600\<rfloor>),
+                           oid4 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person5,
+                           oid5 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n (mk\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n oid5 \<lfloor>2300\<rfloor>),
                            \<^cancel>\<open>oid6\<close>
                            \<^cancel>\<open>oid7\<close>
-                           (oid8 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person9),
+                           oid8 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person9),
                assocs = Map.empty(oid\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n\<B>\<O>\<S>\<S> \<mapsto> [[[oid0],[oid1]],[[oid3],[oid4]],[[oid5],[oid3]]]) \<rparr>"
 
 definition
-      "\<sigma>\<^sub>1' \<equiv> \<lparr> heap = Map.empty(oid0 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person1)
-                           (oid1 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person2)
-                           (oid2 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person3)
-                           (oid3 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person4)
+      "\<sigma>\<^sub>1' \<equiv> \<lparr> heap = Map.empty(oid0 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person1,
+                           oid1 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person2,
+                           oid2 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person3,
+                           oid3 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person4,
                            \<^cancel>\<open>oid4\<close>
-                           (oid5 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person6)
-                           (oid6 \<mapsto> in\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y person7)
-                           (oid7 \<mapsto> in\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y person8)
-                           (oid8 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person9),
+                           oid5 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person6,
+                           oid6 \<mapsto> in\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y person7,
+                           oid7 \<mapsto> in\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y person8,
+                           oid8 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person9),
                assocs = Map.empty(oid\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n\<B>\<O>\<S>\<S> \<mapsto> [[[oid0],[oid1]],[[oid1],[oid1]],[[oid5],[oid6]],[[oid6],[oid6]]]) \<rparr>"
 
 definition "\<sigma>\<^sub>0 \<equiv> \<lparr> heap = Map.empty, assocs = Map.empty \<rparr>"
@@ -1321,15 +1321,15 @@ proof -
 qed
 
 lemma perm_\<sigma>\<^sub>1' : "\<sigma>\<^sub>1' = \<lparr> heap = Map.empty
-                           (oid8 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person9)
-                           (oid7 \<mapsto> in\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y person8)
-                           (oid6 \<mapsto> in\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y person7)
-                           (oid5 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person6)
+                           (oid8 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person9,
+                           oid7 \<mapsto> in\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y person8,
+                           oid6 \<mapsto> in\<^sub>O\<^sub>c\<^sub>l\<^sub>A\<^sub>n\<^sub>y person7,
+                           oid5 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person6,
                            \<^cancel>\<open>oid4\<close>
-                           (oid3 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person4)
-                           (oid2 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person3)
-                           (oid1 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person2)
-                           (oid0 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person1)
+                           oid3 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person4,
+                           oid2 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person3,
+                           oid1 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person2,
+                           oid0 \<mapsto> in\<^sub>P\<^sub>e\<^sub>r\<^sub>s\<^sub>o\<^sub>n person1)
                        , assocs = assocs \<sigma>\<^sub>1' \<rparr>"
 proof -
  note P = fun_upd_twist

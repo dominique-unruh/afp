@@ -1246,7 +1246,7 @@ proof (rule wfP_chain)
     assume "\<exists>seq. \<forall>i. seq (Suc i) \<prec> seq i"
     then obtain seq::"nat \<Rightarrow> 'a" where "\<forall>i. seq (Suc i) \<prec> seq i" ..
     hence "\<And>i. seq (Suc i) \<prec> seq i" ..
-    with ordered_powerprod_lin.transp_less have seq_decr: "\<And>i j. i < j \<Longrightarrow> (seq j) \<prec> (seq i)"
+    with ordered_powerprod_lin.transp_on_less have seq_decr: "\<And>i j. i < j \<Longrightarrow> (seq j) \<prec> (seq i)"
       by (rule transp_sequence)
 
     from dickson obtain i j::nat where "i < j" and i_adds_j: "seq i adds seq j"
@@ -1481,7 +1481,7 @@ lemma Dickson_fun:
 proof (induct V)
   case empty
   have "finite {0}" by simp
-  moreover have "reflp_on (adds) {0::'a \<Rightarrow> 'b}" by (simp add: reflp_on_def)
+  moreover have "reflp_on {0::'a \<Rightarrow> 'b} (adds)" by (simp add: reflp_on_def)
   ultimately have "almost_full_on (adds) {0::'a \<Rightarrow> 'b}" by (rule finite_almost_full_on)
   thus ?case by (simp add: supp_fun_eq_zero_iff)
 next
@@ -1551,7 +1551,7 @@ qed
 subsubsection \<open>Lexicographic Term Order\<close>
 
 text \<open>Term orders are certain linear orders on power-products, satisfying additional requirements.
-  Further information on term orders can be found, e.\,g., in @{cite Robbiano1985}.\<close>
+  Further information on term orders can be found, e.\,g., in \<^cite>\<open>Robbiano1985\<close>.\<close>
 
 context wellorder
 begin

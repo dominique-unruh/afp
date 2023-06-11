@@ -1401,7 +1401,7 @@ end
 section \<open>Refinement to Gabow's Data Structure\<close>text_raw\<open>\label{sec:algo-ds}\<close>
 
 text \<open>
-  The implementation due to Gabow \cite{Gabow2000} represents a path as
+  The implementation due to Gabow \<^cite>\<open>"Gabow00"\<close> represents a path as
   a stack \<open>S\<close> of single nodes, and a stack \<open>B\<close> that contains the
   boundaries of the collapsed segments. Moreover, a map \<open>I\<close> maps nodes
   to their stack indices.
@@ -2355,7 +2355,7 @@ begin
         apply simp_all
 
         using B_in_bound B_sorted B_distinct
-        apply (auto simp: sorted_take dest: in_set_takeD) [3]
+        apply (auto simp: sorted_wrt_take dest: in_set_takeD) [3]
 
         using B0 S_distinct apply auto [2]
 

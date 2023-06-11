@@ -1810,12 +1810,7 @@ proof -
     by auto
   show "flow = (\<lambda>t0 x0 t. flow0 x0 (t - t0))"
     unfolding flow0_def
-    apply (rule ext)
-    apply (rule ext)
-    apply (rule flow_eq_in_existence_ivlI)
-    apply (auto intro: flow_shift_autonomous1
-       mem_existence_ivl_shift_autonomous1 mem_existence_ivl_shift_autonomous2)
-    done
+    by (metis flow_def flow_shift_autonomous1 flow_shift_autonomous2 mem_existence_ivl_iv_defined(2))
   show "existence_ivl = (\<lambda>t0 x0. (+) t0 ` existence_ivl0 x0)"
     unfolding existence_ivl0_def
     apply (safe intro!: ext)
@@ -2170,7 +2165,7 @@ proof-
     show ?thesis
     unfolding \<open>t = 0\<close> Lim_at
     proof(simp add: dist_norm[of _ 0] del: zero_less_dist_iff, safe, rule exI, rule conjI[OF \<open>0 < u\<close>], safe)
-      fix e::real and x assume "0 < e" "0 < dist x x0" "dist x x0 < u"
+      fix e::real and x assume "0 < e" "dist x x0 < u"
       hence "x \<in> X"
         using uK_def(3)
         by (auto simp: dist_commute)

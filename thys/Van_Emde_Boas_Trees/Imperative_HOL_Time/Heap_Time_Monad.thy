@@ -4,7 +4,7 @@
 
 section \<open>A monad with a polymorphic heap and time and primitive reasoning infrastructure\<close>
 
-text \<open>This theory is an adapted version of \<open>Imperative_HOL/Heap_Time_Monad\<close>, where the heap is 
+text \<open>This theory is an adapted version of \<open>Imperative_HOL/Heap_Monad\<close>, where the heap is
   extended by time bookkeeping.\<close>
 
 theory Heap_Time_Monad
@@ -21,9 +21,7 @@ text \<open>Monadic heap actions either produce values
   and transform the heap, or fail\<close>
 datatype 'a Heap = Heap "heap \<Rightarrow> ('a \<times> heap \<times> nat) option"
 
-lemma [code, code del]:
-  "(Code_Evaluation.term_of :: 'a::typerep Heap \<Rightarrow> Code_Evaluation.term) = Code_Evaluation.term_of"
-  ..
+declare [[code drop: "Code_Evaluation.term_of :: 'a::typerep Heap \<Rightarrow> Code_Evaluation.term"]]
 
 primrec execute :: "'a Heap \<Rightarrow> heap \<Rightarrow> ('a \<times> heap \<times> nat) option" where
   [code del]: "execute (Heap f) = f"
@@ -704,16 +702,16 @@ open Code_Thingol;
 
 val imp_program =
   let
-    val is_bind = curry (op =) @{const_name bind};
-    val is_return = curry (op =) @{const_name return};
+    val is_bind = curry (=) \<^const_name>\<open>bind\<close>;
+    val is_return = curry (=) \<^const_name>\<open>return\<close>;
     val dummy_name = "";
     val dummy_case_term = IVar NONE;
     (*assumption: dummy values are not relevant for serialization*)
-    val unitT = @{type_name unit} `%% [];
+    val unitT = \<^type_name>\<open>unit\<close> `%% [];
     val unitt =
-      IConst { sym = Code_Symbol.Constant @{const_name Unity}, typargs = [], dicts = [], dom = [],
-        annotation = NONE };
-    fun dest_abs ((v, ty) `|=> t, _) = ((v, ty), t)
+      IConst { sym = Code_Symbol.Constant \<^const_name>\<open>Unity\<close>, typargs = [], dicts = [], dom = [],
+        annotation = NONE, range = unitT };
+    fun dest_abs ((v, ty) `|=> (t, _), _) = ((v, ty), t)
       | dest_abs (t, ty) =
           let
             val vs = fold_varnames cons t [];
@@ -733,18 +731,18 @@ val imp_program =
           else force t
       | _ => force t;
     fun imp_monad_bind'' ts = (SOME dummy_name, unitT) `|=>
-      ICase { term = IVar (SOME dummy_name), typ = unitT, clauses = [(unitt, tr_bind'' ts)], primitive = dummy_case_term }
+      (ICase { term = IVar (SOME dummy_name), typ = unitT, clauses = [(unitt, tr_bind'' ts)], primitive = dummy_case_term }, unitT)
     fun imp_monad_bind' (const as { sym = Code_Symbol.Constant c, dom = dom, ... }) ts = if is_bind c then case (ts, dom)
        of ([t1, t2], ty1 :: ty2 :: _) => imp_monad_bind'' [(t1, ty1), (t2, ty2)]
         | ([t1, t2, t3], ty1 :: ty2 :: _) => imp_monad_bind'' [(t1, ty1), (t2, ty2)] `$ t3
-        | (ts, _) => imp_monad_bind (eta_expand 2 (const, ts))
+        | (ts, _) => imp_monad_bind (saturated_application 2 (const, ts))
       else IConst const `$$ map imp_monad_bind ts
     and imp_monad_bind (IConst const) = imp_monad_bind' const []
       | imp_monad_bind (t as IVar _) = t
       | imp_monad_bind (t as _ `$ _) = (case unfold_app t
          of (IConst const, ts) => imp_monad_bind' const ts
           | (t, ts) => imp_monad_bind t `$$ map imp_monad_bind ts)
-      | imp_monad_bind (v_ty `|=> t) = v_ty `|=> imp_monad_bind t
+      | imp_monad_bind (v_ty `|=> (t, typ)) = v_ty `|=> (imp_monad_bind t, typ)
       | imp_monad_bind (ICase { term = t, typ = ty, clauses = clauses, primitive = t0 }) =
           ICase { term = imp_monad_bind t, typ = ty,
             clauses = (map o apply2) imp_monad_bind clauses, primitive = imp_monad_bind t0 };

@@ -11,106 +11,8 @@ begin
 
 subsection \<open>Misc\<close>
 
-lemma Im_Ln_eq_pi_half:
-    "z \<noteq> 0 \<Longrightarrow> (Im(Ln z) = pi/2 \<longleftrightarrow> 0 < Im(z) \<and> Re(z) = 0)"
-    "z \<noteq> 0 \<Longrightarrow> (Im(Ln z) = -pi/2 \<longleftrightarrow> Im(z) < 0 \<and> Re(z) = 0)"
-proof -
-  show "z \<noteq> 0 \<Longrightarrow> (Im(Ln z) = pi/2 \<longleftrightarrow> 0 < Im(z) \<and> Re(z) = 0)"
-    by (metis Im_Ln_eq_pi Im_Ln_le_pi Im_Ln_pos_lt Re_Ln_pos_le Re_Ln_pos_lt
-      abs_of_nonneg less_eq_real_def order_less_irrefl pi_half_gt_zero)
-next
-  assume "z\<noteq>0"
-  have "Im (Ln z) = - pi / 2 \<Longrightarrow> Im z < 0 \<and> Re z = 0"
-    by (metis Im_Ln_pos_le Re_Ln_pos_le Re_Ln_pos_lt_imp \<open>z \<noteq> 0\<close> abs_if
-     add.inverse_inverse divide_minus_left less_eq_real_def linorder_not_le minus_pi_half_less_zero)
-  moreover have "Im (Ln z) = - pi / 2" when "Im z < 0" "Re z = 0"
-  proof -
-    obtain r::real where "r>0" "z=r * (-\<i>)"
-      by (metis \<open>Im z < 0\<close> \<open>Re z = 0\<close> add.commute add.inverse_inverse add.right_neutral
-          complex_eq complex_i_mult_minus diff_0 mult.commute mult.left_commute neg_0_less_iff_less
-          of_real_0 of_real_diff)
-    then have "Im (Ln z) = Im (Ln (r*(-\<i>)))" by auto
-    also have "... = Im (Ln (complex_of_real r) + Ln (- \<i>)) "
-      apply (subst Ln_times_of_real)
-      using \<open>r>0\<close> by auto
-    also have "... = - pi/2"
-      using \<open>r>0\<close> by simp
-    finally show "Im (Ln z) = - pi / 2" .
-  qed
-  ultimately show "(Im(Ln z) = -pi/2 \<longleftrightarrow> Im(z) < 0 \<and> Re(z) = 0)" by auto
-qed
-
-lemma Im_Ln_eq:
-  assumes "z\<noteq>0"
-  shows "Im (Ln z) = (if Re z\<noteq>0 then
-                        if Re z>0 then
-                          arctan (Im z/Re z)
-                        else if Im z\<ge>0 then
-                           arctan (Im z/Re z) + pi
-                        else
-                           arctan (Im z/Re z) - pi
-                      else
-                        if Im z>0 then pi/2 else -pi/2)"
-proof -
-  have eq_arctan_pos:"Im (Ln z) = arctan (Im z/Re z)" when "Re z>0" for z
-  proof -
-    define wR where "wR=Re (Ln z)"
-    define \<theta> where "\<theta> = arctan (Im z/Re z)"
-    have "z\<noteq>0" using that by auto
-    have "exp (Complex wR \<theta>) = z"
-    proof (rule complex_eqI)
-      have "Im (exp (Complex wR \<theta>)) =exp wR * sin \<theta> "
-        unfolding Im_exp by simp
-      also have "... = Im z"
-        unfolding wR_def Re_Ln[OF \<open>z\<noteq>0\<close>] \<theta>_def using \<open>z\<noteq>0\<close> \<open>Re z>0\<close>
-        by (auto simp add:sin_arctan divide_simps complex_neq_0 cmod_def real_sqrt_divide)
-      finally show "Im (exp (Complex wR \<theta>)) = Im z" .
-    next
-      have "Re (exp (Complex wR \<theta>)) = exp wR * cos \<theta> "
-        unfolding Re_exp by simp
-      also have "... = Re z"
-        unfolding wR_def Re_Ln[OF \<open>z\<noteq>0\<close>] \<theta>_def using \<open>z\<noteq>0\<close> \<open>Re z>0\<close>
-        by (auto simp add:cos_arctan divide_simps complex_neq_0 cmod_def real_sqrt_divide)
-      finally show "Re (exp (Complex wR \<theta>)) = Re z" .
-    qed
-    moreover have "-pi<\<theta>" "\<theta>\<le>pi"
-      using arctan_lbound [of \<open>Im z / Re z\<close>] arctan_ubound [of \<open>Im z / Re z\<close>]
-      by (simp_all add: \<theta>_def)
-    ultimately have "Ln z = Complex wR \<theta>" using Ln_unique by auto
-    then show ?thesis using that unfolding \<theta>_def by auto
-  qed
-
-  have ?thesis when "Re z=0"
-    using Im_Ln_eq_pi_half[OF \<open>z\<noteq>0\<close>] that
-    apply auto
-    using assms complex.expand by auto
-  moreover have ?thesis when "Re z>0"
-    using eq_arctan_pos[OF that] that by auto
-  moreover have ?thesis when "Re z<0" "Im z\<ge>0"
-  proof -
-    have "Im (Ln (- z)) = arctan (Im (- z) / Re (- z))"
-      apply (rule eq_arctan_pos)
-      using that by auto
-    moreover have "Ln (- z) = Ln z - \<i> * complex_of_real pi"
-      apply (subst Ln_minus[OF \<open>z\<noteq>0\<close>])
-      using that by auto
-    ultimately show ?thesis using that by auto
-  qed
-  moreover have ?thesis when "Re z<0" "Im z<0"
-  proof -
-    have "Im (Ln (- z)) = arctan (Im (- z) / Re (- z))"
-      apply (rule eq_arctan_pos)
-      using that by auto
-    moreover have "Ln (- z) = Ln z + \<i> * complex_of_real pi"
-      apply (subst Ln_minus[OF \<open>z\<noteq>0\<close>])
-      using that by auto
-    ultimately show ?thesis using that by auto
-  qed
-  ultimately show ?thesis by linarith
-qed
-
 lemma exp_Arg2pi2pi_multivalue:
-  assumes "exp (\<i>* of_real x) = z"
+  assumes "exp (\<i> * of_real x) = z"
   shows "\<exists>k::int. x = Arg2pi z + 2*k*pi"
 proof -
   define k where "k=floor( x/(2*pi))"
@@ -127,165 +29,6 @@ proof -
   ultimately have "Arg2pi z = x'" using Arg2pi_unique[of 1 x' z,simplified] by auto
   hence " x = Arg2pi z + 2*k*pi" unfolding x'_def by auto
   thus ?thesis by auto
-qed
-
-lemma cos_eq_neg_periodic_intro:
-  assumes "x - y=2*(of_int k)*pi + pi \<or> x + y = 2*(of_int k)*pi + pi"
-  shows "cos x = - cos y" using assms
-proof
-  assume "x - y = 2 * (of_int k) * pi + pi"
-  then have "cos x = cos ((y+ pi) + (of_int k)*(2*pi))"
-    by (auto simp add:algebra_simps)
-  also have "... = cos (y+pi)"
-    using cos.periodic_simps[of "y+pi"]
-    by (auto simp add:algebra_simps)
-  also have "... = - cos y" by simp
-  finally show "cos x = - cos y" by auto
-next
-  assume "x + y = 2 * real_of_int k * pi + pi "
-  then have "cos x = cos ((- y+ pi) + (of_int k)*(2*pi))"
-    apply (intro arg_cong[where f=cos])
-    by (auto simp add:algebra_simps)
-  also have "... = cos (- y +pi)"
-    using cos.periodic_simps[of "-y+pi"]
-    by (auto simp add:algebra_simps)
-  also have "... = - cos y" by simp
-  finally show "cos x = - cos y" by auto
-qed
-
-lemma cos_eq_periodic_intro:
-  assumes "x - y=2*(of_int k)*pi \<or> x + y = 2*(of_int k)*pi"
-  shows "cos x = cos y" using assms
-proof
-  assume "x - y = 2 * (of_int k) * pi "
-  then have "cos x = cos (y + (of_int k)*(2*pi))"
-    by (auto simp add:algebra_simps)
-  also have "... = cos y"
-    using cos.periodic_simps[of "y"]
-    by (auto simp add:algebra_simps)
-  finally show "cos x = cos y" by auto
-next
-  assume "x + y = 2 * of_int k * pi"
-  then have "cos x = cos (- y + (of_int k)*(2*pi))"
-    apply (intro arg_cong[where f=cos])
-    by (auto simp add:algebra_simps)
-  also have "... = cos (- y)"
-    using cos.periodic_simps[of "-y"]
-    by (auto simp add:algebra_simps)
-  also have "... = cos y" by simp
-  finally show "cos x = cos y" by auto
-qed
-
-lemma sin_tan_half: "sin (2*x) = 2 * tan x / (1 + (tan x)^2)"
-  unfolding sin_double tan_def
-  apply (cases "cos x=0")
-  by (auto simp add:field_simps power2_eq_square)
-
-lemma cos_tan_half: "cos x \<noteq>0 \<Longrightarrow>  cos (2*x) = (1 - (tan x)^2) / (1+ (tan x)^2)"
-  unfolding cos_double tan_def by (auto simp add:field_simps )
-
-lemma tan_eq_arctan_Ex:
-  shows "tan x = y \<longleftrightarrow> (\<exists>k::int. x = arctan y + k*pi \<or> (x = pi/2 + k*pi \<and> y=0))"
-proof
-  assume asm:"tan x = y"
-  obtain k::int where k:"-pi/2 < x-k*pi" "x-k*pi \<le> pi/2"
-  proof -
-    define k where "k=ceiling (x/pi - 1/2)"
-    have "(x/pi - 1/2)\<le>k" unfolding k_def by auto
-    then have "x-k*pi \<le> pi/2" by (auto simp add:field_simps)
-    moreover have "k-1 < x/pi - 1/2" unfolding k_def by linarith
-    then have "-pi/2 < x-k*pi"  by (auto simp add:field_simps)
-    ultimately show ?thesis using that by auto
-  qed
-  have "x = arctan y + of_int k * pi" when "x \<noteq> pi/2 + k*pi"
-  proof -
-    have "tan (x - k * pi) = y" using asm tan_periodic_int[of _ "-k"] by auto
-    then have "arctan y = x - real_of_int k * pi"
-      apply (intro arctan_unique)
-      using k that by (auto simp add:field_simps)
-    then show ?thesis by auto
-  qed
-  moreover have "y=0" when "x = pi/2 + k*pi"
-    using asm that by auto (simp add: tan_def)
-  ultimately show "\<exists>k. x = arctan y + of_int k * pi \<or> (x = pi/2 + k*pi \<and> y=0)"
-    using k by auto
-next
-  assume "\<exists>k::int. x = arctan y +  k * pi \<or> x = pi / 2 + k * pi \<and> y = 0"
-  then show "tan x = y"
-    by (metis arctan_unique cos_pi_half division_ring_divide_zero tan_def tan_periodic_int tan_total)
-qed
-
-lemma arccos_unique:
-  assumes "0 \<le> x"
-    and "x \<le> pi"
-    and "cos x = y"
-  shows "arccos y = x"
-using arccos_cos assms(1) assms(2) assms(3) by blast
-
-lemma cos_eq_arccos_Ex:
-  "cos x = y \<longleftrightarrow> -1\<le>y \<and> y\<le>1 \<and> (\<exists>k::int. x = arccos y + 2*k*pi \<or> x = - arccos y + 2*k*pi)"
-proof
-  assume asm:"-1\<le>y \<and> y\<le>1 \<and> (\<exists>k::int. x = arccos y + 2*k*pi \<or> x = - arccos y + 2*k*pi)"
-  then obtain k::int where "x = arccos y + 2*k*pi \<or> x = - arccos y + 2*k*pi" by auto
-  moreover have "cos x = y" when "x = arccos y + 2*k*pi"
-  proof -
-    have "cos x = cos (arccos y + k*(2*pi))"
-      using that by (auto simp add:algebra_simps)
-    also have "... = cos (arccos y)"
-      using cos.periodic_simps(3)[of "arccos y" k] by auto
-    also have "... = y"
-      using asm by auto
-    finally show ?thesis .
-  qed
-  moreover have "cos x = y" when "x = -arccos y + 2*k*pi"
-  proof -
-    have "cos x = cos (- arccos y + k*2*pi)"
-      unfolding that by (auto simp add:algebra_simps)
-    also have "... = cos (arccos y - k*2*pi)"
-      by (metis cos_minus minus_diff_eq uminus_add_conv_diff)
-    also have "... = cos (arccos y)"
-      using cos.periodic_simps(3)[of "arccos y" "-k"]
-      by (auto simp add:algebra_simps)
-    also have "... = y"
-      using asm by auto
-    finally show ?thesis .
-  qed
-  ultimately show "cos x = y" by auto
-next
-  assume asm:"cos x =y"
-  let ?goal = "(\<exists>k::int. x = arccos y + 2*k*pi \<or> x = - arccos y + 2*k*pi)"
-  obtain k::int where k:"-pi < x-k*2*pi" "x-k*2*pi \<le> pi"
-  proof -
-    define k where "k=ceiling (x/(2*pi) - 1/2)"
-    have "(x/(2*pi) - 1/2)\<le>k" unfolding k_def by auto
-    then have "x-k*2*pi \<le> pi" by (auto simp add:field_simps)
-    moreover have "k-1 < x/(2*pi) - 1/2" unfolding k_def by linarith
-    then have "-pi < x-k*2*pi"  by (auto simp add:field_simps)
-    ultimately show ?thesis using that by auto
-  qed
-  have ?goal when "x-k*2*pi\<ge>0"
-  proof -
-    have "cos (x - k * 2*pi) = y"
-      using cos.periodic_simps(3)[of x "-k"] asm by (auto simp add:field_simps)
-    then have "arccos y = x - k * 2*pi"
-      apply (intro arccos_unique)
-      using k that by auto
-    then show ?goal by auto
-  qed
-  moreover have ?goal when "\<not> x-k*2*pi \<ge>0"
-  proof -
-    have "cos (x - k * 2*pi) = y"
-      using cos.periodic_simps(3)[of x "-k"] asm by (auto simp add:field_simps)
-    then have "cos (k * 2*pi - x) = y"
-      by (metis cos_minus minus_diff_eq)
-    then have "arccos y = k * 2*pi - x"
-      apply (intro arccos_unique)
-      using k that by auto
-    then show ?goal by auto
-  qed
-  ultimately have ?goal by auto
-  moreover have "-1\<le>y \<and> y\<le>1" using asm by auto
-  ultimately show "-1\<le>y \<and> y\<le>1 \<and> ?goal" by auto
 qed
 
 lemma uniform_discrete_tan_eq:
@@ -366,25 +109,16 @@ lemma filtermap_tan_at_right:
   assumes "cos a\<noteq>0"
   shows "filtermap tan (at_right a) = at_right (tan a)"
 proof -
-  obtain k::int and a1 where aa1:"a=k*pi+a1" and "-pi/2\<le>a1" "a1<pi/2"
+  obtain k::int and a1 where aa1:"a=k*pi+a1" and pi_a1: "-pi/2\<le>a1" "a1<pi/2"
     using get_norm_value[of pi a "-pi/2"] by auto
   have "-pi/2 < a1" 
-  proof (rule ccontr)
-    assume "\<not> - pi / 2 < a1"
-    then have "a1=- pi / 2" using \<open>-pi/2\<le>a1\<close> by auto
-    then have "cos a = 0" unfolding aa1
-      by (metis (no_types, opaque_lifting) add.commute add_0_left cos_pi_half 
-              diff_eq_eq mult.left_neutral mult_minus_right mult_zero_left 
-              sin_add sin_pi_half sin_zero_iff_int2 times_divide_eq_left uminus_add_conv_diff)
-    then show False using assms by auto
-  qed
+  using assms
+    by (smt (verit, ccfv_SIG) pi_a1 aa1 cos_2pi_minus cos_diff cos_pi_half cos_two_pi divide_minus_left mult_of_int_commute sin_add sin_npi_int sin_pi_half sin_two_pi)
   have "eventually P (at_right (tan a))" 
     when "eventually P (filtermap tan (at_right a))" for P
   proof -
     obtain b1 where "b1>a" and b1_imp:" \<forall>y>a. y < b1 \<longrightarrow> P (tan y)"
-      using \<open>eventually P (filtermap tan (at_right a))\<close>
-      unfolding eventually_filtermap eventually_at_right 
-      by (metis eventually_at_right_field)
+      by (metis Sturm_Tarski.eventually_at_right \<open>eventually P (filtermap tan (at_right a))\<close> eventually_filtermap)
     define b2 where "b2=min b1 (k*pi+pi/4+a1/2)"  
     define b3 where "b3=b2 - k*pi"
     have "-pi/2 < b3" "b3<pi/2" 
@@ -393,10 +127,7 @@ proof -
         using \<open>b1>a\<close> aa1 \<open>a1<pi/2\<close> unfolding b2_def b3_def by (auto simp add:field_simps)
       then show "-pi/2 < b3" using \<open>-pi/2\<le>a1\<close> by auto
       show "b3 < pi/2"
-        unfolding b2_def b3_def
-        apply (subst min_diff_distrib_left)
-        apply (rule min.strict_coboundedI2)
-        using \<open>b1>a\<close> aa1 \<open>a1<pi/2\<close> \<open>-pi/2<a1\<close> by auto
+        using b2_def b3_def pi_a1(2) by linarith
     qed
     have "tan b2 > tan a" 
     proof -
@@ -498,12 +229,6 @@ proof -
   then show ?thesis 
     unfolding filtermap_filtermap comp_def by auto
 qed
-
-lemma cos_zero_iff_int2:
-  fixes x::real
-  shows "cos x = 0 \<longleftrightarrow> (\<exists>n::int. x = n * pi +  pi/2)"
-  using sin_zero_iff_int2[of "x-pi/2"] unfolding sin_cos_eq 
-  by (auto simp add:algebra_simps)
 
 lemma filtermap_tan_at_right_inf:
   fixes a::real

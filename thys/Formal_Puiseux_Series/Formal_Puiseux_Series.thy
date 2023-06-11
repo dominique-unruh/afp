@@ -4,7 +4,7 @@
 *)
 section \<open>Formal Puiseux Series\<close>
 theory Formal_Puiseux_Series
-  imports Puiseux_Laurent_Library FPS_Hensel
+  imports FPS_Hensel
 begin
 
 subsection \<open>Auxiliary facts and definitions\<close>
@@ -1409,7 +1409,7 @@ text \<open>
   The proof is a fairly standard one that uses Hensel's lemma. Some preliminary tricks are
   required to be able to use it, however, namely a number of non-obvious changes of variables
   to turn the polynomial with Puiseux coefficients into one with formal power series coefficients.
-  The overall approach was taken from an article by Nowak~\cite{nowak2000}.
+  The overall approach was taken from an article by Nowak~\<^cite>\<open>"nowak2000"\<close>.
 
   Basically, what we need to show is this: Let 
   \[p(X,Z) = a_n(Z) X^n + a_{n-1}(Z) X^{n-1} + \ldots + a_0(Z)\]
@@ -1520,7 +1520,8 @@ proof (rule alg_closedI_reducible_coeff_deg_minus_one_eq_0)
     proof (cases "c i = 0")
       case True
       hence "c' i = 0" by (auto simp: c'_def)
-      thus ?thesis by auto
+      thus ?thesis
+        by (metis fps_zero_to_fls)
     next
       case False
       hence "coeff p i \<noteq> 0"
@@ -1562,8 +1563,7 @@ proof (rule alg_closedI_reducible_coeff_deg_minus_one_eq_0)
     fix i assume "i > N"
     hence "coeff p i = 0"
       by (simp add: N_def coeff_eq_0)
-    thus "c'' i = 0" using c'[of i] c[of i] \<open>b > 0\<close>
-      by (auto simp: c'_def fls_shift_eq0_iff)
+    thus "c'' i = 0" using c'[of i] c[of i] \<open>b > 0\<close> \<open>N < i\<close> c''_def by auto
   qed
 
   text \<open>
