@@ -11,10 +11,10 @@ definition partial_trace :: \<open>(('a \<times> 'c) ell2, ('b \<times> 'c) ell2
   \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))))\<close>
 
 
-lemma partial_trace_abs_summable: 
+lemma partial_trace_abs_summable:
   \<open>(\<lambda>j. Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))) abs_summable_on UNIV\<close>
   and partial_trace_has_sum:
-  \<open>has_sum (\<lambda>j. Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))) UNIV (partial_trace t)\<close>
+  \<open>((\<lambda>j. Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))) has_sum partial_trace t) UNIV\<close>
   and partial_trace_norm_reducing: \<open>norm (partial_trace t) \<le> norm t\<close>
 proof -
   define t' where \<open>t' = from_trace_class t\<close>
@@ -149,7 +149,7 @@ proof -
     by (intro nonneg_bdd_above_summable_on bdd_aboveI2[where M=\<open>norm t\<close>] norm_ge_zero bound)
 
   from abs_summable
-  show has_sum: \<open>has_sum s UNIV (partial_trace t)\<close>
+  show has_sum: \<open>(s has_sum partial_trace t) UNIV\<close>
     by (simp add: abs_summable_summable partial_trace_def s_def[abs_def] t'_def)
 
   show \<open>norm (partial_trace t) \<le> norm t\<close>
@@ -179,10 +179,10 @@ proof -
   define s' where \<open>s' e = ket e \<bullet>\<^sub>C ((from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) *\<^sub>V ket e)\<close> for e
   define u where \<open>u j = Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))\<close> for j
   define u' where \<open>u' e j = ket e \<bullet>\<^sub>C (from_trace_class (u j) *\<^sub>V x *\<^sub>V ket e)\<close> for e j
-  have \<open>has_sum u UNIV (partial_trace t)\<close>
+  have \<open>(u has_sum partial_trace t) UNIV\<close>
     using partial_trace_has_sum[of t]
     by (simp add: u_def[abs_def])
-  then have \<open>has_sum ((\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e) o u) UNIV (from_trace_class (partial_trace t) *\<^sub>V x *\<^sub>V ket e)\<close> for e 
+  then have \<open>((\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e) o u has_sum from_trace_class (partial_trace t) *\<^sub>V x *\<^sub>V ket e) UNIV\<close> for e
   proof (rule has_sum_comm_additive[rotated -1])
     show \<open>Modules.additive (\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e)\<close>
       by (simp add: Modules.additive_def cblinfun.add_left plus_trace_class.rep_eq)
@@ -207,7 +207,7 @@ proof -
     then show \<open>(\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e) \<midarrow>partial_trace t\<rightarrow> from_trace_class (partial_trace t) *\<^sub>V x *\<^sub>V ket e\<close>
       by (simp add: isCont_def)
   qed
-  then have \<open>has_sum ((\<lambda>v. ket e \<bullet>\<^sub>C v) o ((\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e) o u)) UNIV (ket e \<bullet>\<^sub>C (from_trace_class (partial_trace t) *\<^sub>V x *\<^sub>V ket e))\<close> for e 
+  then have \<open>((\<lambda>v. ket e \<bullet>\<^sub>C v) o ((\<lambda>u. from_trace_class u *\<^sub>V x *\<^sub>V ket e) o u) has_sum ket e \<bullet>\<^sub>C (from_trace_class (partial_trace t) *\<^sub>V x *\<^sub>V ket e)) UNIV\<close> for e 
   proof (rule has_sum_comm_additive[rotated -1])
     show \<open>Modules.additive (\<lambda>v. ket e \<bullet>\<^sub>C v)\<close>
       by (simp add: Modules.additive_def cinner_simps(2))
@@ -218,7 +218,7 @@ proof -
     then show \<open>(\<lambda>v. ket e \<bullet>\<^sub>C v) \<midarrow>l\<rightarrow> ket e \<bullet>\<^sub>C l\<close> for l
       by (simp add: isContD)
   qed
-  then have has_sum_u': \<open>has_sum (\<lambda>j. u' e j) UNIV (s' e)\<close> for e 
+  then have has_sum_u': \<open>((\<lambda>j. u' e j) has_sum s' e) UNIV\<close> for e 
     by (simp add: o_def u'_def s'_def)
   then have infsum_u': \<open>s' e = infsum (u' e) UNIV\<close> for e
     by (metis infsumI)
@@ -243,11 +243,11 @@ proof -
         trace_class_comp_left trace_class_comp_right cinner_adj_right
         flip: tensor_ell2_ket)
 
-  have \<open>has_sum (\<lambda>e. e \<bullet>\<^sub>C ((from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) *\<^sub>V e)) (range ket) s\<close>
+  have \<open>((\<lambda>e. e \<bullet>\<^sub>C ((from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) *\<^sub>V e)) has_sum s) (range ket)\<close>
     unfolding s_def
     apply (rule trace_has_sum)
     by (auto simp: trace_class_comp_left)
-  then have \<open>has_sum s' UNIV s\<close>
+  then have \<open>(s' has_sum s) UNIV\<close>
     apply (subst (asm) has_sum_reindex)
     by (auto simp: o_def s'_def[abs_def])
   then have \<open>s = infsum s' UNIV\<close>
