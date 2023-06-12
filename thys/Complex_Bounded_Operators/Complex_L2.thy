@@ -103,7 +103,7 @@ lemma ell2_norm_square: \<open>(ell2_norm x)\<^sup>2 = (\<Sum>\<^sub>\<infinity>
 
 lemma ell2_ket:
   fixes a
-  defines \<open>f \<equiv> (\<lambda>i. if a = i then 1 else 0)\<close>
+  defines \<open>f \<equiv> (\<lambda>i. of_bool (a = i))\<close>
   shows has_ell2_norm_ket: \<open>has_ell2_norm f\<close>
     and ell2_norm_ket: \<open>ell2_norm f = 1\<close>
 proof -
@@ -310,14 +310,14 @@ lemma ell2_norm_uminus:
 
 subsection \<open>The type \<open>ell2\<close> of square-summable functions\<close>
 
-typedef 'a ell2 = "{x::'a\<Rightarrow>complex. has_ell2_norm x}"
+typedef 'a ell2 = \<open>{f::'a\<Rightarrow>complex. has_ell2_norm f}\<close>
   unfolding has_ell2_norm_def by (rule exI[of _ "\<lambda>_.0"], auto)
 setup_lifting type_definition_ell2
 
 instantiation ell2 :: (type)complex_vector begin
 lift_definition zero_ell2 :: "'a ell2" is "\<lambda>_. 0" by (auto simp: has_ell2_norm_def)
 lift_definition uminus_ell2 :: "'a ell2 \<Rightarrow> 'a ell2" is uminus by (simp add: has_ell2_norm_def)
-lift_definition plus_ell2 :: "'a ell2 \<Rightarrow> 'a ell2 \<Rightarrow> 'a ell2" is "\<lambda>f g x. f x + g x"
+lift_definition plus_ell2 :: \<open>'a ell2 \<Rightarrow> 'a ell2 \<Rightarrow> 'a ell2\<close> is \<open>\<lambda>f g x. f x + g x\<close>
   by (rule ell2_norm_triangle) 
 lift_definition minus_ell2 :: "'a ell2 \<Rightarrow> 'a ell2 \<Rightarrow> 'a ell2" is "\<lambda>f g x. f x - g x"
   apply (subst add_uminus_conv_diff[symmetric])
@@ -325,7 +325,7 @@ lift_definition minus_ell2 :: "'a ell2 \<Rightarrow> 'a ell2 \<Rightarrow> 'a el
   by (auto simp add: ell2_norm_uminus)
 lift_definition scaleR_ell2 :: "real \<Rightarrow> 'a ell2 \<Rightarrow> 'a ell2" is "\<lambda>r f x. complex_of_real r * f x"
   by (rule ell2_norm_smult)
-lift_definition scaleC_ell2 :: "complex \<Rightarrow> 'a ell2 \<Rightarrow> 'a ell2" is "\<lambda>c f x. c * f x"
+lift_definition scaleC_ell2 :: \<open>complex \<Rightarrow> 'a ell2 \<Rightarrow> 'a ell2\<close> is \<open>\<lambda>c f x. c * f x\<close>
   by (rule ell2_norm_smult)
 
 instance
@@ -411,8 +411,8 @@ proof (insert assms(2), transfer fixing: S)
 qed
 
 instantiation ell2 :: (type) complex_inner begin
-lift_definition cinner_ell2 :: "'a ell2 \<Rightarrow> 'a ell2 \<Rightarrow> complex" is 
-  "\<lambda>x y. infsum (\<lambda>i. (cnj (x i) * y i)) UNIV" .
+lift_definition cinner_ell2 :: \<open>'a ell2 \<Rightarrow> 'a ell2 \<Rightarrow> complex\<close> is 
+  \<open>\<lambda>f g. \<Sum>\<^sub>\<infinity>x. (cnj (f x) * g x)\<close> .
 declare cinner_ell2_def[code del]
 
 instance
@@ -855,7 +855,7 @@ qed
 
 subsection \<open>Kets and bras\<close>
 
-lift_definition ket :: "'a \<Rightarrow> 'a ell2" is "\<lambda>x y. if x=y then 1 else 0"
+lift_definition ket :: \<open>'a \<Rightarrow> 'a ell2\<close> is \<open>\<lambda>x y. of_bool (x=y)\<close>
   by (rule has_ell2_norm_ket)
 
 abbreviation bra :: "'a \<Rightarrow> (_,complex) cblinfun" where "bra i \<equiv> vector_to_cblinfun (ket i)*" for i
@@ -864,14 +864,14 @@ instance ell2 :: (type) not_singleton
 proof standard
   have "ket undefined \<noteq> (0::'a ell2)"
   proof transfer
-    show "(\<lambda>y. if (undefined::'a) = y then 1::complex else 0) \<noteq> (\<lambda>_. 0)"
-      by (meson one_neq_zero)
+    show \<open>(\<lambda>y. of_bool ((undefined::'a) = y)) \<noteq> (\<lambda>_. 0)\<close>
+      by (metis (mono_tags) of_bool_eq(2) zero_neq_one)
   qed   
   thus \<open>\<exists>x y::'a ell2. x \<noteq> y\<close>
     by blast    
 qed
 
-lemma cinner_ket_left: \<open>(ket i \<bullet>\<^sub>C \<psi>) = Rep_ell2 \<psi> i\<close>
+lemma cinner_ket_left: \<open>ket i \<bullet>\<^sub>C \<psi> = Rep_ell2 \<psi> i\<close>
   apply (transfer fixing: i)
   apply (subst infsum_cong_neutral[where T=\<open>{i}\<close>])
   by auto
@@ -882,7 +882,7 @@ lemma cinner_ket_right: \<open>(\<psi> \<bullet>\<^sub>C ket i) = cnj (Rep_ell2 
   by auto
 
 lemma cinner_ket_eqI:
-  assumes \<open>\<And>i. cinner (ket i) \<psi> = cinner (ket i) \<phi>\<close>
+  assumes \<open>\<And>i. ket i \<bullet>\<^sub>C \<psi> = ket i \<bullet>\<^sub>C \<phi>\<close>
   shows \<open>\<psi> = \<phi>\<close>
   by (metis Rep_ell2_inject assms cinner_ket_left ext)
 
@@ -910,14 +910,13 @@ qed
 
 lemma orthogonal_ket[simp]:
   \<open>is_orthogonal (ket i) (ket j) \<longleftrightarrow> i \<noteq> j\<close>
-  by (simp add: cinner_ket_left ket.rep_eq)
+  by (simp add: cinner_ket_left ket.rep_eq of_bool_def)
 
-(* TODO: Restate as \<open>(ket i \<bullet>\<^sub>C ket j) = of_bool (i=j)\<close> *)
-lemma cinner_ket: \<open>(ket i \<bullet>\<^sub>C ket j) = (if i=j then 1 else 0)\<close>
+lemma cinner_ket: \<open>(ket i \<bullet>\<^sub>C ket j) = of_bool (i=j)\<close>
   by (simp add: cinner_ket_left ket.rep_eq)
 
 lemma ket_injective[simp]: \<open>ket i = ket j \<longleftrightarrow> i = j\<close>
-  by (metis cinner_ket one_neq_zero)
+  by (metis cinner_ket one_neq_zero of_bool_def)
 
 lemma inj_ket[simp]: \<open>inj ket\<close>
   by (simp add: inj_on_def)

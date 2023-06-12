@@ -115,7 +115,7 @@ proof -
     have Rep_\<psi>: \<open>Rep_ell2 \<psi> x = 0\<close> if \<open>x \<notin> T\<close> for x
       using _ _ \<psi>T apply (rule complex_vector.linear_eq_0_on_span)
        apply auto
-      by (metis ket.rep_eq that)
+      by (metis ket.rep_eq that of_bool_def)
     have \<open>norm (trunc_ell2 S (F \<psi>)) \<le> sqrt B * norm \<psi>\<close> if \<open>finite S\<close> for S
     proof -
       have *: \<open>cconstruct (range ket) f \<psi> = (\<Sum>x\<in>T. Rep_ell2 \<psi> x *\<^sub>C f (ket x))\<close>
