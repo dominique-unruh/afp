@@ -98,17 +98,6 @@ lemma prod_cases3' [cases type]:
   obtains (fields) a b c where "y = ((a, b), c)"
   by (cases y, case_tac a) blast
 
-lemma lift_cblinfun_comp:
-  assumes \<open>a o\<^sub>C\<^sub>L b = c\<close>
-  shows \<open>a o\<^sub>C\<^sub>L b = c\<close>
-    and \<open>a o\<^sub>C\<^sub>L (b o\<^sub>C\<^sub>L d) = c o\<^sub>C\<^sub>L d\<close>
-    and \<open>a *\<^sub>S (b *\<^sub>S S) = c *\<^sub>S S\<close>
-    and \<open>a *\<^sub>V (b *\<^sub>V x) = c *\<^sub>V x\<close>
-     apply (fact assms)
-    apply (simp add: assms cblinfun_assoc_left(1))
-  using assms cblinfun_assoc_left(2) apply force
-  using assms by force
-
 text \<open>We define the following abbreviations:
 \<^item> \<open>mutually f (x\<^sub>1,x\<^sub>2,\<dots>,x\<^sub>n)\<close> expands to the conjuction of all \<^term>\<open>f x\<^sub>i x\<^sub>j\<close> with \<^term>\<open>i\<noteq>j\<close>.
 \<^item> \<open>each f (x\<^sub>1,x\<^sub>2,\<dots>,x\<^sub>n)\<close> expands to the conjuction of all \<^term>\<open>f x\<^sub>i\<close>.\<close>
@@ -126,12 +115,6 @@ syntax "_each" :: "'a \<Rightarrow> args \<Rightarrow> 'b" ("each _ '(_')")
 translations "each f (x)" => "f x"
 translations "_each f (_args x xs)" => "f x \<and> _each f xs"
 
-
-lemma enum_inj:
-  assumes "i < CARD('a)" and "j < CARD('a)"
-  shows "(Enum.enum ! i :: 'a::enum) = Enum.enum ! j \<longleftrightarrow> i = j"
-  using inj_on_nth[OF enum_distinct, where I=\<open>{..<CARD('a)}\<close>]
-  using assms by (auto dest: inj_onD simp flip: card_UNIV_length_enum)
 
 
 lemma [simp]: "dim_col (mat_adjoint m) = dim_row m"
@@ -167,13 +150,6 @@ lemma Ex_iffI:
   shows \<open>Ex P \<longleftrightarrow> Ex Q\<close>
   using assms(1) assms(2) by auto
 
-(* (* TODO: Get rid of Misc.sandwich and delete this. *)
-lemma sandwich_weak_star_cont'[simp]:
-  \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
-  using sandwich_weak_star_cont
-  by (auto simp add: Complex_Bounded_Linear_Function.sandwich_apply[abs_def] Misc.sandwich_def[abs_def]
-      simp del: sandwich_weak_star_cont) *)
 
-(* hide_const (open) Misc.sandwich *)
 
 end

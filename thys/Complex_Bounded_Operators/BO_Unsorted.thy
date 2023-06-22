@@ -876,6 +876,13 @@ lemma isCont_cblinfun_compose_right: \<open>isCont (\<lambda>x. a o\<^sub>C\<^su
   apply (rule clinear_continuous_at)
   by (rule bounded_clinear_cblinfun_compose_right)
 
+lemma sandwich_compose: \<open>sandwich A o\<^sub>C\<^sub>L sandwich B = sandwich (A o\<^sub>C\<^sub>L B)\<close>
+  by (auto intro!: cblinfun_eqI simp: sandwich_apply)
+
+lemma inj_sandwich_isometry: \<open>inj (sandwich U)\<close> if [simp]: \<open>isometry U\<close> for U :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  apply (rule inj_on_inverseI[where g=\<open>(*\<^sub>V) (sandwich (U*))\<close>])
+  by (auto simp: sandwich_compose simp flip: cblinfun_apply_cblinfun_compose)
+
 
 
 unbundle

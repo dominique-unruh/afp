@@ -1507,7 +1507,7 @@ qed
 lemma trace_norm_triangle: 
   fixes a b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
   assumes [simp]: \<open>trace_class a\<close> \<open>trace_class b\<close>
-  shows \<open>trace_class b \<Longrightarrow> trace_norm (a + b) \<le> trace_norm a + trace_norm b\<close>
+  shows \<open>trace_norm (a + b) \<le> trace_norm a + trace_norm b\<close>
   \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (a)\<close>
 proof -
   define w where \<open>w = polar_decomposition (a+b)\<close>

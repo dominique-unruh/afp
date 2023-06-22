@@ -1945,4 +1945,11 @@ proof -
   finally show ?thesis .
 qed
 
+lemma enum_inj:
+  assumes "i < CARD('a)" and "j < CARD('a)"
+  shows "(Enum.enum ! i :: 'a::enum) = Enum.enum ! j \<longleftrightarrow> i = j"
+  using inj_on_nth[OF enum_distinct, where I=\<open>{..<CARD('a)}\<close>]
+  using assms by (auto dest: inj_onD simp flip: card_UNIV_length_enum)
+
+
 end
