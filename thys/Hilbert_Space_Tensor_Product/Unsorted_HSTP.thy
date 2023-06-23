@@ -158,11 +158,11 @@ proof -
     obtain A :: \<open>'a set\<close> where \<open>is_onb A\<close>
       using is_onb_some_chilbert_basis by blast
     then have idA: \<open>id_cblinfun = (\<Sum>x\<in>A. selfbutter x)\<close>
-      using id_onb_sum_cfinite_dim by blast
+      using butterflies_sum_id_finite by blast
     obtain B :: \<open>'b set\<close> where \<open>is_onb B\<close>
       using is_onb_some_chilbert_basis by blast
     then have idB: \<open>id_cblinfun = (\<Sum>x\<in>B. selfbutter x)\<close>
-      using id_onb_sum_cfinite_dim by blast
+      using butterflies_sum_id_finite by blast
     from lim_wot have \<open>((\<lambda>x. b \<bullet>\<^sub>C (x *\<^sub>V a)) \<longlongrightarrow> b \<bullet>\<^sub>C (l *\<^sub>V a)) F\<close> for a b
       by (simp add: limitin_cweak_operator_topology)
     then have \<open>((\<lambda>x. (b \<bullet>\<^sub>C (x *\<^sub>V a)) *\<^sub>C butterfly b a) \<longlongrightarrow> (b \<bullet>\<^sub>C (l *\<^sub>V a)) *\<^sub>C butterfly b a) F\<close> for a b

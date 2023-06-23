@@ -649,6 +649,12 @@ proof
   qed
 qed
 
+lemma cblinfun_of_mat_invalid: 
+  assumes \<open>M \<notin> carrier_mat (canonical_basis_length TYPE('b::{basis_enum,complex_normed_vector})) (canonical_basis_length TYPE('a::{basis_enum,complex_normed_vector}))\<close>
+  shows \<open>(cblinfun_of_mat M :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'b) = 0\<close>
+  apply (transfer fixing: M)
+  using assms by (simp add: canonical_basis_length)
+
 lemma mat_of_cblinfun_ell2_carrier[simp]: \<open>mat_of_cblinfun (a::'a::enum ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::enum ell2) \<in> carrier_mat CARD('b) CARD('a)\<close>
   by (simp add: mat_of_cblinfun_def)
 

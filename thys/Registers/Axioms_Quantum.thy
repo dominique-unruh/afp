@@ -551,7 +551,8 @@ proof -
       and FU: \<open>F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
       by metis
     show \<open>norm (F a) = norm a\<close>
-      using \<open>unitary U\<close> by (simp add: FU sandwich_apply norm_isometry_compose norm_isometry_o' tensor_op_norm)
+      using \<open>unitary U\<close>
+      by (simp add: FU sandwich_apply norm_isometry_compose norm_isometry_compose' norm_isometry tensor_op_norm)
   qed
   note this[cancel_with_type]
   then show ?thesis

@@ -551,7 +551,7 @@ next
   qed
 qed
 
-lemma enum_idx_bound: "enum_idx x < length (Enum.enum :: 'a list)" for x :: "'a::enum"
+lemma enum_idx_bound[simp]: "enum_idx x < CARD('a)" for x :: "'a::enum"
 proof-
   have p1: "False"
     if "(Enum.enum :: 'a list) = []"
@@ -568,7 +568,7 @@ proof-
   moreover have "(enum_class.enum::'a list) \<noteq> []"
     using p2 by auto
   ultimately show ?thesis
-    unfolding enum_idx_def     
+    unfolding enum_idx_def card_UNIV_length_enum
     using index_of_bound [where x = x and y = "(Enum.enum :: 'a list)"]
     by auto   
 qed

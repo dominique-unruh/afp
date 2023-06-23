@@ -1321,13 +1321,16 @@ class cfinite_dim = complex_vector +
   assumes cfinitely_spanned: "\<exists>S::'a set. finite S \<and> cspan S = UNIV"
 
 class basis_enum = complex_vector +
-  fixes canonical_basis :: "'a list"
+  fixes canonical_basis :: \<open>'a list\<close>
+    and canonical_basis_length :: \<open>'a itself \<Rightarrow> nat\<close>
   assumes distinct_canonical_basis[simp]:
     "distinct canonical_basis"
     and is_cindependent_set[simp]:
     "cindependent (set canonical_basis)"
     and is_generator_set[simp]:
     "cspan (set canonical_basis) = UNIV"
+    and canonical_basis_length:
+    \<open>canonical_basis_length TYPE('a) = length canonical_basis\<close>
 
 setup \<open>Sign.add_const_constraint ("Complex_Vector_Spaces0.cindependent", SOME \<^typ>\<open>'a::complex_vector set \<Rightarrow> bool\<close>)\<close>
 setup \<open>Sign.add_const_constraint (\<^const_name>\<open>cdependent\<close>, SOME \<^typ>\<open>'a::complex_vector set \<Rightarrow> bool\<close>)\<close>
@@ -1336,6 +1339,7 @@ setup \<open>Sign.add_const_constraint (\<^const_name>\<open>cspan\<close>, SOME
 
 instantiation complex :: basis_enum begin
 definition "canonical_basis = [1::complex]"
+definition \<open>canonical_basis_length (_::complex itself) = 1\<close>
 instance
 proof
   show "distinct (canonical_basis::complex list)"
@@ -1347,6 +1351,8 @@ proof
     unfolding canonical_basis_complex_def
     apply (auto simp add: cspan_raw_def vector_space_over_itself.span_Basis)
     by (metis complex_scaleC_def complex_vector.span_base complex_vector.span_scale cspan_raw_def insertI1 mult.right_neutral)
+  show \<open>canonical_basis_length TYPE(complex) = length (canonical_basis :: complex list)\<close>
+    by (simp add: canonical_basis_length_complex_def canonical_basis_complex_def)
 qed
 end
 
@@ -2635,6 +2641,12 @@ proof-
   show ?thesis
     using closed_csubspace.intro by blast
 qed
+
+lemma ccspan_closure[simp]: \<open>ccspan (closure X) = ccspan X\<close>
+  by (simp add: basic_trans_rules(24) ccspan.rep_eq ccspan_leqI ccspan_mono closure_mono closure_subset complex_vector.span_superset)
+
+lemma ccspan_finite: \<open>space_as_set (ccspan X) = cspan X\<close> if \<open>finite X\<close>
+  by (simp add: ccspan.rep_eq that)
 
 subsection \<open>Closed sums\<close>
 

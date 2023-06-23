@@ -6,7 +6,6 @@ theory Teleport
     "HOL-Library.Code_Target_Numeral"
     "HOL-Library.Word"
     QHoare
-    Tensor_Product_Matrices
 begin
 
 hide_const (open) Finite_Cartesian_Product.vec
