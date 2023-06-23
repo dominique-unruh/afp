@@ -338,12 +338,6 @@ proof -
 qed
 
 
-(* (* TODO remove (duplicate of trace_class_iff_summable) *)
-lemma trace_class_alt_def:
-  assumes \<open>is_onb B\<close>
-  shows \<open>trace_class A \<longleftrightarrow> (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) abs_summable_on B\<close>
-  using assms trace_class_iff_summable by blast *)
-
 lemma trace_norm_nondegenerate: \<open>a = 0\<close> if \<open>trace_class a\<close> and \<open>trace_norm a = 0\<close>
 proof (rule ccontr)
   assume \<open>a \<noteq> 0\<close>

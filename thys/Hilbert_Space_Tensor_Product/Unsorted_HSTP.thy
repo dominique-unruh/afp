@@ -71,9 +71,6 @@ lemma sandwich_assoc_ell2_tensor_op[simp]: \<open>sandwich assoc_ell2 ((a \<otim
   by (auto intro!: tensor_ell2_extensionality3 
       simp: sandwich_apply assoc_ell2'_tensor assoc_ell2_tensor tensor_op_ell2)
 
-lemma unitaryI: \<open>unitary a\<close> if \<open>a* o\<^sub>C\<^sub>L a = id_cblinfun\<close> and \<open>a o\<^sub>C\<^sub>L a* = id_cblinfun\<close>
-  unfolding unitary_def using that by simp
-
 lemma unitary_tensor_op: \<open>unitary (a \<otimes>\<^sub>o b)\<close> if [simp]: \<open>unitary a\<close> \<open>unitary b\<close>
   by (auto intro!: unitaryI simp add: tensor_op_adjoint comp_tensor_op)
 
@@ -139,26 +136,6 @@ proof -
     by (metis (no_types, lifting) Compact_Operators.rank1_def finite_rank_butterfly finite_rank_sum)
   with a_sum show ?thesis
     by simp
-qed
-
-(* TODO move *)
-lemma id_onb_sum_cfinite_dim: \<open>id_cblinfun = (\<Sum>x\<in>B. selfbutter x)\<close> if \<open>is_onb B\<close> for B :: \<open>'a :: {cfinite_dim, chilbert_space} set\<close>
-proof (rule cblinfun_eq_gen_eqI)
-  from \<open>is_onb B\<close> show \<open>ccspan B = \<top>\<close>
-    by (simp add: is_onb_def)
-  from \<open>is_onb B\<close> have \<open>cindependent B\<close>
-    by (simp add: is_onb_def is_ortho_set_cindependent)
-  then have [simp]: \<open>finite B\<close>
-    using cindependent_cfinite_dim_finite by blast
-  from \<open>is_onb B\<close>
-  have 1: \<open>j \<noteq> b \<Longrightarrow> j \<in> B \<Longrightarrow> is_orthogonal j b\<close> if \<open>b \<in> B\<close> for j b
-    using that by (auto simp add: is_onb_def is_ortho_set_def)
-  from \<open>is_onb B\<close>
-  have 2: \<open>b \<bullet>\<^sub>C b = 1\<close> if \<open>b \<in> B\<close> for b
-    using that by (simp add: is_onb_def cnorm_eq_1)
-  fix b assume \<open>b \<in> B\<close>
-  then show \<open>id_cblinfun *\<^sub>V b = (\<Sum>x\<in>B. selfbutter x) *\<^sub>V b\<close>
-    using 1 2 by (simp add: cblinfun.sum_left sum_single[where i=b])
 qed
 
 lemma continuous_map_iff_preserves_convergence:

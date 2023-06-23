@@ -13,8 +13,6 @@ no_notation Set_Algebras.elt_set_eq (infix "=o" 50)
 
 unbundle cblinfun_notation
 
-
-
 unbundle no_cblinfun_notation
 
 end
