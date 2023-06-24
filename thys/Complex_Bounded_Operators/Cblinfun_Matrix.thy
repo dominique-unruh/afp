@@ -100,6 +100,10 @@ lemma basis_enum_eq_vec_of_basis_enumI:
   shows "a = b"
   by (metis assms vec_of_basis_enum_inverse)
 
+lemma vec_of_basis_enum_carrier_vec[simp]: \<open>vec_of_basis_enum v \<in> carrier_vec CARD('a)\<close> for v :: \<open>'a::enum ell2\<close>
+  apply (simp only: dim_vec_of_basis_enum' carrier_vec_def vec_of_basis_enum_def)
+  by simp
+
 subsection \<open>Operations on vectors\<close>
 
 lemma basis_enum_of_vec_add:

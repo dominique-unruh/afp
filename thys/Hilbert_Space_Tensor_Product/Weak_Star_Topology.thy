@@ -14,19 +14,6 @@ definition weak_star_topology :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>
 
 (* lift_definition map_topology :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('a topology \<Rightarrow> 'b topology)\<close> is undefined . *)
 
-thm choice
-lemma choice2: \<open>\<exists>f. (\<forall>x. Q1 x (f x)) \<and> (\<forall>x. Q2 x (f x))\<close>
-  if \<open>\<forall>x. \<exists>y. Q1 x y \<and> Q2 x y\<close>
-  by (meson that)
-
-lemma choice3: \<open>\<exists>f. (\<forall>x. Q1 x (f x)) \<and> (\<forall>x. Q2 x (f x)) \<and> (\<forall>x. Q3 x (f x))\<close>
-  if \<open>\<forall>x. \<exists>y. Q1 x y \<and> Q2 x y \<and> Q3 x y\<close>
-  by (meson that)
-
-lemma choice4: \<open>\<exists>f. (\<forall>x. Q1 x (f x)) \<and> (\<forall>x. Q2 x (f x)) \<and> (\<forall>x. Q3 x (f x)) \<and> (\<forall>x. Q4 x (f x))\<close>
-  if \<open>\<forall>x. \<exists>y. Q1 x y \<and> Q2 x y \<and> Q3 x y \<and> Q4 x y\<close>
-  by (meson that)
-
 
 lemma open_map_product_topology_reindex:
   fixes \<pi> :: \<open>'b \<Rightarrow> 'a\<close>
@@ -668,7 +655,8 @@ proof -
       using f_def infsum_butterfly_ket_a by blast
     then show \<open>limitin weak_star_topology (sum f) x (finite_subsets_at_top UNIV)\<close>
       using has_sum_in_def by blast
-    show \<open>range (sum f) \<subseteq> Collect finite_rank\<close>
+    show \<open>\<forall>\<^sub>F F in finite_subsets_at_top UNIV.
+       (\<Sum>i\<in>F. butterfly (x *\<^sub>V ket i) (ket i)) \<in> Collect finite_rank\<close>
       by (auto intro!: finite_rank_sum simp: f_def)
     show \<open>finite_subsets_at_top UNIV \<noteq> \<bottom>\<close>
       by simp

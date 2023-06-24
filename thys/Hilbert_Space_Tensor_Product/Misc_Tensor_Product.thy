@@ -17,58 +17,6 @@ lemma local_defE: "(\<And>x. x=y \<Longrightarrow> P) \<Longrightarrow> P" by me
 lemma inv_prod_swap[simp]: \<open>inv prod.swap = prod.swap\<close>
   by (simp add: inv_unique_comp)
 
-lemma limitin_pullback_topology: 
-  \<open>limitin (pullback_topology A g T) f l F \<longleftrightarrow> l\<in>A \<and> (\<forall>\<^sub>F x in F. f x \<in> A) \<and> limitin T (g o f) (g l) F\<close>
-  apply (simp add: topspace_pullback_topology limitin_def openin_pullback_topology imp_ex flip: ex_simps(1))
-  apply rule
-   apply simp
-   apply safe
-  using eventually_mono apply fastforce
-   apply (simp add: eventually_conj_iff)
-  by (simp add: eventually_conj_iff)
-
-lemma tendsto_coordinatewise: \<open>(f \<longlongrightarrow> l) F \<longleftrightarrow> (\<forall>x. ((\<lambda>i. f i x) \<longlongrightarrow> l x) F)\<close>
-proof (intro iffI allI)
-  assume asm: \<open>(f \<longlongrightarrow> l) F\<close>
-  then show \<open>((\<lambda>i. f i x) \<longlongrightarrow> l x) F\<close> for x
-    apply (rule continuous_on_tendsto_compose[where s=UNIV, rotated])
-    by auto
-next
-  assume asm: \<open>(\<forall>x. ((\<lambda>i. f i x) \<longlongrightarrow> l x) F)\<close>
-  show \<open>(f \<longlongrightarrow> l) F\<close>
-  proof (unfold tendsto_def, intro allI impI)
-    fix S assume \<open>open S\<close> and \<open>l \<in> S\<close>
-    from product_topology_open_contains_basis[OF \<open>open S\<close>[unfolded open_fun_def] \<open>l \<in> S\<close>]
-    obtain U where lU: \<open>l \<in> Pi UNIV U\<close> and openU: \<open>\<And>x. open (U x)\<close> and finiteD: \<open>finite {x. U x \<noteq> UNIV}\<close> and US: \<open>Pi UNIV U \<subseteq> S\<close>
-      by (auto simp add: PiE_UNIV_domain)
-
-    define D where \<open>D = {x. U x \<noteq> UNIV}\<close>
-    with finiteD have finiteD: \<open>finite D\<close>
-      by simp
-    have PiUNIV: \<open>t \<in> Pi UNIV U \<longleftrightarrow> (\<forall>x\<in>D. t x \<in> U x)\<close> for t
-      using D_def by blast
-
-    have f_Ui: \<open>\<forall>\<^sub>F i in F. f i x \<in> U x\<close> for x
-      using asm[rule_format, of x] openU[of x]
-      using lU topological_tendstoD by fastforce
-
-    have \<open>\<forall>\<^sub>F x in F. \<forall>i\<in>D. f x i \<in> U i\<close>
-      using finiteD
-    proof induction
-      case empty
-      then show ?case
-        by simp
-    next
-      case (insert x F)
-      with f_Ui show ?case
-        by (simp add: eventually_conj_iff)
-    qed
-
-    then show \<open>\<forall>\<^sub>F x in F. f x \<in> S\<close>
-      using US by (simp add: PiUNIV eventually_mono in_mono)
-  qed
-qed
-
 lemma filterlim_parametric[transfer_rule]: 
   includes lifting_syntax
   assumes [transfer_rule]: \<open>bi_unique S\<close>
@@ -152,21 +100,21 @@ lemma [transfer_rule]:
   by transfer_prover
 
 
-lemma limitin_closure_of:
-  assumes \<open>limitin T f c F\<close>
-  assumes \<open>range f \<subseteq> S\<close>
-  assumes \<open>\<not> trivial_limit F\<close>
-  shows \<open>c \<in> T closure_of S\<close>
-  by (smt (verit, ccfv_SIG) assms(1) assms(2) assms(3) eventually_happens' in_closure_of limitin_def rangeI subsetD)
-
 lemma limitin_closedin:
   assumes \<open>limitin T f c F\<close>
   assumes \<open>range f \<subseteq> S\<close>
   assumes \<open>closedin T S\<close>
   assumes \<open>\<not> trivial_limit F\<close>
   shows \<open>c \<in> S\<close>
-  by (metis assms(1) assms(2) assms(3) assms(4) closure_of_eq limitin_closure_of)
-
+proof -
+  from assms have \<open>T closure_of S = S\<close>
+    by (simp add: closure_of_eq)
+  moreover have \<open>c \<in> T closure_of S\<close>
+    using assms(1) _ assms(4) apply (rule limitin_closure_of)
+    using range_subsetD[OF assms(2)] by auto
+  ultimately show ?thesis
+    by simp
+qed
 
 
 lemma closure_nhds_principal: \<open>a \<in> closure A \<longleftrightarrow> inf (nhds a) (principal A) \<noteq> bot\<close>
@@ -1950,6 +1898,128 @@ lemma enum_inj:
   shows "(Enum.enum ! i :: 'a::enum) = Enum.enum ! j \<longleftrightarrow> i = j"
   using inj_on_nth[OF enum_distinct, where I=\<open>{..<CARD('a)}\<close>]
   using assms by (auto dest: inj_onD simp flip: card_UNIV_length_enum)
+
+lemma closedin_vimage:
+  assumes \<open>closedin U S\<close>
+  assumes \<open>continuous_map T U f\<close>
+  shows \<open>closedin T (topspace T \<inter> (f -` S))\<close>
+  by (meson assms(1) assms(2) continuous_map_closedin_preimage_eq)
+
+lemma join_forall: \<open>(\<forall>x. P x) \<and> (\<forall>x. Q x) \<longleftrightarrow> (\<forall>x. P x \<and> Q x)\<close>
+  by auto
+
+lemma closedin_singleton': 
+  assumes \<open>hausdorff T\<close> and \<open>x \<in> topspace T\<close>
+  shows \<open>closedin T {x}\<close>
+proof -
+  obtain U where openU: \<open>openin T (U y)\<close> and x_not_U: \<open>x \<notin> U y\<close> and yU: \<open>y \<in> U y\<close> if \<open>x \<noteq> y\<close> and \<open>y \<in> topspace T\<close> for y
+    apply atomize_elim unfolding join_forall apply (rule choice)
+    using assms(1)[unfolded hausdorff_def, rule_format, OF assms(2)]
+    by auto
+  have \<open>topspace T - {x} = (\<Union>y\<in>topspace T - {x}. U y)\<close>
+    using yU openU x_not_U apply auto
+    using openin_subset by fastforce
+  also have \<open>openin T \<dots>\<close>
+    using openU by fastforce
+  finally have \<open>openin T (topspace T - {x})\<close>
+    by -
+  then show ?thesis
+    using assms(2) closedin_def by blast
+qed
+
+
+
+lemma closedin_if_converge_inside:
+  fixes A :: \<open>'a set\<close>
+  assumes AT: \<open>A \<subseteq> topspace T\<close>
+  assumes xA: \<open>\<And>(F::'a filter) f x. F \<noteq> \<bottom> \<Longrightarrow> limitin T f x F \<Longrightarrow> range f \<subseteq> A \<Longrightarrow> x \<in> A\<close>
+  shows \<open>closedin T A\<close>
+proof (cases \<open>A = {}\<close>)
+  case True
+  then show ?thesis by simp
+next
+  case False
+  then obtain a where \<open>a \<in> A\<close>
+    by auto
+  define Ac where \<open>Ac = topspace T - A\<close>
+  have \<open>\<exists>U. openin T U \<and> x \<in> U \<and> U \<subseteq> Ac\<close> if \<open>x \<in> Ac\<close> for x
+  proof (rule ccontr)
+    assume \<open>\<nexists>U. openin T U \<and> x \<in> U \<and> U \<subseteq> Ac\<close>
+    then have UA: \<open>U \<inter> A \<noteq> {}\<close> if \<open>openin T U\<close>and \<open>x \<in> U\<close> for U
+      by (metis Ac_def Diff_mono Diff_triv openin_subset subset_refl that)
+    have [simp]: \<open>x \<in> topspace T\<close>
+      using that by (simp add: Ac_def)
+
+    define F where \<open>F = nhdsin T x \<sqinter> principal A\<close>
+    have \<open>F \<noteq> \<bottom>\<close>
+      apply (subst filter_eq_iff)
+      apply (auto intro!: exI[of _ \<open>\<lambda>_. False\<close>] simp: F_def eventually_inf eventually_principal
+          eventually_nhdsin)
+      by (meson UA disjoint_iff)
+
+    define f where \<open>f y = (if y\<in>A then y else a)\<close> for y
+    with \<open>a \<in> A\<close> have \<open>range f \<subseteq> A\<close>
+      by force
+
+    have \<open>\<forall>\<^sub>F y in F. f y \<in> U\<close> if \<open>openin T U\<close> and \<open>x \<in> U\<close> for U
+    proof -
+      have \<open>eventually (\<lambda>x. x \<in> U) (nhdsin T x)\<close>
+        using eventually_nhdsin that by fastforce
+      moreover have \<open>\<exists>R. (\<forall>x\<in>A. R x) \<and> (\<forall>x. x \<in> U \<longrightarrow> R x \<longrightarrow> f x \<in> U)\<close>
+        apply (rule exI[of _ \<open>\<lambda>x. x \<in> A\<close>])
+        by (simp add: f_def)
+      ultimately show ?thesis
+        by (auto simp add: F_def eventually_inf eventually_principal)
+    qed
+    then have \<open>limitin T f x F\<close>
+      unfolding limitin_def by simp
+    with \<open>F \<noteq> \<bottom>\<close> \<open>range f \<subseteq> A\<close> xA
+    have \<open>x \<in> A\<close>
+      by simp
+    with that show False
+      by (simp add: Ac_def)
+  qed
+  then have \<open>openin T Ac\<close>
+    apply (rule_tac openin_subopen[THEN iffD2])
+    by simp
+  then show ?thesis
+    by (simp add: Ac_def AT closedin_def)
+qed
+
+lemma cmod_mono: \<open>0 \<le> a \<Longrightarrow> a \<le> b \<Longrightarrow> cmod a \<le> cmod b\<close>
+  by (simp add: cmod_Re less_eq_complex_def)
+
+lemma has_sum_mono_neutral_complex:
+  fixes f :: "'a \<Rightarrow> complex"
+  assumes \<open>(f has_sum a) A\<close> and "(g has_sum b) B"
+  assumes \<open>\<And>x. x \<in> A\<inter>B \<Longrightarrow> f x \<le> g x\<close>
+  assumes \<open>\<And>x. x \<in> A-B \<Longrightarrow> f x \<le> 0\<close>
+  assumes \<open>\<And>x. x \<in> B-A \<Longrightarrow> g x \<ge> 0\<close>
+  shows "a \<le> b"
+proof -
+  have \<open>((\<lambda>x. Re (f x)) has_sum Re a) A\<close>
+    using assms(1) has_sum_Re has_sum_cong by blast
+  moreover have \<open>((\<lambda>x. Re (g x)) has_sum Re b) B\<close>
+    using assms(2) has_sum_Re has_sum_cong by blast
+  ultimately have Re: \<open>Re a \<le> Re b\<close>
+    apply (rule has_sum_mono_neutral)
+    using assms(3-5) by (simp_all add: less_eq_complex_def)
+  have \<open>((\<lambda>x. Im (f x)) has_sum Im a) A\<close>
+    using assms(1) has_sum_Im has_sum_cong by blast
+  then have \<open>((\<lambda>x. Im (f x)) has_sum Im a) (A \<inter> B)\<close>
+    apply (rule has_sum_cong_neutral[THEN iffD1, rotated -1])
+    using assms(3-5) by (auto simp add: less_eq_complex_def)
+  moreover have \<open>((\<lambda>x. Im (g x)) has_sum Im b) B\<close>
+    using assms(2) has_sum_Im has_sum_cong by blast
+  then have \<open>((\<lambda>x. Im (f x)) has_sum Im b) (A \<inter> B)\<close>
+    apply (rule has_sum_cong_neutral[THEN iffD1, rotated -1])
+    using assms(3-5) by (auto simp add: less_eq_complex_def)
+  ultimately have Im: \<open>Im a = Im b\<close>
+    by (rule has_sum_unique)
+  from Re Im show ?thesis
+    using less_eq_complexI by blast
+qed
+
 
 
 end

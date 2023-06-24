@@ -135,11 +135,6 @@ next
     using l_topspace eventually_U unfolding limitin_def by simp
 qed *)
 
-lemma limitin_cstrong_operator_topology:
-  \<open>limitin cstrong_operator_topology f l F \<longleftrightarrow> (\<forall>i. ((\<lambda>j. f j *\<^sub>V i) \<longlongrightarrow> l *\<^sub>V i) F)\<close>
-  by (simp add: cstrong_operator_topology_def limitin_pullback_topology 
-      tendsto_coordinatewise)
-
 lemma filterlim_cstrong_operator_topology: \<open>filterlim f (nhdsin cstrong_operator_topology l) = limitin cstrong_operator_topology f l\<close>
   by (auto simp: cstrong_operator_topology_topspace simp flip: filterlim_nhdsin_iff_limitin)
 
@@ -238,48 +233,62 @@ proof intro_classes
     using * by auto
 qed
 
-lemma continuous_map_left_comp_sot: 
-  \<open>continuous_map cstrong_operator_topology cstrong_operator_topology (\<lambda>a::'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L _. b o\<^sub>C\<^sub>L a)\<close> 
-  for b :: \<open>'b::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'c::complex_normed_vector\<close>
+lemma continuous_map_left_comp_sot[continuous_intros]: 
+  fixes b :: \<open>'b::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'c::complex_normed_vector\<close>
+    and f :: \<open>'a \<Rightarrow> 'd::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
+  assumes \<open>continuous_map T cstrong_operator_topology f\<close> 
+  shows \<open>continuous_map T cstrong_operator_topology (\<lambda>x. b o\<^sub>C\<^sub>L f x)\<close> 
 proof -
   have *: \<open>open B \<Longrightarrow> open ((*\<^sub>V) b -` B)\<close> for B
     by (simp add: continuous_open_vimage)
   have **: \<open>((\<lambda>a. b *\<^sub>V a \<psi>) -` B \<inter> UNIV) = (Pi\<^sub>E UNIV (\<lambda>i. if i=\<psi> then (\<lambda>a. b *\<^sub>V a) -` B else UNIV))\<close> 
-    for \<psi> :: 'a and B
+    for \<psi> :: 'd and B
     by (auto simp: PiE_def Pi_def)
-  have *: \<open>continuous_on UNIV (\<lambda>(a::'a \<Rightarrow> 'b). b *\<^sub>V  (a \<psi>))\<close> for \<psi>
+  have *: \<open>continuous_on UNIV (\<lambda>(a::'d \<Rightarrow> 'b). b *\<^sub>V  (a \<psi>))\<close> for \<psi>
     unfolding continuous_on_open_vimage[OF open_UNIV]
     apply (intro allI impI)
     apply (subst **)
     apply (rule open_PiE)
     using * by auto
-  have *: \<open>continuous_on UNIV (\<lambda>(a::'a \<Rightarrow> 'b) \<psi>. b *\<^sub>V  a \<psi>)\<close>
+  have *: \<open>continuous_on UNIV (\<lambda>(a::'d \<Rightarrow> 'b) \<psi>. b *\<^sub>V a \<psi>)\<close>
     apply (rule continuous_on_coordinatewise_then_product)
     by (rule *)
-  show ?thesis
+  have \<open>continuous_map cstrong_operator_topology cstrong_operator_topology
+              (\<lambda>x :: 'd \<Rightarrow>\<^sub>C\<^sub>L 'b. b o\<^sub>C\<^sub>L x)\<close> 
     unfolding cstrong_operator_topology_def
     apply (rule continuous_map_pullback')
      apply (subst asm_rl[of \<open>(*\<^sub>V) \<circ> (o\<^sub>C\<^sub>L) b = (\<lambda>a x. b *\<^sub>V (a x)) \<circ> (*\<^sub>V)\<close>])
       apply (auto intro!: ext)[1]
      apply (rule continuous_map_pullback)
     using * by auto
+  from continuous_map_compose[OF assms this, unfolded o_def]
+  show ?thesis
+    by -
 qed
 
-lemma continuous_map_right_comp_sot: 
-  \<open>continuous_map cstrong_operator_topology cstrong_operator_topology (\<lambda>a::_ \<Rightarrow>\<^sub>C\<^sub>L 'c::complex_normed_vector. a o\<^sub>C\<^sub>L b)\<close> 
-  for b :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
+lemma continuous_map_right_comp_sot[continuous_intros]: 
+  assumes \<open>continuous_map T cstrong_operator_topology f\<close> 
+  shows \<open>continuous_map T cstrong_operator_topology (\<lambda>x. f x o\<^sub>C\<^sub>L a)\<close> 
+  apply (rule continuous_map_compose[OF assms, unfolded o_def])
   by (simp add: continuous_on_cstrong_operator_topo_iff_coordinatewise cstrong_operator_topology_continuous_evaluation)
 
-lemma continuous_map_scaleC_sot: \<open>continuous_map cstrong_operator_topology cstrong_operator_topology (scaleC c)\<close>
+lemma continuous_map_scaleC_sot[continuous_intros]: 
+  assumes \<open>continuous_map T cstrong_operator_topology f\<close> 
+  shows \<open>continuous_map T cstrong_operator_topology (\<lambda>x. c *\<^sub>C f x)\<close>
   apply (subst asm_rl[of \<open>scaleC c = (o\<^sub>C\<^sub>L) (c *\<^sub>C id_cblinfun)\<close>])
    apply auto[1]
-  by (rule continuous_map_left_comp_sot)
+  using assms by (rule continuous_map_left_comp_sot)
 
-lemma continuous_scaleC_sot: \<open>continuous_on X (scaleC c :: (_,_) cblinfun_sot \<Rightarrow> _)\<close>
+lemma continuous_scaleC_sot[continuous_intros]: 
+  fixes f :: \<open>'a::topological_space \<Rightarrow> (_,_) cblinfun_sot\<close>
+  assumes \<open>continuous_on X f\<close>
+  shows \<open>continuous_on X (\<lambda>x. c *\<^sub>C f x)\<close>
+  apply (rule continuous_on_compose[OF assms, unfolded o_def])
   apply (rule continuous_on_subset[rotated, where s=UNIV], simp)
   apply (subst continuous_map_iff_continuous2[symmetric])
   apply transfer
-  by (rule continuous_map_scaleC_sot)
+  apply (rule continuous_map_scaleC_sot)
+  by simp
 
 lemma sot_closure_is_csubspace[simp]:
   fixes A::"('a::complex_normed_vector, 'b::complex_normed_vector) cblinfun_sot set"

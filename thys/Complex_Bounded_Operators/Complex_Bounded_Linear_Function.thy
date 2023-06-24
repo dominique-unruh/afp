@@ -1972,6 +1972,11 @@ lemma surj_isometry_is_unitary:
 lemma cblinfun_apply_in_image': "A *\<^sub>V \<psi> \<in> space_as_set (A *\<^sub>S S)" if \<open>\<psi> \<in> space_as_set S\<close>
   by (metis cblinfun_image.rep_eq closure_subset image_subset_iff that)
 
+lemma cblinfun_image_ccspan_leqI:
+  assumes \<open>\<And>v. v \<in> M \<Longrightarrow> A *\<^sub>V v \<in> space_as_set T\<close>
+  shows \<open>A *\<^sub>S ccspan M \<le> T\<close>
+  by (simp add: assms cblinfun_image_ccspan ccspan_leqI image_subsetI)
+
 subsection \<open>Sandwiches\<close>
 
 lift_definition sandwich :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner) \<Rightarrow> (('a \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow>\<^sub>C\<^sub>L ('b \<Rightarrow>\<^sub>C\<^sub>L 'b))\<close> is
@@ -2527,6 +2532,27 @@ proof (rule antisym)
     apply (rule_tac cblinfun_norm_geqI[of _ _ \<psi>])
     using \<open>\<psi> \<noteq> 0\<close> by simp
 qed
+
+
+lemma Proj_compose_cancelI:
+  assumes \<open>A *\<^sub>S \<top> \<le> S\<close>
+  shows \<open>Proj S o\<^sub>C\<^sub>L A = A\<close>
+  apply (rule cblinfun_eqI)
+proof -
+  fix x
+  have \<open>(Proj S o\<^sub>C\<^sub>L A) *\<^sub>V x = Proj S *\<^sub>V (A *\<^sub>V x)\<close>
+  by simp
+  also have \<open>\<dots> = A *\<^sub>V x\<close>
+    apply (rule Proj_fixes_image)
+    using assms cblinfun_apply_in_image less_eq_ccsubspace.rep_eq by blast
+  finally show \<open>(Proj S o\<^sub>C\<^sub>L A) *\<^sub>V x = A *\<^sub>V x\<close>
+    by -
+qed
+
+lemma space_as_setI_via_Proj:
+  assumes \<open>Proj M *\<^sub>V x = x\<close>
+  shows \<open>x \<in> space_as_set M\<close>
+  using assms norm_Proj_apply by fastforce
 
 subsection \<open>Kernel / eigenspaces\<close>
 
