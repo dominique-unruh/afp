@@ -1209,13 +1209,13 @@ lemma gbinomial_abs_summable:
   fixes a :: real
   assumes \<open>a > 0\<close> and \<open>a \<le> 1\<close>
   shows \<open>(\<lambda>n. (a gchoose n)) abs_summable_on UNIV\<close>
-  using assms by (auto intro!: summable_onI gbinomial_abs_has_sum)
+  using assms by (auto intro!: has_sum_imp_summable gbinomial_abs_has_sum)
 
 lemma gbinomial_abs_summable_1:
   fixes a :: real
   assumes \<open>a > 0\<close> and \<open>a \<le> 1\<close>
   shows \<open>(\<lambda>n. (a gchoose n)) abs_summable_on UNIV-{0}\<close>
-  using assms by (auto intro!: summable_onI gbinomial_abs_has_sum_1)
+  using assms by (auto intro!: has_sum_imp_summable gbinomial_abs_has_sum_1)
 
 lemma has_sum_singleton[simp]: \<open>(f has_sum y) {x} \<longleftrightarrow> f x = y\<close> for y :: \<open>'a :: {comm_monoid_add, t2_space}\<close>
   using has_sum_finite[of \<open>{x}\<close>]

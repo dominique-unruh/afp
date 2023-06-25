@@ -599,10 +599,8 @@ proof -
   then have \<open>limitin weak_star_topology (\<lambda>F. \<Sum>i\<in>F. a i) b (finite_subsets_at_top I)\<close>
     by (auto simp add: limitin_weak_star_topology cblinfun_compose_sum_right trace_sum trace_class_comp_left)
   then show \<open>b \<in> A\<close>
-    using closed
-    apply (rule limitin_closedin)
-    apply (rule eventually_finite_subsets_at_top_weakI)
-    using 1 by auto
+    using 1 closed apply (rule limitin_closedin)
+    by simp
 qed
 
 lemma has_sum_in_weak_star:

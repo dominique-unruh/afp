@@ -247,7 +247,7 @@ proof -
     from has_sum_b
     have sum1: \<open>(\<lambda>n. f \<bullet>\<^sub>C (b n *\<^sub>V f)) summable_on UNIV\<close>
       apply (intro summable_on_cinner_left summable_on_cblinfun_apply_left)
-      by (simp add: summable_onI)
+      by (simp add: has_sum_imp_summable)
     have sum2: \<open>(\<lambda>x. - (complex_of_real \<bar>1 / 2 gchoose x\<bar> * (f \<bullet>\<^sub>C f))) summable_on UNIV - {0}\<close>
       apply (rule abs_summable_summable)
       using gbinomial_abs_summable_1[of \<open>1/2\<close>]
@@ -324,7 +324,7 @@ proof -
       by (auto simp: bb_simp)
 
     from has_sum_b have b\<psi>_sum: \<open>(\<lambda>n. b n *\<^sub>V \<psi>) summable_on UNIV\<close>
-      by (simp add: summable_onI summable_on_cblinfun_apply_left)
+      by (simp add: has_sum_imp_summable summable_on_cblinfun_apply_left)
 
     have b2_pos: \<open>(b i *\<^sub>V \<psi>) \<bullet>\<^sub>C (b j *\<^sub>V \<psi>) \<ge> 0\<close> if \<open>i\<noteq>0\<close> \<open>j\<noteq>0\<close> for i j
     proof -
@@ -380,7 +380,7 @@ proof -
     have \<open>s = (B0 *\<^sub>V \<psi>) \<bullet>\<^sub>C (B0 *\<^sub>V \<psi>)\<close>
       by (metis \<open>0 \<le> B0\<close> cblinfun_apply_cblinfun_compose cinner_adj_left positive_hermitianI s_def)
     also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>n. b n *\<^sub>V \<psi>) \<bullet>\<^sub>C (\<Sum>\<^sub>\<infinity>n. b n *\<^sub>V \<psi>)\<close>
-      by (metis B0_def has_sum_b infsum_cblinfun_apply_left summable_onI)
+      by (metis B0_def has_sum_b infsum_cblinfun_apply_left has_sum_imp_summable)
     also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>n. bb n)\<close>
       using b\<psi>_sum b\<psi>_sum unfolding bb_def
       apply (rule Cauchy_cinner_product_infsum[symmetric])

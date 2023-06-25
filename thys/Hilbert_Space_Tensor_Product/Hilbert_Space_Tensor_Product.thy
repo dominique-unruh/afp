@@ -2142,7 +2142,7 @@ proof -
     apply (rule basis_projections_reconstruct_has_sum)
     by (simp_all add: spanAB' \<open>is_ortho_set AB'\<close> normAB' assms)
   have \<open>(\<lambda>ab. (norm (ab \<bullet>\<^sub>C \<psi>))\<^sup>2) summable_on AB'\<close>
-    apply (rule summable_on_norm_on_basis)
+    apply (rule parseval_identity_summable)
     by (simp_all add: spanAB' \<open>is_ortho_set AB'\<close> normAB' assms)
   then have \<open>countable ABnon0\<close>
     using ABnon0_def' summable_countable_real by blast

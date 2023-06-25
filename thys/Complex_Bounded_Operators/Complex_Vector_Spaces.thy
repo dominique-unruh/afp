@@ -2331,6 +2331,9 @@ lemma ccspan_superset:
   apply transfer
   by (meson closure_subset complex_vector.span_superset subset_trans)
 
+lemma ccspan_superset': \<open>x \<in> X \<Longrightarrow> x \<in> space_as_set (ccspan X)\<close>
+  using ccspan_superset by auto
+
 lemma ccspan_canonical_basis[simp]: "ccspan (set canonical_basis) = top"
   using ccspan.rep_eq space_as_set_inject top_ccsubspace.rep_eq
     closure_UNIV is_generator_set
@@ -2648,6 +2651,32 @@ lemma ccspan_closure[simp]: \<open>ccspan (closure X) = ccspan X\<close>
 lemma ccspan_finite: \<open>space_as_set (ccspan X) = cspan X\<close> if \<open>finite X\<close>
   by (simp add: ccspan.rep_eq that)
 
+lemma ccspan_UNIV[simp]: \<open>ccspan UNIV = \<top>\<close>
+  by (simp add: ccspan.abs_eq top_ccsubspace_def)
+
+lemma infsum_in_closed_csubspaceI:
+  assumes \<open>\<And>x. x\<in>X \<Longrightarrow> f x \<in> A\<close>
+  assumes \<open>closed_csubspace A\<close>
+  shows \<open>infsum f X \<in> A\<close>
+proof (cases \<open>f summable_on X\<close>)
+  case True
+  then have lim: \<open>(sum f \<longlongrightarrow> infsum f X) (finite_subsets_at_top X)\<close>
+    by (simp add: infsum_tendsto)
+  have sumA: \<open>sum f F \<in> A\<close> if \<open>finite F\<close> and \<open>F \<subseteq> X\<close> for F
+    apply (rule complex_vector.subspace_sum)
+    using that assms by auto
+  from lim show \<open>infsum f X \<in> A\<close>
+    apply (rule Lim_in_closed_set[rotated -1])
+    using assms sumA by (auto intro!: closed_csubspace.closed eventually_finite_subsets_at_top_weakI)
+next
+  case False
+  then show ?thesis
+    using assms by (auto intro!: closed_csubspace.closed complex_vector.subspace_0 simp add: infsum_not_exists)
+qed
+
+lemma closed_csubspace_space_as_set[simp]: \<open>closed_csubspace (space_as_set X)\<close>
+  using space_as_set by simp
+
 subsection \<open>Closed sums\<close>
 
 definition closed_sum:: \<open>'a::{semigroup_add,topological_space} set \<Rightarrow> 'a set \<Rightarrow> 'a set\<close> where
@@ -2890,6 +2919,16 @@ proof
     by (simp add: zero_ccsubspace_def)
 qed
 end
+
+lemma SUP_ccspan: \<open>(SUP x\<in>X. ccspan (S x)) = ccspan (\<Union>x\<in>X. S x)\<close>
+proof (rule SUP_eqI)
+  show \<open>ccspan (S x) \<le> ccspan (\<Union>x\<in>X. S x)\<close> if \<open>x \<in> X\<close> for x
+    apply (rule ccspan_mono)
+    using that by auto
+  show \<open>ccspan (\<Union>x\<in>X. S x) \<le> y\<close> if \<open>\<And>x. x \<in> X \<Longrightarrow> ccspan (S x) \<le> y\<close> for y
+    apply (intro ccspan_leqI UN_least)
+    using that ccspan_superset by (auto simp: less_eq_ccsubspace.rep_eq)
+qed
 
 lemma ccsubspace_plus_sup: "y \<le> x \<Longrightarrow> z \<le> x \<Longrightarrow> y + z \<le> x"
   for x y z :: "'a::complex_normed_vector ccsubspace"

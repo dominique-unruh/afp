@@ -873,6 +873,9 @@ proof -
     by auto
 qed
 
+lemma trunc_ell2_uminus: \<open>trunc_ell2 (-M) \<psi> = \<psi> - trunc_ell2 M \<psi>\<close>
+  by (metis Int_UNIV_left boolean_algebra_class.diff_eq subset_UNIV trunc_ell2_UNIV trunc_ell2_union_Diff)
+
 
 subsection \<open>Kets and bras\<close>
 

@@ -1452,6 +1452,9 @@ lemma norm_preserving_isometry: \<open>isometry U\<close> if \<open>\<And>\<psi>
 lemma norm_isometry_compose': \<open>norm (A o\<^sub>C\<^sub>L U) = norm A\<close> if \<open>isometry (U*)\<close>
   by (smt (verit) cblinfun_compose_assoc cblinfun_compose_id_right double_adj isometryD mult_cancel_left2 norm_AadjA norm_cblinfun_compose norm_isometry_compose norm_zero power2_eq_square right_diff_distrib that zero_less_norm_iff)
 
+lemma unitary_nonzero[simp]: \<open>\<not> unitary (0 :: 'a::{chilbert_space, not_singleton} \<Rightarrow>\<^sub>C\<^sub>L _)\<close>
+  by (simp add: unitary_def)
+
 subsection \<open>Product spaces\<close>
 
 lift_definition cblinfun_left :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>'b::complex_normed_vector)\<close> is \<open>(\<lambda>x. (x,0))\<close>
@@ -1977,6 +1980,35 @@ lemma cblinfun_image_ccspan_leqI:
   shows \<open>A *\<^sub>S ccspan M \<le> T\<close>
   by (simp add: assms cblinfun_image_ccspan ccspan_leqI image_subsetI)
 
+
+lemma cblinfun_same_on_image: \<open>A \<psi> = B \<psi>\<close> if eq: \<open>A o\<^sub>C\<^sub>L C = B o\<^sub>C\<^sub>L C\<close> and mem: \<open>\<psi> \<in> space_as_set (C *\<^sub>S \<top>)\<close>
+proof -
+  have \<open>A \<psi> = B \<psi>\<close> if \<open>\<psi> \<in> range C\<close> for \<psi>
+    by (metis (no_types, lifting) eq cblinfun_apply_cblinfun_compose image_iff that)
+  moreover have \<open>\<psi> \<in> closure (range C)\<close>
+    by (metis cblinfun_image.rep_eq mem top_ccsubspace.rep_eq)
+  ultimately show ?thesis
+    apply (rule on_closure_eqI)
+    by (auto simp: continuous_on_eq_continuous_at)
+qed
+
+lemma lift_cblinfun_comp:
+\<comment> \<open>Utility lemma to lift a lemma of the form \<^term>\<open>a o\<^sub>C\<^sub>L b = c\<close>
+   to become a more general rewrite rule.\<close>
+  assumes \<open>a o\<^sub>C\<^sub>L b = c\<close>
+  shows \<open>a o\<^sub>C\<^sub>L b = c\<close>
+    and \<open>a o\<^sub>C\<^sub>L (b o\<^sub>C\<^sub>L d) = c o\<^sub>C\<^sub>L d\<close>
+    and \<open>a *\<^sub>S (b *\<^sub>S S) = c *\<^sub>S S\<close>
+    and \<open>a *\<^sub>V (b *\<^sub>V x) = c *\<^sub>V x\<close>
+     apply (fact assms)
+    apply (simp add: assms cblinfun_assoc_left(1))
+  using assms cblinfun_assoc_left(2) apply force
+  using assms by force
+
+lemma cblinfun_image_def2: \<open>A *\<^sub>S S = ccspan ((*\<^sub>V) A ` space_as_set S)\<close>
+  apply (simp add: flip: cblinfun_image_ccspan)
+  by (metis ccspan_leqI ccspan_superset less_eq_ccsubspace.rep_eq order_class.order_eq_iff)
+
 subsection \<open>Sandwiches\<close>
 
 lift_definition sandwich :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner) \<Rightarrow> (('a \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow>\<^sub>C\<^sub>L ('b \<Rightarrow>\<^sub>C\<^sub>L 'b))\<close> is
@@ -2372,7 +2404,7 @@ proof-
     moreover have \<open>(projection (space_as_set C)) x \<in> space_as_set C\<close>
       by (metis mem_Collect_eq orthog_proj_exists projection_eqI space_as_set)
     ultimately show ?thesis
-      using closure_subset by fastforce
+      using closure_subset by force
   qed
   have x1: \<open>x \<in> (space_as_set B +\<^sub>M space_as_set C)\<close>
     if "x \<in> space_as_set A" for x
@@ -2554,6 +2586,27 @@ lemma space_as_setI_via_Proj:
   shows \<open>x \<in> space_as_set M\<close>
   using assms norm_Proj_apply by fastforce
 
+lemma unitary_image_ortho_compl: 
+  \<comment> \<open>Logically, this lemma belongs in an earlier section but its proof uses projectors.\<close>
+  fixes U :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  assumes [simp]: \<open>unitary U\<close>
+  shows \<open>U *\<^sub>S (- A) = - (U *\<^sub>S A)\<close>
+proof -
+  have \<open>Proj (U *\<^sub>S (- A)) = sandwich U (Proj (- A))\<close>
+    by (simp add: Proj_sandwich)
+  also have \<open>\<dots> = sandwich U (id_cblinfun - Proj A)\<close>
+    by (simp add: Proj_ortho_compl)
+  also have \<open>\<dots> = id_cblinfun - sandwich U (Proj A)\<close>
+    by (metis assms cblinfun.diff_right sandwich_isometry_id unitary_twosided_isometry)
+  also have \<open>\<dots> = id_cblinfun - Proj (U *\<^sub>S A)\<close>
+    by (simp add: Proj_sandwich)
+  also have \<open>\<dots> = Proj (- (U *\<^sub>S A))\<close>
+    by (simp add: Proj_ortho_compl)
+  finally show ?thesis
+    by (simp add: Proj_inj)
+qed
+
+
 subsection \<open>Kernel / eigenspaces\<close>
 
 lift_definition kernel :: "'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L'b::complex_normed_vector
@@ -2654,6 +2707,133 @@ proof (rule ccsubspace_eqI)
     by -
 qed
 
+lemma kernel_apply_self: \<open>A *\<^sub>S kernel A = 0\<close>
+proof transfer
+  fix A :: \<open>'b \<Rightarrow> 'a\<close>
+  assume \<open>bounded_clinear A\<close>
+  then have \<open>A 0 = 0\<close>
+    by (simp add: bounded_clinear_def complex_vector.linear_0)
+  then have \<open>A ` A -` {0} = {0}\<close>
+    by fastforce
+  then show \<open>closure (A ` A -` {0}) = {0}\<close>
+    by auto
+qed
+
+lemma leq_kernel_iff: 
+  shows \<open>A \<le> kernel B \<longleftrightarrow> B *\<^sub>S A = 0\<close>
+proof (rule iffI)
+  assume \<open>A \<le> kernel B\<close>
+  then have \<open>B *\<^sub>S A \<le> B *\<^sub>S kernel B\<close>
+    by (simp add: cblinfun_image_mono)
+  also have \<open>\<dots> = 0\<close>
+    by (simp add: kernel_apply_self)
+  finally show \<open>B *\<^sub>S A = 0\<close>
+    by (simp add: bot.extremum_unique)
+next
+  assume \<open>B *\<^sub>S A = 0\<close>
+  then show \<open>A \<le> kernel B\<close>
+    apply transfer
+    by (metis closure_subset image_subset_iff_subset_vimage)
+qed
+
+lemma cblinfun_image_kernel:
+  assumes \<open>C *\<^sub>S A *\<^sub>S kernel B \<le> kernel B\<close>
+  assumes \<open>A o\<^sub>C\<^sub>L C = id_cblinfun\<close>
+  shows \<open>A *\<^sub>S kernel B = kernel (B o\<^sub>C\<^sub>L C)\<close>
+proof (rule antisym)
+  show \<open>A *\<^sub>S kernel B \<le> kernel (B o\<^sub>C\<^sub>L C)\<close>
+    using assms(1) by (simp add: leq_kernel_iff cblinfun_compose_image)
+  show \<open>kernel (B o\<^sub>C\<^sub>L C) \<le> A *\<^sub>S kernel B\<close>
+  proof (insert assms(2), transfer, intro subsetI)
+    fix A :: \<open>'a \<Rightarrow> 'b\<close> and B :: \<open>'a \<Rightarrow> 'c\<close> and C :: \<open>'b \<Rightarrow> 'a\<close> and x
+    assume \<open>x \<in> (B \<circ> C) -` {0}\<close>
+    then have BCx: \<open>B (C x) = 0\<close>
+      by simp
+    assume \<open>A \<circ> C = (\<lambda>x. x)\<close>
+    then have \<open>x = A (C x)\<close>
+      apply (simp add: o_def)
+      by metis
+    then show \<open>x \<in> closure (A ` B -` {0})\<close>
+      using \<open>B (C x) = 0\<close> closure_subset by fastforce
+  qed
+qed
+
+lemma cblinfun_image_kernel_unitary:
+  assumes \<open>unitary U\<close>
+  shows \<open>U *\<^sub>S kernel B = kernel (B o\<^sub>C\<^sub>L U*)\<close>
+  apply (rule cblinfun_image_kernel)
+  using assms by (auto simp flip: cblinfun_compose_image)
+
+lemma kernel_cblinfun_compose:
+  assumes \<open>kernel B = 0\<close>
+  shows \<open>kernel A = kernel (B o\<^sub>C\<^sub>L A)\<close>
+  using assms apply transfer by auto
+
+
+lemma eigenspace_0[simp]: \<open>eigenspace 0 A = kernel A\<close>
+  by (simp add: eigenspace_def)
+
+lemma kernel_isometry: \<open>kernel U = 0\<close> if \<open>isometry U\<close>
+  by (simp add: kernel_compl_adj_range range_adjoint_isometry that)
+
+lemma cblinfun_image_eigenspace_isometry:
+  assumes [simp]: \<open>isometry A\<close> and \<open>c \<noteq> 0\<close>
+  shows \<open>A *\<^sub>S eigenspace c B = eigenspace c (sandwich A B)\<close>
+proof (rule antisym)
+  show \<open>A *\<^sub>S eigenspace c B \<le> eigenspace c (sandwich A B)\<close>
+  proof (unfold cblinfun_image_def2, rule ccspan_leqI, rule subsetI)
+    fix x assume \<open>x \<in> (*\<^sub>V) A ` space_as_set (eigenspace c B)\<close>
+    then obtain y where x_def: \<open>x = A y\<close> and \<open>y \<in> space_as_set (eigenspace c B)\<close>
+      by auto
+    then have \<open>B y = c *\<^sub>C y\<close>
+      by (simp add: eigenspace_memberD)
+    then have \<open>sandwich A B x = c *\<^sub>C x\<close>
+      apply (simp add: sandwich_apply x_def cblinfun_compose_assoc 
+          flip: cblinfun_apply_cblinfun_compose)
+      by (simp add: cblinfun.scaleC_right)
+    then show \<open>x \<in> space_as_set (eigenspace c (sandwich A B))\<close>
+      by (simp add: eigenspace_memberI)
+  qed
+  show \<open>eigenspace c (sandwich A *\<^sub>V B) \<le> A *\<^sub>S eigenspace c B\<close>
+  proof (rule ccsubspace_leI_unit)
+    fix x
+    assume \<open>x \<in> space_as_set (eigenspace c (sandwich A B))\<close>
+    then have *: \<open>sandwich A B x = c *\<^sub>C x\<close>
+      by (simp add: eigenspace_memberD)
+    then have \<open>c *\<^sub>C x \<in> range A\<close>
+      apply (simp add: sandwich_apply)
+      by (metis rangeI)
+    then have \<open>(inverse c * c) *\<^sub>C x \<in> range A\<close>
+      apply (simp flip: scaleC_scaleC)
+      by (metis (no_types, lifting) cblinfun.scaleC_right rangeE rangeI)
+    with \<open>c \<noteq> 0\<close> have \<open>x \<in> range A\<close>
+      by simp
+    then obtain y where x_def: \<open>x = A y\<close>
+      by auto
+    have \<open>B *\<^sub>V y = A* *\<^sub>V sandwich A B x\<close>
+      apply (simp add: sandwich_apply x_def)
+      by (metis assms cblinfun_apply_cblinfun_compose id_cblinfun.rep_eq isometryD)
+    also have \<open>\<dots> = c *\<^sub>C y\<close>
+      apply (simp add: * cblinfun.scaleC_right)
+      apply (simp add: x_def)
+      by (metis assms(1) cblinfun_apply_cblinfun_compose id_cblinfun_apply isometry_def)
+    finally have \<open>y \<in> space_as_set (eigenspace c B)\<close>
+      by (simp add: eigenspace_memberI)
+    then show \<open>x \<in> space_as_set (A *\<^sub>S eigenspace c B) \<close>
+      by (simp add: x_def cblinfun_apply_in_image')
+  qed
+qed
+
+lemma cblinfun_image_eigenspace_unitary:
+  assumes [simp]: \<open>unitary A\<close>
+  shows \<open>A *\<^sub>S eigenspace c B = eigenspace c (sandwich A B)\<close>
+  apply (cases \<open>c = 0\<close>)
+   apply (simp add: sandwich_apply cblinfun_image_kernel_unitary kernel_isometry cblinfun_compose_assoc
+    flip: kernel_cblinfun_compose)
+  by (simp add: cblinfun_image_eigenspace_isometry)
+
+lemma kernel_member_iff: \<open>x \<in> space_as_set (kernel A) \<longleftrightarrow> A *\<^sub>V x = 0\<close>
+  using kernel_memberD kernel_memberI by blast
 
 subsection \<open>Partial isometries\<close>
 
