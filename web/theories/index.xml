@@ -1609,6 +1609,15 @@
     </item>
     
     <item>
+      <title>Directed_Sets</title>
+      <link>/theories/directed_sets/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/directed_sets/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Dirichlet_L</title>
       <link>/theories/dirichlet_l/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -4179,6 +4188,15 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/theories/multirelations/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Multirelations_Heterogeneous</title>
+      <link>/theories/multirelations_heterogeneous/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/multirelations_heterogeneous/</guid>
       <description></description>
     </item>
     

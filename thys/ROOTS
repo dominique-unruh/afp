@@ -175,6 +175,7 @@ DigitsInBase
 Digit_Expansions
 Dijkstra_Shortest_Path
 Diophantine_Eqns_Lin_Hom
+Directed_Sets
 Dirichlet_L
 Dirichlet_Series
 DiscretePricing
@@ -446,6 +447,7 @@ Monomorphic_Monad
 MuchAdoAboutTwo
 Multi_Party_Computation
 Multirelations
+Multirelations_Heterogeneous
 Multiset_Ordering_NPC
 Multitape_To_Singletape_TM
 Myhill-Nerode
