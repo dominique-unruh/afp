@@ -165,9 +165,9 @@ lemma tensor_ell2_dense:
 proof -
   define ST where \<open>ST = {a\<otimes>\<^sub>sb | a b. a\<in>S \<and> b\<in>T}\<close>
   from assms have 1: \<open>bounded_clinear F \<Longrightarrow> bounded_clinear G \<Longrightarrow> (\<forall>x\<in>S. F x = G x) \<Longrightarrow> F = G\<close> for F G :: \<open>'a ell2 \<Rightarrow> complex\<close>
-    using dense_span_separating[of S F G] by auto
+    using bounded_clinear_eq_on_closure[of F G S] by auto
   from assms have 2: \<open>bounded_clinear F \<Longrightarrow> bounded_clinear G \<Longrightarrow> (\<forall>x\<in>T. F x = G x) \<Longrightarrow> F = G\<close> for F G :: \<open>'b ell2 \<Rightarrow> complex\<close>
-    using dense_span_separating[of T F G] by auto
+    using bounded_clinear_eq_on_closure[of F G T] by auto
   have \<open>F = G\<close> 
     if [simp]: \<open>bounded_clinear F\<close> \<open>bounded_clinear G\<close> and eq: \<open>\<forall>x\<in>ST. F x = G x\<close>
     for F G :: \<open>('a\<times>'b) ell2 \<Rightarrow> complex\<close>
@@ -563,10 +563,10 @@ proof -
       by (auto intro!: bounded_clinear_tensor_ell21[THEN bounded_clinear_compose] bounded_clinear_cblinfun_apply)
 
     have eq_ket: \<open>extg1 *\<^sub>V tensor_ell2 \<psi> (ket y) = tensor_ell2 (M *\<^sub>V \<psi>) (ket y)\<close> for y
-      apply (rule bounded_clinear_eq_on[where t=\<psi> and G=\<open>range ket\<close>])
+      apply (rule bounded_clinear_eq_on_closure[where t=\<psi> and G=\<open>range ket\<close>])
       using 1 2 extg1_ket by (auto simp: tensor_ell2_ket)
     show ?thesis 
-      apply (rule bounded_clinear_eq_on[where t=\<phi> and G=\<open>range ket\<close>])
+      apply (rule bounded_clinear_eq_on_closure[where t=\<phi> and G=\<open>range ket\<close>])
       using 3 4 eq_ket by auto
   qed
 
@@ -662,10 +662,10 @@ proof -
       by (auto intro!: bounded_clinear_tensor_ell22[THEN bounded_clinear_compose] bounded_clinear_cblinfun_apply)
 
     have eq_ket: \<open>extg2 *\<^sub>V (ket x \<otimes>\<^sub>s \<phi>) = ket x \<otimes>\<^sub>s (N *\<^sub>V \<phi>)\<close> for x
-      apply (rule bounded_clinear_eq_on[where t=\<phi> and G=\<open>range ket\<close>])
+      apply (rule bounded_clinear_eq_on_closure[where t=\<phi> and G=\<open>range ket\<close>])
       using 1 2 extg2_ket by (auto simp: tensor_ell2_ket)
     show ?thesis 
-      apply (rule bounded_clinear_eq_on[where t=\<psi> and G=\<open>range ket\<close>])
+      apply (rule bounded_clinear_eq_on_closure[where t=\<psi> and G=\<open>range ket\<close>])
       using 3 4 eq_ket by auto
   qed
 
@@ -1401,7 +1401,7 @@ lemma tensor_op_pos: \<open>a \<otimes>\<^sub>o b \<ge> 0\<close> if [simp]: \<o
   for a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
 proof -
   have \<open>(sqrt_op a \<otimes>\<^sub>o sqrt_op b)* o\<^sub>C\<^sub>L (sqrt_op a \<otimes>\<^sub>o sqrt_op b) = a \<otimes>\<^sub>o b\<close>
-    by (simp add: tensor_op_adjoint comp_tensor_op flip: positive_hermitianI)
+    by (simp add: tensor_op_adjoint comp_tensor_op positive_hermitianI)
   then show \<open>a \<otimes>\<^sub>o b \<ge> 0\<close>
     by (metis positive_cblinfun_squareI)
 qed
@@ -1410,7 +1410,7 @@ qed
 lemma abs_op_tensor: \<open>abs_op (a \<otimes>\<^sub>o b) = abs_op a \<otimes>\<^sub>o abs_op b\<close>
 proof -
   have \<open>(abs_op a \<otimes>\<^sub>o abs_op b)* o\<^sub>C\<^sub>L (abs_op a \<otimes>\<^sub>o abs_op b) = (a \<otimes>\<^sub>o b)* o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o b)\<close>
-    by (simp add: tensor_op_adjoint comp_tensor_op abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
+    by (simp add: tensor_op_adjoint comp_tensor_op abs_op_def positive_cblinfun_squareI positive_hermitianI)
   then show ?thesis
     by (metis abs_opI abs_op_pos tensor_op_pos)
 qed

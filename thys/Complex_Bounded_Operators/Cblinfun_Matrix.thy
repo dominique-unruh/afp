@@ -186,11 +186,9 @@ lemma cscalar_prod_vec_of_basis_enum: "cscalar_prod (vec_of_basis_enum \<phi>) (
   apply (subst cinner_basis_enum_of_vec[symmetric, where 'a='a])
   by simp_all
 
-(* TODO: Introduce a definition for the rhs. (i.e., norm on vec's) *)
-lemma norm_ell2_vec_of_basis_enum: "norm \<psi> =
-  (let \<psi>' = vec_of_basis_enum \<psi> in
-    sqrt (\<Sum> i \<in> {0 ..< dim_vec \<psi>'}. let z = vec_index \<psi>' i in (Re z)\<^sup>2 + (Im z)\<^sup>2))"
-  (is "_ = ?rhs") for \<psi> :: "'a::onb_enum"
+definition \<open>norm_vec \<psi> = sqrt (\<Sum> i \<in> {0 ..< dim_vec \<psi>}. let z = vec_index \<psi> i in (Re z)\<^sup>2 + (Im z)\<^sup>2)\<close>
+
+lemma norm_ell2_vec_of_basis_enum: \<open>norm \<psi> = norm_vec (vec_of_basis_enum \<psi>)\<close> for \<psi> :: "'a::onb_enum"
 proof -
   have "norm \<psi> = sqrt (cmod (\<Sum>i = 0..<dim_vec (vec_of_basis_enum \<psi>).
             vec_of_basis_enum \<psi> $ i * conjugate (vec_of_basis_enum \<psi>) $ i))"
@@ -201,8 +199,8 @@ proof -
     apply (subst sum.cong, rule refl)
      apply (subst vec_index_conjugate)
     by (auto simp: Let_def complex_mult_cnj)
-  also have "\<dots> = ?rhs"
-    unfolding Let_def norm_of_real
+  also have "\<dots> = norm_vec (vec_of_basis_enum \<psi>)"
+    unfolding Let_def norm_of_real norm_vec_def
     apply (subst abs_of_nonneg)
      apply (rule sum_nonneg)
     by auto

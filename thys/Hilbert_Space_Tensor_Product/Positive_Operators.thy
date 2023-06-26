@@ -753,8 +753,8 @@ lemma sqrt_op_scaleC:
   assumes \<open>c \<ge> 0\<close> and \<open>a \<ge> 0\<close>
   shows \<open>sqrt_op (c *\<^sub>C a) = sqrt c *\<^sub>C sqrt_op a\<close>
   apply (rule sqrt_op_unique[symmetric])
-  using assms apply (auto simp: split_scaleC_pos_le simp flip: positive_hermitianI)
-  by (metis of_real_power power2_eq_square real_sqrt_pow2 )
+  using assms apply (auto simp: split_scaleC_pos_le positive_hermitianI)
+  by (metis of_real_power power2_eq_square real_sqrt_pow2)
 
 definition abs_op :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner \<Rightarrow> 'a \<Rightarrow>\<^sub>C\<^sub>L 'a\<close> where \<open>abs_op a = sqrt_op (a* o\<^sub>C\<^sub>L a)\<close>
 
@@ -827,7 +827,7 @@ proof (rule ccsubspace_eqI)
   also have \<open>\<dots> \<longleftrightarrow> x \<bullet>\<^sub>C ((abs_op a)* o\<^sub>C\<^sub>L abs_op a) x = 0\<close>
     by (simp add: cinner_adj_right)
   also have \<open>\<dots> \<longleftrightarrow> x \<bullet>\<^sub>C (a* o\<^sub>C\<^sub>L a) x = 0\<close>
-    by (simp add: abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
+    by (simp add: abs_op_def positive_cblinfun_squareI positive_hermitianI)
   also have \<open>\<dots> \<longleftrightarrow> a x \<bullet>\<^sub>C a x = 0\<close>
     by (simp add: cinner_adj_right)
   also have \<open>\<dots> \<longleftrightarrow> a x = 0\<close>
@@ -858,7 +858,7 @@ proof -
     also have \<open>\<dots> = (A* o\<^sub>C\<^sub>L A) h \<bullet>\<^sub>C h\<close>
       by (simp add: cinner_adj_left)
     also have \<open>\<dots> = ((abs_op A)* o\<^sub>C\<^sub>L abs_op A) h \<bullet>\<^sub>C h\<close>
-      by (simp add: abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
+      by (simp add: abs_op_def positive_cblinfun_squareI positive_hermitianI)
     also have \<open>\<dots> = abs_op A h \<bullet>\<^sub>C abs_op A h\<close>
       by (simp add: cinner_adj_left)
     also have \<open>\<dots> = complex_of_real ((norm (abs_op A h))\<^sup>2)\<close>
@@ -887,7 +887,7 @@ proof -
     also have \<open>\<dots> = (A* o\<^sub>C\<^sub>L A) h \<bullet>\<^sub>C h\<close>
       by (simp add: cinner_adj_left)
     also have \<open>\<dots> = ((abs_op A)* o\<^sub>C\<^sub>L abs_op A) h \<bullet>\<^sub>C h\<close>
-      by (simp add: abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
+      by (simp add: abs_op_def positive_cblinfun_squareI positive_hermitianI)
     also have \<open>\<dots> = abs_op A h \<bullet>\<^sub>C abs_op A h\<close>
       by (simp add: cinner_adj_left)
     also have \<open>\<dots> = complex_of_real ((norm (abs_op A h))\<^sup>2)\<close>
@@ -1057,7 +1057,7 @@ proof -
   have \<open>(norm (abs_op a))\<^sup>2 = norm (abs_op a* o\<^sub>C\<^sub>L abs_op a)\<close>
     by simp
   also have \<open>\<dots> = norm (a* o\<^sub>C\<^sub>L a)\<close>
-    by (simp add: abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
+    by (simp add: abs_op_def positive_cblinfun_squareI positive_hermitianI)
   also have \<open>\<dots> = (norm a)\<^sup>2\<close>
     by simp
   finally show ?thesis
@@ -1101,7 +1101,7 @@ next
 qed
 
 lemma abs_op_square: \<open>(abs_op A)* o\<^sub>C\<^sub>L abs_op A = A* o\<^sub>C\<^sub>L A\<close>
-  by (simp add: abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
+  by (simp add: abs_op_def positive_cblinfun_squareI positive_hermitianI)
 
 (* TODO move to polar_decomposition-definition theory *)
 lemma polar_decomposition_0[simp]: \<open>polar_decomposition 0 = (0 :: 'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space)\<close>

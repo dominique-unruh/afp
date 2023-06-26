@@ -167,7 +167,7 @@ lemma trace_norm_basis_invariance:
 proof -
   define B where \<open>B = sqrt_op (abs_op A)\<close>
   have \<open>complex_of_real (cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) = (B* *\<^sub>V B*\<^sub>V e) \<bullet>\<^sub>C e\<close> for e
-    apply (simp add: B_def flip: cblinfun_apply_cblinfun_compose positive_hermitianI)
+    apply (simp add: B_def positive_hermitianI flip: cblinfun_apply_cblinfun_compose)
     by (metis (no_types, lifting) abs_op_pos cblinfun.zero_left cinner_commute cinner_zero_right complex_cnj_complex_of_real complex_of_real_cmod less_eq_cblinfun_def)
   also have \<open>\<dots> e = complex_of_real ((norm (B *\<^sub>V e))\<^sup>2)\<close> for e
     apply (subst cdot_square_norm[symmetric])
@@ -701,7 +701,7 @@ proof -
     have \<open>trace_class (abs_op A)\<close>
       by simp
     then show \<open>trace_class (Sq* o\<^sub>C\<^sub>L Sq)\<close>
-      by (auto simp: Sq_def simp flip: positive_hermitianI)
+      by (auto simp: Sq_def positive_hermitianI)
   qed
   have sqrt_hs_hs_times_hs: \<open>\<exists>B (C :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'a). hilbert_schmidt B \<and> hilbert_schmidt C \<and> A = B o\<^sub>C\<^sub>L C\<close>
     if \<open>hilbert_schmidt Sq\<close>
@@ -1350,9 +1350,9 @@ proof -
         = tu* o\<^sub>C\<^sub>L tu\<close>
       proof -
         have tt[THEN simp_a_oCL_b, simp]: \<open>(abs_op t)* o\<^sub>C\<^sub>L abs_op t = t* o\<^sub>C\<^sub>L t\<close>
-          by (simp add: abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
+          by (simp add: abs_op_def positive_cblinfun_squareI positive_hermitianI)
         have uu[THEN simp_a_oCL_b, simp]: \<open>(abs_op u)* o\<^sub>C\<^sub>L abs_op u = u* o\<^sub>C\<^sub>L u\<close>
-          by (simp add: abs_op_def positive_cblinfun_squareI flip: positive_hermitianI)
+          by (simp add: abs_op_def positive_cblinfun_squareI positive_hermitianI)
         note isometryD[THEN simp_a_oCL_b, simp]
         note cblinfun_right_left_ortho[THEN simp_a_oCL_b, simp]
         note cblinfun_left_right_ortho[THEN simp_a_oCL_b, simp]
@@ -1449,7 +1449,7 @@ proof -
   also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. cmod (e \<bullet>\<^sub>C ((a o\<^sub>C\<^sub>L b) *\<^sub>V e)))\<close>
     using sum1 by (rule norm_infsum_bound)
   also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. cmod (((sqrt_op (abs_op b) o\<^sub>C\<^sub>L W* o\<^sub>C\<^sub>L a*) *\<^sub>V e) \<bullet>\<^sub>C (sqrt_op (abs_op b) *\<^sub>V e)))\<close>
-    apply (simp add: flip: cinner_adj_right flip: positive_hermitianI cblinfun_apply_cblinfun_compose)
+    apply (simp add: positive_hermitianI flip: cinner_adj_right cblinfun_apply_cblinfun_compose)
     by (metis (full_types) W_def abs_op_def cblinfun_compose_assoc polar_decomposition_correct sqrt_op_pos sqrt_op_square)
   also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. norm ((sqrt_op (abs_op b) o\<^sub>C\<^sub>L W* o\<^sub>C\<^sub>L a*) *\<^sub>V e) * norm (sqrt_op (abs_op b) *\<^sub>V e))\<close>
     using sum2 sum3 apply (rule infsum_mono)
@@ -1476,7 +1476,7 @@ proof -
   also have \<open>\<dots> = norm a * (hilbert_schmidt_norm (sqrt_op (abs_op b)))\<^sup>2\<close>
     by (simp add: power2_eq_square)
   also have \<open>\<dots> = norm a * trace_norm b\<close>
-    apply (simp add: hilbert_schmidt_norm_def flip: positive_hermitianI)
+    apply (simp add: hilbert_schmidt_norm_def positive_hermitianI)
     by (metis abs_op_idem of_real_eq_iff trace_abs_op)
   finally show ?thesis
     by -
@@ -2005,7 +2005,7 @@ proof (rule field_le_epsilon)
   have \<open>complex_of_real (norm t) = norm (abs_op t)\<close>
     by simp
   also have \<open>\<dots> = (norm (sqrt_op (abs_op t)))\<^sup>2\<close>
-    by (simp flip: norm_AadjA positive_hermitianI)
+    by (simp add: positive_hermitianI flip: norm_AadjA)
   also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>) + \<delta>)\<^sup>2\<close>
     by (smt (verit) \<psi>\<epsilon> complex_of_real_mono norm_triangle_ineq4 norm_triangle_sub pos2 power_strict_mono)
   also have \<open>\<dots> = (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>))\<^sup>2 + \<delta>\<^sup>2 + 2 * norm (sqrt_op (abs_op t) *\<^sub>V \<psi>) * \<delta>\<close>
@@ -2019,7 +2019,7 @@ proof (rule field_le_epsilon)
   also have \<open>\<dots> = ((sqrt_op (abs_op t) *\<^sub>V \<psi>) \<bullet>\<^sub>C (sqrt_op (abs_op t) *\<^sub>V \<psi>)) + \<epsilon>\<close>
     by (simp add: cdot_square_norm)
   also have \<open>\<dots> = (\<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>)) + \<epsilon>\<close>
-    by (simp flip: cinner_adj_right cblinfun_apply_cblinfun_compose flip: positive_hermitianI)
+    by (simp add: positive_hermitianI flip: cinner_adj_right cblinfun_apply_cblinfun_compose)
   also have \<open>\<dots> \<le> trace_norm t + \<epsilon>\<close>
     using \<open>norm \<psi> = 1\<close> \<open>trace_class t\<close> by (auto simp add: trace_norm_geq_cinner_abs_op)
   finally show \<open>norm t \<le> trace_norm t + \<epsilon>\<close>

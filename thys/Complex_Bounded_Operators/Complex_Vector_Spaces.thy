@@ -1428,7 +1428,6 @@ text \<open>The following auxiliary lemma (\<open>finite_span_complete_aux\<clos
    (HOL does not support such reasoning). Therefore we have the type \<^typ>\<open>'basis\<close> as
    an explicit assumption and remove it using @{attribute internalize_sort} after the proof.\<close>
 
-(* TODO: Maybe this should be in Extra_Vector_Spaces *)
 lemma finite_span_complete_aux:
   fixes b :: "'b::real_normed_vector" and B :: "'b set"
     and  rep :: "'basis::finite \<Rightarrow> 'b" and abs :: "'b \<Rightarrow> 'basis"
@@ -1670,7 +1669,6 @@ proof -
     by simp
 qed
 
-(* TODO: Maybe this should be in Extra_Vector_Spaces *)
 lemma finite_span_complete[simp]:
   fixes A :: "'a::real_normed_vector set"
   assumes "finite A"
@@ -1716,7 +1714,6 @@ next
     using complete_singleton by auto
 qed
 
-(* TODO: Maybe this should be in Extra_Vector_Spaces *)
 lemma finite_span_representation_bounded:
   fixes B :: "'a::real_normed_vector set"
   assumes "finite B" and "independent B"
@@ -1809,7 +1806,6 @@ lemma finite_cspan_complete[simp]:
   shows "complete (cspan B)"
   by (simp add: assms cspan_as_span)
 
-(* TODO: Maybe this should be in Extra_Vector_Spaces *)
 lemma finite_span_closed[simp]:
   fixes B :: "'a::real_normed_vector set"
   assumes "finite B"
@@ -1958,7 +1954,6 @@ proof -
     using assms bounded_clinear_def bounded_clinear_axioms_def by blast
 qed
 
-(* TODO: Maybe this should be in Extra_Vector_Spaces if we move finite_span_closed, too. *)
 lemma summable_on_scaleR_left_converse:
   \<comment> \<open>This result has nothing to do with the bounded operator library but it
       uses @{thm [source] finite_span_closed} so it is proven here.\<close>
@@ -2026,7 +2021,6 @@ proof -
     by (auto simp: o_def)
 qed
 
-(* TODO: Maybe this should be in Extra_Vector_Spaces if we move finite_span_closed, too. *)
 lemma infsum_scaleR_left:
   \<comment> \<open>This result has nothing to do with the bounded operator library but it
       uses @{thm [source] finite_span_closed} so it is proven here.
@@ -2050,7 +2044,6 @@ next
     by (auto simp add: infsum_not_exists)
 qed
 
-(* TODO: Maybe this should be in Extra_Vector_Spaces if we move finite_span_closed, too. *)
 lemma infsum_of_real: 
   shows \<open>(\<Sum>\<^sub>\<infinity>x\<in>A. of_real (f x) :: 'b::{real_normed_vector, real_algebra_1}) = of_real (\<Sum>\<^sub>\<infinity>x\<in>A. f x)\<close>
   \<comment> \<open>This result has nothing to do with the bounded operator library but it
@@ -2200,7 +2193,7 @@ qed
 
 typedef (overloaded) ('a::"{complex_vector,topological_space}")
   ccsubspace = \<open>{S::'a set. closed_csubspace S}\<close>
-  morphisms space_as_set Abs_clinear_space (* TODO: rename \<rightarrow> Abs_ccsubspace *)
+  morphisms space_as_set Abs_ccsubspace
   using Complex_Vector_Spaces.closed_csubspace_UNIV by blast
 
 setup_lifting type_definition_ccsubspace
@@ -2460,7 +2453,7 @@ lemma antilinear_continuous_within:
   shows \<open>continuous (at x within s) f\<close>
   by (simp add: assms bounded_antilinear.bounded_linear linear_continuous_within)
 
-lemma bounded_clinear_eq_on:
+lemma bounded_clinear_eq_on_closure:
   fixes A B :: "'a::complex_normed_vector \<Rightarrow> 'b::complex_normed_vector"
   assumes \<open>bounded_clinear A\<close> and \<open>bounded_clinear B\<close> and
     eq: \<open>\<And>x. x \<in> G \<Longrightarrow> A x = B x\<close> and t: \<open>t \<in> closure (cspan G)\<close>
@@ -2608,7 +2601,7 @@ lemma space_as_set_top[simp]: \<open>space_as_set top = UNIV\<close>
 lemma ccsubspace_eqI:
   assumes \<open>\<And>x. x \<in> space_as_set S \<longleftrightarrow> x \<in> space_as_set T\<close>
   shows \<open>S = T\<close>
-  by (metis Abs_clinear_space_cases Abs_clinear_space_inverse antisym assms subsetI)
+  by (metis Abs_ccsubspace_cases Abs_ccsubspace_inverse antisym assms subsetI)
 
 lemma ccspan_remove_0: \<open>ccspan (A - {0}) = ccspan A\<close>
   apply transfer
@@ -3082,7 +3075,7 @@ proof -
   moreover from t have \<open>?t \<in> closure (cspan ?G)\<close>
     by (metis bounded_antilinear.bounded_linear bounded_antilinear_to_conjugate_space closure_bounded_linear_image_subset cspan_to_conjugate_space imageI subsetD)
   ultimately have \<open>?A ?t = ?B ?t\<close>
-    by (rule bounded_clinear_eq_on)
+    by (rule bounded_clinear_eq_on_closure)
   then show \<open>A t = B t\<close>
     by (simp add: to_conjugate_space_inverse)
 qed

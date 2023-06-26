@@ -465,7 +465,7 @@ proof -
     using bounded_antilinear_cinner_left apply (rule bounded_antilinear_eq_on[where G=X])
     using assms that by auto
   show \<open>cinner x y = 0\<close>
-    using bounded_clinear_cinner_right apply (rule bounded_clinear_eq_on[where G=Y])
+    using bounded_clinear_cinner_right apply (rule bounded_clinear_eq_on_closure[where G=Y])
     using * assms by auto
 qed
 
@@ -492,10 +492,9 @@ lift_definition minus_ccsubspace :: "'a ccsubspace \<Rightarrow> 'a ccsubspace \
 instance..
 end
 
-(* TODO write with \<longleftrightarrow> *)
 definition is_ortho_set :: "'a::complex_inner set \<Rightarrow> bool" where
   \<comment> \<open>Orthogonal set\<close>
-  \<open>is_ortho_set S = ((\<forall>x\<in>S. \<forall>y\<in>S. x \<noteq> y \<longrightarrow> (x \<bullet>\<^sub>C y) = 0) \<and> 0 \<notin> S)\<close>
+  \<open>is_ortho_set S \<longleftrightarrow> (\<forall>x\<in>S. \<forall>y\<in>S. x \<noteq> y \<longrightarrow> (x \<bullet>\<^sub>C y) = 0) \<and> 0 \<notin> S\<close>
 
 definition is_onb where \<open>is_onb E \<longleftrightarrow> is_ortho_set E \<and> (\<forall>b\<in>E. norm b = 1) \<and> ccspan E = top\<close>
 
@@ -1296,9 +1295,8 @@ lemma is_projection_on_unique:
   using smallest_dist_unique[OF assms(1)] using assms(2,3)
   unfolding is_projection_on_def by blast
 
-(* TODO: Use = instead of \<equiv> *)
 definition projection :: \<open>'a::metric_space set \<Rightarrow> ('a \<Rightarrow> 'a)\<close> where
-  \<open>projection M \<equiv> SOME \<pi>. is_projection_on \<pi> M\<close>
+  \<open>projection M = (SOME \<pi>. is_projection_on \<pi> M)\<close>
 
 lemma projection_is_projection_on:
   fixes M :: \<open>'a::chilbert_space set\<close>

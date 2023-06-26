@@ -1117,7 +1117,7 @@ proof -
   have \<open>(F *\<^sub>V x) \<bullet>\<^sub>C y = x \<bullet>\<^sub>C (G *\<^sub>V y)\<close> if \<open>x \<in> range ket\<close> and \<open>y \<in> range ket\<close> for x y
     using that by auto
   then have \<open>(F *\<^sub>V x) \<bullet>\<^sub>C y = x \<bullet>\<^sub>C (G *\<^sub>V y)\<close> if \<open>x \<in> range ket\<close> for x y
-    apply (rule bounded_clinear_eq_on[where G=\<open>range ket\<close> and t=y, rotated 2])
+    apply (rule bounded_clinear_eq_on_closure[where G=\<open>range ket\<close> and t=y, rotated 2])
     using that by (auto intro!: bounded_linear_intros)
   then have \<open>(F *\<^sub>V x) \<bullet>\<^sub>C y = x \<bullet>\<^sub>C (G *\<^sub>V y)\<close> for x y
     apply (rule bounded_antilinear_eq_on[where G=\<open>range ket\<close> and t=x, rotated 2])
@@ -1158,7 +1158,7 @@ lemma bounded_clinear_equal_ket:
   assumes \<open>\<And>i. f (ket i) = g (ket i)\<close>
   shows \<open>f = g\<close>
   apply (rule ext)
-  apply (rule bounded_clinear_eq_on[of f g \<open>range ket\<close>])
+  apply (rule bounded_clinear_eq_on_closure[of f g \<open>range ket\<close>])
   using assms by auto
 
 lemma bounded_antilinear_equal_ket:

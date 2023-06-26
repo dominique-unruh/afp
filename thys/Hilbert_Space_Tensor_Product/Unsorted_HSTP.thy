@@ -1950,7 +1950,7 @@ proof -
     have [simp]: \<open>unitary u\<close>
       by (auto intro!: unitary_def[THEN iffD2] simp: * ** u_def cblinfun_compose_add_right
           cblinfun_compose_add_left adj_plus cblinfun_compose_minus_left cblinfun_compose_minus_right
-          positive_hermitianI[symmetric] sqrt_op_pos scaleC_diff_right scaleC_add_right)
+          positive_hermitianI sqrt_op_pos scaleC_diff_right scaleC_add_right)
     have [simp]: \<open>u + u* = h' + h'\<close>
       by (simp add: * u_def adj_plus positive_hermitianI[symmetric] sqrt_op_pos)
     show ?thesis
@@ -2053,9 +2053,9 @@ proof -
   have \<open>B \<ge> 0\<close>
     using assms by force
   have sqrtA: \<open>(sqrt_op A)* o\<^sub>C\<^sub>L sqrt_op A = A\<close>
-    by (simp add: \<open>A \<ge> 0\<close> flip: positive_hermitianI)
+    by (simp add: \<open>A \<ge> 0\<close> positive_hermitianI)
   have sqrtB: \<open>(sqrt_op B)* o\<^sub>C\<^sub>L sqrt_op B = B\<close>
-    by (simp add: \<open>B \<ge> 0\<close> flip: positive_hermitianI)
+    by (simp add: \<open>B \<ge> 0\<close> positive_hermitianI)
   have \<open>norm (sqrt_op A \<psi>) \<le> norm (sqrt_op B \<psi>)\<close> for \<psi>
     apply (auto intro!: cnorm_le[THEN iffD2]
         simp: sqrtA sqrtB

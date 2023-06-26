@@ -380,12 +380,6 @@ proof -
     using \<open>0 \<le> b\<close> norm_cblinfun_bound by blast
 qed
 
-(* TODO: move to Complex_Vector *)
-(* TODO: maybe remove *)
-lemma dense_span_separating: 
-  \<open>closure (cspan S) = UNIV \<Longrightarrow> bounded_clinear F \<Longrightarrow> bounded_clinear G \<Longrightarrow> (\<forall>x\<in>S. F x = G x) \<Longrightarrow> F = G\<close>
-  by (metis UNIV_I ext bounded_clinear_eq_on)
-
 lemma infsum_cblinfun_apply:
   assumes \<open>g summable_on S\<close>
   shows \<open>infsum (\<lambda>x. A *\<^sub>V g x) S = A *\<^sub>V (infsum g S)\<close>
@@ -644,7 +638,7 @@ lemma cblinfun_eq_on:
   shows "A *\<^sub>V t = B *\<^sub>V t"
   using assms
   apply transfer
-  using bounded_clinear_eq_on by blast
+  using bounded_clinear_eq_on_closure by blast
 
 lemma cblinfun_eq_gen_eqI:
   fixes A B :: "'a::cbanach \<Rightarrow>\<^sub>C\<^sub>L'b::complex_normed_vector"
@@ -850,11 +844,7 @@ lemma clinear_blinfun_compose_left: \<open>clinear (\<lambda>x. blinfun_compose 
   by (auto intro!: clinearI simp: blinfun_eqI scaleC_blinfun.rep_eq bounded_bilinear.add_left
                                   bounded_bilinear_blinfun_compose)
 
-(* TODO: Just instance *)
-instantiation blinfun :: (real_normed_vector, cbanach) "cbanach"
-begin
-instance..
-end
+instance blinfun :: (real_normed_vector, cbanach) cbanach..
 
 lemma blinfun_compose_assoc: "(A o\<^sub>L B) o\<^sub>L C = A o\<^sub>L (B  o\<^sub>L C)"
   by (simp add: blinfun_eqI)
@@ -1263,7 +1253,7 @@ lemma adj_uminus: \<open>(-A)* = - (A*)\<close>
 lemma cinner_real_hermiteanI:
   \<comment> \<open>Prop. II.2.12 in \<^cite>\<open>conway2013course\<close>\<close>
   assumes \<open>\<And>\<psi>. \<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>) \<in> \<real>\<close>
-  shows \<open>A = A*\<close>
+  shows \<open>A* = A\<close>
 proof -
   { fix g h :: 'a
     {
@@ -1292,7 +1282,8 @@ proof -
     have \<open>cinner h (A g) = cinner h (A* *\<^sub>V g)\<close>
       by (auto simp: ring_class.ring_distribs)
   }
-  then show "A = A*"
+  then show "A* = A"
+    apply (rule_tac sym)
     by (simp add: adjoint_eqI cinner_adj_right)
 qed
 
@@ -1501,7 +1492,7 @@ proof -
   have *: \<open>cinner (U* *\<^sub>V U *\<^sub>V \<psi>) \<phi> = cinner \<psi> \<phi>\<close> if \<open>\<psi>\<in>B\<close> and \<open>\<phi>\<in>B\<close> for \<psi> \<phi>
     by (simp add: cinner_adj_left orthoU that(1) that(2))
   have *: \<open>cinner (U* *\<^sub>V U *\<^sub>V \<psi>) \<phi> = cinner \<psi> \<phi>\<close> if \<open>\<psi>\<in>B\<close> for \<psi> \<phi>
-    apply (rule bounded_clinear_eq_on[where t=\<phi> and G=B])
+    apply (rule bounded_clinear_eq_on_closure[where t=\<phi> and G=B])
     using bounded_clinear_cinner_right *[OF that]
     by auto
   have \<open>U* *\<^sub>V U *\<^sub>V \<phi> = \<phi>\<close> if \<open>\<phi>\<in>B\<close> for \<phi>
@@ -1544,10 +1535,6 @@ lemma norm_isometry:
 
 lemma norm_preserving_isometry: \<open>isometry U\<close> if \<open>\<And>\<psi>. norm (U *\<^sub>V \<psi>) = norm \<psi>\<close>
   by (smt (verit, ccfv_SIG) cblinfun_cinner_eqI cblinfun_id_cblinfun_apply cinner_adj_right cnorm_eq isometry_def simp_a_oCL_b' that)
-
-(* TODO: Add this *)
-(* lemma \<open>isometry U \<Longrightarrow> cinner (U x) (U y) = cinner x y\<close>
-  by (metis (no_types, lifting) cblinfun_apply_cblinfun_compose cblinfun_id_cblinfun_apply cinner_adj_right isometryD) *)
 
 lemma norm_isometry_compose': \<open>norm (A o\<^sub>C\<^sub>L U) = norm A\<close> if \<open>isometry (U*)\<close>
   by (smt (verit) cblinfun_compose_assoc cblinfun_compose_id_right double_adj isometryD mult_cancel_left2 norm_AadjA norm_cblinfun_compose norm_isometry_compose norm_zero power2_eq_square right_diff_distrib that zero_less_norm_iff)
@@ -1774,13 +1761,13 @@ proof-
   hence \<open>(closure (cblinfun_apply (\<alpha> *\<^sub>C A) ` space_as_set S)) =
    ((*\<^sub>C) \<alpha>) ` (closure (cblinfun_apply A ` space_as_set S))\<close>
     by (metis (mono_tags, lifting) comp_apply image_cong scaleC_cblinfun.rep_eq)
-  hence \<open>Abs_clinear_space (closure (cblinfun_apply (\<alpha> *\<^sub>C A) ` space_as_set S)) =
-            \<alpha> *\<^sub>C Abs_clinear_space (closure (cblinfun_apply A ` space_as_set S))\<close>
+  hence \<open>Abs_ccsubspace (closure (cblinfun_apply (\<alpha> *\<^sub>C A) ` space_as_set S)) =
+            \<alpha> *\<^sub>C Abs_ccsubspace (closure (cblinfun_apply A ` space_as_set S))\<close>
     by (metis space_as_set_inverse cblinfun_image.rep_eq scaleC_ccsubspace.rep_eq)
-  have x1: "Abs_clinear_space (closure ((*\<^sub>V) (\<alpha> *\<^sub>C A) ` space_as_set S)) =
-            \<alpha> *\<^sub>C Abs_clinear_space (closure ((*\<^sub>V) A ` space_as_set S))"
-    using \<open>Abs_clinear_space (closure (cblinfun_apply (\<alpha> *\<^sub>C A) ` space_as_set S)) =
-            \<alpha> *\<^sub>C Abs_clinear_space (closure (cblinfun_apply A ` space_as_set S))\<close>
+  have x1: "Abs_ccsubspace (closure ((*\<^sub>V) (\<alpha> *\<^sub>C A) ` space_as_set S)) =
+            \<alpha> *\<^sub>C Abs_ccsubspace (closure ((*\<^sub>V) A ` space_as_set S))"
+    using \<open>Abs_ccsubspace (closure (cblinfun_apply (\<alpha> *\<^sub>C A) ` space_as_set S)) =
+            \<alpha> *\<^sub>C Abs_ccsubspace (closure (cblinfun_apply A ` space_as_set S))\<close>
     by blast
   show ?thesis
     unfolding cblinfun_image_def using x1 by force
@@ -1833,7 +1820,7 @@ proof (use assms in transfer)
   assume a4: "S \<subseteq> closure (cspan G)"
 
   have "A ` closure S = B ` closure S"
-    by (smt (verit, best) UnCI a1 a2 a3 a4 bounded_clinear_eq_on closure_Un closure_closure image_cong sup.absorb_iff1)
+    by (smt (verit, best) UnCI a1 a2 a3 a4 bounded_clinear_eq_on_closure closure_Un closure_closure image_cong sup.absorb_iff1)
   then show "closure (A ` S) = closure (B ` S)"
     by (metis bounded_clinear.bounded_linear a1 a2 closure_bounded_linear_image_subset_eq)
 qed
@@ -1873,7 +1860,6 @@ qed
 lemma zero_cblinfun_image[simp]: "0 *\<^sub>S S = (0::_ ccsubspace)"
   by transfer (simp add: complex_vector.subspace_0 image_constant[where x=0])
 
-(* TODO replace existing cblinfun_image_INF_eq_general *)
 lemma cblinfun_image_INF_eq_general:
   fixes V :: "'a \<Rightarrow> 'b::chilbert_space ccsubspace"
     and U :: "'b \<Rightarrow>\<^sub>C\<^sub>L'c::chilbert_space"
@@ -1982,7 +1968,6 @@ proof-
     using top.extremum_unique by blast
 qed
 
-(* TODO replace existing cblinfun_image_INF_eq *)
 lemma cblinfun_image_INF_eq[simp]:
   fixes V :: "'a \<Rightarrow> 'b::chilbert_space ccsubspace"
     and U :: "'b \<Rightarrow>\<^sub>C\<^sub>L 'c::chilbert_space"
@@ -2570,7 +2555,7 @@ proof-
       by blast
   qed
 
-  hence \<open>x \<in> space_as_set (Abs_clinear_space (space_as_set B +\<^sub>M space_as_set C))\<close>
+  hence \<open>x \<in> space_as_set (Abs_ccsubspace (space_as_set B +\<^sub>M space_as_set C))\<close>
     if "x \<in> space_as_set A" for x
     using that
     by (metis space_as_set_inverse sup_ccsubspace.rep_eq)
@@ -3534,8 +3519,7 @@ end
 lemma positive_id_cblinfun[simp]: "id_cblinfun \<ge> 0"
   unfolding less_eq_cblinfun_def using cinner_ge_zero by auto
 
-(* TODO: change to \<open>A* = A\<close> (so it's usable as a simp-rule) *)
-lemma positive_hermitianI: \<open>A = A*\<close> if \<open>A \<ge> 0\<close>
+lemma positive_hermitianI: \<open>A* = A\<close> if \<open>A \<ge> 0\<close>
   apply (rule cinner_real_hermiteanI)
   using that by (auto simp: complex_is_real_iff_compare0 less_eq_cblinfun_def)
 
