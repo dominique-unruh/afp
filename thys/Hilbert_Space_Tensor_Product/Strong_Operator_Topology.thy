@@ -266,6 +266,29 @@ proof -
     by -
 qed
 
+lemma continuous_cstrong_operator_topology_plus[continuous_intros]:
+  assumes \<open>continuous_map T cstrong_operator_topology f\<close>
+  assumes \<open>continuous_map T cstrong_operator_topology g\<close>
+  shows \<open>continuous_map T cstrong_operator_topology (\<lambda>x. f x + g x)\<close>
+  using assms
+  by (auto intro!: continuous_map_add
+      simp: continuous_on_cstrong_operator_topo_iff_coordinatewise cblinfun.add_left)
+
+lemma continuous_cstrong_operator_topology_uminus[continuous_intros]:
+  assumes \<open>continuous_map T cstrong_operator_topology f\<close>
+  shows \<open>continuous_map T cstrong_operator_topology (\<lambda>x. - f x)\<close>
+  using assms
+  by (auto simp add: continuous_on_cstrong_operator_topo_iff_coordinatewise cblinfun.minus_left)
+
+lemma continuous_cstrong_operator_topology_minus[continuous_intros]:
+  assumes \<open>continuous_map T cstrong_operator_topology f\<close>
+  assumes \<open>continuous_map T cstrong_operator_topology g\<close>
+  shows \<open>continuous_map T cstrong_operator_topology (\<lambda>x. f x - g x)\<close>
+  apply (subst diff_conv_add_uminus)
+  by (intro continuous_intros assms)
+
+
+
 lemma continuous_map_right_comp_sot[continuous_intros]: 
   assumes \<open>continuous_map T cstrong_operator_topology f\<close> 
   shows \<open>continuous_map T cstrong_operator_topology (\<lambda>x. f x o\<^sub>C\<^sub>L a)\<close> 
@@ -340,6 +363,62 @@ proof (rule complex_vector.subspaceI)
     by (metis 0 assms closure_subset csubspace_scaleC_invariant imageI in_mono scaleC_eq_0_iff)
 qed
 
+lemma limitin_cstrong_operator_topology:
+  \<open>limitin cstrong_operator_topology f l F \<longleftrightarrow> (\<forall>i. ((\<lambda>j. f j *\<^sub>V i) \<longlongrightarrow> l *\<^sub>V i) F)\<close>
+  by (simp add: cstrong_operator_topology_def limitin_pullback_topology 
+      tendsto_coordinatewise)
+
+(* TODO: can be generalized for more pullback topologies, I think *)
+lemma cstrong_operator_topology_in_closureI:
+  assumes \<open>\<And>M \<epsilon>. \<epsilon> > 0 \<Longrightarrow> finite M \<Longrightarrow> \<exists>a\<in>A. \<forall>v\<in>M. norm ((b-a) *\<^sub>V v) \<le> \<epsilon>\<close>
+  shows \<open>b \<in> cstrong_operator_topology closure_of A\<close>
+proof -
+  define F :: \<open>('a set \<times> real) filter\<close> where \<open>F = finite_subsets_at_top UNIV \<times>\<^sub>F at_right 0\<close>
+  obtain f where fA: \<open>f M \<epsilon> \<in> A\<close> and f: \<open>v \<in> M \<Longrightarrow> norm ((f M \<epsilon> - b) *\<^sub>V v) \<le> \<epsilon>\<close> if \<open>finite M\<close> and \<open>\<epsilon> > 0\<close> for M \<epsilon> v
+    apply atomize_elim
+    apply (intro allI choice2)
+    using assms
+    by (metis cblinfun.diff_left norm_minus_commute)
+  have F_props: \<open>\<forall>\<^sub>F (M,\<epsilon>) in F. finite M \<and> \<epsilon> > 0\<close>
+    apply (auto intro!: eventually_prodI simp: F_def case_prod_unfold)
+    by (simp add: eventually_at_right_less)
+  then have inA: \<open>\<forall>\<^sub>F (M,\<epsilon>) in F. f M \<epsilon> \<in> A\<close>
+    apply (rule eventually_rev_mp)
+    using fA by (auto intro!: always_eventually)
+  have \<open>limitin cstrong_operator_topology (case_prod f) b F\<close>
+  proof -
+    have \<open>\<forall>\<^sub>F (M,\<epsilon>) in F. norm (f M \<epsilon> *\<^sub>V v - b *\<^sub>V v) < e\<close> if \<open>e > 0\<close> for e v
+    proof -
+      have 1: \<open>\<forall>\<^sub>F (M,\<epsilon>) in F. (finite M \<and> v \<in> M) \<and> (\<epsilon> > 0 \<and> \<epsilon> < e)\<close>
+        apply (unfold F_def case_prod_unfold, rule eventually_prodI)
+        using eventually_at_right that
+        by (auto simp add: eventually_finite_subsets_at_top)
+      have 2: \<open>norm (f M \<epsilon> *\<^sub>V v - b *\<^sub>V v) < e\<close> if \<open>(finite M \<and> v \<in> M) \<and> (\<epsilon> > 0 \<and> \<epsilon> < e)\<close> for M \<epsilon>
+        by (smt (verit) cblinfun.diff_left f that)
+      show ?thesis
+        using 1 apply (rule eventually_mono)
+        using 2 by auto
+    qed
+    then have \<open>((\<lambda>(M,\<epsilon>). f M \<epsilon> *\<^sub>V v) \<longlongrightarrow> b *\<^sub>V v) F\<close> for v
+      by (simp add: tendsto_iff dist_norm case_prod_unfold)
+    then show ?thesis
+      by (simp add: case_prod_unfold limitin_cstrong_operator_topology)
+  qed
+  then show ?thesis
+    apply (rule limitin_closure_of)
+    using inA by (auto simp: F_def case_prod_unfold prod_filter_eq_bot)
+qed
+
+
+
+
+lemma sot_weaker_than_norm_limitin: \<open>limitin cstrong_operator_topology a A F\<close> if \<open>(a \<longlongrightarrow> A) F\<close>
+proof -
+  from that have \<open>((\<lambda>x. a x *\<^sub>V \<psi>) \<longlongrightarrow> A \<psi>) F\<close> for \<psi>
+    by (auto intro!: cblinfun.tendsto)
+  then show ?thesis
+    by (simp add: limitin_cstrong_operator_topology)
+qed
 
 lemma [transfer_rule]:
   includes lifting_syntax

@@ -442,7 +442,7 @@ proof -
   have \<open>swap_ell2 *\<^sub>V (\<psi> \<otimes>\<^sub>s (\<Sum>\<^sub>\<infinity>x\<in>A. \<phi> x)) = swap_ell2 *\<^sub>V (\<Sum>\<^sub>\<infinity>x\<in>A. \<psi> \<otimes>\<^sub>s \<phi> x)\<close>
     by metis
   then show ?thesis
-    by (simp add: flip: infsum_cblinfun_apply_isometry)
+    by (simp add: invertible_cblinfun_isometry flip: infsum_cblinfun_apply_invertible)
 qed
 
 

@@ -113,6 +113,10 @@ lemma not_singleton_existence[simp]:
   \<open>\<exists> x::('a::not_singleton). x \<noteq> t\<close>
   using not_singleton_card[where ?'a = 'a] by (metis (full_types))
 
+lemma not_not_singleton_zero: 
+  \<open>x = 0\<close> if \<open>\<not> class.not_singleton TYPE('a)\<close> for x :: \<open>'a::zero\<close>
+  using that unfolding class.not_singleton_def by auto
+
 lemma UNIV_not_singleton[simp]: "(UNIV::_::not_singleton set) \<noteq> {x}"
   using not_singleton_existence[of x] by blast
 
@@ -764,6 +768,25 @@ next
     then show \<open>\<forall>\<^sub>F x in F. f x \<in> S\<close>
       using US by (simp add: PiUNIV eventually_mono in_mono)
   qed
+qed
+
+lemma limitin_closure_of:
+  assumes limit: \<open>limitin T f c F\<close>
+  assumes in_S: \<open>\<forall>\<^sub>F x in F. f x \<in> S\<close>
+  assumes nontrivial: \<open>\<not> trivial_limit F\<close>
+  shows \<open>c \<in> T closure_of S\<close>
+proof (intro in_closure_of[THEN iffD2] conjI impI allI)
+  from limit show \<open>c \<in> topspace T\<close>
+    by (simp add: limitin_topspace)
+  fix U
+  assume \<open>c \<in> U \<and> openin T U\<close>
+  with limit have \<open>\<forall>\<^sub>F x in F. f x \<in> U\<close>
+    by (simp add: limitin_def)
+  with in_S have \<open>\<forall>\<^sub>F x in F. f x \<in> U \<and> f x \<in> S\<close>
+    by (simp add: eventually_frequently_simps)
+  with nontrivial
+  show \<open>\<exists>y. y \<in> S \<and> y \<in> U\<close>
+    using eventually_happens' by blast
 qed
 
 

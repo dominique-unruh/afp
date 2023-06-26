@@ -685,6 +685,26 @@ proof -
         simp add: f.add_right f.scaleC_right mult.commute mult.left_commute)
 qed
 
+lemma clinear_scaleR[simp]: \<open>clinear (scaleR x)\<close>
+  by (simp add: complex_vector.linear_scale_self scaleR_scaleC)
+
+
+lemma abs_summable_on_scaleC_left [intro]:
+  fixes c :: \<open>'a :: complex_normed_vector\<close>
+  assumes "c \<noteq> 0 \<Longrightarrow> f abs_summable_on A"
+  shows   "(\<lambda>x. f x *\<^sub>C c) abs_summable_on A"
+  apply (cases \<open>c = 0\<close>)
+   apply simp
+  by (auto intro!: summable_on_cmult_left assms simp: norm_scaleC)
+
+lemma abs_summable_on_scaleC_right [intro]:
+  fixes f :: \<open>'a \<Rightarrow> 'b :: complex_normed_vector\<close>
+  assumes "c \<noteq> 0 \<Longrightarrow> f abs_summable_on A"
+  shows   "(\<lambda>x. c *\<^sub>C f x) abs_summable_on A"
+  apply (cases \<open>c = 0\<close>)
+   apply simp
+  by (auto intro!: summable_on_cmult_right assms simp: norm_scaleC)
+
 
 subsection \<open>Antilinear maps and friends\<close>
 

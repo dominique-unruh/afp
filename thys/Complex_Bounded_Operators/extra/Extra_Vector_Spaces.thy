@@ -210,6 +210,36 @@ proof-
   thus ?thesis by auto
 qed
 
+lemma any_norm_exists:
+  assumes \<open>n \<ge> 0\<close>
+  shows \<open>\<exists>\<psi>::'a::{real_normed_vector,not_singleton}. norm \<psi> = n\<close>
+proof -
+  obtain \<psi> :: 'a where \<open>\<psi> \<noteq> 0\<close>
+    using not_singleton_card
+    by force
+  then have \<open>norm (n *\<^sub>R sgn \<psi>) = n\<close>
+    using assms by (auto simp: sgn_div_norm abs_mult)
+  then show ?thesis
+    by blast
+qed
+
+
+lemma abs_summable_on_scaleR_left [intro]:
+  fixes c :: \<open>'a :: real_normed_vector\<close>
+  assumes "c \<noteq> 0 \<Longrightarrow> f abs_summable_on A"
+  shows   "(\<lambda>x. f x *\<^sub>R c) abs_summable_on A"
+  apply (cases \<open>c = 0\<close>)
+   apply simp
+  by (auto intro!: summable_on_cmult_left assms simp flip: real_norm_def)
+
+lemma abs_summable_on_scaleR_right [intro]:
+  fixes f :: \<open>'a \<Rightarrow> 'b :: real_normed_vector\<close>
+  assumes "c \<noteq> 0 \<Longrightarrow> f abs_summable_on A"
+  shows   "(\<lambda>x. c *\<^sub>R f x) abs_summable_on A"
+  apply (cases \<open>c = 0\<close>)
+   apply simp
+  by (auto intro!: summable_on_cmult_right assms)
+
 
 
 end
