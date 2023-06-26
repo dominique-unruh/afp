@@ -5,7 +5,6 @@ theory Misc_Tensor_Product_BO
     Complex_Bounded_Operators.Complex_L2
     Misc_Tensor_Product  
     "HOL-Library.Function_Algebras" 
-    Complex_Bounded_Operators.BO_Unsorted
 begin
 
 no_notation Set_Algebras.elt_set_eq (infix "=o" 50)

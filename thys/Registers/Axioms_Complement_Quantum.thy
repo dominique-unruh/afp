@@ -223,19 +223,19 @@ proof -
       apply (rule surj_from_comp[where g=\<open>sandwich V\<close>])
       using \<open>surj F\<close> apply (auto simp: FV)
       by (meson \<open>unitary V\<close> register_inj unitary_sandwich_register)
-    then obtain a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L _\<close> 
-      where a: \<open>a \<otimes>\<^sub>o ?ida = selfbutterket undefined \<otimes>\<^sub>o selfbutterket undefined\<close>
+    then obtain a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> 
+      where a: \<open>a \<otimes>\<^sub>o ?ida = butterfly (ket undefined) (ket undefined) \<otimes>\<^sub>o butterfly (ket undefined) (ket undefined)\<close>
       by (smt (verit, best) surjD)
 
     then have \<open>a \<noteq> 0\<close>
       apply (auto simp: tensor_ell2_ket)
       by (metis butterfly_apply cblinfun.zero_left complex_vector.scale_eq_0_iff ket_nonzero orthogonal_ket)
 
-    obtain \<gamma> where \<gamma>: \<open>?ida = \<gamma> *\<^sub>C selfbutterket undefined\<close>
+    obtain \<gamma> where \<gamma>: \<open>?ida = \<gamma> *\<^sub>C butterfly (ket undefined) (ket undefined)\<close>
       apply atomize_elim
       using a \<open>a \<noteq> 0\<close> by (rule tensor_op_almost_injective)
-    then have \<open>?ida (ket undefined) = \<gamma> *\<^sub>C (selfbutterket undefined *\<^sub>V ket undefined)\<close>
-      by (simp add: \<open>id_cblinfun = \<gamma> *\<^sub>C selfbutterket undefined\<close> scaleC_cblinfun.rep_eq)
+    then have \<open>?ida (ket undefined) = \<gamma> *\<^sub>C (butterfly (ket undefined) (ket undefined) *\<^sub>V ket undefined)\<close>
+      by (simp add: \<open>id_cblinfun = \<gamma> *\<^sub>C butterfly (ket undefined) (ket undefined)\<close> scaleC_cblinfun.rep_eq)
     then have \<open>ket undefined = \<gamma> *\<^sub>C ket undefined\<close>
       by (metis butterfly_apply cinner_ket_same id_cblinfun_apply ket_nonzero scaleC_cancel_right scaleC_one)
     then have \<open>\<gamma> = 1\<close>
@@ -246,7 +246,7 @@ proof -
       unfolding T_def
       apply (subst bounded_clinear_CBlinfun_apply)
       by (auto intro!: bounded_clinear_tensor_ell22)
-    have \<open>sandwich T (butterket i j) = butterket i j \<otimes>\<^sub>o id_cblinfun\<close> for i j
+    have \<open>sandwich T (butterfly (ket i) (ket j)) = butterfly (ket i) (ket j) \<otimes>\<^sub>o id_cblinfun\<close> for i j
       by (simp add: T sandwich_apply cblinfun_comp_butterfly butterfly_comp_cblinfun \<gamma> \<open>\<gamma> = 1\<close>)
     then have sandwich_T: \<open>sandwich T a = a \<otimes>\<^sub>o ?ida\<close> for a
       apply (rule_tac fun_cong[where x=a])
@@ -273,7 +273,7 @@ proof -
       proof -
         have \<open>T *\<^sub>V (cinner (ket undefined) \<xi> *\<^sub>C \<phi>) = \<phi> \<otimes>\<^sub>s (cinner (ket undefined) \<xi> *\<^sub>C ket undefined)\<close>
           by (simp add: T tensor_ell2_scaleC1 tensor_ell2_scaleC2)
-        also have \<open>\<dots> = \<phi> \<otimes>\<^sub>s (selfbutterket undefined *\<^sub>V \<xi>)\<close>
+        also have \<open>\<dots> = \<phi> \<otimes>\<^sub>s (butterfly (ket undefined) (ket undefined) *\<^sub>V \<xi>)\<close>
           by simp
         also have \<open>\<dots> = \<phi> \<otimes>\<^sub>s (?ida *\<^sub>V \<xi>)\<close>
           by (simp add: \<gamma> \<open>\<gamma> = 1\<close>)
@@ -563,7 +563,7 @@ proof -
     by (simp add: clinear_register)
 
   define P where \<open>P i = Proj (ccspan {ket i})\<close> for i :: 'a
-  have P_butter: \<open>P i = selfbutterket i\<close> for i
+  have P_butter: \<open>P i = butterfly (ket i) (ket i)\<close> for i
     by (simp add: P_def butterfly_eq_proj)
 
   define P' where \<open>P' i = \<Phi> (P i)\<close> for i :: 'a
@@ -611,7 +611,7 @@ proof -
       by (metis cinner_adj_left is_Proj_algebraic proj_P')
     also have \<open>\<dots> = cinner (\<Phi> (P j o\<^sub>C\<^sub>L P i) *\<^sub>V x') y'\<close>
       unfolding P'_def register_mult[OF \<open>register \<Phi>\<close>, symmetric] by simp
-    also have \<open>\<dots> = cinner (\<Phi> (selfbutterket j o\<^sub>C\<^sub>L selfbutterket i) *\<^sub>V x') y'\<close>
+    also have \<open>\<dots> = cinner (\<Phi> (butterfly (ket j) (ket j) o\<^sub>C\<^sub>L butterfly (ket i) (ket i)) *\<^sub>V x') y'\<close>
       unfolding P_butter by simp
     also have \<open>\<dots> = cinner (\<Phi> 0 *\<^sub>V x') y'\<close>
       by (metis butterfly_comp_butterfly complex_vector.scale_eq_0_iff orthogonal_ket that(3))
@@ -670,7 +670,7 @@ proof -
 
   have cardBsame: \<open>card (B i) = card (B j)\<close> for i j
   proof -
-    define Si_to_Sj where \<open>Si_to_Sj i j \<psi> = \<Phi> (butterket j i) *\<^sub>V \<psi>\<close> for i j \<psi>
+    define Si_to_Sj where \<open>Si_to_Sj i j \<psi> = \<Phi> (butterfly (ket j) (ket i)) *\<^sub>V \<psi>\<close> for i j \<psi>
     have S2S2S: \<open>Si_to_Sj j i (Si_to_Sj i j \<psi>) = \<psi>\<close> if \<open>\<psi> \<in> space_as_set (S i)\<close> for i j \<psi>
       using that P'id
       by (simp add: Si_to_Sj_def cblinfun_apply_cblinfun_compose[symmetric] register_mult P_butter P'_def)
@@ -713,7 +713,7 @@ proof -
     apply atomize_elim apply (rule finite_same_card_bij)
     using finiteB CARD_complement_domain[OF CARD'b] by auto
 
-  define u where \<open>u = (\<lambda>(\<xi>,\<alpha>). \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>)\<close> for \<xi> :: 'a and \<alpha> :: \<open>('a,'b) complement_domain_simple\<close>
+  define u where \<open>u = (\<lambda>(\<xi>,\<alpha>). \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V f \<alpha>)\<close> for \<xi> :: 'a and \<alpha> :: \<open>('a,'b) complement_domain_simple\<close>
   obtain U where Uapply: \<open>U *\<^sub>V ket \<xi>\<alpha> = u \<xi>\<alpha>\<close> for \<xi>\<alpha>
     apply atomize_elim
     apply (rule exI[of _ \<open>cblinfun_extension (range ket) (\<lambda>k. u (inv ket k))\<close>])
@@ -729,18 +729,18 @@ proof -
   proof -
     obtain \<xi> \<alpha> \<xi>' \<alpha>' where \<xi>\<alpha>: \<open>\<xi>\<alpha> = (\<xi>,\<alpha>)\<close> and \<xi>'\<alpha>': \<open>\<xi>'\<alpha>' = (\<xi>',\<alpha>')\<close>
       apply atomize_elim by auto
-    have \<open>cinner (U *\<^sub>V ket (\<xi>,\<alpha>)) (U *\<^sub>V ket (\<xi>', \<alpha>')) = cinner (\<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (\<Phi> (butterket \<xi>' \<xi>0) *\<^sub>V f \<alpha>')\<close>
+    have \<open>cinner (U *\<^sub>V ket (\<xi>,\<alpha>)) (U *\<^sub>V ket (\<xi>', \<alpha>')) = cinner (\<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V f \<alpha>) (\<Phi> (butterfly (ket \<xi>') (ket \<xi>0)) *\<^sub>V f \<alpha>')\<close>
       unfolding Uapply u_def by simp
-    also have \<open>\<dots> = cinner ((\<Phi> (butterket \<xi>' \<xi>0))* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
+    also have \<open>\<dots> = cinner ((\<Phi> (butterfly (ket \<xi>') (ket \<xi>0)))* *\<^sub>V \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       by (simp add: cinner_adj_left)
-    also have \<open>\<dots> = cinner (\<Phi> (butterket \<xi>' \<xi>0 *) *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
+    also have \<open>\<dots> = cinner (\<Phi> (butterfly (ket \<xi>') (ket \<xi>0) *) *\<^sub>V \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       by (metis (no_types, lifting) assms register_def)
-    also have \<open>\<dots> = cinner (\<Phi> (butterket \<xi>0 \<xi>' o\<^sub>C\<^sub>L butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
+    also have \<open>\<dots> = cinner (\<Phi> (butterfly (ket \<xi>0) (ket \<xi>') o\<^sub>C\<^sub>L butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       by (simp add: register_mult cblinfun_apply_cblinfun_compose[symmetric])
-    also have \<open>\<dots> = cinner (\<Phi> (eqa \<xi>' \<xi> *\<^sub>C selfbutterket \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
+    also have \<open>\<dots> = cinner (\<Phi> (eqa \<xi>' \<xi> *\<^sub>C butterfly (ket \<xi>0) (ket \<xi>0)) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       apply simp
       by (metis cinner_ket_same eqa_def orthogonal_ket)
-    also have \<open>\<dots> = eqa \<xi>' \<xi> * cinner (\<Phi> (selfbutterket \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
+    also have \<open>\<dots> = eqa \<xi>' \<xi> * cinner (\<Phi> (butterfly (ket \<xi>0) (ket \<xi>0)) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       by (smt (verit, ccfv_threshold) \<open>clinear \<Phi>\<close> eqa_def cblinfun.scaleC_left cinner_commute 
               cinner_scaleC_left cinner_zero_right complex_cnj_one complex_vector.linear_scale)
     also have \<open>\<dots> = eqa \<xi>' \<xi> * cinner (P' \<xi>0 *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
@@ -760,27 +760,27 @@ proof -
     apply (rule_tac orthogonal_on_basis_is_isometry[where B=\<open>range ket\<close>])
     using eqac_def by auto
 
-  have \<open>sandwich (U*) (\<Phi> (butterket \<xi> \<eta>)) = butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun\<close> for \<xi> \<eta>
+  have \<open>sandwich (U*) (\<Phi> (butterfly (ket \<xi>) (ket \<eta>))) = butterfly (ket \<xi>) (ket \<eta>) \<otimes>\<^sub>o id_cblinfun\<close> for \<xi> \<eta>
   proof (rule equal_ket, rename_tac \<xi>1\<alpha>)
     fix \<xi>1\<alpha> obtain \<xi>1 :: 'a and \<alpha> :: \<open>('a,'b) complement_domain_simple\<close> where \<xi>1\<alpha>: \<open>\<xi>1\<alpha> = (\<xi>1,\<alpha>)\<close> 
       apply atomize_elim by auto
-    have \<open>sandwich (U*) (\<Phi> (butterket \<xi> \<eta>)) *\<^sub>V ket \<xi>1\<alpha> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta>) *\<^sub>V \<Phi> (butterket \<xi>1 \<xi>0) *\<^sub>V f \<alpha>\<close>
+    have \<open>sandwich (U*) (\<Phi> (butterfly (ket \<xi>) (ket \<eta>))) *\<^sub>V ket \<xi>1\<alpha> = U* *\<^sub>V \<Phi> (butterfly (ket \<xi>) (ket \<eta>)) *\<^sub>V \<Phi> (butterfly (ket \<xi>1) (ket \<xi>0)) *\<^sub>V f \<alpha>\<close>
       by (simp add: sandwich_apply[abs_def] cblinfun_apply_cblinfun_compose \<xi>1\<alpha> Uapply u_def)
-    also have \<open>\<dots> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta> o\<^sub>C\<^sub>L butterket \<xi>1 \<xi>0) *\<^sub>V f \<alpha>\<close>
+    also have \<open>\<dots> = U* *\<^sub>V \<Phi> (butterfly (ket \<xi>) (ket \<eta>) o\<^sub>C\<^sub>L butterfly (ket \<xi>1) (ket \<xi>0)) *\<^sub>V f \<alpha>\<close>
       by (metis (no_types, lifting) assms butterfly_comp_butterfly lift_cblinfun_comp(4) register_mult)
-    also have \<open>\<dots> = U* *\<^sub>V \<Phi> (eqa \<eta> \<xi>1 *\<^sub>C butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>\<close>
+    also have \<open>\<dots> = U* *\<^sub>V \<Phi> (eqa \<eta> \<xi>1 *\<^sub>C butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V f \<alpha>\<close>
       by (simp add: eqa_def cinner_ket)
-    also have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C U* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>\<close>
+    also have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C U* *\<^sub>V \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V f \<alpha>\<close>
       by (simp add: complex_vector.linear_scale)
     also have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C U* *\<^sub>V U *\<^sub>V ket (\<xi>, \<alpha>)\<close>
       unfolding Uapply u_def by simp
     also from \<open>isometry U\<close> have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C ket (\<xi>, \<alpha>)\<close>
       unfolding cblinfun_apply_cblinfun_compose[symmetric] by simp
-    also have \<open>\<dots> = (butterket \<xi> \<eta> *\<^sub>V ket \<xi>1) \<otimes>\<^sub>s ket \<alpha>\<close>
+    also have \<open>\<dots> = (butterfly (ket \<xi>) (ket \<eta>) *\<^sub>V ket \<xi>1) \<otimes>\<^sub>s ket \<alpha>\<close>
       by (simp add: eqa_def tensor_ell2_scaleC1 tensor_ell2_ket)
-    also have \<open>\<dots> = (butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
+    also have \<open>\<dots> = (butterfly (ket \<xi>) (ket \<eta>) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
       by (simp add: \<xi>1\<alpha> tensor_op_ket)
-    finally show \<open>sandwich (U*) (\<Phi> (butterket \<xi> \<eta>)) *\<^sub>V ket \<xi>1\<alpha> = (butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
+    finally show \<open>sandwich (U*) (\<Phi> (butterfly (ket \<xi>) (ket \<eta>))) *\<^sub>V ket \<xi>1\<alpha> = (butterfly (ket \<xi>) (ket \<eta>) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
       by -
   qed
   then have 1: \<open>sandwich (U*) (\<Phi> \<theta>) = \<theta> \<otimes>\<^sub>o id_cblinfun\<close> for \<theta>
@@ -789,29 +789,29 @@ proof -
 
   have [simp]: \<open>unitary U\<close>
   proof -
-    have \<open>\<Phi> (butterket \<xi> \<xi>1) *\<^sub>S \<top> \<le> U *\<^sub>S \<top>\<close> for \<xi> \<xi>1
+    have \<open>\<Phi> (butterfly (ket \<xi>) (ket \<xi>1)) *\<^sub>S \<top> \<le> U *\<^sub>S \<top>\<close> for \<xi> \<xi>1
     proof -
-      have *: \<open>\<Phi> (butterket \<xi> \<xi>0) *\<^sub>V b \<in> space_as_set (U *\<^sub>S \<top>)\<close> if \<open>b \<in> B \<xi>0\<close> for b
-        apply (subst asm_rl[of \<open>\<Phi> (butterket \<xi> \<xi>0) *\<^sub>V b = u (\<xi>, inv f b)\<close>])
+      have *: \<open>\<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V b \<in> space_as_set (U *\<^sub>S \<top>)\<close> if \<open>b \<in> B \<xi>0\<close> for b
+        apply (subst asm_rl[of \<open>\<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V b = u (\<xi>, inv f b)\<close>])
          apply (simp add: u_def, metis bij_betw_inv_into_right bij_f that)
         by (metis Uapply cblinfun_apply_in_image)
 
-      have \<open>\<Phi> (butterket \<xi> \<xi>1) *\<^sub>S \<top> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>1) *\<^sub>S \<top>\<close>
+      have \<open>\<Phi> (butterfly (ket \<xi>) (ket \<xi>1)) *\<^sub>S \<top> = \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>S \<Phi> (butterfly (ket \<xi>0) (ket \<xi>0)) *\<^sub>S \<Phi> (butterfly (ket \<xi>0) (ket \<xi>1)) *\<^sub>S \<top>\<close>
         unfolding cblinfun_compose_image[symmetric] register_mult[OF assms]
         by simp
-      also have \<open>\<dots> \<le> \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>0) *\<^sub>S \<top>\<close>
+      also have \<open>\<dots> \<le> \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>S \<Phi> (butterfly (ket \<xi>0) (ket \<xi>0)) *\<^sub>S \<top>\<close>
         by (meson cblinfun_image_mono top_greatest)
-      also have \<open>\<dots> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S S \<xi>0\<close>
+      also have \<open>\<dots> = \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>S S \<xi>0\<close>
         by (simp add: S_def P'_def P_butter)
-      also have \<open>\<dots> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S ccspan (B \<xi>0)\<close>
+      also have \<open>\<dots> = \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>S ccspan (B \<xi>0)\<close>
         by (simp add: ccspanB)
-      also have \<open>\<dots> = ccspan (\<Phi> (butterket \<xi> \<xi>0) ` B \<xi>0)\<close>
+      also have \<open>\<dots> = ccspan (\<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) ` B \<xi>0)\<close>
         by (meson cblinfun_image_ccspan)
       also have \<open>\<dots> \<le> U *\<^sub>S \<top>\<close>
         by (rule ccspan_leqI, use * in auto)
       finally show ?thesis by -
     qed
-    moreover have \<open>\<Phi> id_cblinfun *\<^sub>S \<top> \<le> (SUP \<xi>\<in>UNIV. \<Phi> (selfbutterket \<xi>) *\<^sub>S \<top>)\<close>
+    moreover have \<open>\<Phi> id_cblinfun *\<^sub>S \<top> \<le> (SUP \<xi>\<in>UNIV. \<Phi> (butterfly (ket \<xi>) (ket \<xi>)) *\<^sub>S \<top>)\<close>
       unfolding sum_butterfly_ket[symmetric]
       apply (subst complex_vector.linear_sum, simp)
       by (rule cblinfun_sum_image_distr)
@@ -843,12 +843,11 @@ lemma register_decomposition_finite:
   shows \<open>\<exists>U :: ('a \<times> ('a, 'b) complement_domain_simple) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
               (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
 proof -
-  fix a\<^sub>0
-  have inj_butterket: \<open>inj (butterket a\<^sub>0 :: 'a \<Rightarrow> 'a update)\<close>
+  have inj_butterket: \<open>inj (\<lambda>a. butterfly (ket a) (ket a) :: 'a update)\<close>
   proof (rule injI)
     fix x y :: 'a
-    assume \<open>butterket a\<^sub>0 x = butterket a\<^sub>0 y\<close>
-    then have \<open>butterket a\<^sub>0 x *\<^sub>V ket x = butterket a\<^sub>0 y *\<^sub>V ket x\<close>
+    assume \<open>butterfly (ket x) (ket x) = butterfly (ket y) (ket y)\<close>
+    then have \<open>butterfly (ket x) (ket x) *\<^sub>V ket x = butterfly (ket y) (ket y)  *\<^sub>V ket x\<close>
       by simp
     then show \<open>x = y\<close>
       apply (cases \<open>x = y\<close>)
@@ -856,19 +855,19 @@ proof -
   qed
 
   from cindependent_butterfly_ket
-  have \<open>cindependent (range (butterket a\<^sub>0) :: 'a update set)\<close>
-    apply (subgoal_tac \<open>(range (butterket a\<^sub>0) :: 'a update set) \<subseteq> {butterket i j |i j. True}\<close>)
+  have \<open>cindependent (range (\<lambda>a. butterfly (ket a) (ket a)) :: 'a update set)\<close>
+    apply (subgoal_tac \<open>(range (\<lambda>a. butterfly (ket a) (ket a)) :: 'a update set) \<subseteq> {butterfly (ket i) (ket j) |i j. True}\<close>)
     by (auto intro: complex_vector.dependent_mono)
-  then have \<open>cindependent (\<Phi> ` range (butterket a\<^sub>0))\<close>
+  then have \<open>cindependent (\<Phi> ` range (\<lambda>a. butterfly (ket a) (ket a)))\<close>
     apply (rule complex_vector.linear_independent_injective_image[rotated])
     by (simp_all add: register_inj clinear_register)
-  then have \<open>finite (\<Phi> ` range (butterket a\<^sub>0))\<close>
+  then have \<open>finite (\<Phi> ` range (\<lambda>a. butterfly (ket a) (ket a)))\<close>
     using cindependent_cfinite_dim_finite by blast
-  then have \<open>finite (range (butterket a\<^sub>0) :: 'a update set)\<close>
+  then have \<open>finite (range (\<lambda>a. butterfly (ket a) (ket a)) :: 'a update set)\<close>
     apply (rule Finite_Set.inj_on_finite[rotated -1, where f=\<Phi>])
     by (simp_all add: register_inj)
   then have \<open>finite (UNIV :: 'a set)\<close>
-    apply (rule Finite_Set.inj_on_finite[rotated -1, where f=\<open>butterket a\<^sub>0\<close>])
+    apply (rule Finite_Set.inj_on_finite[rotated -1, where f=\<open>\<lambda>a. butterfly (ket a) (ket a)\<close>])
      apply (rule inj_butterket)
     by simp
   then have \<open>class.finite TYPE('a)\<close>

@@ -121,7 +121,7 @@ lemma register_unitary:
   shows "unitary (F a)"
   using assms by (smt (verit, best) register_def unitary_def)
 
-definition \<open>register_decomposition_basis \<Phi> = (SOME B. is_ortho_set B \<and> (\<forall>b\<in>B. norm b = 1) \<and> ccspan B = \<Phi> (selfbutterket undefined) *\<^sub>S \<top>)\<close> 
+definition \<open>register_decomposition_basis \<Phi> = (SOME B. is_ortho_set B \<and> (\<forall>b\<in>B. norm b = 1) \<and> ccspan B = \<Phi> (butterfly (ket undefined) (ket undefined)) *\<^sub>S \<top>)\<close> 
   for \<Phi> :: \<open>'a update \<Rightarrow> 'b update\<close>
 
 lemma register_decomposition:
@@ -145,7 +145,7 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
   then have [simp]: \<open>clinear \<Phi>\<close>
     by (simp add: bounded_clinear.clinear)
 
-  define P where \<open>P i = selfbutterket i\<close> for i :: 'a
+  define P where \<open>P i = butterfly (ket i) (ket i)\<close> for i :: 'a
 
   note blinfun_cblinfun_eq_bi_unique[transfer_rule del]
   note cblinfun.bi_unique[transfer_rule del]
@@ -160,7 +160,7 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
   have sumP'id2: \<open>has_sum_in weak_star_topology (\<lambda>i. P' i) UNIV id_cblinfun\<close>
   proof -
     from infsum_butterfly_ket
-    have \<open>has_sum_in weak_star_topology (\<Phi> o selfbutterket) UNIV (\<Phi> id_cblinfun)\<close>
+    have \<open>has_sum_in weak_star_topology (\<Phi> o (\<lambda>x. butterfly (ket x) (ket x))) UNIV (\<Phi> id_cblinfun)\<close>
       apply (rule has_sum_in_comm_additive[rotated -1])
       using assms 
          apply simp_all
@@ -282,23 +282,23 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
     apply (rule bij_betwI[where g=abs_c])
     using Rep Rep_inverse Abs_inverse by blast+
 
-  define u where \<open>u = (\<lambda>(\<xi>,\<alpha>). \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>)\<close> for \<xi> :: 'a and \<alpha> :: \<open>'c\<close>
+  define u where \<open>u = (\<lambda>(\<xi>,\<alpha>). \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V rep_c \<alpha>)\<close> for \<xi> :: 'a and \<alpha> :: \<open>'c\<close>
 
   have cinner_u: \<open>cinner (u \<xi>\<alpha>) (u \<xi>'\<alpha>') = of_bool (\<xi>\<alpha> = \<xi>'\<alpha>')\<close> for \<xi>\<alpha> \<xi>'\<alpha>'
   proof -
     obtain \<xi> \<alpha> \<xi>' \<alpha>' where \<xi>\<alpha>: \<open>\<xi>\<alpha> = (\<xi>,\<alpha>)\<close> and \<xi>'\<alpha>': \<open>\<xi>'\<alpha>' = (\<xi>',\<alpha>')\<close>
       apply atomize_elim by auto
-    have \<open>cinner (u (\<xi>,\<alpha>)) (u (\<xi>', \<alpha>')) = cinner (\<Phi> (butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>) (\<Phi> (butterket \<xi>' \<xi>0) *\<^sub>V rep_c \<alpha>')\<close>
+    have \<open>cinner (u (\<xi>,\<alpha>)) (u (\<xi>', \<alpha>')) = cinner (\<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V rep_c \<alpha>) (\<Phi> (butterfly (ket \<xi>') (ket \<xi>0)) *\<^sub>V rep_c \<alpha>')\<close>
       unfolding u_def by simp
-    also have \<open>\<dots> = cinner ((\<Phi> (butterket \<xi>' \<xi>0))* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
+    also have \<open>\<dots> = cinner ((\<Phi> (butterfly (ket \<xi>') (ket \<xi>0)))* *\<^sub>V \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
       by (simp add: cinner_adj_left)
-    also have \<open>\<dots> = cinner (\<Phi> (butterket \<xi>' \<xi>0 *) *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
+    also have \<open>\<dots> = cinner (\<Phi> (butterfly (ket \<xi>') (ket \<xi>0) *) *\<^sub>V \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
       by (metis (no_types, lifting) assms register_def)
-    also have \<open>\<dots> = cinner (\<Phi> (butterket \<xi>0 \<xi>' o\<^sub>C\<^sub>L butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
+    also have \<open>\<dots> = cinner (\<Phi> (butterfly (ket \<xi>0) (ket \<xi>') o\<^sub>C\<^sub>L butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
       by (simp add: register_mult cblinfun_apply_cblinfun_compose[symmetric])
-    also have \<open>\<dots> = cinner (\<Phi> (of_bool (\<xi>'=\<xi>) *\<^sub>C selfbutterket \<xi>0) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
+    also have \<open>\<dots> = cinner (\<Phi> (of_bool (\<xi>'=\<xi>) *\<^sub>C butterfly (ket \<xi>0) (ket \<xi>0)) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
       by (simp add: cinner_ket_left ket.rep_eq)
-    also have \<open>\<dots> = of_bool (\<xi>'=\<xi>) * cinner (\<Phi> (selfbutterket \<xi>0) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
+    also have \<open>\<dots> = of_bool (\<xi>'=\<xi>) * cinner (\<Phi> (butterfly (ket \<xi>0) (ket \<xi>0)) *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
       by (simp add: complex_vector.linear_0)
     also have \<open>\<dots> = of_bool (\<xi>'=\<xi>) * cinner (P' \<xi>0 *\<^sub>V rep_c \<alpha>) (rep_c \<alpha>')\<close>
       using P_def P'_def by simp
@@ -324,27 +324,27 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
   
   have 1: \<open>U* o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L U = \<theta> \<otimes>\<^sub>o id_cblinfun\<close> for \<theta>
   proof -
-    have *: \<open>U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U = butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun\<close> for \<xi> \<eta>
+    have *: \<open>U* o\<^sub>C\<^sub>L \<Phi> (butterfly (ket \<xi>) (ket \<eta>)) o\<^sub>C\<^sub>L U = butterfly (ket \<xi>) (ket \<eta>) \<otimes>\<^sub>o id_cblinfun\<close> for \<xi> \<eta>
     proof (rule equal_ket, rename_tac \<xi>1\<alpha>)
       fix \<xi>1\<alpha> obtain \<xi>1 :: 'a and \<alpha> :: \<open>'c\<close> where \<xi>1\<alpha>: \<open>\<xi>1\<alpha> = (\<xi>1,\<alpha>)\<close> 
         apply atomize_elim by auto
-      have \<open>(U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U) *\<^sub>V ket \<xi>1\<alpha> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta>) *\<^sub>V \<Phi> (butterket \<xi>1 \<xi>0) *\<^sub>V rep_c \<alpha>\<close>
+      have \<open>(U* o\<^sub>C\<^sub>L \<Phi> (butterfly (ket \<xi>) (ket \<eta>)) o\<^sub>C\<^sub>L U) *\<^sub>V ket \<xi>1\<alpha> = U* *\<^sub>V \<Phi> (butterfly (ket \<xi>) (ket \<eta>)) *\<^sub>V \<Phi> (butterfly (ket \<xi>1) (ket \<xi>0)) *\<^sub>V rep_c \<alpha>\<close>
         unfolding cblinfun_apply_cblinfun_compose \<xi>1\<alpha> Uapply u_def by simp
-      also have \<open>\<dots> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta> o\<^sub>C\<^sub>L butterket \<xi>1 \<xi>0) *\<^sub>V rep_c \<alpha>\<close>
+      also have \<open>\<dots> = U* *\<^sub>V \<Phi> (butterfly (ket \<xi>) (ket \<eta>) o\<^sub>C\<^sub>L butterfly (ket \<xi>1) (ket \<xi>0)) *\<^sub>V rep_c \<alpha>\<close>
          by (metis assms register_mult simp_a_oCL_b')
-      also have \<open>\<dots> = U* *\<^sub>V \<Phi> (of_bool (\<eta>=\<xi>1) *\<^sub>C butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>\<close>
+      also have \<open>\<dots> = U* *\<^sub>V \<Phi> (of_bool (\<eta>=\<xi>1) *\<^sub>C butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V rep_c \<alpha>\<close>
         by (simp add: cinner_ket)
-      also have \<open>\<dots> = of_bool (\<eta>=\<xi>1) *\<^sub>C U* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V rep_c \<alpha>\<close>
+      also have \<open>\<dots> = of_bool (\<eta>=\<xi>1) *\<^sub>C U* *\<^sub>V \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V rep_c \<alpha>\<close>
         by (simp add: complex_vector.linear_scale)
       also have \<open>\<dots> = of_bool (\<eta>=\<xi>1) *\<^sub>C U* *\<^sub>V U *\<^sub>V ket (\<xi>, \<alpha>)\<close>
         unfolding Uapply u_def by simp
       also from \<open>isometry U\<close> have \<open>\<dots> = of_bool (\<eta>=\<xi>1) *\<^sub>C ket (\<xi>, \<alpha>)\<close>
         unfolding cblinfun_apply_cblinfun_compose[symmetric] by simp
-      also have \<open>\<dots> = (butterket \<xi> \<eta> *\<^sub>V ket \<xi>1) \<otimes>\<^sub>s ket \<alpha>\<close>
+      also have \<open>\<dots> = (butterfly (ket \<xi>) (ket \<eta>) *\<^sub>V ket \<xi>1) \<otimes>\<^sub>s ket \<alpha>\<close>
         by (simp add: tensor_ell2_scaleC1 tensor_ell2_ket)
-      also have \<open>\<dots> = (butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
+      also have \<open>\<dots> = (butterfly (ket \<xi>) (ket \<eta>) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
         by (simp add: \<xi>1\<alpha> tensor_op_ket)
-      finally show \<open>(U* o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<eta>) o\<^sub>C\<^sub>L U) *\<^sub>V ket \<xi>1\<alpha> = (butterket \<xi> \<eta> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
+      finally show \<open>(U* o\<^sub>C\<^sub>L \<Phi> (butterfly (ket \<xi>) (ket \<eta>)) o\<^sub>C\<^sub>L U) *\<^sub>V ket \<xi>1\<alpha> = (butterfly (ket \<xi>) (ket \<eta>) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket \<xi>1\<alpha>\<close>
         by -
     qed
 
@@ -353,7 +353,7 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
       apply (auto intro!: continuous_map_compose[where X'=weak_star_topology])
       using assms register_def continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star by blast+
 
-    have *: \<open>U* o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L U = \<theta> \<otimes>\<^sub>o id_cblinfun\<close> if \<open>\<theta> \<in> cspan {butterket \<xi> \<eta> | \<xi> \<eta>. True}\<close> for \<theta>
+    have *: \<open>U* o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L U = \<theta> \<otimes>\<^sub>o id_cblinfun\<close> if \<open>\<theta> \<in> cspan {butterfly (ket \<xi>) (ket \<eta>) | \<xi> \<eta>. True}\<close> for \<theta>
       apply (rule complex_vector.linear_eq_on[where x=\<theta>, OF _ _ that])
         apply (intro \<open>clinear \<Phi>\<close>
           clinear_compose[OF _ clinear_cblinfun_compose_left, unfolded o_def]
@@ -361,7 +361,7 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
        apply simp
       using * by blast
     have \<open>U* o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L U = \<theta> \<otimes>\<^sub>o id_cblinfun\<close> 
-      if \<open>\<theta> \<in> (weak_star_topology closure_of (cspan {butterket \<xi> \<eta> | \<xi> \<eta>. True}))\<close> for \<theta>
+      if \<open>\<theta> \<in> (weak_star_topology closure_of (cspan {butterfly (ket \<xi>) (ket \<eta>) | \<xi> \<eta>. True}))\<close> for \<theta>
       apply (rule closure_of_eqI[OF _ _ that])
       using * cont1 left_amplification_weak_star_cont by auto
     with butterkets_weak_star_dense show ?thesis
@@ -369,39 +369,39 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
   qed
   have \<open>unitary U\<close>
   proof -
-    have \<open>\<Phi> (butterket \<xi> \<xi>1) *\<^sub>S \<top> \<le> U *\<^sub>S \<top>\<close> for \<xi> \<xi>1
+    have \<open>\<Phi> (butterfly (ket \<xi>) (ket \<xi>1)) *\<^sub>S \<top> \<le> U *\<^sub>S \<top>\<close> for \<xi> \<xi>1
     proof -
-      have *: \<open>\<Phi> (butterket \<xi> \<xi>0) *\<^sub>V b \<in> space_as_set (U *\<^sub>S \<top>)\<close> if \<open>b \<in> B \<xi>0\<close> for b
-        apply (subst asm_rl[of \<open>\<Phi> (butterket \<xi> \<xi>0) *\<^sub>V b = u (\<xi>, inv rep_c b)\<close>])
+      have *: \<open>\<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V b \<in> space_as_set (U *\<^sub>S \<top>)\<close> if \<open>b \<in> B \<xi>0\<close> for b
+        apply (subst asm_rl[of \<open>\<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V b = u (\<xi>, inv rep_c b)\<close>])
          apply (simp add: u_def, metis bij_betw_inv_into_right bij_rep_c that)
         by (metis Uapply cblinfun_apply_in_image)
 
-      have \<open>\<Phi> (butterket \<xi> \<xi>1) *\<^sub>S \<top> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>1) *\<^sub>S \<top>\<close>
+      have \<open>\<Phi> (butterfly (ket \<xi>) (ket \<xi>1)) *\<^sub>S \<top> = \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>S \<Phi> (butterfly (ket \<xi>0) (ket \<xi>0)) *\<^sub>S \<Phi> (butterfly (ket \<xi>0) (ket \<xi>1)) *\<^sub>S \<top>\<close>
         unfolding cblinfun_compose_image[symmetric] register_mult[OF assms]
         by simp
-      also have \<open>\<dots> \<le> \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>0) *\<^sub>S \<top>\<close>
+      also have \<open>\<dots> \<le> \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>S \<Phi> (butterfly (ket \<xi>0) (ket \<xi>0)) *\<^sub>S \<top>\<close>
         by (meson cblinfun_image_mono top_greatest)
-      also have \<open>\<dots> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S S \<xi>0\<close>
+      also have \<open>\<dots> = \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>S S \<xi>0\<close>
         by (simp add: S_def P'_def P_def)
-      also have \<open>\<dots> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S ccspan (B \<xi>0)\<close>
+      also have \<open>\<dots> = \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>S ccspan (B \<xi>0)\<close>
         by (simp add: cspanB)
-      also have \<open>\<dots> = ccspan (\<Phi> (butterket \<xi> \<xi>0) ` B \<xi>0)\<close>
+      also have \<open>\<dots> = ccspan (\<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) ` B \<xi>0)\<close>
         by (meson cblinfun_image_ccspan)
       also have \<open>\<dots> \<le> U *\<^sub>S \<top>\<close>
         by (rule ccspan_leqI, use * in auto)
       finally show ?thesis by -
     qed
-    then have \<open>ccspan {\<Phi> (butterket \<xi> \<xi>) *\<^sub>V \<alpha> |\<xi> \<alpha>. True} \<le> U *\<^sub>S \<top>\<close>
+    then have \<open>ccspan {\<Phi> (butterfly (ket \<xi>) (ket \<xi>)) *\<^sub>V \<alpha> |\<xi> \<alpha>. True} \<le> U *\<^sub>S \<top>\<close>
       apply (rule_tac ccspan_leqI)
       using cblinfun_apply_in_image less_eq_ccsubspace.rep_eq by blast
-    moreover have \<open>ccspan {\<Phi> (butterket \<xi> \<xi>) *\<^sub>V \<alpha> |\<xi> \<alpha>. True} = \<top>\<close>
+    moreover have \<open>ccspan {\<Phi> (butterfly (ket \<xi>) (ket \<xi>)) *\<^sub>V \<alpha> |\<xi> \<alpha>. True} = \<top>\<close>
     proof -
-      define Q where \<open>Q = Proj (- ccspan {\<Phi> (butterket \<xi> \<xi>) *\<^sub>V \<alpha> |\<xi> \<alpha>. True})\<close>
-      have \<open>has_sum_in weak_star_topology (\<lambda>\<xi>. Q o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<xi>)) UNIV (Q o\<^sub>C\<^sub>L id_cblinfun)\<close>
+      define Q where \<open>Q = Proj (- ccspan {\<Phi> (butterfly (ket \<xi>) (ket \<xi>)) *\<^sub>V \<alpha> |\<xi> \<alpha>. True})\<close>
+      have \<open>has_sum_in weak_star_topology (\<lambda>\<xi>. Q o\<^sub>C\<^sub>L \<Phi> (butterfly (ket \<xi>) (ket \<xi>))) UNIV (Q o\<^sub>C\<^sub>L id_cblinfun)\<close>
         apply (rule has_sum_in_comm_additive[where g=\<open>cblinfun_compose Q\<close> and T=weak_star_topology, unfolded o_def])
         using sumP'id2
         by (auto simp add: continuous_map_left_comp_weak_star P'_def P_def cblinfun_compose_add_right Modules.additive_def)
-      moreover have \<open>Q o\<^sub>C\<^sub>L \<Phi> (butterket \<xi> \<xi>) = 0\<close> for \<xi>
+      moreover have \<open>Q o\<^sub>C\<^sub>L \<Phi> (butterfly (ket \<xi>) (ket \<xi>)) = 0\<close> for \<xi>
         apply (auto intro!: equal_ket simp: Q_def Proj_ortho_compl cblinfun.diff_left)
         apply (subst Proj_fixes_image)
         by (auto intro!: ccspan_superset[THEN set_mp])

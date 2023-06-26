@@ -2,6 +2,8 @@ theory Unsorted_HSTP
   imports Complex_Bounded_Operators.Complex_Bounded_Linear_Function
     Tensor_Product.Hilbert_Space_Tensor_Product
     Jordan_Normal_Form.Matrix
+    Complex_Bounded_Operators.Extra_Jordan_Normal_Form
+    Complex_Bounded_Operators.Cblinfun_Matrix
 begin
 
 unbundle cblinfun_notation Finite_Cartesian_Product.no_vec_syntax jnf_notation
@@ -29,11 +31,11 @@ proof (rule Set.set_eqI, rule iffI)
   have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l)) = cinner (ket (i,j)) ((id_cblinfun \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close> for i j k l
   proof -
     have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l))
-        = cinner ((butterket i \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,j)) (x *\<^sub>V (butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
+        = cinner ((butterfly (ket i) (ket \<gamma>) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,j)) (x *\<^sub>V (butterfly (ket k) (ket \<gamma>) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
       by (auto simp: tensor_op_ket tensor_ell2_ket)
-    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) ((butterket \<gamma> i \<otimes>\<^sub>o id_cblinfun) *\<^sub>V x *\<^sub>V (butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
+    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) ((butterfly (ket \<gamma>) (ket i) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V x *\<^sub>V (butterfly (ket k) (ket \<gamma>) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
       by (metis (no_types, lifting) cinner_adj_left butterfly_adjoint id_cblinfun_adjoint tensor_op_adjoint)
-    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) (x *\<^sub>V (butterket \<gamma> i \<otimes>\<^sub>o id_cblinfun o\<^sub>C\<^sub>L butterket k \<gamma> \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
+    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) (x *\<^sub>V (butterfly (ket \<gamma>) (ket i) \<otimes>\<^sub>o id_cblinfun o\<^sub>C\<^sub>L butterfly (ket k) (ket \<gamma>) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
       unfolding comm by (simp add: cblinfun_apply_cblinfun_compose)
     also have \<open>\<dots> = cinner (ket i) (ket k) * cinner (ket (\<gamma>,j)) (x *\<^sub>V ket (\<gamma>,l))\<close>
       by (simp add: comp_tensor_op tensor_op_ket tensor_op_scaleC_left cinner_ket tensor_ell2_ket)
@@ -575,7 +577,7 @@ qed
 
 fun inflation_op' :: \<open>nat \<Rightarrow> ('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2) list \<Rightarrow> ('a\<times>nat) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b\<times>nat) ell2\<close> where
   \<open>inflation_op' n Nil = 0\<close>
-| \<open>inflation_op' n (a#as) = (a \<otimes>\<^sub>o selfbutterket n) + inflation_op' (n+1) as\<close>
+| \<open>inflation_op' n (a#as) = (a \<otimes>\<^sub>o butterfly (ket n) (ket n)) + inflation_op' (n+1) as\<close>
 
 abbreviation \<open>inflation_op \<equiv> inflation_op' 0\<close>
 
@@ -597,11 +599,11 @@ definition inflation_carrier :: \<open>nat \<Rightarrow> ('a\<times>nat) ell2 cc
 definition inflation_op_carrier :: \<open>nat \<Rightarrow> (('a\<times>nat) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('b\<times>nat) ell2) set\<close> where
   \<open>inflation_op_carrier n = { Proj (inflation_carrier n) o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L Proj (inflation_carrier n) | a. True }\<close>
 
-lemma inflation_op_compose_outside: \<open>inflation_op' m ops o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o selfbutterket n) = 0\<close> if \<open>n < m\<close>
+lemma inflation_op_compose_outside: \<open>inflation_op' m ops o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o butterfly (ket n) (ket n)) = 0\<close> if \<open>n < m\<close>
   using that apply (induction ops arbitrary: m)
   by (auto simp: cblinfun_compose_add_left comp_tensor_op cinner_ket)
 
-lemma inflation_op_compose_outside_rev: \<open>(a \<otimes>\<^sub>o selfbutterket n) o\<^sub>C\<^sub>L inflation_op' m ops = 0\<close> if \<open>n < m\<close>
+lemma inflation_op_compose_outside_rev: \<open>(a \<otimes>\<^sub>o butterfly (ket n) (ket n)) o\<^sub>C\<^sub>L inflation_op' m ops = 0\<close> if \<open>n < m\<close>
   using that apply (induction ops arbitrary: m)
   by (auto simp: cblinfun_compose_add_right comp_tensor_op cinner_ket)
 
@@ -754,7 +756,7 @@ next
   show ?case
   proof (cases \<open>i = n\<close>)
     case True
-    have \<open>a \<otimes>\<^sub>o selfbutterket n o\<^sub>C\<^sub>L tensor_ell2_right (ket n) = tensor_ell2_right (ket n) o\<^sub>C\<^sub>L a\<close>
+    have \<open>a \<otimes>\<^sub>o butterfly (ket n) (ket n) o\<^sub>C\<^sub>L tensor_ell2_right (ket n) = tensor_ell2_right (ket n) o\<^sub>C\<^sub>L a\<close>
       apply (rule cblinfun_eqI)
       by (simp add: tensor_op_ell2 cinner_ket)
     with True show ?thesis
@@ -763,7 +765,7 @@ next
     case False
     with Cons.prems have 1: \<open>Suc n \<le> i\<close>
       by presburger
-    have 2: \<open>a \<otimes>\<^sub>o selfbutterket n o\<^sub>C\<^sub>L tensor_ell2_right (ket i) = 0\<close>
+    have 2: \<open>a \<otimes>\<^sub>o butterfly (ket n) (ket n) o\<^sub>C\<^sub>L tensor_ell2_right (ket i) = 0\<close>
       apply (rule cblinfun_eqI)
       using False by (simp add: tensor_op_ell2 cinner_ket)
     show ?thesis
@@ -1484,7 +1486,7 @@ proof -
     proof -
       have comm: \<open>x o\<^sub>C\<^sub>L (U i o\<^sub>C\<^sub>L U j*) = (U i o\<^sub>C\<^sub>L U j*) o\<^sub>C\<^sub>L x\<close> for i j
       proof -
-        have \<open>U i o\<^sub>C\<^sub>L U j* = id_cblinfun \<otimes>\<^sub>o butterket i j\<close>
+        have \<open>U i o\<^sub>C\<^sub>L U j* = id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket j)\<close>
           by (simp add: U_def tensor_ell2_right_butterfly)
         also have \<open>\<dots> \<in> (\<pi> ` X)'\<close>
           by (simp add: \<pi>_def commutant_def comp_tensor_op)

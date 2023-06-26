@@ -21,8 +21,8 @@ unbundle no_inner_syntax
 unbundle cblinfun_notation
 unbundle jnf_notation
 
-(* abbreviation "butterket i j \<equiv> butterfly (ket i) (ket j)" *)
-(* abbreviation "selfbutterket i \<equiv> butterfly (ket i) (ket i)" *)
+(* abbreviation "butterfly (ket i) (ket j) \<equiv> butterfly (ket i) (ket j)" *)
+(* abbreviation "butterfly (ket i) (ket i) \<equiv> butterfly (ket i) (ket i)" *)
 
 text \<open>The following declares the ML antiquotation \<^verbatim>\<open>fact\<close>. In ML code,
   \<^verbatim>\<open>@{fact f}\<close> for a theorem/fact name f is replaced by an ML string

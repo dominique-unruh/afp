@@ -6,7 +6,7 @@ theory Misc_Tensor_Product
     "HOL-Analysis.Infinite_Sum" "HOL-Analysis.Harmonic_Numbers" Containers.Containers_Auxiliary
     Complex_Bounded_Operators.Extra_General
     Complex_Bounded_Operators.Extra_Vector_Spaces
-    Complex_Bounded_Operators.BO_Unsorted
+    Complex_Bounded_Operators.Extra_Ordered_Fields
 begin
 
 unbundle lattice_syntax
@@ -1332,7 +1332,7 @@ proof (rule nonneg_bdd_above_summable_on, simp, rule bdd_aboveI2, rename_tac F)
     by (smt mult_left_mono mult_nonneg_nonneg mult_right_mono norm_ge_zero)
   hence "(\<Sum>i\<in>F. norm (x i * y i)) \<le> (\<Sum>i\<in>F. norm ((x i)\<^sup>2) + norm ((y i)\<^sup>2))"
     using [[simp_trace]]
-    by (simp add: power2_eq_square sum_mono del: VS_Connect.class_semiring.add.finprod_multf)
+    by (simp add: power2_eq_square sum_mono del: (* VS_Connect.class_semiring.add.finprod_multf *))
   also have "\<dots> = (\<Sum>i\<in>F. norm ((x i)\<^sup>2)) + (\<Sum>i\<in>F. norm ((y i)\<^sup>2))"
     by (simp add: sum.distrib)
   also have "\<dots> \<le> (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((x i)\<^sup>2)) + (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((y i)\<^sup>2))"

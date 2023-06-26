@@ -58,7 +58,7 @@ lemma
   apply (subst everything_the_same[where y=0])
   by simp
 
-(* TODO: parseval_identity coverse this *) thm parseval_identity
+(* TODO: parseval_identity covers this *) thm parseval_identity
 lemma 
   fixes h :: \<open>'a::{chilbert_space}\<close>
   assumes \<open>is_onb E\<close>

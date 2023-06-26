@@ -623,7 +623,7 @@ proof (rule has_sum_in_weak_star[THEN iffD2, rule_format])
   have \<open>((\<lambda>i. ket i \<bullet>\<^sub>C (t *\<^sub>V ket i)) has_sum trace t) UNIV\<close>
     apply (subst (asm) has_sum_reindex)
     by (auto simp: o_def)
-  then show \<open>((\<lambda>i. trace (t o\<^sub>C\<^sub>L selfbutterket i)) has_sum trace (t o\<^sub>C\<^sub>L id_cblinfun)) UNIV\<close>
+  then show \<open>((\<lambda>i. trace (t o\<^sub>C\<^sub>L butterfly (ket i) (ket i))) has_sum trace (t o\<^sub>C\<^sub>L id_cblinfun)) UNIV\<close>
     by (simp add: trace_butterfly_comp')
 qed
 
@@ -634,7 +634,7 @@ lemma sandwich_weak_star_cont[simp]:
 
 lemma infsum_butterfly_ket_a: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (a *\<^sub>V ket i) (ket i)) UNIV a\<close>
 proof -
-  have \<open>has_sum_in weak_star_topology ((\<lambda>b. a o\<^sub>C\<^sub>L b) \<circ> (\<lambda>i. selfbutterket i)) UNIV (a o\<^sub>C\<^sub>L id_cblinfun)\<close>
+  have \<open>has_sum_in weak_star_topology ((\<lambda>b. a o\<^sub>C\<^sub>L b) \<circ> (\<lambda>i. butterfly (ket i) (ket i))) UNIV (a o\<^sub>C\<^sub>L id_cblinfun)\<close>
     apply (rule has_sum_in_comm_additive)
     by (auto intro!: infsum_butterfly_ket continuous_map_is_continuous_at_point limitin_continuous_map
         continuous_map_left_comp_weak_star  cblinfun_compose_add_right
@@ -665,18 +665,18 @@ qed
 
 
 lemma butterkets_weak_star_dense[simp]:
-  \<open>weak_star_topology closure_of cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True} = UNIV\<close>
+  \<open>weak_star_topology closure_of cspan {butterfly (ket (\<xi>::'a)) (ket (\<eta>::'b)) |\<xi> \<eta>. True} = UNIV\<close>
 proof -
   from continuous_map_image_closure_subset[OF weak_star_topology_weaker_than_euclidean]
-  have \<open>weak_star_topology closure_of (cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True}) \<supseteq> closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True})\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
+  have \<open>weak_star_topology closure_of (cspan {butterfly (ket (\<xi>::'a)) (ket (\<eta>::'b)) |\<xi> \<eta>. True}) \<supseteq> closure (cspan {butterfly (ket \<xi>) (ket \<eta>) |\<xi> \<eta>. True})\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
     by auto
   moreover from finite_rank_dense_compact
   have \<open>\<dots> \<supseteq> Collect finite_rank\<close>
     by (metis closure_subset compact_op_def mem_Collect_eq subsetI subset_antisym)
-  ultimately have *: \<open>weak_star_topology closure_of (cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True}) \<supseteq> Collect finite_rank\<close>
+  ultimately have *: \<open>weak_star_topology closure_of (cspan {butterfly (ket (\<xi>::'a)) (ket (\<eta>::'b)) |\<xi> \<eta>. True}) \<supseteq> Collect finite_rank\<close>
     by simp
-  have \<open>weak_star_topology closure_of cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}
-        = weak_star_topology closure_of (weak_star_topology closure_of cspan {butterket (\<xi>::'a) (\<eta>::'b) |\<xi> \<eta>. True})\<close>
+  have \<open>weak_star_topology closure_of cspan {butterfly (ket \<xi>) (ket \<eta>) |\<xi> \<eta>. True}
+        = weak_star_topology closure_of (weak_star_topology closure_of cspan {butterfly (ket (\<xi>::'a)) (ket (\<eta>::'b)) |\<xi> \<eta>. True})\<close>
   by simp
   also have \<open>\<dots> \<supseteq> weak_star_topology closure_of Collect finite_rank\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
     using * closure_of_mono by blast
@@ -696,12 +696,12 @@ lemma weak_star_clinear_eq_butterfly_ketI:
   assumes "\<And>i j. F (butterfly (ket i) (ket j)) = G (butterfly (ket i) (ket j))"
   shows "F = G"
 proof -
-  have FG: \<open>F x = G x\<close> if \<open>x \<in> cspan {butterket i j |i j. True}\<close> for x
+  have FG: \<open>F x = G x\<close> if \<open>x \<in> cspan {butterfly (ket i) (ket j) |i j. True}\<close> for x
     by (smt (verit, ccfv_threshold) assms(1) assms(2) assms(6) complex_vector.linear_eq_on mem_Collect_eq that)
   show ?thesis
     apply (rule ext)
     using \<open>hausdorff T\<close> FG
-    apply (rule closure_of_eqI[where f=F and g=G and S=\<open>cspan {butterket i j| i j. True}\<close>])
+    apply (rule closure_of_eqI[where f=F and g=G and S=\<open>cspan {butterfly (ket i) (ket j)| i j. True}\<close>])
     using assms butterkets_weak_star_dense by auto
 qed
 

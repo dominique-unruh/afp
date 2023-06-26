@@ -32,7 +32,7 @@ proof -
     then have tc_tk[simp]: \<open>trace_class (tk k)\<close> for k
       by (simp add: tk_def trace_class_comp_left trace_class_comp_right)
     define uk where \<open>uk k = (polar_decomposition (tk k))*\<close> for k
-    define u where \<open>u = (\<Sum>k\<in>F. uk k \<otimes>\<^sub>o selfbutterket k)\<close>
+    define u where \<open>u = (\<Sum>k\<in>F. uk k \<otimes>\<^sub>o butterfly (ket k) (ket k))\<close>
     define B :: \<open>'b ell2 set\<close> where \<open>B = range ket\<close>
 
     have aux1: \<open>tensor_ell2_right (ket x)* *\<^sub>V u *\<^sub>V a = 0\<close> if \<open>x \<notin> F\<close> for x a
@@ -76,19 +76,19 @@ proof -
     have norm_u: \<open>norm u \<le> 1\<close>
     proof -
       define u2 uk2 where \<open>u2 = u* o\<^sub>C\<^sub>L u\<close> and \<open>uk2 k = (uk k)* o\<^sub>C\<^sub>L uk k\<close> for k (* and \<open>u4 = u2* o\<^sub>C\<^sub>L u2\<close> *)
-      have *: \<open>(\<Sum>i\<in>F. (uk i* o\<^sub>C\<^sub>L uk k) \<otimes>\<^sub>o (ket i \<bullet>\<^sub>C ket k) *\<^sub>C butterket i k)
-           = (uk k* o\<^sub>C\<^sub>L uk k) \<otimes>\<^sub>o selfbutterket k\<close> if [simp]: \<open>k \<in> F\<close> for k
+      have *: \<open>(\<Sum>i\<in>F. (uk i* o\<^sub>C\<^sub>L uk k) \<otimes>\<^sub>o (ket i \<bullet>\<^sub>C ket k) *\<^sub>C butterfly (ket i) (ket k))
+           = (uk k* o\<^sub>C\<^sub>L uk k) \<otimes>\<^sub>o butterfly (ket k) (ket k)\<close> if [simp]: \<open>k \<in> F\<close> for k
         apply (subst sum_single[where i=k])
         by (auto simp: cinner_ket)
-      have **: \<open>(\<Sum>ka\<in>F. (uk2 ka o\<^sub>C\<^sub>L uk2 k) \<otimes>\<^sub>o (ket ka \<bullet>\<^sub>C ket k) *\<^sub>C butterket ka k)
-           = (uk2 k o\<^sub>C\<^sub>L uk2 k) \<otimes>\<^sub>o selfbutterket k\<close> if [simp]: \<open>k \<in> F\<close> for k
+      have **: \<open>(\<Sum>ka\<in>F. (uk2 ka o\<^sub>C\<^sub>L uk2 k) \<otimes>\<^sub>o (ket ka \<bullet>\<^sub>C ket k) *\<^sub>C butterfly (ket ka) (ket k))
+           = (uk2 k o\<^sub>C\<^sub>L uk2 k) \<otimes>\<^sub>o butterfly (ket k) (ket k)\<close> if [simp]: \<open>k \<in> F\<close> for k
         apply (subst sum_single[where i=k])
         by (auto simp: cinner_ket)
       have proj_uk2: \<open>is_Proj (uk2 k)\<close> for k
         unfolding uk2_def
         apply (rule partial_isometry_square_proj)
         by (auto intro!: partial_isometry_square_proj partial_isometry_adj simp: uk_def)
-      have u2_explicit: \<open>u2 = (\<Sum>k\<in>F. uk2 k \<otimes>\<^sub>o selfbutterket k)\<close>
+      have u2_explicit: \<open>u2 = (\<Sum>k\<in>F. uk2 k \<otimes>\<^sub>o butterfly (ket k) (ket k))\<close>
         by (simp add: u2_def u_def sum_adj tensor_op_adjoint cblinfun_compose_sum_right 
             cblinfun_compose_sum_left tensor_butter comp_tensor_op * uk2_def)
       have \<open>u2* = u2\<close>

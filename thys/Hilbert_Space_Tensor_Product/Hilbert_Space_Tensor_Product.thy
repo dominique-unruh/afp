@@ -755,17 +755,17 @@ lemma tensor_op_bounded_cbilinear[simp]: \<open>bounded_cbilinear tensor_op\<clo
 lemma tensor_op_cbilinear[simp]: \<open>cbilinear tensor_op\<close>
   by (simp add: bounded_cbilinear.add_left bounded_cbilinear.add_right cbilinear_def clinearI tensor_op_scaleC_left tensor_op_scaleC_right)
 
-lemma tensor_butter: \<open>butterket i j \<otimes>\<^sub>o butterket k l = butterket (i,k) (j,l)\<close>
+lemma tensor_butter: \<open>butterfly (ket i) (ket j) \<otimes>\<^sub>o butterfly (ket k) (ket l) = butterfly (ket (i,k)) (ket (j,l))\<close>
   apply (rule equal_ket, rename_tac x, case_tac x)
   apply (auto simp flip: tensor_ell2_ket simp: tensor_op_ell2 butterfly_def)
   by (auto simp: tensor_ell2_scaleC1 tensor_ell2_scaleC2)
 
-lemma cspan_tensor_op_butter: \<open>cspan {tensor_op (butterket i j) (butterket k l)| (i::_::finite) (j::_::finite) (k::_::finite) (l::_::finite). True} = UNIV\<close>
+lemma cspan_tensor_op_butter: \<open>cspan {tensor_op (butterfly (ket i) (ket j)) (butterfly (ket k) (ket l))| (i::_::finite) (j::_::finite) (k::_::finite) (l::_::finite). True} = UNIV\<close>
   unfolding tensor_butter
   apply (subst cspan_butterfly_ket[symmetric])
   by (metis surj_pair)
 
-lemma cindependent_tensor_op_butter: \<open>cindependent {tensor_op (butterket i j) (butterket k l)| i j k l. True}\<close>
+lemma cindependent_tensor_op_butter: \<open>cindependent {tensor_op (butterfly (ket i) (ket j)) (butterfly (ket k) (ket l))| i j k l. True}\<close>
   unfolding tensor_butter
   using cindependent_butterfly_ket
   by (smt (z3) Collect_mono_iff complex_vector.independent_mono)
@@ -792,21 +792,21 @@ lemma tensor_op_adjoint: \<open>(tensor_op a b)* = tensor_op (a*) (b*)\<close>
   apply (auto simp flip: tensor_ell2_ket simp: tensor_op_ell2)
   by (simp add: cinner_adj_left)
 
-lemma has_sum_id_tensor_butterfly_ket: \<open>((\<lambda>i. (id_cblinfun \<otimes>\<^sub>o selfbutterket i) *\<^sub>V \<psi>) has_sum \<psi>) UNIV\<close>
+lemma has_sum_id_tensor_butterfly_ket: \<open>((\<lambda>i. (id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i)) *\<^sub>V \<psi>) has_sum \<psi>) UNIV\<close>
 proof -
-  have *: \<open>(\<Sum>i\<in>F. (id_cblinfun \<otimes>\<^sub>o selfbutterket i) *\<^sub>V \<psi>) = trunc_ell2 (UNIV \<times> F) \<psi>\<close> if \<open>finite F\<close> for F
+  have *: \<open>(\<Sum>i\<in>F. (id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i)) *\<^sub>V \<psi>) = trunc_ell2 (UNIV \<times> F) \<psi>\<close> if \<open>finite F\<close> for F
   proof (rule Rep_ell2_inject[THEN iffD1], rule ext, rename_tac xy)
     fix xy :: \<open>'b \<times> 'a\<close>
     obtain x y where xy: \<open>xy = (x,y)\<close>
       by fastforce
-    have \<open>Rep_ell2 (\<Sum>i\<in>F. (id_cblinfun \<otimes>\<^sub>o selfbutterket i) *\<^sub>V \<psi>) xy
-       = ket xy \<bullet>\<^sub>C (\<Sum>i\<in>F. (id_cblinfun \<otimes>\<^sub>o selfbutterket i) *\<^sub>V \<psi>)\<close>
+    have \<open>Rep_ell2 (\<Sum>i\<in>F. (id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i)) *\<^sub>V \<psi>) xy
+       = ket xy \<bullet>\<^sub>C (\<Sum>i\<in>F. (id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i)) *\<^sub>V \<psi>)\<close>
       by (simp add: cinner_ket_left)
-    also have \<open>... = (\<Sum>i\<in>F. ket xy \<bullet>\<^sub>C ((id_cblinfun \<otimes>\<^sub>o selfbutterket i) *\<^sub>V \<psi>))\<close>
+    also have \<open>... = (\<Sum>i\<in>F. ket xy \<bullet>\<^sub>C ((id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i)) *\<^sub>V \<psi>))\<close>
       using cinner_sum_right by blast
-    also have \<open>\<dots> = (\<Sum>i\<in>F. ket xy \<bullet>\<^sub>C ((id_cblinfun \<otimes>\<^sub>o selfbutterket i)* *\<^sub>V \<psi>))\<close>
+    also have \<open>\<dots> = (\<Sum>i\<in>F. ket xy \<bullet>\<^sub>C ((id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i))* *\<^sub>V \<psi>))\<close>
       by (simp add: tensor_op_adjoint)
-    also have \<open>\<dots> = (\<Sum>i\<in>F. ((id_cblinfun \<otimes>\<^sub>o selfbutterket i) *\<^sub>V ket xy) \<bullet>\<^sub>C \<psi>)\<close>
+    also have \<open>\<dots> = (\<Sum>i\<in>F. ((id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i)) *\<^sub>V ket xy) \<bullet>\<^sub>C \<psi>)\<close>
       by (meson cinner_adj_right)
     also have \<open>\<dots> = of_bool (y\<in>F) * (ket xy \<bullet>\<^sub>C \<psi>)\<close>
       apply (subst sum_single[where i=y])
@@ -815,7 +815,7 @@ proof -
       by (simp add: cinner_ket_left)
     also have \<open>\<dots> = Rep_ell2 (trunc_ell2 (UNIV \<times> F) \<psi>) xy\<close>
       by (simp add: trunc_ell2.rep_eq xy)
-    finally show \<open>Rep_ell2 (\<Sum>i\<in>F. (id_cblinfun \<otimes>\<^sub>o selfbutterket i) *\<^sub>V \<psi>) xy = \<dots>\<close>
+    finally show \<open>Rep_ell2 (\<Sum>i\<in>F. (id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i)) *\<^sub>V \<psi>) xy = \<dots>\<close>
       by -
   qed
 
@@ -826,7 +826,7 @@ proof -
   then have \<open>((\<lambda>F. trunc_ell2 (UNIV\<times>F) \<psi>) \<longlongrightarrow> \<psi>) (finite_subsets_at_top UNIV)\<close>
     apply (simp add: filterlim_def filtermap_filtermap)
     by -
-  then have \<open>((\<lambda>F. (\<Sum>i\<in>F. (id_cblinfun \<otimes>\<^sub>o selfbutterket i) *\<^sub>V \<psi>)) \<longlongrightarrow> \<psi>) (finite_subsets_at_top UNIV)\<close>
+  then have \<open>((\<lambda>F. (\<Sum>i\<in>F. (id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i)) *\<^sub>V \<psi>)) \<longlongrightarrow> \<psi>) (finite_subsets_at_top UNIV)\<close>
     apply (rule Lim_transform_eventually)
     by (simp add: * eventually_finite_subsets_at_top_weakI)
   then show ?thesis
@@ -849,27 +849,27 @@ proof (intro order.antisym subset_UNIV subsetI)
   have [simp]: \<open>csubspace AB\<close>
     using AB_def sot_closure_is_csubspace' by blast
 
-  have *: \<open>c' i j \<otimes>\<^sub>o butterket i j = (id_cblinfun \<otimes>\<^sub>o selfbutterket i) o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j)\<close> for i j
+  have *: \<open>c' i j \<otimes>\<^sub>o butterfly (ket i) (ket j) = (id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i)) o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o butterfly (ket j) (ket j))\<close> for i j
   proof (rule equal_ket, rule cinner_ket_eqI, rename_tac a b)
     fix a :: \<open>'a \<times> 'b\<close> and b :: \<open>'c \<times> 'd\<close>
     obtain bi bj ai aj where b: \<open>b = (bi,bj)\<close> and a: \<open>a = (ai,aj)\<close>
       by (meson surj_pair)
-    have \<open>ket b \<bullet>\<^sub>C ((c' i j \<otimes>\<^sub>o butterket i j) *\<^sub>V ket a) = of_bool (j = aj \<and> bj = i) * ((ket bi \<otimes>\<^sub>s ket i) \<bullet>\<^sub>C (c *\<^sub>V ket ai \<otimes>\<^sub>s ket aj))\<close>
+    have \<open>ket b \<bullet>\<^sub>C ((c' i j \<otimes>\<^sub>o butterfly (ket i) (ket j)) *\<^sub>V ket a) = of_bool (j = aj \<and> bj = i) * ((ket bi \<otimes>\<^sub>s ket i) \<bullet>\<^sub>C (c *\<^sub>V ket ai \<otimes>\<^sub>s ket aj))\<close>
       by (auto simp add: a b tensor_op_ell2 cinner_ket c'_def tensor_ell2_right_apply cinner_adj_right
           simp flip: tensor_ell2_ket)
-    also have \<open>\<dots> = ket b \<bullet>\<^sub>C ((id_cblinfun \<otimes>\<^sub>o selfbutterket i o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L id_cblinfun \<otimes>\<^sub>o selfbutterket j) *\<^sub>V ket a)\<close>
-      apply (subst asm_rl[of \<open>id_cblinfun \<otimes>\<^sub>o selfbutterket i = (id_cblinfun \<otimes>\<^sub>o selfbutterket i)*\<close>])
+    also have \<open>\<dots> = ket b \<bullet>\<^sub>C ((id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i) o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L id_cblinfun \<otimes>\<^sub>o butterfly (ket j) (ket j)) *\<^sub>V ket a)\<close>
+      apply (subst asm_rl[of \<open>id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i) = (id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i))*\<close>])
        apply (simp add: tensor_op_adjoint)
       by (auto simp: a b tensor_op_ell2 cinner_adj_right cinner_ket
           simp flip: tensor_ell2_ket)
-    finally show \<open>ket b \<bullet>\<^sub>C ((c' i j \<otimes>\<^sub>o butterket i j) *\<^sub>V ket a) =
-           ket b \<bullet>\<^sub>C ((id_cblinfun \<otimes>\<^sub>o selfbutterket i o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L id_cblinfun \<otimes>\<^sub>o selfbutterket j) *\<^sub>V ket a)\<close>
+    finally show \<open>ket b \<bullet>\<^sub>C ((c' i j \<otimes>\<^sub>o butterfly (ket i) (ket j)) *\<^sub>V ket a) =
+           ket b \<bullet>\<^sub>C ((id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i) o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L id_cblinfun \<otimes>\<^sub>o butterfly (ket j) (ket j)) *\<^sub>V ket a)\<close>
       by -
   qed
 
-  have \<open>c' i j \<otimes>\<^sub>o butterket i j \<in> AB\<close> for i j
+  have \<open>c' i j \<otimes>\<^sub>o butterfly (ket i) (ket j) \<in> AB\<close> for i j
   proof -
-    have \<open>c' i j \<otimes>\<^sub>o butterket i j \<in> {a \<otimes>\<^sub>o b | a b. True}\<close>
+    have \<open>c' i j \<otimes>\<^sub>o butterfly (ket i) (ket j) \<in> {a \<otimes>\<^sub>o b | a b. True}\<close>
       by auto
     also have \<open>\<dots> \<subseteq> cspan \<dots>\<close>
       by (simp add: complex_vector.span_superset)
@@ -881,16 +881,16 @@ proof (intro order.antisym subset_UNIV subsetI)
     finally show ?thesis
       by simp
   qed
-  with * have AB1: \<open>(id_cblinfun \<otimes>\<^sub>o selfbutterket i) o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j) \<in> AB\<close> for i j
+  with * have AB1: \<open>(id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i)) o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o butterfly (ket j) (ket j)) \<in> AB\<close> for i j
     by simp
-  have \<open>((\<lambda>i. ((id_cblinfun \<otimes>\<^sub>o selfbutterket i) o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j)) *\<^sub>V \<psi>)
-            has_sum (c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j)) *\<^sub>V \<psi>) UNIV\<close> for j \<psi>
+  have \<open>((\<lambda>i. ((id_cblinfun \<otimes>\<^sub>o butterfly (ket i) (ket i)) o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o butterfly (ket j) (ket j))) *\<^sub>V \<psi>)
+            has_sum (c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o butterfly (ket j) (ket j))) *\<^sub>V \<psi>) UNIV\<close> for j \<psi>
     apply simp by (rule has_sum_id_tensor_butterfly_ket)
-  then have AB2: \<open>(c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j)) \<in> AB\<close> for j
+  then have AB2: \<open>(c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o butterfly (ket j) (ket j))) \<in> AB\<close> for j
     apply (rule has_sum_closed_cstrong_operator_topology[rotated -1])
     using AB1 by auto
 
-  have \<open>((\<lambda>j. (c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket j)) *\<^sub>V \<psi>) has_sum c *\<^sub>V \<psi>) UNIV\<close> for \<psi>
+  have \<open>((\<lambda>j. (c o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o butterfly (ket j) (ket j))) *\<^sub>V \<psi>) has_sum c *\<^sub>V \<psi>) UNIV\<close> for \<psi>
     apply simp
     apply (rule has_sum_cblinfun_apply)
     by (rule has_sum_id_tensor_butterfly_ket)
@@ -916,10 +916,10 @@ lemma tensor_extensionality_finite:
 proof (rule ext, rule complex_vector.linear_eq_on_span[where f=F and g=G])
   show \<open>clinear F\<close> and \<open>clinear G\<close>
     using assms by (simp_all add: cbilinear_def)
-  show \<open>x \<in> cspan  {tensor_op (butterket i j) (butterket k l)| i j k l. True}\<close> 
+  show \<open>x \<in> cspan  {tensor_op (butterfly (ket i) (ket j)) (butterfly (ket k) (ket l))| i j k l. True}\<close> 
     for x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('c \<times> 'd) ell2\<close>
     using cspan_tensor_op_butter by auto
-  show \<open>F x = G x\<close> if \<open>x \<in> {tensor_op (butterket i j) (butterket k l) |i j k l. True}\<close> for x
+  show \<open>F x = G x\<close> if \<open>x \<in> {tensor_op (butterfly (ket i) (ket j)) (butterfly (ket k) (ket l)) |i j k l. True}\<close> for x
     using that by (auto simp: tensor_eq)
 qed
 
@@ -948,8 +948,8 @@ lemma
 proof -
   define F2' t4 \<phi> where
     \<open>F2' = tensor_lift F2\<close> and
-    \<open>t4 = (\<lambda>(i,j,k,l). tensor_op (butterket i j) (butterket k l))\<close> and
-    \<open>\<phi> m = (let (i,j,k,l) = inv t4 m in F2 (butterket i j) (butterket k l))\<close> for m
+    \<open>t4 = (\<lambda>(i,j,k,l). tensor_op (butterfly (ket i) (ket j)) (butterfly (ket k) (ket l)))\<close> and
+    \<open>\<phi> m = (let (i,j,k,l) = inv t4 m in F2 (butterfly (ket i) (ket j)) (butterfly (ket k) (ket l)))\<close> for m
   have t4inj: "x = y" if "t4 x = t4 y" for x y
   proof (rule ccontr)
     obtain i  j  k  l  where x: "x = (i,j,k,l)" by (meson prod_cases4) 
@@ -964,12 +964,12 @@ proof -
     show False
       by auto
   qed
-  have \<open>\<phi> (tensor_op (butterket i j) (butterket k l)) = F2 (butterket i j) (butterket k l)\<close> for i j k l
-    apply (subst asm_rl[of \<open>tensor_op (butterket i j) (butterket k l) = t4 (i,j,k,l)\<close>])
+  have \<open>\<phi> (tensor_op (butterfly (ket i) (ket j)) (butterfly (ket k) (ket l))) = F2 (butterfly (ket i) (ket j)) (butterfly (ket k) (ket l))\<close> for i j k l
+    apply (subst asm_rl[of \<open>tensor_op (butterfly (ket i) (ket j)) (butterfly (ket k) (ket l)) = t4 (i,j,k,l)\<close>])
      apply (simp add: t4_def)
     by (auto simp add: injI t4inj inv_f_f \<phi>_def)
 
-  have *: \<open>range t4 = {tensor_op (butterket i j) (butterket k l) |i j k l. True}\<close>
+  have *: \<open>range t4 = {tensor_op (butterfly (ket i) (ket j)) (butterfly (ket k) (ket l)) |i j k l. True}\<close>
     apply (auto simp: case_prod_beta t4_def)
     using image_iff by fastforce
 
@@ -979,22 +979,22 @@ proof -
      apply auto unfolding * 
     using cindependent_tensor_op_butter cspan_tensor_op_butter by auto
 
-  then obtain G where G: \<open>G *\<^sub>V (t4 (i,j,k,l)) = F2 (butterket i j) (butterket k l)\<close> for i j k l
+  then obtain G where G: \<open>G *\<^sub>V (t4 (i,j,k,l)) = F2 (butterfly (ket i) (ket j)) (butterfly (ket k) (ket l))\<close> for i j k l
     apply atomize_elim
     unfolding cblinfun_extension_exists_def
     apply auto
     by (metis (no_types, lifting) t4inj \<phi>_def f_inv_into_f rangeI split_conv)
 
-  have *: \<open>G *\<^sub>V tensor_op (butterket i j) (butterket k l) = F2 (butterket i j) (butterket k l)\<close> for i j k l
+  have *: \<open>G *\<^sub>V tensor_op (butterfly (ket i) (ket j)) (butterfly (ket k) (ket l)) = F2 (butterfly (ket i) (ket j)) (butterfly (ket k) (ket l))\<close> for i j k l
     using G by (auto simp: t4_def)
-  have *: \<open>G *\<^sub>V tensor_op a (butterket k l) = F2 a (butterket k l)\<close> for a k l
-    apply (rule complex_vector.linear_eq_on_span[where g=\<open>\<lambda>a. F2 a _\<close> and B=\<open>{butterket k l|k l. True}\<close>])
+  have *: \<open>G *\<^sub>V tensor_op a (butterfly (ket k) (ket l)) = F2 a (butterfly (ket k) (ket l))\<close> for a k l
+    apply (rule complex_vector.linear_eq_on_span[where g=\<open>\<lambda>a. F2 a _\<close> and B=\<open>{butterfly (ket k) (ket l)|k l. True}\<close>])
     unfolding cspan_butterfly_ket
     using * apply (auto intro!: clinear_compose[unfolded o_def, where f=\<open>\<lambda>a. tensor_op a _\<close> and g=\<open>(*\<^sub>V) G\<close>])
      apply (metis cbilinear_def tensor_op_cbilinear)
     using assms unfolding cbilinear_def by blast
   have G_F2: \<open>G *\<^sub>V tensor_op a b = F2 a b\<close> for a b
-    apply (rule complex_vector.linear_eq_on_span[where g=\<open>F2 a\<close> and B=\<open>{butterket k l|k l. True}\<close>])
+    apply (rule complex_vector.linear_eq_on_span[where g=\<open>F2 a\<close> and B=\<open>{butterfly (ket k) (ket l)|k l. True}\<close>])
     unfolding cspan_butterfly_ket
     using * apply (auto simp: cblinfun.add_right clinearI
                         intro!: clinear_compose[unfolded o_def, where f=\<open>tensor_op a\<close> and g=\<open>(*\<^sub>V) G\<close>])
@@ -1878,12 +1878,12 @@ proof (rule antisym[rotated])
   proof (rule ccsubspace_leI_unit)
     fix \<psi>
     assume asm: \<open>\<psi> \<in> space_as_set (\<Sqinter>x\<in>X. S x \<otimes>\<^sub>S ?top)\<close>
-    obtain \<psi>' where \<psi>'b_b: \<open>\<psi>' b \<otimes>\<^sub>s ket b = (id_cblinfun \<otimes>\<^sub>o selfbutterket b) *\<^sub>V \<psi>\<close> for b
+    obtain \<psi>' where \<psi>'b_b: \<open>\<psi>' b \<otimes>\<^sub>s ket b = (id_cblinfun \<otimes>\<^sub>o butterfly (ket b) (ket b)) *\<^sub>V \<psi>\<close> for b
     proof (atomize_elim, rule choice, intro allI)
       fix b :: 'c
-      have \<open>(id_cblinfun \<otimes>\<^sub>o selfbutterket b) *\<^sub>V \<psi> \<in> space_as_set (\<top> \<otimes>\<^sub>S ccspan {ket b})\<close>
+      have \<open>(id_cblinfun \<otimes>\<^sub>o butterfly (ket b) (ket b)) *\<^sub>V \<psi> \<in> space_as_set (\<top> \<otimes>\<^sub>S ccspan {ket b})\<close>
         by (simp add: butterfly_eq_proj tensor_ccsubspace_via_Proj)
-      then show \<open>\<exists>\<psi>'. \<psi>' \<otimes>\<^sub>s ket b = (id_cblinfun \<otimes>\<^sub>o selfbutterket b) *\<^sub>V \<psi>\<close>
+      then show \<open>\<exists>\<psi>'. \<psi>' \<otimes>\<^sub>s ket b = (id_cblinfun \<otimes>\<^sub>o butterfly (ket b) (ket b)) *\<^sub>V \<psi>\<close>
        by (metis tensor_ccsubspace_right1dim_member)
     qed
   
@@ -1891,18 +1891,18 @@ proof (rule antisym[rotated])
     proof -
       from asm have \<psi>_ST: \<open>\<psi> \<in> space_as_set (S x \<otimes>\<^sub>S ?top)\<close>
         by (meson INF_lower Set.basic_monos(7) less_eq_ccsubspace.rep_eq that)
-      have \<open>\<psi>' b \<otimes>\<^sub>s ket b = (id_cblinfun \<otimes>\<^sub>o selfbutterket b) *\<^sub>V \<psi>\<close>
+      have \<open>\<psi>' b \<otimes>\<^sub>s ket b = (id_cblinfun \<otimes>\<^sub>o butterfly (ket b) (ket b)) *\<^sub>V \<psi>\<close>
         by (simp add: \<psi>'b_b)
       also from \<psi>_ST
-      have \<open>\<dots> \<in> space_as_set (((id_cblinfun \<otimes>\<^sub>o selfbutterket b)) *\<^sub>S (S x \<otimes>\<^sub>S ?top))\<close>
+      have \<open>\<dots> \<in> space_as_set (((id_cblinfun \<otimes>\<^sub>o butterfly (ket b) (ket b))) *\<^sub>S (S x \<otimes>\<^sub>S ?top))\<close>
         by (meson cblinfun_apply_in_image')
-      also have \<open>\<dots> = space_as_set (((id_cblinfun \<otimes>\<^sub>o selfbutterket b) o\<^sub>C\<^sub>L (Proj (S x) \<otimes>\<^sub>o id_cblinfun)) *\<^sub>S \<top>)\<close>
+      also have \<open>\<dots> = space_as_set (((id_cblinfun \<otimes>\<^sub>o butterfly (ket b) (ket b)) o\<^sub>C\<^sub>L (Proj (S x) \<otimes>\<^sub>o id_cblinfun)) *\<^sub>S \<top>)\<close>
         by (simp add: cblinfun_compose_image tensor_ccsubspace_via_Proj)
-      also have \<open>\<dots> = space_as_set ((Proj (S x) \<otimes>\<^sub>o (selfbutterket b o\<^sub>C\<^sub>L id_cblinfun)) *\<^sub>S \<top>)\<close>
+      also have \<open>\<dots> = space_as_set ((Proj (S x) \<otimes>\<^sub>o (butterfly (ket b) (ket b) o\<^sub>C\<^sub>L id_cblinfun)) *\<^sub>S \<top>)\<close>
         by (simp add: comp_tensor_op)
-      also have \<open>\<dots> = space_as_set ((Proj (S x) \<otimes>\<^sub>o (id_cblinfun o\<^sub>C\<^sub>L selfbutterket b)) *\<^sub>S \<top>)\<close>
+      also have \<open>\<dots> = space_as_set ((Proj (S x) \<otimes>\<^sub>o (id_cblinfun o\<^sub>C\<^sub>L butterfly (ket b) (ket b))) *\<^sub>S \<top>)\<close>
         by simp
-      also have \<open>\<dots> = space_as_set (((Proj (S x) \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o selfbutterket b)) *\<^sub>S \<top>)\<close>
+      also have \<open>\<dots> = space_as_set (((Proj (S x) \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o butterfly (ket b) (ket b))) *\<^sub>S \<top>)\<close>
         by (simp add: comp_tensor_op)
       also have \<open>\<dots> \<subseteq> space_as_set ((Proj (S x) \<otimes>\<^sub>o id_cblinfun) *\<^sub>S \<top>)\<close>
         by (metis cblinfun_compose_image cblinfun_image_mono less_eq_ccsubspace.rep_eq top_greatest)
@@ -1924,7 +1924,7 @@ proof (rule antisym[rotated])
     
     have \<open>\<psi> \<in> space_as_set (ccspan (range (\<lambda>b. \<psi>' b \<otimes>\<^sub>s ket b)))\<close> (is \<open>\<psi> \<in> ?rhs\<close>)
     proof -
-      define \<gamma> where \<open>\<gamma> F = (\<Sum>b\<in>F. (id_cblinfun \<otimes>\<^sub>o selfbutterket b) *\<^sub>V \<psi>)\<close> for F
+      define \<gamma> where \<open>\<gamma> F = (\<Sum>b\<in>F. (id_cblinfun \<otimes>\<^sub>o butterfly (ket b) (ket b)) *\<^sub>V \<psi>)\<close> for F
       have \<gamma>_rhs: \<open>\<gamma> F \<in> ?rhs\<close> for F
         apply (auto intro!: complex_vector.subspace_sum simp add: \<gamma>_def \<psi>'b_b)
         using ccspan_superset by fastforce
@@ -1932,7 +1932,7 @@ proof (rule antisym[rotated])
       proof (rule cinner_ket_eqI)
         fix x :: \<open>'b \<times> 'c\<close> obtain x1 x2 where x_def: \<open>x = (x1,x2)\<close>
           by force
-        have *: \<open>ket x \<bullet>\<^sub>C ((id_cblinfun \<otimes>\<^sub>o selfbutterket j) *\<^sub>V \<psi>) = of_bool (j=x2) * Rep_ell2 \<psi> x\<close> for j
+        have *: \<open>ket x \<bullet>\<^sub>C ((id_cblinfun \<otimes>\<^sub>o butterfly (ket j) (ket j)) *\<^sub>V \<psi>) = of_bool (j=x2) * Rep_ell2 \<psi> x\<close> for j
           apply (simp add: x_def tensor_op_ell2 tensor_op_adjoint cinner_ket 
               flip: tensor_ell2_ket cinner_adj_left)
           by (simp add: tensor_ell2_ket cinner_ket_left)

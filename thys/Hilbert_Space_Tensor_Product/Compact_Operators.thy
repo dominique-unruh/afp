@@ -323,11 +323,11 @@ proof -
 qed
 
 (* TODO move *)
-lemma finite_rank_dense_compact[simp]: \<open>closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}) = Collect compact_op\<close>
+lemma finite_rank_dense_compact[simp]: \<open>closure (cspan {butterfly (ket \<xi>) (ket \<eta>) |\<xi> \<eta>. True}) = Collect compact_op\<close>
 proof (rule Set.equalityI)
-  show \<open>closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}) \<subseteq> Collect compact_op\<close>
+  show \<open>closure (cspan {butterfly (ket \<xi>) (ket \<eta>) |\<xi> \<eta>. True}) \<subseteq> Collect compact_op\<close>
   proof -
-    have \<open>closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}) \<subseteq> closure (Collect finite_rank)\<close>
+    have \<open>closure (cspan {butterfly (ket \<xi>) (ket \<eta>) |\<xi> \<eta>. True}) \<subseteq> closure (Collect finite_rank)\<close>
       apply (auto intro!: closure_mono simp: finite_rank_def)
       by (smt (verit, del_insts) Collect_mono complex_vector.span_mono in_mono rank1_def)
     also have \<open>\<dots> = Collect compact_op\<close>
@@ -335,11 +335,11 @@ proof (rule Set.equalityI)
     finally show ?thesis
       by -
   qed
-  show \<open>Collect compact_op \<subseteq> closure (cspan {butterket \<xi> \<eta> |(\<xi>::'b) (\<eta>::'a). True})\<close>
+  show \<open>Collect compact_op \<subseteq> closure (cspan {butterfly (ket \<xi>) (ket \<eta>) |(\<xi>::'b) (\<eta>::'a). True})\<close>
   proof -
     have \<open>Collect compact_op = closure (cspan (Collect rank1))\<close>
       by (metis compact_op_def finite_rank_def mem_Collect_eq subsetI subset_antisym)
-    also have \<open>\<dots> \<subseteq> closure (cspan (closure (cspan {butterket \<xi> \<eta> |(\<xi>::'b) (\<eta>::'a). True})))\<close>
+    also have \<open>\<dots> \<subseteq> closure (cspan (closure (cspan {butterfly (ket \<xi>) (ket \<eta>) |(\<xi>::'b) (\<eta>::'a). True})))\<close>
     proof (rule closure_mono, rule complex_vector.span_mono, rule subsetI)
       fix x :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> assume \<open>x \<in> Collect rank1\<close>
       then obtain a b where xab: \<open>x = butterfly a b\<close>
@@ -430,21 +430,21 @@ proof (rule Set.equalityI)
       qed
       have nontriv: \<open>finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV \<noteq> \<bottom>\<close>
         by (simp add: prod_filter_eq_bot)
-      have inside: \<open>\<forall>\<^sub>F x in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. f x \<in> cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}\<close>
+      have inside: \<open>\<forall>\<^sub>F x in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. f x \<in> cspan {butterfly (ket \<xi>) (ket \<eta>) |\<xi> \<eta>. True}\<close>
       proof (rule eventually_mp[where P=\<open>\<lambda>(F,G). finite F \<and> finite G\<close>])
         show \<open>\<forall>\<^sub>F (F,G) in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. finite F \<and> finite G\<close>
           by (smt (verit) case_prod_conv eventually_finite_subsets_at_top_weakI eventually_prod_filter)
-        have \<open>f (F,G) \<in> cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}\<close> if [simp]: \<open>finite F\<close> \<open>finite G\<close> for F G
+        have \<open>f (F,G) \<in> cspan {butterfly (ket \<xi>) (ket \<eta>) |\<xi> \<eta>. True}\<close> if [simp]: \<open>finite F\<close> \<open>finite G\<close> for F G
           by (auto intro!: complex_vector.span_sum complex_vector.span_scale complex_vector.span_base[where a=\<open>butterfly _ _\<close>]
               simp add: f_def trunc_ell2_finite_sum butterfly_sum_left butterfly_sum_right)
-        then show \<open>\<forall>\<^sub>F x in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. (case x of (F, G) \<Rightarrow> finite F \<and> finite G) \<longrightarrow> f x \<in> cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True}\<close>
+        then show \<open>\<forall>\<^sub>F x in finite_subsets_at_top UNIV \<times>\<^sub>F finite_subsets_at_top UNIV. (case x of (F, G) \<Rightarrow> finite F \<and> finite G) \<longrightarrow> f x \<in> cspan {butterfly (ket \<xi>) (ket \<eta>) |\<xi> \<eta>. True}\<close>
           apply auto
           by (simp add: always_eventually)
       qed
-      show \<open>x \<in> closure (cspan {butterket \<xi> \<eta> |\<xi> \<eta>. True})\<close>
+      show \<open>x \<in> closure (cspan {butterfly (ket \<xi>) (ket \<eta>) |\<xi> \<eta>. True})\<close>
         using lim nontriv inside by (rule limit_in_closure)
     qed
-    also have \<open>\<dots> = closure (cspan {butterket \<xi> \<eta> |(\<xi>::'b) (\<eta>::'a). True})\<close>
+    also have \<open>\<dots> = closure (cspan {butterfly (ket \<xi>) (ket \<eta>) |(\<xi>::'b) (\<eta>::'a). True})\<close>
       by (simp add: complex_vector.span_eq_iff[THEN iffD2])
     finally show ?thesis
       by -
