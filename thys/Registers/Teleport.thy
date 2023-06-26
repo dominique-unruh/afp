@@ -116,12 +116,12 @@ proof -
     apply (rule hoare_apply) by (simp add: O3_def cblinfun_assoc_left(2))
 
   also
-  define O4 where \<open>O4 = \<Phi>1 (selfbutterket a) o\<^sub>C\<^sub>L O3\<close>
+  define O4 where \<open>O4 = \<Phi>1 (selfbutter (ket a)) o\<^sub>C\<^sub>L O3\<close>
   have \<open>hoare (O3 *\<^sub>S pre) [ifthen \<Phi>1 a] (O4 *\<^sub>S pre)\<close>
     apply (rule hoare_ifthen) by (simp add: O4_def cblinfun_assoc_left(2))
 
   also
-  define O5 where \<open>O5 = X (selfbutterket b) o\<^sub>C\<^sub>L O4\<close>
+  define O5 where \<open>O5 = X (selfbutter (ket b)) o\<^sub>C\<^sub>L O4\<close>
   have \<open>hoare (O4 *\<^sub>S pre) [ifthen X b] (O5 *\<^sub>S pre)\<close>
     apply (rule hoare_ifthen) by (simp add: O5_def cblinfun_assoc_left(2))
 

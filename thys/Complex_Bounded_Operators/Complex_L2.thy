@@ -797,7 +797,7 @@ lemma trunc_ell2_twice[simp]: \<open>trunc_ell2 M (trunc_ell2 N \<psi>) = trunc_
 lemma trunc_ell2_union: \<open>trunc_ell2 (M \<union> N) \<psi> = trunc_ell2 M \<psi> + trunc_ell2 N \<psi> - trunc_ell2 (M\<inter>N) \<psi>\<close>
   apply transfer by auto
 
-lemma trunc_ell2_union_disjoint: \<open>M\<inter>N = {} \<Longrightarrow> trunc_ell2 (M \<union> N) \<psi> = trunc_ell2 M \<psi> + trunc_ell2 N \<psi>\<close>
+lemma trunc_ell2_union_disjoint: \<open>M \<inter> N = {} \<Longrightarrow> trunc_ell2 (M \<union> N) \<psi> = trunc_ell2 M \<psi> + trunc_ell2 N \<psi>\<close>
   by (simp add: trunc_ell2_union)
 
 lemma trunc_ell2_union_Diff: \<open>M \<subseteq> N \<Longrightarrow> trunc_ell2 (N-M) \<psi> = trunc_ell2 N \<psi> - trunc_ell2 M \<psi>\<close>
@@ -876,7 +876,6 @@ qed
 lemma trunc_ell2_uminus: \<open>trunc_ell2 (-M) \<psi> = \<psi> - trunc_ell2 M \<psi>\<close>
   by (metis Int_UNIV_left boolean_algebra_class.diff_eq subset_UNIV trunc_ell2_UNIV trunc_ell2_union_Diff)
 
-
 subsection \<open>Kets and bras\<close>
 
 lift_definition ket :: \<open>'a \<Rightarrow> 'a ell2\<close> is \<open>\<lambda>x y. of_bool (x=y)\<close>
@@ -952,7 +951,7 @@ lemma inj_ket[simp]: \<open>inj ket\<close>
   by (simp add: inj_on_def)
 
 lemma trunc_ell2_ket_cspan:
-  \<open>trunc_ell2 S x \<in> (cspan (range ket))\<close> if \<open>finite S\<close>
+  \<open>trunc_ell2 S x \<in> cspan (range ket)\<close> if \<open>finite S\<close>
 proof (use that in induction)
   case empty
   then show ?case 

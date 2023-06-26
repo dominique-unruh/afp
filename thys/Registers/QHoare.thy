@@ -11,7 +11,7 @@ locale qhoare =
 begin
 
 definition "apply U R = R U" for R :: \<open>'a update \<Rightarrow> 'mem update\<close>
-definition "ifthen R x = R (butterket x x)" for R :: \<open>'a update \<Rightarrow> 'mem update\<close>
+definition "ifthen R x = R (butterfly (ket x) (ket x))" for R :: \<open>'a update \<Rightarrow> 'mem update\<close>
 definition "program S = fold (o\<^sub>C\<^sub>L) S id_cblinfun" for S :: \<open>'mem update list\<close>
 
 
