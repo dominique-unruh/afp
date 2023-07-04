@@ -7,6 +7,7 @@ theory Teleport
     "HOL-Library.Word"
     QHoare
     Tensor_Product_Matrices
+    Complex_Bounded_Operators.Cblinfun_Code
 begin
 
 hide_const (open) Finite_Cartesian_Product.vec
@@ -18,6 +19,75 @@ no_notation Group.mult (infixl "\<otimes>\<index>" 70)
 no_notation Order.top ("\<top>\<index>")
 unbundle no_vec_syntax
 unbundle no_inner_syntax
+
+thm ccspan_closure
+
+declare ccspan_closure[simp del]
+
+lemma closure_cspan_closure: \<open>closure (cspan (closure X)) = closure (cspan X)\<close>
+  for X :: \<open>'a :: complex_normed_vector set\<close>
+  using ccspan_closure[of X] by (transfer fixing: X)
+
+lemma closure_UN_closure: \<open>closure (\<Union>x\<in>X. closure (A x)) = closure (\<Union>x\<in>X. A x)\<close>
+proof (rule equalityI)
+  have *: \<open>A \<subseteq> B \<Longrightarrow> A \<subseteq> closure B\<close> for A B :: \<open>'a set\<close>
+    using closure_subset by blast
+  show \<open>closure (\<Union>x\<in>X. closure (A x)) \<subseteq> closure (\<Union>x\<in>X. A x)\<close>
+    apply (intro closure_minimal UN_least *)
+    by auto
+  show \<open>closure (\<Union>x\<in>X. A x) \<subseteq> closure (\<Union>x\<in>X. closure (A x))\<close>
+    apply (intro closure_mono UN_mono closure_subset)
+    by simp
+qed
+
+lemma cblinfun_image_SUP:
+  fixes A :: \<open>'c \<Rightarrow> 'a::complex_normed_vector ccsubspace\<close> and U :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
+  shows \<open>U *\<^sub>S (\<Squnion>x\<in>X. A x) = (\<Squnion>x\<in>X. U *\<^sub>S A x)\<close>
+proof (transfer fixing: X)
+  fix U :: \<open>'a \<Rightarrow> 'b\<close> and A :: \<open>'c \<Rightarrow> 'a set\<close>
+  assume blin: \<open>bounded_clinear U\<close>
+  assume \<open>pred_fun \<top> closed_csubspace A\<close>
+  then have closed: \<open>closed_csubspace (A x)\<close> for x
+    by simp
+  
+  from blin have \<open>closure (U ` closure (cspan (\<Union>x\<in>X. A x))) = closure (U ` cspan (\<Union>x\<in>X. A x))\<close>
+    by (simp add: closure_bounded_linear_image_subset_eq bounded_clinear.bounded_linear) 
+  also from blin have \<open>\<dots> = closure (cspan (U ` (\<Union>x\<in>X. A x)))\<close>
+    by (simp add: bounded_clinear.clinear complex_vector.linear_span_image)
+  also have \<open>\<dots> = closure (cspan (\<Union>x\<in>X. U ` A x))\<close>
+    by (simp add: image_UN)
+  also have \<open>\<dots> = closure (cspan (closure (\<Union>x\<in>X. U ` A x)))\<close>
+    by (simp add: closure_cspan_closure)
+  also have \<open>\<dots> = closure (cspan (closure (\<Union>x\<in>X. closure (U ` A x))))\<close>
+    by (simp add: closure_UN_closure)
+  also have \<open>\<dots> = closure (cspan (\<Union>x\<in>X. closure (U ` A x)))\<close>
+    by (simp add: closure_cspan_closure)
+  finally show \<open>closure (U ` closure (cspan (\<Union>x\<in>X. A x))) = closure (cspan (\<Union>x\<in>X. closure (U ` A x)))\<close>
+    by -
+qed
+  
+
+
+ 
+(* TODO move *)
+lemma insert_Times_insert':
+  "insert a A \<times> insert b B = insert (a,b) (A \<times> insert b B \<union> {a} \<times> B)"
+  by blast
+
+(* Reason for insert_Times_insert': *)
+lemma \<open>(\<Sum>(a,b)\<in>{0,1}\<times>{0,1}. x a b) = x 0 0 + x 0 1 + x 1 0 + x 1 1\<close> for x :: \<open>bit \<Rightarrow> bit \<Rightarrow> nat\<close>
+  (* apply simp (* Failure! *) *)
+  by (simp add: insert_Times_insert' del: insert_Times_insert)
+
+(* TODO move *)
+lemma UNIV_bit: \<open>UNIV = {0, 1::bit}\<close>
+  by force
+
+lemma singleton_bit_complement: \<open>- {x} = {x + 1}\<close> for x :: bit
+  apply (cases x) by auto
+
+lemma Uswap_compose: \<open>Uswap o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o y) = (y \<otimes>\<^sub>o x) o\<^sub>C\<^sub>L Uswap\<close>
+  by (auto intro!: equal_ket simp: tensor_op_ell2 simp flip: tensor_ell2_ket)
 
 locale teleport_locale = qhoare "TYPE('mem)" +
   fixes X :: "bit update \<Rightarrow> 'mem update"
@@ -36,15 +106,12 @@ abbreviation "XAB \<equiv> ((X;A); B)"
 abbreviation "AB \<equiv> (A;B)"
 abbreviation "\<Phi>2AB \<equiv> ((\<Phi> o Snd; A); B)"
 
-definition "teleport a b = [
+definition "teleport = [
     apply CNOT X\<Phi>1,
     apply hadamard X,
-    ifthen \<Phi>1 a,
-    ifthen X b, 
-    apply (if a=1 then pauliX else id_cblinfun) \<Phi>2,
-    apply (if b=1 then pauliZ else id_cblinfun) \<Phi>2
+    ifthenelse \<Phi>1 {1} [apply pauliX \<Phi>2] [],
+    ifthenelse X {1} [apply pauliZ \<Phi>2] []
   ]"
-
 
 lemma \<Phi>_X\<Phi>: \<open>\<Phi> a = X\<Phi> (id_cblinfun \<otimes>\<^sub>o a)\<close>
   by (auto simp: register_pair_apply)
@@ -90,11 +157,15 @@ schematic_goal \<Phi>2AB_to_X\<Phi>2_AB: "\<Phi>2AB a = (X\<Phi>2;AB) ?b"
 
 lemmas to_X\<Phi>2_AB = XAB_to_X\<Phi>2_AB X\<Phi>2_to_X\<Phi>2_AB \<Phi>2AB_to_X\<Phi>2_AB
 
-lemma teleport:
-  assumes [simp]: "norm \<psi> = 1"
-  shows "hoare (XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00) (teleport a b) (\<Phi>2AB =\<^sub>q \<psi>)"
+lemma X_to_X\<Phi>2: \<open>X x = X\<Phi>2 (x \<otimes>\<^sub>o id_cblinfun)\<close>
+  by (simp add: register_pair_apply)
+lemma \<Phi>2_to_X\<Phi>2: \<open>\<Phi>2 x = X\<Phi>2 (id_cblinfun \<otimes>\<^sub>o x)\<close>
+  by (simp add: register_pair_apply)
+lemmas to_X\<Phi>2 = X_to_X\<Phi>2 \<Phi>2_to_X\<Phi>2
+
+lemma teleport: \<open>hoare (XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00) teleport (\<Phi>2AB =\<^sub>q \<psi>)\<close>
 proof -
-  define XZ :: \<open>bit update\<close> where "XZ = (if a=1 then (if b=1 then pauliZ o\<^sub>C\<^sub>L pauliX else pauliX) else (if b=1 then pauliZ else id_cblinfun))"
+  define XZ :: \<open>bit \<Rightarrow> bit \<Rightarrow> bit update\<close> where "XZ a b = (if a=1 then (if b=1 then pauliZ o\<^sub>C\<^sub>L pauliX else pauliX) else (if b=1 then pauliZ else id_cblinfun))" for a b
 
   define pre where "pre = XAB =\<^sub>q \<psi>"
 
@@ -102,9 +173,7 @@ proof -
   have \<open>(XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00) = O1 *\<^sub>S pre\<close>
     unfolding pre_def O1_def EQ_def
     apply (subst compatible_proj_intersect[where R=XAB and S=\<Phi>])
-       apply (simp_all add: butterfly_is_Proj)
-    apply (subst swap_registers[where R=XAB and S=\<Phi>])
-    by (simp_all add: cblinfun_assoc_left(2))
+    by (simp_all add: butterfly_eq_proj swap_registers[where R=XAB and S=\<Phi>] cblinfun_assoc_left(2))
 
   also
   define O2 where "O2 = X\<Phi>1 CNOT o\<^sub>C\<^sub>L O1"
@@ -112,82 +181,114 @@ proof -
     apply (rule hoare_apply) by (simp add: O2_def cblinfun_assoc_left(2))
 
   also
-  define O3 where \<open>O3 = X hadamard o\<^sub>C\<^sub>L O2\<close>
-  have \<open>hoare (O2 *\<^sub>S pre) [apply hadamard X] (O3 *\<^sub>S pre)\<close>
-    apply (rule hoare_apply) by (simp add: O3_def cblinfun_assoc_left(2))
+  define O3' where \<open>O3' a' b' a b = (1/2) *\<^sub>C \<Phi>2 (XZ a b*) o\<^sub>C\<^sub>L X\<Phi>2 Uswap o\<^sub>C\<^sub>L \<Phi> (butterfly (ket a' \<otimes>\<^sub>s ket b') \<beta>00)\<close> for a b a' b'
+  have \<open>hoare (O2 *\<^sub>S pre) [apply hadamard X] (\<Squnion>(a,b)\<in>UNIV. O3' a b a b *\<^sub>S pre)\<close>
+  proof -
+    have \<open>X hadamard o\<^sub>C\<^sub>L O2 = (\<Sum>(a,b)\<in>UNIV. O3' a b a b)\<close>
+      unfolding (* O3_def *) O2_def O1_def O3'_def
+      apply (simp split del: if_split only: to_X\<Phi> register_mult[of X\<Phi>])
+      apply (simp split del: if_split
+          add: register_mult[of X\<Phi>] clinear_register UNIV_bit XZ_def assoc_ell2_sandwich insert_Times_insert' 
+          flip: complex_vector.linear_scale complex_vector.linear_add[of X\<Phi>] UNIV_Times_UNIV
+          del: comp_apply insert_Times_insert)
+      apply (rule arg_cong[of _ _ X\<Phi>])
+      apply (rule cblinfun_eq_mat_of_cblinfunI)
+      apply (simp add: assoc_ell2_sandwich mat_of_cblinfun_tensor_op XZ_def mat_of_cblinfun_plus
+          butterfly_def mat_of_cblinfun_compose mat_of_cblinfun_vector_to_cblinfun
+          mat_of_cblinfun_adj vec_of_basis_enum_ket mat_of_cblinfun_id
+          swap_sandwich[abs_def] mat_of_cblinfun_scaleR mat_of_cblinfun_scaleC
+          id_tensor_sandwich vec_of_basis_enum_tensor_state mat_of_cblinfun_cblinfun_apply
+          mat_of_cblinfun_sandwich)
+      by normalization (* Slow (code compilation?) *)
+    then have *: \<open>X hadamard *\<^sub>S O2 *\<^sub>S pre \<le> (\<Squnion>(a,b)\<in>UNIV. O3' a b a b *\<^sub>S pre)\<close>
+      by (simp add: cblinfun_sum_image_distr case_prod_beta flip: cblinfun_compose_image)
+    then show ?thesis
+      apply (rule_tac hoare_apply) by simp
+  qed
 
   also
-  define O4 where \<open>O4 = \<Phi>1 (selfbutterket a) o\<^sub>C\<^sub>L O3\<close>
-  have \<open>hoare (O3 *\<^sub>S pre) [ifthen \<Phi>1 a] (O4 *\<^sub>S pre)\<close>
-    apply (rule hoare_ifthen) by (simp add: O4_def cblinfun_assoc_left(2))
+  have \<open>hoare (\<Squnion>(a,b)\<in>UNIV. O3' a b a b *\<^sub>S pre)
+              [ifthenelse \<Phi>1 {1} [apply pauliX \<Phi>2] []]
+              (\<Squnion>(a,b)\<in>UNIV. O3' a b 0 b *\<^sub>S pre)\<close>
+  proof -
+    have *: \<open>\<Phi>1 (proj (ket a')) o\<^sub>C\<^sub>L O3' a b a b = of_bool (a=a') *\<^sub>C O3' a b a b\<close> for a a' b
+      apply (simp_all add: O3'_def cblinfun_compose_assoc
+          lift_cblinfun_comp[OF swap_registers, of \<Phi>1 \<Phi>2]
+          lift_cblinfun_comp[OF swap_registers, of \<Phi>1 X\<Phi>2] del: o_apply)
+      apply (simp_all add: register_mult[of \<Phi>] o_def flip: cblinfun_compose_assoc)
+      by (simp_all add: Fst_def cblinfun_comp_butterfly tensor_op_ell2 
+          cinner_ket complex_vector.linear_0 clinear_register
+          flip: butterfly_eq_proj)
+    have **: \<open>\<Phi>2 pauliX o\<^sub>C\<^sub>L O3' a b 1 b = O3' a b 0 b\<close> for a b
+      apply (simp add: O3'_def lift_cblinfun_comp[OF register_mult, of \<Phi>2]
+          cblinfun_compose_assoc XZ_def
+          del: o_apply)
+      by (simp flip: cblinfun_compose_assoc)
+    show ?thesis
+      apply (rule hoare_ifthenelse)
+      using * ** 
+      apply (auto intro!: hoare_apply hoare_skip SUP_mono 
+          simp add: UNIV_bit cblinfun_compose_add_right singleton_bit_complement
+          cblinfun_image_SUP cblinfun_compose_assoc
+          simp flip: cblinfun_compose_image)
+      by blast+
+  qed
 
   also
-  define O5 where \<open>O5 = X (selfbutterket b) o\<^sub>C\<^sub>L O4\<close>
-  have \<open>hoare (O4 *\<^sub>S pre) [ifthen X b] (O5 *\<^sub>S pre)\<close>
-    apply (rule hoare_ifthen) by (simp add: O5_def cblinfun_assoc_left(2))
+  have \<open>hoare (\<Squnion>(a,b)\<in>UNIV. O3' a b 0 b *\<^sub>S pre)
+              [ifthenelse X {1} [apply pauliZ \<Phi>2] []]
+              (\<Squnion>(a,b)\<in>UNIV. O3' a b 0 0 *\<^sub>S pre)\<close>
+  proof -
+    have *: \<open>X (proj (ket b')) o\<^sub>C\<^sub>L O3' a b 0 b = of_bool (b=b') *\<^sub>C O3' a b 0 b\<close> for a b b'
+    proof -
+      have 1: \<open>X x o\<^sub>C\<^sub>L X\<Phi>2 Uswap = X\<Phi>2 Uswap o\<^sub>C\<^sub>L \<Phi>2 x\<close> for x
+        by (simp add: to_X\<Phi>2 register_mult Uswap_compose del: o_apply)
+      show ?thesis
+        apply (simp_all add: O3'_def cblinfun_compose_assoc
+            lift_cblinfun_comp[OF swap_registers, of  X \<Phi>] lift_cblinfun_comp[OF 1]
+            register_mult[of \<Phi>])
+        by (simp_all add: Snd_def cblinfun_comp_butterfly tensor_op_ell2 
+            cinner_ket complex_vector.linear_0 clinear_register
+            flip: butterfly_eq_proj)
+    qed
+    have **: \<open>\<Phi>2 pauliZ o\<^sub>C\<^sub>L O3' a b 0 1 = O3' a b 0 0\<close> for a b
+      by (simp add: O3'_def lift_cblinfun_comp[OF register_mult, of \<Phi>2]
+          cblinfun_compose_assoc XZ_def
+          del: o_apply)
+    show ?thesis
+      apply (rule hoare_ifthenelse)
+      using * ** 
+      apply (auto intro!: hoare_apply hoare_skip SUP_mono 
+          simp add: UNIV_bit cblinfun_compose_add_right singleton_bit_complement
+          cblinfun_image_SUP cblinfun_compose_assoc
+          simp flip: cblinfun_compose_image)
+      by blast+
+  qed
 
-  also
-  define O6 where \<open>O6 = \<Phi>2 (if a=1 then pauliX else id_cblinfun) o\<^sub>C\<^sub>L O5\<close>
-  have \<open>hoare (O5 *\<^sub>S pre) [apply (if a=1 then pauliX else id_cblinfun) (\<Phi> \<circ> Snd)] (O6 *\<^sub>S pre)\<close>
-    apply (rule hoare_apply) by (auto simp add: O6_def cblinfun_assoc_left(2))
+  also have \<open>(\<Squnion>(a,b)\<in>UNIV. O3' a b 0 0 *\<^sub>S pre) \<le> \<Phi>2AB =\<^sub>q \<psi>\<close>
+  proof (rule SUP_least, simp only: case_prod_unfold)
+    fix a b
+    have \<open>O3' a b 0 0 *\<^sub>S pre = (X\<Phi>2 Uswap o\<^sub>C\<^sub>L \<Phi> (butterfly (ket a \<otimes>\<^sub>s ket b) \<beta>00)) *\<^sub>S (XAB =\<^sub>q \<psi>)\<close>
+      by (simp add: O3'_def XZ_def pre_def)
+    also have \<open>\<dots> \<le> X\<Phi>2 Uswap *\<^sub>S (XAB =\<^sub>q \<psi>)\<close>
+      by (auto intro!: cblinfun_image_mono
+          simp add: cblinfun_compose_image EQ_def lift_cblinfun_comp[OF swap_registers, of \<Phi> XAB])
+    also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes>\<^sub>o id_cblinfun) *\<^sub>S (X\<Phi>2;AB)
+                      ((swap \<otimes>\<^sub>r id) (assoc' (id_cblinfun \<otimes>\<^sub>o assoc (proj \<psi>)))) *\<^sub>S \<top>\<close>
+      by (simp add: to_X\<Phi>2_AB EQ_def)
+    also have \<open>\<dots> = \<Phi>2AB (proj \<psi>) *\<^sub>S X\<Phi>2 Uswap *\<^sub>S \<top>\<close>
+      apply (simp add: swap_sandwich sandwich_grow_left to_X\<Phi>2_AB   
+          cblinfun_compose_image[symmetric] register_mult)
+      by (simp add: sandwich_apply cblinfun_compose_assoc[symmetric] comp_tensor_op tensor_op_adjoint)
+    also have \<open>\<dots> \<le> \<Phi>2AB =\<^sub>q \<psi>\<close>
+      by (simp add: EQ_def cblinfun_image_mono)
+    finally show \<open>O3' a b 0 0 *\<^sub>S pre \<le> \<Phi>2AB =\<^sub>q \<psi>\<close>
+      by -
+  qed
 
-  also
-  define O7 where \<open>O7 = \<Phi>2 (if b = 1 then pauliZ else id_cblinfun) o\<^sub>C\<^sub>L O6\<close>
-  have O7: \<open>O7 = \<Phi>2 XZ o\<^sub>C\<^sub>L O5\<close>
-    by (auto simp add: O6_def O7_def XZ_def register_mult lift_cblinfun_comp[OF register_mult])
-  have \<open>hoare (O6 *\<^sub>S pre) [apply (if b=1 then pauliZ else id_cblinfun) (\<Phi> \<circ> Snd)] (O7 *\<^sub>S pre)\<close>
-    apply (rule hoare_apply) 
-    by (auto simp add: O7_def cblinfun_assoc_left(2))
-
-  finally have hoare: \<open>hoare (XAB =\<^sub>q \<psi> \<sqinter> \<Phi> =\<^sub>q \<beta>00) (teleport a b) (O7 *\<^sub>S pre)\<close>
-    by (auto simp add: teleport_def comp_def)
-
-  have O5': "O5 = (1/2) *\<^sub>C \<Phi>2 (XZ*) o\<^sub>C\<^sub>L X\<Phi>2 Uswap o\<^sub>C\<^sub>L \<Phi> (butterfly (ket a \<otimes>\<^sub>s ket b) \<beta>00)"
-    unfolding O7 O5_def O4_def O3_def O2_def O1_def 
-    apply (simp split del: if_split only: to_X\<Phi> register_mult[of X\<Phi>])
-    apply (simp split del: if_split add: register_mult[of X\<Phi>] clinear_register
-                flip: complex_vector.linear_scale
-                del: comp_apply)
-    apply (rule arg_cong[of _ _ X\<Phi>])
-    apply (rule cblinfun_eq_mat_of_cblinfunI)
-    apply (simp add: assoc_ell2_sandwich mat_of_cblinfun_tensor_op XZ_def
-                     butterfly_def mat_of_cblinfun_compose mat_of_cblinfun_vector_to_cblinfun
-                     mat_of_cblinfun_adj vec_of_basis_enum_ket mat_of_cblinfun_id
-                     swap_sandwich[abs_def] mat_of_cblinfun_scaleR mat_of_cblinfun_scaleC
-                     id_tensor_sandwich vec_of_basis_enum_tensor_state mat_of_cblinfun_cblinfun_apply
-                     mat_of_cblinfun_sandwich)
-    by normalization
-
-  have [simp]: "unitary XZ"
-    unfolding unitary_def unfolding XZ_def apply auto
-     apply (metis cblinfun_assoc_left(1) pauliXX pauliZZ cblinfun_compose_id_left)
-    by (metis cblinfun_assoc_left(1) pauliXX pauliZZ cblinfun_compose_id_left)
-
-  have O7': "O7 = (1/2) *\<^sub>C X\<Phi>2 Uswap o\<^sub>C\<^sub>L \<Phi> (butterfly (ket a \<otimes>\<^sub>s ket b) \<beta>00)"
-    unfolding O7 O5'
-    by (simp add: cblinfun_compose_assoc[symmetric] register_mult[of \<Phi>2] del: comp_apply)
-
-  have "O7 *\<^sub>S pre = X\<Phi>2 Uswap *\<^sub>S XAB (selfbutter \<psi>) *\<^sub>S \<Phi> (butterfly (ket (a, b)) \<beta>00) *\<^sub>S \<top>"
-    apply (simp add: O7' pre_def EQ_def cblinfun_compose_image tensor_ell2_ket)
-    apply (subst lift_cblinfun_comp[OF swap_registers[where R=\<Phi> and S=XAB]], simp)
-    by (simp add: cblinfun_assoc_left(2))
-  also have \<open>\<dots> \<le> X\<Phi>2 Uswap *\<^sub>S XAB (selfbutter \<psi>) *\<^sub>S \<top>\<close>
-    by (simp add: cblinfun_image_mono)
-  also have \<open>\<dots> = (X\<Phi>2;AB) (Uswap \<otimes>\<^sub>o id_cblinfun) *\<^sub>S (X\<Phi>2;AB)
-                      ((swap \<otimes>\<^sub>r id) (assoc' (id_cblinfun \<otimes>\<^sub>o assoc (selfbutter \<psi>)))) *\<^sub>S \<top>\<close>
-    by (simp add: to_X\<Phi>2_AB)
-  also have \<open>\<dots> = \<Phi>2AB (selfbutter \<psi>) *\<^sub>S X\<Phi>2 Uswap *\<^sub>S \<top>\<close>
-    apply (simp add: swap_sandwich sandwich_grow_left to_X\<Phi>2_AB   
-        cblinfun_compose_image[symmetric] register_mult)
-    by (simp add: sandwich_apply cblinfun_compose_assoc[symmetric] comp_tensor_op tensor_op_adjoint)
-  also have \<open>\<dots> \<le> \<Phi>2AB =\<^sub>q \<psi>\<close>
-    by (simp add: EQ_def cblinfun_image_mono)
-  finally have \<open>O7 *\<^sub>S pre \<le> \<Phi>2AB =\<^sub>q \<psi>\<close>
-    by simp
-
-  with hoare
+  finally
   show ?thesis
-    by (meson basic_trans_rules(31) hoare_def less_eq_ccsubspace.rep_eq)
+    by (simp add: teleport_def o_def)
 qed
 
 end
