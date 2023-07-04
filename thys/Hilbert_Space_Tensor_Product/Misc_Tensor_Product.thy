@@ -6,7 +6,7 @@ theory Misc_Tensor_Product
     "HOL-Analysis.Infinite_Sum" "HOL-Analysis.Harmonic_Numbers" Containers.Containers_Auxiliary
     Complex_Bounded_Operators.Extra_General
     Complex_Bounded_Operators.Extra_Vector_Spaces
-    Complex_Bounded_Operators.BO_Unsorted
+    BO_Unsorted
 begin
 
 unbundle lattice_syntax

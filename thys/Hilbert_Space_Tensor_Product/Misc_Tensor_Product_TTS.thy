@@ -2,7 +2,6 @@ theory Misc_Tensor_Product_TTS
   imports
     Complex_Bounded_Operators.Complex_Bounded_Linear_Function
     Misc_Tensor_Product
-    Misc_Tensor_Product_BO
     With_Type.With_Type
 begin
 

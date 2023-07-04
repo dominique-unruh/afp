@@ -4,7 +4,7 @@ text \<open>Files in this directory are intended to be added to other theory fil
       session in the development branch of the AFP by the AFP maintainers.\<close>
 
 theory BO_Unsorted
-  imports Cblinfun_Code
+  imports Complex_Bounded_Operators.Cblinfun_Code
 begin
 
 unbundle cblinfun_notation

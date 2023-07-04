@@ -1,5 +1,5 @@
 theory Compact_Operators
-  imports Tensor_Product.Misc_Tensor_Product_BO
+  imports Tensor_Product.Misc_Tensor_Product
     Sqrt_Babylonian.Sqrt_Babylonian_Auxiliary
 begin
 

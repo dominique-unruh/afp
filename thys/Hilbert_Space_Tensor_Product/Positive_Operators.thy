@@ -1,7 +1,7 @@
 section \<open>\<open>Positive_Operators\<close> -- Positive bounded operators\<close>
 
 theory Positive_Operators
-  imports Tensor_Product.Misc_Tensor_Product_BO Tensor_Product.Strong_Operator_Topology
+  imports Tensor_Product.Misc_Tensor_Product Tensor_Product.Strong_Operator_Topology
     Ordinary_Differential_Equations.Cones
 begin
 
