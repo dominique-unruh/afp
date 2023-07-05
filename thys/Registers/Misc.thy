@@ -167,13 +167,56 @@ lemma Ex_iffI:
   shows \<open>Ex P \<longleftrightarrow> Ex Q\<close>
   using assms(1) assms(2) by auto
 
-(* (* TODO: Get rid of Misc.sandwich and delete this. *)
-lemma sandwich_weak_star_cont'[simp]:
-  \<open>continuous_map weak_star_topology weak_star_topology (sandwich A)\<close>
-  using sandwich_weak_star_cont
-  by (auto simp add: Complex_Bounded_Linear_Function.sandwich_apply[abs_def] Misc.sandwich_def[abs_def]
-      simp del: sandwich_weak_star_cont) *)
+lemma closure_cspan_closure: \<open>closure (cspan (closure X)) = closure (cspan X)\<close>
+  for X :: \<open>'a :: complex_normed_vector set\<close>
+  using ccspan_closure[of X] by (transfer fixing: X)
 
-(* hide_const (open) Misc.sandwich *)
+lemma closure_UN_closure: \<open>closure (\<Union>x\<in>X. closure (A x)) = closure (\<Union>x\<in>X. A x)\<close>
+proof (rule equalityI)
+  have *: \<open>A \<subseteq> B \<Longrightarrow> A \<subseteq> closure B\<close> for A B :: \<open>'a set\<close>
+    using closure_subset by blast
+  show \<open>closure (\<Union>x\<in>X. closure (A x)) \<subseteq> closure (\<Union>x\<in>X. A x)\<close>
+    apply (intro closure_minimal UN_least *)
+    by auto
+  show \<open>closure (\<Union>x\<in>X. A x) \<subseteq> closure (\<Union>x\<in>X. closure (A x))\<close>
+    apply (intro closure_mono UN_mono closure_subset)
+    by simp
+qed
+
+lemma cblinfun_image_SUP:
+  fixes A :: \<open>'c \<Rightarrow> 'a::complex_normed_vector ccsubspace\<close> and U :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
+  shows \<open>U *\<^sub>S (\<Squnion>x\<in>X. A x) = (\<Squnion>x\<in>X. U *\<^sub>S A x)\<close>
+proof (transfer fixing: X)
+  fix U :: \<open>'a \<Rightarrow> 'b\<close> and A :: \<open>'c \<Rightarrow> 'a set\<close>
+  assume blin: \<open>bounded_clinear U\<close>
+  assume \<open>pred_fun \<top> closed_csubspace A\<close>
+  then have closed: \<open>closed_csubspace (A x)\<close> for x
+    by simp
+  
+  from blin have \<open>closure (U ` closure (cspan (\<Union>x\<in>X. A x))) = closure (U ` cspan (\<Union>x\<in>X. A x))\<close>
+    by (simp add: closure_bounded_linear_image_subset_eq bounded_clinear.bounded_linear) 
+  also from blin have \<open>\<dots> = closure (cspan (U ` (\<Union>x\<in>X. A x)))\<close>
+    by (simp add: bounded_clinear.clinear complex_vector.linear_span_image)
+  also have \<open>\<dots> = closure (cspan (\<Union>x\<in>X. U ` A x))\<close>
+    by (simp add: image_UN)
+  also have \<open>\<dots> = closure (cspan (closure (\<Union>x\<in>X. U ` A x)))\<close>
+    by (simp add: closure_cspan_closure)
+  also have \<open>\<dots> = closure (cspan (closure (\<Union>x\<in>X. closure (U ` A x))))\<close>
+    by (simp add: closure_UN_closure)
+  also have \<open>\<dots> = closure (cspan (\<Union>x\<in>X. closure (U ` A x)))\<close>
+    by (simp add: closure_cspan_closure)
+  finally show \<open>closure (U ` closure (cspan (\<Union>x\<in>X. A x))) = closure (cspan (\<Union>x\<in>X. closure (U ` A x)))\<close>
+    by -
+qed
+  
+lemma UNIV_bit: \<open>UNIV = {0, 1::bit}\<close>
+  by force
+
+lemma singleton_bit_complement: \<open>- {x} = {x + 1}\<close> for x :: bit
+  apply (cases x) by auto
+
+lemma insert_Times_insert':
+  "insert a A \<times> insert b B = insert (a,b) (A \<times> insert b B \<union> {a} \<times> B)"
+  by blast
 
 end

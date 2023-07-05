@@ -145,4 +145,7 @@ lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otim
   apply (simp add: mat_of_cblinfun_cblinfun_apply vec_of_basis_enum_ket tensor_ell2_ket)
   by (case_tac i; case_tac ia; hypsubst_thin; normalization)
 
+lemma Uswap_compose: \<open>Uswap o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o y) = (y \<otimes>\<^sub>o x) o\<^sub>C\<^sub>L Uswap\<close>
+  by (auto intro!: equal_ket simp: tensor_op_ell2 simp flip: tensor_ell2_ket)
+
 end

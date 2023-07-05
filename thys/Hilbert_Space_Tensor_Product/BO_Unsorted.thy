@@ -1,7 +1,6 @@
-text \<open>Files in this directory are intended to be added to other theory files when the next AFP 
-      release is near. The reason why they are currently held in a separate file is that this will
-      lessen the severity of merge conflicts due to changes made to the Complex_Bounded_Operators
-      session in the development branch of the AFP by the AFP maintainers.\<close>
+text \<open>This theory contains lemmas from the session \<^session>\<open>Complex_Bounded_Operators\<close>
+      that are not available in the AFP for Isabelle 2022 yet (only in the development snapshot for Isabelle 2023).
+      After release of Isabelle 2023, this theory can be removed.\<close>
 
 theory BO_Unsorted
   imports Complex_Bounded_Operators.Cblinfun_Code
