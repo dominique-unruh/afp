@@ -45,11 +45,11 @@ abbreviation "\<Phi>2AB \<equiv> ((\<Phi> o Snd; A); B)"
 
 text \<open>The teleportation program.\<close>
 
-definition "teleport = [
+definition "teleport = program [
     apply CNOT X\<Phi>1,
     apply hadamard X,
-    ifthenelse \<Phi>1 {1} [apply pauliX \<Phi>2] [],
-    ifthenelse X {1} [apply pauliZ \<Phi>2] []
+    ifthenelse \<Phi>1 {1} (apply pauliX \<Phi>2) skip,
+    ifthenelse X {1} (apply pauliZ \<Phi>2) skip
   ]"
 
 text \<open>In the following, we declare various rewriting rules for the registers at hand.
@@ -116,12 +116,12 @@ proof -
 
   also
   define O2 where "O2 = X\<Phi>1 CNOT o\<^sub>C\<^sub>L O1"
-  have \<open>hoare (O1 *\<^sub>S pre) [apply CNOT X\<Phi>1] (O2 *\<^sub>S pre)\<close>
+  have \<open>hoare (O1 *\<^sub>S pre) (apply CNOT X\<Phi>1) (O2 *\<^sub>S pre)\<close>
     apply (rule hoare_apply) by (simp add: O2_def cblinfun_assoc_left(2))
 
   also
   define O3' where \<open>O3' a' b' a b = (1/2) *\<^sub>C \<Phi>2 (XZ a b*) o\<^sub>C\<^sub>L X\<Phi>2 Uswap o\<^sub>C\<^sub>L \<Phi> (butterfly (ket a' \<otimes>\<^sub>s ket b') \<beta>00)\<close> for a b a' b'
-  have \<open>hoare (O2 *\<^sub>S pre) [apply hadamard X] (\<Squnion>(a,b)\<in>UNIV. O3' a b a b *\<^sub>S pre)\<close>
+  have \<open>hoare (O2 *\<^sub>S pre) (apply hadamard X) (\<Squnion>(a,b)\<in>UNIV. O3' a b a b *\<^sub>S pre)\<close>
   proof -
     have \<open>X hadamard o\<^sub>C\<^sub>L O2 = (\<Sum>(a,b)\<in>UNIV. O3' a b a b)\<close>
       unfolding O2_def O1_def O3'_def
@@ -147,7 +147,7 @@ proof -
 
   also
   have \<open>hoare (\<Squnion>(a,b)\<in>UNIV. O3' a b a b *\<^sub>S pre)
-              [ifthenelse \<Phi>1 {1} [apply pauliX \<Phi>2] []]
+              (ifthenelse \<Phi>1 {1} (apply pauliX \<Phi>2) skip)
               (\<Squnion>(a,b)\<in>UNIV. O3' a b 0 b *\<^sub>S pre)\<close>
   proof (rule hoare_ifthenelse, 
          simp_all only: image_insert image_empty singleton_bit_complement add_bit_eq_xor xor_self_eq)
@@ -165,15 +165,16 @@ proof -
           del: o_apply)
       by (simp flip: cblinfun_compose_assoc)
     show \<open>hoare (\<Phi>1 (proj (ket 1)) *\<^sub>S (\<Squnion>(a, b). O3' a b a b *\<^sub>S pre))
-                [apply pauliX \<Phi>2]
+                (apply pauliX \<Phi>2)
                 (\<Squnion>(a, b). O3' a b 0 b *\<^sub>S pre)\<close>
       using * **
       apply (auto intro!: hoare_apply SUP_mono 
           simp add: cblinfun_image_SUP cblinfun_compose_assoc
           simp flip: cblinfun_compose_image)
       by blast
-    show \<open>hoare (\<Phi>1 (proj (ket 0)) *\<^sub>S (\<Squnion>(a, b). O3' a b a b *\<^sub>S pre)) []
-     (\<Squnion>(a, b). O3' a b 0 b *\<^sub>S pre)\<close>
+    show \<open>hoare (\<Phi>1 (proj (ket 0)) *\<^sub>S (\<Squnion>(a, b). O3' a b a b *\<^sub>S pre))
+          skip
+          (\<Squnion>(a, b). O3' a b 0 b *\<^sub>S pre)\<close>
       using * 
       apply (auto intro!:  hoare_skip SUP_mono 
           simp add: cblinfun_image_SUP 
@@ -183,7 +184,7 @@ proof -
 
   also
   have \<open>hoare (\<Squnion>(a,b)\<in>UNIV. O3' a b 0 b *\<^sub>S pre)
-              [ifthenelse X {1} [apply pauliZ \<Phi>2] []]
+              (ifthenelse X {1} (apply pauliZ \<Phi>2) skip)
               (\<Squnion>(a,b)\<in>UNIV. O3' a b 0 0 *\<^sub>S pre)\<close>
   proof (rule hoare_ifthenelse, 
          simp_all only: image_insert image_empty singleton_bit_complement add_bit_eq_xor xor_self_eq)
@@ -204,7 +205,7 @@ proof -
           cblinfun_compose_assoc XZ_def
           del: o_apply)
     show \<open>hoare (X (proj (ket 1)) *\<^sub>S (\<Squnion>(a, b). O3' a b 0 b *\<^sub>S pre))
-                [apply pauliZ \<Phi>2]
+                (apply pauliZ \<Phi>2)
                 (\<Squnion>(a, b). O3' a b 0 0 *\<^sub>S pre)\<close>
       using * ** 
       apply (auto intro!: hoare_apply SUP_mono 
@@ -212,7 +213,7 @@ proof -
           simp flip: cblinfun_compose_image)
       by blast
     show \<open>hoare (X (proj (ket 0)) *\<^sub>S (\<Squnion>(a, b). O3' a b 0 b *\<^sub>S pre))
-                []
+                skip
                 (\<Squnion>(a, b). O3' a b 0 0 *\<^sub>S pre)\<close>
       using * 
       apply (auto intro!:  hoare_skip SUP_mono 
@@ -244,7 +245,7 @@ proof -
 
   finally
   show ?thesis
-    by (simp add: teleport_def o_def)
+    by (simp add: teleport_def program_def o_def seq_assoc)
 qed
 
 end
