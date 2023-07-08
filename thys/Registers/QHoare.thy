@@ -15,9 +15,9 @@ definition skip :: \<open>'m statement\<close> where \<open>skip \<psi> = [\<psi
 definition \<open>program S = foldr seq S skip\<close> for S :: \<open>'mem statement list\<close>
   \<comment> \<open>Convenience abbreviation: List of statements as repeated seq\<close>
 definition \<open>apply U R \<psi> = [R U *\<^sub>V \<psi>]\<close> for R :: \<open>'a update \<Rightarrow> 'mem update\<close>
-definition \<open>ifthenelse R M P Q \<psi> = P (R (Proj (ccspan (ket ` M))) \<psi>) @
-                                   Q (R (Proj (ccspan (ket ` (-M)))) \<psi>)\<close>
-  for R :: \<open>'a update \<Rightarrow> 'mem update\<close> and P Q :: \<open>'mem statement\<close>
+definition \<open>ifthenelse R x P Q \<psi> = P (R (proj (ket x)) \<psi>) @
+                                   Q (R (proj (ket (binary_other x))) \<psi>)\<close>
+  for R :: \<open>'a::binary update \<Rightarrow> 'mem update\<close> and P Q :: \<open>'mem statement\<close>
 
 definition hoare :: \<open>'mem ell2 ccsubspace \<Rightarrow> 'mem statement \<Rightarrow> 'mem ell2 ccsubspace \<Rightarrow> bool\<close> where
   \<open>hoare C p D \<longleftrightarrow> (\<forall>\<psi> \<in> space_as_set C. set (p \<psi>) \<subseteq> space_as_set D)\<close> for C p D
@@ -63,12 +63,12 @@ lemma hoare_apply:
   by (metis (no_types, lifting) cblinfun_image.rep_eq closure_subset imageI less_eq_ccsubspace.rep_eq subsetD)
 
 lemma hoare_ifthenelse:
-  fixes R :: \<open>'a update \<Rightarrow> 'mem update\<close>
-  assumes \<open>hoare (R (Proj (ccspan (ket ` M))) *\<^sub>S pre) P post\<close>
-  assumes \<open>hoare (R (Proj (ccspan (ket ` (-M)))) *\<^sub>S pre) Q post\<close>
-  shows \<open>hoare pre (ifthenelse R M P Q) post\<close>
+  fixes R :: \<open>'a::binary update \<Rightarrow> 'mem update\<close>
+  assumes \<open>hoare (R (selfbutterket x) *\<^sub>S pre) P post\<close>
+  assumes \<open>hoare (R (selfbutterket (binary_other x)) *\<^sub>S pre) Q post\<close>
+  shows \<open>hoare pre (ifthenelse R x P Q) post\<close>
   using assms
-  by (auto simp: hoare_def ifthenelse_def cblinfun_apply_in_image')
+  by (auto simp: hoare_def ifthenelse_def cblinfun_apply_in_image' simp flip: butterfly_eq_proj)
 
 end
 

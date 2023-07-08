@@ -212,11 +212,49 @@ qed
 lemma UNIV_bit: \<open>UNIV = {0, 1::bit}\<close>
   by force
 
-lemma singleton_bit_complement: \<open>- {x} = {x + 1}\<close> for x :: bit
-  apply (cases x) by auto
-
 lemma insert_Times_insert':
   "insert a A \<times> insert b B = insert (a,b) (A \<times> insert b B \<union> {a} \<times> B)"
   by blast
+
+class binary = assumes binary_card_UNIV: \<open>card UNIV = 2\<close>
+
+instance binary \<subseteq> card2
+  apply intro_classes using binary_card_UNIV[where 'a='a] apply auto
+  using card_0_eq by fastforce
+
+definition binary_other :: \<open>'a::binary \<Rightarrow> 'a\<close> where \<open>binary_other x = (THE y. y \<noteq> x)\<close>
+
+lemma binary_other_different: \<open>binary_other x \<noteq> x\<close>
+  unfolding binary_other_def
+  apply (rule theI')
+  using binary_card_UNIV[where 'a='a]
+  by (metis (no_types, opaque_lifting) UNIV_I card_2_iff')
+
+lemma binary_other_is_other: \<open>binary_other x = y\<close> if \<open>x \<noteq> y\<close>
+  using binary_other_different[of x] binary_card_UNIV[where 'a='a] that
+  by (metis (no_types, opaque_lifting) UNIV_I card_2_iff')
+
+lemma binary_UNIV: \<open>UNIV = {x, binary_other x}\<close>
+  by (smt (verit, ccfv_SIG) UNIV_eq_I binary_other_is_other insertI1 insert_commute)
+
+lemma binary_exhaust: \<open>(y = x \<Longrightarrow> P) \<Longrightarrow> (y = binary_other x \<Longrightarrow> P) \<Longrightarrow> P\<close>
+  using binary_UNIV[of x] by auto
+
+lemma singleton_binary_complement: \<open>- {x} = {binary_other x}\<close>
+  by (metis Compl_eq_Diff_UNIV Diff_insert_absorb binary_UNIV binary_other_different singletonD)
+
+instance bit :: binary
+  apply intro_classes 
+  by simp
+
+instance bool :: binary
+  apply intro_classes 
+  by simp
+
+lemma binary_other_bit[simp]: \<open>binary_other 0 = (1::bit)\<close> \<open>binary_other 1 = (0::bit)\<close>
+  by (simp_all add: binary_other_is_other)
+
+lemma binary_other_bool[simp]: \<open>binary_other True = False\<close> \<open>binary_other False = True\<close>
+  using binary_other_different by blast+
 
 end
