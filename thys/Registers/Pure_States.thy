@@ -15,15 +15,15 @@ lemma pure_state_target_vector_ket_default: \<open>pure_state_target_vector F \<
   by (simp add: pure_state_target_vector_def that)
 
 lemma
-  assumes [simp]: \<open>\<eta>\<^sub>F \<noteq> 0\<close> \<open>register F\<close>
+  assumes [simp]: \<open>\<eta>\<^sub>F \<noteq> 0\<close> \<open>reference F\<close>
   shows pure_state_target_vector_in_range: \<open>pure_state_target_vector F \<eta>\<^sub>F \<in> range ((*\<^sub>V) (F (selfbutter \<eta>\<^sub>F)))\<close> (is ?range)
     and pure_state_target_vector_norm: \<open>norm (pure_state_target_vector F \<eta>\<^sub>F) = 1\<close> (is ?norm)
 proof -
   from assms have \<open>selfbutter \<eta>\<^sub>F \<noteq> 0\<close>
     by (metis butterfly_0_right complex_vector.scale_zero_right inj_selfbutter_upto_phase)
   then have \<open>F (selfbutter \<eta>\<^sub>F) \<noteq> 0\<close>
-    using register_inj[OF \<open>register F\<close>, THEN injD, where y=0]
-    by (auto simp: complex_vector.linear_0 clinear_register)
+    using reference_inj[OF \<open>reference F\<close>, THEN injD, where y=0]
+    by (auto simp: complex_vector.linear_0 clinear_reference)
   then obtain \<psi>' where \<psi>': \<open>F (selfbutter \<eta>\<^sub>F) *\<^sub>V \<psi>' \<noteq> 0\<close>
     by (meson cblinfun_eq_0_on_UNIV_span complex_vector.span_UNIV)
   have ex: \<open>\<exists>\<psi>. norm \<psi> = 1 \<and> \<psi> \<in> range ((*\<^sub>V) (F (selfbutter \<eta>\<^sub>F)))\<close>
@@ -39,7 +39,7 @@ qed
 
 
 lemma pure_state_target_vector_correct: 
-  assumes [simp]: \<open>\<eta> \<noteq> 0\<close> \<open>register F\<close>
+  assumes [simp]: \<open>\<eta> \<noteq> 0\<close> \<open>reference F\<close>
   shows \<open>F (selfbutter \<eta>) *\<^sub>V pure_state_target_vector F \<eta> \<noteq> 0\<close>
 proof -
   obtain \<psi> where \<psi>: \<open>F (selfbutter \<eta>) \<psi> = pure_state_target_vector F \<eta>\<close>
@@ -58,7 +58,7 @@ proof -
   have \<open>F (selfbutter \<eta>) *\<^sub>V pure_state_target_vector F \<eta> = F (selfbutter \<eta>) *\<^sub>V F (selfbutter \<eta>) *\<^sub>V \<psi>\<close>
     by (simp add: \<psi>)
   also have \<open>\<dots> = n *\<^sub>C F (selfbutter \<eta>) *\<^sub>V \<psi>\<close>
-    by (simp flip: cblinfun_apply_cblinfun_compose add: register_mult register_scaleC n_def)
+    by (simp flip: cblinfun_apply_cblinfun_compose add: reference_mult reference_scaleC n_def)
   also have \<open>\<dots> = n *\<^sub>C pure_state_target_vector F \<eta>\<close>
     by (simp add: \<psi>)
   also have \<open>\<dots> \<noteq> 0\<close>
@@ -89,9 +89,9 @@ translations
 term \<open>(F \<psi> \<otimes>\<^sub>p G \<phi> \<otimes>\<^sub>p H z)\<close>
 term \<open>pure_state (F; G) (a \<otimes>\<^sub>s b)\<close>
 
-lemma register_pair_butterfly_tensor: \<open>(F; G) (butterfly (a \<otimes>\<^sub>s b) (c \<otimes>\<^sub>s d)) = F (butterfly a c) o\<^sub>C\<^sub>L G (butterfly b d)\<close>
-  if [simp]: \<open>compatible F G\<close>
-  by (auto simp: default_prod_def simp flip: tensor_ell2_ket tensor_butterfly register_pair_apply)
+lemma reference_pair_butterfly_tensor: \<open>(F; G) (butterfly (a \<otimes>\<^sub>s b) (c \<otimes>\<^sub>s d)) = F (butterfly a c) o\<^sub>C\<^sub>L G (butterfly b d)\<close>
+  if [simp]: \<open>disjoint F G\<close>
+  by (auto simp: default_prod_def simp flip: tensor_ell2_ket tensor_butterfly reference_pair_apply)
 
 lemma pure_state_eqI:
   assumes \<open>F (selfbutter \<eta>\<^sub>F) = G (selfbutter \<eta>\<^sub>G)\<close>
@@ -107,44 +107,44 @@ proof -
 qed
 
 
-definition \<open>regular_register F \<longleftrightarrow> register F \<and> (\<exists>a. (F; complement F) (selfbutterket default \<otimes>\<^sub>o a) = selfbutterket default)\<close>
+definition \<open>regular_reference F \<longleftrightarrow> reference F \<and> (\<exists>a. (F; complement F) (selfbutterket default \<otimes>\<^sub>o a) = selfbutterket default)\<close>
 
-lemma regular_registerI:
-  assumes [simp]: \<open>register F\<close>
+lemma regular_referenceI:
+  assumes [simp]: \<open>reference F\<close>
   assumes [simp]: \<open>complements F G\<close>
   assumes eq: \<open>(F; G) (selfbutterket default \<otimes>\<^sub>o a) = selfbutterket default\<close>
-  shows \<open>regular_register F\<close>
+  shows \<open>regular_reference F\<close>
 proof -
-  have [simp]: \<open>compatible F G\<close>
+  have [simp]: \<open>disjoint F G\<close>
     using assms by (simp add: complements_def)
   from \<open>complements F G\<close>
-  obtain I where cFI: \<open>complement F o I = G\<close> and \<open>iso_register I\<close>
+  obtain I where cFI: \<open>complement F o I = G\<close> and \<open>iso_reference I\<close>
     apply atomize_elim
-    using complement_unique' equivalent_registers_def equivalent_registers_sym by blast
+    using complement_unique' equivalent_references_def equivalent_references_sym by blast
   have \<open>(F; complement F) (selfbutterket default \<otimes>\<^sub>o I a) = (F; G) (selfbutterket default \<otimes>\<^sub>o a)\<close>
-    using cFI by (auto simp: register_pair_apply)
+    using cFI by (auto simp: reference_pair_apply)
   also have \<open>\<dots> = selfbutterket default\<close>
     by (rule eq)
   finally show ?thesis
-    unfolding regular_register_def by auto
+    unfolding regular_reference_def by auto
 qed
 
-lemma regular_register_pair:
-  assumes [simp]: \<open>compatible F G\<close>
-  assumes \<open>regular_register F\<close> and \<open>regular_register G\<close>
-  shows \<open>regular_register (F;G)\<close>
+lemma regular_reference_pair:
+  assumes [simp]: \<open>disjoint F G\<close>
+  assumes \<open>regular_reference F\<close> and \<open>regular_reference G\<close>
+  shows \<open>regular_reference (F;G)\<close>
 proof -
   have [simp]: \<open>bij (F;complement F)\<close> \<open>bij (G;complement G)\<close>
-    using assms(1) compatible_def complement_is_complement complements_def iso_register_bij by blast+
+    using assms(1) disjoint_def complement_is_complement complements_def iso_reference_bij by blast+
   have [simp]: \<open>bij ((F;G);complement (F;G))\<close>
-    using assms(1) complement_is_complement complements_def iso_register_bij pair_is_register by blast
-  have [simp]: \<open>register F\<close> \<open>register G\<close>
-    using assms(1) unfolding compatible_def by auto
+    using assms(1) complement_is_complement complements_def iso_reference_bij pair_is_reference by blast
+  have [simp]: \<open>reference F\<close> \<open>reference G\<close>
+    using assms(1) unfolding disjoint_def by auto
 
   obtain aF where [simp]: \<open>inv (F;complement F) (selfbutterket default) = selfbutterket default \<otimes>\<^sub>o aF\<close>
-    by (metis assms(2) compatible_complement_right invI pair_is_register register_inj regular_register_def)
+    by (metis assms(2) disjoint_complement_right invI pair_is_reference reference_inj regular_reference_def)
   obtain aG where [simp]: \<open>inv (G;complement G) (selfbutterket default) = selfbutterket default \<otimes>\<^sub>o aG\<close>
-    by (metis assms(3) complement_is_complement complements_def inj_iff inv_f_f iso_register_inv_comp1 regular_register_def)
+    by (metis assms(3) complement_is_complement complements_def inj_iff inv_f_f iso_reference_inv_comp1 regular_reference_def)
   define t1 where \<open>t1 = inv ((F;G); complement (F;G)) (selfbutterket default)\<close>
   define t2 where \<open>t2 = inv (F; (G; complement (F;G))) (selfbutterket default)\<close>
   define t3 where \<open>t3 = inv (G; (F; complement (F;G))) (selfbutterket default)\<close>
@@ -153,14 +153,14 @@ proof -
   have \<open>complements F (G; complement (F;G))\<close>
     apply (rule complements_complement_pair)
     by simp_all
-  then have \<open>equivalent_registers (complement F) (G; complement (F;G))\<close>
-    using complement_unique' equivalent_registers_sym by blast
-  then obtain I where [simp]: \<open>iso_register I\<close> and I: \<open>(G; complement (F;G)) = complement F o I\<close>
-    by (metis equivalent_registers_def)
-  then have [simp]: \<open>register I\<close>
-    by (meson iso_register_is_register)
+  then have \<open>equivalent_references (complement F) (G; complement (F;G))\<close>
+    using complement_unique' equivalent_references_sym by blast
+  then obtain I where [simp]: \<open>iso_reference I\<close> and I: \<open>(G; complement (F;G)) = complement F o I\<close>
+    by (metis equivalent_references_def)
+  then have [simp]: \<open>reference I\<close>
+    by (meson iso_reference_is_reference)
   have [simp]: \<open>bij (id \<otimes>\<^sub>r I)\<close>
-    by (rule iso_register_bij, simp)
+    by (rule iso_reference_bij, simp)
   have [simp]: \<open>inv (id \<otimes>\<^sub>r I) = id \<otimes>\<^sub>r inv I\<close>
     by auto
 
@@ -170,23 +170,23 @@ proof -
     by (auto simp: pair_o_tensor)
   also have \<open>\<dots> = (selfbutterket default \<otimes>\<^sub>o inv I aF)\<close>
     apply auto
-    by (metis \<open>iso_register I\<close> id_def iso_register_def iso_register_inv register_id register_tensor_apply)
+    by (metis \<open>iso_reference I\<close> id_def iso_reference_def iso_reference_inv reference_id reference_tensor_apply)
   finally have t2': \<open>t2 = selfbutterket default \<otimes>\<^sub>o inv I aF\<close>
     by simp
 
   have *: \<open>complements G (F; complement (F;G))\<close>
     apply (rule complements_complement_pair')
     by simp_all
-  then have [simp]: \<open>compatible G (F; complement (F;G))\<close>
+  then have [simp]: \<open>disjoint G (F; complement (F;G))\<close>
     using complements_def by blast
-  from * have \<open>equivalent_registers (complement G) (F; complement (F;G))\<close>
-    using complement_unique' equivalent_registers_sym by blast
-  then obtain J where [simp]: \<open>iso_register J\<close> and I: \<open>(F; complement (F;G)) = complement G o J\<close>
-    by (metis equivalent_registers_def)
-  then have [simp]: \<open>register J\<close>
-    by (meson iso_register_is_register)
+  from * have \<open>equivalent_references (complement G) (F; complement (F;G))\<close>
+    using complement_unique' equivalent_references_sym by blast
+  then obtain J where [simp]: \<open>iso_reference J\<close> and I: \<open>(F; complement (F;G)) = complement G o J\<close>
+    by (metis equivalent_references_def)
+  then have [simp]: \<open>reference J\<close>
+    by (meson iso_reference_is_reference)
   have [simp]: \<open>bij (id \<otimes>\<^sub>r J)\<close>
-    by (rule iso_register_bij, simp)
+    by (rule iso_reference_bij, simp)
   have [simp]: \<open>inv (id \<otimes>\<^sub>r J) = id \<otimes>\<^sub>r inv J\<close>
     by auto
 
@@ -196,25 +196,25 @@ proof -
     by (auto simp: pair_o_tensor)
   also have \<open>\<dots> = (selfbutterket default \<otimes>\<^sub>o inv J aG)\<close>
     apply auto
-    by (metis \<open>iso_register J\<close> id_def iso_register_def iso_register_inv register_id register_tensor_apply)
+    by (metis \<open>iso_reference J\<close> id_def iso_reference_def iso_reference_inv reference_id reference_tensor_apply)
   finally have t3': \<open>t3 = selfbutterket default \<otimes>\<^sub>o inv J aG\<close>
     by simp
 
   have *: \<open>((F;G); complement (F;G)) o assoc' = (F; (G; complement (F;G)))\<close>
     apply (rule tensor_extensionality3)
-    by (auto simp: register_pair_apply  compatible_complement_pair1 compatible_complement_pair2)
+    by (auto simp: reference_pair_apply  disjoint_complement_pair1 disjoint_complement_pair2)
   have t2_t1: \<open>t2 = assoc t1\<close>
     unfolding t1_def t2_def *[symmetric] apply (subst o_inv_distrib)
     by auto
 
   have *: \<open>((F;G); complement (F;G)) o (swap \<otimes>\<^sub>r id) o assoc' = (G; (F; complement (F;G)))\<close>
     apply (rule tensor_extensionality3)
-      apply (auto intro!: register_comp register_tensor_is_register pair_is_register complements_complement_pair
-        simp: register_pair_apply compatible_complement_pair1)
-    by (metis assms(1) cblinfun_assoc_left(1) swap_registers_left)
+      apply (auto intro!: reference_comp reference_tensor_is_reference pair_is_reference complements_complement_pair
+        simp: reference_pair_apply disjoint_complement_pair1)
+    by (metis assms(1) cblinfun_assoc_left(1) swap_references_left)
   have t3_t1: \<open>t3 = assoc ((swap \<otimes>\<^sub>r id) t1)\<close>
     unfolding t1_def t3_def *[symmetric] apply (subst o_inv_distrib)
-    by (auto intro!: bij_comp simp: iso_register_bij o_inv_distrib)
+    by (auto intro!: bij_comp simp: iso_reference_bij o_inv_distrib)
 
   from \<open>t2 = assoc t1\<close> \<open>t3 = assoc ((swap \<otimes>\<^sub>r id) t1)\<close>
   have *: \<open>selfbutterket default \<otimes>\<^sub>o inv J aG =  assoc ((swap \<otimes>\<^sub>r id) (assoc' (selfbutterket default \<otimes>\<^sub>o inv I aF)))\<close>
@@ -226,7 +226,7 @@ proof -
     by (simp add: *)
   also have \<open>\<dots> = (assoc o swap) (selfbutterket default \<otimes>\<^sub>o inv I aF)\<close>
     apply (rule fun_cong[where g=\<open>assoc o swap\<close>])
-    apply (intro tensor_extensionality3 register_comp register_tensor_is_register)
+    apply (intro tensor_extensionality3 reference_comp reference_tensor_is_reference)
     by auto
   also have \<open>\<dots> = assoc (inv I aF \<otimes>\<^sub>o selfbutterket default)\<close>
     by auto
@@ -240,7 +240,7 @@ proof -
     by auto
 
   have \<open>t1 = ((swap \<otimes>\<^sub>r id) o assoc') t3\<close>
-    by (simp add: t3_t1 register_tensor_distrib[unfolded o_def, THEN fun_cong] flip: id_def)
+    by (simp add: t3_t1 reference_tensor_distrib[unfolded o_def, THEN fun_cong] flip: id_def)
   also have \<open>\<dots> = ((swap \<otimes>\<^sub>r id) o assoc' o (id \<otimes>\<^sub>r swap)) (selfbutterket (default::'c) \<otimes>\<^sub>o swap (inv J aG))\<close>
     unfolding t3' by auto
   also have \<open>\<dots> = ((swap \<otimes>\<^sub>r id) o assoc' o (id \<otimes>\<^sub>r swap)) (selfbutterket default \<otimes>\<^sub>o c \<otimes>\<^sub>o selfbutterket default)\<close>
@@ -252,33 +252,33 @@ proof -
     by -
 
   then show ?thesis
-    apply (auto intro!: exI[of _ c] simp: regular_register_def t1_def)
+    apply (auto intro!: exI[of _ c] simp: regular_reference_def t1_def)
     by (metis \<open>bij ((F;G);complement (F;G))\<close> bij_inv_eq_iff)
 qed
 
-lemma regular_register_comp: \<open>regular_register (F o G)\<close> if \<open>regular_register F\<close> \<open>regular_register G\<close>
+lemma regular_reference_comp: \<open>regular_reference (F o G)\<close> if \<open>regular_reference F\<close> \<open>regular_reference G\<close>
 proof -
-  have [simp]: \<open>register F\<close> \<open>register G\<close>
-    using regular_register_def that by blast+
+  have [simp]: \<open>reference F\<close> \<open>reference G\<close>
+    using regular_reference_def that by blast+
   from that obtain a where a: \<open>(F; complement F) (selfbutterket default \<otimes>\<^sub>o a) = selfbutterket default\<close>
-    unfolding regular_register_def by metis
+    unfolding regular_reference_def by metis
   from that obtain b where b: \<open>(G; complement G) (selfbutterket default \<otimes>\<^sub>o b) = selfbutterket default\<close>
-    unfolding regular_register_def by metis
+    unfolding regular_reference_def by metis
   have \<open>complements (F o G) (complement F; F o complement G)\<close>
     by (simp add: complements_chain)
-  then have \<open>equivalent_registers (complement F; F o complement G) (complement (F o G))\<close>
+  then have \<open>equivalent_references (complement F; F o complement G) (complement (F o G))\<close>
     using complement_unique' by blast
-  then obtain J where [simp]: \<open>iso_register J\<close> and 1: \<open>(complement F; F o complement G) o J = (complement (F o G))\<close>
-    using equivalent_registers_def by blast
-  have [simp]: \<open>register J\<close>
-    by (simp add: iso_register_is_register)
+  then obtain J where [simp]: \<open>iso_reference J\<close> and 1: \<open>(complement F; F o complement G) o J = (complement (F o G))\<close>
+    using equivalent_references_def by blast
+  have [simp]: \<open>reference J\<close>
+    by (simp add: iso_reference_is_reference)
 
   define c where \<open>c = inv J (a \<otimes>\<^sub>o b)\<close>
 
   have \<open>((F o G); complement (F o G)) (selfbutterket default \<otimes>\<^sub>o c) = ((F o G); (complement F; F o complement G)) (selfbutterket default \<otimes>\<^sub>o J c)\<close>
-    by (auto simp flip: 1 simp: register_pair_apply)
+    by (auto simp flip: 1 simp: reference_pair_apply)
   also have \<open>\<dots> = ((F o (G; complement G); complement F) o assoc' o (id \<otimes>\<^sub>r swap)) (selfbutterket default \<otimes>\<^sub>o J c)\<close>
-    apply (subst register_comp_pair[symmetric])
+    apply (subst reference_comp_pair[symmetric])
       apply auto[2]
     apply (subst pair_o_assoc')
        apply auto[3]
@@ -288,45 +288,45 @@ proof -
     by auto
   also have \<open>\<dots> = ((F o (G; complement G); complement F) o assoc') (selfbutterket default \<otimes>\<^sub>o (b \<otimes>\<^sub>o a))\<close>
     unfolding c_def apply (subst surj_f_inv_f[where f=J])
-     apply (meson \<open>iso_register J\<close> bij_betw_inv_into_right iso_register_inv_comp1 iso_register_inv_comp2 iso_tuple_UNIV_I o_bij surj_iff_all)
+     apply (meson \<open>iso_reference J\<close> bij_betw_inv_into_right iso_reference_inv_comp1 iso_reference_inv_comp2 iso_tuple_UNIV_I o_bij surj_iff_all)
     by auto
   also have \<open>\<dots> = (F \<circ> (G;complement G);complement F) ((selfbutterket default \<otimes>\<^sub>o b) \<otimes>\<^sub>o a)\<close>
     by (simp add: assoc'_apply)
   also have \<open>\<dots> = (F; complement F) ((G;complement G) (selfbutterket default \<otimes>\<^sub>o b) \<otimes>\<^sub>o a)\<close>
-    by (simp add: register_pair_apply')
+    by (simp add: reference_pair_apply')
   also have \<open>\<dots> = selfbutterket default\<close>
     by (auto simp: a b) 
   finally have \<open>(F \<circ> G;complement (F \<circ> G)) (selfbutterket default \<otimes>\<^sub>o c) = selfbutterket default\<close>
     by -
   then show ?thesis
-    using \<open>register F\<close> \<open>register G\<close> register_comp regular_register_def by blast
+    using \<open>reference F\<close> \<open>reference G\<close> reference_comp regular_reference_def by blast
 qed
 
-lemma regular_iso_register:
-  assumes \<open>regular_register F\<close>
-  assumes [register]: \<open>iso_register F\<close>
+lemma regular_iso_reference:
+  assumes \<open>regular_reference F\<close>
+  assumes [reference]: \<open>iso_reference F\<close>
   shows \<open>F (selfbutterket default) = selfbutterket default\<close>
 proof -
   from assms(1) obtain a where a: \<open>(F;complement F) (selfbutterket default \<otimes>\<^sub>o a) = selfbutterket default\<close>
-    using regular_register_def by blast
+    using regular_reference_def by blast
 
   let ?u = \<open>empty_var :: (unit ell2 \<Rightarrow>\<^sub>C\<^sub>L unit ell2) \<Rightarrow> _\<close>
-  have \<open>is_unit_register ?u\<close> and \<open>is_unit_register (complement F)\<close>
+  have \<open>is_unit_reference ?u\<close> and \<open>is_unit_reference (complement F)\<close>
     by auto
-  then have \<open>equivalent_registers (complement F) ?u\<close>
-    using unit_register_unique by blast
-  then obtain I where \<open>iso_register I\<close> and \<open>complement F = ?u o I\<close>
-    by (metis \<open>is_unit_register (complement F)\<close> equivalent_registers_def is_unit_register_empty_var unit_register_unique)
+  then have \<open>equivalent_references (complement F) ?u\<close>
+    using unit_reference_unique by blast
+  then obtain I where \<open>iso_reference I\<close> and \<open>complement F = ?u o I\<close>
+    by (metis \<open>is_unit_reference (complement F)\<close> equivalent_references_def is_unit_reference_empty_var unit_reference_unique)
   have \<open>selfbutterket default = (F; ?u o I) (selfbutterket default \<otimes>\<^sub>o a)\<close>
     using \<open>complement F = empty_var \<circ> I\<close> a by presburger
   also have \<open>\<dots> = (F; ?u) (selfbutterket default \<otimes>\<^sub>o I a)\<close>
-    by (metis Laws_Quantum.register_pair_apply \<open>complement F = empty_var \<circ> I\<close> \<open>equivalent_registers (complement F) empty_var\<close> assms(2) comp_apply complement_is_complement complements_def equivalent_complements iso_register_is_register)
+    by (metis Laws_Quantum.reference_pair_apply \<open>complement F = empty_var \<circ> I\<close> \<open>equivalent_references (complement F) empty_var\<close> assms(2) comp_apply complement_is_complement complements_def equivalent_complements iso_reference_is_reference)
   also have \<open>\<dots> = (F; ?u) (selfbutterket default \<otimes>\<^sub>o (one_dim_iso (I a) *\<^sub>C id_cblinfun))\<close>
     by simp
   also have \<open>\<dots> = one_dim_iso (I a) *\<^sub>C (F; ?u) (selfbutterket default \<otimes>\<^sub>o id_cblinfun)\<close>
-    by (simp add: Axioms_Quantum.register_pair_apply empty_var_def iso_register_is_register)
+    by (simp add: Axioms_Quantum.reference_pair_apply empty_var_def iso_reference_is_reference)
   also have \<open>\<dots> = one_dim_iso (I a) *\<^sub>C F (selfbutterket default)\<close>
-    by (auto simp: register_pair_apply iso_register_is_register simp del: id_cblinfun_eq_1)
+    by (auto simp: reference_pair_apply iso_reference_is_reference simp del: id_cblinfun_eq_1)
   finally have F: \<open>one_dim_iso (I a) *\<^sub>C F (selfbutterket default) = selfbutterket default\<close>
     by simp
 
@@ -338,7 +338,7 @@ proof -
   also have \<open>\<dots> = one_dim_iso (I a) *\<^sub>C F (selfbutterket default o\<^sub>C\<^sub>L selfbutterket default)\<close>
     by auto
   also have \<open>\<dots> = one_dim_iso (I a) *\<^sub>C (F (selfbutterket default) o\<^sub>C\<^sub>L F (selfbutterket default))\<close>
-    by (simp add: assms(2) iso_register_is_register register_mult)
+    by (simp add: assms(2) iso_reference_is_reference reference_mult)
   also have \<open>\<dots> = one_dim_iso (I a) *\<^sub>C ((selfbutterket default /\<^sub>C one_dim_iso (I a)) o\<^sub>C\<^sub>L (selfbutterket default /\<^sub>C one_dim_iso (I a)))\<close>
     by (metis (no_types, lifting) F \<open>one_dim_iso (I a) \<noteq> 0\<close> complex_vector.scale_left_imp_eq inverse_1 left_inverse scaleC_scaleC zero_neq_one)
   also have \<open>\<dots> = one_dim_iso (I a) *\<^sub>C selfbutterket default\<close>
@@ -350,16 +350,16 @@ proof -
 qed
 
 lemma pure_state_nested:
-  assumes [simp]: \<open>compatible F G\<close>
-  assumes \<open>regular_register H\<close>
-  assumes \<open>iso_register H\<close>
+  assumes [simp]: \<open>disjoint F G\<close>
+  assumes \<open>regular_reference H\<close>
+  assumes \<open>iso_reference H\<close>
   shows \<open>pure_state (F;G) (pure_state H h \<otimes>\<^sub>s g) = pure_state ((F o H);G) (h \<otimes>\<^sub>s g)\<close>
 proof -
-  note [[simproc del: Laws_Quantum.compatibility_warn]]
-  have [simp]: \<open>register H\<close>
-    by (meson assms(3) iso_register_is_register)
+  note [[simproc del: Laws_Quantum.disjointness_warn]]
+  have [simp]: \<open>reference H\<close>
+    by (meson assms(3) iso_reference_is_reference)
   have [simp]: \<open>H (selfbutterket default) = selfbutterket default\<close>
-    apply (rule regular_iso_register)
+    apply (rule regular_iso_reference)
     using assms by auto
   have 1: \<open>pure_state_target_vector H (ket default) = ket default\<close>
     apply (rule pure_state_target_vector_ket_default)
@@ -373,7 +373,7 @@ proof -
   also have \<open>\<dots> = H (butterfly h (ket default)) o\<^sub>C\<^sub>L H (selfbutterket default)\<close>
     by simp
   also have \<open>\<dots> = H (butterfly h (ket default) o\<^sub>C\<^sub>L selfbutterket default)\<close>
-    by (meson \<open>register H\<close> register_mult)
+    by (meson \<open>reference H\<close> reference_mult)
   also have \<open>\<dots> = H (butterfly h (ket default))\<close>
     by auto
   finally have 2: \<open>butterfly (pure_state H h) (ket default) = H (butterfly h (ket default))\<close>
@@ -382,55 +382,55 @@ proof -
   show ?thesis
     apply (rule pure_state_eqI)
     using 1 2
-    by (auto simp: register_pair_butterfly_tensor compatible_ac_rules default_prod_def simp flip: tensor_ell2_ket)
+    by (auto simp: reference_pair_butterfly_tensor disjoint_ac_rules default_prod_def simp flip: tensor_ell2_ket)
 qed
 
 lemma state_apply1: 
-  assumes [register]: \<open>compatible F G\<close>
+  assumes [reference]: \<open>disjoint F G\<close>
   shows \<open>F U *\<^sub>V (F \<psi> \<otimes>\<^sub>p G \<phi>) = (F (U \<psi>) \<otimes>\<^sub>p G \<phi>)\<close>
 proof -
-  have [register]: \<open>compatible F G\<close>
+  have [reference]: \<open>disjoint F G\<close>
     using assms(1) complements_def by blast
   have \<open>F U *\<^sub>V (F \<psi> \<otimes>\<^sub>p G \<phi>) = (F;G) (U \<otimes>\<^sub>o id_cblinfun) *\<^sub>V (F \<psi> \<otimes>\<^sub>p G \<phi>)\<close>
-    apply (subst register_pair_apply)
+    apply (subst reference_pair_apply)
     by auto
   also have \<open>\<dots> = (F (U \<psi>) \<otimes>\<^sub>p G \<phi>)\<close>
     unfolding pure_state'_def 
-    by (auto simp: register_mult' cblinfun_comp_butterfly tensor_op_ell2)
+    by (auto simp: reference_mult' cblinfun_comp_butterfly tensor_op_ell2)
   finally show ?thesis
     by -
 qed
 
-lemma Fst_regular[simp]: \<open>regular_register Fst\<close>
-  apply (rule regular_registerI[where a=\<open>selfbutterket default\<close> and G=Snd])
+lemma Fst_regular[simp]: \<open>regular_reference Fst\<close>
+  apply (rule regular_referenceI[where a=\<open>selfbutterket default\<close> and G=Snd])
   by (auto simp: pair_Fst_Snd default_prod_def tensor_ell2_ket)
 
-lemma Snd_regular[simp]: \<open>regular_register Snd\<close>
-  apply (rule regular_registerI[where a=\<open>selfbutterket default\<close> and G=Fst])
+lemma Snd_regular[simp]: \<open>regular_reference Snd\<close>
+  apply (rule regular_referenceI[where a=\<open>selfbutterket default\<close> and G=Fst])
     apply auto[2]
   apply (auto simp only: default_prod_def swap_apply simp flip: swap_def tensor_ell2_ket)
   by auto
 
-lemma id_regular[simp]: \<open>regular_register id\<close>
-  apply (rule regular_registerI[where G=unit_register and a=id_cblinfun])
-  by (auto simp: register_pair_apply)
+lemma id_regular[simp]: \<open>regular_reference id\<close>
+  apply (rule regular_referenceI[where G=unit_reference and a=id_cblinfun])
+  by (auto simp: reference_pair_apply)
 
-lemma swap_regular[simp]: \<open>regular_register swap\<close>
-  by (auto intro!: regular_register_pair simp: swap_def)
+lemma swap_regular[simp]: \<open>regular_reference swap\<close>
+  by (auto intro!: regular_reference_pair simp: swap_def)
 
-lemma assoc_regular[simp]: \<open>regular_register assoc\<close>
-  by (auto intro!: regular_register_pair regular_register_comp simp: assoc_def)
+lemma assoc_regular[simp]: \<open>regular_reference assoc\<close>
+  by (auto intro!: regular_reference_pair regular_reference_comp simp: assoc_def)
 
-lemma assoc'_regular[simp]: \<open>regular_register assoc'\<close>
-  by (auto intro!: regular_register_pair regular_register_comp simp: assoc'_def)
+lemma assoc'_regular[simp]: \<open>regular_reference assoc'\<close>
+  by (auto intro!: regular_reference_pair regular_reference_comp simp: assoc'_def)
 
 lemma cspan_pure_state': 
-  assumes \<open>iso_register F\<close>
+  assumes \<open>iso_reference F\<close>
   assumes \<open>cspan (g ` X) = UNIV\<close>
   assumes \<eta>_cond: \<open>F (selfbutter \<eta>) *\<^sub>V pure_state_target_vector F \<eta> \<noteq> 0\<close>
   shows \<open>cspan ((\<lambda>z. pure_state' F (g z) \<eta>) ` X) = UNIV\<close>
 proof -
-  from iso_register_decomposition[of F]
+  from iso_reference_decomposition[of F]
   obtain U where [simp]: \<open>unitary U\<close> and F: \<open>F = sandwich U\<close>
     using assms(1) by blast
 
@@ -459,38 +459,38 @@ proof -
 qed
 
 lemma cspan_pure_state: 
-  assumes [simp]: \<open>iso_register F\<close>
+  assumes [simp]: \<open>iso_reference F\<close>
   assumes \<open>cspan (g ` X) = UNIV\<close>
   shows \<open>cspan ((\<lambda>z. pure_state F (g z)) ` X) = UNIV\<close>
   apply (rule cspan_pure_state')
   using assms apply auto[2]
   apply (rule pure_state_target_vector_correct)
-  by (auto simp: iso_register_is_register)
+  by (auto simp: iso_reference_is_reference)
 
 lemma pure_state_bounded_clinear:
-  assumes [register]: \<open>compatible F G\<close>
+  assumes [reference]: \<open>disjoint F G\<close>
   shows \<open>bounded_clinear (\<lambda>\<psi>. (F \<psi> \<otimes>\<^sub>p G \<phi>))\<close>
 proof -
   have [bounded_clinear]: \<open>bounded_clinear (F;G)\<close>
-    using assms pair_is_register register_bounded_clinear by blast
+    using assms pair_is_reference reference_bounded_clinear by blast
   show ?thesis
     unfolding pure_state'_def
     by (auto intro!: bounded_linear_intros)
 qed
 
 lemma pure_state_bounded_clinear_right:
-  assumes [register]: \<open>compatible F G\<close>
+  assumes [reference]: \<open>disjoint F G\<close>
   shows \<open>bounded_clinear (\<lambda>\<phi>. (F \<psi> \<otimes>\<^sub>p G \<phi>))\<close>
 proof -
   have [bounded_clinear]: \<open>bounded_clinear (F;G)\<close>
-    using assms pair_is_register register_bounded_clinear by blast
+    using assms pair_is_reference reference_bounded_clinear by blast
   show ?thesis
     unfolding pure_state'_def
     by (auto intro!: bounded_linear_intros)
 qed
 
 lemma pure_state_clinear:
-  assumes [register]: \<open>compatible F G\<close>
+  assumes [reference]: \<open>disjoint F G\<close>
   shows \<open>clinear (\<lambda>\<psi>. (F \<psi> \<otimes>\<^sub>p G \<phi>))\<close>
   using assms bounded_clinear.clinear pure_state_bounded_clinear by blast
 
@@ -498,32 +498,32 @@ method pure_state_flatten_nested =
   (subst pure_state_nested, (auto; fail)[3])+
 
 text \<open>The following method \<open>pure_state_eq\<close> tries to solve a equality where both sides are of the form
-  \<open>F\<^sub>1(\<psi>\<^sub>1) \<otimes>\<^sub>p F\<^sub>2(\<psi>\<^sub>2) \<otimes>\<^sub>p \<dots> \<otimes>\<^sub>p F\<^sub>n(\<psi>\<^sub>n)\<close> by reordering the registers and unfolding nested register pairs.
-  (For the unfolding of nested pairs, it is necessary that the corresponding \<^term>\<open>compatible F G\<close> facts are provable by the simplifier.)
+  \<open>F\<^sub>1(\<psi>\<^sub>1) \<otimes>\<^sub>p F\<^sub>2(\<psi>\<^sub>2) \<otimes>\<^sub>p \<dots> \<otimes>\<^sub>p F\<^sub>n(\<psi>\<^sub>n)\<close> by reordering the references and unfolding nested reference pairs.
+  (For the unfolding of nested pairs, it is necessary that the corresponding \<^term>\<open>disjoint F G\<close> facts are provable by the simplifier.)
 
   If the some of the pure states \<^term>\<open>\<psi>\<^sub>i\<close> themselves are \<open>\<otimes>\<^sub>p\<close>-tensors, they will be flattened if possible. 
-  (If all necessary conditions can be proven, such as \<open>regular_register\<close> etc.)
+  (If all necessary conditions can be proven, such as \<open>regular_reference\<close> etc.)
 
   The method may either succeed, fail, or reduce the equality to a hopefully simpler one.\<close>
 
 method pure_state_eq =
   (pure_state_flatten_nested?,
     rule pure_state_eqI;
-    auto simp: register_pair_butterfly_tensor compatible_ac_rules default_prod_def
+    auto simp: reference_pair_butterfly_tensor disjoint_ac_rules default_prod_def
     simp flip: tensor_ell2_ket)
 
 lemma example:
   fixes F :: \<open>bit update \<Rightarrow> 'c::{finite,default} update\<close>
     and G :: \<open>bit update \<Rightarrow> 'c update\<close>
-  assumes [register]: \<open>compatible F G\<close>
+  assumes [reference]: \<open>disjoint F G\<close>
   shows  \<open>(F;G) CNOT o\<^sub>C\<^sub>L (G;F) CNOT o\<^sub>C\<^sub>L (F;G) CNOT = (F;G) swap_ell2\<close>
 proof -
   define Z where \<open>Z = complement (F;G)\<close>
-  then have [register]: \<open>compatible Z F\<close> \<open>compatible Z G\<close>
-    using assms compatible_complement_pair1 compatible_complement_pair2 compatible_sym by blast+
+  then have [reference]: \<open>disjoint Z F\<close> \<open>disjoint Z G\<close>
+    using assms disjoint_complement_pair1 disjoint_complement_pair2 disjoint_sym by blast+
 
-  have [simp]: \<open>iso_register (F;(G;Z))\<close>
-    using Z_def assms complement_is_complement complements_complement_pair complements_def pair_is_register by blast
+  have [simp]: \<open>iso_reference (F;(G;Z))\<close>
+    using Z_def assms complement_is_complement complements_complement_pair complements_def pair_is_reference by blast
 
   have eq1: \<open>((F;G) CNOT o\<^sub>C\<^sub>L (G;F) CNOT o\<^sub>C\<^sub>L (F;G) CNOT) *\<^sub>V (F(ket f) \<otimes>\<^sub>p G(ket g) \<otimes>\<^sub>p Z(ket z))
            = (F;G) swap_ell2 *\<^sub>V (F(ket f) \<otimes>\<^sub>p G(ket g) \<otimes>\<^sub>p Z(ket z))\<close> for f g z

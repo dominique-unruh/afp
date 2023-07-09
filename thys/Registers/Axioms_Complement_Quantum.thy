@@ -190,39 +190,39 @@ qed
 (* lemma cmod_distrib_plus: \<open>a \<ge> 0 \<Longrightarrow> b \<ge> 0 \<Longrightarrow> cmod (a + b) = cmod a + cmod b\<close>
   by (simp add: cmod_Re) *)
 
-lemma register_decomposition_converse:
+lemma reference_decomposition_converse:
   assumes \<open>unitary U\<close>
-  shows \<open>register (\<lambda>x. sandwich U (id_cblinfun \<otimes>\<^sub>o x))\<close>
-  using _ unitary_sandwich_register apply (rule register_comp[unfolded o_def])
+  shows \<open>reference (\<lambda>x. sandwich U (id_cblinfun \<otimes>\<^sub>o x))\<close>
+  using _ unitary_sandwich_reference apply (rule reference_comp[unfolded o_def])
   using assms by auto
 
-lemma iso_register_decomposition:
-  assumes [simp]: \<open>iso_register F\<close>
+lemma iso_reference_decomposition:
+  assumes [simp]: \<open>iso_reference F\<close>
   shows \<open>\<exists>U. unitary U \<and> F = sandwich U\<close>
 proof -
-  from register_decomposition
-  have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
+  from reference_decomposition
+  have \<open>\<forall>\<^sub>\<tau> 'c::type = reference_decomposition_basis F.
         \<exists>U. unitary U \<and> F = sandwich U\<close>
   proof (rule with_type_mp)
-    show [simp]: \<open>register F\<close>
-      using assms iso_register_is_register by blast 
+    show [simp]: \<open>reference F\<close>
+      using assms iso_reference_is_reference by blast 
 
-    assume register_decomposition:
+    assume reference_decomposition:
       \<open>\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> (\<forall>\<theta>. F \<theta> = Complex_Bounded_Linear_Function.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
 
     let ?ida = \<open>id_cblinfun :: 'c ell2 \<Rightarrow>\<^sub>C\<^sub>L _\<close>
 
-    from register_decomposition
+    from reference_decomposition
     obtain V :: \<open>('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> where \<open>unitary V\<close>
       and FV: \<open>F \<theta> = sandwich V (\<theta> \<otimes>\<^sub>o ?ida)\<close> for \<theta>
       by auto
 
     have \<open>surj F\<close>
-      by (meson assms iso_register_inv_comp2 surj_iff)
+      by (meson assms iso_reference_inv_comp2 surj_iff)
     have surj_tensor: \<open>surj (\<lambda>a::'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2. a \<otimes>\<^sub>o ?ida)\<close>
       apply (rule surj_from_comp[where g=\<open>sandwich V\<close>])
       using \<open>surj F\<close> apply (auto simp: FV)
-      by (meson \<open>unitary V\<close> register_inj unitary_sandwich_register)
+      by (meson \<open>unitary V\<close> reference_inj unitary_sandwich_reference)
     then obtain a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L _\<close> 
       where a: \<open>a \<otimes>\<^sub>o ?ida = selfbutterket undefined \<otimes>\<^sub>o selfbutterket undefined\<close>
       by (smt (verit, best) surjD)
@@ -262,7 +262,7 @@ proof -
     finally have F_rep:  \<open>F a = U o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L U*\<close> for a
       apply (rule_tac fun_cong[where x=a])
       apply (rule weak_star_clinear_eq_butterfly_ketI[where T=weak_star_topology])
-      by (auto simp: clinear_register weak_star_cont_register simp flip: sandwich_apply)
+      by (auto simp: clinear_reference weak_star_cont_reference simp flip: sandwich_apply)
 
     have \<open>isometry T\<close>
       apply (rule orthogonal_on_basis_is_isometry[where B=\<open>range ket\<close>])
@@ -311,18 +311,18 @@ qed
 
 lemma complement_exists:
   fixes F :: \<open>'a update \<Rightarrow> 'b update\<close>
-  assumes \<open>register F\<close>
-  shows \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
-         \<exists>G :: 'c update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
-proof (use register_decomposition[OF \<open>register F\<close>] in \<open>rule with_type_mp\<close>)
-  note [[simproc del: Laws_Quantum.compatibility_warn]]
-  assume register_decomposition: \<open>\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> (\<forall>\<theta>. F \<theta> = Complex_Bounded_Linear_Function.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
+  assumes \<open>reference F\<close>
+  shows \<open>\<forall>\<^sub>\<tau> 'c::type = reference_decomposition_basis F.
+         \<exists>G :: 'c update \<Rightarrow> 'b update. disjoint F G \<and> iso_reference (F;G)\<close>
+proof (use reference_decomposition[OF \<open>reference F\<close>] in \<open>rule with_type_mp\<close>)
+  note [[simproc del: Laws_Quantum.disjointness_warn]]
+  assume reference_decomposition: \<open>\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> (\<forall>\<theta>. F \<theta> = Complex_Bounded_Linear_Function.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
   then obtain U :: \<open>('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
     where [simp]: "unitary U" and F: \<open>F a = sandwich U (a \<otimes>\<^sub>o id_cblinfun)\<close> for a
     by auto
   define G :: \<open>'c update \<Rightarrow> 'b update\<close> where \<open>G b = sandwich U (id_cblinfun \<otimes>\<^sub>o b)\<close> for b
-  have [simp]: \<open>register G\<close>
-    unfolding G_def apply (rule register_decomposition_converse) by simp
+  have [simp]: \<open>reference G\<close>
+    unfolding G_def apply (rule reference_decomposition_converse) by simp
   have \<open>F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close> for a b
   proof -
     have \<open>F a o\<^sub>C\<^sub>L G b = sandwich U (a \<otimes>\<^sub>o b)\<close>
@@ -333,45 +333,45 @@ proof (use register_decomposition[OF \<open>register F\<close>] in \<open>rule w
       by (metis (no_types, lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) comp_tensor_op cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
     ultimately show ?thesis by simp
   qed
-  then have [simp]: \<open>compatible F G\<close>
-    by (auto simp: compatible_def \<open>register F\<close>)
-  moreover have \<open>iso_register (F;G)\<close>
+  then have [simp]: \<open>disjoint F G\<close>
+    by (auto simp: disjoint_def \<open>reference F\<close>)
+  moreover have \<open>iso_reference (F;G)\<close>
   proof -
     have \<open>(F;G) (a \<otimes>\<^sub>o b) = sandwich U (a \<otimes>\<^sub>o b)\<close> for a b
-      apply (auto simp: register_pair_apply F G_def sandwich_apply)
+      apply (auto simp: reference_pair_apply F G_def sandwich_apply)
       by (metis (no_types, lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) comp_tensor_op cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
     then have FG: \<open>(F;G) = sandwich U\<close>
       apply (rule tensor_extensionality[rotated -1])
-      by (simp_all add: unitary_sandwich_register)
+      by (simp_all add: unitary_sandwich_reference)
     define I where \<open>I = sandwich (U*)\<close> for x
-    have [simp]: \<open>register I\<close>
-      by (simp add: I_def unitary_sandwich_register)
+    have [simp]: \<open>reference I\<close>
+      by (simp add: I_def unitary_sandwich_reference)
     have \<open>I o (F;G) = id\<close> and FGI: \<open>(F;G) o I = id\<close>
        apply (auto intro!:ext simp: I_def[abs_def] FG sandwich_apply)
        apply (metis (no_types, opaque_lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
       by (metis (no_types, lifting) \<open>unitary U\<close> cblinfun_assoc_left(1) cblinfun_compose_id_left cblinfun_compose_id_right unitaryD2)
-    then show \<open>iso_register (F;G)\<close>
-      by (auto intro!: iso_registerI)
+    then show \<open>iso_reference (F;G)\<close>
+      by (auto intro!: iso_referenceI)
   qed
-  ultimately show \<open>\<exists>G :: 'c update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
+  ultimately show \<open>\<exists>G :: 'c update \<Rightarrow> 'b update. disjoint F G \<and> iso_reference (F;G)\<close>
     apply (rule_tac exI[of _ G]) by auto
 qed
 
 lemma commutant_exchange:
   fixes F :: \<open>'a update \<Rightarrow> 'b update\<close>
-  assumes \<open>iso_register F\<close>
+  assumes \<open>iso_reference F\<close>
   shows \<open>commutant (F ` X) = F ` commutant X\<close>
 proof (rule Set.set_eqI)
   fix x :: \<open>'b update\<close>
   from assms
-  obtain G where \<open>F o G = id\<close> and \<open>G o F = id\<close> and [simp]: \<open>register G\<close>
-    using iso_register_def by blast
-  from assms have [simp]: \<open>register F\<close>
-    using iso_register_def by blast
+  obtain G where \<open>F o G = id\<close> and \<open>G o F = id\<close> and [simp]: \<open>reference G\<close>
+    using iso_reference_def by blast
+  from assms have [simp]: \<open>reference F\<close>
+    using iso_reference_def by blast
   have \<open>x \<in> commutant (F ` X) \<longleftrightarrow> (\<forall>y \<in> F ` X. x o\<^sub>C\<^sub>L y = y o\<^sub>C\<^sub>L x)\<close>
     by (simp add: commutant_def)
   also have \<open>\<dots> \<longleftrightarrow> (\<forall>y \<in> F ` X. G x o\<^sub>C\<^sub>L G y = G y o\<^sub>C\<^sub>L G x)\<close>
-    by (metis (no_types, opaque_lifting) \<open>F \<circ> G = id\<close> \<open>G o F = id\<close> \<open>register G\<close> comp_def eq_id_iff register_def)
+    by (metis (no_types, opaque_lifting) \<open>F \<circ> G = id\<close> \<open>G o F = id\<close> \<open>reference G\<close> comp_def eq_id_iff reference_def)
   also have \<open>\<dots> \<longleftrightarrow> (\<forall>y \<in> X. G x o\<^sub>C\<^sub>L y = y o\<^sub>C\<^sub>L G x)\<close>
     by (simp add: \<open>G \<circ> F = id\<close> pointfree_idE)
   also have \<open>\<dots> \<longleftrightarrow> G x \<in> commutant X\<close>
@@ -383,13 +383,13 @@ proof (rule Set.set_eqI)
 qed
 
 lemma complement_range:
-  assumes [simp]: \<open>compatible F G\<close> and [simp]: \<open>iso_register (F;G)\<close>
+  assumes [simp]: \<open>disjoint F G\<close> and [simp]: \<open>iso_reference (F;G)\<close>
   shows \<open>range G = commutant (range F)\<close>
 proof -
-  have [simp]: \<open>register F\<close> \<open>register G\<close>
-    using assms compatible_def by metis+
+  have [simp]: \<open>reference F\<close> \<open>reference G\<close>
+    using assms disjoint_def by metis+
   have [simp]: \<open>(F;G) (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close> for a b
-    using Laws_Quantum.register_pair_apply assms by blast
+    using Laws_Quantum.reference_pair_apply assms by blast
   have [simp]: \<open>range F = (F;G) ` range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)\<close>
     by force
   have [simp]: \<open>range G = (F;G) ` range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
@@ -405,18 +405,18 @@ qed
   by (simp add: isCont_def Lim_at_id) *)
 
 
-lemma register_inv_G_o_F: 
-  assumes [simp]: \<open>register F\<close> and [simp]: \<open>register G\<close> and range_FG: \<open>range F \<subseteq> range G\<close>
-  shows \<open>register (inv G \<circ> F)\<close>
+lemma reference_inv_G_o_F: 
+  assumes [simp]: \<open>reference F\<close> and [simp]: \<open>reference G\<close> and range_FG: \<open>range F \<subseteq> range G\<close>
+  shows \<open>reference (inv G \<circ> F)\<close>
 proof -
-  note [[simproc del: Laws_Quantum.compatibility_warn]]
+  note [[simproc del: Laws_Quantum.disjointness_warn]]
   define GF where \<open>GF = inv G o F\<close>
   have F_rangeG[simp]: \<open>F x \<in> range G\<close> for x
    using range_FG by auto
   have [simp]: \<open>inj F\<close> and [simp]: \<open>inj G\<close>
-    by (simp_all add: register_inj)
+    by (simp_all add: reference_inj)
   have [simp]: \<open>bounded_clinear F\<close> \<open>bounded_clinear G\<close>
-    by (simp_all add: register_bounded_clinear)
+    by (simp_all add: reference_bounded_clinear)
   have [simp]: \<open>clinear F\<close> \<open>clinear G\<close>
     by (simp_all add: bounded_clinear.clinear)
   have addJ: \<open>GF (x + y) = GF x + GF y\<close> for x y
@@ -439,68 +439,68 @@ proof -
   have multJ: \<open>GF (a o\<^sub>C\<^sub>L b) = GF a o\<^sub>C\<^sub>L GF b\<close> for a b
     unfolding GF_def o_def
     apply (rule injD[OF \<open>inj G\<close>])
-    apply (subst register_mult[symmetric, OF \<open>register G\<close>])
+    apply (subst reference_mult[symmetric, OF \<open>reference G\<close>])
     apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)+
-    by (simp add: register_mult)
+    by (simp add: reference_mult)
   have adjJ: \<open>GF (a*) = (GF a)*\<close> for a
     unfolding GF_def o_def
     apply (rule injD[OF \<open>inj G\<close>])
-    apply (subst register_adjoint[OF \<open>register G\<close>])
+    apply (subst reference_adjoint[OF \<open>reference G\<close>])
     apply (subst Hilbert_Choice.f_inv_into_f[where f=G], simp)+
-    using \<open>register F\<close> register_adjoint by blast
+    using \<open>reference F\<close> reference_adjoint by blast
   have normJ: \<open>norm (GF a) = norm a\<close> for a
     unfolding GF_def
-    by (metis F_rangeG \<open>register F\<close> \<open>register G\<close> f_inv_into_f o_def register_norm)
+    by (metis F_rangeG \<open>reference F\<close> \<open>reference G\<close> f_inv_into_f o_def reference_norm)
   have weak_star_J: \<open>continuous_map weak_star_topology weak_star_topology GF\<close>
   proof -
     have \<open>continuous_map weak_star_topology weak_star_topology F\<close>
-      by (simp add: weak_star_cont_register)
+      by (simp add: weak_star_cont_reference)
     then have \<open>continuous_map weak_star_topology (subtopology weak_star_topology (range F)) F\<close>
       by (simp add: continuous_map_into_subtopology)
     moreover have \<open>continuous_map (subtopology weak_star_topology (range G)) weak_star_topology (inv G)\<close>
-      using \<open>register G\<close> register_inv_weak_star_continuous by blast
+      using \<open>reference G\<close> reference_inv_weak_star_continuous by blast
     ultimately show \<open>continuous_map weak_star_topology weak_star_topology GF\<close>
       by (simp add: GF_def range_FG continuous_map_compose continuous_map_from_subtopology_mono)
   qed
 
   from addJ scaleJ unitalJ multJ adjJ normJ weak_star_J
-  show \<open>register GF\<close>
-    unfolding register_def by (auto intro!: bounded_clinearI[where K=1])
+  show \<open>reference GF\<close>
+    unfolding reference_def by (auto intro!: bounded_clinearI[where K=1])
 qed
 
 
 lemma same_range_equivalent:
   fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G :: \<open>'b update \<Rightarrow> 'c update\<close>
-  assumes [simp]: \<open>register F\<close> and [simp]: \<open>register G\<close>
+  assumes [simp]: \<open>reference F\<close> and [simp]: \<open>reference G\<close>
   assumes range_FG: \<open>range F = range G\<close>
-  shows \<open>equivalent_registers F G\<close>
+  shows \<open>equivalent_references F G\<close>
 proof -
-  note [[simproc del: Laws_Quantum.compatibility_warn]]
-  have regGF: \<open>register (inv G o F)\<close>
-    using assms by (auto intro!: register_inv_G_o_F)
-  have regFG: \<open>register (inv F o G)\<close>
-    using assms by (auto intro!: register_inv_G_o_F)
+  note [[simproc del: Laws_Quantum.disjointness_warn]]
+  have regGF: \<open>reference (inv G o F)\<close>
+    using assms by (auto intro!: reference_inv_G_o_F)
+  have regFG: \<open>reference (inv F o G)\<close>
+    using assms by (auto intro!: reference_inv_G_o_F)
   have \<open>inj G\<close>
-    by (simp add: register_inj)
+    by (simp add: reference_inj)
   with range_FG have GFFG: \<open>(inv G o F) o (inv F o G) = id\<close>
-    by (smt (verit) assms(1) f_inv_into_f invI isomorphism_expand o_def rangeI register_inj)
+    by (smt (verit) assms(1) f_inv_into_f invI isomorphism_expand o_def rangeI reference_inj)
   have \<open>inj F\<close>
-    by (simp add: register_inj)
+    by (simp add: reference_inj)
   with range_FG have FGGF: \<open>(inv F o G) o (inv G o F) = id\<close>
     by (metis GFFG fun.set_map image_inv_f_f left_right_inverse_eq surj_iff)
-  from regGF regFG GFFG FGGF have iso_FG: \<open>iso_register (inv F o G)\<close>
-    using iso_registerI by auto
+  from regGF regFG GFFG FGGF have iso_FG: \<open>iso_reference (inv F o G)\<close>
+    using iso_referenceI by auto
   have FFG: \<open>F o (inv F o G) = G\<close>
     by (smt (verit) FGGF GFFG fun.inj_map_strong fun.map_comp fun.set_map image_inv_f_f inj_on_imageI2 inv_id inv_into_injective inv_o_cancel o_inv_o_cancel range_FG surj_id surj_imp_inj_inv)
-  from FFG iso_FG show \<open>equivalent_registers F G\<close>
-    by (simp add: equivalent_registersI)
+  from FFG iso_FG show \<open>equivalent_references F G\<close>
+    by (simp add: equivalent_referencesI)
 qed
 
 lemma complement_unique:
-  assumes "compatible F G" and \<open>iso_register (F;G)\<close>
-  assumes "compatible F H" and \<open>iso_register (F;H)\<close>
-  shows \<open>equivalent_registers G H\<close>
-  by (metis assms compatible_def complement_range same_range_equivalent)
+  assumes "disjoint F G" and \<open>iso_reference (F;G)\<close>
+  assumes "disjoint F H" and \<open>iso_reference (F;H)\<close>
+  shows \<open>equivalent_references G H\<close>
+  by (metis assms disjoint_def complement_range same_range_equivalent)
 
 
 
@@ -549,18 +549,18 @@ proof -
     by (metis card_image)
 qed
 
-lemma register_decomposition_finite_aux:
+lemma reference_decomposition_finite_aux:
   fixes \<Phi> :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
-  assumes [simp]: \<open>register \<Phi>\<close>
+  assumes [simp]: \<open>reference \<Phi>\<close>
   shows \<open>\<exists>U :: ('a \<times> ('a, 'b) complement_domain_simple) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
               (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
   \<comment> \<open>Proof based on @{cite daws21unitalanswer}\<close>
 proof -
-  note [[simproc del: compatibility_warn]]
+  note [[simproc del: disjointness_warn]]
   fix \<xi>0 :: 'a
 
   have [simp]: \<open>clinear \<Phi>\<close>
-    by (simp add: clinear_register)
+    by (simp add: clinear_reference)
 
   define P where \<open>P i = Proj (ccspan {ket i})\<close> for i :: 'a
   have P_butter: \<open>P i = selfbutterket i\<close> for i
@@ -568,7 +568,7 @@ proof -
 
   define P' where \<open>P' i = \<Phi> (P i)\<close> for i :: 'a
   have proj_P': \<open>is_Proj (P' i)\<close> for i
-    by (simp add: P_def P'_def register_projector)
+    by (simp add: P_def P'_def reference_projector)
   have \<open>(\<Sum>i\<in>UNIV. P i) = id_cblinfun\<close>
     using sum_butterfly_ket P_butter by simp
   then have sumP'id: \<open>(\<Sum>i\<in>UNIV. P' i) = id_cblinfun\<close>
@@ -610,7 +610,7 @@ proof -
     also have \<open>\<dots> = cinner (P' j *\<^sub>V P' i *\<^sub>V x') y'\<close>
       by (metis cinner_adj_left is_Proj_algebraic proj_P')
     also have \<open>\<dots> = cinner (\<Phi> (P j o\<^sub>C\<^sub>L P i) *\<^sub>V x') y'\<close>
-      unfolding P'_def register_mult[OF \<open>register \<Phi>\<close>, symmetric] by simp
+      unfolding P'_def reference_mult[OF \<open>reference \<Phi>\<close>, symmetric] by simp
     also have \<open>\<dots> = cinner (\<Phi> (selfbutterket j o\<^sub>C\<^sub>L selfbutterket i) *\<^sub>V x') y'\<close>
       unfolding P_butter by simp
     also have \<open>\<dots> = cinner (\<Phi> 0 *\<^sub>V x') y'\<close>
@@ -673,13 +673,13 @@ proof -
     define Si_to_Sj where \<open>Si_to_Sj i j \<psi> = \<Phi> (butterket j i) *\<^sub>V \<psi>\<close> for i j \<psi>
     have S2S2S: \<open>Si_to_Sj j i (Si_to_Sj i j \<psi>) = \<psi>\<close> if \<open>\<psi> \<in> space_as_set (S i)\<close> for i j \<psi>
       using that P'id
-      by (simp add: Si_to_Sj_def cblinfun_apply_cblinfun_compose[symmetric] register_mult P_butter P'_def)
+      by (simp add: Si_to_Sj_def cblinfun_apply_cblinfun_compose[symmetric] reference_mult P_butter P'_def)
     also have lin[simp]: \<open>clinear (Si_to_Sj i j)\<close> for i j
       unfolding Si_to_Sj_def by simp
     have S2S: \<open>Si_to_Sj i j x \<in> space_as_set (S j)\<close> for i j x
     proof -
       have \<open>Si_to_Sj i j x = P' j *\<^sub>V Si_to_Sj i j x\<close>
-        by (simp add: Si_to_Sj_def cblinfun_apply_cblinfun_compose[symmetric] register_mult P_butter P'_def)
+        by (simp add: Si_to_Sj_def cblinfun_apply_cblinfun_compose[symmetric] reference_mult P_butter P'_def)
       also have \<open>P' j *\<^sub>V Si_to_Sj i j x \<in> space_as_set (S j)\<close>
         by (simp add: S_def)
       finally show ?thesis by -
@@ -734,9 +734,9 @@ proof -
     also have \<open>\<dots> = cinner ((\<Phi> (butterket \<xi>' \<xi>0))* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       by (simp add: cinner_adj_left)
     also have \<open>\<dots> = cinner (\<Phi> (butterket \<xi>' \<xi>0 *) *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
-      by (metis (no_types, lifting) assms register_def)
+      by (metis (no_types, lifting) assms reference_def)
     also have \<open>\<dots> = cinner (\<Phi> (butterket \<xi>0 \<xi>' o\<^sub>C\<^sub>L butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
-      by (simp add: register_mult cblinfun_apply_cblinfun_compose[symmetric])
+      by (simp add: reference_mult cblinfun_apply_cblinfun_compose[symmetric])
     also have \<open>\<dots> = cinner (\<Phi> (eqa \<xi>' \<xi> *\<^sub>C selfbutterket \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       apply simp by (metis eqa_def cinner_ket)
     also have \<open>\<dots> = eqa \<xi>' \<xi> * cinner (\<Phi> (selfbutterket \<xi>0) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
@@ -766,7 +766,7 @@ proof -
     have \<open>sandwich (U*) (\<Phi> (butterket \<xi> \<eta>)) *\<^sub>V ket \<xi>1\<alpha> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta>) *\<^sub>V \<Phi> (butterket \<xi>1 \<xi>0) *\<^sub>V f \<alpha>\<close>
       by (simp add: sandwich_apply[abs_def] cblinfun_apply_cblinfun_compose \<xi>1\<alpha> Uapply u_def)
     also have \<open>\<dots> = U* *\<^sub>V \<Phi> (butterket \<xi> \<eta> o\<^sub>C\<^sub>L butterket \<xi>1 \<xi>0) *\<^sub>V f \<alpha>\<close>
-      by (metis (no_types, lifting) assms butterfly_comp_butterfly lift_cblinfun_comp(4) register_mult)
+      by (metis (no_types, lifting) assms butterfly_comp_butterfly lift_cblinfun_comp(4) reference_mult)
     also have \<open>\<dots> = U* *\<^sub>V \<Phi> (eqa \<eta> \<xi>1 *\<^sub>C butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>\<close>
       by (simp add: eqa_def cinner_ket)
     also have \<open>\<dots> = eqa \<eta> \<xi>1 *\<^sub>C U* *\<^sub>V \<Phi> (butterket \<xi> \<xi>0) *\<^sub>V f \<alpha>\<close>
@@ -784,7 +784,7 @@ proof -
   qed
   then have 1: \<open>sandwich (U*) (\<Phi> \<theta>) = \<theta> \<otimes>\<^sub>o id_cblinfun\<close> for \<theta>
     apply (rule clinear_eq_butterfly_ketI[THEN fun_cong, where x=\<theta>, rotated -1])
-    by (auto intro: bounded_clinear.clinear bounded_linear_intros register_bounded_clinear \<open>register \<Phi>\<close>)
+    by (auto intro: bounded_clinear.clinear bounded_linear_intros reference_bounded_clinear \<open>reference \<Phi>\<close>)
 
   have [simp]: \<open>unitary U\<close>
   proof -
@@ -796,7 +796,7 @@ proof -
         by (metis Uapply cblinfun_apply_in_image)
 
       have \<open>\<Phi> (butterket \<xi> \<xi>1) *\<^sub>S \<top> = \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>1) *\<^sub>S \<top>\<close>
-        unfolding cblinfun_compose_image[symmetric] register_mult[OF assms]
+        unfolding cblinfun_compose_image[symmetric] reference_mult[OF assms]
         by simp
       also have \<open>\<dots> \<le> \<Phi> (butterket \<xi> \<xi>0) *\<^sub>S \<Phi> (butterket \<xi>0 \<xi>0) *\<^sub>S \<top>\<close>
         by (meson cblinfun_image_mono top_greatest)
@@ -836,9 +836,9 @@ proof -
     by simp
 qed
 
-lemma register_decomposition_finite:
+lemma reference_decomposition_finite:
   fixes \<Phi> :: \<open>'a update \<Rightarrow> 'b::finite update\<close>
-  assumes [simp]: \<open>register \<Phi>\<close>
+  assumes [simp]: \<open>reference \<Phi>\<close>
   shows \<open>\<exists>U :: ('a \<times> ('a, 'b) complement_domain_simple) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
               (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
 proof -
@@ -860,37 +860,37 @@ proof -
     by (auto intro: complex_vector.dependent_mono)
   then have \<open>cindependent (\<Phi> ` range (butterket a\<^sub>0))\<close>
     apply (rule complex_vector.linear_independent_injective_image[rotated])
-    by (simp_all add: register_inj clinear_register)
+    by (simp_all add: reference_inj clinear_reference)
   then have \<open>finite (\<Phi> ` range (butterket a\<^sub>0))\<close>
     using cindependent_cfinite_dim_finite by blast
   then have \<open>finite (range (butterket a\<^sub>0) :: 'a update set)\<close>
     apply (rule Finite_Set.inj_on_finite[rotated -1, where f=\<Phi>])
-    by (simp_all add: register_inj)
+    by (simp_all add: reference_inj)
   then have \<open>finite (UNIV :: 'a set)\<close>
     apply (rule Finite_Set.inj_on_finite[rotated -1, where f=\<open>butterket a\<^sub>0\<close>])
      apply (rule inj_butterket)
     by simp
   then have \<open>class.finite TYPE('a)\<close>
     by intro_classes
-  from register_decomposition_finite_aux[unoverload_type 'a, OF this]
+  from reference_decomposition_finite_aux[unoverload_type 'a, OF this]
   show ?thesis
     using assms by metis
 qed
 
-hide_fact register_decomposition_finite_aux
+hide_fact reference_decomposition_finite_aux
 
 lemma complement_exists_simple:
   fixes F :: \<open>'a update \<Rightarrow> 'b::finite update\<close>
-  assumes \<open>register F\<close>
-  shows \<open>\<exists>G :: ('a, 'b) complement_domain_simple update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
+  assumes \<open>reference F\<close>
+  shows \<open>\<exists>G :: ('a, 'b) complement_domain_simple update \<Rightarrow> 'b update. disjoint F G \<and> iso_reference (F;G)\<close>
 proof -
-  note [[simproc del: Laws_Quantum.compatibility_warn]]
+  note [[simproc del: Laws_Quantum.disjointness_warn]]
   obtain U :: \<open>('a \<times> ('a, 'b) complement_domain_simple) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
     where [simp]: "unitary U" and F: \<open>F a = sandwich U (a \<otimes>\<^sub>o id_cblinfun)\<close> for a
-    apply atomize_elim using assms by (rule register_decomposition_finite)
+    apply atomize_elim using assms by (rule reference_decomposition_finite)
   define G :: \<open>(('a, 'b) complement_domain_simple) update \<Rightarrow> 'b update\<close> where \<open>G b = sandwich U (id_cblinfun \<otimes>\<^sub>o b)\<close> for b
-  have [simp]: \<open>register G\<close>
-    unfolding G_def apply (rule register_decomposition_converse) by simp
+  have [simp]: \<open>reference G\<close>
+    unfolding G_def apply (rule reference_decomposition_converse) by simp
   have \<open>F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close> for a b
   proof -
     have \<open>F a o\<^sub>C\<^sub>L G b = sandwich U (a \<otimes>\<^sub>o b)\<close>
@@ -901,26 +901,26 @@ proof -
       by (metis (no_types, lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) comp_tensor_op cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
     ultimately show ?thesis by simp
   qed
-  then have [simp]: \<open>compatible F G\<close>
-    by (auto simp: compatible_def \<open>register F\<close> \<open>register G\<close>)
-  moreover have \<open>iso_register (F;G)\<close>
+  then have [simp]: \<open>disjoint F G\<close>
+    by (auto simp: disjoint_def \<open>reference F\<close> \<open>reference G\<close>)
+  moreover have \<open>iso_reference (F;G)\<close>
   proof -
     have \<open>(F;G) (a \<otimes>\<^sub>o b) = sandwich U (a \<otimes>\<^sub>o b)\<close> for a b
-      apply (auto simp: register_pair_apply F G_def sandwich_apply)
+      apply (auto simp: reference_pair_apply F G_def sandwich_apply)
       by (metis (no_types, lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) comp_tensor_op cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
     then have FG: \<open>(F;G) = sandwich U\<close>
       apply (rule tensor_extensionality[rotated -1])
-      by (simp_all add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right clinearI unitary_sandwich_register)
+      by (simp_all add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right clinearI unitary_sandwich_reference)
 
     define I where \<open>I = sandwich (U*)\<close> for x
-    have [simp]: \<open>register I\<close>
-      by (simp add: I_def unitary_sandwich_register)
+    have [simp]: \<open>reference I\<close>
+      by (simp add: I_def unitary_sandwich_reference)
     have \<open>I o (F;G) = id\<close> and FGI: \<open>(F;G) o I = id\<close>
        apply (auto intro!:ext simp: I_def[abs_def] FG sandwich_apply)
        apply (metis (no_types, opaque_lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
       by (metis (no_types, lifting) \<open>unitary U\<close> cblinfun_assoc_left(1) cblinfun_compose_id_left cblinfun_compose_id_right unitaryD2)
-    then show \<open>iso_register (F;G)\<close>
-      by (auto intro!: iso_registerI)
+    then show \<open>iso_reference (F;G)\<close>
+      by (auto intro!: iso_referenceI)
   qed
   ultimately show ?thesis
     apply (rule_tac exI[of _ G]) by (auto)

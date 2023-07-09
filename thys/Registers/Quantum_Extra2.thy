@@ -1,4 +1,4 @@
-section \<open>More derived facts about quantum registers\<close>
+section \<open>More derived facts about quantum references\<close>
 
 text \<open>This theory contains some derived facts that cannot be placed in theory \<open>Quantum_Extra\<close> 
       because they depend on \<open>Laws_Complement_Quantum\<close>.\<close>
@@ -12,7 +12,7 @@ begin
 definition empty_var :: \<open>'a::{CARD_1,enum} update \<Rightarrow> 'b update\<close> where
   "empty_var a = one_dim_iso a *\<^sub>C id_cblinfun"
 
-lemma is_unit_register_empty_var[register]: \<open>is_unit_register empty_var\<close> (is \<open>is_unit_register ?e\<close>)
+lemma is_unit_reference_empty_var[reference]: \<open>is_unit_reference empty_var\<close> (is \<open>is_unit_reference ?e\<close>)
 proof -
   note continuous_map_compose[trans]
   have \<open>continuous_map weak_star_topology euclidean (id :: 'a update \<Rightarrow> _)\<close>
@@ -25,16 +25,16 @@ proof -
     by (metis comp_id fun.map_ident weak_star_topology_weaker_than_euclidean)
   finally have \<open>continuous_map weak_star_topology weak_star_topology (\<lambda>a :: 'a update. one_dim_iso a *\<^sub>C id_cblinfun :: 'b update)\<close>
     by (simp add: o_def)
-  then have [simp]: \<open>register ?e\<close>
-    unfolding register_def empty_var_def
+  then have [simp]: \<open>reference ?e\<close>
+    unfolding reference_def empty_var_def
     by (simp add: clinearI scaleC_left.add)
-  have [simp]: \<open>compatible ?e id\<close>
-    by (auto intro!: compatibleI simp: empty_var_def)
-  have [simp]: \<open>iso_register (?e; id)\<close>
+  have [simp]: \<open>disjoint ?e id\<close>
+    by (auto intro!: disjointI simp: empty_var_def)
+  have [simp]: \<open>iso_reference (?e; id)\<close>
     by (auto intro!: same_range_equivalent range_eqI[where x=\<open>id_cblinfun \<otimes>\<^sub>o _\<close>] 
-        simp del: id_cblinfun_eq_1 simp flip: iso_register_equivalent_id simp: register_pair_apply)
+        simp del: id_cblinfun_eq_1 simp flip: iso_reference_equivalent_id simp: reference_pair_apply)
   show ?thesis
-    by (auto intro!: complementsI simp: is_unit_register_def)
+    by (auto intro!: complementsI simp: is_unit_reference_def)
 qed
 
 instance complement_domain_simple :: (type, type) default ..
