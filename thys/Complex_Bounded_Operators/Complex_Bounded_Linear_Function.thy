@@ -3194,7 +3194,7 @@ qed
 
 lemma infsum_cblinfun_apply_invertible:
   assumes \<open>invertible_cblinfun A\<close>
-  shows \<open>infsum (\<lambda>x. A *\<^sub>V g x) S = A *\<^sub>V (infsum g S)\<close>
+  shows \<open>(\<Sum>\<^sub>\<infinity>x\<in>S. A *\<^sub>V g x) = A *\<^sub>V (\<Sum>\<^sub>\<infinity>x\<in>S. g x)\<close>
 proof (cases \<open>g summable_on S\<close>)
   case True
   then show ?thesis
@@ -4234,21 +4234,21 @@ qed
 
 subsection \<open>Riesz-representation theorem\<close>
 
-theorem riesz_frechet_representation_cblinfun_existence:
+theorem riesz_representation_cblinfun_existence:
   \<comment> \<open>Theorem 3.4 in \<^cite>\<open>conway2013course\<close>\<close>
   fixes f::\<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L complex\<close>
   shows \<open>\<exists>t. \<forall>x.  f *\<^sub>V x = (t \<bullet>\<^sub>C x)\<close>
-  by transfer (rule riesz_frechet_representation_existence)
+  by transfer (rule riesz_representation_existence)
 
-lemma riesz_frechet_representation_cblinfun_unique:
+lemma riesz_representation_cblinfun_unique:
   \<comment> \<open>Theorem 3.4 in \<^cite>\<open>conway2013course\<close>\<close>
   fixes f::\<open>'a::complex_inner \<Rightarrow>\<^sub>C\<^sub>L complex\<close>
   assumes \<open>\<And>x. f *\<^sub>V x = (t \<bullet>\<^sub>C x)\<close>
   assumes \<open>\<And>x. f *\<^sub>V x = (u \<bullet>\<^sub>C x)\<close>
   shows \<open>t = u\<close>
-  using assms by (rule riesz_frechet_representation_unique)
+  using assms by (rule riesz_representation_unique)
 
-theorem riesz_frechet_representation_cblinfun_norm:
+theorem riesz_representation_cblinfun_norm:
   includes notation_norm
   fixes f::\<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L complex\<close>
   assumes \<open>\<And>x.  f *\<^sub>V x = (t \<bullet>\<^sub>C x)\<close>
@@ -4306,12 +4306,12 @@ definition the_riesz_rep :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^s
 lemma the_riesz_rep[simp]: \<open>the_riesz_rep f \<bullet>\<^sub>C x = f *\<^sub>V x\<close>
   unfolding the_riesz_rep_def
   apply (rule someI2_ex)
-  by (simp_all add: riesz_frechet_representation_cblinfun_existence)
+  by (simp_all add: riesz_representation_cblinfun_existence)
 
 lemma the_riesz_rep_unique:
   assumes \<open>\<And>x. f *\<^sub>V x = t \<bullet>\<^sub>C x\<close>
   shows \<open>t = the_riesz_rep f\<close>
-  using assms riesz_frechet_representation_cblinfun_unique the_riesz_rep by metis
+  using assms riesz_representation_cblinfun_unique the_riesz_rep by metis
 
 lemma the_riesz_rep_scaleC: \<open>the_riesz_rep (c *\<^sub>C f) = cnj c *\<^sub>C the_riesz_rep f\<close>
   apply (rule the_riesz_rep_unique[symmetric])
@@ -4322,7 +4322,7 @@ lemma the_riesz_rep_add: \<open>the_riesz_rep (f + g) = the_riesz_rep f + the_ri
   by (auto simp: cinner_add_left cblinfun.add_left)
 
 lemma the_riesz_rep_norm[simp]: \<open>norm (the_riesz_rep f) = norm f\<close>
-  apply (rule riesz_frechet_representation_cblinfun_norm[symmetric])
+  apply (rule riesz_representation_cblinfun_norm[symmetric])
   by simp
 
 lemma bounded_antilinear_the_riesz_rep[bounded_antilinear]: \<open>bounded_antilinear the_riesz_rep\<close>
@@ -4384,13 +4384,13 @@ proof -
       apply (subst CBlinfun_inverse)
       by (auto intro!: bounded_linear_intros)
     obtain y'' where \<open>y' z = y'' \<bullet>\<^sub>C z\<close> for z
-      using riesz_frechet_representation_cblinfun_existence by blast
+      using riesz_representation_cblinfun_existence by blast
     then have y'': \<open>z \<bullet>\<^sub>C y'' = cnj (y' z)\<close> for z
       by auto
     have \<open>(bidual_embedding *\<^sub>V y'') *\<^sub>V f = y *\<^sub>V f\<close> for f :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L complex\<close>
     proof -
       obtain f' where f': \<open>f z = f' \<bullet>\<^sub>C z\<close> for z
-        using riesz_frechet_representation_cblinfun_existence by blast
+        using riesz_representation_cblinfun_existence by blast
       then have f'2: \<open>f = cblinfun_cinner_right f'\<close>
         using cblinfun_apply_inject by force
       show ?thesis

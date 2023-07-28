@@ -96,7 +96,7 @@ lemma [transfer_rule]:
   assumes [transfer_rule]: \<open>bi_total R\<close>
   assumes [transfer_rule]: \<open>bi_unique R\<close>
   shows \<open>(rel_topology R ===> rel_topology S ===> (R ===> S) ===> (=)) continuous_map continuous_map\<close>
-  unfolding continuous_map_def
+  unfolding continuous_map_def Pi_def
   by transfer_prover
 
 

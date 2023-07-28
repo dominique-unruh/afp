@@ -126,8 +126,7 @@ proof (rule bijective_open_imp_homeomorphic_map)
       using openin_subset by blast
     from topspace
     have topspace': \<open>topspace (product_topology T A) = g' ` topspace (product_topology S B)\<close>
-      by (metis (no_types, lifting) bij_betw_byWitness bij_betw_imp_surj_on g'g gg' open_map open_map_g' open_map_imp_subset_topspace)
-
+      by (metis bij_betw_byWitness bij_betw_def calculation g'g gg' openin_subset openin_topspace)
     show ?thesis
       unfolding topspace'
       using U_top gg' 
@@ -138,7 +137,7 @@ proof (rule bijective_open_imp_homeomorphic_map)
   using that by blast
 
   then show \<open>continuous_map (product_topology T A) (product_topology S B) g\<close>
-    by (metis topspace continuous_map_alt open_gU2 openin_subset openin_topspace)
+    by (smt (verit, best) g'g image_iff open_eq_continuous_inverse_map open_map_g' topspace)
 qed
 
 lemma weak_star_topology_def':
