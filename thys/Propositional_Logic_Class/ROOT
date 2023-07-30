@@ -1,7 +1,6 @@
 chapter AFP
 
-session Propositional_Logic_Class (AFP) = "HOL" +
-  (* options [document = pdf, document_output = "output"] *)
+session Propositional_Logic_Class = "HOL" +
   options [timeout = 300]
   sessions
     "HOL-Combinatorics"

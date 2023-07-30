@@ -1,6 +1,6 @@
 chapter AFP
 
-session First_Order_Terms (AFP) = "Abstract-Rewriting" +
+session First_Order_Terms = "Abstract-Rewriting" +
   description "First-Order Terms"
   options [timeout = 300]
   sessions
@@ -15,6 +15,7 @@ session First_Order_Terms (AFP) = "Abstract-Rewriting" +
     Matching
     Unification
     Subsumption
+    Subterm_and_Context
   document_files
     "root.tex"
     "root.bib"

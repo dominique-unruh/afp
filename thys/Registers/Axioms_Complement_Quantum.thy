@@ -738,8 +738,7 @@ proof -
     also have \<open>\<dots> = cinner (\<Phi> (butterfly (ket \<xi>0) (ket \<xi>') o\<^sub>C\<^sub>L butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       by (simp add: register_mult cblinfun_apply_cblinfun_compose[symmetric])
     also have \<open>\<dots> = cinner (\<Phi> (eqa \<xi>' \<xi> *\<^sub>C butterfly (ket \<xi>0) (ket \<xi>0)) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
-      apply simp
-      by (metis cinner_ket_same eqa_def orthogonal_ket)
+      by (simp add: eqa_def cinner_ket) 
     also have \<open>\<dots> = eqa \<xi>' \<xi> * cinner (\<Phi> (butterfly (ket \<xi>0) (ket \<xi>0)) *\<^sub>V f \<alpha>) (f \<alpha>')\<close>
       by (smt (verit, ccfv_threshold) \<open>clinear \<Phi>\<close> eqa_def cblinfun.scaleC_left cinner_commute 
               cinner_scaleC_left cinner_zero_right complex_cnj_one complex_vector.linear_scale)

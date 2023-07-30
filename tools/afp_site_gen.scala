@@ -5,9 +5,9 @@ Generation and compilation of SSG project for the AFP website.
 package afp
 
 
-import isabelle._
+import isabelle.*
 
-import afp.Metadata._
+import afp.Metadata.{Affiliation, Author, ACM, AMS, Classification, DOI, Email, Entry, Formatted, Homepage, Reference, Release, Topic, Unaffiliated}
 
 
 object AFP_Site_Gen {
@@ -139,11 +139,7 @@ object AFP_Site_Gen {
         opt("related", entry.related.map(from_related(_, cache))))
 
     def from_keywords(keywords: List[String]): T =
-      keywords.zipWithIndex.map {
-        case (keyword, i) => Object(
-          "id" -> i,
-          "keyword" -> keyword)
-      }
+      keywords.sorted.map(keyword => Object("keyword" -> keyword))
   }
 
 

@@ -1,9 +1,10 @@
 chapter AFP
 
-session Median_Method (AFP) = "HOL-Probability" +
+session Median_Method = "HOL-Probability" +
   options [timeout = 300]
   sessions
     "HOL-Library"
+    "Universal_Hash_Families"
   theories
     Median
   document_files

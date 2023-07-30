@@ -1,13 +1,10 @@
 chapter AFP
 
-session Intro_Dest_Elim (AFP) = HOL +
+session Intro_Dest_Elim = HOL +
   options [timeout=600]
   sessions
     "HOL-Library"
-  directories
-    IDE_Tools
   theories[document = false]
-    "IDE_Tools/IDE_Tools"
     IHOL_IDE
     Reference_Prerequisites
   theories

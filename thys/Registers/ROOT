@@ -1,6 +1,6 @@
 chapter AFP
 
-session Registers (AFP) = Tensor_Product +
+session Registers = Tensor_Product +
   options [timeout = 1200]
   sessions With_Type
   theories

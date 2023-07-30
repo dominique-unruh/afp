@@ -5,7 +5,7 @@ AFP Metadata file structure with save and load operations.
 package afp
 
 
-import isabelle._
+import isabelle.*
 
 
 class AFP_Structure private(val base_dir: Path) {
@@ -32,7 +32,7 @@ class AFP_Structure private(val base_dir: Path) {
 
   /* load */
 
-  private def load[A](file: Path, parser: afp.TOML.T => A): A = {
+  private def load[A](file: Path, parser: isabelle.TOML.Table => A): A = {
     val content = File.read(file)
     val toml =
       try { TOML.parse(content) }
@@ -70,7 +70,7 @@ class AFP_Structure private(val base_dir: Path) {
 
   /* save */
 
-  private def save(file: Path, content: afp.TOML.T): Unit = {
+  private def save(file: Path, content: isabelle.TOML.Table): Unit = {
     file.dir.file.mkdirs()
     File.write(file, TOML.Format(content))
   }

@@ -666,7 +666,7 @@ proof -
         have \<open>continuous_map weak_star_topology weak_star_topology G'\<close>
           by (auto intro!: continuous_map_compose[where X'=weak_star_topology] simp: G'_def  weak_star_cont_register)
         then have cont_G': \<open>continuous_map weak_star_topology (subtopology weak_star_topology (range \<iota>)) G'\<close>
-          by (simp add: range_G' continuous_map_into_subtopology)
+          using range_G' by (auto intro!: continuous_map_into_subtopology)
 
         have [simp]: \<open>register \<iota>\<close>
           by (simp add: \<iota>_def[abs_def] register_tensor_right)

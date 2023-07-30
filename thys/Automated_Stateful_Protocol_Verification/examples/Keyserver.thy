@@ -11,7 +11,7 @@ theory Keyserver
   imports "../PSPSP"
 begin
 
-declare [[code_timing,pspsp_timing]]
+declare [[pspsp_timing]]
 
 trac\<open>
 Protocol: keyserver
@@ -90,11 +90,11 @@ compute_SMP [optimized] keyserver_protocol keyserver_SMP
 manual_protocol_security_proof ssp: keyserver
   for keyserver_protocol keyserver_fixpoint keyserver_SMP
   apply check_protocol_intro
-  subgoal by code_simp
-  subgoal by code_simp
-  subgoal by code_simp
-  subgoal by code_simp
-  subgoal by code_simp
+  subgoal by (timeit code_simp)
+  subgoal by (timeit code_simp)
+  subgoal by (timeit code_simp)
+  subgoal by (timeit code_simp)
+  subgoal by (timeit code_simp)
   done
 
 end
