@@ -20,7 +20,7 @@ let
     end
 in
   check "Source" "Axioms_Classical.thy" "72388b1ddd9b0570c9f0761063a13e5e777551e3";
-  check "Source" "Axioms_Quantum.thy" "cd5aec6183fac408d0c36e3eb7cb60c3f175db7b";
+  check "Source" "Axioms_Quantum.thy" "ce0ecbc629d65d2321d28d37fd7aa50413f340ba";
   check "Source" "Laws.thy" "1db2088f827e04309e9ba20810c3a274cebeabab";
   check "Source" "Laws_Complement.thy" "5ba70f38590214499d1dbf91e09c92b45d18365a";
   check "Generated" "Laws_Classical.thy" "3d37a81779a1277e9ca5bb387eab03c3d401e691";
