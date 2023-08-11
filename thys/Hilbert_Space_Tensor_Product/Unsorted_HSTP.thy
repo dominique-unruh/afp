@@ -9,6 +9,7 @@ begin
 unbundle cblinfun_notation Finite_Cartesian_Product.no_vec_syntax jnf_notation
 hide_const (open) Finite_Cartesian_Product.vec
 hide_const (open) Finite_Cartesian_Product.mat
+hide_const (open) Coset.kernel
 
 definition \<open>commutant F = {x. \<forall>y\<in>F. x o\<^sub>C\<^sub>L y = y o\<^sub>C\<^sub>L x}\<close>
 
@@ -2414,6 +2415,438 @@ proof transfer
   finally show \<open>trace_norm (a o\<^sub>C\<^sub>L b) \<le> trace_norm a * trace_norm b\<close>
     by -
 qed
+
+
+lemma trace_norm_sandwich: \<open>trace_norm (sandwich e t) \<le> (norm e)^2 * trace_norm t\<close> if \<open>trace_class t\<close>
+  apply (simp add: sandwich_apply)
+  by (smt (z3) Groups.mult_ac(2) more_arith_simps(11) mult_left_mono norm_adj norm_ge_zero power2_eq_square that trace_class_comp_right trace_norm_comp_left trace_norm_comp_right)
+
+lift_definition sandwich_tc :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) \<Rightarrow> ('a::chilbert_space,'a) trace_class \<Rightarrow>\<^sub>C\<^sub>L ('b::chilbert_space,'b) trace_class\<close> is
+  \<open>\<lambda>e t. sandwich e t\<close>
+proof (intro relcomppI conjI)
+  include lifting_syntax
+  fix e :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
+  have *: \<open>trace_class (sandwich e *\<^sub>V from_trace_class t)\<close> for t
+    using trace_class_from_trace_class trace_class_sandwich by blast
+  define S where \<open>S e t = Abs_trace_class (sandwich e (from_trace_class t))\<close> for e :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> and t :: \<open>('a,'a) trace_class\<close>
+  show 1: \<open>(cr_trace_class ===> cr_trace_class) ((*\<^sub>V) (sandwich e)) (S e)\<close>
+    by (auto intro!: rel_funI simp add: cr_trace_class_def S_def Abs_trace_class_inverse * )
+  show \<open>bounded_clinear (S e)\<close>
+    apply (rule bounded_clinearI[where K=\<open>(norm e)^2\<close>])
+    apply (simp_all add: S_def
+        plus_trace_class.rep_eq scaleC_trace_class.rep_eq 
+        cblinfun.add_right cblinfun.scaleC_right
+        plus_trace_class.abs_eq scaleC_trace_class.abs_eq norm_trace_class.abs_eq
+        eq_onp_def * )
+    using trace_norm_sandwich[where e=e, OF trace_class_from_trace_class]
+    by (simp add: norm_trace_class.rep_eq ordered_field_class.sign_simps(33))
+  show \<open>S e = S e\<close>
+    by simp
+  show \<open>(cr_trace_class ===> cr_trace_class)\<inverse>\<inverse> (S e) ((*\<^sub>V) (sandwich e))\<close>
+    by (intro conversepI 1)
+qed
+
+lemma from_trace_class_sandwich_tc:
+  \<open>from_trace_class (sandwich_tc e t) = sandwich e (from_trace_class t)\<close>
+  apply transfer
+  by (rule sandwich_apply)
+
+lemma sandwich_tc_apply:
+  \<open>sandwich_tc e t = Abs_trace_class (sandwich e (from_trace_class t))\<close>
+  using from_trace_class_sandwich_tc[of e t]
+  by (metis from_trace_class_inverse)
+
+lemma norm_sandwich_tc: \<open>norm (sandwich_tc e t) \<le> (norm e)^2 * norm t\<close>
+  by (simp add: norm_trace_class.rep_eq from_trace_class_sandwich_tc trace_norm_sandwich)
+
+lemma sandwich_tc_pos: \<open>sandwich_tc e t \<ge> 0\<close> if \<open>t \<ge> 0\<close>
+  using that apply (transfer fixing: e)
+  by (simp add: sandwich_pos)
+
+lift_definition trace_tc :: \<open>('a::chilbert_space, 'a) trace_class \<Rightarrow> complex\<close> is trace.
+
+lemma trace_tc_plus: \<open>trace_tc (a + b) = trace_tc a + trace_tc b\<close>
+  apply transfer by (simp add: trace_plus)
+
+lemma trace_tc_scaleC: \<open>trace_tc (c *\<^sub>C a) = c *\<^sub>C trace_tc a\<close>
+  apply transfer by (simp add: trace_scaleC)
+
+lemma trace_tc_norm: \<open>norm (trace_tc a) \<le> norm a\<close>
+  apply transfer by auto
+
+lemma bounded_clinear_trace_tc[bounded_clinear, simp]: \<open>bounded_clinear trace_tc\<close>
+  apply (rule bounded_clinearI[where K=1])
+  by (auto simp: trace_tc_scaleC trace_tc_plus intro!: trace_tc_norm)
+
+
+lemma trace_norm_pos: \<open>trace_norm A = trace A\<close> if \<open>A \<ge> 0\<close>
+  by (metis abs_op_id_on_pos that trace_abs_op)
+
+lemma norm_tc_pos: \<open>norm A = trace_tc A\<close> if \<open>A \<ge> 0\<close>
+   using that apply transfer by (simp add: trace_norm_pos)
+
+lemma from_trace_class_pos: \<open>from_trace_class A \<ge> 0 \<longleftrightarrow> A \<ge> 0\<close>
+  by (simp add: less_eq_trace_class.rep_eq)
+
+lemma infsum_tc_norm_bounded_abs_summable:
+  fixes A :: \<open>'a \<Rightarrow> ('b::chilbert_space, 'b::chilbert_space) trace_class\<close>
+  assumes pos: \<open>\<And>x. x \<in> M \<Longrightarrow> A x \<ge> 0\<close>
+  assumes bound_B: \<open>\<And>F. finite F \<Longrightarrow> F \<subseteq> M \<Longrightarrow> norm (\<Sum>x\<in>F. A x) \<le> B\<close>
+  shows \<open>A abs_summable_on M\<close>
+proof -
+  have \<open>(\<Sum>x\<in>F. norm (A x)) = norm (\<Sum>x\<in>F. A x)\<close> if \<open>F \<subseteq> M\<close> for F
+  proof -
+    have \<open>complex_of_real (\<Sum>x\<in>F. norm (A x)) = (\<Sum>x\<in>F. complex_of_real (trace_norm (from_trace_class (A x))))\<close>
+      by (simp add: norm_trace_class.rep_eq trace_norm_pos)
+    also have \<open>\<dots> = (\<Sum>x\<in>F. trace (from_trace_class (A x)))\<close>
+      using that pos by (auto intro!: sum.cong simp add: trace_norm_pos less_eq_trace_class.rep_eq)
+    also have \<open>\<dots> = trace (from_trace_class (\<Sum>x\<in>F. A x))\<close>
+      by (simp add: from_trace_class_sum trace_sum)
+    also have \<open>\<dots> = norm (\<Sum>x\<in>F. A x)\<close>
+      by (smt (verit, ccfv_threshold) calculation norm_of_real norm_trace_class.rep_eq sum_norm_le trace_leq_trace_norm)
+    finally show ?thesis
+      using of_real_hom.injectivity by blast
+  qed
+  with bound_B have bound_B': \<open>(\<Sum>x\<in>F. norm (A x)) \<le> B\<close> if \<open>finite F\<close> and \<open>F \<subseteq> M\<close> for F
+    by (metis that(1) that(2))
+  then show \<open>A abs_summable_on M\<close>
+    apply (rule_tac nonneg_bdd_above_summable_on)
+    by (auto intro!: bdd_aboveI)
+qed
+
+lemma abs_op_geq: \<open>abs_op a \<ge> a\<close> if [simp]: \<open>a* = a\<close>
+proof -
+  define A P where \<open>A = abs_op a\<close> and \<open>P = Proj (kernel (A + a))\<close>
+  have [simp]: \<open>A \<ge> 0\<close>
+    by (simp add: A_def)
+  then have [simp]: \<open>A* = A\<close>
+    using positive_hermitianI by fastforce
+  have aa_AA: \<open>a o\<^sub>C\<^sub>L a = A o\<^sub>C\<^sub>L A\<close>
+    by (metis A_def \<open>A* = A\<close> abs_op_square that)
+  have [simp]: \<open>P* = P\<close>
+    by (simp add: P_def adj_Proj)
+  have Aa_aA: \<open>A o\<^sub>C\<^sub>L a = a o\<^sub>C\<^sub>L A\<close>
+    by (metis (full_types) A_def lift_cblinfun_comp(2) abs_op_def positive_cblinfun_squareI sqrt_op_commute that)
+
+  have \<open>(A-a) \<psi> \<bullet>\<^sub>C (A+a) \<phi> = 0\<close> for \<phi> \<psi>
+    by (simp add: adj_minus that \<open>A* = A\<close> aa_AA Aa_aA cblinfun_compose_add_right cblinfun_compose_minus_left
+        flip: cinner_adj_right cblinfun_apply_cblinfun_compose)
+  then have \<open>(A-a) \<psi> \<in> space_as_set (kernel (A+a))\<close> for \<psi>
+    by (metis \<open>A* = A\<close> adj_plus call_zero_iff cinner_adj_left kernel_memberI that)
+  then have P_fix: \<open>P o\<^sub>C\<^sub>L (A-a) = (A-a)\<close>
+    by (simp add: P_def Proj_fixes_image cblinfun_eqI)
+  then have \<open>P o\<^sub>C\<^sub>L (A-a) o\<^sub>C\<^sub>L P = (A-a) o\<^sub>C\<^sub>L P\<close>
+    by simp
+  also have \<open>\<dots> = (P o\<^sub>C\<^sub>L (A-a))*\<close>
+    by (simp add: adj_minus \<open>A* = A\<close> that \<open>P* = P\<close>)
+  also have \<open>\<dots> = (A-a)*\<close>
+    by (simp add: P_fix)
+  also have \<open>\<dots> = A-a\<close>
+    by (simp add: \<open>A* = A\<close> that adj_minus)
+  finally have 1: \<open>P o\<^sub>C\<^sub>L (A - a) o\<^sub>C\<^sub>L P = A - a\<close>
+    by -
+  have 2: \<open>P o\<^sub>C\<^sub>L (A + a) o\<^sub>C\<^sub>L P = 0\<close>
+    by (simp add: P_def cblinfun_compose_assoc)
+  have \<open>A - a = P o\<^sub>C\<^sub>L (A - a) o\<^sub>C\<^sub>L P + P o\<^sub>C\<^sub>L (A + a) o\<^sub>C\<^sub>L P\<close>
+    by (simp add: 1 2)
+  also have \<open>\<dots> = sandwich P (2 *\<^sub>C A)\<close>
+    by (simp add: sandwich_apply cblinfun_compose_minus_left cblinfun_compose_minus_right
+        cblinfun_compose_add_left cblinfun_compose_add_right scaleC_2 \<open>P* = P\<close>) 
+  also have \<open>\<dots> \<ge> 0\<close>
+    by (auto intro!: sandwich_pos scaleC_nonneg_nonneg simp: less_eq_complex_def)
+  finally show \<open>A \<ge> a\<close>
+    by auto
+qed
+
+lemma abs_op_geq_neq: \<open>abs_op a \<ge> - a\<close> if \<open>a* = a\<close>
+  by (metis abs_op_geq abs_op_uminus adj_uminus that)
+
+lemma trace_norm_uminus[simp]: \<open>trace_norm (-a) = trace_norm a\<close>
+  by (metis abs_op_uminus of_real_eq_iff trace_abs_op)
+
+(* TODO: remove [simp] from trace_class_uminus *)
+lemma trace_class_uminus_iff[simp]: \<open>trace_class (-a) =  trace_class a\<close>
+  by (auto simp add: trace_class_def)
+lemma trace_norm_triangle_minus: 
+  fixes a b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  assumes [simp]: \<open>trace_class a\<close> \<open>trace_class b\<close>
+  shows \<open>trace_norm (a - b) \<le> trace_norm a + trace_norm b\<close>
+  using trace_norm_triangle[of a \<open>-b\<close>]
+  by auto
+
+lemma trace_norm_abs_op[simp]: \<open>trace_norm (abs_op t) = trace_norm t\<close>
+  by (simp add: trace_norm_def)
+
+lemma
+  fixes t :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a::chilbert_space\<close>
+  shows cblinfun_decomp_4pos: \<open>
+             \<exists>t1 t2 t3 t4.
+              t = t1 - t2 + \<i> *\<^sub>C t3 - \<i> *\<^sub>C t4
+               \<and> t1 \<ge> 0 \<and> t2 \<ge> 0 \<and> t3 \<ge> 0 \<and> t4 \<ge> 0\<close>  (is ?thesis1)
+  and trace_class_decomp_4pos: \<open>trace_class t \<Longrightarrow>
+             \<exists>t1 t2 t3 t4.
+              t = t1 - t2 + \<i> *\<^sub>C t3 - \<i> *\<^sub>C t4
+               \<and> trace_class t1 \<and> trace_class t2 \<and> trace_class t3 \<and> trace_class t4
+               \<and> trace_norm t1 \<le> trace_norm t \<and> trace_norm t2 \<le> trace_norm t \<and> trace_norm t3 \<le> trace_norm t \<and> trace_norm t4 \<le> trace_norm t 
+               \<and> t1 \<ge> 0 \<and> t2 \<ge> 0 \<and> t3 \<ge> 0 \<and> t4 \<ge> 0\<close> (is \<open>_ \<Longrightarrow> ?thesis2\<close>)
+proof -
+  define th ta where \<open>th = (1/2) *\<^sub>C (t + t*)\<close> and \<open>ta = (-\<i>/2) *\<^sub>C (t - t*)\<close>
+  have th_herm: \<open>th* = th\<close>
+    by (simp add: adj_plus th_def)
+  have \<open>ta* = ta\<close>
+    by (simp add: adj_minus ta_def scaleC_diff_right adj_uminus)
+  have \<open>t = th + \<i> *\<^sub>C ta\<close>
+    by (smt (verit, ccfv_SIG) add.commute add.inverse_inverse complex_i_mult_minus complex_vector.vector_space_assms(1) complex_vector.vector_space_assms(3) diff_add_cancel group_cancel.add2 i_squared scaleC_half_double ta_def th_def times_divide_eq_right)
+  define t1 t2 where \<open>t1 = (abs_op th + th) /\<^sub>R 2\<close> and \<open>t2 = (abs_op th - th) /\<^sub>R 2\<close>
+  have \<open>t1 \<ge> 0\<close>
+    using abs_op_geq_neq[OF \<open>th* = th\<close>] ordered_field_class.sign_simps(15)
+    by (fastforce simp add: t1_def intro!: scaleR_nonneg_nonneg)
+  have \<open>t2 \<ge> 0\<close>
+    using abs_op_geq[OF \<open>th* = th\<close>] ordered_field_class.sign_simps(15)
+    by (fastforce simp add: t2_def intro!: scaleR_nonneg_nonneg)
+  have \<open>th = t1 - t2\<close>
+    apply (simp add: t1_def t2_def)
+    by (metis (no_types, opaque_lifting) Extra_Ordered_Fields.sign_simps(8) diff_add_cancel ordered_field_class.sign_simps(2) ordered_field_class.sign_simps(27) scaleR_half_double)
+  define t3 t4 where \<open>t3 = (abs_op ta + ta) /\<^sub>R 2\<close> and \<open>t4 = (abs_op ta - ta) /\<^sub>R 2\<close>
+  have \<open>t3 \<ge> 0\<close>
+    using abs_op_geq_neq[OF \<open>ta* = ta\<close>] ordered_field_class.sign_simps(15)
+    by (fastforce simp add: t3_def intro!: scaleR_nonneg_nonneg)
+  have \<open>t4 \<ge> 0\<close>
+    using abs_op_geq[OF \<open>ta* = ta\<close>] ordered_field_class.sign_simps(15)
+    by (fastforce simp add: t4_def intro!: scaleR_nonneg_nonneg)
+  have \<open>ta = t3 - t4\<close>
+    apply (simp add: t3_def t4_def)
+    by (metis (no_types, opaque_lifting) Extra_Ordered_Fields.sign_simps(8) diff_add_cancel ordered_field_class.sign_simps(2) ordered_field_class.sign_simps(27) scaleR_half_double)
+  have decomp: \<open>t = t1 - t2 + \<i> *\<^sub>C t3 - \<i> *\<^sub>C t4\<close>
+    by (simp add: \<open>t = th + \<i> *\<^sub>C ta\<close> \<open>th = t1 - t2\<close> \<open>ta = t3 - t4\<close> scaleC_diff_right)
+  from decomp \<open>t1 \<ge> 0\<close> \<open>t2 \<ge> 0\<close> \<open>t3 \<ge> 0\<close> \<open>t4 \<ge> 0\<close>
+  show ?thesis1
+    by auto
+  show ?thesis2 if \<open>trace_class t\<close>
+  proof -
+    have \<open>trace_class th\<close> \<open>trace_class ta\<close>
+      by (auto simp add: th_def ta_def
+          intro!: \<open>trace_class t\<close> trace_class_scaleC trace_class_plus trace_class_minus trace_class_uminus trace_class_adj)
+    then have tc: \<open>trace_class t1\<close> \<open>trace_class t2\<close> \<open>trace_class t3\<close> \<open>trace_class t4\<close>
+      by (auto simp add: t1_def t2_def t3_def t4_def scaleR_scaleC intro!: trace_class_scaleC)
+    have tn_th: \<open>trace_norm th \<le> trace_norm t\<close>
+      using trace_norm_triangle[of t \<open>t*\<close>] 
+      by (auto simp add: that th_def trace_norm_scaleC)
+    have tn_ta: \<open>trace_norm ta \<le> trace_norm t\<close>
+      using trace_norm_triangle_minus[of t \<open>t*\<close>] 
+      by (auto simp add: that ta_def trace_norm_scaleC)
+    have tn1: \<open>trace_norm t1 \<le> trace_norm t\<close>
+      using trace_norm_triangle[of \<open>abs_op th\<close> th] tn_th
+      by (auto simp add: \<open>trace_class th\<close> t1_def trace_norm_scaleC scaleR_scaleC)
+    have tn2: \<open>trace_norm t2 \<le> trace_norm t\<close>
+      using trace_norm_triangle_minus[of \<open>abs_op th\<close> th] tn_th
+      by (auto simp add: \<open>trace_class th\<close> t2_def trace_norm_scaleC scaleR_scaleC)
+    have tn3: \<open>trace_norm t3 \<le> trace_norm t\<close>
+      using trace_norm_triangle[of \<open>abs_op ta\<close> ta] tn_ta
+      by (auto simp add: \<open>trace_class ta\<close> t3_def trace_norm_scaleC scaleR_scaleC)
+    have tn4: \<open>trace_norm t4 \<le> trace_norm t\<close>
+      using trace_norm_triangle_minus[of \<open>abs_op ta\<close> ta] tn_ta
+      by (auto simp add: \<open>trace_class ta\<close> t4_def trace_norm_scaleC scaleR_scaleC)
+    from decomp tc \<open>t1 \<ge> 0\<close> \<open>t2 \<ge> 0\<close> \<open>t3 \<ge> 0\<close> \<open>t4 \<ge> 0\<close> tn1 tn2 tn3 tn4
+    show ?thesis2
+      by auto
+  qed
+qed
+
+lemma trace_class_decomp_4pos':
+  fixes t :: \<open>('a::chilbert_space,'a) trace_class\<close>
+  shows \<open>\<exists>t1 t2 t3 t4.
+              t = t1 - t2 + \<i> *\<^sub>C t3 - \<i> *\<^sub>C t4
+               \<and> norm t1 \<le> norm t \<and> norm t2 \<le> norm t \<and> norm t3 \<le> norm t \<and> norm t4 \<le> norm t 
+               \<and> t1 \<ge> 0 \<and> t2 \<ge> 0 \<and> t3 \<ge> 0 \<and> t4 \<ge> 0\<close>
+proof -
+  from trace_class_decomp_4pos[of \<open>from_trace_class t\<close>, OF trace_class_from_trace_class]
+  obtain t1' t2' t3' t4'
+    where *: \<open>from_trace_class t = t1' - t2' + \<i> *\<^sub>C t3' - \<i> *\<^sub>C t4'
+               \<and> trace_class t1' \<and> trace_class t2' \<and> trace_class t3' \<and> trace_class t4'
+               \<and> trace_norm t1' \<le> trace_norm (from_trace_class t) \<and> trace_norm t2' \<le> trace_norm (from_trace_class t) \<and> trace_norm t3' \<le> trace_norm (from_trace_class t) \<and> trace_norm t4' \<le> trace_norm (from_trace_class t) 
+               \<and> t1' \<ge> 0 \<and> t2' \<ge> 0 \<and> t3' \<ge> 0 \<and> t4' \<ge> 0\<close>
+    by auto
+  then obtain t1 t2 t3 t4 where
+    t1234: \<open>t1' = from_trace_class t1\<close> \<open>t2' = from_trace_class t2\<close> \<open>t3' = from_trace_class t3\<close> \<open>t4' = from_trace_class t4\<close>
+    by (metis from_trace_class_cases mem_Collect_eq)
+  with * have n1234: \<open>norm t1 \<le> norm t\<close> \<open>norm t2 \<le> norm t\<close> \<open>norm t3 \<le> norm t\<close> \<open>norm t4 \<le> norm t\<close>
+    by (metis norm_trace_class.rep_eq)+
+  have t_decomp: \<open>t = t1 - t2 + \<i> *\<^sub>C t3 - \<i> *\<^sub>C t4\<close>
+    using * unfolding t1234 
+    by (auto simp: from_trace_class_inject
+        simp flip: scaleC_trace_class.rep_eq plus_trace_class.rep_eq minus_trace_class.rep_eq)
+  have pos1234: \<open>t1 \<ge> 0\<close> \<open>t2 \<ge> 0\<close> \<open>t3 \<ge> 0\<close> \<open>t4 \<ge> 0\<close>
+    using * unfolding t1234 
+    by (auto simp: less_eq_trace_class_def)
+  from t_decomp pos1234 n1234
+  show ?thesis
+    by blast
+qed
+
+thm bounded_clinear_trace_duality
+lemma bounded_clinear_trace_duality': \<open>trace_class t \<Longrightarrow> bounded_clinear (\<lambda>a. trace (a o\<^sub>C\<^sub>L t))\<close> for t :: \<open>_::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L _::chilbert_space\<close>
+  apply (rule bounded_clinearI[where K=\<open>trace_norm t\<close>])
+    apply (auto simp add: cblinfun_compose_add_left trace_class_comp_right trace_plus trace_scaleC)[2]
+  by (metis circularity_of_trace order_trans trace_leq_trace_norm trace_norm_comp_right)
+
+lemma infsum_nonneg_cblinfun:
+  fixes f :: "'a \<Rightarrow> 'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b"
+  assumes "\<And>x. x \<in> M \<Longrightarrow> 0 \<le> f x"
+  shows "infsum f M \<ge> 0"
+  apply (cases \<open>f summable_on M\<close>)
+   apply (subst infsum_0_simp[symmetric])
+   apply (rule infsum_mono_cblinfun)
+  using assms by (auto simp: infsum_not_exists)
+
+lemma infsum_nonneg_traceclass:
+  fixes f :: "'a \<Rightarrow> ('b::chilbert_space, 'b) trace_class"
+  assumes "\<And>x. x \<in> M \<Longrightarrow> 0 \<le> f x"
+  shows "infsum f M \<ge> 0"
+  apply (cases \<open>f summable_on M\<close>)
+   apply (subst infsum_0_simp[symmetric])
+   apply (rule infsum_mono_neutral_traceclass)
+  using assms by (auto simp: infsum_not_exists)
+
+(* TODO: also flip sandwich_compose *)
+lemma sandwich_tc_compose: \<open>sandwich_tc (A o\<^sub>C\<^sub>L B) = sandwich_tc A o\<^sub>C\<^sub>L sandwich_tc B\<close>
+  apply (rule cblinfun_eqI)
+  apply (rule from_trace_class_inject[THEN iffD1])
+  apply (transfer fixing: A B)
+  by (simp flip: sandwich_compose)
+
+lemma sandwich_tc_0_left[simp]: \<open>sandwich_tc 0 = 0\<close>
+  by (metis (no_types, opaque_lifting) cblinfun.zero_left cblinfun_eqI linorder_not_le norm_sandwich_tc norm_scaleC norm_zero power2_eq_square scaleC_left.zero zero_less_norm_iff)
+
+
+lemma scaleC_scaleR_commute: \<open>a *\<^sub>C b *\<^sub>R x = b *\<^sub>R a *\<^sub>C x\<close> for x :: \<open>_::complex_normed_vector\<close>
+  by (simp add: scaleR_scaleC scaleC_left_commute)
+
+
+lemma sandwich_scaleC_left: \<open>sandwich (c *\<^sub>C e) = (cmod c)^2 *\<^sub>C sandwich e\<close>
+  by (auto intro!: cblinfun_eqI simp: sandwich_apply cnj_x_x abs_complex_def)
+
+lemma sandwich_scaleR_left: \<open>sandwich (r *\<^sub>R e) = r^2 *\<^sub>R sandwich e\<close>
+  by (simp add: scaleR_scaleC sandwich_scaleC_left flip: of_real_power)
+
+lemma sandwich_tc_scaleC_left: \<open>sandwich_tc (c *\<^sub>C e) = (cmod c)^2 *\<^sub>C sandwich_tc e\<close>
+  apply (rule cblinfun_eqI)
+  apply (rule from_trace_class_inject[THEN iffD1])
+  by (simp add: from_trace_class_sandwich_tc scaleC_trace_class.rep_eq
+      sandwich_scaleC_left)
+
+lemma sandwich_tc_scaleR_left: \<open>sandwich_tc (r *\<^sub>R e) = r^2 *\<^sub>R sandwich_tc e\<close>
+  by (simp add: scaleR_scaleC sandwich_tc_scaleC_left flip: of_real_power)
+
+(* TODO move *)
+lift_definition tc_tensor :: \<open>('a ell2, 'b ell2) trace_class \<Rightarrow> ('c ell2, 'd ell2) trace_class \<Rightarrow> 
+      (('a \<times> 'c) ell2, ('b \<times> 'd) ell2) trace_class\<close> is
+  tensor_op
+  by (auto intro!: trace_class_tensor)
+
+
+lemma infsum_product:
+  fixes f :: \<open>'a \<Rightarrow> 'c :: {topological_semigroup_mult,division_ring,banach}\<close>
+  assumes \<open>(\<lambda>(x, y). f x * g y) summable_on X \<times> Y\<close>
+  shows \<open>(\<Sum>\<^sub>\<infinity>x\<in>X. f x) * (\<Sum>\<^sub>\<infinity>y\<in>Y. g y) = (\<Sum>\<^sub>\<infinity>(x,y)\<in>X\<times>Y. f x * g y)\<close>
+  using assms
+  by (simp add: infsum_cmult_right' infsum_cmult_left' flip: infsum_Sigma'_banach)
+
+lemma infsum_product':
+  fixes f :: \<open>'a \<Rightarrow> 'c :: {banach,times,real_normed_algebra}\<close> and g :: \<open>'b \<Rightarrow> 'c\<close>
+  assumes \<open>f abs_summable_on X\<close>
+  assumes \<open>g abs_summable_on Y\<close>
+  shows \<open>(\<Sum>\<^sub>\<infinity>x\<in>X. f x) * (\<Sum>\<^sub>\<infinity>y\<in>Y. g y) = (\<Sum>\<^sub>\<infinity>(x,y)\<in>X\<times>Y. f x * g y)\<close>
+  using assms
+  by (simp add: abs_summable_times infsum_cmult_right infsum_cmult_left abs_summable_summable flip: infsum_Sigma'_banach)
+
+(* TODO move *)
+lemma trace_norm_tensor: \<open>trace_norm (a \<otimes>\<^sub>o b) = trace_norm a * trace_norm b\<close>
+  apply (rule of_real_hom.injectivity[where 'a=complex])
+  by (simp add: abs_op_tensor trace_tensor flip: trace_abs_op)
+
+
+(* TODO move *)
+lemma bounded_cbilinear_tc_tensor: \<open>bounded_cbilinear tc_tensor\<close>
+  unfolding bounded_cbilinear_def
+  apply transfer
+  by (auto intro!: exI[of _ 1]
+      simp: trace_norm_tensor tensor_op_left_add tensor_op_right_add tensor_op_scaleC_left tensor_op_scaleC_right)
+lemmas bounded_clinear_tc_tensor_left[bounded_clinear] = bounded_cbilinear.bounded_clinear_left[OF bounded_cbilinear_tc_tensor]
+lemmas bounded_clinear_tc_tensor_right[bounded_clinear] = bounded_cbilinear.bounded_clinear_right[OF bounded_cbilinear_tc_tensor]
+
+
+(* TODO move *)
+lemma bounded_cbilinear_tc_compose: \<open>bounded_cbilinear tc_compose\<close>
+  unfolding bounded_cbilinear_def
+  apply transfer
+  apply (auto intro!: exI[of _ 1] simp: cblinfun_compose_add_left cblinfun_compose_add_right)
+  by (meson Unsorted_HSTP.norm_leq_trace_norm dual_order.trans mult_right_mono trace_norm_comp_right trace_norm_nneg)
+lemmas bounded_clinear_tc_compose_left[bounded_clinear] = bounded_cbilinear.bounded_clinear_left[OF bounded_cbilinear_tc_compose]
+lemmas bounded_clinear_tc_compose_right[bounded_clinear] = bounded_cbilinear.bounded_clinear_right[OF bounded_cbilinear_tc_compose]
+
+(* TODO move *)
+lemma tc_tensor_scaleC_left: \<open>tc_tensor (c *\<^sub>C a) b = c *\<^sub>C tc_tensor a b\<close>
+  apply transfer'
+  by (simp add: tensor_op_scaleC_left)
+lemma tc_tensor_scaleC_right: \<open>tc_tensor a (c *\<^sub>C b) = c *\<^sub>C tc_tensor a b\<close>
+  apply transfer'
+  by (simp add: tensor_op_scaleC_right)
+  
+(* TODO move *)
+lemma comp_tc_tensor: \<open>tc_compose (tc_tensor a b) (tc_tensor c d) = tc_tensor (tc_compose a c) (tc_compose b d)\<close>
+  apply transfer'
+  by (rule comp_tensor_op)
+
+(* TODO move *)
+lift_definition tc_butterfly :: \<open>'a::chilbert_space \<Rightarrow> 'b::chilbert_space \<Rightarrow> ('b,'a) trace_class\<close>
+  is butterfly
+  by simp
+
+(* TODO move *)
+lemma norm_tc_butterfly: \<open>norm (tc_butterfly \<psi> \<phi>) = norm \<psi> * norm \<phi>\<close>
+  apply (transfer fixing: \<psi> \<phi>)
+  by (simp add: trace_norm_butterfly)
+
+(* TODO move *)
+lemma norm_tc_tensor: \<open>norm (tc_tensor a b) = norm a * norm b\<close>
+  apply transfer'
+  apply (rule of_real_hom.injectivity[where 'a=complex])
+  by (simp add: abs_op_tensor trace_tensor flip: trace_abs_op)
+
+
+lemma comp_tc_butterfly[simp]: \<open>tc_compose (tc_butterfly a b) (tc_butterfly c d) = (b \<bullet>\<^sub>C c) *\<^sub>C tc_butterfly a d\<close>
+  apply transfer'
+  by simp
+
+
+lemma infsum_single: 
+  assumes "\<And>j. j \<noteq> i \<Longrightarrow> j\<in>A \<Longrightarrow> f j = 0"
+  shows "infsum f A = (if i\<in>A then f i else 0)"
+  apply (subst infsum_cong_neutral[where T=\<open>A \<inter> {i}\<close> and g=f])
+  using assms by auto
+
+
+
+(* TODO move *)
+lemma summable_on_diff:
+  fixes f g :: "'a \<Rightarrow> 'b::real_normed_vector"  (* Can probably be shown for a much wider type class. *)
+  assumes \<open>f summable_on A\<close>
+  assumes \<open>g summable_on A\<close>
+  shows \<open>(\<lambda>x. f x - g x) summable_on A\<close>
+  using summable_on_add[where f=f and g=\<open>\<lambda>x. - g x\<close>] summable_on_uminus[where f=g]
+  using assms by auto
+
+lemma tc_tensor_pos: \<open>tc_tensor a b \<ge> 0\<close> if \<open>a \<ge> 0\<close> and \<open>b \<ge> 0\<close>
+  for a :: \<open>('a ell2,'a ell2) trace_class\<close> and b :: \<open>('b ell2,'b ell2) trace_class\<close>
+  using that apply transfer'
+  by (rule tensor_op_pos)
+
+(* TODO move *)
+lemma tc_butterfly_pos[simp]: \<open>0 \<le> tc_butterfly \<psi> \<psi>\<close>
+  apply transfer
+  by simp
+
 
 
 
