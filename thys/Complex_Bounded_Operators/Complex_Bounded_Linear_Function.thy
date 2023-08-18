@@ -1687,32 +1687,22 @@ qed
 lemma ccsubspace_Times_top_top[simp]: \<open>ccsubspace_Times top top = top\<close>
   by transfer simp
 
+lemma is_ortho_set_prod:
+  assumes \<open>is_ortho_set B\<close> \<open>is_ortho_set B'\<close>
+  shows \<open>is_ortho_set ((B \<times> {0}) \<union> ({0} \<times> B'))\<close>
+  using assms unfolding is_ortho_set_def
+  apply (auto simp: is_onb_def is_ortho_set_def zero_prod_def)
+  by (meson is_onb_def is_ortho_set_def)+
+
+lemma ccsubspace_Times_ccspan:
+  assumes \<open>ccspan B = S\<close> and \<open>ccspan B' = S'\<close>
+  shows \<open>ccspan ((B \<times> {0}) \<union> ({0} \<times> B')) = ccsubspace_Times S S'\<close>
+  by (smt (z3) Diff_eq_empty_iff Sigma_cong assms(1) assms(2) ccspan.rep_eq ccspan_0 ccspan_Times_sing1 ccspan_Times_sing2 ccspan_of_empty ccspan_remove_0 ccspan_superset ccspan_union ccsubspace_Times_sup complex_vector.span_insert_0 space_as_set_bot sup_bot_left sup_bot_right)
+
 lemma is_onb_prod:
   assumes \<open>is_onb B\<close> \<open>is_onb B'\<close>
   shows \<open>is_onb ((B \<times> {0}) \<union> ({0} \<times> B'))\<close>
-proof -
-  from assms
-  have 1: \<open>is_ortho_set ((B \<times> {0}) \<union> ({0} \<times> B'))\<close>
-    unfolding is_ortho_set_def
-    apply (auto simp: is_onb_def is_ortho_set_def zero_prod_def)
-    by (meson is_onb_def is_ortho_set_def)+
-
-  have 2: \<open>(l, r) \<in> B \<times> {0} \<Longrightarrow> norm (l, r) = 1\<close> for l :: 'a and r :: 'b
-    using \<open>is_onb B\<close> is_onb_def by auto
-
-  have 3: \<open>(l, r) \<in> {0} \<times> B' \<Longrightarrow> norm (l, r) = 1\<close> for l :: 'a and r :: 'b
-    using \<open>is_onb B'\<close> is_onb_def by auto
-
-  have [simp]: \<open>ccspan B = top\<close> \<open>ccspan B' = top\<close>
-    using assms is_onb_def by auto
-
-  have 4: \<open>ccspan ((B \<times> {0}) \<union> ({0} \<times> B')) = top\<close>
-    by (auto simp: ccspan_Times_sing1 ccspan_Times_sing2 ccsubspace_Times_sup simp flip: ccspan_union)
-
-  from 1 2 3 4
-  show \<open>is_onb ((B \<times> {0}) \<union> ({0} \<times> B'))\<close>
-    by (auto simp add: is_onb_def)
-qed
+  using assms by (auto intro!: is_ortho_set_prod simp add: is_onb_def ccsubspace_Times_ccspan)
 
 subsection \<open>Images\<close>
 
@@ -2745,9 +2735,9 @@ lemma Proj_on_image [simp]: \<open>Proj S *\<^sub>S S = S\<close>
 
 subsection \<open>Kernel / eigenspaces\<close>
 
-lift_definition kernel :: "'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L'b::complex_normed_vector
+lift_definition kernel :: "'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector
    \<Rightarrow> 'a ccsubspace"
-  is "\<lambda> f. f -` {0}"
+  is "\<lambda>f. f -` {0}"
   by (metis kernel_is_closed_csubspace)
 
 definition eigenspace :: "complex \<Rightarrow> 'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L'a \<Rightarrow> 'a ccsubspace" where
@@ -3140,12 +3130,13 @@ definition iso_cblinfun :: \<open>('a::complex_normed_vector, 'b::complex_normed
 definition \<open>invertible_cblinfun A \<longleftrightarrow> (\<exists>B. B o\<^sub>C\<^sub>L A = id_cblinfun)\<close>
 
 definition cblinfun_inv :: \<open>('a::complex_normed_vector, 'b::complex_normed_vector) cblinfun \<Rightarrow> ('b,'a) cblinfun\<close> where
-  \<open>cblinfun_inv A = (SOME B. B o\<^sub>C\<^sub>L A = id_cblinfun)\<close>
+  \<open>cblinfun_inv A = (if invertible_cblinfun A then SOME B. B o\<^sub>C\<^sub>L A = id_cblinfun else 0)\<close>
 
 lemma cblinfun_inv_left:
   assumes \<open>invertible_cblinfun A\<close>
   shows \<open>cblinfun_inv A o\<^sub>C\<^sub>L A = id_cblinfun\<close>
-  unfolding cblinfun_inv_def apply (rule someI_ex)
+  apply (simp add: assms cblinfun_inv_def)
+  apply (rule someI_ex)
   using assms by (simp add: invertible_cblinfun_def)
 
 lemma inv_cblinfun_invertible:  \<open>iso_cblinfun A \<Longrightarrow> invertible_cblinfun A\<close>
@@ -3159,7 +3150,7 @@ proof -
   obtain B where AB: \<open>A o\<^sub>C\<^sub>L B = id_cblinfun\<close> and BA: \<open>B o\<^sub>C\<^sub>L A = id_cblinfun\<close>
     using iso_cblinfun_def by blast
   from BA have \<open>cblinfun_inv A o\<^sub>C\<^sub>L A = id_cblinfun\<close>
-    by (metis (mono_tags, lifting) cblinfun_inv_def someI_ex)
+    by (simp add: assms cblinfun_inv_left inv_cblinfun_invertible)
   with AB BA have \<open>cblinfun_inv A = B\<close>
     by (metis cblinfun_assoc_left(1) cblinfun_compose_id_right)
   with AB show \<open>A o\<^sub>C\<^sub>L cblinfun_inv A = id_cblinfun\<close>
@@ -3397,7 +3388,7 @@ lemma heterogenous_same_type_cblinfun[simp]: \<open>heterogenous_same_type_cblin
   unfolding heterogenous_same_type_cblinfun_def by auto
 
 instantiation cblinfun :: (chilbert_space, chilbert_space) ord begin
-definition less_eq_cblinfun_def_heterogenous: \<open>A \<le> B =
+definition less_eq_cblinfun_def_heterogenous: \<open>A \<le> B \<longleftrightarrow>
   (if heterogenous_same_type_cblinfun TYPE('a) TYPE('b) then
     \<forall>\<psi>::'b. cinner \<psi> ((B-A) *\<^sub>V heterogenous_cblinfun_id *\<^sub>V \<psi>) \<ge> 0 else (A=B))\<close>
 definition \<open>(A :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'b) < B \<longleftrightarrow> A \<le> B \<and> \<not> B \<le> A\<close>
