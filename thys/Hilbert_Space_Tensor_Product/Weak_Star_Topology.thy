@@ -443,7 +443,7 @@ proof intro_classes
   show \<open>(uminus \<longlongrightarrow> - a) (nhds a)\<close> for a :: \<open>('a,'b) cblinfun_weak_star\<close>
     apply (subst tendsto_at_iff_tendsto_nhds[symmetric])
     apply (subst isCont_def[symmetric])
-    apply (rule continuous_on_interior[where s=UNIV])
+    apply (rule continuous_on_interior[where S=UNIV])
      apply (subst continuous_map_iff_continuous2[symmetric])
      apply transfer
     using * by auto

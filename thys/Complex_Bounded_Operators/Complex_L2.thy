@@ -947,6 +947,7 @@ lemma cinner_ket: \<open>(ket i \<bullet>\<^sub>C ket j) = of_bool (i=j)\<close>
 lemma ket_injective[simp]: \<open>ket i = ket j \<longleftrightarrow> i = j\<close>
   by (metis cinner_ket one_neq_zero of_bool_def)
 
+(* TODO: make into \<open>inj_on M ket\<close> *)
 lemma inj_ket[simp]: \<open>inj ket\<close>
   by (simp add: inj_on_def)
 

@@ -227,7 +227,7 @@ proof intro_classes
   show \<open>(uminus \<longlongrightarrow> - a) (nhds a)\<close> for a :: \<open>('a,'b) cblinfun_sot\<close>
     apply (subst tendsto_at_iff_tendsto_nhds[symmetric])
     apply (subst isCont_def[symmetric])
-    apply (rule continuous_on_interior[where s=UNIV])
+    apply (rule continuous_on_interior[where S=UNIV])
      apply (subst continuous_map_iff_continuous2[symmetric])
      apply transfer
     using * by auto
@@ -538,13 +538,13 @@ lift_definition cblinfun_compose_sot :: \<open>('a::complex_normed_vector,'b::co
   is cblinfun_compose .
 
 lemma isCont_cblinfun_compose_sot_right[simp]: \<open>isCont (\<lambda>F. cblinfun_compose_sot F G) x\<close>
-  apply (rule continuous_on_interior[where s=UNIV, rotated], simp)
+  apply (rule continuous_on_interior[where S=UNIV, rotated], simp)
   apply (rule continuous_map_iff_continuous2[THEN iffD1])
   apply transfer
   by (simp add: continuous_map_right_comp_sot)
 
 lemma isCont_cblinfun_compose_sot_left[simp]: \<open>isCont (\<lambda>F. cblinfun_compose_sot G F) x\<close>
-  apply (rule continuous_on_interior[where s=UNIV, rotated], simp)
+  apply (rule continuous_on_interior[where S=UNIV, rotated], simp)
   apply (rule continuous_map_iff_continuous2[THEN iffD1])
   apply transfer
   by (simp add: continuous_map_left_comp_sot)
