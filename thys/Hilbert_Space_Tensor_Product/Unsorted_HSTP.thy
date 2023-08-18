@@ -86,8 +86,8 @@ proof (rule Set.set_eqI)
   let ?comm = \<open>\<lambda>a b. a o\<^sub>C\<^sub>L b = b o\<^sub>C\<^sub>L a\<close>
   have \<open>x \<in> sandwich U ` commutant X \<longleftrightarrow> sandwich (U*) x \<in> commutant X\<close>
     apply (subst inj_image_mem_iff[symmetric, where f=\<open>sandwich (U*)\<close>])
-    by (auto intro!: inj_sandwich_isometry simp: image_image sandwich_compose
-        simp flip: cblinfun_apply_cblinfun_compose)
+    by (auto intro!: inj_sandwich_isometry simp: image_image
+        simp flip: cblinfun_apply_cblinfun_compose sandwich_compose)
   also have \<open>\<dots> \<longleftrightarrow> (\<forall>y\<in>X. ?comm (sandwich (U*) x) y)\<close>
     by (simp add: commutant_def)
   also have \<open>\<dots> \<longleftrightarrow> (\<forall>y\<in>X. ?comm x (sandwich U y))\<close>
@@ -2708,7 +2708,6 @@ lemma infsum_nonneg_traceclass:
    apply (rule infsum_mono_neutral_traceclass)
   using assms by (auto simp: infsum_not_exists)
 
-(* TODO: also flip sandwich_compose *)
 lemma sandwich_tc_compose: \<open>sandwich_tc (A o\<^sub>C\<^sub>L B) = sandwich_tc A o\<^sub>C\<^sub>L sandwich_tc B\<close>
   apply (rule cblinfun_eqI)
   apply (rule from_trace_class_inject[THEN iffD1])

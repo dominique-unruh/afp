@@ -354,11 +354,11 @@ proof -
 qed
 
 lemma summable_on_tensor_ell2_right: \<open>\<phi> summable_on A \<Longrightarrow> (\<lambda>x. \<psi> \<otimes>\<^sub>s \<phi> x) summable_on A\<close>
-  apply (rule summable_on_bounded_linear[unfolded o_def, where f=\<open>\<lambda>x. \<psi> \<otimes>\<^sub>s x\<close>])
+  apply (rule summable_on_bounded_linear[where h=\<open>\<lambda>x. \<psi> \<otimes>\<^sub>s x\<close>])
   by (intro bounded_linear_intros)
 
 lemma summable_on_tensor_ell2_left: \<open>\<phi> summable_on A \<Longrightarrow> (\<lambda>x. \<phi> x \<otimes>\<^sub>s \<psi>) summable_on A\<close>
-  apply (rule summable_on_bounded_linear[unfolded o_def, where f=\<open>\<lambda>x. x \<otimes>\<^sub>s \<psi>\<close>])
+  apply (rule summable_on_bounded_linear[where h=\<open>\<lambda>x. x \<otimes>\<^sub>s \<psi>\<close>])
   by (intro bounded_linear_intros)
 
 lift_definition tensor_ell2_left :: \<open>'a ell2 \<Rightarrow> ('b ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>'b) ell2)\<close> is

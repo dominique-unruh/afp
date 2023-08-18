@@ -1022,7 +1022,6 @@ proof -
     by auto
 qed
 
-(* TODO: also support in code-gen *)
 lemma cblinfun_of_mat_mat:
   shows \<open>cblinfun_of_mat (mat (CARD('b)) (CARD('a)) f) = explicit_cblinfun (\<lambda>(r::'b::enum) (c::'a::enum). f (enum_idx r, enum_idx c))\<close>
   apply (intro equal_ket basis_enum_eq_vec_of_basis_enumI)
@@ -1030,7 +1029,6 @@ lemma cblinfun_of_mat_mat:
       mat_of_cblinfun_ell2_component canonical_basis_length cblinfun_of_mat_inverse index_row
       mat_of_cblinfun_cblinfun_apply)
 
-(* TODO: also support in code-gen *)
 lemma mat_of_cblinfun_explicit_cblinfun:
   fixes f :: \<open>'a::enum \<Rightarrow> 'b::enum \<Rightarrow> complex\<close>
   shows \<open>mat_of_cblinfun (explicit_cblinfun f) = mat (CARD('a)) (CARD('b)) (\<lambda>(r,c). f (Enum.enum!r) (Enum.enum!c))\<close>

@@ -2212,12 +2212,12 @@ lemma sandwich_id[simp]: "sandwich id_cblinfun = id_cblinfun"
   apply (rule cblinfun_eqI)
   by (auto simp: sandwich_apply)
 
-lemma sandwich_compose: \<open>sandwich A o\<^sub>C\<^sub>L sandwich B = sandwich (A o\<^sub>C\<^sub>L B)\<close>
+lemma sandwich_compose: \<open>sandwich (A o\<^sub>C\<^sub>L B) = sandwich A o\<^sub>C\<^sub>L sandwich B\<close>
   by (auto intro!: cblinfun_eqI simp: sandwich_apply)
 
 lemma inj_sandwich_isometry: \<open>inj (sandwich U)\<close> if [simp]: \<open>isometry U\<close> for U :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
   apply (rule inj_on_inverseI[where g=\<open>(*\<^sub>V) (sandwich (U*))\<close>])
-  by (auto simp: sandwich_compose simp flip: cblinfun_apply_cblinfun_compose)
+  by (auto simp flip: cblinfun_apply_cblinfun_compose sandwich_compose)
 
 lemma sandwich_isometry_id: \<open>isometry (U*) \<Longrightarrow> sandwich U id_cblinfun = id_cblinfun\<close>
   by (simp add: sandwich_apply isometry_def)

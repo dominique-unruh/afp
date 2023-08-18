@@ -78,6 +78,9 @@ declare mat_of_cblinfun_minus[code]
 declare mat_of_cblinfun_classical_operator[code]
   \<comment> \<open>Code equation for computing the "classical operator"\<close>
 
+declare mat_of_cblinfun_explicit_cblinfun[code]
+  \<comment> \<open>Code equation for computing the \<^const>\<open>explicit_cblinfun\<close>\<close>
+
 declare mat_of_cblinfun_compose[code]
   \<comment> \<open>Code equation for computing the composition/product of cblinfun's\<close>
 
