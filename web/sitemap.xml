@@ -3,31 +3,79 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>/</loc>
-    <lastmod>2023-07-11T00:00:00+00:00</lastmod>
+    <lastmod>2023-08-14T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/authors/</loc>
-    <lastmod>2023-07-11T00:00:00+00:00</lastmod>
+    <lastmod>2023-08-14T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>/topics/computer-science/</loc>
-    <lastmod>2023-07-11T00:00:00+00:00</lastmod>
+    <loc>/entries/Catoids.html</loc>
+    <lastmod>2023-08-14T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/dependencies/</loc>
+    <lastmod>2023-08-14T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/entries/</loc>
-    <lastmod>2023-07-11T00:00:00+00:00</lastmod>
+    <lastmod>2023-08-14T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/dependencies/kad/</loc>
+    <lastmod>2023-08-14T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/topics/mathematics/</loc>
+    <lastmod>2023-08-14T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/dependencies/quantales/</loc>
+    <lastmod>2023-08-14T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/dependencies/quantales_converse/</loc>
+    <lastmod>2023-08-14T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/dependencies/relation_algebra/</loc>
+    <lastmod>2023-08-14T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/authors/struth/</loc>
+    <lastmod>2023-08-14T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/topics/</loc>
+    <lastmod>2023-08-14T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/authors/argyraki/</loc>
+    <lastmod>2023-08-10T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/authors/leek/</loc>
+    <lastmod>2023-08-10T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/entries/Polygonal_Number_Theorem.html</loc>
+    <lastmod>2023-08-10T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/dependencies/three_squares/</loc>
+    <lastmod>2023-08-10T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/authors/yez/</loc>
+    <lastmod>2023-08-10T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/authors/calk/</loc>
+    <lastmod>2023-07-25T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/topics/computer-science/</loc>
+    <lastmod>2023-07-25T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/dependencies/kleene_algebra/</loc>
+    <lastmod>2023-07-25T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/entries/Quantales_Converse.html</loc>
+    <lastmod>2023-07-25T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/entries/Earley_Parser.html</loc>
+    <lastmod>2023-07-16T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/authors/rau/</loc>
+    <lastmod>2023-07-16T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/entries/Gray_Codes.html</loc>
     <lastmod>2023-07-11T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>/topics/mathematics/</loc>
-    <lastmod>2023-07-11T00:00:00+00:00</lastmod>
-  </url><url>
     <loc>/authors/spitz/</loc>
     <lastmod>2023-07-11T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>/topics/</loc>
-    <lastmod>2023-07-11T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>/dependencies/</loc>
-    <lastmod>2023-06-19T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/authors/eberl/</loc>
     <lastmod>2023-06-19T00:00:00+00:00</lastmod>
@@ -92,9 +140,6 @@
     <loc>/entries/Directed_Sets.html</loc>
     <lastmod>2023-05-24T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>/topics/mathematics/</loc>
-    <lastmod>2023-05-24T00:00:00+00:00</lastmod>
-  </url><url>
     <loc>/authors/yamada/</loc>
     <lastmod>2023-05-24T00:00:00+00:00</lastmod>
   </url><url>
@@ -102,9 +147,6 @@
     <lastmod>2023-05-22T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/entries/Multirelations_Heterogeneous.html</loc>
-    <lastmod>2023-05-22T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>/authors/struth/</loc>
     <lastmod>2023-05-22T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/authors/cremer/</loc>
@@ -461,9 +503,6 @@
     <loc>/entries/Sauer_Shelah_Lemma.html</loc>
     <lastmod>2022-11-24T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>/authors/argyraki/</loc>
-    <lastmod>2022-11-21T00:00:00+00:00</lastmod>
-  </url><url>
     <loc>/authors/baksys/</loc>
     <lastmod>2022-11-21T00:00:00+00:00</lastmod>
   </url><url>
@@ -643,6 +682,9 @@
   </url><url>
     <loc>/entries/Nano_JSON.html</loc>
     <lastmod>2022-07-29T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/dependencies/finite-map-extras/</loc>
+    <lastmod>2022-07-18T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/entries/Solidity.html</loc>
     <lastmod>2022-07-18T00:00:00+00:00</lastmod>
@@ -1124,6 +1166,9 @@
     <loc>/entries/Complex_Bounded_Operators.html</loc>
     <lastmod>2021-09-18T00:00:00+00:00</lastmod>
   </url><url>
+    <loc>/dependencies/complex_bounded_operators_dependencies/</loc>
+    <lastmod>2021-09-18T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>/dependencies/real_impl/</loc>
     <lastmod>2021-09-18T00:00:00+00:00</lastmod>
   </url><url>
@@ -1457,9 +1502,6 @@
     <loc>/entries/Topological_Semantics.html</loc>
     <lastmod>2020-12-17T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>/dependencies/aggregation_algebras/</loc>
-    <lastmod>2020-12-08T00:00:00+00:00</lastmod>
-  </url><url>
     <loc>/authors/brien/</loc>
     <lastmod>2020-12-08T00:00:00+00:00</lastmod>
   </url><url>
@@ -1625,6 +1667,9 @@
     <loc>/entries/Inductive_Inference.html</loc>
     <lastmod>2020-08-31T00:00:00+00:00</lastmod>
   </url><url>
+    <loc>/dependencies/aggregation_algebras/</loc>
+    <lastmod>2020-08-26T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>/entries/Relational_Disjoint_Set_Forests.html</loc>
     <lastmod>2020-08-26T00:00:00+00:00</lastmod>
   </url><url>
@@ -1664,9 +1709,6 @@
     <loc>/authors/hoefner/</loc>
     <lastmod>2020-07-13T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>/dependencies/relation_algebra/</loc>
-    <lastmod>2020-07-13T00:00:00+00:00</lastmod>
-  </url><url>
     <loc>/entries/Relational_Paths.html</loc>
     <lastmod>2020-07-13T00:00:00+00:00</lastmod>
   </url><url>
@@ -1698,9 +1740,6 @@
     <lastmod>2020-05-12T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/dependencies/prime_distribution_elementary/</loc>
-    <lastmod>2020-05-12T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>/dependencies/prime_number_theorem/</loc>
     <lastmod>2020-05-12T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/authors/dunaev/</loc>
@@ -1874,9 +1913,6 @@
     <loc>/entries/Closest_Pair_Points.html</loc>
     <lastmod>2020-01-13T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>/authors/rau/</loc>
-    <lastmod>2020-01-13T00:00:00+00:00</lastmod>
-  </url><url>
     <loc>/dependencies/root_balanced_tree/</loc>
     <lastmod>2020-01-13T00:00:00+00:00</lastmod>
   </url><url>
@@ -1896,6 +1932,9 @@
     <lastmod>2020-01-06T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/dependencies/e_transcendental/</loc>
+    <lastmod>2019-12-27T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>/dependencies/prime_number_theorem/</loc>
     <lastmod>2019-12-27T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/entries/Zeta_3_Irrational.html</loc>
@@ -1966,9 +2005,6 @@
   </url><url>
     <loc>/entries/Generic_Join.html</loc>
     <lastmod>2019-09-16T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>/dependencies/kad/</loc>
-    <lastmod>2019-09-10T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/dependencies/kat_and_dra/</loc>
     <lastmod>2019-09-10T00:00:00+00:00</lastmod>
@@ -2276,16 +2312,10 @@
     <loc>/entries/Constructive_Cryptography.html</loc>
     <lastmod>2018-12-17T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>/dependencies/kleene_algebra/</loc>
-    <lastmod>2018-12-11T00:00:00+00:00</lastmod>
-  </url><url>
     <loc>/dependencies/order_lattice_props/</loc>
     <lastmod>2018-12-11T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/entries/Order_Lattice_Props.html</loc>
-    <lastmod>2018-12-11T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>/dependencies/quantales/</loc>
     <lastmod>2018-12-11T00:00:00+00:00</lastmod>
   </url><url>
     <loc>/entries/Quantales.html</loc>
@@ -4764,6 +4794,8 @@
   </url><url>
     <loc>/theories/category3/</loc>
   </url><url>
+    <loc>/theories/catoids/</loc>
+  </url><url>
     <loc>/theories/cauchy/</loc>
   </url><url>
     <loc>/theories/cava_automata/</loc>
@@ -4833,6 +4865,8 @@
     <loc>/theories/completeness/</loc>
   </url><url>
     <loc>/theories/complex_bounded_operators/</loc>
+  </url><url>
+    <loc>/theories/complex_bounded_operators_dependencies/</loc>
   </url><url>
     <loc>/theories/complex_geometry/</loc>
   </url><url>
@@ -5052,6 +5086,8 @@
   </url><url>
     <loc>/theories/e_transcendental/</loc>
   </url><url>
+    <loc>/theories/earley_parser/</loc>
+  </url><url>
     <loc>/theories/echelon_form/</loc>
   </url><url>
     <loc>/theories/edmondskarp_maxflow/</loc>
@@ -5081,6 +5117,8 @@
     <loc>/theories/euler_partition/</loc>
   </url><url>
     <loc>/theories/eval_fo/</loc>
+  </url><url>
+    <loc>/theories/example-submission/</loc>
   </url><url>
     <loc>/theories/executable_randomized_algorithms/</loc>
   </url><url>
@@ -5788,6 +5826,8 @@
   </url><url>
     <loc>/theories/poincare_disc/</loc>
   </url><url>
+    <loc>/theories/polygonal_number_theorem/</loc>
+  </url><url>
     <loc>/theories/polynomial_factorization/</loc>
   </url><url>
     <loc>/theories/polynomial_interpolation/</loc>
@@ -5869,6 +5909,8 @@
     <loc>/theories/qr_decomposition/</loc>
   </url><url>
     <loc>/theories/quantales/</loc>
+  </url><url>
+    <loc>/theories/quantales_converse/</loc>
   </url><url>
     <loc>/theories/quantifier_elimination_hybrid/</loc>
   </url><url>

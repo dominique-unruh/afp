@@ -870,15 +870,6 @@ host = [
   "uk",
 ]
 
-[brucker.emails.brucker_email1]
-user = [
-  "brucker",
-]
-host = [
-  "spamfence",
-  "net",
-]
-
 [brucker.emails.brucker_email2]
 user = [
   "adbrucker",
@@ -1016,6 +1007,13 @@ host = [
 
 [caballero.homepages]
 caballero_homepage = "https://josephcmac.github.io/"
+
+[calk]
+name = "Cameron Calk"
+
+[calk.emails]
+
+[calk.homepages]
 
 [caminati]
 name = "Marco B. Caminati"
@@ -3657,6 +3655,23 @@ host = [
 
 [lee.homepages]
 
+[leek]
+name = "Kevin Lee"
+
+[leek.emails]
+
+[leek.emails.leek_email]
+user = [
+  "kfkl2",
+]
+host = [
+  "cam",
+  "ac",
+  "uk",
+]
+
+[leek.homepages]
+
 [leustean]
 name = "Laurentiu Leustean"
 
@@ -3783,16 +3798,6 @@ name = "Yangjia Li"
 name = "Andreas Lochbihler"
 
 [lochbihler.emails]
-
-[lochbihler.emails.lochbihler_email]
-user = [
-  "andreas",
-  "lochbihler",
-]
-host = [
-  "digitalasset",
-  "com",
-]
 
 [lochbihler.emails.lochbihler_email1]
 user = [
@@ -5340,16 +5345,6 @@ host = [
   "com",
 ]
 
-[rawson.emails.rawson_email1]
-user = [
-  "mr644",
-]
-host = [
-  "cam",
-  "ac",
-  "uk",
-]
-
 [rawson.homepages]
 
 [raya]
@@ -6073,7 +6068,6 @@ host = [
 
 [sprenger.homepages]
 
-
 [springsklee]
 name = "Valentin Springsklee"
 
@@ -6090,8 +6084,6 @@ host = [
 ]
 
 [springsklee.homepages]
-
-
 
 [staats]
 name = "Charles Staats"
@@ -6172,7 +6164,7 @@ host = [
 ]
 
 [starosta.homepages]
-starosta_homepage = "https://users.fit.cvut.cz/~staroste/"
+starosta_homepage = "https://staroste.pages.fit/"
 
 [steen]
 name = "Alexander Steen"
@@ -7115,7 +7107,6 @@ host = [
 ]
 
 [wenzel.homepages]
-wenzel_homepage = "https://sketis.net"
 
 [whitley]
 name = "A Whitley"
@@ -7284,6 +7275,23 @@ host = [
 ]
 
 [ye.homepages]
+
+[yez]
+name = "Zhengkun Ye"
+
+[yez.emails]
+
+[yez.emails.yez_email]
+user = [
+  "zy307",
+]
+host = [
+  "cam",
+  "ac",
+  "uk",
+]
+
+[yez.homepages]
 
 [ying]
 name = "Shenggang Ying"

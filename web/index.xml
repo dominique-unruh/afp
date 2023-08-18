@@ -6,7 +6,43 @@
     <description>Recent content on Archive of Formal Proofs</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
-    <lastBuildDate>Tue, 11 Jul 2023 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 14 Aug 2023 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Catoids, Categories, Groupoids</title>
+      <link>/entries/Catoids.html</link>
+      <pubDate>Mon, 14 Aug 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Catoids.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Polygonal Number Theorem</title>
+      <link>/entries/Polygonal_Number_Theorem.html</link>
+      <pubDate>Thu, 10 Aug 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Polygonal_Number_Theorem.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Modal quantales, involutive quantales, Dedekind Quantales</title>
+      <link>/entries/Quantales_Converse.html</link>
+      <pubDate>Tue, 25 Jul 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Quantales_Converse.html</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Earley Parser</title>
+      <link>/entries/Earley_Parser.html</link>
+      <pubDate>Sun, 16 Jul 2023 00:00:00 +0000</pubDate>
+      
+      <guid>/entries/Earley_Parser.html</guid>
+      <description></description>
+    </item>
+    
     <item>
       <title>Gray Codes for Arbitrary Numeral Systems</title>
       <link>/entries/Gray_Codes.html</link>
@@ -7568,6 +7604,15 @@
     </item>
     
     <item>
+      <title>Catoids</title>
+      <link>/theories/catoids/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/catoids/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Cauchy</title>
       <link>/theories/cauchy/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -7879,6 +7924,15 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/theories/complex_bounded_operators/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Complex_Bounded_Operators_Dependencies</title>
+      <link>/theories/complex_bounded_operators_dependencies/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/complex_bounded_operators_dependencies/</guid>
       <description></description>
     </item>
     
@@ -8558,6 +8612,15 @@
     </item>
     
     <item>
+      <title>Earley_Parser</title>
+      <link>/theories/earley_parser/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/earley_parser/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Echelon_Form</title>
       <link>/theories/echelon_form/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -8680,6 +8743,15 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/theories/eval_fo/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Example-Submission</title>
+      <link>/theories/example-submission/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/example-submission/</guid>
       <description></description>
     </item>
     
@@ -11591,6 +11663,15 @@
     </item>
     
     <item>
+      <title>Polygonal_Number_Theorem</title>
+      <link>/theories/polygonal_number_theorem/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/polygonal_number_theorem/</guid>
+      <description></description>
+    </item>
+    
+    <item>
       <title>Polynomial_Factorization</title>
       <link>/theories/polynomial_factorization/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -11956,6 +12037,15 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/theories/quantales/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Quantales_Converse</title>
+      <link>/theories/quantales_converse/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/theories/quantales_converse/</guid>
       <description></description>
     </item>
     

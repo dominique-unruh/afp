@@ -95,6 +95,7 @@ Catalan_Numbers
 Category
 Category2
 Category3
+Catoids
 Cauchy
 Cayley_Hamilton
 Certification_Monads
@@ -188,6 +189,7 @@ Dominance_CHK
 DynamicArchitectures
 Dynamic_Tables
 E_Transcendental
+Earley_Parser
 Echelon_Form
 EdmondsKarp_Maxflow
 Edwards_Elliptic_Curves_Group
@@ -513,6 +515,7 @@ Planarity_Certificates
 Pluennecke_Ruzsa_Inequality
 Poincare_Bendixson
 Poincare_Disc
+Polygonal_Number_Theorem
 Polynomial_Factorization
 Polynomial_Interpolation
 Polynomials
@@ -552,6 +555,7 @@ Public_Announcement_Logic
 QHLProver
 QR_Decomposition
 Quantales
+Quantales_Converse
 Quantifier_Elimination_Hybrid
 Quasi_Borel_Spaces
 Quaternions
