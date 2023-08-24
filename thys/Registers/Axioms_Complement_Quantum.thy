@@ -828,7 +828,7 @@ proof -
     from 1 have \<open>sandwich U (sandwich (U*) *\<^sub>V \<Phi> \<theta>) = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close>
       by simp
     then show ?thesis
-      by (simp add: sandwich_compose flip: cblinfun_apply_cblinfun_compose)
+      by (simp flip: sandwich_compose cblinfun_apply_cblinfun_compose)
   qed
 
   then show ?thesis

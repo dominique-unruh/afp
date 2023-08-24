@@ -1109,16 +1109,15 @@ proof -
   have homeo: \<open>homeomorphic_map cstrong_operator_topology cstrong_operator_topology
      ((*\<^sub>V) (sandwich ell2_to_hilbert))\<close>
     by (auto intro!: continuous_intros homeomorphic_maps_imp_map[where g=\<open>sandwich (ell2_to_hilbert*)\<close>]
-        simp: homeomorphic_maps_def sandwich_compose unitary_ell2_to_hilbert
-        simp flip: cblinfun_apply_cblinfun_compose)
+        simp: homeomorphic_maps_def unitary_ell2_to_hilbert
+        simp flip: cblinfun_apply_cblinfun_compose sandwich_compose)
   have \<open>commutant (commutant A') = cstrong_operator_topology closure_of A'\<close>
     using subspace mult id adj by (rule double_commutant_theorem_aux)
   then have \<open>sandwich ell2_to_hilbert ` commutant (commutant A') = sandwich ell2_to_hilbert ` (cstrong_operator_topology closure_of A')\<close>
     by simp
   then show ?thesis
-    by (simp add: A'_def unitary_ell2_to_hilbert sandwich_unitary_commutant image_image
-        sandwich_compose homeo
-        flip: cblinfun_apply_cblinfun_compose
+    by (simp add: A'_def unitary_ell2_to_hilbert sandwich_unitary_commutant image_image homeo
+        flip: cblinfun_apply_cblinfun_compose sandwich_compose
         homeomorphic_map_closure_of[where Y=cstrong_operator_topology])
 qed
 
@@ -1389,8 +1388,7 @@ lemma closed_map_sot_unitary_sandwich:
   apply (rule closed_eq_continuous_inverse_map[where g=\<open>sandwich (U*)\<close>, THEN iffD2])
   using assms 
   by (auto intro!: continuous_intros
-      simp add: sandwich_compose
-      simp flip: cblinfun_apply_cblinfun_compose)
+      simp flip: sandwich_compose cblinfun_apply_cblinfun_compose)
 
 lemma von_neumann_algebra_commutant: \<open>von_neumann_algebra (commutant A)\<close> if \<open>von_neumann_algebra A\<close>
 proof (rule von_neumann_algebraI)
@@ -2712,7 +2710,7 @@ lemma sandwich_tc_compose: \<open>sandwich_tc (A o\<^sub>C\<^sub>L B) = sandwich
   apply (rule cblinfun_eqI)
   apply (rule from_trace_class_inject[THEN iffD1])
   apply (transfer fixing: A B)
-  by (simp flip: sandwich_compose)
+  by (simp add: sandwich_compose)
 
 lemma sandwich_tc_0_left[simp]: \<open>sandwich_tc 0 = 0\<close>
   by (metis (no_types, opaque_lifting) cblinfun.zero_left cblinfun_eqI linorder_not_le norm_sandwich_tc norm_scaleC norm_zero power2_eq_square scaleC_left.zero zero_less_norm_iff)

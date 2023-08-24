@@ -655,7 +655,7 @@ proof -
           by (simp add: sandwich_unitary_commutant)
         also have \<open>\<dots> = commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun))\<close>
           apply (rule arg_cong[where f=commutant])
-          by (simp add: FU image_image sandwich_compose flip: cblinfun_apply_cblinfun_compose)
+          by (simp add: FU image_image flip: sandwich_compose cblinfun_apply_cblinfun_compose)
         also have \<open>\<dots> = range (\<lambda>d. id_cblinfun \<otimes>\<^sub>o d)\<close>
           by (rule commutant_tensor1)
         also have \<open>\<dots> = range \<iota>\<close>
