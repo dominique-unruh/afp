@@ -5,6 +5,7 @@ begin
 
 unbundle cblinfun_notation
 
+(* TODO: remove this definition (use rank1 from BO) *)
 definition rank1 where \<open>rank1 A \<longleftrightarrow> (\<exists>x y. A = butterfly x y)\<close>
 
 lemma rank1_0[simp]: \<open>rank1 0\<close>
