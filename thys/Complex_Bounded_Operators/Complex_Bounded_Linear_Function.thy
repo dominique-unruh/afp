@@ -3841,6 +3841,9 @@ lemma butterfly_is_rank1:
 
 
 lemma rank1_is_butterfly:
+  \<comment> \<open>The restriction \<^term>\<open>\<psi>::_::chilbert_space\<close> is necessary.
+    Consider, e.g., the space of all finite sequences (with sum-norm), and \<^term>\<open>A' f = (\<Sum>x. f x)\<close>.
+    Then \<^term>\<open>A'\<close> is not a butterfly.\<close>
   assumes \<open>A *\<^sub>S \<top> = ccspan {\<psi>::_::chilbert_space}\<close>
   shows \<open>\<exists>\<phi>. A = butterfly \<psi> \<phi>\<close>
 proof (rule exI[of _ \<open>A* *\<^sub>V (\<psi> /\<^sub>R (norm \<psi>)\<^sup>2)\<close>], rule cblinfun_eqI)

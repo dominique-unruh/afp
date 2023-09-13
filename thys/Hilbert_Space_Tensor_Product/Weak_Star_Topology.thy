@@ -664,19 +664,24 @@ qed
 
 
 lemma butterkets_weak_star_dense[simp]:
-  \<open>weak_star_topology closure_of cspan {butterfly (ket (\<xi>::'a)) (ket (\<eta>::'b)) |\<xi> \<eta>. True} = UNIV\<close>
+  \<open>weak_star_topology closure_of cspan ((\<lambda>(\<xi>,\<eta>). butterfly (ket \<xi>) (ket \<eta>)) ` UNIV) = UNIV\<close>
+  (* Stronger form proven in comment below, but would need strengthening of finite_rank_weak_star_dense first *)
 proof -
   from continuous_map_image_closure_subset[OF weak_star_topology_weaker_than_euclidean]
-  have \<open>weak_star_topology closure_of (cspan {butterfly (ket (\<xi>::'a)) (ket (\<eta>::'b)) |\<xi> \<eta>. True}) \<supseteq> closure (cspan {butterfly (ket \<xi>) (ket \<eta>) |\<xi> \<eta>. True})\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
+  have \<open>weak_star_topology closure_of (cspan ((\<lambda>(\<xi>,\<eta>). butterfly (ket \<xi>) (ket \<eta>)) ` UNIV))
+          \<supseteq> closure (cspan ((\<lambda>(\<xi>,\<eta>). butterfly (ket \<xi>) (ket \<eta>)) ` UNIV))\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
     by auto
-  moreover from finite_rank_dense_compact
-  have \<open>\<dots> \<supseteq> Collect finite_rank\<close>
+  moreover 
+  have \<open>\<dots> = Collect compact_op\<close>
+    unfolding finite_rank_dense_compact[OF is_onb_ket is_onb_ket, symmetric]
+    by (simp add: image_image case_prod_beta flip: map_prod_image)
+  moreover have \<open>\<dots> \<supseteq> Collect finite_rank\<close>
     by (metis closure_subset compact_op_def mem_Collect_eq subsetI subset_antisym)
-  ultimately have *: \<open>weak_star_topology closure_of (cspan {butterfly (ket (\<xi>::'a)) (ket (\<eta>::'b)) |\<xi> \<eta>. True}) \<supseteq> Collect finite_rank\<close>
+  ultimately have *: \<open>weak_star_topology closure_of (cspan ((\<lambda>(\<xi>,\<eta>). butterfly (ket \<xi>) (ket \<eta>)) ` UNIV)) \<supseteq> Collect finite_rank\<close>
+    by blast
+  have \<open>weak_star_topology closure_of cspan ((\<lambda>(\<xi>,\<eta>). butterfly (ket \<xi>) (ket \<eta>)) ` UNIV)
+        = weak_star_topology closure_of (weak_star_topology closure_of cspan ((\<lambda>(\<xi>,\<eta>). butterfly (ket \<xi>) (ket \<eta>)) ` UNIV))\<close>
     by simp
-  have \<open>weak_star_topology closure_of cspan {butterfly (ket \<xi>) (ket \<eta>) |\<xi> \<eta>. True}
-        = weak_star_topology closure_of (weak_star_topology closure_of cspan {butterfly (ket (\<xi>::'a)) (ket (\<eta>::'b)) |\<xi> \<eta>. True})\<close>
-  by simp
   also have \<open>\<dots> \<supseteq> weak_star_topology closure_of Collect finite_rank\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
     using * closure_of_mono by blast
   also have \<open>\<dots> = UNIV\<close>
@@ -684,7 +689,32 @@ proof -
   finally show ?thesis
     by auto
 qed
-
+(* 
+lemma butterkets_weak_star_dense[simp]:
+  assumes \<open>is_onb A\<close> and \<open>is_onb B\<close>
+  shows \<open>weak_star_topology closure_of cspan (cspan ((\<lambda>(\<xi>,\<eta>). butterfly \<xi> \<eta>) ` (A \<times> B))) = UNIV\<close>
+proof -
+  from continuous_map_image_closure_subset[OF weak_star_topology_weaker_than_euclidean]
+  have \<open>weak_star_topology closure_of (cspan (cspan ((\<lambda>(\<xi>,\<eta>). butterfly \<xi> \<eta>) ` (A \<times> B)))) 
+            \<supseteq> closure (cspan (cspan ((\<lambda>(\<xi>,\<eta>). butterfly \<xi> \<eta>) ` (A \<times> B))))\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
+    by auto
+  moreover from finite_rank_dense_compact[OF assms]
+  have \<open>\<dots> \<supseteq> Collect finite_rank\<close>
+    by (metis closure_subset compact_op_def complex_vector.span_span mem_Collect_eq subsetD subsetI)
+  ultimately have *: \<open>weak_star_topology closure_of (cspan (cspan ((\<lambda>(\<xi>,\<eta>). butterfly \<xi> \<eta>) ` (A \<times> B)))) \<supseteq> Collect finite_rank\<close>
+    by simp
+  have \<open>weak_star_topology closure_of cspan (cspan ((\<lambda>(\<xi>,\<eta>). butterfly \<xi> \<eta>) ` (A \<times> B)))
+        = weak_star_topology closure_of (weak_star_topology closure_of cspan (cspan ((\<lambda>(\<xi>,\<eta>). butterfly \<xi> \<eta>) ` (A \<times> B))))\<close>
+    by simp
+  also have \<open>\<dots> \<supseteq> weak_star_topology closure_of Collect finite_rank\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
+    using * closure_of_mono by blast
+  also have \<open>\<dots> = UNIV\<close>
+    thm finite_rank_weak_star_dense
+    by simp
+  finally show ?thesis
+    by auto
+qed
+ *)
 
 
 lemma weak_star_clinear_eq_butterfly_ketI:
@@ -695,12 +725,12 @@ lemma weak_star_clinear_eq_butterfly_ketI:
   assumes "\<And>i j. F (butterfly (ket i) (ket j)) = G (butterfly (ket i) (ket j))"
   shows "F = G"
 proof -
-  have FG: \<open>F x = G x\<close> if \<open>x \<in> cspan {butterfly (ket i) (ket j) |i j. True}\<close> for x
-    by (smt (verit, ccfv_threshold) assms(1) assms(2) assms(6) complex_vector.linear_eq_on mem_Collect_eq that)
+  have FG: \<open>F x = G x\<close> if \<open>x \<in> cspan ((\<lambda>(\<xi>,\<eta>). butterfly (ket \<xi>) (ket \<eta>)) ` UNIV)\<close> for x
+    by (smt (verit) assms(1) assms(2) assms(6) complex_vector.linear_eq_on imageE split_def that)
   show ?thesis
     apply (rule ext)
     using \<open>hausdorff T\<close> FG
-    apply (rule closure_of_eqI[where f=F and g=G and S=\<open>cspan {butterfly (ket i) (ket j)| i j. True}\<close>])
+    apply (rule closure_of_eqI[where f=F and g=G and S=\<open>cspan ((\<lambda>(\<xi>,\<eta>). butterfly (ket \<xi>) (ket \<eta>)) ` UNIV)\<close>])
     using assms butterkets_weak_star_dense by auto
 qed
 

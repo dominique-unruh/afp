@@ -133,10 +133,8 @@ proof -
       apply (subst sum_single[where i=s])
       using 1 2 by auto
   qed
-  have \<open>rank1 (a o\<^sub>C\<^sub>L selfbutter b)\<close> for b
-    by (simp add: cblinfun_comp_butterfly)
-  then have \<open>finite_rank (\<Sum>b\<in>B. a o\<^sub>C\<^sub>L selfbutter b)\<close>
-    by (metis (no_types, lifting) Compact_Operators.rank1_def finite_rank_butterfly finite_rank_sum)
+  have \<open>finite_rank (\<Sum>b\<in>B. a o\<^sub>C\<^sub>L selfbutter b)\<close>
+    by (auto intro!: finite_rank_sum simp: cblinfun_comp_butterfly)
   with a_sum show ?thesis
     by simp
 qed
@@ -2114,17 +2112,6 @@ proof -
         simp add: trace_norm_def trace_class_iff_summable[OF is_onb_some_chilbert_basis])
 qed
 
-(* TODO move *)
-instantiation trace_class :: (chilbert_space, chilbert_space) order begin
-lift_definition less_eq_trace_class :: \<open>('a, 'b) trace_class \<Rightarrow> ('a, 'b) trace_class \<Rightarrow> bool\<close> is
-  less_eq.
-lift_definition less_trace_class :: \<open>('a, 'b) trace_class \<Rightarrow> ('a, 'b) trace_class \<Rightarrow> bool\<close> is
-  less.
-instance
-  apply intro_classes
-     apply (auto simp add: less_eq_trace_class.rep_eq less_trace_class.rep_eq)
-  by (simp add: from_trace_class_inject)
-end
 
 
 lemma norm_cblinfun_mono_trace_class:
@@ -2136,9 +2123,6 @@ lemma norm_cblinfun_mono_trace_class:
   apply transfer
   apply (rule trace_norm_cblinfun_mono)
   by auto
-
-lemma trace_class_sandwich: \<open>trace_class b \<Longrightarrow> trace_class (sandwich a b)\<close>
-  by (simp add: sandwich_apply trace_class_comp_right trace_class_comp_left)
 
 lemma trace_norm_butterfly: \<open>trace_norm (butterfly a b) = (norm a) * (norm b)\<close>
   for a b :: \<open>_ :: chilbert_space\<close>
@@ -2230,8 +2214,11 @@ next
     using \<open>\<epsilon> > 0\<close> by simp
 qed
 
+lemma clinear_from_trace_class[iff]: \<open>clinear from_trace_class\<close>
+  apply (rule clinearI; transfer)
+  by auto
 
-lemma bounded_clinear_from_trace_class:
+lemma bounded_clinear_from_trace_class[bounded_clinear]:
   \<open>bounded_clinear (from_trace_class :: ('a::chilbert_space,'b::chilbert_space) trace_class \<Rightarrow> _)\<close>
 proof (cases \<open>class.not_singleton TYPE('a)\<close>)
   case True
@@ -2414,52 +2401,6 @@ proof transfer
     by -
 qed
 
-
-lemma trace_norm_sandwich: \<open>trace_norm (sandwich e t) \<le> (norm e)^2 * trace_norm t\<close> if \<open>trace_class t\<close>
-  apply (simp add: sandwich_apply)
-  by (smt (z3) Groups.mult_ac(2) more_arith_simps(11) mult_left_mono norm_adj norm_ge_zero power2_eq_square that trace_class_comp_right trace_norm_comp_left trace_norm_comp_right)
-
-lift_definition sandwich_tc :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) \<Rightarrow> ('a::chilbert_space,'a) trace_class \<Rightarrow>\<^sub>C\<^sub>L ('b::chilbert_space,'b) trace_class\<close> is
-  \<open>\<lambda>e t. sandwich e t\<close>
-proof (intro relcomppI conjI)
-  include lifting_syntax
-  fix e :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
-  have *: \<open>trace_class (sandwich e *\<^sub>V from_trace_class t)\<close> for t
-    using trace_class_from_trace_class trace_class_sandwich by blast
-  define S where \<open>S e t = Abs_trace_class (sandwich e (from_trace_class t))\<close> for e :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> and t :: \<open>('a,'a) trace_class\<close>
-  show 1: \<open>(cr_trace_class ===> cr_trace_class) ((*\<^sub>V) (sandwich e)) (S e)\<close>
-    by (auto intro!: rel_funI simp add: cr_trace_class_def S_def Abs_trace_class_inverse * )
-  show \<open>bounded_clinear (S e)\<close>
-    apply (rule bounded_clinearI[where K=\<open>(norm e)^2\<close>])
-    apply (simp_all add: S_def
-        plus_trace_class.rep_eq scaleC_trace_class.rep_eq 
-        cblinfun.add_right cblinfun.scaleC_right
-        plus_trace_class.abs_eq scaleC_trace_class.abs_eq norm_trace_class.abs_eq
-        eq_onp_def * )
-    using trace_norm_sandwich[where e=e, OF trace_class_from_trace_class]
-    by (simp add: norm_trace_class.rep_eq ordered_field_class.sign_simps(33))
-  show \<open>S e = S e\<close>
-    by simp
-  show \<open>(cr_trace_class ===> cr_trace_class)\<inverse>\<inverse> (S e) ((*\<^sub>V) (sandwich e))\<close>
-    by (intro conversepI 1)
-qed
-
-lemma from_trace_class_sandwich_tc:
-  \<open>from_trace_class (sandwich_tc e t) = sandwich e (from_trace_class t)\<close>
-  apply transfer
-  by (rule sandwich_apply)
-
-lemma sandwich_tc_apply:
-  \<open>sandwich_tc e t = Abs_trace_class (sandwich e (from_trace_class t))\<close>
-  using from_trace_class_sandwich_tc[of e t]
-  by (metis from_trace_class_inverse)
-
-lemma norm_sandwich_tc: \<open>norm (sandwich_tc e t) \<le> (norm e)^2 * norm t\<close>
-  by (simp add: norm_trace_class.rep_eq from_trace_class_sandwich_tc trace_norm_sandwich)
-
-lemma sandwich_tc_pos: \<open>sandwich_tc e t \<ge> 0\<close> if \<open>t \<ge> 0\<close>
-  using that apply (transfer fixing: e)
-  by (simp add: sandwich_pos)
 
 lift_definition trace_tc :: \<open>('a::chilbert_space, 'a) trace_class \<Rightarrow> complex\<close> is trace.
 

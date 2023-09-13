@@ -10,6 +10,10 @@ hide_fact (open) Determinants.trace_def
 definition partial_trace :: \<open>(('a \<times> 'c) ell2, ('b \<times> 'c) ell2) trace_class \<Rightarrow> ('a ell2, 'b ell2) trace_class\<close> where
   \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))))\<close>
 
+lemma partial_trace_def': \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. sandwich_tc ((tensor_ell2_right (ket j))*) t)\<close>
+\<comment> \<open>We cannot use this as the definition of \<^const>\<open>partial_trace\<close> because this definition
+      has a more restricted type (\<^term>\<open>t\<close> is a square operator).\<close>
+  by (auto intro!: simp: partial_trace_def sandwich_tc_apply sandwich_apply)
 
 lemma partial_trace_abs_summable:
   \<open>(\<lambda>j. Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))) abs_summable_on UNIV\<close>
@@ -163,6 +167,13 @@ proof -
       by -
   qed
 qed
+
+lemma partial_trace_abs_summable':
+  \<open>(\<lambda>j.  sandwich_tc ((tensor_ell2_right (ket j))*) t) abs_summable_on UNIV\<close>
+  and partial_trace_has_sum':
+  \<open>((\<lambda>j.  sandwich_tc ((tensor_ell2_right (ket j))*) t) has_sum partial_trace t) UNIV\<close>
+  using partial_trace_abs_summable partial_trace_has_sum
+  by (auto intro!: simp: sandwich_tc_apply sandwich_apply)
 
 (* definition partial_trace' where \<open>partial_trace' t = (if trace_class t then from_trace_class (partial_trace (Abs_trace_class t)) else 0)\<close>
 
