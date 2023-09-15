@@ -613,8 +613,7 @@ proof -
     by (simp add: * has_sum_def has_sum_in_def limitin_weak_star_topology)
 qed
 
-(* TODO rename \<rightarrow> has_sum... *)
-lemma infsum_butterfly_ket: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (ket i) (ket i)) UNIV id_cblinfun\<close>
+lemma has_sum_butterfly_ket: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (ket i) (ket i)) UNIV id_cblinfun\<close>
 proof (rule has_sum_in_weak_star[THEN iffD2, rule_format])
   fix t :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close>
   assume [simp]: \<open>trace_class t\<close>
@@ -631,11 +630,11 @@ lemma sandwich_weak_star_cont[simp]:
   using continuous_map_compose[OF continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star]
   by (auto simp: o_def sandwich_apply[abs_def])
 
-lemma infsum_butterfly_ket_a: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (a *\<^sub>V ket i) (ket i)) UNIV a\<close>
+lemma has_sum_butterfly_ket_a: \<open>has_sum_in weak_star_topology (\<lambda>i. butterfly (a *\<^sub>V ket i) (ket i)) UNIV a\<close>
 proof -
   have \<open>has_sum_in weak_star_topology ((\<lambda>b. a o\<^sub>C\<^sub>L b) \<circ> (\<lambda>i. butterfly (ket i) (ket i))) UNIV (a o\<^sub>C\<^sub>L id_cblinfun)\<close>
     apply (rule has_sum_in_comm_additive)
-    by (auto intro!: infsum_butterfly_ket continuous_map_is_continuous_at_point limitin_continuous_map
+    by (auto intro!: has_sum_butterfly_ket continuous_map_is_continuous_at_point limitin_continuous_map
         continuous_map_left_comp_weak_star  cblinfun_compose_add_right
         simp: Modules.additive_def)
   then show ?thesis
@@ -649,7 +648,7 @@ proof -
   proof (rule limitin_closure_of)
     define f :: \<open>'a \<Rightarrow> 'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> where \<open>f = (\<lambda>i. butterfly (x *\<^sub>V ket i) (ket i))\<close>
     have \<open>has_sum_in weak_star_topology f UNIV x\<close>
-      using f_def infsum_butterfly_ket_a by blast
+      using f_def has_sum_butterfly_ket_a by blast
     then show \<open>limitin weak_star_topology (sum f) x (finite_subsets_at_top UNIV)\<close>
       using has_sum_in_def by blast
     show \<open>\<forall>\<^sub>F F in finite_subsets_at_top UNIV.
