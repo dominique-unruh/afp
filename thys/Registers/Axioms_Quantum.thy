@@ -159,7 +159,7 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
     by (simp add: P_def P'_def butterfly_is_Proj register_projector)
   have sumP'id2: \<open>has_sum_in weak_star_topology (\<lambda>i. P' i) UNIV id_cblinfun\<close>
   proof -
-    from infsum_butterfly_ket
+    from has_sum_butterfly_ket
     have \<open>has_sum_in weak_star_topology (\<Phi> o (\<lambda>x. butterfly (ket x) (ket x))) UNIV (\<Phi> id_cblinfun)\<close>
       apply (rule has_sum_in_comm_additive[rotated -1])
       using assms 
@@ -353,15 +353,15 @@ proof (rule with_typeI; unfold fst_conv snd_conv)
       apply (auto intro!: continuous_map_compose[where X'=weak_star_topology])
       using assms register_def continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star by blast+
 
-    have *: \<open>U* o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L U = \<theta> \<otimes>\<^sub>o id_cblinfun\<close> if \<open>\<theta> \<in> cspan {butterfly (ket \<xi>) (ket \<eta>) | \<xi> \<eta>. True}\<close> for \<theta>
+    have *: \<open>U* o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L U = \<theta> \<otimes>\<^sub>o id_cblinfun\<close> if \<open>\<theta> \<in> cspan (range (\<lambda>(\<xi>, \<eta>). butterfly (ket \<xi>) (ket \<eta>)))\<close> for \<theta>
       apply (rule complex_vector.linear_eq_on[where x=\<theta>, OF _ _ that])
         apply (intro \<open>clinear \<Phi>\<close>
           clinear_compose[OF _ clinear_cblinfun_compose_left, unfolded o_def]
           clinear_compose[OF _ clinear_cblinfun_compose_right, unfolded o_def])
        apply simp
-      using * by blast
+      using * by fast
     have \<open>U* o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L U = \<theta> \<otimes>\<^sub>o id_cblinfun\<close> 
-      if \<open>\<theta> \<in> (weak_star_topology closure_of (cspan {butterfly (ket \<xi>) (ket \<eta>) | \<xi> \<eta>. True}))\<close> for \<theta>
+      if \<open>\<theta> \<in> (weak_star_topology closure_of (cspan (range (\<lambda>(\<xi>, \<eta>). butterfly (ket \<xi>) (ket \<eta>)))))\<close> for \<theta>
       apply (rule closure_of_eqI[OF _ _ that])
       using * cont1 left_amplification_weak_star_cont by auto
     with butterkets_weak_star_dense show ?thesis
