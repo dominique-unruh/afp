@@ -1,6 +1,7 @@
 theory Compact_Operators
   imports Tensor_Product.Misc_Tensor_Product_BO HS2Ell2
     Sqrt_Babylonian.Sqrt_Babylonian_Auxiliary Wlog.Wlog
+    "HOL-Analysis.Abstract_Metric_Spaces"
 begin
 
 unbundle cblinfun_notation
@@ -74,56 +75,118 @@ lemma finite_rank_sum: \<open>finite_rank (\<Sum>x\<in>F. f x)\<close> if \<open
 
 subsection \<open>Compact operators\<close>
 
-definition compact_op where \<open>compact_op A \<longleftrightarrow> A \<in> closure (Collect finite_rank)\<close>
+definition compact_map where \<open>compact_map f \<longleftrightarrow> clinear f \<and> compact (closure (f ` cball 0 1))\<close>
+
+lemma \<open>bounded_clinear f\<close> if \<open>compact_map f\<close>
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.4.2 (a)\<close>
+  thm bounded_clinear_def
+proof (unfold bounded_clinear_def bounded_clinear_axioms_def, intro conjI)
+  show \<open>clinear f\<close>
+    using compact_map_def that by blast
+  have \<open>compact (closure (f ` cball 0 1))\<close>
+    using compact_map_def that by blast
+  then have \<open>bounded (f ` cball 0 1)\<close>
+    by (meson bounded_subset closure_subset compact_imp_bounded)
+  then obtain K where *: \<open>norm (f x) \<le> K\<close> if \<open>norm x \<le> 1\<close> for x
+    apply atomize_elim
+    apply (simp add: bounded_iff dist_norm ball_def)
+    by force
+  have \<open>norm (f x) \<le> norm x * K\<close> for x
+  proof (cases \<open>x = 0\<close>)
+    case True
+    then show ?thesis
+      using \<open>clinear f\<close> complex_vector.linear_0 by force
+  next
+    case False
+    have \<open>norm (f x) = norm (f (norm x *\<^sub>C sgn x))\<close>
+      by simp
+    also have \<open>\<dots> = norm x * norm (f (sgn x))\<close>
+      by (smt (verit, best) \<open>clinear f\<close> complex_vector.linear_scale norm_ge_zero norm_of_real norm_scaleC)
+    also have \<open>\<dots> \<le> norm x * K\<close>
+      by (simp add: "*" mult_left_mono norm_sgn)
+    finally show ?thesis
+      by -
+  qed
+  then show \<open>\<exists>K. \<forall>x. norm (f x) \<le> norm x * K\<close>
+    by blast
+qed
+
+lift_definition compact_op :: \<open>('a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector) \<Rightarrow> bool\<close> is compact_map.
+
+lemma compact_op_def2: \<open>compact_op a \<longleftrightarrow> compact (closure (a ` cball 0 1))\<close>
+  apply transfer
+  using bounded_clinear.clinear compact_map_def by blast
+
+(* TODO move *)
+lemma compact_scaleC:
+  fixes s :: "'a::complex_normed_vector set"
+  assumes "compact s"
+  shows "compact (scaleC c ` s)"
+  by (auto intro!: compact_continuous_image assms continuous_at_imp_continuous_on)
 
 lemma compact_op_0[simp]: \<open>compact_op 0\<close>
-  by (meson closure_subset compact_op_def finite_rank_0 in_mono mem_Collect_eq)
+  by (simp add: compact_op_def2 image_constant[where x=0] mem_cball_leI[where x=0])
 
 lemma compact_op_scaleC[simp]: \<open>compact_op (c *\<^sub>C a)\<close> if \<open>compact_op a\<close>
-proof (cases \<open>c = 0\<close>)
-  case True
-  then show ?thesis by simp
-next
-  case False
-  from that
-  have \<open>a \<in> closure (Collect finite_rank)\<close>
-    using compact_op_def by blast
-  then have \<open>c *\<^sub>C a \<in> scaleC c ` closure (Collect finite_rank)\<close>
-    by blast
-  also have \<open>\<dots> = closure (scaleC c ` Collect finite_rank)\<close>
-    by (simp add: closure_scaleC)
-  also have \<open>\<dots> = closure (Collect finite_rank)\<close>
-    by (simp add: False complex_vector.subspace_def csubspace_scaleC_invariant)
-  finally show ?thesis
-    using compact_op_def by blast
+proof -
+  have \<open>compact (closure (a ` cball 0 1))\<close>
+    using compact_op_def2 that by blast
+  then have *: \<open>compact (scaleC c ` closure (a ` cball 0 1))\<close>
+    using compact_scaleC by blast
+  have \<open>closure ((c *\<^sub>C a) ` cball 0 1) = closure (scaleC c ` a ` cball 0 1)\<close>
+    by (metis (no_types, lifting) cblinfun.scaleC_left image_cong image_image)
+  also have \<open>\<dots> = scaleC c ` closure (a ` cball 0 1)\<close>
+    using closure_scaleC by blast
+  finally have \<open>compact (closure ((c *\<^sub>C a) ` cball 0 1))\<close>
+    using "*" by simp
+  then show ?thesis
+    using compact_op_def2 by blast
 qed
 
 lemma compact_op_scaleR[simp]: \<open>compact_op (c *\<^sub>R a)\<close> if \<open>compact_op a\<close>
   by (simp add: scaleR_scaleC that)
-  
 
 lemma compact_op_uminus[simp]: \<open>compact_op (-a) = compact_op a\<close>
   by (metis compact_op_scaleC scaleC_minus1_left verit_minus_simplify(4))
 
+(* TODO move *)
+lemma compact_closed_subset:
+  assumes \<open>compact s\<close>
+  assumes \<open>closed t\<close>
+  assumes \<open>t \<subseteq> s\<close>
+  shows \<open>compact t\<close>
+  by (metis assms(1) assms(2) assms(3) compact_Int_closed inf.absorb_iff2)
 
 lemma compact_op_plus[simp]: \<open>compact_op (a + b)\<close> if \<open>compact_op a\<close> and \<open>compact_op b\<close>
 proof -
-  have \<open>a \<in> closure (Collect finite_rank)\<close> and \<open>b \<in> closure (Collect finite_rank)\<close>
-    using compact_op_def that by auto
-  then have \<open>(a,b) \<in> closure (Collect finite_rank \<times> Collect finite_rank)\<close>
-    using closure_Times by blast
-  then have \<open>a + b \<in> case_prod plus ` closure (Collect finite_rank \<times> Collect finite_rank)\<close>
-    by blast
-  also have \<open>\<dots> \<subseteq> closure (case_prod plus ` closure (Collect finite_rank \<times> Collect finite_rank))\<close>
-    by (meson closure_subset)
-  also have \<open>\<dots> = closure (case_prod plus ` (Collect finite_rank \<times> Collect finite_rank))\<close>
-    apply (rule closure_bounded_linear_image_subset_eq)
-    by simp
-  also have \<open>\<dots> \<subseteq> closure (Collect finite_rank)\<close>
-    by (simp add: closure_mono image_subset_iff)
-  finally show ?thesis
-    using compact_op_def by blast
+  have \<open>compact (closure (a ` cball 0 1))\<close>
+    using compact_op_def2 that by blast
+  moreover have \<open>compact (closure (b ` cball 0 1))\<close>
+    using compact_op_def2 that by blast
+  ultimately have compact_sum: 
+    \<open>compact {x + y |x y. x \<in> closure ((*\<^sub>V) a ` cball 0 1) 
+                        \<and> y \<in> closure ((*\<^sub>V) b ` cball 0 1)}\<close> (is \<open>compact ?sum\<close>)
+    by (rule compact_sums)
+  have \<open>compact (closure ((a + b) ` cball 0 1))\<close>
+  proof -
+    have \<open>((*\<^sub>V) (a + b) ` cball 0 1) \<subseteq> ?sum\<close>
+      using cblinfun.real.add_left closure_subset image_subset_iff by blast
+    then have \<open>closure ((*\<^sub>V) (a + b) ` cball 0 1) \<subseteq> closure ?sum\<close>
+      by (meson closure_mono)
+    also have \<open>\<dots> = ?sum\<close>
+      using compact_sum
+      by (auto intro!: closure_closed compact_imp_closed)
+    finally show ?thesis
+      apply (rule compact_closed_subset[rotated 2])
+      using compact_sum by auto
+  qed
+  then show ?thesis
+    using compact_op_def2 by blast
 qed
+
+lemma csubspace_compact_op: \<open>csubspace (Collect compact_op)\<close>
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.4.2 (b)\<close>
+  by (simp add: complex_vector.subspace_def)
 
 lemma compact_op_minus[simp]: \<open>compact_op (a - b)\<close> if \<open>compact_op a\<close> and \<open>compact_op b\<close>
   by (metis compact_op_plus compact_op_uminus that(1) that(2) uminus_add_conv_diff)
@@ -143,6 +206,163 @@ next
     by (simp add: False sgn_div_norm)
   ultimately show ?thesis
     by auto
+qed
+
+
+(* lemma compact_eq_totally_bounded':
+  fixes s :: \<open>'a::metric_space set\<close>
+  shows "compact s \<longleftrightarrow> complete s \<and> totally_bounded s"
+  by (simp add: compact_eq_totally_bounded totally_bounded_metric ball_def) *)
+
+(* lemma mtotally_bounded_totally_bounded:
+  \<open>Met_TC.mtotally_bounded = (totally_bounded :: 'a::metric_space set \<Rightarrow> _)\<close>
+proof (intro ext iffI)
+  fix S :: \<open>'a set\<close>
+  assume \<open>Met_TC.mtotally_bounded S\<close>
+  then show \<open>totally_bounded S\<close>
+    by (auto simp: Met_TC.mtotally_bounded_def totally_bounded_metric ball_def)
+next
+  fix S :: \<open>'a set\<close>
+  assume asm: \<open>totally_bounded S\<close>
+  show \<open>Met_TC.mtotally_bounded S\<close>
+  proof (unfold Met_TC.mtotally_bounded_def, intro allI impI)
+    fix \<epsilon> :: real assume \<open>\<epsilon> > 0\<close>
+    from totally_bounded_metric[THEN iffD1, rule_format, OF asm this]
+    obtain K where \<open>finite K\<close> and \<open>S \<subseteq> (\<Union>x\<in>K. {y. dist x y < \<epsilon>})\<close>
+      by blast
+
+    show \<open>\<exists>K. finite K \<and> K \<subseteq> S \<and> S \<subseteq> (\<Union>x\<in>K. Met_TC.mball x \<epsilon>)\<close>
+      apply simp
+
+    apply (simp add: Met_TC.mtotally_bounded_def totally_bounded_metric ball_def)
+
+try0
+sledgehammer [dont_slice]
+by - *)
+
+(* lemma totally_bounded_closure:
+  fixes S :: \<open>'a::metric_space set\<close>
+  assumes "totally_bounded S"
+  shows "totally_bounded (closure S)"
+  using Met_TC.mtotally_bounded_closure_of[of S] assms
+  by (simp add: mtotally_bounded_totally_bounded) *)
+
+lemma closed_compact_op: 
+  shows \<open>closed (Collect (compact_op :: ('a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) \<Rightarrow> bool))\<close>
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.4.2 (b)\<close>
+proof (intro closed_sequential_limits[THEN iffD2] allI impI conjI)
+  fix T and A :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
+  assume asm: \<open>(\<forall>n. T n \<in> Collect compact_op) \<and> T \<longlonglongrightarrow> A\<close>
+  have \<open>Met_TC.mtotally_bounded (A ` cball 0 1)\<close>
+  proof (unfold Met_TC.mtotally_bounded_def, intro allI impI)
+    fix \<epsilon> :: real assume \<open>\<epsilon> > 0\<close>
+    define \<delta> where \<open>\<delta> = \<epsilon>/3\<close>
+    then have \<open>\<delta> > 0\<close>
+      using \<open>\<epsilon> > 0\<close> by simp
+    from asm[unfolded LIMSEQ_def, THEN conjunct2, rule_format, OF \<open>\<delta> > 0\<close>]
+    obtain n where dist_TA: \<open>dist (T n) A < \<delta>\<close>
+      apply atomize_elim by auto
+    from asm have \<open>compact_op (T n)\<close>
+      by simp
+    then have \<open>Met_TC.mtotally_bounded (T n ` cball 0 1)\<close>
+      apply (subst Met_TC.mtotally_bounded_eq_compact_closure_of)
+      by (auto intro!: simp: compact_op_def2 Met_TC.mtotally_bounded_eq_compact_closure_of)
+    then obtain K where \<open>finite K\<close> and K_T: \<open>K \<subseteq> T n ` cball 0 1\<close> and 
+      TK: \<open>T n ` cball 0 1 \<subseteq> (\<Union>k\<in>K. Met_TC.mball k \<delta>)\<close> 
+      apply atomize_elim unfolding Met_TC.mtotally_bounded_def using \<open>\<delta> > 0\<close>
+      by blast
+    from \<open>finite K\<close> and K_T obtain H where \<open>finite H\<close> and \<open>H \<subseteq> cball 0 1\<close>
+      and KTH: \<open>K = T n ` H\<close>
+      by (meson finite_subset_image)
+    from TK have TH: \<open>T n ` cball 0 1 \<subseteq> (\<Union>h\<in>H. ball (T n *\<^sub>V h) \<delta>)\<close>
+      by (simp add: KTH)
+    have \<open>A ` cball 0 1 \<subseteq> (\<Union>h\<in>H. ball (A h) \<epsilon>)\<close>
+    proof (rule subsetI)
+      fix x assume \<open>x \<in> (*\<^sub>V) A ` cball 0 1\<close>
+      then obtain l where \<open>l \<in> cball 0 1\<close> and xl: \<open>x = A l\<close>
+        by blast
+      then have \<open>T n l \<in> T n ` cball 0 1\<close>
+        by auto
+      with TH obtain h where \<open>h \<in> H\<close> and \<open>T n l \<in> ball (T n h) \<delta>\<close>
+        by blast
+      then have dist_Tlh: \<open>dist (T n l) (T n h) < \<delta>\<close>
+        by (simp add: dist_commute)
+      have \<open>dist (A h) (A l) < \<epsilon>\<close>
+      proof -
+        have norm_h: \<open>norm h \<le> 1\<close>
+          using \<open>H \<subseteq> cball 0 1\<close> \<open>h \<in> H\<close> mem_cball_0 by blast
+        have norm_l: \<open>norm l \<le> 1\<close>
+          using \<open>l \<in> cball 0 1\<close> by auto
+        from dist_TA norm_h have \<open>dist (A h) (T n h) < \<delta>\<close>
+          apply (subst dist_commute)
+          using norm_cblinfun[of \<open>T n - A\<close> h]
+          apply (simp add: dist_norm flip: cblinfun.diff_left)
+          by (smt (verit, del_insts) mult.commute mult_left_le_one_le norm_ge_zero)
+        moreover have \<open>dist (T n h) (T n l) < \<delta>\<close>
+          using dist_Tlh by (metis dist_commute)
+        moreover from dist_TA norm_l have \<open>dist (T n l) (A l) < \<delta>\<close>
+          using norm_cblinfun[of \<open>T n - A\<close> l]
+          apply (simp add: dist_norm flip: cblinfun.diff_left)
+          by (smt (verit, del_insts) mult.commute mult_left_le_one_le norm_ge_zero)
+        ultimately show ?thesis
+          unfolding \<delta>_def
+          by (rule dist_triangle_third)
+      qed
+      then show \<open>x \<in> (\<Union>h\<in>H. ball (A h) \<epsilon>) \<close>
+        using \<open>h \<in> H\<close> by (auto intro!: simp: xl)
+    qed
+    then show \<open>\<exists>K. finite K \<and> K \<subseteq> (*\<^sub>V) A ` cball 0 1 \<and> 
+              (*\<^sub>V) A ` cball 0 1 \<subseteq> (\<Union>x\<in>K. Met_TC.mball x \<epsilon>)\<close>
+      using \<open>H \<subseteq> cball 0 1\<close>
+      apply (auto intro!: exI[of _ \<open>A ` H\<close>] \<open>finite H\<close> simp: ball_def)
+      by fastforce
+  qed
+  then have \<open>Met_TC.mtotally_bounded (closure (A ` cball 0 1))\<close>
+    using Met_TC.mtotally_bounded_closure_of by auto
+  then have \<open>compact (closure (A ` cball 0 1))\<close>
+    by (simp_all add: Met_TC.mtotally_bounded_eq_compact_closure_of complete_UNIV_cuspace)
+  then show \<open>A \<in> Collect compact_op\<close>
+    using compact_op_def2 by blast
+qed
+
+lemma rank1_compact_op: \<open>compact_op a\<close> if \<open>rank1 a\<close>
+  by x
+(*
+proof -
+  from that obtain \<psi> where \<open>\<psi> \<noteq> 0\<close> and \<open>a *\<^sub>S \<top> = ccspan {\<psi>}\<close>
+    by (auto intro!: simp: rank1_def)
+  then have \<open>range a = cspan {\<psi>}\<close>
+try0
+sledgehammer [dont_slice]
+by -
+  have \<open>complete (cspan {\<psi>})\<close> *)
+
+lemma finite_rank_compact_op: \<open>compact_op a\<close> if \<open>finite_rank a\<close>
+proof -
+  from that obtain t r where \<open>finite t\<close> and \<open>t \<subseteq> Collect rank1\<close>
+    and a_decomp: \<open>a = (\<Sum>x\<in>t. r x *\<^sub>C x)\<close>
+    by (auto simp: finite_rank_def complex_vector.span_explicit)
+  from \<open>finite t\<close> \<open>t \<subseteq> Collect rank1\<close> show \<open>compact_op a\<close>
+    apply (unfold a_decomp, induction)
+    by (auto intro!: compact_op_plus compact_op_scaleC intro: rank1_compact_op)
+qed
+
+lemma compact_op_finite_rank: 
+  fixes A :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  shows \<open>compact_op A \<longleftrightarrow> A \<in> closure (Collect finite_rank)\<close>
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.4.4 (c)\<close>
+proof (rule iffI)
+  assume \<open>A \<in> closure (Collect finite_rank)\<close>
+  then have \<open>A \<in> closure (Collect compact_op)\<close>
+    by (metis closure_sequential finite_rank_compact_op mem_Collect_eq)
+  also have \<open>\<dots> = Collect compact_op\<close>
+    by (simp add: closed_compact_op)
+  finally show \<open>compact_op A\<close>
+    by simp
+next
+  assume \<open>compact_op A\<close>
+  show \<open>A \<in> closure (Collect finite_rank)\<close>
+    by x
 qed
 
 typedef (overloaded) ('a::chilbert_space,'b::complex_normed_vector) compact_op = \<open>Collect compact_op :: ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close>

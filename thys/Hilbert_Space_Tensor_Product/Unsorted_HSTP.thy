@@ -2148,6 +2148,7 @@ lemma from_trace_class_sum:
   apply (induction M rule:infinite_finite_induct)
   by (simp_all add: plus_trace_class.rep_eq)
 
+(* A \<ge> 0 can be replaced by A*=A, see Conway Operator II.2.13. *)
 lemma cblinfun_norm_approx_witness_cinner:
   fixes A :: \<open>'a::{not_singleton,chilbert_space} \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
   assumes \<open>A \<ge> 0\<close> and \<open>\<epsilon> > 0\<close>
