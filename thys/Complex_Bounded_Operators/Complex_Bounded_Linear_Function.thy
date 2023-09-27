@@ -3765,7 +3765,13 @@ lemma image_vector_to_cblinfun_adj':
 
 subsection \<open>Rank-1 operators / butterflies\<close>
 
-definition rank1 where \<open>rank1 A \<longleftrightarrow> (\<exists>\<psi>\<noteq>0. A *\<^sub>S \<top> = ccspan {\<psi>})\<close>
+definition rank1 where \<open>rank1 A \<longleftrightarrow> (\<exists>\<psi>. A *\<^sub>S \<top> = ccspan {\<psi>})\<close>
+(* TODO update description in paper *)
+\<comment> \<open>This is not the usual definition of a rank-1 operator.
+The usual definition is an operator with 1-dim image.
+Here we define it as an operator with 0- or 1-dim image.
+This makes the definition simpler to use.
+The normal definition of rank-1 operators then corresponds to the non-zero \<^term>\<open>rank1\<close> operators.\<close>
 
 definition "butterfly (s::'a::complex_normed_vector) (t::'b::chilbert_space)
    = vector_to_cblinfun s o\<^sub>C\<^sub>L (vector_to_cblinfun t :: complex \<Rightarrow>\<^sub>C\<^sub>L _)*"
@@ -3865,11 +3871,10 @@ proof (rule exI[of _ \<open>A* *\<^sub>V (\<psi> /\<^sub>R (norm \<psi>)\<^sup>2
     by -
 qed
 
-lemma zero_not_rank1[simp]: \<open>\<not> rank1 0\<close>
-  unfolding rank1_def
-  by auto (metis ccspan_superset insert_not_empty singleton_insert_inj_eq space_as_set_bot subset_singletonD)
+lemma rank1_0[simp]: \<open>rank1 0\<close>
+  by (metis ccspan_0 kernel_0 kernel_apply_self rank1_def)
 
-lemma rank1_iff_butterfly: \<open>rank1 A \<longleftrightarrow> (\<exists>\<psi> \<phi>. A = butterfly \<psi> \<phi>) \<and> A \<noteq> 0\<close>
+lemma rank1_iff_butterfly: \<open>rank1 A \<longleftrightarrow> (\<exists>\<psi> \<phi>. A = butterfly \<psi> \<phi>)\<close>
   for A :: \<open>_::complex_inner \<Rightarrow>\<^sub>C\<^sub>L _::chilbert_space\<close>
 proof (rule iffI)
   assume \<open>rank1 A\<close>
@@ -3877,27 +3882,27 @@ proof (rule iffI)
     using rank1_def by auto
   then have \<open>\<exists>\<phi>. A = butterfly \<psi> \<phi>\<close>
     by (rule rank1_is_butterfly)
-  moreover from \<open>rank1 A\<close> have \<open>A \<noteq> 0\<close>
-    by auto
-  ultimately show \<open>(\<exists>\<psi> \<phi>. A = butterfly \<psi> \<phi>) \<and> A \<noteq> 0\<close>
+  then show \<open>\<exists>\<psi> \<phi>. A = butterfly \<psi> \<phi>\<close>
     by auto
 next
-  assume asm: \<open>(\<exists>\<psi> \<phi>. A = butterfly \<psi> \<phi>) \<and> A \<noteq> 0\<close>
-  then obtain \<psi> \<phi> where A: \<open>A = butterfly \<psi> \<phi>\<close>
-    by auto
-  from asm have \<open>A \<noteq> 0\<close>
-    by simp
-  with A have \<open>\<psi> \<noteq> 0\<close> and \<open>\<phi> \<noteq> 0\<close>
-    by auto
-  then have \<open>butterfly \<psi> \<phi> *\<^sub>S \<top> = ccspan {\<psi>}\<close>
-    by (rule_tac butterfly_is_rank1)
-  with A \<open>\<psi> \<noteq> 0\<close> show \<open>rank1 A\<close>
-    by (auto intro!: exI[of _ \<psi>] simp: rank1_def)
+  assume asm: \<open>\<exists>\<psi> \<phi>. A = butterfly \<psi> \<phi>\<close>
+  show \<open>rank1 A\<close>
+  proof (cases \<open>A = 0\<close>)
+    case True
+    then show ?thesis
+      by simp
+  next
+    case False
+    from asm obtain \<psi> \<phi> where A: \<open>A = butterfly \<psi> \<phi>\<close>
+      by auto
+    with False have \<open>\<psi> \<noteq> 0\<close> and \<open>\<phi> \<noteq> 0\<close>
+      by auto
+    then have \<open>butterfly \<psi> \<phi> *\<^sub>S \<top> = ccspan {\<psi>}\<close>
+      by (rule_tac butterfly_is_rank1)
+    with A \<open>\<psi> \<noteq> 0\<close> show \<open>rank1 A\<close>
+      by (auto intro!: exI[of _ \<psi>] simp: rank1_def)
+  qed
 qed
-
-lemma butterfly_if_rank1: \<open>(\<exists>\<psi> \<phi>. A = butterfly \<psi> \<phi>) \<longleftrightarrow> rank1 A \<or> A = 0\<close>
-  for A :: \<open>_::complex_inner \<Rightarrow>\<^sub>C\<^sub>L _::chilbert_space\<close>
-  by (metis butterfly_0_left rank1_iff_butterfly)
 
 lemma norm_butterfly: "norm (butterfly \<psi> \<phi>) = norm \<psi> * norm \<phi>"
 proof (cases "\<phi>=0")
@@ -3907,7 +3912,6 @@ next
   case False
   show ?thesis
     unfolding norm_cblinfun.rep_eq
-    thm onormI[OF _ False]
   proof (rule onormI[OF _ False])
     fix x
 
@@ -4128,40 +4132,94 @@ next
     by simp
 qed
 
-lemma rank1_compose_left: \<open>rank1 (a o\<^sub>C\<^sub>L b)\<close> if \<open>rank1 b\<close> and \<open>a o\<^sub>C\<^sub>L b \<noteq> 0\<close>
+lemma rank1_compose_left: \<open>rank1 (a o\<^sub>C\<^sub>L b)\<close> if \<open>rank1 b\<close>
 proof -
   from \<open>rank1 b\<close>
   obtain \<psi> where \<open>b *\<^sub>S \<top> = ccspan {\<psi>}\<close>
     using rank1_def by blast
   then have *: \<open>(a o\<^sub>C\<^sub>L b) *\<^sub>S \<top> = ccspan {a \<psi>}\<close>
     by (metis cblinfun_assoc_left(2) cblinfun_image_ccspan image_empty image_insert)
-  with \<open>a o\<^sub>C\<^sub>L b \<noteq> 0\<close> have \<open>a \<psi> \<noteq> 0\<close>
-    by auto
-  with * show \<open>rank1 (a o\<^sub>C\<^sub>L b)\<close>
+  then show \<open>rank1 (a o\<^sub>C\<^sub>L b)\<close>
     using rank1_def by blast
 qed
 
-lemma rank1_compose_right: \<open>rank1 (a o\<^sub>C\<^sub>L b)\<close> if \<open>rank1 a\<close> and \<open>a o\<^sub>C\<^sub>L b \<noteq> 0\<close>
+lemma csubspace_of_1dim_space:
+  assumes \<open>S \<noteq> {0}\<close>
+  assumes \<open>csubspace S\<close>
+  assumes \<open>S \<subseteq> cspan {\<psi>}\<close>
+  shows \<open>S = cspan {\<psi>}\<close>
 proof -
-  from \<open>rank1 a\<close>
-  obtain \<psi> where \<open>a *\<^sub>S \<top> = ccspan {\<psi>}\<close> and \<open>\<psi> \<noteq> 0\<close>
+  from \<open>S \<noteq> {0}\<close> \<open>csubspace S\<close>
+  obtain \<phi> where \<open>\<phi> \<in> S\<close> and \<open>\<phi> \<noteq> 0\<close>
+    using complex_vector.subspace_0 by blast
+  then have \<open>\<phi> \<in> cspan {\<psi>}\<close>
+    using \<open>S \<subseteq> cspan {\<psi>}\<close> by blast
+  with \<open>\<phi> \<noteq> 0\<close> obtain c where \<open>\<phi> = c *\<^sub>C \<psi>\<close> and \<open>c \<noteq> 0\<close>
+    by (metis complex_vector.span_breakdown_eq complex_vector.span_empty right_minus_eq scaleC_eq_0_iff singletonD)
+  have \<open>cspan {\<psi>} = cspan {inverse c *\<^sub>C \<phi>}\<close>
+    by (simp add: \<open>\<phi> = c *\<^sub>C \<psi>\<close> \<open>c \<noteq> 0\<close>)
+  also have \<open>\<dots> \<subseteq> cspan {\<phi>}\<close>
+    using \<open>c \<noteq> 0\<close> by auto
+  also from \<open>\<phi> = c *\<^sub>C \<psi>\<close> \<open>\<phi> \<in> S\<close> \<open>c \<noteq> 0\<close> assms
+  have \<open>\<dots> \<subseteq> S\<close>
+    by (metis complex_vector.span_subspace cspan_singleton_scaleC empty_subsetI insert_Diff insert_mono)
+  finally have \<open>cspan {\<psi>} \<subseteq> S\<close>
+    by -
+  with \<open>S \<subseteq> cspan {\<psi>}\<close> show ?thesis
+    by simp
+qed
+
+lemma subspace_of_1dim_ccspan:
+  assumes \<open>S \<noteq> 0\<close>
+  assumes \<open>S \<le> ccspan {\<psi>}\<close>
+  shows \<open>S = ccspan {\<psi>}\<close>
+  using assms apply transfer
+  by (simp add: csubspace_of_1dim_space)
+
+lemma rank1_compose_right: \<open>rank1 (a o\<^sub>C\<^sub>L b)\<close> if \<open>rank1 a\<close>
+proof -
+  have \<open>(a o\<^sub>C\<^sub>L b) *\<^sub>S \<top> \<le> a *\<^sub>S \<top>\<close>
+    by (metis cblinfun_apply_cblinfun_compose cblinfun_apply_in_image cblinfun_image_ccspan_leqI ccspan_UNIV)
+  also from \<open>rank1 a\<close>
+  obtain \<psi> where \<open>a *\<^sub>S \<top> = ccspan {\<psi>}\<close>
     using rank1_def by blast
+  finally have *: \<open>(a o\<^sub>C\<^sub>L b) *\<^sub>S \<top> \<le> ccspan {\<psi>}\<close>
+    by -
+  show \<open>rank1 (a o\<^sub>C\<^sub>L b)\<close>
+  proof (cases \<open>(a o\<^sub>C\<^sub>L b) *\<^sub>S \<top> = 0\<close>)
+    case True
+    then show ?thesis 
+      by simp
+  next
+    case False
+    with * have \<open>(a o\<^sub>C\<^sub>L b) *\<^sub>S \<top> = ccspan {\<psi>}\<close>
+      using subspace_of_1dim_ccspan by blast
+    then show ?thesis
+      using rank1_def by blast
+  qed
+qed
+(*   obtain \<phi> where \<open>(a o\<^sub>C\<^sub>L b) *\<^sub>S \<top>\<close>
   then have *: \<open>(a o\<^sub>C\<^sub>L b) *\<^sub>S \<top> \<le> ccspan {\<psi>}\<close>
     by (metis cblinfun_assoc_left(2) cblinfun_image_mono top_greatest)
-  from \<open>a o\<^sub>C\<^sub>L b \<noteq> 0\<close> obtain \<phi> where \<phi>_ab: \<open>\<phi> \<in> space_as_set ((a o\<^sub>C\<^sub>L b) *\<^sub>S \<top>)\<close> and \<open>\<phi> \<noteq> 0\<close>
-    by (metis cblinfun.real.zero_left cblinfun_apply_in_image cblinfun_eqI)
+  obtain \<phi> where \<phi>_ab: \<open>\<phi> \<in> space_as_set ((a o\<^sub>C\<^sub>L b) *\<^sub>S \<top>)\<close>
+    by (metis cblinfun_apply_in_image)
   with * have \<open>\<phi> \<in> space_as_set (ccspan {\<psi>})\<close>
     using less_eq_ccsubspace.rep_eq by blast
-  with \<open>\<phi> \<noteq> 0\<close> obtain c where \<open>\<phi> = c *\<^sub>C \<psi>\<close> and \<open>c \<noteq> 0\<close>
+  then obtain c where \<open>\<phi> = c *\<^sub>C \<psi>\<close>
     apply (simp add: ccspan.rep_eq)
     by (auto simp add: complex_vector.span_singleton)
   with \<phi>_ab have \<open>(a o\<^sub>C\<^sub>L b) *\<^sub>S \<top> \<ge> ccspan {\<psi>}\<close>
+    apply (auto intro!: ccspan_leqI simp: )
+try0
+sledgehammer [dont_slice]
+  by (metis X ccspan_leqI ccspan_singleton_scaleC empty_subsetI insert_subset scaleC_eq_0_iff)
+by -
     by (metis ccspan_leqI ccspan_singleton_scaleC empty_subsetI insert_subset)
   with * have \<open>(a o\<^sub>C\<^sub>L b) *\<^sub>S \<top> = ccspan {\<psi>}\<close>
     by fastforce
-  with \<open>\<psi> \<noteq> 0\<close> show \<open>rank1 (a o\<^sub>C\<^sub>L b)\<close>
+  then show \<open>rank1 (a o\<^sub>C\<^sub>L b)\<close>
     using rank1_def by blast
-qed
+qed *)
 
 lemma rank1_scaleC: \<open>rank1 (c *\<^sub>C a)\<close> if \<open>rank1 a\<close> and \<open>c \<noteq> 0\<close>
   using rank1_compose_left[OF \<open>rank1 a\<close>, where a=\<open>c *\<^sub>C id_cblinfun\<close>]

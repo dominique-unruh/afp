@@ -675,7 +675,7 @@ proof -
     unfolding finite_rank_dense_compact[OF is_onb_ket is_onb_ket, symmetric]
     by (simp add: image_image case_prod_beta flip: map_prod_image)
   moreover have \<open>\<dots> \<supseteq> Collect finite_rank\<close>
-    by (metis closure_subset compact_op_def mem_Collect_eq subsetI subset_antisym)
+    by (metis closure_subset compact_op_finite_rank mem_Collect_eq subsetI subset_antisym)
   ultimately have *: \<open>weak_star_topology closure_of (cspan ((\<lambda>(\<xi>,\<eta>). butterfly (ket \<xi>) (ket \<eta>)) ` UNIV)) \<supseteq> Collect finite_rank\<close>
     by blast
   have \<open>weak_star_topology closure_of cspan ((\<lambda>(\<xi>,\<eta>). butterfly (ket \<xi>) (ket \<eta>)) ` UNIV)
