@@ -12,9 +12,8 @@ lemma rank1_scaleR[simp]: \<open>rank1 (c *\<^sub>R a)\<close> if \<open>rank1 a
   by (simp add: rank1_scaleC scaleR_scaleC that(1) that(2))
 
 lemma rank1_butterfly[simp]: \<open>rank1 (butterfly x y)\<close>
-  apply (auto intro!: simp: rank1_def)
-  unfolding rank1_iff_butterfly
-  by (metis butterfly_is_rank1 rank1_def that(1) that(2) zero_not_rank1)
+  apply (cases \<open>y = 0\<close>)
+  by (auto intro: exI[of _ 0] simp: rank1_def butterfly_is_rank1)
   
 subsection \<open>Finite rank operators\<close>
 
@@ -66,7 +65,7 @@ proof -
   obtain x y where \<open>c i = butterfly (x i) (y i)\<close> if \<open>i < n\<close> for i
     apply atomize_elim
     apply (rule SMT.choices)
-    using butterfly_if_rank1 by blast
+    using rank1_iff_butterfly by fastforce
   with ac_sum show ?thesis
     by auto
 qed    
@@ -103,14 +102,61 @@ qed
 lemma finite_rank_compose_right:
   assumes \<open>finite_rank A\<close>
   shows \<open>finite_rank (A o\<^sub>C\<^sub>L B)\<close>
-  by -
+proof -
+  from assms have \<open>A \<in> cspan (Collect rank1)\<close>
+    by (simp add: finite_rank_def)
+  then obtain F t where \<open>finite F\<close> and F_rank1: \<open>F \<subseteq> Collect rank1\<close> and \<open>A = (\<Sum>x\<in>F. t x *\<^sub>C x)\<close>
+    by (smt (verit, best) complex_vector.span_explicit mem_Collect_eq)
+  then have \<open>A o\<^sub>C\<^sub>L B = (\<Sum>x\<in>F. t x *\<^sub>C (x o\<^sub>C\<^sub>L B))\<close>
+    by (metis (mono_tags, lifting) cblinfun_compose_scaleC_left cblinfun_compose_sum_left sum.cong)
+  also have \<open>\<dots> \<in> cspan (Collect finite_rank)\<close>
+    apply (intro complex_vector.span_sum complex_vector.span_scale)
+    using F_rank1
+    by (auto intro!: complex_vector.span_base rank1_finite_rank rank1_compose_right simp: )
+  also have \<open>\<dots> = Collect finite_rank\<close>
+    by (metis (no_types, lifting) complex_vector.span_superset cspan_eqI finite_rank_def mem_Collect_eq subset_antisym subset_iff)
+  finally show ?thesis
+    by simp
+qed
+
+lemma rank1_Proj_singleton[iff]: \<open>rank1 (Proj (ccspan {x}))\<close>
+  using Proj_range rank1_def by blast
+
+lemma finite_rank_Proj_singleton[iff]: \<open>finite_rank (Proj (ccspan {x}))\<close>
+  by (simp add: rank1_finite_rank)
 
 lemma finite_rank_Proj_finite:
+  fixes F :: \<open>'a::chilbert_space set\<close>
   assumes \<open>finite F\<close>
   shows \<open>finite_rank (Proj (ccspan F))\<close>
-(* Maybe by finding a finite ONB of ccspan F, then using Proj_orthog_ccspan_insert and induction on the ONB *)
-  by x
-
+proof -
+  obtain B where \<open>is_ortho_set B\<close> and \<open>finite B\<close> and \<open>cspan B = cspan F\<close>
+    by (meson assms orthonormal_basis_of_cspan)
+  have \<open>Proj (ccspan F) = Proj (ccspan B)\<close>
+    by (simp add: \<open>cspan B = cspan F\<close> ccspan.abs_eq)
+  moreover have \<open>finite_rank (Proj (ccspan B))\<close>
+    using \<open>finite B\<close> \<open>is_ortho_set B\<close> 
+  proof induction
+    case empty
+    then show ?case
+      by simp
+  next
+    case (insert x F)
+    then have \<open>is_ortho_set F\<close>
+      by (meson is_ortho_set_antimono subset_insertI)
+    have \<open>Proj (ccspan (insert x F)) = proj x + Proj (ccspan F)\<close>
+      apply (subst Proj_orthog_ccspan_insert)
+      using insert apply (simp_all add: is_onb_def is_ortho_set_def)
+      by fast
+    moreover have \<open>finite_rank \<dots>\<close>
+      apply (rule finite_rank_plus)
+      by (auto intro!: finite_rank_Proj_singleton \<open>is_ortho_set F\<close> insert)
+    ultimately show ?case 
+      by simp
+  qed
+  ultimately show ?thesis
+    by simp
+qed
 
 
 subsection \<open>Compact operators\<close>
@@ -367,8 +413,10 @@ qed
 
 lemma rank1_compact_op: \<open>compact_op a\<close> if \<open>rank1 a\<close>
 proof -
-  from that obtain \<psi> where im_a: \<open>a *\<^sub>S \<top> = ccspan {\<psi>}\<close>
-    by (auto intro!: simp: rank1_def)
+  wlog \<open>a \<noteq> 0\<close>
+    using negation by simp
+  with that obtain \<psi> where im_a: \<open>a *\<^sub>S \<top> = ccspan {\<psi>}\<close> and \<open>\<psi> \<noteq> 0\<close>
+    using rank1_def by fastforce
   define c where \<open>c = norm a / norm \<psi>\<close>
   have compact_\<psi>c: \<open>compact ((\<lambda>x. x *\<^sub>C \<psi>) ` cball 0 c)\<close>
   proof -
@@ -997,7 +1045,7 @@ proof (rule Set.equalityI)
   proof -
     have \<open>closure (cspan ((\<lambda>(\<xi>,\<eta>). butterfly \<xi> \<eta>) ` (A \<times> B))) \<subseteq> closure (Collect finite_rank)\<close>
       apply (auto intro!: closure_mono simp: case_prod_beta)
-      by (smt (z3) butterfly_if_rank1 complex_vector.span_alt complex_vector.span_base complex_vector.span_clauses(4) complex_vector.span_sum finite_rank_0 finite_rank_def image_iff mem_Collect_eq subsetD)
+      by (metis (mono_tags, lifting) complex_vector.span_minimal complex_vector.subspace_span finite_rank_butterfly finite_rank_def image_iff subset_iff)
     also have \<open>\<dots> = Collect compact_op\<close>
       by (simp add: Set.set_eqI compact_op_finite_rank)
     finally show ?thesis
@@ -1011,7 +1059,7 @@ proof (rule Set.equalityI)
     proof (rule closure_mono, rule complex_vector.span_mono, rule subsetI)
       fix x :: \<open>'b \<Rightarrow>\<^sub>C\<^sub>L 'a\<close> assume \<open>x \<in> Collect rank1\<close>
       then obtain a b where xab: \<open>x = butterfly a b\<close>
-        using butterfly_if_rank1 by fastforce
+        using rank1_iff_butterfly by fastforce
       define f where \<open>f F G = butterfly (Proj (ccspan F) a) (Proj (ccspan G) b)\<close> for F G
       have lim: \<open>(case_prod f \<longlongrightarrow> x) (finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B)\<close>
       proof (rule tendstoI, subst dist_norm)
