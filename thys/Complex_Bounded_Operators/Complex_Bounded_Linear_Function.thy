@@ -214,7 +214,7 @@ qed
 lemma cblinfun_norm_approx_witness_mult:
   fixes A :: \<open>'a::{not_singleton,complex_normed_vector} \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
   assumes \<open>\<epsilon> < 1\<close>
-  shows \<open>\<exists>\<psi>. norm (A *\<^sub>V \<psi>) \<ge> norm A * \<epsilon> \<and> norm \<psi> = 1\<close>
+  shows \<open>\<exists>\<psi>.  norm (A *\<^sub>V \<psi>) \<ge> norm A * \<epsilon> \<and> norm \<psi> = 1\<close>
 proof (cases \<open>norm A = 0\<close>)
   case True
   then show ?thesis
@@ -1779,7 +1779,7 @@ lemmas cblinfun_assoc_right = cblinfun_compose_assoc cblinfun_compose_image
   add.assoc[where ?'a="'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space"]
 
 lemma cblinfun_image_INF_leq[simp]:
-  fixes U :: "'b::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'c::cbanach"
+  fixes U :: "'b::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'c::complex_normed_vector"
     and V :: "'a \<Rightarrow> 'b ccsubspace"
   shows \<open>U *\<^sub>S (INF i\<in>X. V i) \<le> (INF i\<in>X. U *\<^sub>S (V i))\<close>
   apply transfer

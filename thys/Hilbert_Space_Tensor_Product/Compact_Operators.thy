@@ -125,6 +125,95 @@ lemma rank1_Proj_singleton[iff]: \<open>rank1 (Proj (ccspan {x}))\<close>
 lemma finite_rank_Proj_singleton[iff]: \<open>finite_rank (Proj (ccspan {x}))\<close>
   by (simp add: rank1_finite_rank)
 
+(* TODO move *)
+definition \<open>cfinite_dim S \<longleftrightarrow> (\<exists>B. finite B \<and> S \<subseteq> cspan B)\<close>
+
+(* TODO move *)
+lemma cfinite_dim_subspace_has_basis:
+  assumes \<open>cfinite_dim S\<close> and \<open>csubspace S\<close>
+  shows \<open>\<exists>B. finite B \<and> cindependent B \<and> cspan B = S\<close>
+proof -
+  from \<open>csubspace S\<close>
+  obtain B where \<open>cindependent B\<close> and \<open>cspan B = S\<close>
+    apply (rule_tac complex_vector.maximal_independent_subset[where V=S])
+    using complex_vector.span_subspace by blast
+  from \<open>cfinite_dim S\<close>
+  obtain C where \<open>finite C\<close> and \<open>S \<subseteq> cspan C\<close>
+    using cfinite_dim_def by auto
+  from \<open>cspan B = S\<close> and \<open>S \<subseteq> cspan C\<close>
+  have \<open>B \<subseteq> cspan C\<close>
+    using complex_vector.span_superset by force
+  from \<open>finite C\<close> \<open>cindependent B\<close> this
+  have \<open>finite B\<close>
+    by (rule complex_vector.independent_span_bound[THEN conjunct1])
+  from this and \<open>cindependent B\<close> and \<open>cspan B = S\<close>
+  show ?thesis
+    by auto
+qed
+
+(* TODO move *)
+lemma cfinite_dim_subspace_has_onb:
+  assumes \<open>cfinite_dim S\<close> and \<open>csubspace S\<close>
+  shows \<open>\<exists>B. finite B \<and> is_ortho_set B \<and> cspan B = S \<and> (\<forall>x\<in>B. norm x = 1)\<close>
+proof -
+  from assms
+  obtain C where \<open>finite C\<close> and \<open>cindependent C\<close> and \<open>cspan C = S\<close>
+    using cfinite_dim_subspace_has_basis by blast
+  obtain B where \<open>finite B\<close> and \<open>is_ortho_set B\<close> and \<open>cspan B = cspan C\<close>
+    and norm: \<open>x \<in> B \<Longrightarrow> norm x = 1\<close> for x
+    using orthonormal_basis_of_cspan[OF \<open>finite C\<close>]
+    by blast
+  with \<open>cspan C = S\<close> have \<open>cspan B = S\<close>
+    by simp
+  with \<open>finite B\<close> and \<open>is_ortho_set B\<close> and norm
+  show ?thesis
+    by blast
+qed
+
+lemma cspan_finite_dim[intro]: \<open>cfinite_dim (cspan B)\<close> if \<open>finite B\<close>
+  using cfinite_dim_def that by auto
+
+(* TODO move *)
+lift_definition finite_dim_ccsubspace :: \<open>'a::complex_normed_vector ccsubspace \<Rightarrow> bool\<close> is cfinite_dim.
+
+lemma ccspan_finite_dim[intro]: \<open>finite_dim_ccsubspace (ccspan B)\<close> if \<open>finite B\<close>
+  using ccspan_finite finite_dim_ccsubspace.rep_eq that by fastforce
+
+lemma finite_rank_Proj_finite_dim:
+  fixes S :: \<open>'a::chilbert_space ccsubspace\<close>
+  assumes \<open>finite_dim_ccsubspace S\<close>
+  shows \<open>finite_rank (Proj S)\<close>
+proof -
+  from assms
+  obtain B where \<open>is_ortho_set B\<close> and \<open>finite B\<close> and spanB: \<open>cspan B = space_as_set S\<close>
+    unfolding finite_dim_ccsubspace.rep_eq
+    using cfinite_dim_subspace_has_onb by force
+  have \<open>Proj S = Proj (ccspan B)\<close>
+    by (metis Proj.rep_eq \<open>finite B\<close> cblinfun_apply_inject ccspan_finite spanB)
+  moreover have \<open>finite_rank (Proj (ccspan B))\<close>
+    using \<open>finite B\<close> \<open>is_ortho_set B\<close> 
+  proof induction
+    case empty
+    then show ?case
+      by simp
+  next
+    case (insert x F)
+    then have \<open>is_ortho_set F\<close>
+      by (meson is_ortho_set_antimono subset_insertI)
+    have \<open>Proj (ccspan (insert x F)) = proj x + Proj (ccspan F)\<close>
+      apply (subst Proj_orthog_ccspan_insert)
+      using insert apply (simp_all add: is_onb_def is_ortho_set_def)
+      by fast
+    moreover have \<open>finite_rank \<dots>\<close>
+      apply (rule finite_rank_plus)
+      by (auto intro!: finite_rank_Proj_singleton \<open>is_ortho_set F\<close> insert)
+    ultimately show ?case 
+      by simp
+  qed
+  ultimately show ?thesis
+    by simp
+qed
+
 lemma finite_rank_Proj_finite:
   fixes F :: \<open>'a::chilbert_space set\<close>
   assumes \<open>finite F\<close>

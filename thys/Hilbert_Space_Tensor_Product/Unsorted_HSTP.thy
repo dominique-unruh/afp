@@ -11,6 +11,9 @@ hide_const (open) Finite_Cartesian_Product.vec
 hide_const (open) Finite_Cartesian_Product.mat
 hide_const (open) Coset.kernel
 
+definition selfadjoint :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow> bool\<close> where
+  \<open>selfadjoint a \<longleftrightarrow> a* = a\<close>
+
 definition \<open>commutant F = {x. \<forall>y\<in>F. x o\<^sub>C\<^sub>L y = y o\<^sub>C\<^sub>L x}\<close>
 
 lemma commutant_tensor1: \<open>commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)) = range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
@@ -2143,17 +2146,118 @@ proof -
     by (rule of_real_hom.injectivity)
 qed
 
+(* (* TODO move *)
+lemma complex_polar_decomp: \<open>\<exists>\<gamma>. cmod \<gamma> = 1 \<and> z = \<gamma> * cmod z\<close>
+  apply (cases \<open>z = 0\<close>)
+   apply (auto intro!: exI[of _ 1])[1]
+  using complex_norm_eq_1_exp_eq[of \<open>sgn z\<close>, THEN iffD1]
+apply (auto intro!: simp: )
+
+  by - *)
+
 lemma from_trace_class_sum:
   shows \<open>from_trace_class (\<Sum>x\<in>M. f x) = (\<Sum>x\<in>M. from_trace_class (f x))\<close>
   apply (induction M rule:infinite_finite_induct)
   by (simp_all add: plus_trace_class.rep_eq)
 
-(* A \<ge> 0 can be replaced by A*=A, see Conway Operator II.2.13. *)
+(* TODO move *)
+lemma ex_norm1_not_singleton:
+  shows \<open>\<exists>x::'a::{real_normed_vector, not_singleton}. norm x = 1\<close>
+  apply (rule ex_norm1)
+  by simp
+
+
+lemma cblinfun_norm_is_Sup_cinner:
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.2.13\<close>
+fixes A :: \<open>'a::{not_singleton,chilbert_space} \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
+  assumes Aselfadj: \<open>selfadjoint A\<close>
+  shows \<open>is_Sup ((\<lambda>\<psi>. cmod (\<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>))) ` {\<psi>. norm \<psi> = 1}) (norm A)\<close>
+proof (rule is_SupI)
+  fix b assume \<open>b \<in> (\<lambda>\<psi>. cmod (\<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>))) ` {\<psi>. norm \<psi> = 1}\<close>
+  then obtain \<psi> where \<open>norm \<psi> = 1\<close> and b_\<psi>: \<open>b = cmod (\<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>))\<close>
+    by blast
+  have \<open>b \<le> norm (A \<psi>)\<close>
+    using b_\<psi> \<open>norm \<psi> = 1\<close>
+    by (metis complex_inner_class.Cauchy_Schwarz_ineq2 mult_cancel_right2)
+  also have \<open>\<dots> \<le> norm A\<close>
+    using \<open>norm \<psi> = 1\<close> 
+    by (metis mult_cancel_left2 norm_cblinfun)
+  finally show \<open>b \<le> norm A\<close>
+    by -
+next
+  fix c assume asm: \<open>(\<And>b. b \<in> (\<lambda>\<psi>. cmod (\<psi> \<bullet>\<^sub>C A \<psi>)) ` {\<psi>. norm \<psi> = 1} \<Longrightarrow> b \<le> c)\<close>
+  have c_upper: \<open>cmod (\<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>)) \<le> c\<close> if \<open>norm \<psi> = 1\<close> for \<psi>
+    using that using asm[of \<open>cmod (\<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>))\<close>] by auto
+  have \<open>c \<ge> 0\<close>
+    by (smt (z3) ex_norm1_not_singleton c_upper norm_ge_zero)
+  have *: \<open>Re (g \<bullet>\<^sub>C A h) \<le> c\<close> if \<open>norm g = 1\<close> and \<open>norm h = 1\<close> for g h
+  proof -
+    have c_upper': \<open>cmod (\<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>)) \<le> c * (norm \<psi>)\<^sup>2\<close> for \<psi>
+      apply (cases \<open>\<psi> = 0\<close>, simp)
+      apply (subst (2) norm_scaleC_sgn[symmetric, of \<psi>])
+      apply (subst norm_scaleC_sgn[symmetric])
+      apply (simp only: cinner_scaleC_left cinner_scaleC_right cblinfun.scaleC_right)
+      using c_upper[of \<open>sgn \<psi>\<close>]
+      by (simp add: norm_mult norm_sgn power2_eq_square)
+    from Aselfadj have 1: \<open>(h + g) \<bullet>\<^sub>C A (h + g) = h \<bullet>\<^sub>C A h + 2 * Re (g \<bullet>\<^sub>C A h) + g \<bullet>\<^sub>C A g\<close>
+      apply (auto intro!: simp: cinner_add_right cinner_add_left cblinfun.add_right selfadjoint_def)
+      apply (subst cinner_commute[of h])
+      by (metis cinner_adj_right complex_add_cnj mult_2 of_real_hom.hom_add)
+    from Aselfadj have 2: \<open>(h - g) \<bullet>\<^sub>C A (h - g) = h \<bullet>\<^sub>C A h - 2 * Re (g \<bullet>\<^sub>C A h) + g \<bullet>\<^sub>C A g\<close>
+      apply (auto intro!: simp: cinner_diff_right cinner_diff_left cblinfun.diff_right selfadjoint_def)
+      apply (subst cinner_commute[of h])
+      by (metis cinner_adj_right complex_add_cnj diff_minus_eq_add minus_diff_eq mult_2 of_real_hom.hom_add)
+    have \<open>4 * Re (g \<bullet>\<^sub>C A h) = Re ((h + g) \<bullet>\<^sub>C A (h + g)) - Re ((h - g) \<bullet>\<^sub>C A (h - g))\<close>
+      by (smt (verit, ccfv_SIG) "1" "2" Re_complex_of_real minus_complex.simps(1) plus_complex.sel(1))
+    also
+    have \<open>\<dots> \<le> c * (norm (h + g))\<^sup>2 - Re ((h - g) \<bullet>\<^sub>C A (h - g))\<close>
+      using c_upper'[of \<open>h + g\<close>]
+      by (smt (verit, best) complex_Re_le_cmod)
+    also have \<open>\<dots> \<le> c * (norm (h + g))\<^sup>2 + c * (norm (h - g))\<^sup>2\<close>
+      unfolding diff_conv_add_uminus
+      apply (rule add_left_mono)
+      using c_upper'[of \<open>h - g\<close>]
+      by (smt (verit) abs_Re_le_cmod add_uminus_conv_diff)
+    also have \<open>\<dots> = 2 * c * ((norm h)\<^sup>2 + (norm g)\<^sup>2)\<close>
+      by (auto intro!: simp: polar_identity polar_identity_minus ring_distribs)
+    also have \<open>\<dots> \<le> 4 * c\<close>
+      by (simp add: \<open>norm h = 1\<close> \<open>norm g = 1\<close>)
+    finally show \<open>Re (g \<bullet>\<^sub>C (A *\<^sub>V h)) \<le> c\<close>
+      by simp
+  qed      
+  have *: \<open>cmod (g \<bullet>\<^sub>C A h) \<le> c\<close> if \<open>norm g = 1\<close> and \<open>norm h = 1\<close> for g h
+  proof -
+    define \<gamma> where \<open>\<gamma> = (if g \<bullet>\<^sub>C A h = 0 then 1 else sgn (g \<bullet>\<^sub>C A h))\<close>
+    have \<gamma>: \<open>\<gamma> * cmod (g \<bullet>\<^sub>C A h) = g \<bullet>\<^sub>C A h\<close>
+      by (simp add: \<gamma>_def sgn_eq)
+    have \<open>norm \<gamma> = 1\<close>
+      by (simp add: \<gamma>_def norm_sgn)
+    have \<open>cmod (g \<bullet>\<^sub>C A h) = Re (complex_of_real (norm (g \<bullet>\<^sub>C A h)))\<close>
+      by simp
+    also have \<open>\<dots> = Re (g \<bullet>\<^sub>C (A (h /\<^sub>C \<gamma>)))\<close>
+      using \<gamma> \<open>cmod \<gamma> = 1\<close>
+      by (smt (verit) Groups.mult_ac(2) Groups.mult_ac(3) cblinfun.scaleC_right cinner_scaleC_right left_inverse more_arith_simps(6) norm_eq_zero)
+    also have \<open>\<dots> \<le> c\<close>
+      using \<open>norm \<gamma> = 1\<close>
+      by (auto intro!: * simp: that norm_inverse)
+    finally show \<open>cmod (g \<bullet>\<^sub>C (A *\<^sub>V h)) \<le> c\<close>
+      by -
+  qed
+  have \<open>norm (A h) \<le> c\<close> if \<open>norm h = 1\<close> for h
+    using *[OF _ that]
+    by -
+  then show \<open>norm A \<le> c\<close>
+    using \<open>c \<ge> 0\<close> by (auto intro!: norm_cblinfun_bound_unit)
+qed
+
+(* A \<ge> 0 can be replaced by A*=A, see Conway Functional II.2.13. *)
 lemma cblinfun_norm_approx_witness_cinner:
   fixes A :: \<open>'a::{not_singleton,chilbert_space} \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
-  assumes \<open>A \<ge> 0\<close> and \<open>\<epsilon> > 0\<close>
+  assumes \<open>selfadjoint A\<close> and \<open>\<epsilon> > 0\<close>
   shows \<open>\<exists>\<psi>. \<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>) \<ge> norm A - \<epsilon> \<and> norm \<psi> = 1\<close>
-proof (cases \<open>A = 0\<close>)
+  using cblinfun_norm_is_Sup_cinner[OF assms(1)] assms(2)
+by -
+(* proof (cases \<open>A = 0\<close>)
   case False
   define B where \<open>B = sqrt_op A\<close>
   define \<delta> where \<open>\<delta> = min (\<epsilon> / (2 * norm B)) (norm B)\<close>
@@ -2190,11 +2294,11 @@ next
   case True
   with \<open>\<epsilon> > 0\<close> show ?thesis
     by (auto intro!: any_norm_exists)
-qed
+qed *)
 
 lemma cblinfun_norm_approx_witness_cinner':
   fixes A :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
-  assumes \<open>A \<ge> 0\<close> and \<open>\<epsilon> > 0\<close>
+  assumes \<open>selfadjoint A\<close> and \<open>\<epsilon> > 0\<close>
   shows \<open>\<exists>\<psi>. \<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>) / (norm \<psi>)^2 \<ge> norm A - \<epsilon>\<close>
 proof (cases \<open>class.not_singleton TYPE('a)\<close>)
   case True
@@ -2454,25 +2558,27 @@ proof -
     by (auto intro!: bdd_aboveI)
 qed
 
-lemma abs_op_geq: \<open>abs_op a \<ge> a\<close> if [simp]: \<open>a* = a\<close>
+lemma abs_op_geq: \<open>abs_op a \<ge> a\<close> if \<open>selfadjoint a\<close>
 proof -
   define A P where \<open>A = abs_op a\<close> and \<open>P = Proj (kernel (A + a))\<close>
+  from that have [simp]: \<open>a* = a\<close>
+    by (simp add: selfadjoint_def)
   have [simp]: \<open>A \<ge> 0\<close>
     by (simp add: A_def)
   then have [simp]: \<open>A* = A\<close>
     using positive_hermitianI by fastforce
   have aa_AA: \<open>a o\<^sub>C\<^sub>L a = A o\<^sub>C\<^sub>L A\<close>
-    by (metis A_def \<open>A* = A\<close> abs_op_square that)
+    by (metis A_def \<open>A* = A\<close> abs_op_square that selfadjoint_def)
   have [simp]: \<open>P* = P\<close>
     by (simp add: P_def adj_Proj)
   have Aa_aA: \<open>A o\<^sub>C\<^sub>L a = a o\<^sub>C\<^sub>L A\<close>
-    by (metis (full_types) A_def lift_cblinfun_comp(2) abs_op_def positive_cblinfun_squareI sqrt_op_commute that)
+    by (metis (full_types) A_def lift_cblinfun_comp(2) abs_op_def positive_cblinfun_squareI sqrt_op_commute that selfadjoint_def)
 
   have \<open>(A-a) \<psi> \<bullet>\<^sub>C (A+a) \<phi> = 0\<close> for \<phi> \<psi>
     by (simp add: adj_minus that \<open>A* = A\<close> aa_AA Aa_aA cblinfun_compose_add_right cblinfun_compose_minus_left
         flip: cinner_adj_right cblinfun_apply_cblinfun_compose)
   then have \<open>(A-a) \<psi> \<in> space_as_set (kernel (A+a))\<close> for \<psi>
-    by (metis \<open>A* = A\<close> adj_plus call_zero_iff cinner_adj_left kernel_memberI that)
+    by (metis \<open>A* = A\<close> adj_plus call_zero_iff cinner_adj_left kernel_memberI that selfadjoint_def)
   then have P_fix: \<open>P o\<^sub>C\<^sub>L (A-a) = (A-a)\<close>
     by (simp add: P_def Proj_fixes_image cblinfun_eqI)
   then have \<open>P o\<^sub>C\<^sub>L (A-a) o\<^sub>C\<^sub>L P = (A-a) o\<^sub>C\<^sub>L P\<close>
@@ -2498,8 +2604,8 @@ proof -
     by auto
 qed
 
-lemma abs_op_geq_neq: \<open>abs_op a \<ge> - a\<close> if \<open>a* = a\<close>
-  by (metis abs_op_geq abs_op_uminus adj_uminus that)
+lemma abs_op_geq_neq: \<open>abs_op a \<ge> - a\<close> if \<open>selfadjoint a\<close>
+  by (metis abs_op_geq abs_op_uminus adj_uminus that selfadjoint_def)
 
 lemma trace_norm_uminus[simp]: \<open>trace_norm (-a) = trace_norm a\<close>
   by (metis abs_op_uminus of_real_eq_iff trace_abs_op)
@@ -2539,20 +2645,20 @@ proof -
     by (smt (verit, ccfv_SIG) add.commute add.inverse_inverse complex_i_mult_minus complex_vector.vector_space_assms(1) complex_vector.vector_space_assms(3) diff_add_cancel group_cancel.add2 i_squared scaleC_half_double ta_def th_def times_divide_eq_right)
   define t1 t2 where \<open>t1 = (abs_op th + th) /\<^sub>R 2\<close> and \<open>t2 = (abs_op th - th) /\<^sub>R 2\<close>
   have \<open>t1 \<ge> 0\<close>
-    using abs_op_geq_neq[OF \<open>th* = th\<close>] ordered_field_class.sign_simps(15)
+    using abs_op_geq_neq[unfolded selfadjoint_def, OF \<open>th* = th\<close>] ordered_field_class.sign_simps(15)
     by (fastforce simp add: t1_def intro!: scaleR_nonneg_nonneg)
   have \<open>t2 \<ge> 0\<close>
-    using abs_op_geq[OF \<open>th* = th\<close>] ordered_field_class.sign_simps(15)
+    using abs_op_geq[unfolded selfadjoint_def, OF \<open>th* = th\<close>] ordered_field_class.sign_simps(15)
     by (fastforce simp add: t2_def intro!: scaleR_nonneg_nonneg)
   have \<open>th = t1 - t2\<close>
     apply (simp add: t1_def t2_def)
     by (metis (no_types, opaque_lifting) Extra_Ordered_Fields.sign_simps(8) diff_add_cancel ordered_field_class.sign_simps(2) ordered_field_class.sign_simps(27) scaleR_half_double)
   define t3 t4 where \<open>t3 = (abs_op ta + ta) /\<^sub>R 2\<close> and \<open>t4 = (abs_op ta - ta) /\<^sub>R 2\<close>
   have \<open>t3 \<ge> 0\<close>
-    using abs_op_geq_neq[OF \<open>ta* = ta\<close>] ordered_field_class.sign_simps(15)
+    using abs_op_geq_neq[unfolded selfadjoint_def, OF \<open>ta* = ta\<close>] ordered_field_class.sign_simps(15)
     by (fastforce simp add: t3_def intro!: scaleR_nonneg_nonneg)
   have \<open>t4 \<ge> 0\<close>
-    using abs_op_geq[OF \<open>ta* = ta\<close>] ordered_field_class.sign_simps(15)
+    using abs_op_geq[unfolded selfadjoint_def, OF \<open>ta* = ta\<close>] ordered_field_class.sign_simps(15)
     by (fastforce simp add: t4_def intro!: scaleR_nonneg_nonneg)
   have \<open>ta = t3 - t4\<close>
     apply (simp add: t3_def t4_def)
