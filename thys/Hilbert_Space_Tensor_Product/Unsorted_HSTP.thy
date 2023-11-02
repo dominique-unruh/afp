@@ -2244,19 +2244,37 @@ next
       by -
   qed
   have \<open>norm (A h) \<le> c\<close> if \<open>norm h = 1\<close> for h
-    using *[OF _ that]
-    by -
+    apply (cases \<open>A h = 0\<close>, simp add: \<open>0 \<le> c\<close>)
+    using *[OF _ that, of \<open>sgn (A h)\<close>]
+    by (simp add: norm_sgn)
   then show \<open>norm A \<le> c\<close>
     using \<open>c \<ge> 0\<close> by (auto intro!: norm_cblinfun_bound_unit)
+qed
+
+lemma is_Sup_approx_below:
+  fixes b :: \<open>'a::linordered_ab_group_add\<close>
+  assumes \<open>is_Sup A b\<close>
+  assumes \<open>\<epsilon> > 0\<close>
+  shows \<open>\<exists>x\<in>A. b - \<epsilon> \<le> x\<close>
+proof (rule ccontr)
+  assume \<open>\<not> (\<exists>x\<in>A. b - \<epsilon> \<le> x)\<close>
+  then have \<open>b - \<epsilon> \<ge> x\<close> if \<open>x \<in> A\<close> for x
+    using that by auto
+  with assms
+  have \<open>b \<le> b - \<epsilon>\<close>
+    by (simp add: is_Sup_def)
+  with \<open>\<epsilon> > 0\<close>
+  show False
+    by simp
 qed
 
 (* A \<ge> 0 can be replaced by A*=A, see Conway Functional II.2.13. *)
 lemma cblinfun_norm_approx_witness_cinner:
   fixes A :: \<open>'a::{not_singleton,chilbert_space} \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
   assumes \<open>selfadjoint A\<close> and \<open>\<epsilon> > 0\<close>
-  shows \<open>\<exists>\<psi>. \<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>) \<ge> norm A - \<epsilon> \<and> norm \<psi> = 1\<close>
-  using cblinfun_norm_is_Sup_cinner[OF assms(1)] assms(2)
-by -
+  shows \<open>\<exists>\<psi>. cmod (\<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>)) \<ge> norm A - \<epsilon> \<and> norm \<psi> = 1\<close>
+  using is_Sup_approx_below[OF cblinfun_norm_is_Sup_cinner[OF assms(1)] assms(2)]
+  by blast
 (* proof (cases \<open>A = 0\<close>)
   case False
   define B where \<open>B = sqrt_op A\<close>
@@ -2299,14 +2317,14 @@ qed *)
 lemma cblinfun_norm_approx_witness_cinner':
   fixes A :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
   assumes \<open>selfadjoint A\<close> and \<open>\<epsilon> > 0\<close>
-  shows \<open>\<exists>\<psi>. \<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>) / (norm \<psi>)^2 \<ge> norm A - \<epsilon>\<close>
+  shows \<open>\<exists>\<psi>. cmod (\<psi> \<bullet>\<^sub>C A \<psi>) / (norm \<psi>)^2 \<ge> norm A - \<epsilon>\<close>
 proof (cases \<open>class.not_singleton TYPE('a)\<close>)
   case True
-  obtain \<psi> where \<open>\<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>) \<ge> norm A - \<epsilon>\<close> and \<open>norm \<psi> = 1\<close>
+  obtain \<psi> where \<open>cmod (\<psi> \<bullet>\<^sub>C A \<psi>) \<ge> norm A - \<epsilon>\<close> and \<open>norm \<psi> = 1\<close>
     apply atomize_elim
     using chilbert_space_axioms True assms
     by (rule cblinfun_norm_approx_witness_cinner[internalize_sort' 'a])
-  then have \<open>\<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>) / (norm \<psi>)^2 \<ge> norm A - \<epsilon>\<close>
+  then have \<open>cmod (\<psi> \<bullet>\<^sub>C A \<psi>) / (norm \<psi>)^2 \<ge> norm A - \<epsilon>\<close>
     by simp
   then show ?thesis 
     by auto

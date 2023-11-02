@@ -1359,6 +1359,7 @@ lemma has_sum_adj:
 lemma adj_minus: \<open>(A - B)* = (A*) - (B*)\<close>
   by (metis add_implies_diff adj_plus diff_add_cancel)
 
+(* TODO: use constant "selfadjoint A" *)
 lemma cinner_hermitian_real: \<open>x \<bullet>\<^sub>C (A *\<^sub>V x) \<in> \<real>\<close> if \<open>A* = A\<close>
   by (metis Reals_cnj_iff cinner_adj_right cinner_commute' that)
 
