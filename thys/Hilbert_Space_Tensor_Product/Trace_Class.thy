@@ -1316,9 +1316,17 @@ proof (rule ccontr)
     by simp
 qed
 
+lift_definition adj_tc :: \<open>('a::chilbert_space, 'b::chilbert_space) trace_class \<Rightarrow> ('b,'a) trace_class\<close> is adj
+  by simp
+
+lift_definition selfadjoint_tc :: \<open>('a::chilbert_space, 'a) trace_class \<Rightarrow> bool\<close> is selfadjoint.
+
+lemma selfadjoint_tc_def': \<open>selfadjoint_tc a \<longleftrightarrow> adj_tc a = a\<close>
+  apply transfer
+  using selfadjoint_def by blast 
+
 lemma trace_class_finite_dim'[simp]: \<open>trace_class A\<close> for A :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::{cfinite_dim,chilbert_space}\<close>
   by (metis double_adj trace_class_adj trace_class_finite_dim)
-
 
 lemma trace_class_plus[simp]:
   fixes t u :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
@@ -2043,6 +2051,59 @@ instance
   by (simp add: from_trace_class_inject)
 end
 
+
+lift_definition compose_tcl :: \<open>('a::chilbert_space, 'b::chilbert_space) trace_class \<Rightarrow> ('c::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow> ('c,'b) trace_class\<close> is
+  \<open>cblinfun_compose :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'b \<Rightarrow> 'c \<Rightarrow>\<^sub>C\<^sub>L 'a \<Rightarrow> 'c \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
+  by (simp add: trace_class_comp_left)
+
+lift_definition compose_tcr :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) \<Rightarrow> ('c::chilbert_space, 'a) trace_class \<Rightarrow> ('c,'b) trace_class\<close> is
+  \<open>cblinfun_compose :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'b \<Rightarrow> 'c \<Rightarrow>\<^sub>C\<^sub>L 'a \<Rightarrow> 'c \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
+  by (simp add: trace_class_comp_right)
+
+lemma norm_compose_tcl: \<open>norm (compose_tcl a b) \<le> norm a * norm b\<close>
+  by (auto intro!: trace_norm_comp_left simp: norm_trace_class.rep_eq compose_tcl.rep_eq)
+
+lemma norm_compose_tcr: \<open>norm (compose_tcr a b) \<le> norm a * norm b\<close>
+  by (auto intro!: trace_norm_comp_right simp: norm_trace_class.rep_eq compose_tcr.rep_eq)
+
+interpretation compose_tcl: bounded_cbilinear compose_tcl
+proof (intro bounded_cbilinear.intro exI[of _ 1] allI)
+  fix a a' :: \<open>('a,'b) trace_class\<close> and b b' :: \<open>'c \<Rightarrow>\<^sub>C\<^sub>L 'a\<close> and r :: complex
+  show \<open>compose_tcl (a + a') b = compose_tcl a b + compose_tcl a' b\<close>
+    apply transfer
+    by (simp add: cblinfun_compose_add_left)
+  show \<open>compose_tcl a (b + b') = compose_tcl a b + compose_tcl a b'\<close>
+    apply transfer
+    by (simp add: cblinfun_compose_add_right)
+  show \<open>compose_tcl (r *\<^sub>C a) b = r *\<^sub>C compose_tcl a b\<close>
+    apply transfer
+    by simp
+  show \<open>compose_tcl a (r *\<^sub>C b) = r *\<^sub>C compose_tcl a b\<close>
+    apply transfer
+    by simp
+  show \<open>norm (compose_tcl a b) \<le> norm a * norm b * 1\<close>
+    by (simp add: norm_compose_tcl)
+qed
+
+interpretation compose_tcr: bounded_cbilinear compose_tcr
+proof (intro bounded_cbilinear.intro exI[of _ 1] allI)
+  fix a a' :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> and b b' :: \<open>('c,'a) trace_class\<close> and r :: complex
+  show \<open>compose_tcr (a + a') b = compose_tcr a b + compose_tcr a' b\<close>
+    apply transfer
+    by (simp add: cblinfun_compose_add_left)
+  show \<open>compose_tcr a (b + b') = compose_tcr a b + compose_tcr a b'\<close>
+    apply transfer
+    by (simp add: cblinfun_compose_add_right)
+  show \<open>compose_tcr (r *\<^sub>C a) b = r *\<^sub>C compose_tcr a b\<close>
+    apply transfer
+    by simp
+  show \<open>compose_tcr a (r *\<^sub>C b) = r *\<^sub>C compose_tcr a b\<close>
+    apply transfer
+    by simp
+  show \<open>norm (compose_tcr a b) \<le> norm a * norm b * 1\<close>
+    by (simp add: norm_compose_tcr)
+qed
+
 lemma trace_norm_sandwich: \<open>trace_norm (sandwich e t) \<le> (norm e)^2 * trace_norm t\<close> if \<open>trace_class t\<close>
   apply (simp add: sandwich_apply)
   by (smt (z3) Groups.mult_ac(2) more_arith_simps(11) mult_left_mono norm_adj norm_ge_zero power2_eq_square that trace_class_comp_right trace_norm_comp_left trace_norm_comp_right)
@@ -2050,7 +2111,9 @@ lemma trace_norm_sandwich: \<open>trace_norm (sandwich e t) \<le> (norm e)^2 * t
 lemma trace_class_sandwich: \<open>trace_class b \<Longrightarrow> trace_class (sandwich a b)\<close>
   by (simp add: sandwich_apply trace_class_comp_right trace_class_comp_left)
 
-lift_definition sandwich_tc :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) \<Rightarrow> ('a::chilbert_space,'a) trace_class \<Rightarrow>\<^sub>C\<^sub>L ('b::chilbert_space,'b) trace_class\<close> is
+definition \<open>sandwich_tc e t = compose_tcl (compose_tcr e t) (e*)\<close>
+
+(* lift_definition sandwich_tc :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) \<Rightarrow> ('a::chilbert_space,'a) trace_class \<Rightarrow>\<^sub>C\<^sub>L ('b::chilbert_space,'b) trace_class\<close> is
   \<open>\<lambda>e t. sandwich e t\<close>
 proof (intro relcomppI conjI)
   include lifting_syntax
@@ -2058,7 +2121,7 @@ proof (intro relcomppI conjI)
   have *: \<open>trace_class (sandwich e *\<^sub>V from_trace_class t)\<close> for t
     using trace_class_from_trace_class trace_class_sandwich by blast
   define S where \<open>S e t = Abs_trace_class (sandwich e (from_trace_class t))\<close> for e :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> and t :: \<open>('a,'a) trace_class\<close>
-  show 1: \<open>(cr_trace_class ===> cr_trace_class) ((*\<^sub>V) (sandwich e)) (S e)\<close>
+  show 1: \<open>(cr_trace_class ===> cr_trace_class) (( *\<^sub>V) (sandwich e)) (S e)\<close>
     by (auto intro!: rel_funI simp add: cr_trace_class_def S_def Abs_trace_class_inverse * )
   show \<open>bounded_clinear (S e)\<close>
     apply (rule bounded_clinearI[where K=\<open>(norm e)^2\<close>])
@@ -2071,24 +2134,29 @@ proof (intro relcomppI conjI)
     by (simp add: norm_trace_class.rep_eq ordered_field_class.sign_simps(33))
   show \<open>S e = S e\<close>
     by simp
-  show \<open>(cr_trace_class ===> cr_trace_class)\<inverse>\<inverse> (S e) ((*\<^sub>V) (sandwich e))\<close>
+  show \<open>(cr_trace_class ===> cr_trace_class)\<inverse>\<inverse> (S e) (( *\<^sub>V) (sandwich e))\<close>
     by (intro conversepI 1)
-qed
+qed *)
+
+lemma sandwich_tc_transfer[transfer_rule]:
+  includes lifting_syntax
+  shows \<open>((=) ===> cr_trace_class ===> cr_trace_class) (\<lambda>e. (*\<^sub>V) (sandwich e)) sandwich_tc\<close>
+  by (auto intro!: rel_funI simp: sandwich_tc_def cr_trace_class_def compose_tcl.rep_eq compose_tcr.rep_eq sandwich_apply)
 
 lemma from_trace_class_sandwich_tc:
   \<open>from_trace_class (sandwich_tc e t) = sandwich e (from_trace_class t)\<close>
   apply transfer
   by (rule sandwich_apply)
 
-lemma sandwich_tc_apply:
+(* lemma sandwich_tc_apply:
   \<open>sandwich_tc e t = Abs_trace_class (sandwich e (from_trace_class t))\<close>
   using from_trace_class_sandwich_tc[of e t]
-  by (metis from_trace_class_inverse)
+  by (metis from_trace_class_inverse) *)
 
 lemma norm_sandwich_tc: \<open>norm (sandwich_tc e t) \<le> (norm e)^2 * norm t\<close>
   by (simp add: norm_trace_class.rep_eq from_trace_class_sandwich_tc trace_norm_sandwich)
 
-lemma sandwich_tc_pos: \<open>sandwich_tc e *\<^sub>V t \<ge> 0\<close> if \<open>t \<ge> 0\<close>
+lemma sandwich_tc_pos: \<open>sandwich_tc e t \<ge> 0\<close> if \<open>t \<ge> 0\<close>
   using that apply (transfer fixing: e)
   by (simp add: sandwich_pos)
 

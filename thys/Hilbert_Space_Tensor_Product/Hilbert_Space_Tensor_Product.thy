@@ -927,6 +927,7 @@ lemma tensor_id[simp]: \<open>tensor_op id_cblinfun id_cblinfun = id_cblinfun\<c
   apply (rule equal_ket, rename_tac x, case_tac x)
   by (simp flip: tensor_ell2_ket add: tensor_op_ell2)
 
+(* TODO remove [simp] *)
 lemma tensor_butterfly[simp]: "tensor_op (butterfly \<psi> \<psi>') (butterfly \<phi> \<phi>') = butterfly (tensor_ell2 \<psi> \<phi>) (tensor_ell2 \<psi>' \<phi>')"
   apply (rule equal_ket, rename_tac x, case_tac x)
   by (simp flip: tensor_ell2_ket add: tensor_op_ell2 butterfly_def

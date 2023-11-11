@@ -11,9 +11,6 @@ hide_const (open) Finite_Cartesian_Product.vec
 hide_const (open) Finite_Cartesian_Product.mat
 hide_const (open) Coset.kernel
 
-definition selfadjoint :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow> bool\<close> where
-  \<open>selfadjoint a \<longleftrightarrow> a* = a\<close>
-
 definition \<open>commutant F = {x. \<forall>y\<in>F. x o\<^sub>C\<^sub>L y = y o\<^sub>C\<^sub>L x}\<close>
 
 lemma commutant_tensor1: \<open>commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)) = range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
@@ -2842,15 +2839,14 @@ lemma infsum_nonneg_traceclass:
    apply (rule infsum_mono_neutral_traceclass)
   using assms by (auto simp: infsum_not_exists)
 
-lemma sandwich_tc_compose: \<open>sandwich_tc (A o\<^sub>C\<^sub>L B) = sandwich_tc A o\<^sub>C\<^sub>L sandwich_tc B\<close>
-  apply (rule cblinfun_eqI)
+lemma sandwich_tc_compose: \<open>sandwich_tc (A o\<^sub>C\<^sub>L B) = sandwich_tc A o sandwich_tc B\<close>
+  apply (rule ext)
   apply (rule from_trace_class_inject[THEN iffD1])
   apply (transfer fixing: A B)
   by (simp add: sandwich_compose)
 
 lemma sandwich_tc_0_left[simp]: \<open>sandwich_tc 0 = 0\<close>
-  by (metis (no_types, opaque_lifting) cblinfun.zero_left cblinfun_eqI linorder_not_le norm_sandwich_tc norm_scaleC norm_zero power2_eq_square scaleC_left.zero zero_less_norm_iff)
-
+  by (auto intro!: ext simp add: sandwich_tc_def compose_tcl.zero_left compose_tcr.zero_left)
 
 lemma scaleC_scaleR_commute: \<open>a *\<^sub>C b *\<^sub>R x = b *\<^sub>R a *\<^sub>C x\<close> for x :: \<open>_::complex_normed_vector\<close>
   by (simp add: scaleR_scaleC scaleC_left_commute)
@@ -2862,13 +2858,12 @@ lemma sandwich_scaleC_left: \<open>sandwich (c *\<^sub>C e) = (cmod c)^2 *\<^sub
 lemma sandwich_scaleR_left: \<open>sandwich (r *\<^sub>R e) = r^2 *\<^sub>R sandwich e\<close>
   by (simp add: scaleR_scaleC sandwich_scaleC_left flip: of_real_power)
 
-lemma sandwich_tc_scaleC_left: \<open>sandwich_tc (c *\<^sub>C e) = (cmod c)^2 *\<^sub>C sandwich_tc e\<close>
-  apply (rule cblinfun_eqI)
+lemma sandwich_tc_scaleC_left: \<open>sandwich_tc (c *\<^sub>C e) t = (cmod c)^2 *\<^sub>C sandwich_tc e t\<close>
   apply (rule from_trace_class_inject[THEN iffD1])
   by (simp add: from_trace_class_sandwich_tc scaleC_trace_class.rep_eq
       sandwich_scaleC_left)
 
-lemma sandwich_tc_scaleR_left: \<open>sandwich_tc (r *\<^sub>R e) = r^2 *\<^sub>R sandwich_tc e\<close>
+lemma sandwich_tc_scaleR_left: \<open>sandwich_tc (r *\<^sub>R e) t = r^2 *\<^sub>R sandwich_tc e t\<close>
   by (simp add: scaleR_scaleC sandwich_tc_scaleC_left flip: of_real_power)
 
 (* TODO move *)
@@ -3973,15 +3968,6 @@ lemma orthogonal_spaces_SUP_right:
 (* next to *) thm orthogonal_bot
 lemma orthogonal_bot_left[simp]: \<open>orthogonal_spaces bot S\<close>
   by (simp add: orthogonal_spaces_def)
-
-lift_definition adj_tc :: \<open>('a::chilbert_space, 'b::chilbert_space) trace_class \<Rightarrow> ('b,'a) trace_class\<close> is adj
-  by simp
-
-lift_definition selfadjoint_tc :: \<open>('a::chilbert_space, 'a) trace_class \<Rightarrow> bool\<close> is selfadjoint.
-
-lemma selfadjoint_tc_def': \<open>selfadjoint_tc a \<longleftrightarrow> adj_tc a = a\<close>
-  apply transfer
-  using selfadjoint_def by blast 
 
 lift_definition rank1_tc :: \<open>('a::chilbert_space, 'b::chilbert_space) trace_class \<Rightarrow> bool\<close> is rank1.
 lift_definition finite_rank_tc :: \<open>('a::chilbert_space, 'b::chilbert_space) trace_class \<Rightarrow> bool\<close> is finite_rank.

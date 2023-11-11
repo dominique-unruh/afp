@@ -12,6 +12,9 @@ no_notation Set_Algebras.elt_set_eq (infix "=o" 50)
 
 unbundle cblinfun_notation
 
+definition selfadjoint :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow> bool\<close> where
+  \<open>selfadjoint a \<longleftrightarrow> a* = a\<close>
+
 unbundle no_cblinfun_notation
 
 end

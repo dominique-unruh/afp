@@ -7,22 +7,24 @@ hide_fact (open) Infinite_Set_Sum.abs_summable_on_comparison_test
 hide_const (open) Determinants.trace
 hide_fact (open) Determinants.trace_def
 
+(* TODO: use compose_tcl/compose_tcr *)
 definition partial_trace :: \<open>(('a \<times> 'c) ell2, ('b \<times> 'c) ell2) trace_class \<Rightarrow> ('a ell2, 'b ell2) trace_class\<close> where
-  \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))))\<close>
+  \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. compose_tcl (compose_tcr ((tensor_ell2_right (ket j))*) t) (tensor_ell2_right (ket j)))\<close>
+  (* \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))))\<close> *)
 
 lemma partial_trace_def': \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. sandwich_tc ((tensor_ell2_right (ket j))*) t)\<close>
 \<comment> \<open>We cannot use this as the definition of \<^const>\<open>partial_trace\<close> because this definition
       has a more restricted type (\<^term>\<open>t\<close> is a square operator).\<close>
-  by (auto intro!: simp: partial_trace_def sandwich_tc_apply sandwich_apply)
+  by (auto intro!: simp: partial_trace_def sandwich_tc_def)
 
 lemma partial_trace_abs_summable:
-  \<open>(\<lambda>j. Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))) abs_summable_on UNIV\<close>
+  \<open>(\<lambda>j. compose_tcl (compose_tcr ((tensor_ell2_right (ket j))*) t) (tensor_ell2_right (ket j))) abs_summable_on UNIV\<close>
   and partial_trace_has_sum:
-  \<open>((\<lambda>j. Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))) has_sum partial_trace t) UNIV\<close>
+  \<open>((\<lambda>j. compose_tcl (compose_tcr ((tensor_ell2_right (ket j))*) t) (tensor_ell2_right (ket j))) has_sum partial_trace t) UNIV\<close>
   and partial_trace_norm_reducing: \<open>norm (partial_trace t) \<le> norm t\<close>
 proof -
   define t' where \<open>t' = from_trace_class t\<close>
-  define s where \<open>s k = Abs_trace_class (tensor_ell2_right (ket k)* o\<^sub>C\<^sub>L t' o\<^sub>C\<^sub>L tensor_ell2_right (ket k))\<close> for k
+  define s where \<open>s k = compose_tcl (compose_tcr ((tensor_ell2_right (ket k))*) t) (tensor_ell2_right (ket k))\<close> for k
 
   have bound: \<open>(\<Sum>k\<in>F. norm (s k)) \<le> norm t\<close>
     if  \<open>F \<in> {F. F \<subseteq> UNIV \<and> finite F}\<close>
@@ -110,7 +112,7 @@ proof -
 
     have \<open>(\<Sum>k\<in>F. norm (s k))
       = (\<Sum>k\<in>F. trace_norm (tk k))\<close>
-      by (metis (no_types, opaque_lifting) s_def Abs_trace_class_inverse mem_Collect_eq norm_trace_class.rep_eq tc_tk tk_def)
+      by (simp add: s_def tk_def norm_trace_class.rep_eq compose_tcl.rep_eq compose_tcr.rep_eq t'_def)
     also have \<open>\<dots> = cmod (\<Sum>k\<in>F. trace (uk k o\<^sub>C\<^sub>L tk k))\<close>
       by (smt (verit, best) norm_of_real of_real_hom.hom_sum polar_decomposition_correct' sum.cong sum_nonneg trace_abs_op trace_norm_nneg uk_def)
     also have \<open>\<dots> = cmod (\<Sum>k\<in>F. trace (tensor_ell2_right (ket k)* o\<^sub>C\<^sub>L u o\<^sub>C\<^sub>L t' o\<^sub>C\<^sub>L tensor_ell2_right (ket k)))\<close>
@@ -173,7 +175,7 @@ lemma partial_trace_abs_summable':
   and partial_trace_has_sum':
   \<open>((\<lambda>j.  sandwich_tc ((tensor_ell2_right (ket j))*) t) has_sum partial_trace t) UNIV\<close>
   using partial_trace_abs_summable partial_trace_has_sum
-  by (auto intro!: simp: sandwich_tc_apply sandwich_apply)
+  by (auto intro!: simp: sandwich_tc_def sandwich_apply)
 
 (* definition partial_trace' where \<open>partial_trace' t = (if trace_class t then from_trace_class (partial_trace (Abs_trace_class t)) else 0)\<close>
 
@@ -188,7 +190,7 @@ lemma trace_partial_trace_compose_eq_trace_compose_tensor_id:
 proof -
   define s where \<open>s = trace (from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x)\<close>
   define s' where \<open>s' e = ket e \<bullet>\<^sub>C ((from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) *\<^sub>V ket e)\<close> for e
-  define u where \<open>u j = Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j)))\<close> for j
+  define u where \<open>u j = compose_tcl (compose_tcr ((tensor_ell2_right (ket j))*) t) (tensor_ell2_right (ket j))\<close> for j
   define u' where \<open>u' e j = ket e \<bullet>\<^sub>C (from_trace_class (u j) *\<^sub>V x *\<^sub>V ket e)\<close> for e j
   have \<open>(u has_sum partial_trace t) UNIV\<close>
     using partial_trace_has_sum[of t]
@@ -246,12 +248,13 @@ proof -
     then show ?thesis
       by (simp_all add: o_def u'_def[abs_def] u_def
           trace_class_comp_left trace_class_comp_right Abs_trace_class_inverse tensor_ell2_right_apply 
-          ket_pair_split tensor_op_ell2 case_prod_unfold cinner_adj_right)
+          ket_pair_split tensor_op_ell2 case_prod_unfold cinner_adj_right
+          compose_tcl.rep_eq compose_tcr.rep_eq)
   qed
 
   have u'_tensor: \<open>u' e j = ket (e,j) \<bullet>\<^sub>C ((from_trace_class t o\<^sub>C\<^sub>L (x \<otimes>\<^sub>o id_cblinfun)) *\<^sub>V ket (e,j))\<close> for e j
     by (simp add: u'_def u_def tensor_op_ell2 tensor_ell2_right_apply  Abs_trace_class_inverse
-        trace_class_comp_left trace_class_comp_right cinner_adj_right
+        trace_class_comp_left trace_class_comp_right cinner_adj_right compose_tcl.rep_eq compose_tcr.rep_eq
         flip: tensor_ell2_ket)
 
   have \<open>((\<lambda>e. e \<bullet>\<^sub>C ((from_trace_class (partial_trace t) o\<^sub>C\<^sub>L x) *\<^sub>V e)) has_sum s) (range ket)\<close>
