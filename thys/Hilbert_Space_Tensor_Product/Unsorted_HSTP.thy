@@ -2848,6 +2848,9 @@ lemma sandwich_tc_compose: \<open>sandwich_tc (A o\<^sub>C\<^sub>L B) = sandwich
 lemma sandwich_tc_0_left[simp]: \<open>sandwich_tc 0 = 0\<close>
   by (auto intro!: ext simp add: sandwich_tc_def compose_tcl.zero_left compose_tcr.zero_left)
 
+lemma sandwich_tc_0_right[simp]: \<open>sandwich_tc e 0 = 0\<close>
+  by (auto intro!: ext simp add: sandwich_tc_def compose_tcl.zero_left compose_tcr.zero_right)
+
 lemma scaleC_scaleR_commute: \<open>a *\<^sub>C b *\<^sub>R x = b *\<^sub>R a *\<^sub>C x\<close> for x :: \<open>_::complex_normed_vector\<close>
   by (simp add: scaleR_scaleC scaleC_left_commute)
 
