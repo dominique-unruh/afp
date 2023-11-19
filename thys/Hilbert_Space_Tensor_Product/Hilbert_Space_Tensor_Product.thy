@@ -445,6 +445,12 @@ proof -
     by (simp add: invertible_cblinfun_isometry flip: infsum_cblinfun_apply_invertible)
 qed
 
+lemma tensor_ell2_extensionality3:
+  assumes "(\<And>s t u. a *\<^sub>V (s \<otimes>\<^sub>s t \<otimes>\<^sub>s u) = b *\<^sub>V (s \<otimes>\<^sub>s t \<otimes>\<^sub>s u))"
+  shows "a = b"
+  apply (rule equal_ket, case_tac x, hypsubst_thin)
+  by (simp add: assms flip: tensor_ell2_ket)
+
 
 subsection \<open>Tensor product of operators on \<^typ>\<open>_ ell2\<close>\<close>
 
@@ -1632,6 +1638,63 @@ lemma unitary_tensor_id_left[simp]: \<open>unitary (id_cblinfun \<otimes>\<^sub>
   unfolding unitary_twosided_isometry
   by (simp add: tensor_op_adjoint)
 
+lemma commutant_tensor1: \<open>commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)) = range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
+proof (rule Set.set_eqI, rule iffI)
+  fix x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
+  fix \<gamma> :: 'a
+  assume \<open>x \<in> commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun))\<close>
+  then have comm: \<open>(a \<otimes>\<^sub>o id_cblinfun) *\<^sub>V x *\<^sub>V \<psi> = x *\<^sub>V (a \<otimes>\<^sub>o id_cblinfun) *\<^sub>V \<psi>\<close> for a \<psi>
+    by (metis (mono_tags, lifting) commutant_def mem_Collect_eq rangeI cblinfun_apply_cblinfun_compose)
+
+  define op where \<open>op = classical_operator (\<lambda>i. Some (\<gamma>,i::'b))\<close>
+  have [simp]: \<open>classical_operator_exists (\<lambda>i. Some (\<gamma>,i))\<close>
+    apply (rule classical_operator_exists_inj)
+    using inj_map_def by blast
+  define x' where \<open>x' = op* o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L op\<close>
+  have x': \<open>cinner (ket j) (x' *\<^sub>V ket l) = cinner (ket (\<gamma>,j)) (x *\<^sub>V ket (\<gamma>,l))\<close> for j l
+    by (simp add: x'_def op_def classical_operator_ket cinner_adj_right)
+
+  have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l)) = cinner (ket (i,j)) ((id_cblinfun \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close> for i j k l
+  proof -
+    have \<open>cinner (ket (i,j)) (x *\<^sub>V ket (k,l))
+        = cinner ((butterfly (ket i) (ket \<gamma>) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,j)) (x *\<^sub>V (butterfly (ket k) (ket \<gamma>) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
+      by (auto simp: tensor_op_ket tensor_ell2_ket)
+    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) ((butterfly (ket \<gamma>) (ket i) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V x *\<^sub>V (butterfly (ket k) (ket \<gamma>) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
+      by (metis (no_types, lifting) cinner_adj_left butterfly_adjoint id_cblinfun_adjoint tensor_op_adjoint)
+    also have \<open>\<dots> = cinner (ket (\<gamma>,j)) (x *\<^sub>V (butterfly (ket \<gamma>) (ket i) \<otimes>\<^sub>o id_cblinfun o\<^sub>C\<^sub>L butterfly (ket k) (ket \<gamma>) \<otimes>\<^sub>o id_cblinfun) *\<^sub>V ket (\<gamma>,l))\<close>
+      unfolding comm by (simp add: cblinfun_apply_cblinfun_compose)
+    also have \<open>\<dots> = cinner (ket i) (ket k) * cinner (ket (\<gamma>,j)) (x *\<^sub>V ket (\<gamma>,l))\<close>
+      by (simp add: comp_tensor_op tensor_op_ket tensor_op_scaleC_left cinner_ket tensor_ell2_ket)
+    also have \<open>\<dots> = cinner (ket i) (ket k) * cinner (ket j) (x' *\<^sub>V ket l)\<close>
+      by (simp add: x')
+    also have \<open>\<dots> = cinner (ket (i,j)) ((id_cblinfun \<otimes>\<^sub>o x') *\<^sub>V ket (k,l))\<close>
+      apply (simp add: tensor_op_ket)
+      by (simp flip: tensor_ell2_ket)
+    finally show ?thesis by -
+  qed
+  then have \<open>x = (id_cblinfun \<otimes>\<^sub>o x')\<close>
+    by (auto intro!: equal_ket cinner_ket_eqI)
+  then show \<open>x \<in> range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
+    by auto
+next
+  fix x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
+  assume \<open>x \<in> range (\<lambda>b. id_cblinfun \<otimes>\<^sub>o b)\<close>
+  then obtain b where x: \<open>x = id_cblinfun \<otimes>\<^sub>o b\<close>
+    by auto
+  then show \<open>x \<in> commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun))\<close>
+    by (auto simp: x commutant_def comp_tensor_op)
+qed
+
+
+lemma sandwich_tensor_op: \<open>sandwich (a \<otimes>\<^sub>o b) (c \<otimes>\<^sub>o d) = sandwich a c \<otimes>\<^sub>o sandwich b d\<close>
+  by (simp add: sandwich_apply tensor_op_adjoint flip: cblinfun_compose_assoc comp_tensor_op)
+
+lemma sandwich_assoc_ell2_tensor_op[simp]: \<open>sandwich assoc_ell2 ((a \<otimes>\<^sub>o b) \<otimes>\<^sub>o c) = a \<otimes>\<^sub>o (b \<otimes>\<^sub>o c)\<close>
+  by (auto intro!: tensor_ell2_extensionality3 
+      simp: sandwich_apply assoc_ell2'_tensor assoc_ell2_tensor tensor_op_ell2)
+
+lemma unitary_tensor_op: \<open>unitary (a \<otimes>\<^sub>o b)\<close> if [simp]: \<open>unitary a\<close> \<open>unitary b\<close>
+  by (auto intro!: unitaryI simp add: tensor_op_adjoint comp_tensor_op)
 
 subsection \<open>Tensor product of subspaces\<close>
 

@@ -2066,6 +2066,13 @@ lemma is_Sup_cSup:
   shows \<open>is_Sup X (Sup X)\<close>
   using assms by (auto intro!: cSup_upper cSup_least simp: is_Sup_def)
 
+lemma continuous_map_iff_preserves_convergence:
+  assumes \<open>\<And>F a. a \<in> topspace T \<Longrightarrow> limitin T id a F \<Longrightarrow> limitin U f (f a) F\<close>
+  shows \<open>continuous_map T U f\<close>
+  apply (rule continuous_map_atin[THEN iffD2], intro ballI)
+  using assms
+  by (simp add: limitin_continuous_map)
+
 
 
 end

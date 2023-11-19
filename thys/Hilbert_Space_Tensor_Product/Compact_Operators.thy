@@ -247,6 +247,43 @@ proof -
     by simp
 qed
 
+(* TODO move *)
+lemma finite_rank_cfinite_dim[simp]: \<open>finite_rank (a :: 'a :: {cfinite_dim,chilbert_space} \<Rightarrow>\<^sub>C\<^sub>L 'b :: complex_normed_vector)\<close>
+proof -
+  obtain B :: \<open>'a set\<close> where \<open>is_onb B\<close>
+    using is_onb_some_chilbert_basis by blast
+  from \<open>is_onb B\<close> have [simp]: \<open>finite B\<close>
+    by (auto intro!: cindependent_cfinite_dim_finite is_ortho_set_cindependent simp add: is_onb_def)
+  have [simp]: \<open>cspan B = UNIV\<close>
+  proof -
+    from \<open>is_onb B\<close> have \<open>ccspan B = \<top>\<close>
+      using is_onb_def by blast
+    then have \<open>closure (cspan B) = UNIV\<close>
+      by (metis ccspan.rep_eq space_as_set_top)
+    then show ?thesis
+      by simp
+  qed
+  have a_sum: \<open>a = (\<Sum>b\<in>B. a o\<^sub>C\<^sub>L selfbutter b)\<close>
+  proof (rule cblinfun_eq_on_UNIV_span[OF \<open>cspan B = UNIV\<close>])
+    fix s assume [simp]: \<open>s \<in> B\<close>
+    with \<open>is_onb B\<close> have \<open>norm s = 1\<close>
+      by (simp add: is_onb_def)
+    have 1: \<open>j \<noteq> s \<Longrightarrow> j \<in> B \<Longrightarrow> (a o\<^sub>C\<^sub>L selfbutter j) *\<^sub>V s = 0\<close> for j
+      apply auto
+      by (metis \<open>is_onb B\<close> \<open>s \<in> B\<close> cblinfun.scaleC_right is_onb_def is_ortho_set_def scaleC_eq_0_iff)
+    have 2: \<open>a *\<^sub>V s = (if s \<in> B then (a o\<^sub>C\<^sub>L selfbutter s) *\<^sub>V s else 0)\<close>
+      using \<open>norm s = 1\<close> \<open>s \<in> B\<close> by (simp add: cnorm_eq_1)
+    show \<open>a *\<^sub>V s = (\<Sum>b\<in>B. a o\<^sub>C\<^sub>L selfbutter b) *\<^sub>V s\<close>
+      apply (subst cblinfun.sum_left)
+      apply (subst sum_single[where i=s])
+      using 1 2 by auto
+  qed
+  have \<open>finite_rank (\<Sum>b\<in>B. a o\<^sub>C\<^sub>L selfbutter b)\<close>
+    by (auto intro!: finite_rank_sum simp: cblinfun_comp_butterfly)
+  with a_sum show ?thesis
+    by simp
+qed
+
 
 subsection \<open>Compact operators\<close>
 
@@ -1288,5 +1325,8 @@ proof (rule Set.equalityI)
   qed
 qed
 
+subsection \<open>Spectral decomposition\<close>
+
+(* TODO *)
 
 end

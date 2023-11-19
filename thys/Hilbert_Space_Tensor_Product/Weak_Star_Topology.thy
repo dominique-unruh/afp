@@ -766,6 +766,21 @@ lemma continuous_map_minus_weak_star[continuous_intros]:
   apply (subst diff_conv_add_uminus)
   by (intro assms continuous_intros)
 
+lemma weak_star_topology_is_norm_topology_fin_dim[simp]: 
+  \<open>(weak_star_topology :: ('a::{cfinite_dim,chilbert_space} \<Rightarrow>\<^sub>C\<^sub>L 'b::{cfinite_dim,chilbert_space}) topology) = euclidean\<close>
+proof -
+  have 1: \<open>continuous_map euclidean weak_star_topology (id :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b \<Rightarrow> _)\<close>
+    by (simp add: id_def weak_star_topology_weaker_than_euclidean)
+  have \<open>continuous_map weak_star_topology cweak_operator_topology (id :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b \<Rightarrow> _)\<close>
+    by (simp only: id_def wot_weaker_than_weak_star)
+  then have 2: \<open>continuous_map weak_star_topology euclidean (id :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b \<Rightarrow> _)\<close>
+    by (simp only: wot_is_norm_topology_findim)
+  from 1 2
+  show ?thesis
+    by (auto simp: topology_finer_continuous_id[symmetric] simp flip: openin_inject)
+qed
+
+
 
 
 unbundle no_cblinfun_notation

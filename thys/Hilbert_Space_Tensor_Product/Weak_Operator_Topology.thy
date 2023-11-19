@@ -445,4 +445,59 @@ proof -
     by simp
 qed
 
+lemma wot_is_norm_topology_findim[simp]:
+  \<open>(cweak_operator_topology :: ('a::{cfinite_dim,chilbert_space} \<Rightarrow>\<^sub>C\<^sub>L 'b::{cfinite_dim,chilbert_space}) topology) = euclidean\<close>
+proof -
+  have \<open>continuous_map euclidean cweak_operator_topology id\<close>
+    by (simp add: id_def cweak_operator_topology_weaker_than_euclidean)
+  moreover have \<open>continuous_map cweak_operator_topology euclidean (id :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'b \<Rightarrow> _)\<close>
+  proof (rule continuous_map_iff_preserves_convergence)
+    fix l and F :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b) filter\<close>
+    assume lim_wot: \<open>limitin cweak_operator_topology id l F\<close>
+    obtain A :: \<open>'a set\<close> where \<open>is_onb A\<close>
+      using is_onb_some_chilbert_basis by blast
+    then have idA: \<open>id_cblinfun = (\<Sum>x\<in>A. selfbutter x)\<close>
+      using butterflies_sum_id_finite by blast
+    obtain B :: \<open>'b set\<close> where \<open>is_onb B\<close>
+      using is_onb_some_chilbert_basis by blast
+    then have idB: \<open>id_cblinfun = (\<Sum>x\<in>B. selfbutter x)\<close>
+      using butterflies_sum_id_finite by blast
+    from lim_wot have \<open>((\<lambda>x. b \<bullet>\<^sub>C (x *\<^sub>V a)) \<longlongrightarrow> b \<bullet>\<^sub>C (l *\<^sub>V a)) F\<close> for a b
+      by (simp add: limitin_cweak_operator_topology)
+    then have \<open>((\<lambda>x. (b \<bullet>\<^sub>C (x *\<^sub>V a)) *\<^sub>C butterfly b a) \<longlongrightarrow> (b \<bullet>\<^sub>C (l *\<^sub>V a)) *\<^sub>C butterfly b a) F\<close> for a b
+      by (simp add: tendsto_scaleC)
+    then have \<open>((\<lambda>x. selfbutter b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L selfbutter a) \<longlongrightarrow> (selfbutter b o\<^sub>C\<^sub>L l o\<^sub>C\<^sub>L selfbutter a)) F\<close> for a b
+      by (simp add: cblinfun_comp_butterfly)
+    then have \<open>((\<lambda>x. \<Sum>b\<in>B. selfbutter b o\<^sub>C\<^sub>L x o\<^sub>C\<^sub>L selfbutter a) \<longlongrightarrow> (\<Sum>b\<in>B. selfbutter b o\<^sub>C\<^sub>L l o\<^sub>C\<^sub>L selfbutter a)) F\<close> for a
+      by (rule tendsto_sum)
+    then have \<open>((\<lambda>x. x o\<^sub>C\<^sub>L selfbutter a) \<longlongrightarrow> (l o\<^sub>C\<^sub>L selfbutter a)) F\<close> for a
+      by (simp add: flip: cblinfun_compose_sum_left idB)
+    then have \<open>((\<lambda>x. \<Sum>a\<in>A. x o\<^sub>C\<^sub>L selfbutter a) \<longlongrightarrow> (\<Sum>a\<in>A. l o\<^sub>C\<^sub>L selfbutter a)) F\<close>
+      by (rule tendsto_sum)
+    then have \<open>(id \<longlongrightarrow> l) F\<close>
+      by (simp add: flip: cblinfun_compose_sum_right idA id_def)
+    then show \<open>limitin euclidean id (id l) F\<close>
+      by simp
+  qed
+  ultimately show ?thesis
+    by (auto simp: topology_finer_continuous_id[symmetric] simp flip: openin_inject)
+qed
+
+
+lemma sot_is_norm_topology_fin_dim[simp]: 
+  \<comment> \<open>Logically belongs in \<^theory>\<open>Tensor_Product.Strong_Operator_Topology\<close> but the proof uses
+      lemmas from here..\<close>
+  \<open>(cstrong_operator_topology :: ('a::{cfinite_dim,chilbert_space} \<Rightarrow>\<^sub>C\<^sub>L 'b::{cfinite_dim,chilbert_space}) topology) = euclidean\<close>
+proof -
+  have 1: \<open>continuous_map euclidean cstrong_operator_topology (id :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b \<Rightarrow> _)\<close>
+    by (simp add: id_def cstrong_operator_topology_weaker_than_euclidean)
+  have \<open>continuous_map cstrong_operator_topology cweak_operator_topology (id :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b \<Rightarrow> _)\<close>
+    by (metis eq_id_iff wot_weaker_than_sot)
+  then have 2: \<open>continuous_map cstrong_operator_topology euclidean (id :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b \<Rightarrow> _)\<close>
+    by (simp only: wot_is_norm_topology_findim)
+  from 1 2
+  show ?thesis
+    by (auto simp: topology_finer_continuous_id[symmetric] simp flip: openin_inject)
+qed
+
 end
