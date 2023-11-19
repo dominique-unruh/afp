@@ -3313,10 +3313,14 @@ end
 lemma id_cblinfun_eq_1[simp]: \<open>id_cblinfun = 1\<close>
   by transfer auto
 
+(* TODO rename: apply \<rightarrow> cblinfun_compose *)
 lemma one_dim_apply_is_times[simp]:
   fixes A :: "'a::one_dim \<Rightarrow>\<^sub>C\<^sub>L 'a" and B :: "'a \<Rightarrow>\<^sub>C\<^sub>L 'a"
   shows "A o\<^sub>C\<^sub>L B = A * B"
   by transfer simp
+
+lemma scaleC_one_dim_is_times: \<open>r *\<^sub>C x = one_dim_iso r * x\<close>
+  by simp
 
 lemma one_comp_one_cblinfun[simp]: "1 o\<^sub>C\<^sub>L 1 = 1"
   apply transfer unfolding o_def by simp
@@ -3362,6 +3366,14 @@ lemma one_dim_cblinfun_compose_commute: \<open>a o\<^sub>C\<^sub>L b = b o\<^sub
 
 lemma one_cblinfun_apply_one[simp]: \<open>1 *\<^sub>V 1 = 1\<close>
   by (simp add: one_cblinfun.rep_eq)
+
+lemma one_dim_cblinfun_apply_is_times:
+  fixes A :: "'a::one_dim \<Rightarrow>\<^sub>C\<^sub>L 'b::one_dim" and b :: "'a"
+  shows "A *\<^sub>V b = one_dim_iso A * one_dim_iso b"
+  apply (subst one_dim_scaleC_1[of A, symmetric])
+  apply (subst one_dim_scaleC_1[of b, symmetric])
+  apply (simp only: cblinfun.scaleC_left cblinfun.scaleC_right)
+  by simp
 
 lemma is_onb_one_dim[simp]: \<open>norm x = 1 \<Longrightarrow> is_onb {x}\<close> for x :: \<open>_ :: one_dim\<close>
   by (auto simp: is_onb_def intro!: ccspan_one_dim)

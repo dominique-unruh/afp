@@ -1300,6 +1300,7 @@ lift_definition inverse_ell2 :: "'a ell2 \<Rightarrow> 'a ell2" is "\<lambda>a x
 instance..
 end
 
+(* TODO could be just an "instance" command *)
 instantiation ell2 :: ("{enum,CARD_1}") one_dim begin
 text \<open>Note: enum is not needed logically, but without it this instantiation
             clashes with \<open>instantiation ell2 :: (enum) onb_enum\<close>\<close>
