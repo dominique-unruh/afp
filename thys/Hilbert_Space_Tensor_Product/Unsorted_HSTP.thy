@@ -4,6 +4,7 @@ theory Unsorted_HSTP
     Jordan_Normal_Form.Matrix
     Complex_Bounded_Operators.Extra_Jordan_Normal_Form
     Complex_Bounded_Operators.Cblinfun_Matrix
+    Partial_Trace
 begin
 
 unbundle cblinfun_notation Finite_Cartesian_Product.no_vec_syntax jnf_notation
@@ -4944,9 +4945,52 @@ proof (intro order_top_class.top_le subsetI)
     by meson
 qed
 
+lemma cspan_tc_transfer[transfer_rule]: 
+  includes lifting_syntax
+  shows \<open>(rel_set cr_trace_class ===> rel_set cr_trace_class) cspan cspan\<close>
+proof (intro rel_funI rel_setI)
+  fix B :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close> and C
+  assume \<open>rel_set cr_trace_class B C\<close>
+  then have BC: \<open>B = from_trace_class ` C\<close>
+    by (auto intro!: simp: cr_trace_class_def image_iff rel_set_def)
+      (*     then have tc_B: \<open>B \<subseteq> Collect trace_class\<close> (* TODO used? *)
+      by auto *)
+
+  show \<open>\<exists>t\<in>cspan C. cr_trace_class a t\<close> if \<open>a \<in> cspan B\<close> for a
+  proof -
+    from that obtain F f where \<open>finite F\<close> and \<open>F \<subseteq> B\<close> and a_sum: \<open>a = (\<Sum>x\<in>F. f x *\<^sub>C x)\<close>
+      by (auto simp: complex_vector.span_explicit)
+    from \<open>F \<subseteq> B\<close>
+    obtain F' where \<open>F' \<subseteq> C\<close> and FF': \<open>F = from_trace_class ` F'\<close>
+      by (auto elim!: subset_imageE simp: BC)
+    define t where \<open>t = (\<Sum>x\<in>F'. f (from_trace_class x) *\<^sub>C x)\<close>
+    have \<open>a = from_trace_class t\<close>
+      by (simp add: a_sum t_def from_trace_class_sum scaleC_trace_class.rep_eq FF'
+          sum.reindex o_def from_trace_class_inject inj_on_def)
+    moreover have \<open>t \<in> cspan C\<close>
+      by (metis (no_types, lifting) \<open>F' \<subseteq> C\<close> complex_vector.span_clauses(4) complex_vector.span_sum complex_vector.span_superset subsetD t_def)
+    ultimately show \<open>\<exists>t\<in>cspan C. cr_trace_class a t\<close>
+      by (auto simp: cr_trace_class_def)
+  qed
+
+  show \<open>\<exists>a\<in>cspan B. cr_trace_class a t\<close> if \<open>t \<in> cspan C\<close> for t
+  proof -
+    from that obtain F f where \<open>finite F\<close> and \<open>F \<subseteq> C\<close> and t_sum: \<open>t = (\<Sum>x\<in>F. f x *\<^sub>C x)\<close>
+      by (auto simp: complex_vector.span_explicit)
+    define a where \<open>a = (\<Sum>x\<in>F. f x *\<^sub>C from_trace_class x)\<close>
+    then have \<open>a = from_trace_class t\<close>
+      by (simp add: t_sum a_def from_trace_class_sum scaleC_trace_class.rep_eq)
+    moreover have \<open>a \<in> cspan B\<close>
+      using BC \<open>F \<subseteq> C\<close> 
+      by (auto intro!: complex_vector.span_base complex_vector.span_sum complex_vector.span_scale simp: a_def)
+    ultimately show ?thesis
+      by (auto simp: cr_trace_class_def)
+  qed
+qed
+
 
 lemma finite_rank_tc_def': \<open>finite_rank_tc A \<longleftrightarrow> A \<in> cspan (Collect rank1_tc)\<close>
-  apply transfer
+  apply transfer'
   apply (auto simp: finite_rank_def)
    apply (metis (no_types, lifting) Collect_cong rank1_trace_class)
   by (metis (no_types, lifting) Collect_cong rank1_trace_class)
@@ -4993,6 +5037,629 @@ qed
 
 hide_fact finite_rank_tc_dense_aux
 
+
+
+lemma tc_butterfly_add_left: \<open>tc_butterfly (a + a') b = tc_butterfly a b + tc_butterfly a' b\<close>
+  apply transfer
+  by (rule butterfly_add_left)
+
+lemma tc_butterfly_add_right: \<open>tc_butterfly a (b + b') = tc_butterfly a b + tc_butterfly a b'\<close>
+  apply transfer
+  by (rule butterfly_add_right)
+
+lemma tc_butterfly_sum_left: \<open>tc_butterfly (\<Sum>i\<in>M. \<psi> i) \<phi> = (\<Sum>i\<in>M. tc_butterfly (\<psi> i) \<phi>)\<close>
+  apply transfer
+  by (rule butterfly_sum_left)
+
+lemma tc_butterfly_sum_right: \<open>tc_butterfly \<psi> (\<Sum>i\<in>M. \<phi> i) = (\<Sum>i\<in>M. tc_butterfly \<psi> (\<phi> i))\<close>
+  apply transfer
+  by (rule butterfly_sum_right)
+
+lemma tc_butterfly_scaleC_left[simp]: "tc_butterfly (c *\<^sub>C \<psi>) \<phi> = c *\<^sub>C tc_butterfly \<psi> \<phi>"
+  apply transfer by simp
+
+lemma tc_butterfly_scaleC_right[simp]: "tc_butterfly \<psi> (c *\<^sub>C \<phi>) = cnj c *\<^sub>C tc_butterfly \<psi> \<phi>"
+  apply transfer by simp
+
+lemma onb_butterflies_span_trace_class:
+  fixes A :: \<open>'a::chilbert_space set\<close> and B :: \<open>'b::chilbert_space set\<close>
+  assumes \<open>is_onb A\<close> and \<open>is_onb B\<close>
+  shows \<open>ccspan ((\<lambda>(x, y). tc_butterfly x y) ` (A\<times>B)) = \<top>\<close>
+proof -
+  have \<open>closure (cspan ((\<lambda>(x, y). tc_butterfly x y) ` (A\<times>B))) \<supseteq> Collect rank1_tc\<close>
+  proof (rule subsetI)
+    \<comment> \<open>This subproof is almost identical to the corresponding one in
+        @{thm [source] finite_rank_dense_compact}, and lengthy. Can they be merged into one subproof?\<close>
+    fix x :: \<open>('b, 'a) trace_class\<close> assume \<open>x \<in> Collect rank1_tc\<close>
+    then obtain a b where xab: \<open>x = tc_butterfly a b\<close>
+      apply transfer using rank1_iff_butterfly by fastforce
+    define f where \<open>f F G = tc_butterfly (Proj (ccspan F) a) (Proj (ccspan G) b)\<close> for F G
+    have lim: \<open>(case_prod f \<longlongrightarrow> x) (finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B)\<close>
+    proof (rule tendstoI, subst dist_norm)
+      fix e :: real assume \<open>e > 0\<close>
+      define d where \<open>d = (if norm a = 0 \<and> norm b = 0 then 1 
+                                  else e / (max (norm a) (norm b)) / 4)\<close>
+      have d: \<open>norm a * d + norm a * d + norm b * d < e\<close>
+      proof -
+        have \<open>norm a * d \<le> e/4\<close>
+          using \<open>e > 0\<close> apply (auto simp: d_def)
+           apply (simp add: divide_le_eq)
+          by (smt (z3) Extra_Ordered_Fields.mult_sign_intros(3) \<open>0 < e\<close> antisym_conv divide_le_eq less_imp_le linordered_field_class.mult_imp_div_pos_le mult_left_mono nice_ordered_field_class.dense_le nice_ordered_field_class.divide_nonneg_neg nice_ordered_field_class.divide_nonpos_pos nle_le nonzero_mult_div_cancel_left norm_imp_pos_and_ge ordered_field_class.sign_simps(5) split_mult_pos_le)
+        moreover have \<open>norm b * d \<le> e/4\<close>
+          using \<open>e > 0\<close> apply (auto simp: d_def)
+           apply (simp add: divide_le_eq)
+          by (smt (verit) linordered_field_class.mult_imp_div_pos_le mult_left_mono norm_le_zero_iff ordered_field_class.sign_simps(5))
+        ultimately have \<open>norm a * d + norm a * d + norm b * d \<le> 3 * e / 4\<close>
+          by linarith
+        also have \<open>\<dots> < e\<close>
+          by (simp add: \<open>0 < e\<close>)
+        finally show ?thesis
+          by -
+      qed
+      have [simp]: \<open>d > 0\<close>
+        using \<open>e > 0\<close> apply (auto simp: d_def)
+         apply (smt (verit, best) nice_ordered_field_class.divide_pos_pos norm_eq_zero norm_not_less_zero)
+        by (smt (verit) linordered_field_class.divide_pos_pos zero_less_norm_iff)
+      from Proj_onb_limit[where \<psi>=a, OF assms(1)]
+      have \<open>\<forall>\<^sub>F F in finite_subsets_at_top A. norm (Proj (ccspan F) a - a) < d\<close>
+        by (metis Lim_null \<open>0 < d\<close> order_tendstoD(2) tendsto_norm_zero_iff)
+      moreover from Proj_onb_limit[where \<psi>=b, OF assms(2)]
+      have \<open>\<forall>\<^sub>F G in finite_subsets_at_top B. norm (Proj (ccspan G) b - b) < d\<close>
+        by (metis Lim_null \<open>0 < d\<close> order_tendstoD(2) tendsto_norm_zero_iff)
+      ultimately have FG_close: \<open>\<forall>\<^sub>F (F,G) in finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B. 
+              norm (Proj (ccspan F) a - a) < d \<and> norm (Proj (ccspan G) b - b) < d\<close>
+        unfolding case_prod_beta
+        by (rule eventually_prodI)
+      have fFG_dist: \<open>norm (f F G - x) < e\<close> 
+        if \<open>norm (Proj (ccspan F) a - a) < d\<close> and \<open>norm (Proj (ccspan G) b - b) < d\<close>
+          and \<open>F \<subseteq> A\<close> and \<open>G \<subseteq> B\<close> for F G
+      proof -
+        have a_split: \<open>a = Proj (ccspan F) a + Proj (ccspan (A-F)) a\<close>
+          using assms apply (simp add: is_onb_def is_ortho_set_def that Proj_orthog_ccspan_union flip: cblinfun.add_left)
+          apply (subst Proj_orthog_ccspan_union[symmetric])
+           apply (metis DiffD1 DiffD2 in_mono that(3))
+          using \<open>F \<subseteq> A\<close> by (auto intro!: simp: Un_absorb1)
+        have b_split: \<open>b = Proj (ccspan G) b + Proj (ccspan (B-G)) b\<close>
+          using assms apply (simp add: is_onb_def is_ortho_set_def that Proj_orthog_ccspan_union flip: cblinfun.add_left)
+          apply (subst Proj_orthog_ccspan_union[symmetric])
+           apply (metis DiffD1 DiffD2 in_mono that(4))
+          using \<open>G \<subseteq> B\<close> by (auto intro!: simp: Un_absorb1)
+        have n1: \<open>norm (f F (B-G)) \<le> norm a * d\<close> for F
+        proof -
+          have \<open>norm (f F (B-G)) \<le> norm a * norm (Proj (ccspan (B-G)) b)\<close>
+            by (auto intro!: mult_right_mono is_Proj_reduces_norm simp add: f_def norm_tc_butterfly)
+          also have \<open>\<dots> \<le> norm a * norm (Proj (ccspan G) b - b)\<close>
+            by (metis add_diff_cancel_left' b_split less_eq_real_def norm_minus_commute)
+          also have \<open>\<dots> \<le> norm a * d\<close>
+            by (meson less_eq_real_def mult_left_mono norm_ge_zero that(2))
+          finally show ?thesis
+            by -
+        qed
+        have n2: \<open>norm (f (A-F) G) \<le> norm b * d\<close> for G
+        proof -
+          have \<open>norm (f (A-F) G) \<le> norm b * norm (Proj (ccspan (A-F)) a)\<close>
+            by (auto intro!: mult_right_mono is_Proj_reduces_norm simp add: f_def norm_tc_butterfly mult.commute)
+          also have \<open>\<dots> \<le> norm b * norm (Proj (ccspan F) a - a)\<close>
+            by (smt (verit, best) a_split add_diff_cancel_left' minus_diff_eq norm_minus_cancel)
+          also have \<open>\<dots> \<le> norm b * d\<close>
+            by (meson less_eq_real_def mult_left_mono norm_ge_zero that(1))
+          finally show ?thesis
+            by -
+        qed
+        have \<open>norm (f F G - x) = norm (- f F (B-G) - f (A-F) (B-G) - f (A-F) G)\<close>
+          unfolding xab
+          apply (subst a_split, subst b_split)
+          by (simp add: f_def tc_butterfly_add_right tc_butterfly_add_left)
+        also have \<open>\<dots> \<le> norm (f F (B-G)) + norm (f (A-F) (B-G)) + norm (f (A-F) G)\<close>
+          by (smt (verit, best) norm_minus_cancel norm_triangle_ineq4)
+        also have \<open>\<dots> \<le> norm a * d + norm a * d + norm b * d\<close>
+          using n1 n2
+          by (meson add_mono_thms_linordered_semiring(1))
+        also have \<open>\<dots> < e\<close>
+          by (fact d)
+        finally show ?thesis
+          by -
+      qed
+      show \<open>\<forall>\<^sub>F FG in finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B. norm (case_prod f FG - x) < e\<close>
+        apply (rule eventually_elim2)
+          apply (rule eventually_prodI[where P=\<open>\<lambda>F. finite F \<and> F \<subseteq> A\<close> and Q=\<open>\<lambda>G. finite G \<and> G \<subseteq> B\<close>])
+           apply auto[2]
+         apply (rule FG_close)
+        using fFG_dist by fastforce
+    qed
+    have nontriv: \<open>finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B \<noteq> \<bottom>\<close>
+      by (simp add: prod_filter_eq_bot)
+    have inside: \<open>\<forall>\<^sub>F x in finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B. 
+              case_prod f x \<in> cspan ((\<lambda>(\<xi>,\<eta>). tc_butterfly \<xi> \<eta>) ` (A \<times> B))\<close>
+    proof (rule eventually_mp[where P=\<open>\<lambda>(F,G). finite F \<and> finite G\<close>])
+      show \<open>\<forall>\<^sub>F (F,G) in finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B. finite F \<and> finite G\<close>
+        by (smt (verit) case_prod_conv eventually_finite_subsets_at_top_weakI eventually_prod_filter)
+      have f_in_span: \<open>f F G \<in> cspan ((\<lambda>(\<xi>,\<eta>). tc_butterfly \<xi> \<eta>) ` (A \<times> B))\<close> if [simp]: \<open>finite F\<close> \<open>finite G\<close> and \<open>F \<subseteq> A\<close> \<open>G \<subseteq> B\<close> for F G
+      proof -
+        have \<open>Proj (ccspan F) a \<in> cspan F\<close>
+          by (metis Proj_range cblinfun_apply_in_image ccspan_finite that(1))
+        then obtain r where ProjFsum: \<open>Proj (ccspan F) a = (\<Sum>x\<in>F. r x *\<^sub>C x)\<close>
+          apply atomize_elim
+          using complex_vector.span_finite[OF \<open>finite F\<close>]
+          by auto
+        have \<open>Proj (ccspan G) b \<in> cspan G\<close>
+          by (metis Proj_range cblinfun_apply_in_image ccspan_finite that(2))
+        then obtain s where ProjGsum: \<open>Proj (ccspan G) b = (\<Sum>x\<in>G. s x *\<^sub>C x)\<close>
+          apply atomize_elim
+          using complex_vector.span_finite[OF \<open>finite G\<close>]
+          by auto
+        have \<open>tc_butterfly \<xi> \<eta> \<in> (\<lambda>(\<xi>, \<eta>). tc_butterfly \<xi> \<eta>) ` (A \<times> B)\<close>
+          if \<open>\<eta> \<in> G\<close> and \<open>\<xi> \<in> F\<close> for \<eta> \<xi>
+          using \<open>F \<subseteq> A\<close> \<open>G \<subseteq> B\<close> that by (auto intro!: pair_imageI)
+        then show ?thesis
+          by (auto intro!: complex_vector.span_sum complex_vector.span_scale
+              intro: complex_vector.span_base[where a=\<open>tc_butterfly _ _\<close>]
+              simp add: f_def ProjFsum ProjGsum tc_butterfly_sum_left tc_butterfly_sum_right)
+      qed
+      show \<open>\<forall>\<^sub>F x in finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B.
+                      (case x of (F, G) \<Rightarrow> finite F \<and> finite G) \<longrightarrow> (case x of (F, G) \<Rightarrow> f F G) \<in> cspan ((\<lambda>(\<xi>, \<eta>). tc_butterfly \<xi> \<eta>) ` (A \<times> B))\<close>
+        apply (rule eventually_mono)
+        apply (rule eventually_prodI[where P=\<open>\<lambda>F. finite F \<and> F \<subseteq> A\<close> and Q=\<open>\<lambda>G. finite G \<and> G \<subseteq> B\<close>])
+        by (auto intro!: f_in_span)
+    qed
+    show \<open>x \<in> closure (cspan ((\<lambda>(\<xi>, \<eta>). tc_butterfly \<xi> \<eta>) ` (A \<times> B)))\<close>
+      using lim nontriv inside by (rule limit_in_closure)
+  qed
+  moreover have \<open>cspan (Collect rank1_tc :: ('b,'a) trace_class set) = Collect finite_rank_tc\<close>
+    using finite_rank_tc_def' by fastforce
+  moreover have \<open>closure (Collect finite_rank_tc :: ('b,'a) trace_class set) = UNIV\<close>
+    by (rule finite_rank_tc_dense)
+  ultimately have \<open>closure (cspan ((\<lambda>(x, y). tc_butterfly x y) ` (A\<times>B))) \<supseteq> UNIV\<close>
+    by (smt (verit, del_insts) Un_UNIV_left closed_sum_closure_left closed_sum_cspan closure_closure closure_is_csubspace complex_vector.span_eq_iff complex_vector.subspace_span subset_Un_eq)
+  then show ?thesis
+    by (metis ccspan.abs_eq ccspan_UNIV closure_UNIV complex_vector.span_UNIV top.extremum_uniqueI)
+qed
+
+interpretation tensor_op_cbilinear: bounded_cbilinear tensor_op
+  by simp
+
+
+
+lemma tensor_op_mono_left:
+  fixes a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and c :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+  assumes \<open>a \<le> b\<close> and \<open>c \<ge> 0\<close>
+  shows \<open>a \<otimes>\<^sub>o c \<le> b \<otimes>\<^sub>o c\<close>
+proof -
+  have \<open>b - a \<ge> 0\<close>
+    by (simp add: assms(1))
+  with \<open>c \<ge> 0\<close> have \<open>(b - a) \<otimes>\<^sub>o c \<ge> 0\<close>
+    by (intro tensor_op_pos)
+  then have \<open>b \<otimes>\<^sub>o c - a \<otimes>\<^sub>o c \<ge> 0\<close>
+    by (simp add: tensor_op_cbilinear.diff_left)
+  then show ?thesis
+    by simp
+qed
+
+lemma tensor_op_mono_right:
+  fixes a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+  assumes \<open>b \<le> c\<close> and \<open>a \<ge> 0\<close>
+  shows \<open>a \<otimes>\<^sub>o b \<le> a \<otimes>\<^sub>o c\<close>
+proof -
+  have \<open>c - b \<ge> 0\<close>
+    by (simp add: assms(1))
+  with \<open>a \<ge> 0\<close> have \<open>a \<otimes>\<^sub>o (c - b) \<ge> 0\<close>
+    by (intro tensor_op_pos)
+  then have \<open>a \<otimes>\<^sub>o c - a \<otimes>\<^sub>o b \<ge> 0\<close>
+    by (simp add: tensor_op_cbilinear.diff_right)
+  then show ?thesis
+    by simp
+qed
+
+
+lemma tensor_op_mono:
+  fixes a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and c :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+  assumes \<open>a \<le> b\<close> and \<open>c \<le> d\<close> and \<open>b \<ge> 0\<close> and \<open>c \<ge> 0\<close>
+  shows \<open>a \<otimes>\<^sub>o c \<le> b \<otimes>\<^sub>o d\<close>
+proof -
+  have \<open>a \<otimes>\<^sub>o c \<le> b \<otimes>\<^sub>o c\<close>
+    using \<open>a \<le> b\<close> and \<open>c \<ge> 0\<close>
+    by (rule tensor_op_mono_left)
+  also have \<open>\<dots> \<le> b \<otimes>\<^sub>o d\<close>
+    using \<open>c \<le> d\<close> and \<open>b \<ge> 0\<close>
+    by (rule tensor_op_mono_right)
+  finally show ?thesis
+    by -
+qed
+
+lemma sandwich_tc_tensor: \<open>sandwich_tc (E \<otimes>\<^sub>o F) (tc_tensor t u) = tc_tensor (sandwich_tc E t) (sandwich_tc F u)\<close>
+  apply (transfer fixing: E F)
+  by (simp add: sandwich_tensor_op)
+
+
+lemma tensor_tc_butterfly: "tc_tensor (tc_butterfly \<psi> \<psi>') (tc_butterfly \<phi> \<phi>') = tc_butterfly (tensor_ell2 \<psi> \<phi>) (tensor_ell2 \<psi>' \<phi>')"
+  apply (transfer fixing: \<phi> \<phi>' \<psi> \<psi>') by simp
+
+
+definition separating_set :: \<open>(('a \<Rightarrow> 'b) \<Rightarrow> bool) \<Rightarrow> 'a set \<Rightarrow> bool\<close> where
+  \<open>separating_set P S \<longleftrightarrow> (\<forall>f g. P f \<longrightarrow> P g \<longrightarrow> (\<forall>x\<in>S. f x = g x) \<longrightarrow> f = g)\<close>
+
+lemma separating_set_mono: \<open>S \<subseteq> T \<Longrightarrow> separating_set P S \<Longrightarrow> separating_set P T\<close>
+  unfolding separating_set_def by fast
+
+lemma separating_set_UNIV[simp]: \<open>separating_set P UNIV\<close>
+  by (auto intro!: ext simp: separating_set_def)
+
+lemma eq_from_separatingI:
+  assumes \<open>separating_set P S\<close>
+  assumes \<open>P f\<close> and \<open>P g\<close>
+  assumes \<open>\<And>x. x \<in> S \<Longrightarrow> f x = g x\<close>
+  shows \<open>f = g\<close>
+  using assms by (simp add: separating_set_def)
+
+lemma cblinfun_eq_from_separatingI:
+  fixes a b :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
+  assumes \<open>separating_set (bounded_clinear :: ('a \<Rightarrow> 'b) \<Rightarrow> bool) S\<close>
+  assumes \<open>\<And>x. x \<in> S \<Longrightarrow> a x = b x\<close>
+  shows \<open>a = b\<close>
+  apply (rule cblinfun_eqI, rule fun_cong[where f=\<open>cblinfun_apply _\<close>])
+  using assms(1) apply (rule eq_from_separatingI)
+  using assms(2) by (auto intro!: bounded_cbilinear_apply_bounded_clinear cblinfun.bounded_cbilinear_axioms simp: )
+
+lemma eq_from_separatingI2:
+  assumes \<open>separating_set P ((\<lambda>(x,y). h x y) ` (S\<times>T))\<close>
+  assumes \<open>P f\<close> and \<open>P g\<close>
+  assumes \<open>\<And>x y. x \<in> S \<Longrightarrow> y \<in> T \<Longrightarrow> f (h x y) = g (h x y)\<close>
+  shows \<open>f = g\<close>
+  apply (rule eq_from_separatingI[OF assms(1)])
+  using assms(2-4) by auto
+
+lemma cblinfun_eq_from_separatingI2:
+  fixes a b :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
+  assumes \<open>separating_set (bounded_clinear :: ('a \<Rightarrow> 'b) \<Rightarrow> bool) ((\<lambda>(x,y). h x y) ` (S\<times>T))\<close>
+  assumes \<open>\<And>x y. x \<in> S \<Longrightarrow> y \<in> T \<Longrightarrow> a (h x y) = b (h x y)\<close>
+  shows \<open>a = b\<close>
+  apply (rule cblinfun_eqI, rule fun_cong[where f=\<open>cblinfun_apply _\<close>])
+  using assms(1) apply (rule eq_from_separatingI2)
+  using assms(2) by (auto intro!: bounded_cbilinear_apply_bounded_clinear cblinfun.bounded_cbilinear_axioms simp: )
+
+lemma separating_set_bounded_clinear_dense:
+  assumes \<open>ccspan S = \<top>\<close>
+  shows \<open>separating_set bounded_clinear S\<close>
+  using assms
+  apply (auto intro!: ext simp: separating_set_def)
+  apply (rule bounded_clinear_eq_on_closure[where G=S])
+  apply auto
+  using ccspan.rep_eq by force
+
+
+lemma separating_set_bounded_clinear_tc_tensor:
+  shows \<open>separating_set bounded_clinear ((\<lambda>(\<rho>,\<sigma>). tc_tensor \<rho> \<sigma>) ` (UNIV \<times> UNIV))\<close>
+proof -
+  have \<open>\<top> = ccspan ((\<lambda>(x, y). tc_butterfly x y) ` (range ket \<times> range ket))\<close>
+    by (simp add: onb_butterflies_span_trace_class)
+  also have \<open>\<dots> = ccspan ((\<lambda>(x, y, z, w). tc_butterfly (x \<otimes>\<^sub>s y) (z \<otimes>\<^sub>s w)) ` (range ket \<times> range ket \<times> range ket \<times> range ket))\<close>
+    by (auto intro!: arg_cong[where f=ccspan] image_eqI simp: tensor_ell2_ket)
+  also have \<open>\<dots> = ccspan ((\<lambda>(x, y, z, w). tc_tensor (tc_butterfly x z) (tc_butterfly y w)) ` (range ket \<times> range ket \<times> range ket \<times> range ket))\<close>
+    by (simp add: tensor_tc_butterfly)
+  also have \<open>\<dots> \<le> ccspan ((\<lambda>(\<rho>, \<sigma>). tc_tensor \<rho> \<sigma>) ` (UNIV \<times> UNIV))\<close>
+    by (auto intro!: ccspan_mono)
+  finally show ?thesis
+    apply (rule_tac separating_set_bounded_clinear_dense)
+    using top_le by blast
+qed
+
+lemma separating_setI:
+  assumes \<open>\<And>f g. P f \<Longrightarrow> P g \<Longrightarrow> (\<And>x. x\<in>S \<Longrightarrow> f x = g x) \<Longrightarrow> f = g\<close>
+  shows \<open>separating_set P S\<close>
+  by (simp add: assms separating_set_def)
+
+lemma separating_set_ket: \<open>separating_set bounded_clinear (range ket)\<close>
+  by (simp add: bounded_clinear_equal_ket separating_setI)
+
+
+lemma separating_set_bounded_cbilinear_nested:
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector) \<Rightarrow> _) ((\<lambda>(x, y). h x y) ` (UNIV \<times> UNIV))\<close>
+  assumes \<open>bounded_cbilinear h\<close>
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) A\<close>
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) B\<close>
+  shows \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) ((\<lambda>(x,y). h x y) ` (A \<times> B))\<close>
+proof (rule separating_setI)
+  fix f g :: \<open>'a \<Rightarrow> 'e\<close>
+  assume [simp]: \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  have [simp]: \<open>bounded_clinear (\<lambda>x. f (h x y))\<close> for y
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear f\<close>])
+    using assms(2) by (rule bounded_cbilinear.bounded_clinear_left)
+  have [simp]: \<open>bounded_clinear (\<lambda>x. g (h x y))\<close> for y
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear g\<close>])
+    using assms(2) by (rule bounded_cbilinear.bounded_clinear_left)
+  have [simp]: \<open>bounded_clinear (\<lambda>y. f (h x y))\<close> for x
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear f\<close>])
+    using assms(2) by (rule bounded_cbilinear.bounded_clinear_right)
+  have [simp]: \<open>bounded_clinear (\<lambda>y. g (h x y))\<close> for x
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear g\<close>])
+    using assms(2) by (rule bounded_cbilinear.bounded_clinear_right)
+
+  assume \<open>z \<in> (\<lambda>(x, y). h x y) ` (A \<times> B) \<Longrightarrow> f z = g z\<close> for z
+  then have \<open>f (h x y) = g (h x y)\<close> if \<open>x \<in> A\<close> and \<open>y \<in> B\<close> for x y
+    using that by auto
+  then have \<open>(\<lambda>x. f (h x y)) = (\<lambda>x. g (h x y))\<close> if \<open>y \<in> B\<close> for y
+    apply (rule_tac eq_from_separatingI[OF assms(3)])
+    using that by auto
+  then have \<open>(\<lambda>y. f (h x y)) = (\<lambda>y. g (h x y))\<close> for x
+    apply (rule_tac eq_from_separatingI[OF assms(4)])
+    apply auto by meson
+  then have \<open>f (h x y) = g (h x y)\<close> for x y
+    by meson
+  with \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  show \<open>f = g\<close>
+    apply (rule eq_from_separatingI2[where f=f and g=g and P=bounded_clinear and S=UNIV and T=UNIV, rotated 1])
+    using assms(1) by -
+qed
+
+lemma separating_set_bounded_clinear_antilinear:
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector conjugate_space) \<Rightarrow> _) A\<close>
+  shows \<open>separating_set (bounded_antilinear :: (_ => 'e) \<Rightarrow> _) A\<close>
+proof (rule separating_setI)
+  fix f g :: \<open>'a \<Rightarrow> 'e\<close>
+  assume \<open>bounded_antilinear f\<close>
+  then have lin_f: \<open>bounded_clinear (to_conjugate_space o f)\<close>
+    by (simp add: bounded_antilinear_o_bounded_antilinear')
+  assume \<open>bounded_antilinear g\<close>
+  then have lin_g: \<open>bounded_clinear (to_conjugate_space o g)\<close>
+    by (simp add: bounded_antilinear_o_bounded_antilinear')
+  assume \<open>f x = g x\<close> if \<open>x \<in> A\<close> for x
+  then have \<open>(to_conjugate_space o f) x = (to_conjugate_space o g) x\<close> if \<open>x \<in> A\<close> for x
+    by (simp add: that)
+  with lin_f lin_g
+  have \<open>to_conjugate_space o f = to_conjugate_space o g\<close>
+    by (rule eq_from_separatingI[OF assms])
+  then show \<open>f = g\<close>
+    by (metis UNIV_I fun.inj_map_strong to_conjugate_space_inverse)
+qed
+
+lemma separating_set_bounded_sesquilinear_nested:
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector) \<Rightarrow> _) ((\<lambda>(x, y). h x y) ` (UNIV \<times> UNIV))\<close>
+  assumes \<open>bounded_sesquilinear h\<close>
+  assumes sep_A: \<open>separating_set (bounded_clinear :: (_ => 'e conjugate_space) \<Rightarrow> _) A\<close>
+  assumes sep_B: \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) B\<close>
+  shows \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) ((\<lambda>(x,y). h x y) ` (A \<times> B))\<close>
+proof (rule separating_setI)
+  fix f g :: \<open>'a \<Rightarrow> 'e\<close>
+  assume [simp]: \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  have [simp]: \<open>bounded_antilinear (\<lambda>x. f (h x y))\<close> for y
+    apply (rule bounded_clinear_o_bounded_antilinear[OF \<open>bounded_clinear f\<close>])
+    using assms(2) by (rule bounded_sesquilinear.bounded_antilinear_left)
+  have [simp]: \<open>bounded_antilinear (\<lambda>x. g (h x y))\<close> for y
+    apply (rule bounded_clinear_o_bounded_antilinear[OF \<open>bounded_clinear g\<close>])
+    using assms(2) by (rule bounded_sesquilinear.bounded_antilinear_left)
+  have [simp]: \<open>bounded_clinear (\<lambda>y. f (h x y))\<close> for x
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear f\<close>])
+    using assms(2) by (rule bounded_sesquilinear.bounded_clinear_right)
+  have [simp]: \<open>bounded_clinear (\<lambda>y. g (h x y))\<close> for x
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear g\<close>])
+    using assms(2) by (rule bounded_sesquilinear.bounded_clinear_right)
+
+  from sep_A have sep_A': \<open>separating_set (bounded_antilinear :: (_ => 'e) \<Rightarrow> _) A\<close>
+    by (rule separating_set_bounded_clinear_antilinear)
+  assume \<open>z \<in> (\<lambda>(x, y). h x y) ` (A \<times> B) \<Longrightarrow> f z = g z\<close> for z
+  then have \<open>f (h x y) = g (h x y)\<close> if \<open>x \<in> A\<close> and \<open>y \<in> B\<close> for x y
+    using that by auto
+  then have \<open>(\<lambda>x. f (h x y)) = (\<lambda>x. g (h x y))\<close> if \<open>y \<in> B\<close> for y
+    apply (rule_tac eq_from_separatingI[OF sep_A'])
+    using that by auto
+  then have \<open>(\<lambda>y. f (h x y)) = (\<lambda>y. g (h x y))\<close> for x
+    apply (rule_tac eq_from_separatingI[OF sep_B])
+    apply auto by meson
+  then have \<open>f (h x y) = g (h x y)\<close> for x y
+    by meson
+  with \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  show \<open>f = g\<close>
+    apply (rule eq_from_separatingI2[where f=f and g=g and P=bounded_clinear and S=UNIV and T=UNIV, rotated 1])
+    using assms(1) by -
+qed
+
+lemma separating_set_bounded_clinear_tc_tensor_nested:
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector) \<Rightarrow> _) A\<close>
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector) \<Rightarrow> _) B\<close>
+  shows \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector) \<Rightarrow> _) ((\<lambda>(\<rho>,\<sigma>). tc_tensor \<rho> \<sigma>) ` (A \<times> B))\<close>
+  using separating_set_bounded_clinear_tc_tensor bounded_cbilinear_tc_tensor assms
+  by (rule separating_set_bounded_cbilinear_nested)
+(* proof (rule separating_setI)
+  fix f g :: \<open>(('a \<times> 'c) ell2, ('b \<times> 'd) ell2) trace_class \<Rightarrow> 'e\<close>
+  assume [simp]: \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  have [simp]: \<open>bounded_clinear (\<lambda>\<rho>. f (tc_tensor \<rho> \<sigma>))\<close> for \<sigma>
+    by -
+  have [simp]: \<open>bounded_clinear (\<lambda>\<rho>. g (tc_tensor \<rho> \<sigma>))\<close> for \<sigma>
+    by -
+  have [simp]: \<open>bounded_clinear (\<lambda>\<sigma>. f (tc_tensor \<rho> \<sigma>))\<close> for \<rho>
+    by -
+  have [simp]: \<open>bounded_clinear (\<lambda>\<sigma>. g (tc_tensor \<rho> \<sigma>))\<close> for \<rho>
+    by -
+
+  assume \<open>x \<in> (\<lambda>(\<rho>, \<sigma>). tc_tensor \<rho> \<sigma>) ` (A \<times> B) \<Longrightarrow> f x = g x\<close> for x
+  then have \<open>f (tc_tensor \<rho> \<sigma>) = g (tc_tensor \<rho> \<sigma>)\<close> if \<open>\<rho> \<in> A\<close> and \<open>\<sigma> \<in> B\<close> for \<rho> \<sigma>
+    using that by auto
+  then have \<open>(\<lambda>\<rho>. f (tc_tensor \<rho> \<sigma>)) = (\<lambda>\<rho>. g (tc_tensor \<rho> \<sigma>))\<close> if \<open>\<sigma> \<in> B\<close> for \<sigma>
+    apply (rule eq_from_separatingI[OF assms(1), rotated -1])
+    using that by auto
+  then have \<open>(\<lambda>\<sigma>. f (tc_tensor \<rho> \<sigma>)) = (\<lambda>\<sigma>. g (tc_tensor \<rho> \<sigma>))\<close> for \<rho>
+    apply (rule_tac eq_from_separatingI[OF assms(2)])
+    apply auto by meson
+  then have \<open>f (tc_tensor \<rho> \<sigma>) = g (tc_tensor \<rho> \<sigma>)\<close> for \<rho> \<sigma>
+    by meson
+  with \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  show \<open>f = g\<close>
+    by (rule eq_from_separatingI2[OF separating_set_bounded_clinear_tc_tensor])
+qed *)
+
+
+
+lemma bounded_sesquilinear_tc_butterfly[iff]: \<open>bounded_sesquilinear (\<lambda>a b. tc_butterfly b a)\<close>
+  by (auto intro!: bounded_sesquilinear.intro exI[of _ 1]
+      simp: tc_butterfly_add_left tc_butterfly_add_right norm_tc_butterfly)
+
+lemma separating_set_tc_butterfly: \<open>separating_set bounded_clinear ((\<lambda>(g,h). tc_butterfly g h) ` (UNIV \<times> UNIV))\<close>
+  apply (rule separating_set_mono[where S=\<open>(\<lambda>(g, h). tc_butterfly g h) ` (some_chilbert_basis \<times> some_chilbert_basis)\<close>])
+  by (auto intro!: separating_set_bounded_clinear_dense onb_butterflies_span_trace_class) 
+
+lemma separating_set_tc_butterfly_nested:
+  assumes \<open>separating_set (bounded_clinear :: (_ \<Rightarrow> 'c::complex_normed_vector) \<Rightarrow> _) A\<close>
+  assumes \<open>separating_set (bounded_clinear :: (_ \<Rightarrow> 'c conjugate_space) \<Rightarrow> _) B\<close>
+  shows \<open>separating_set (bounded_clinear :: (_ \<Rightarrow> 'c) \<Rightarrow> _) ((\<lambda>(g,h). tc_butterfly g h) ` (A \<times> B))\<close>
+proof -
+  from separating_set_tc_butterfly
+  have \<open>separating_set bounded_clinear ((\<lambda>(g,h). tc_butterfly g h) ` prod.swap ` (UNIV \<times> UNIV))\<close>
+    by simp
+  then have \<open>separating_set bounded_clinear ((\<lambda>(g,h). tc_butterfly h g) ` (UNIV \<times> UNIV))\<close>
+    unfolding image_image by simp
+  then have \<open>separating_set (bounded_clinear :: (_ \<Rightarrow> 'c) \<Rightarrow> _) ((\<lambda>(g,h). tc_butterfly h g) ` (B \<times> A))\<close>
+    apply (rule separating_set_bounded_sesquilinear_nested)
+    apply (rule bounded_sesquilinear_tc_butterfly)
+    using assms by auto
+  then have \<open>separating_set (bounded_clinear :: (_ \<Rightarrow> 'c) \<Rightarrow> _) ((\<lambda>(g,h). tc_butterfly h g) ` prod.swap ` (A \<times> B))\<close>
+    by (smt (verit, del_insts) SigmaE SigmaI eq_from_separatingI image_iff pair_in_swap_image separating_setI)
+  then show ?thesis
+    unfolding image_image by simp
+qed
+
+(* proof (rule separating_setI)
+  fix f g :: \<open>('b, 'a) trace_class \<Rightarrow> 'c\<close>
+  assume [simp]: \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  have [simp]: \<open>bounded_clinear (\<lambda>\<rho>. f (tc_butterfly \<rho> \<sigma>))\<close> for \<sigma>
+try0
+sledgehammer [dont_slice]
+by -
+  have [simp]: \<open>bounded_clinear (\<lambda>\<rho>. g (tc_butterfly \<rho> \<sigma>))\<close> for \<sigma>
+try0
+sledgehammer [dont_slice]
+by -
+  have [simp]: \<open>bounded_clinear (\<lambda>\<sigma>. f (tc_butterfly \<rho> \<sigma>))\<close> for \<rho>
+try0
+sledgehammer [dont_slice]
+by -
+  have [simp]: \<open>bounded_clinear (\<lambda>\<sigma>. g (tc_butterfly \<rho> \<sigma>))\<close> for \<rho>
+try0
+sledgehammer [dont_slice]
+by -
+
+  assume \<open>x \<in> (\<lambda>(g, h). tc_butterfly g h) ` (A \<times> B) \<Longrightarrow> f x = g x\<close> for x
+  then have \<open>f (tc_butterfly \<rho> \<sigma>) = g (tc_butterfly \<rho> \<sigma>)\<close> if \<open>\<rho> \<in> A\<close> and \<open>\<sigma> \<in> B\<close> for \<rho> \<sigma>
+    using that by auto
+  then have \<open>(\<lambda>\<rho>. f (tc_butterfly \<rho> \<sigma>)) = (\<lambda>\<rho>. g (tc_butterfly \<rho> \<sigma>))\<close> if \<open>\<sigma> \<in> B\<close> for \<sigma>
+    apply (rule eq_from_separatingI[OF assms(1), rotated -1])
+    using that by auto
+  then have \<open>(\<lambda>\<sigma>. f (tc_butterfly \<rho> \<sigma>)) = (\<lambda>\<sigma>. g (tc_butterfly \<rho> \<sigma>))\<close> for \<rho>
+    apply (rule_tac eq_from_separatingI[OF assms(2)])
+    apply auto by meson
+  then have \<open>f (tc_butterfly \<rho> \<sigma>) = g (tc_butterfly \<rho> \<sigma>)\<close> for \<rho> \<sigma>
+    by meson
+  with \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  show \<open>f = g\<close>
+    by (rule eq_from_separatingI2[OF separating_set_tc_butterfly])
+qed *)
+
+
+lemma partial_trace_scaleC: \<open>partial_trace (c *\<^sub>C t) = c *\<^sub>C partial_trace t\<close>
+  by (simp add: partial_trace_def infsum_scaleC_right compose_tcr.scaleC_right compose_tcl.scaleC_left)
+
+lemma partial_trace_tensor: \<open>partial_trace (tc_tensor t u) = trace_tc u *\<^sub>C t\<close>
+proof -
+  define t' u' where \<open>t' = from_trace_class t\<close> and \<open>u' = from_trace_class u\<close>
+  have 1: \<open>(\<lambda>j. ket j \<bullet>\<^sub>C (from_trace_class u *\<^sub>V ket j)) summable_on UNIV\<close>
+    using  trace_exists[where B=\<open>range ket\<close> and A=\<open>from_trace_class u\<close>]
+    by (simp add: summable_on_reindex o_def)
+  have \<open>partial_trace (tc_tensor t u) =
+      (\<Sum>\<^sub>\<infinity>j. compose_tcl (compose_tcr (tensor_ell2_right (ket j)*) (tc_tensor t u)) (tensor_ell2_right (ket j)))\<close>
+    by (simp add: partial_trace_def)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>j. (ket j \<bullet>\<^sub>C (from_trace_class u *\<^sub>V ket j)) *\<^sub>C t)\<close>
+  proof -
+    have *: \<open>tensor_ell2_right (ket j)* o\<^sub>C\<^sub>L t' \<otimes>\<^sub>o u' o\<^sub>C\<^sub>L tensor_ell2_right (ket j) =
+         (ket j \<bullet>\<^sub>C (u' *\<^sub>V ket j)) *\<^sub>C t'\<close> for j
+      by (auto intro!: cblinfun_eqI simp: tensor_op_ell2)
+    show ?thesis
+    apply (rule infsum_cong)
+      by (auto intro!: from_trace_class_inject[THEN iffD1] simp flip: t'_def u'_def
+        simp: * compose_tcl.rep_eq compose_tcr.rep_eq tc_tensor.rep_eq scaleC_trace_class.rep_eq)
+  qed
+  also have \<open>\<dots> = trace_tc u *\<^sub>C t\<close>
+    by (auto intro!: infsum_scaleC_left simp: trace_tc_def trace_alt_def[OF is_onb_ket] infsum_reindex o_def 1)
+  finally show ?thesis
+    by -
+qed
+
+(* TODO move *)
+lemma partial_trace_plus: \<open>partial_trace (t + u) = partial_trace t + partial_trace u\<close>
+proof -
+  from partial_trace_has_sum[of t] and partial_trace_has_sum[of u]
+  have \<open>((\<lambda>j. compose_tcl (compose_tcr ((tensor_ell2_right (ket j))*) t) (tensor_ell2_right (ket j))
+            + compose_tcl (compose_tcr ((tensor_ell2_right (ket j))*) u) (tensor_ell2_right (ket j))) has_sum
+           partial_trace t + partial_trace u) UNIV\<close> (is \<open>(?f has_sum _) _\<close>)
+    by (rule has_sum_add)
+  moreover have \<open>?f j = compose_tcl (compose_tcr ((tensor_ell2_right (ket j))*) (t + u)) (tensor_ell2_right (ket j))\<close> (is \<open>?f j = ?g j\<close>) for j
+    by (simp add: compose_tcl.add_left compose_tcr.add_right)
+  ultimately have \<open>(?g has_sum partial_trace t + partial_trace u) UNIV\<close>
+    by simp
+  moreover have \<open>(?g has_sum partial_trace (t + u)) UNIV\<close>
+    by (simp add: partial_trace_has_sum)
+  ultimately show ?thesis
+    using has_sum_unique by blast
+qed
+
+
+lemma bounded_clinear_partial_trace[bounded_clinear, iff]: \<open>bounded_clinear partial_trace\<close>
+  apply (rule bounded_clinearI[where K=1])
+  by (auto simp add: partial_trace_plus partial_trace_scaleC partial_trace_norm_reducing)
+
+
+lemma infsum_bounded_linear_invertible:
+  assumes \<open>bounded_linear f\<close>
+  assumes \<open>bounded_linear f'\<close>
+  assumes \<open>f' o f = id\<close>
+  shows \<open>infsum (f \<circ> g) S = f (infsum g S)\<close>
+proof (cases \<open>g summable_on S\<close>)
+  case True
+  then show ?thesis
+    using assms(1) infsum_bounded_linear by blast
+next
+  case False
+  have \<open>\<not> (f o g) summable_on S\<close>
+  proof (rule ccontr)
+    assume \<open>\<not> \<not> f \<circ> g summable_on S\<close>
+    with \<open>bounded_linear f'\<close> have \<open>f' o f o g summable_on S\<close>
+      by (auto intro: summable_on_bounded_linear simp: o_def)
+    then have \<open>g summable_on S\<close>
+      by (simp add: assms(3))
+    with False show False
+      by blast
+  qed
+  then show ?thesis
+    by (simp add: False assms(1) infsum_not_exists linear_simps(3))
+qed
+
+lemma trace_minus: 
+  assumes \<open>trace_class a\<close> \<open>trace_class b\<close>
+  shows \<open>trace (a - b) = trace a - trace b\<close>
+  by (metis (no_types, lifting) add_uminus_conv_diff assms(1) assms(2) trace_class_uminus trace_plus trace_uminus)
+
+lemma trace_cblinfun_mono:
+  fixes A B :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
+  assumes \<open>trace_class A\<close> and \<open>trace_class B\<close>
+  assumes \<open>A \<le> B\<close>
+  shows \<open>trace A \<le> trace B\<close>
+proof -
+  have sumA: \<open>(\<lambda>e. e \<bullet>\<^sub>C (A *\<^sub>V e)) summable_on some_chilbert_basis\<close>
+    by (auto intro!: trace_exists assms)
+  moreover have sumB: \<open>(\<lambda>e. e \<bullet>\<^sub>C (B *\<^sub>V e)) summable_on some_chilbert_basis\<close>
+    by (auto intro!: trace_exists assms)
+  moreover have \<open>x \<bullet>\<^sub>C (A *\<^sub>V x) \<le> x \<bullet>\<^sub>C (B *\<^sub>V x)\<close> for x
+    using assms(3) less_eq_cblinfun_def by blast
+  ultimately have \<open>(\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. e \<bullet>\<^sub>C (A *\<^sub>V e)) \<le> (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. e \<bullet>\<^sub>C (B *\<^sub>V e))\<close>
+    by (rule infsum_mono_complex)
+  then show ?thesis
+    by (metis assms(1) assms(2) assms(3) diff_ge_0_iff_ge trace_minus trace_pos)
+qed
+
+lemma trace_tc_mono:
+  assumes \<open>A \<le> B\<close>
+  shows \<open>trace_tc A \<le> trace_tc B\<close>
+  using assms
+  apply transfer
+  by (simp add: trace_cblinfun_mono)
 
 
 end
