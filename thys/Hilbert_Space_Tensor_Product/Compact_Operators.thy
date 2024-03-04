@@ -1327,6 +1327,6 @@ qed
 
 subsection \<open>Spectral decomposition\<close>
 
-(* TODO *)
+(* TODO. Currently in Unsorted_HSTP.thy *)
 
 end

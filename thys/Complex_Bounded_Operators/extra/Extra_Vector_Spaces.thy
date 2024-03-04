@@ -136,6 +136,7 @@ lemma infsum_bounded_linear:
   using assms blinfun_apply_induct blinfun.additive_right
   by (auto simp: linear_continuous_within)
 
+(* TODO: Slightly incompatible duplication with *) thm Infinite_Sum.has_sum_bounded_linear
 lemma has_sum_bounded_linear: 
   assumes \<open>bounded_linear f\<close>
   assumes \<open>(g has_sum x) S\<close>
