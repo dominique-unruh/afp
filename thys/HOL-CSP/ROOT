@@ -44,12 +44,8 @@ chapter AFP
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  ******************************************************************************)
-(* $Id:$ *)
 
-
-
-
-session "HOL-CSP" = HOLCF +
+session "HOL-CSP" (AFP) = HOLCF +
   description \<open>HOL-CSP based on the original Roscoe-Book.\<close>
   options [timeout = 1200] 
   sessions
@@ -57,11 +53,10 @@ session "HOL-CSP" = HOLCF +
   theories
     "Introduction"
     "Process"
-     Bot Skip Stop Det Ndet Seq Hiding Sync Mndetprefix Mprefix 
-    "CSP" "Assertions"
+     Bot Skip Stop Det Ndet Seq Renaming Hiding Sync Mndetprefix Mprefix
+    "CSP_Induct" "CSP" "Assertions"
     "Conclusion"
     "CopyBuffer"
-    Induction_ext
   document_files
     "root.tex"
     "adb-long.bib"

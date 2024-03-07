@@ -1,12 +1,13 @@
 chapter AFP
 
-session Expander_Graphs = Frequency_Moments +
-  options [timeout = 1200]
+session Expander_Graphs = "HOL-Probability" +
+  options [timeout = 3600]
   sessions
     Graph_Theory
     Perron_Frobenius
     Commuting_Hermitian
     Weighted_Arithmetic_Geometric_Mean
+    Universal_Hash_Families
   theories
     Constructive_Chernoff_Bound
     Expander_Graphs_Algebra
@@ -20,6 +21,7 @@ session Expander_Graphs = Frequency_Moments +
     Expander_Graphs_TTS
     Expander_Graphs_Walks
     Extra_Congruence_Method
+    Pseudorandom_Objects_Expander_Walks
   document_files
     "root.tex"
     "root.bib"

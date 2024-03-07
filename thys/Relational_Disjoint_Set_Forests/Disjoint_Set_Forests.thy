@@ -58,8 +58,6 @@ abbreviation rel_update :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> '
 abbreviation rel_access :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" ("(2_[[_]])" [70, 65] 65)
   where "x[[y]] \<equiv> x\<^sup>T * y"
 
-text \<open>Theorem 1.1\<close>
-
 lemma update_univalent:
   assumes "univalent x"
     and "vector y"
@@ -92,8 +90,6 @@ proof -
     using 1 2 4 5 by simp
 qed
 
-text \<open>Theorem 1.2\<close>
-
 lemma update_total:
   assumes "total x"
     and "vector y"
@@ -111,8 +107,6 @@ proof -
     by simp
 qed
 
-text \<open>Theorem 1.3\<close>
-
 lemma update_mapping:
   assumes "mapping x"
     and "vector y"
@@ -121,15 +115,11 @@ lemma update_mapping:
   shows "mapping (x[y\<longmapsto>z])"
   using assms update_univalent update_total by simp
 
-text \<open>Theorem 1.4\<close>
-
 lemma read_injective:
   assumes "injective y"
     and "univalent x"
   shows "injective (x[[y]])"
   using assms injective_mult_closed univalent_conv_injective by blast
-
-text \<open>Theorem 1.5\<close>
 
 lemma read_surjective:
   assumes "surjective y"
@@ -137,23 +127,17 @@ lemma read_surjective:
   shows "surjective (x[[y]])"
   using assms surjective_mult_closed total_conv_surjective by blast
 
-text \<open>Theorem 1.6\<close>
-
 lemma read_bijective:
   assumes "bijective y"
     and "mapping x"
   shows "bijective (x[[y]])"
   by (simp add: assms read_injective read_surjective)
 
-text \<open>Theorem 1.7\<close>
-
 lemma read_point:
   assumes "point p"
     and "mapping x"
   shows "point (x[[p]])"
   using assms comp_associative read_injective read_surjective by auto
-
-text \<open>Theorem 1.8\<close>
 
 lemma update_postcondition:
   assumes "point x" "point y"
@@ -193,20 +177,14 @@ proof -
     .
 qed
 
-text \<open>Theorem 2.1\<close>
-
 lemma put_get:
   assumes "vector y" "surjective y" "vector z"
   shows "(x[y\<longmapsto>z])[[y]] = z"
   by (simp add: assms put_get_sub)
 
-text \<open>Theorem 2.3\<close>
-
 lemma put_put:
   "(x[y\<longmapsto>z])[y\<longmapsto>w] = x[y\<longmapsto>w]"
   by (metis inf_absorb2 inf_commute inf_le1 inf_sup_distrib1 maddux_3_13 sup_inf_absorb)
-
-text \<open>Theorem 2.5\<close>
 
 lemma get_put:
   assumes "point y"
@@ -273,8 +251,6 @@ This section defines these operations and derives their properties.
 context stone_kleene_relation_algebra
 begin
 
-text \<open>Theorem 5.2\<close>
-
 lemma omit_redundant_points:
   assumes "point p"
   shows "p \<sqinter> x\<^sup>\<star> = (p \<sqinter> 1) \<squnion> (p \<sqinter> x) * (-p \<sqinter> x)\<^sup>\<star>"
@@ -316,8 +292,6 @@ text \<open>Weakly connected components\<close>
 
 abbreviation "wcc x \<equiv> (x \<squnion> x\<^sup>T)\<^sup>\<star>"
 
-text \<open>Theorem 7.1\<close>
-
 lemma wcc_equivalence:
   "equivalence (wcc x)"
   apply (intro conjI)
@@ -325,8 +299,6 @@ lemma wcc_equivalence:
   subgoal by (simp add: star.circ_transitive_equal)
   subgoal by (simp add: conv_dist_sup conv_star_commute sup_commute)
   done
-
-text \<open>Theorem 7.2\<close>
 
 lemma wcc_increasing:
   "x \<le> wcc x"
@@ -340,8 +312,6 @@ lemma wcc_idempotent:
   "wcc (wcc x) = wcc x"
   using star_involutive wcc_equivalence by auto
 
-text \<open>Theorem 7.3\<close>
-
 lemma wcc_below_wcc:
   "x \<le> wcc y \<Longrightarrow> wcc x \<le> wcc y"
   using wcc_idempotent wcc_isotone by fastforce
@@ -349,8 +319,6 @@ lemma wcc_below_wcc:
 lemma wcc_galois:
   "x \<le> wcc y \<longleftrightarrow> wcc x \<le> wcc y"
   using order_trans star.circ_sub_dist_1 wcc_below_wcc by blast
-
-text \<open>Theorem 7.4\<close>
 
 lemma wcc_bot:
   "wcc bot = 1"
@@ -360,13 +328,9 @@ lemma wcc_one:
   "wcc 1 = 1"
   by (simp add: star_one)
 
-text \<open>Theorem 7.5\<close>
-
 lemma wcc_top:
   "wcc top = top"
   by (simp add: star.circ_top)
-
-text \<open>Theorem 7.6\<close>
 
 lemma wcc_with_loops:
   "wcc x = wcc (x \<squnion> 1)"
@@ -380,8 +344,6 @@ lemma forest_components_wcc:
   "injective x \<Longrightarrow> wcc x = forest_components x"
   by (simp add: cancel_separate_1)
 
-text \<open>Theorem 7.8\<close>
-
 lemma wcc_sup_wcc:
   "wcc (x \<squnion> y) = wcc (x \<squnion> wcc y)"
   by (smt (verit, ccfv_SIG) le_sup_iff order.antisym sup_right_divisibility wcc_below_wcc wcc_increasing)
@@ -389,8 +351,6 @@ lemma wcc_sup_wcc:
 text \<open>Components of a forest, which is represented using edges directed towards the roots\<close>
 
 abbreviation "fc x \<equiv> x\<^sup>\<star> * x\<^sup>T\<^sup>\<star>"
-
-text \<open>Theorem 3.1\<close>
 
 lemma fc_equivalence:
   "univalent x \<Longrightarrow> equivalence (fc x)"
@@ -400,25 +360,17 @@ lemma fc_equivalence:
   subgoal by (simp add: conv_dist_comp conv_star_commute)
   done
 
-text \<open>Theorem 3.2\<close>
-
 lemma fc_increasing:
   "x \<le> fc x"
   by (metis le_supE mult_left_isotone star.circ_back_loop_fixpoint star.circ_increasing)
-
-text \<open>Theorem 3.3\<close>
 
 lemma fc_isotone:
   "x \<le> y \<Longrightarrow> fc x \<le> fc y"
   by (simp add: comp_isotone conv_isotone star_isotone)
 
-text \<open>Theorem 3.4\<close>
-
 lemma fc_idempotent:
   "univalent x \<Longrightarrow> fc (fc x) = fc x"
   by (metis fc_equivalence cancel_separate_1 star.circ_transitive_equal star_involutive)
-
-text \<open>Theorem 3.5\<close>
 
 lemma fc_star:
   "univalent x \<Longrightarrow> (fc x)\<^sup>\<star> = fc x"
@@ -428,8 +380,6 @@ lemma fc_plus:
   "univalent x \<Longrightarrow> (fc x)\<^sup>+ = fc x"
   by (metis fc_star star.circ_decompose_9)
 
-text \<open>Theorem 3.6\<close>
-
 lemma fc_bot:
   "fc bot = 1"
   by (simp add: star.circ_zero)
@@ -438,13 +388,9 @@ lemma fc_one:
   "fc 1 = 1"
   by (simp add: star_one)
 
-text \<open>Theorem 3.7\<close>
-
 lemma fc_top:
   "fc top = top"
   by (simp add: star.circ_top)
-
-text \<open>Theorem 7.7\<close>
 
 lemma fc_wcc:
   "univalent x \<Longrightarrow> wcc x = fc x"
@@ -463,8 +409,6 @@ proof (rule order.antisym)
   show "p\<^sup>\<star> * (p \<sqinter> 1) * p\<^sup>T\<^sup>\<star> \<le> fc p"
     by (metis comp_isotone inf.cobounded2 mult_1_right order.refl)
 qed
-
-text \<open>Theorem 5.1\<close>
 
 lemma update_acyclic_1:
   assumes "acyclic (p - 1)"
@@ -576,13 +520,9 @@ proof -
     by simp
 qed
 
-text \<open>Theorem 8.1\<close>
-
 lemma plus_arc_decompose:
   "arc a \<Longrightarrow> (a \<squnion> x)\<^sup>+ = x\<^sup>+ \<squnion> x\<^sup>\<star> * a * x\<^sup>\<star>"
   using arc_top_arc plus_rectangle_decompose by blast
-
-text \<open>Theorem 8.2\<close>
 
 lemma update_acyclic_4:
   assumes "acyclic (p - 1)"
@@ -612,8 +552,6 @@ proof -
     by simp
 qed
 
-text \<open>Theorem 8.3\<close>
-
 lemma update_acyclic_5:
   assumes "acyclic (p - 1)"
     and "point w"
@@ -633,13 +571,9 @@ text \<open>Root of the tree containing point $x$ in the disjoint-set forest $p$
 abbreviation "roots p \<equiv> (p \<sqinter> 1) * top"
 abbreviation "root p x \<equiv> p\<^sup>T\<^sup>\<star> * x \<sqinter> roots p"
 
-text \<open>Theorem 4.1\<close>
-
 lemma root_var:
   "root p x = (p \<sqinter> 1) * p\<^sup>T\<^sup>\<star> * x"
   by (simp add: coreflexive_comp_top_inf inf_commute mult_assoc)
-
-text \<open>Theorem 4.2\<close>
 
 lemma root_successor_loop:
   "univalent p \<Longrightarrow> root p x = p[[root p x]]"
@@ -844,11 +778,9 @@ end
 context stone_relation_algebra_tarski
 begin
 
-text \<open>Theorem 5.4 \<open>distinct_points\<close> has been moved to theory \<open>Relation_Algebras\<close> in entry \<open>Stone_Relation_Algebras\<close>\<close>
+text \<open>lemma \<open>distinct_points\<close> has been moved to theory \<open>Relation_Algebras\<close> in entry \<open>Stone_Relation_Algebras\<close>\<close>
 
 text \<open>Back and von Wright's array independence requirements \<^cite>\<open>"BackWright1998"\<close>\<close>
-
-text \<open>Theorem 2.2\<close>
 
 lemma put_get_different_vector:
   assumes "vector y" "w \<le> -y"
@@ -879,8 +811,6 @@ proof -
   thus ?thesis
     by (simp add: assms(1) assms(2) put_get_different_vector)
 qed
-
-text \<open>Theorem 2.4\<close>
 
 lemma put_put_different_vector:
   assumes "vector y" "vector v" "v \<sqinter> y = bot"
@@ -1220,8 +1150,6 @@ The corresponding algorithm shows how to obtain the root.
 We therefore have an essentially constructive proof of the following result.
 \<close>
 
-text \<open>Theorem 4.3\<close>
-
 lemma root_point:
   "disjoint_set_forest p \<Longrightarrow> point x \<Longrightarrow> point (root p x)"
   using find_set_exists find_set_precondition_def find_set_postcondition_def by simp
@@ -1252,7 +1180,7 @@ definition "path_compression_invariant p x y p0 w \<equiv>
   root p w = y \<and> p0[p0\<^sup>T\<^sup>\<star> * x - p0\<^sup>T\<^sup>\<star> * w\<longmapsto>y] = p \<and>
   disjoint_set_forest p0 \<and> w \<le> p0\<^sup>T\<^sup>\<star> * x"
 definition "path_compression_postcondition p x y p0 \<equiv>
-  path_compression_precondition p x y \<and> p \<sqinter> 1 = p0 \<sqinter> 1 \<and> fc p = fc p0 \<and>
+  disjoint_set_forest p \<and> y = root p x \<and> p \<sqinter> 1 = p0 \<sqinter> 1 \<and> fc p = fc p0 \<and>
   p0[p0\<^sup>T\<^sup>\<star> * x\<longmapsto>y] = p"
 
 text \<open>
@@ -1386,12 +1314,6 @@ theorem path_compression_assign:
   subgoal using update_univalent mult_assoc by auto
   subgoal using bijective_regular mapping_regular regular_closed_star regular_conv_closed regular_mult_closed update_mapping mult_assoc by auto
   subgoal using update_acyclic_6 by blast
-  subgoal by blast
-  subgoal by blast
-  subgoal by blast
-  subgoal by blast
-  subgoal by blast
-  subgoal by blast
   subgoal by (smt same_root path_compression_exact path_compression_precondition_def update_univalent vector_mult_closed)
   subgoal using path_compression_exact(1) path_compression_precondition_def by blast
   subgoal using path_compression_exact(2) path_compression_precondition_def by blast
@@ -2017,7 +1939,7 @@ proof -
   have "path_compression_postcondition ?p x ?y p"
     using assms find_set_path_compression_function prod.collapse by blast
   thus "?r = ?y"
-    using 1 by (smt assms same_root find_set_precondition_def find_set_postcondition_def path_compression_precondition_def path_compression_postcondition_def)
+    using 1 by (smt assms same_root find_set_precondition_def find_set_postcondition_def path_compression_postcondition_def)
 qed
 
 text \<open>
@@ -2062,7 +1984,7 @@ proof -
   have "?r = ?y"
     by (simp add: assms find_set_path_compression_find_set)
   thus "?q = ?p"
-    using 1 2 by (simp add: path_compression_postcondition_def)
+    using 1 2 path_compression_postcondition_def by auto
 qed
 
 subsection \<open>Union-Sets\<close>
@@ -2076,19 +1998,19 @@ The disjoint-set forest, which keeps being updated, is threaded through the sequ
 \<close>
 
 definition "union_sets_precondition p x y \<equiv> disjoint_set_forest p \<and> point x \<and> point y"
-definition "union_sets_postcondition p x y p0 \<equiv> union_sets_precondition p x y \<and> fc p = wcc (p0 \<squnion> x * y\<^sup>T)"
+definition "union_sets_postcondition p x y p0 \<equiv> disjoint_set_forest p \<and> fc p = wcc (p0 \<squnion> x * y\<^sup>T)"
 
 lemma union_sets_1:
   assumes "union_sets_precondition p0 x y"
     and "path_compression_postcondition p1 x r p0"
     and "path_compression_postcondition p2 y s p1"
   shows "union_sets_postcondition (p2[r\<longmapsto>s]) x y p0"
-proof (unfold union_sets_postcondition_def union_sets_precondition_def, intro conjI)
+proof (unfold union_sets_postcondition_def, intro conjI)
   let ?p = "p2[r\<longmapsto>s]"
   have 1: "disjoint_set_forest p1 \<and> point r \<and> r = root p1 x \<and> p1 \<sqinter> 1 = p0 \<sqinter> 1 \<and> fc p1 = fc p0"
-    using assms(2) path_compression_precondition_def path_compression_postcondition_def by auto
+    by (smt (verit) assms(1,2) path_compression_postcondition_def root_point union_sets_precondition_def)
   have 2: "disjoint_set_forest p2 \<and> point s \<and> s = root p2 y \<and> p2 \<sqinter> 1 = p1 \<sqinter> 1 \<and> fc p2 = fc p1"
-    using assms(3) path_compression_precondition_def path_compression_postcondition_def by auto
+    by (smt (verit) assms(1,3) path_compression_postcondition_def root_point union_sets_precondition_def)
   hence 3: "fc p2 = fc p0"
     using 1 by simp
   show 4: "univalent ?p"
@@ -2111,18 +2033,6 @@ proof (unfold union_sets_postcondition_def union_sets_precondition_def, intro co
     thus ?thesis
       using 1 2 update_acyclic_4 by blast
   qed
-  show "vector x"
-    using assms(1) by (simp add: union_sets_precondition_def)
-  show "injective x"
-    using assms(1) by (simp add: union_sets_precondition_def)
-  show "surjective x"
-    using assms(1) by (simp add: union_sets_precondition_def)
-  show "vector y"
-    using assms(1) by (simp add: union_sets_precondition_def)
-  show "injective y"
-    using assms(1) by (simp add: union_sets_precondition_def)
-  show "surjective y"
-    using assms(1) by (simp add: union_sets_precondition_def)
   show "fc ?p = wcc (p0 \<squnion> x * y\<^sup>T)"
   proof (rule order.antisym)
     have "r = p1[[r]]"
@@ -2290,7 +2200,7 @@ proof vcg_tc_simp
   hence 2: "path_compression_postcondition ?p1 x ?r p0"
     by (simp add: find_set_precondition_def union_sets_precondition_def find_set_path_compression_function)
   hence "path_compression_postcondition ?p2 y ?s ?p1"
-    using 1 by (meson find_set_precondition_def union_sets_precondition_def find_set_path_compression_function path_compression_postcondition_def path_compression_precondition_def prod.collapse)
+    using 1 by (meson find_set_precondition_def union_sets_precondition_def find_set_path_compression_function path_compression_postcondition_def prod.collapse)
   thus "union_sets_postcondition (?p2[?r\<longmapsto>?s]) x y p0"
     using 1 2 by (simp add: union_sets_1)
 qed

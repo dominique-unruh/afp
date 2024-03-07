@@ -805,7 +805,9 @@ object AFP_Submit {
           case Model.Status.Review => "Review in progress."
           case Model.Status.Added => "Added to the AFP."
           case Model.Status.Rejected => "Submission rejected."
-        } getOrElse "Draft saved. Submit to editors once successfully built."
+        } getOrElse
+          "Draft saved. Check the logs for errors and warnings, " +
+          "and submit to editors once successfully built."
 
       val archive_url =
         if (handler.get_archive(submission.id).exists(_.get_ext == "zip"))
@@ -1287,12 +1289,15 @@ object AFP_Submit {
             case Prefix(prefix) => prefix
             case _ => ""
           }
+          val updated_authors = model.updated_authors(authors)
+
           var ident = suffix.toLowerCase
-          for (c <- prefix.toLowerCase) {
-            if (model.updated_authors(authors).contains(ident)) ident += c.toString
-            else return ident
-          }
-          Utils.make_unique(ident, model.updated_authors(authors).keySet)
+          for {
+            c <- prefix.toLowerCase
+            if updated_authors.contains(ident)
+          } ident += c.toString
+
+          Utils.make_unique(ident, updated_authors.keySet)
         }
 
         val id = make_author_id(name)

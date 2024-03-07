@@ -176,7 +176,7 @@ proof -
     then have \<open>p = of_word w\<close>
       by (simp add: of_word_of)
     also have \<open>P (of_word w)\<close>
-    proof (induction w rule: bits_induct)
+    proof (induction w rule: bit_induct)
       case (stable w)
       show ?case
         by (rule stable') (simp add: word_of_word stable)
@@ -190,38 +190,48 @@ proof -
     qed
     finally show \<open>P p\<close> .
   qed
-  have \<open>class.semiring_parity_axioms (+) (0::'a) (*) 1 (mod)\<close>
-    by standard (simp_all add: eq_iff_word_of word_of_0 word_of_1 even_iff_word_of word_of_mod even_iff_mod_2_eq_zero)
+  have \<open>class.semiring_parity_axioms (+) (0::'a) (*) 1 (div) (mod)\<close>
+    by standard
+      (simp_all add: eq_iff_word_of word_of_0 word_of_1 even_iff_word_of word_of_add word_of_div word_of_mod even_iff_mod_2_eq_zero)
   with of_class_semiring_modulo have \<open>OFCLASS('a, semiring_parity_class)\<close>
     by (rule semiring_parity_class.intro) 
-  moreover have \<open>class.semiring_bits_axioms (+) (-) (0::'a) (*) 1 (div) (mod) bit\<close>
-    apply (standard, fact induct)
-    apply (simp_all only: eq_iff_word_of word_of_0 word_of_1 word_of_bool word_of_numeral
-      word_of_add word_of_diff word_of_mult word_of_div word_of_mod word_of_power even_iff_word_of
-      bit_eq_word_of push_bit_take_bit drop_bit_take_bit
-      even_drop_bit_iff_not_bit
-      flip: push_bit_eq_mult drop_bit_eq_div take_bit_eq_mod mask_eq_exp_minus_1)
-               apply (auto simp add: ac_simps bit_simps drop_bit_exp_eq)
+  moreover have \<open>OFCLASS('a, semiring_modulo_trivial_class)\<close>
+    apply standard
+      apply (simp_all only: eq_iff_word_of word_of_0 word_of_1 word_of_div)
+      apply simp_all
+    done
+  moreover have \<open>class.semiring_bits_axioms (+) (0::'a) (*) 1 (div) (mod) bit\<close>
+    apply standard
+             apply (fact induct)
+            apply (simp_all only: eq_iff_word_of word_of_0 word_of_1 word_of_bool word_of_numeral
+              word_of_add word_of_diff word_of_mult word_of_div word_of_mod word_of_power
+              bit_eq_word_of push_bit_take_bit drop_bit_take_bit even_iff_word_of
+              fold_possible_bit
+              flip: push_bit_eq_mult drop_bit_eq_div take_bit_eq_mod mask_eq_exp_minus_1 drop_bit_Suc)
+           apply (simp_all add: bit_simps even_drop_bit_iff_not_bit not_less)
     done
   ultimately have \<open>OFCLASS('a, semiring_bits_class)\<close>
     by (rule semiring_bits_class.intro)
-  moreover have \<open>class.semiring_bit_operations_axioms (+) (-) (*) (1::'a) (div) (mod) bit (AND) (OR) (XOR) mask Bit_Operations.set_bit unset_bit flip_bit push_bit drop_bit take_bit\<close>
-    by standard
-      (simp_all add: eq_iff_word_of word_of_push_bit word_of_power
-      bit_eq_word_of word_of_and word_of_or word_of_xor word_of_mask word_of_diff word_of_1 bit_simps
-      word_of_set_bit set_bit_eq_or word_of_unset_bit word_of_flip_bit flip_bit_eq_xor
+  moreover have \<open>class.semiring_bit_operations_axioms (+) (-) (0::'a) (*) (1::'a) (div) (mod) (AND) (OR) (XOR) mask Bit_Operations.set_bit unset_bit flip_bit push_bit drop_bit take_bit\<close>
+    apply standard
+    apply (simp_all add: eq_iff_word_of word_of_add word_of_push_bit word_of_power
+      bit_eq_word_of word_of_and word_of_or word_of_xor word_of_mask word_of_diff
+      word_of_0 word_of_1 bit_simps
+      word_of_set_bit set_bit_eq_or word_of_unset_bit unset_bit_eq_or_xor word_of_flip_bit flip_bit_eq_xor
       word_of_mult
       word_of_drop_bit word_of_div word_of_take_bit word_of_mod
+      and_rec [of \<open>word_of a\<close> \<open>word_of b\<close> for a b]
+      or_rec [of \<open>word_of a\<close> \<open>word_of b\<close> for a b]
+      xor_rec [of \<open>word_of a\<close> \<open>word_of b\<close> for a b] even_iff_word_of
       flip: mask_eq_exp_minus_1 push_bit_eq_mult drop_bit_eq_div take_bit_eq_mod)
+    done
   ultimately have \<open>OFCLASS('a, semiring_bit_operations_class)\<close>
     by (rule semiring_bit_operations_class.intro)
   moreover have \<open>OFCLASS('a, ring_parity_class)\<close>
     using \<open>OFCLASS('a, semiring_parity_class)\<close> by (rule ring_parity_class.intro) standard
-  moreover have \<open>class.ring_bit_operations_axioms (+) (-) (0::'a) (*) 1 bit uminus NOT\<close>
-    by standard (simp_all add: eq_iff_word_of word_of_power
-      bit_eq_word_of word_of_diff word_of_1 bit_simps linorder_not_le
-      word_of_not word_of_0
-      word_of_minus minus_eq_not_minus_1)
+  moreover have \<open>class.ring_bit_operations_axioms (-) (1::'a) uminus NOT\<close>
+    by standard
+      (simp add: eq_iff_word_of word_of_not word_of_diff word_of_minus word_of_1 not_eq_complement)
   ultimately show \<open>OFCLASS('a, ring_bit_operations_class)\<close>
     by (rule ring_bit_operations_class.intro)
 qed

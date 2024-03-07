@@ -15,29 +15,6 @@ theory Khovanskii
     "HOL-Library.List_Lenlexorder"      \<comment> \<open>lexicographic ordering for the type @{typ \<open>nat list\<close>}\<close>
 begin
 
-(*FIXME: move this, and Transcendental's sum_up_index_split maybe to Set_Interval*)
-lemma sum_diff_split:
-  fixes f:: "nat \<Rightarrow> 'a::ab_group_add"
-  assumes "m \<le> n"
-  shows "(\<Sum>i\<le>n - m. f(n - i)) = (\<Sum>i\<le>n. f i) - (\<Sum>i<m. f i)"
-proof -
-  have inj: "inj_on ((-) n) {m..n}"
-    by (auto simp: inj_on_def)
-  have "(\<Sum>i\<le>n - m. f(n - i)) = (\<Sum>i\<in>(-) n ` {m..n}. f(n - i))"
-  proof (rule sum.cong)
-    have "\<And>x. x \<le> n - m \<Longrightarrow> \<exists>k\<ge>m. k \<le> n \<and> x = n - k"
-      by (metis assms diff_diff_cancel diff_le_mono2 diff_le_self le_trans)
-    then show "{..n - m} = (-) n ` {m..n}"
-      by (auto simp: image_iff Bex_def)
-  qed auto
-  also have "\<dots> = (\<Sum>i=m..n. f i)"
-    by (smt (verit) atLeastAtMost_iff diff_diff_cancel sum.reindex_cong [OF inj])
-  also have "\<dots> = (\<Sum>i\<le>n. f i) - (\<Sum>i<m. f i)"
-    using sum_diff_nat_ivl[of 0 "m" "Suc n" f] assms 
-    by (simp only: atLeast0AtMost atLeast0LessThan atLeastLessThanSuc_atLeastAtMost)
-  finally show ?thesis .
-qed
-
 text \<open>The sum of the elements of a list\<close>
 abbreviation "\<sigma> \<equiv> sum_list"
 
@@ -483,10 +460,15 @@ next
                                      / (1 + real j) - 0 ^ j)"
   have rp_q: "real_polynomial_function q"
     by (fastforce simp: bernpoly_def p_eq q_def)
-  have q_eq: "(\<Sum>x\<le>k - 1. p (real (k - x))) = q (real k)" if "k>0" for k
-    using that
-    by (simp add: p_eq q_def sum.swap add.commute sum_of_powers sum_diff_split[where f="\<lambda>i. real i ^ _"]
-             flip: sum_distrib_left)
+  have q_eq: "(\<Sum>x\<le>k-1. p (k-x)) = q k" if "k>0" for k::nat
+  proof -
+    have "(\<Sum>x\<le>k-1. p (k-x)) = (\<Sum>j\<le>n. a j * ((\<Sum>x\<le>k. real x ^ j) - 0^j))"
+      using that
+      by (simp add: p_eq sum.swap flip: sum_distrib_left sum_diff_split[where f="\<lambda>i. real i ^ _"])
+    also have "\<dots> = q k"
+      by (simp add: sum_of_powers add.commute q_def)
+    finally show ?thesis .
+  qed
   define p' where "p' \<equiv> \<lambda>x. q x + real (card (length_sum_set r 0))"
   have "real_polynomial_function p'"
     using rp_q by (force simp: p'_def)
@@ -1110,7 +1092,7 @@ proof -
     define SUM1 where "SUM1 \<equiv> \<Sum>I | I \<subseteq> C n ` X \<and> I \<noteq> {}. (- 1) ^ (card I + 1) * int (card (\<Inter>I))"
     define SUM2 where "SUM2 \<equiv> \<Sum>Y | Y \<subseteq> X \<and> Y \<noteq> {}. (- 1) ^ (card Y + 1) * int (card (\<Inter>(C n ` Y)))"
     have SUM1_card: "card(length_sum_set r n \<inter> {x. useless x}) = nat SUM1"
-      unfolding SUM1_def using \<open>finite X\<close> by (simp add: finC 2 card_UNION)
+      unfolding SUM1_def 2 using \<open>finite X\<close> finC by (intro card_UNION; force)
     have "SUM1 \<ge> 0"
       unfolding SUM1_def using card_UNION_nonneg finC \<open>finite X\<close> by auto
     have C_empty_iff: "C n x' = {} \<longleftrightarrow> \<sigma> x' > n" if "length x' \<noteq> 0" for x'

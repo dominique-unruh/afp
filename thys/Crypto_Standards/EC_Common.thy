@@ -955,8 +955,9 @@ lemma add_eq_h2:
            "twoy1 = nat ((2*y1) mod (int p))" "inv_2y1 = int (inv_mod p twoy1)"
            "l = ((3 * x1^2 + (int a)) * inv_2y1) mod p" "x3 = (l^2 - 2*x1) mod (int p)"
            "y3 = (- y1 - l * (x3 - x1)) mod (int p)"
-  shows    "point_madd a p\<^sub>1 p\<^sub>2 = Point x3 y3"
-  unfolding point_madd_def Let_def using assms point.distinct by simp
+         shows    "point_madd a p\<^sub>1 p\<^sub>2 = Point x3 y3"
+  by (simp add: assms(1-2) assms(4) assms(8-9) point_madd_def Let_def
+    flip: assms(3) assms(5) assms(6) assms(7))
 
 lemma point_add_eq [code]: "add a p\<^sub>1 p\<^sub>2 = point_madd a p\<^sub>1 p\<^sub>2"
 proof (cases p\<^sub>1)
@@ -1077,14 +1078,14 @@ proof -
   have 11: "x \<noteq> 0"        using assms(1) by fastforce
   have 12: "euclid_ext_aux 1 0 0 1 1 x = euclid_ext_aux 0 (1 - 0 * 0) 1 (0 - 0 * 1) x (1 mod x)"
     by (smt (verit, ccfv_threshold) 10 11 euclid_ext_aux.simps mult_cancel_left1 of_nat_1 
-        of_nat_eq_0_iff of_nat_mod unique_euclidean_semiring_with_nat_class.of_nat_div) 
+        of_nat_eq_0_iff of_nat_mod linordered_euclidean_semiring_class.of_nat_div) 
   have 1: "euclid_ext_aux 1 0 0 1 1 x = euclid_ext_aux 0 1 1 0 x 1"
     using 12 assms(1) by force
   have 20: "x div 1 = x"  by simp
   have 21: "(1::int) \<noteq> 0" by simp
   have 22: "euclid_ext_aux 0 1 1 0 x 1 = euclid_ext_aux 1 (0 - x * 1) 0 (1 - x * 0) 1 (x mod 1)"
     by (smt (verit, ccfv_threshold)20 21 euclid_ext_aux.simps mult_cancel_left1 of_nat_1 
-        of_nat_eq_0_iff of_nat_mod unique_euclidean_semiring_with_nat_class.of_nat_div mod_by_1)
+        of_nat_eq_0_iff of_nat_mod linordered_euclidean_semiring_class.of_nat_div mod_by_1)
   have 2:  "euclid_ext_aux 0 1 1 0 x 1 = euclid_ext_aux 1 (0 - x) 0 1 1 0" 
     using 22 assms(1) by simp
   have 3: "euclid_ext_aux 1 (0 - x) 0 1 1 0 = ((1,0), 1)"

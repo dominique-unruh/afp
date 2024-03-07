@@ -247,6 +247,23 @@ host = [
 [ballarin.homepages]
 ballarin_homepage = "http://www21.in.tum.de/~ballarin/"
 
+[ballenghien]
+name = "Benoît Ballenghien"
+
+[ballenghien.emails]
+
+[ballenghien.emails.ballenghien_email]
+user = [
+  "benoit",
+  "ballenghien",
+]
+host = [
+  "universite-paris-saclay",
+  "fr",
+]
+
+[ballenghien.homepages]
+
 [barsotti]
 name = "Damián Barsotti"
 
@@ -487,6 +504,7 @@ name = "Julian Biendarra"
 
 [bisping]
 name = "Benjamin Bisping"
+orcid = "0000-0002-0637-0171"
 
 [bisping.emails]
 
@@ -496,12 +514,12 @@ user = [
   "bisping",
 ]
 host = [
-  "campus",
   "tu-berlin",
   "de",
 ]
 
 [bisping.homepages]
+bisping_homepage = "https://bbisping.de"
 
 [blanchette]
 name = "Jasmin Christian Blanchette"
@@ -609,6 +627,23 @@ host = [
 ]
 
 [bohrer.homepages]
+
+[bootle]
+name = "Jonathan Bootle"
+
+[bootle.emails]
+
+[bootle.emails.bootle_email]
+user = [
+  "JBT",
+]
+host = [
+  "zurich",
+  "ibm",
+  "com",
+]
+
+[bootle.homepages]
 
 [bordg]
 name = "Anthony Bordg"
@@ -952,6 +987,22 @@ host = [
 ]
 
 [bulwahn.homepages]
+
+[buss]
+name = "Sebastián Buss"
+
+[buss.emails]
+
+[buss.emails.buss_email]
+user = [
+  "sbuss94",
+]
+host = [
+  "gmail",
+  "com",
+]
+
+[buss.homepages]
 
 [butler]
 name = "David Butler"
@@ -1998,6 +2049,22 @@ name = "Xin Gao"
 [gao.emails]
 
 [gao.homepages]
+
+[garvia]
+name = "Azucena Garvia"
+
+[garvia.emails]
+
+[garvia.emails.garvia_email]
+user = [
+  "zucegb",
+]
+host = [
+  "gmail",
+  "com",
+]
+
+[garvia.homepages]
 
 [gaudel]
 name = "Marie-Claude Gaudel"
@@ -3524,6 +3591,23 @@ host = [
 
 [lallemand.homepages]
 
+[lameris]
+name = "Cárolos Laméris"
+
+[lameris.emails]
+
+[lameris.emails.lameris_email]
+user = [
+  "carolos",
+  "lameris",
+]
+host = [
+  "ru",
+  "nl",
+]
+
+[lameris.homepages]
+
 [lammich]
 name = "Peter Lammich"
 
@@ -4382,6 +4466,14 @@ name = "Bernhard Möller"
 
 [moeller.homepages]
 moeller_homepage = "https://www.informatik.uni-augsburg.de/en/chairs/dbis/pmi/staff/moeller/"
+
+[montanari]
+name = "Luisa Montanari"
+orcid = "0000-0002-5270-0290"
+
+[montanari.emails]
+
+[montanari.homepages]
 
 [mori]
 name = "Coraline Mori"
@@ -5836,6 +5928,24 @@ host = [
 
 [schoepf.homepages]
 
+[schou]
+name = "Morten Konggaard Schou"
+orcid = "0000-0002-5970-4294"
+
+[schou.emails]
+
+[schou.emails.schou_email]
+user = [
+  "mksc",
+]
+host = [
+  "cs",
+  "aau",
+  "dk",
+]
+
+[schou.homepages]
+
 [scott]
 name = "Dana Scott"
 
@@ -6101,6 +6211,15 @@ host = [
 
 [springsklee.homepages]
 
+[srba]
+name = "Jiří Srba"
+orcid = "0000-0001-5551-6547"
+
+[srba.emails]
+
+[srba.homepages]
+srba_homepage = "https://homes.cs.aau.dk/~srba/"
+
 [staats]
 name = "Charles Staats"
 
@@ -6207,6 +6326,25 @@ host = [
 ]
 
 [steinberg.homepages]
+
+[stell]
+name = "Amy Stell"
+orcid = "0000-0003-0714-3269"
+
+[stell.emails]
+
+[stell.emails.stell_email]
+user = [
+  "as1343",
+]
+host = [
+  "exeter",
+  "ac",
+  "uk",
+]
+
+[stell.homepages]
+stell_homepage = "https://computerscience.exeter.ac.uk/staff/as1343?sm=as1343"
 
 [stephan]
 name = "Werner Stephan"

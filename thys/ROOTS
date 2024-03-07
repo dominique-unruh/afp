@@ -74,8 +74,10 @@ CAVA_LTL_Modelchecker
 CCS
 CHERI-C_Memory_Model
 CISC-Kernel
+Concentration_Inequalities
 CRDT
 CRYSTALS-Kyber
+CRYSTALS-Kyber_Security
 CSP_RefTK
 CVP_Hardness
 CYK
@@ -89,6 +91,7 @@ Card_Equiv_Relations
 Card_Multisets
 Card_Number_Partitions
 Card_Partitions
+Cardinality_Continuum
 Cartan_FP
 Case_Labeling
 Catalan_Numbers
@@ -101,6 +104,7 @@ Cayley_Hamilton
 Certification_Monads
 Ceva
 Chandy_Lamport
+Chebyshev_Polynomials
 Chord_Segments
 Circus
 Clean
@@ -147,6 +151,7 @@ Core_SC_DOM
 Correctness_Algebras
 Cotangent_PFD_Formula
 Count_Complex_Roots
+Coupledsim_Contrasim
 CryptHOL
 CryptoBasedCompositionalProperties
 Crypto_Standards
@@ -184,6 +189,7 @@ Dirichlet_L
 Dirichlet_Series
 DiscretePricing
 Discrete_Summation
+Disintegration
 DiskPaxos
 Distributed_Distinct_Elements
 Dominance_CHK
@@ -196,6 +202,7 @@ EdmondsKarp_Maxflow
 Edwards_Elliptic_Curves_Group
 Efficient-Mergesort
 Efficient_Weighted_Path_Order
+Elimination_Of_Repeated_Factors
 Elliptic_Curves_Group_Law
 Encodability_Process_Calculi
 Epistemic_Logic
@@ -204,6 +211,8 @@ Ergodic_Theory
 Error_Function
 Euler_MacLaurin
 Euler_Partition
+Euler_Polyhedron_Formula
+Eudoxus_Reals
 Eval_FO
 Example-Submission
 Executable_Randomized_Algorithms
@@ -292,6 +301,7 @@ Gromov_Hyperbolicity
 Grothendieck_Schemes
 Group-Ring-Module
 HOL-CSP
+HOL-CSPM
 HOLCF-Prelude
 HRB-Slicing
 Hahn_Jordan_Decomposition
@@ -314,6 +324,8 @@ Hybrid_Systems_VCs
 HyperCTL
 HyperHoareLogic
 Hyperdual
+Hypergraph_Basics
+Hypergraph_Colourings
 IEEE_Floating_Point
 IFC_Tracking
 IMAP-CRDT
@@ -322,10 +334,13 @@ IMP2
 IMP2_Binary_Heap
 IMP_Compiler
 IMP_Compiler_Reuse
+Interval_Analysis
+IO_Language_Conformance
 IP_Addresses
 Imperative_Insertion_Sort
 Implicational_Logic
 Impossible_Geometry
+IMP_Noninterference
 Incompleteness
 Incredible_Proof_Machine
 Independence_CH
@@ -346,6 +361,7 @@ Irrationals_From_THEBOOK
 IsaGeoCoq
 IsaNet
 Isabelle_C
+Isabelle_hoops
 Isabelle_Marries_Dirac
 Isabelle_Meta_Model
 Jacobson_Basic_Algebra
@@ -367,6 +383,7 @@ Knights_Tour
 Knot_Theory
 Knuth_Bendix_Order
 Knuth_Morris_Pratt
+KnuthMorrisPratt
 Koenigsberg_Friendship
 Kruskal
 Kuratowski_Closure_Complement
@@ -385,6 +402,7 @@ LambdaMu
 Lambda_Free_EPO
 Lambda_Free_KBOs
 Lambda_Free_RPOs
+Lambert_Series
 Lambert_W
 Landau_Symbols
 Laplace_Transform
@@ -412,6 +430,7 @@ LocalLexing
 Localization_Ring
 Locally-Nameless-Sigma
 Logging_Independent_Anonymity
+Lovasz_Local
 Lowe_Ontological_Argument
 Lower_Semicontinuous
 Lp
@@ -424,6 +443,7 @@ MFOTL_Monitor
 MSO_Regex_Equivalence
 Markov_Models
 Marriage
+Martingales
 Mason_Stothers
 Matrices_for_ODEs
 Matrix
@@ -444,6 +464,7 @@ Minimal_SSA
 Minkowskis_Theorem
 Minsky_Machines
 MLSS_Decision_Proc
+ML_Unification
 Modal_Logics_for_NTS
 Modular_Assembly_Kit_Security
 Modular_arithmetic_LLL_and_HNF_algorithms
@@ -470,6 +491,7 @@ Neumann_Morgenstern_Utility
 No_FTL_observers
 No_FTL_observers_Gen_Rel
 Nominal2
+Nominal_Myhill_Nerode
 Noninterference_CSP
 Noninterference_Concurrent_Composition
 Noninterference_Generic_Unwinding
@@ -480,6 +502,7 @@ NormByEval
 Nullstellensatz
 Number_Theoretic_Transform
 Octonions
+OmegaCatoidsQuantales
 OpSets
 Open_Induction
 Optics
@@ -508,6 +531,7 @@ Partial_Function_MR
 Partial_Order_Reduction
 Password_Authentication_Protocol
 Pell
+Perfect_Fields
 Perfect-Number-Thm
 Perron_Frobenius
 Physical_Quantities
@@ -518,6 +542,8 @@ Pluennecke_Ruzsa_Inequality
 Poincare_Bendixson
 Poincare_Disc
 Polygonal_Number_Theorem
+Polylog
+Polynomial_Crit_Geometry
 Polynomial_Factorization
 Polynomial_Interpolation
 Polynomials
@@ -554,6 +580,8 @@ PseudoHoops
 Psi_Calculi
 Ptolemys_Theorem
 Public_Announcement_Logic
+Q0_Metatheory
+Q0_Soundness
 QHLProver
 QR_Decomposition
 Quantales
@@ -581,6 +609,7 @@ Refine_Imperative_HOL
 Refine_Monadic
 RefinementReactive
 Regex_Equivalence
+Region_Quadtrees
 Registers
 Regression_Test_Selection
 Regular-Sets
@@ -588,6 +617,7 @@ Regular_Algebras
 Regular_Tree_Relations
 Relation_Algebra
 Relational-Incorrectness-Logic
+Relational_Cardinality
 Relational_Disjoint_Set_Forests
 Relational_Forests
 Relational_Method
@@ -615,6 +645,7 @@ SDS_Impossibility
 SIFPL
 SIFUM_Type_Systems
 SPARCv8
+S_Finite_Measure_Monad
 Safe_Distance
 Safe_OCL
 Safe_Range_RC
@@ -661,6 +692,7 @@ Splay_Tree
 Sqrt_Babylonian
 Stable_Matching
 Stalnaker_Logic
+Standard_Borel_Spaces
 Statecharts
 Stateful_Protocol_Composition_and_Typing
 Stellar_Quorums
@@ -681,6 +713,7 @@ Sturm_Tarski
 Stuttering_Equivalence
 Subresultants
 Subset_Boolean_Algebras
+Sumcheck_Protocol
 SumSquares
 Sunflowers
 SuperCalc
@@ -709,6 +742,7 @@ Transition_Systems_and_Automata
 Transitive-Closure
 Transitive-Closure-II
 Transitive_Models
+Transport
 Treaps
 Tree-Automata
 Tree_Decomposition
@@ -760,6 +794,8 @@ Zeckendorf
 Zeta_3_Irrational
 Zeta_Function
 pGCL
+Labeled_Transition_Systems
+Pushdown_Systems
 
 # Unruh's additions
 Hilbert_Space_Tensor_Product
