@@ -64,7 +64,7 @@ proof -
   from c_rank1
   obtain x y where \<open>c i = butterfly (x i) (y i)\<close> if \<open>i < n\<close> for i
     apply atomize_elim
-    apply (rule SMT.choices)
+    apply (rule SMT_choices)
     using rank1_iff_butterfly by fastforce
   with ac_sum show ?thesis
     by auto

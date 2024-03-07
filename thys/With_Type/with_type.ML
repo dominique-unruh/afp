@@ -96,7 +96,9 @@ fun unoverload_type_local ctxt tvars thm = let
   val thm_unover = Unoverload_Type.unoverload_type (Context.Proof ctxt) tvars thm_no_tfree
   val skip_nprems = Thm.nprems_of thm_unover - Thm.nprems_of thm_no_tfree
   val _ = skip_nprems >= 0 orelse error ("unoverload_type_local: skip_nprems is negative")
-  val tfree_subst' = map (fn ((n,s),ni) => ((ni,s), TFree (n,s) |> Thm.ctyp_of ctxt)) tfree_subst |> TVars.make
+  val _ = forall (fn ((_,s1),(_,s2)) => s1 = s2) tfree_subst orelse
+            error ("unoverload_type_local: Thm.varifyT_global' returned inconsistent sorts")
+  val tfree_subst' = map (fn ((n,s),nis) => (nis, TFree (n,s) |> Thm.ctyp_of ctxt)) tfree_subst |> TVars.make
   val thm_tfree = Thm.instantiate (tfree_subst', Vars.empty) thm_unover
   val all_prems = Assumption.all_prems_of ctxt
   fun remove_hyp i thm : thm = case Seq.pull (solve_tac ctxt all_prems (i+skip_nprems+1) thm) of

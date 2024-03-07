@@ -405,9 +405,9 @@ fun mk_relation_for_type ctxt name_fun (T:typ) = let
         in \<^Const>\<open>rel_itself T' T\<close> end
     | Type(name, _) => (case With_Type.get_relator ctxt name of
                          NONE => raise TYPE("mk_relation_for_type: don't know how to handle type " ^ name, [T,T'], [])
-                        | SOME f => f ctxt mk T'
-                                    handle e as TYPE _ => raise e
-                                         | e => raise TYPE("mk_relation_for_type: handler for type " ^ name ^ " failed with exception " ^ Runtime.exn_message e, [T,T'], []))
+                        | SOME f => \<^try>\<open>f ctxt mk T'
+                                    catch e as TYPE _ => raise e
+                                         | e => raise TYPE("mk_relation_for_type: handler for type " ^ name ^ " failed with exception " ^ Runtime.exn_message e, [T,T'], [])\<close>)
     | TVar _ => raise TYPE("mk_relation_for_type: encountered schematic type var", [T,T'], [])
   in mk T end
 \<close>
