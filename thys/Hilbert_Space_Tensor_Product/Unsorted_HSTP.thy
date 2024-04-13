@@ -2179,6 +2179,30 @@ proof -
     by (simp add: less_eq_cblinfun_def)
 qed
 
+lemma has_sum_mono_wot:
+  fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
+  assumes "has_sum_in cweak_operator_topology f A x" and "has_sum_in cweak_operator_topology g A y"
+  assumes \<open>\<And>x. x \<in> A \<Longrightarrow> f x \<le> g x\<close>
+  shows "x \<le> y"
+  using assms has_sum_mono_neutral_wot by force
+
+lemma infsum_mono_wot:
+  fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
+  assumes "summable_on_in cweak_operator_topology f A" and "summable_on_in cweak_operator_topology g A"
+  assumes \<open>\<And>x. x \<in> A \<Longrightarrow> f x \<le> g x\<close>
+  shows "infsum_in cweak_operator_topology f A \<le> infsum_in cweak_operator_topology g A"
+  by (meson assms has_sum_in_infsum_in has_sum_mono_wot hausdorff_cweak_operator_topology)
+
+lemma infsum_mono_neutral_wot:
+  fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
+  assumes "summable_on_in cweak_operator_topology f A" and "summable_on_in cweak_operator_topology g B"
+  assumes \<open>\<And>x. x \<in> A\<inter>B \<Longrightarrow> f x \<le> g x\<close>
+  assumes \<open>\<And>x. x \<in> A-B \<Longrightarrow> f x \<le> 0\<close>
+  assumes \<open>\<And>x. x \<in> B-A \<Longrightarrow> g x \<ge> 0\<close>
+  shows "infsum_in cweak_operator_topology f A \<le> infsum_in cweak_operator_topology g B"
+  using assms
+  by (metis (mono_tags, lifting) has_sum_in_infsum_in has_sum_mono_neutral_wot hausdorff_cweak_operator_topology)
+
 lemma has_sum_mono_neutral_cblinfun:
   fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
   assumes \<open>(f has_sum a) A\<close> and "(g has_sum b) B"
@@ -2410,6 +2434,10 @@ lemma trace_norm_pos: \<open>trace_norm A = trace A\<close> if \<open>A \<ge> 0\
 
 lemma norm_tc_pos: \<open>norm A = trace_tc A\<close> if \<open>A \<ge> 0\<close>
    using that apply transfer by (simp add: trace_norm_pos)
+
+lemma norm_tc_pos_Re: \<open>norm A = Re (trace_tc A)\<close> if \<open>A \<ge> 0\<close>
+  using norm_tc_pos[OF that]
+  by (metis Re_complex_of_real)
 
 lemma from_trace_class_pos: \<open>from_trace_class A \<ge> 0 \<longleftrightarrow> A \<ge> 0\<close>
   by (simp add: less_eq_trace_class.rep_eq)
@@ -5660,6 +5688,9 @@ lemma trace_tc_mono:
   using assms
   apply transfer
   by (simp add: trace_cblinfun_mono)
+
+lemma trace_tc_0[simp]: \<open>trace_tc 0 = 0\<close>
+  apply transfer' by simp
 
 
 end

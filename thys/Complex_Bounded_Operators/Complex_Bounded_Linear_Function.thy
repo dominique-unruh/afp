@@ -38,6 +38,7 @@ declare cblinfun.scaleC_left[simp]
 lemma cblinfun_apply_clinear[simp]: \<open>clinear (cblinfun_apply A)\<close>
   using bounded_clinear.axioms(1) cblinfun_apply by blast
 
+(* TODO: Strengthen: only norm \<psi> = 1, see Kraus_Maps *)
 lemma cblinfun_cinner_eqI:
   fixes A B :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
   assumes \<open>\<And>\<psi>. cinner \<psi> (A *\<^sub>V \<psi>) = cinner \<psi> (B *\<^sub>V \<psi>)\<close>
@@ -3553,6 +3554,8 @@ lemma positive_cblinfunI: \<open>A \<ge> 0\<close> if \<open>\<And>x. norm x = 1
 lemma less_eq_scaled_id_norm: 
   assumes \<open>norm A \<le> c\<close> and \<open>A = A*\<close>
   shows \<open>A \<le> complex_of_real c *\<^sub>C id_cblinfun\<close>
+(* TODO: should be *\<^sub>R instead *)
+(* TODO: should assume "selfadjoint A" *)
 proof -
   have \<open>x \<bullet>\<^sub>C (A *\<^sub>V x) \<le> complex_of_real c\<close> if \<open>norm x = 1\<close> for x
   proof -
@@ -3609,12 +3612,14 @@ proof (rule cblinfun_eq_0_on_UNIV_span[where basis=UNIV]; simp)
     by simp
 qed
 
+(* TODO formulate using "selfadjoint" *)
 lemma comparable_hermitean:
   assumes \<open>a \<le> b\<close>
   assumes \<open>a* = a\<close>
   shows \<open>b* = b\<close>
   by (smt (verit, best) assms(1) assms(2) cinner_hermitian_real cinner_real_hermiteanI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def)
 
+(* TODO formulate using "selfadjoint" *)
 lemma comparable_hermitean':
   assumes \<open>a \<le> b\<close>
   assumes \<open>b* = b\<close>
