@@ -11,8 +11,85 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     
-      <lastBuildDate>Mon, 12 Feb 2024 00:00:00 +0000</lastBuildDate>
+      <lastBuildDate>Wed, 20 Mar 2024 00:00:00 +0000</lastBuildDate>
       <atom:link href="/authors/index.xml" rel="self" type="application/rss+xml" />
+        <item>
+          <title>eberl</title>
+          <link>/authors/eberl/</link>
+          <pubDate>Wed, 20 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/eberl/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>tan</title>
+          <link>/authors/tan/</link>
+          <pubDate>Fri, 15 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/tan/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>yang</title>
+          <link>/authors/yang/</link>
+          <pubDate>Fri, 15 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/yang/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>benzmueller</title>
+          <link>/authors/benzmueller/</link>
+          <pubDate>Sat, 09 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/benzmueller/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>parent</title>
+          <link>/authors/parent/</link>
+          <pubDate>Sat, 09 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/parent/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>bergstroem</title>
+          <link>/authors/bergstroem/</link>
+          <pubDate>Wed, 06 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/bergstroem/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>chenj</title>
+          <link>/authors/chenj/</link>
+          <pubDate>Wed, 06 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/chenj/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>weber</title>
+          <link>/authors/weber/</link>
+          <pubDate>Wed, 06 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/weber/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>karayel</title>
+          <link>/authors/karayel/</link>
+          <pubDate>Mon, 19 Feb 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/karayel/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>schulz</title>
+          <link>/authors/schulz/</link>
+          <pubDate>Mon, 19 Feb 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/schulz/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>keskin</title>
+          <link>/authors/keskin/</link>
+          <pubDate>Thu, 15 Feb 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/keskin/</guid>
+          <description></description>
+        </item>
         <item>
           <title>noce</title>
           <link>/authors/noce/</link>
@@ -56,6 +133,13 @@
           <description></description>
         </item>
         <item>
+          <title>massacrier</title>
+          <link>/authors/massacrier/</link>
+          <pubDate>Wed, 24 Jan 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/massacrier/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>struth</title>
           <link>/authors/struth/</link>
           <pubDate>Wed, 24 Jan 2024 00:00:00 +0000</pubDate>
@@ -67,6 +151,20 @@
           <link>/authors/buss/</link>
           <pubDate>Mon, 22 Jan 2024 00:00:00 +0000</pubDate>
           <guid>/authors/buss/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>hupel</title>
+          <link>/authors/hupel/</link>
+          <pubDate>Mon, 22 Jan 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/hupel/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>stuebinger</title>
+          <link>/authors/stuebinger/</link>
+          <pubDate>Mon, 22 Jan 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/stuebinger/</guid>
           <description></description>
         </item>
         <item>
@@ -84,17 +182,24 @@
           <description></description>
         </item>
         <item>
+          <title>ballenghien</title>
+          <link>/authors/ballenghien/</link>
+          <pubDate>Sun, 24 Dec 2023 00:00:00 +0000</pubDate>
+          <guid>/authors/ballenghien/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>wolff</title>
+          <link>/authors/wolff/</link>
+          <pubDate>Sun, 24 Dec 2023 00:00:00 +0000</pubDate>
+          <guid>/authors/wolff/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>kreuzer</title>
           <link>/authors/kreuzer/</link>
           <pubDate>Mon, 18 Dec 2023 00:00:00 +0000</pubDate>
           <guid>/authors/kreuzer/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>ballenghien</title>
-          <link>/authors/ballenghien/</link>
-          <pubDate>Tue, 05 Dec 2023 00:00:00 +0000</pubDate>
-          <guid>/authors/ballenghien/</guid>
           <description></description>
         </item>
         <item>
@@ -105,13 +210,6 @@
           <description></description>
         </item>
         <item>
-          <title>wolff</title>
-          <link>/authors/wolff/</link>
-          <pubDate>Tue, 05 Dec 2023 00:00:00 +0000</pubDate>
-          <guid>/authors/wolff/</guid>
-          <description></description>
-        </item>
-        <item>
           <title>paulson</title>
           <link>/authors/paulson/</link>
           <pubDate>Mon, 27 Nov 2023 00:00:00 +0000</pubDate>
@@ -119,38 +217,10 @@
           <description></description>
         </item>
         <item>
-          <title>eberl</title>
-          <link>/authors/eberl/</link>
-          <pubDate>Fri, 24 Nov 2023 00:00:00 +0000</pubDate>
-          <guid>/authors/eberl/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>keskin</title>
-          <link>/authors/keskin/</link>
-          <pubDate>Tue, 21 Nov 2023 00:00:00 +0000</pubDate>
-          <guid>/authors/keskin/</guid>
-          <description></description>
-        </item>
-        <item>
           <title>schlichtkrull</title>
           <link>/authors/schlichtkrull/</link>
           <pubDate>Mon, 20 Nov 2023 00:00:00 +0000</pubDate>
           <guid>/authors/schlichtkrull/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>karayel</title>
-          <link>/authors/karayel/</link>
-          <pubDate>Mon, 13 Nov 2023 00:00:00 +0000</pubDate>
-          <guid>/authors/karayel/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>tan</title>
-          <link>/authors/tan/</link>
-          <pubDate>Mon, 13 Nov 2023 00:00:00 +0000</pubDate>
-          <guid>/authors/tan/</guid>
           <description></description>
         </item>
         <item>
@@ -242,13 +312,6 @@
           <link>/authors/rabing/</link>
           <pubDate>Wed, 16 Aug 2023 00:00:00 +0000</pubDate>
           <guid>/authors/rabing/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>hupel</title>
-          <link>/authors/hupel/</link>
-          <pubDate>Mon, 14 Aug 2023 00:00:00 +0000</pubDate>
-          <guid>/authors/hupel/</guid>
           <description></description>
         </item>
         <item>
@@ -599,13 +662,6 @@
           <link>/authors/platzer/</link>
           <pubDate>Thu, 15 Dec 2022 00:00:00 +0000</pubDate>
           <guid>/authors/platzer/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>benzmueller</title>
-          <link>/authors/benzmueller/</link>
-          <pubDate>Mon, 05 Dec 2022 00:00:00 +0000</pubDate>
-          <guid>/authors/benzmueller/</guid>
           <description></description>
         </item>
         <item>
@@ -2335,13 +2391,6 @@
           <link>/authors/parrow/</link>
           <pubDate>Tue, 25 Oct 2016 00:00:00 +0000</pubDate>
           <guid>/authors/parrow/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>weber</title>
-          <link>/authors/weber/</link>
-          <pubDate>Tue, 25 Oct 2016 00:00:00 +0000</pubDate>
-          <guid>/authors/weber/</guid>
           <description></description>
         </item>
         <item>

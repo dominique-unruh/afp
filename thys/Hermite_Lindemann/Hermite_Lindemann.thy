@@ -2,7 +2,7 @@
   File:     Hermite_Lindemann.thy
   Author:   Manuel Eberl, TU München
 *)
-section \<open>The Hermite--Lindemann--Weierstraß Transcendence Theorem\<close>
+section \<open>The Hermite--Lindemann--Weierstra\ss Transcendence Theorem\<close>
 theory Hermite_Lindemann
 imports 
   Pi_Transcendental.Pi_Transcendental
@@ -20,19 +20,19 @@ hide_const (open) Henstock_Kurzweil_Integration.content  Module.smult
 
 
 text \<open>
-  The Hermite--Lindemann--Weierstraß theorem answers questions about the transcendence of
+  The Hermite--Lindemann--Weierstra\ss theorem answers questions about the transcendence of
   the exponential function and other related complex functions. It proves that a large number of
   combinations of exponentials is always transcendental.
 
-  A first (much weaker) version of the theorem was proven by Hermite. Lindemann and Weierstraß then
+  A first (much weaker) version of the theorem was proven by Hermite. Lindemann and Weierstra\ss then
   successively generalised it shortly afterwards, and finally Baker gave another, arguably more
   elegant formulation (which is the one that we will prove, and then derive the traditional version
   from it).
 
   To honour the contributions of all three of these 19th-century mathematicians, I refer to the
-  theorem as the Hermite--Lindemann--Weierstraß theorem, even though in other literature it is
-  often called Hermite--Lindemann or Lindemann--Weierstraß. To keep things short, the Isabelle
-  name of the theorem, however, will omit Weierstraß's name.
+  theorem as the Hermite--Lindemann--Weierstra\ss theorem, even though in other literature it is
+  often called Hermite--Lindemann or Lindemann--Weierstra\ss. To keep things short, the Isabelle
+  name of the theorem, however, will omit Weierstra\ss's name.
 \<close>
 
 subsection \<open>Main proof\<close>
@@ -254,7 +254,7 @@ proof
     proof -
       have "Polynomial.degree (f_poly \<alpha>) = p - 1 + (n - 1) * p"
         unfolding f_poly_altdef[OF that] using that \<open>l > 0\<close> \<open>finite Roots'\<close>
-        by (subst prod.If_eq) (auto simp: degree_prod_eq degree_power_eq degree_mult_eq n_altdef)
+        by (subst prod.If_eq) (auto simp: degree_prod_sum_eq degree_power_eq degree_mult_eq n_altdef)
       also have "p - 1 + (n - 1) * p = n * p - 1"
         using \<open>n > 0\<close> \<open>p > 1\<close> by (cases n) auto
       finally show ?thesis .
@@ -548,7 +548,7 @@ proof
           next
             case True
             hence "i \<le> n * p - 1" using \<open>l > 0\<close>
-              by (simp add: Q'_def degree_prod_eq Q_def degree_power_eq)
+              by (simp add: Q'_def degree_prod_sum_eq Q_def degree_power_eq)
             also have "n * p > 0"
               using \<open>n > 0\<close> \<open>p > 1\<close> by auto
             hence "n * p - 1 < n * p"
@@ -833,7 +833,7 @@ proof
         finally show ?thesis .
       qed
       hence "(\<Prod>q\<in>P. \<Prod>\<alpha>\<in>Roots q. J \<alpha>) \<in> \<rat>"
-        by (rule prod_in_Rats)
+        by (rule Rats_prod)
       also have "(\<Prod>q\<in>P. \<Prod>\<alpha>\<in>Roots q. J \<alpha>) = J'"
         unfolding Roots'_def J'_def using disjoint
         by (intro prod.UNION_disjoint [symmetric]) (auto simp: disjoint_family_on_def)

@@ -7,14 +7,13 @@ package afp
 
 import isabelle.*
 
-import java.net.URL
-import java.io.{BufferedReader, InputStreamReader, IOException}
+import java.io.IOException
 
 import scala.collection.immutable.ListMap
 
 
 object Utils {
-  val TIMEOUT = 30*1000
+  val TIMEOUT = 30 * 1000
 
   def group_sorted[A, K](l: List[A], f: A => K): ListMap[K, List[A]] =
     l.foldLeft(ListMap.empty[K, List[A]]) {
@@ -33,9 +32,9 @@ object Utils {
 
   def the_entry[K, V](m: Map[K, V], k: K): V = m.getOrElse(k, error("Expected key " + quote(k.toString)))
 
-  def fetch_text(url: URL, params: Map[String, String]): String =
+  def fetch_text(url: Url, params: Map[String, String]): String =
     try {
-      val conn = url.openConnection()
+      val conn = url.open_connection()
       conn.setConnectTimeout(TIMEOUT)
       conn.setReadTimeout(TIMEOUT)
       params.foreach { case (param, value) => conn.setRequestProperty(param, value) }

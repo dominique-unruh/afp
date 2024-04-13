@@ -11,8 +11,64 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     
-      <lastBuildDate>Mon, 12 Feb 2024 00:00:00 +0000</lastBuildDate>
+      <lastBuildDate>Wed, 20 Mar 2024 00:00:00 +0000</lastBuildDate>
       <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+        <item>
+          <title>Continued Fractions</title>
+          <link>/entries/Continued_Fractions.html</link>
+          <pubDate>Wed, 20 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Continued_Fractions.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Kummer&#39;s congruence</title>
+          <link>/entries/Kummer_Congruence.html</link>
+          <pubDate>Wed, 20 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Kummer_Congruence.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Approximate Model Counting</title>
+          <link>/entries/Approximate_Model_Counting.html</link>
+          <pubDate>Fri, 15 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Approximate_Model_Counting.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Conditional normative reasoning as a fragment of HOL (Isabelle/HOL dataset)</title>
+          <link>/entries/CondNormReasHOL.html</link>
+          <pubDate>Sat, 09 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/CondNormReasHOL.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Verified QBF Solving</title>
+          <link>/entries/QBF_Solver_Verification.html</link>
+          <pubDate>Wed, 06 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/QBF_Solver_Verification.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Wieferich–Kempner Theorem</title>
+          <link>/entries/Wieferich_Kempner.html</link>
+          <pubDate>Wed, 06 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Wieferich_Kempner.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Karatsuba Multiplication on Integers</title>
+          <link>/entries/Karatsuba.html</link>
+          <pubDate>Mon, 19 Feb 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Karatsuba.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Doob&#39;s Upcrossing Inequality and Martingale Convergence Theorem</title>
+          <link>/entries/Doob_Convergence.html</link>
+          <pubDate>Thu, 15 Feb 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Doob_Convergence.html</guid>
+          <description></description>
+        </item>
         <item>
           <title>Information Flow Control via Stateful Intransitive Noninterference in Language IMP</title>
           <link>/entries/IMP_Noninterference.html</link>
@@ -35,6 +91,13 @@
           <description></description>
         </item>
         <item>
+          <title>Cubical Categories</title>
+          <link>/entries/CubicalCategories.html</link>
+          <pubDate>Wed, 24 Jan 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/CubicalCategories.html</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Higher Globular Catoids and Quantales</title>
           <link>/entries/OmegaCatoidsQuantales.html</link>
           <pubDate>Wed, 24 Jan 2024 00:00:00 +0000</pubDate>
@@ -49,10 +112,24 @@
           <description></description>
         </item>
         <item>
+          <title>Go Code Generation for Isabelle</title>
+          <link>/entries/Go.html</link>
+          <pubDate>Mon, 22 Jan 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Go.html</guid>
+          <description></description>
+        </item>
+        <item>
           <title>(Extended) Interval Analysis</title>
           <link>/entries/Interval_Analysis.html</link>
           <pubDate>Sun, 21 Jan 2024 00:00:00 +0000</pubDate>
           <guid>/entries/Interval_Analysis.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Operational Semantics formally proven in HOL-CSP</title>
+          <link>/entries/HOL-CSP_OpSem.html</link>
+          <pubDate>Sun, 24 Dec 2023 00:00:00 +0000</pubDate>
+          <guid>/entries/HOL-CSP_OpSem.html</guid>
           <description></description>
         </item>
         <item>
@@ -5768,6 +5845,13 @@
           <description></description>
         </item>
         <item>
+          <title>Approximate_Model_Counting</title>
+          <link>/sessions/approximate_model_counting/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/approximate_model_counting/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Approximation_Algorithms</title>
           <link>/sessions/approximation_algorithms/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -6538,6 +6622,13 @@
           <description></description>
         </item>
         <item>
+          <title>CondNormReasHOL</title>
+          <link>/sessions/condnormreashol/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/condnormreashol/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Consensus_Refined</title>
           <link>/sessions/consensus_refined/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -6577,6 +6668,13 @@
           <link>/sessions/containers-benchmarks/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/containers-benchmarks/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Continued_Fractions</title>
+          <link>/sessions/continued_fractions/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/continued_fractions/</guid>
           <description></description>
         </item>
         <item>
@@ -6703,6 +6801,13 @@
           <link>/sessions/cubic_quartic_equations/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/cubic_quartic_equations/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>CubicalCategories</title>
+          <link>/sessions/cubicalcategories/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/cubicalcategories/</guid>
           <description></description>
         </item>
         <item>
@@ -6983,6 +7088,13 @@
           <link>/sessions/dominance_chk/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/dominance_chk/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Doob_Convergence</title>
+          <link>/sessions/doob_convergence/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/doob_convergence/</guid>
           <description></description>
         </item>
         <item>
@@ -7651,6 +7763,27 @@
           <description></description>
         </item>
         <item>
+          <title>Go</title>
+          <link>/sessions/go/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/go/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Go_Test_Quick</title>
+          <link>/sessions/go_test_quick/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/go_test_quick/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Go_Test_Slow</title>
+          <link>/sessions/go_test_slow/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/go_test_slow/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Goedel_HFSet_Semantic</title>
           <link>/sessions/goedel_hfset_semantic/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -7844,6 +7977,13 @@
           <link>/sessions/hol-csp/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/hol-csp/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>HOL-CSP_OpSem</title>
+          <link>/sessions/hol-csp_opsem/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/hol-csp_opsem/</guid>
           <description></description>
         </item>
         <item>
@@ -8309,6 +8449,13 @@
           <description></description>
         </item>
         <item>
+          <title>Karatsuba</title>
+          <link>/sessions/karatsuba/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/karatsuba/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>KAT_and_DRA</title>
           <link>/sessions/kat_and_dra/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -8404,6 +8551,13 @@
           <link>/sessions/kruskal/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/kruskal/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Kummer_Congruence</title>
+          <link>/sessions/kummer_congruence/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/kummer_congruence/</guid>
           <description></description>
         </item>
         <item>
@@ -9839,6 +9993,13 @@
           <link>/sessions/q0_soundness/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/q0_soundness/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>QBF_Solver_Verification</title>
+          <link>/sessions/qbf_solver_verification/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/qbf_solver_verification/</guid>
           <description></description>
         </item>
         <item>
@@ -11281,6 +11442,13 @@
           <link>/sessions/whatandwhere_security/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/whatandwhere_security/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Wieferich_Kempner</title>
+          <link>/sessions/wieferich_kempner/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/wieferich_kempner/</guid>
           <description></description>
         </item>
         <item>

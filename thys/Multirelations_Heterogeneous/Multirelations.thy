@@ -977,7 +977,7 @@ lemma
   nitpick[expect=genuine,card=1,3]
   oops
 
-  section \<open>Powerdomain Preorders\<close>
+section \<open>Powerdomain Preorders\<close>
 
 abbreviation lower_less_eq :: "('a,'b) mrel \<Rightarrow> ('a,'b) mrel \<Rightarrow> bool" (infixl "\<sqsubseteq>\<down>" 50) where
   "R \<sqsubseteq>\<down> S \<equiv> R \<subseteq> S\<down>"
@@ -2325,6 +2325,230 @@ lemma convex_order_lower_upper:
 lemma convex_order_Convex:
   "R\<updown> \<subseteq> S\<updown> \<longleftrightarrow> R \<sqsubseteq>\<Updown> S"
   by (meson Convex_lower_upper convex_order_lower_upper)
+
+subsection \<open>Further results for convex-closure\<close>
+
+lemma convex_down:
+  "R\<updown>\<down> = R\<down>"
+  by (meson convex_eq_up_closed lower_eq_down)
+
+lemma convex_up:
+  "R\<updown>\<up> = R\<up>"
+  by (meson convex_eq_up_closed upper_eq_up)
+
+lemma iu_dist_oi_convex:
+  assumes "R = R\<updown>"
+      and "S = S\<updown>"
+      and "T = T\<updown>"
+    shows "(R \<inter> S) \<union>\<union> T = (R \<union>\<union> T) \<inter> (S \<union>\<union> T)"
+  nitpick[expect=genuine,card=1]
+  oops
+
+lemma ii_dist_oi_convex:
+  assumes "R = R\<updown>"
+      and "S = S\<updown>"
+      and "T = T\<updown>"
+    shows "(R \<inter> S) \<inter>\<inter> T = (R \<inter>\<inter> T) \<inter> (S \<inter>\<inter> T)"
+  nitpick[expect=genuine,card=1]
+  oops
+
+lemma oI_up_closed:
+  assumes "\<forall>R\<in>X . R\<up> = R"
+    shows "(\<Inter>X)\<up> = \<Inter>X"
+  by (meson Inter_iff assms ucl_iff)
+
+lemma oI_down_closed:
+  assumes "\<forall>R\<in>X . R\<down> = R"
+    shows "(\<Inter>X)\<down> = \<Inter>X"
+  by (metis (no_types, opaque_lifting) antisym assms down_isotone dual_order.refl le_Inf_iff lower_reflexive)
+
+lemma oI_convex_closed:
+  assumes "\<forall>R\<in>X . R\<updown> = R"
+    shows "(\<Inter>X)\<updown> = \<Inter>X"
+  by (metis (no_types, lifting) Inf_lower Inter_greatest antisym assms convex_increasing convex_isotone)
+
+lemma up_dist_Union:
+  "(\<Union>X)\<up> = \<Union>{ R\<up> | R . R \<in> X }"
+  by (simp add: Setcompr_eq_image up_dist_oU)
+
+lemma down_dist_Union:
+  "(\<Union>X)\<down> = \<Union>{ R\<down> | R . R \<in> X }"
+  by (simp add: Setcompr_eq_image down_dist_oU)
+
+lemma convex_dist_Union:
+  "(\<Union>X)\<updown> = \<Union>{ R\<updown> | R . R \<in> X }"
+  nitpick[expect=genuine,card=1,2]
+  oops
+
+lemma up_dist_Inter:
+  "(\<Inter>X)\<up> = \<Inter>{ R\<up> | R . R \<in> X }"
+  nitpick[expect=genuine,card=1]
+  oops
+
+lemma down_dist_Inter:
+  "(\<Inter>X)\<down> = \<Inter>{ R\<down> | R . R \<in> X }"
+  nitpick[expect=genuine,card=1]
+  oops
+
+lemma convex_dist_Inter:
+  "(\<Inter>X)\<updown> = \<Inter>{ R\<updown> | R . R \<in> X }"
+  nitpick[expect=genuine,card=1,2]
+  oops
+
+lemma Inter_convex_closed:
+  "(\<Inter>X)\<updown> = \<Inter>X"
+  nitpick[expect=genuine,card=1,2]
+  oops
+
+abbreviation "convex_iu" (infixl "\<union>\<union>\<updown>" 70)
+  where "R \<union>\<union>\<updown> S \<equiv> (R \<union>\<union> S)\<updown>"
+
+lemma convex_iu:
+  "R \<union>\<union>\<updown> S = (R\<down> \<union>\<union> S\<down>) \<inter> R\<up> \<inter> S\<up>"
+  by (metis Int_assoc Int_commute down_dist_iu up_dist_iu_oi)
+
+lemma convex_iu_sub:
+  "R\<updown> \<union>\<union> S \<subseteq> R \<union>\<union>\<updown> S"
+  by (meson equalityE iu_Convex_left_isotone)
+
+lemma convex_iu_convex_left:
+  "R \<union>\<union>\<updown> S = R\<updown> \<union>\<union>\<updown> S"
+  by (simp add: convex_down convex_iu convex_up)
+
+lemma convex_iu_convex_right:
+  "R \<union>\<union>\<updown> S = R \<union>\<union>\<updown> S\<updown>"
+  by (simp add: convex_down convex_iu convex_up)
+
+lemma convex_iu_convex:
+  "R \<union>\<union>\<updown> S = R\<updown> \<union>\<union>\<updown> S\<updown>"
+  by (simp add: convex_down convex_iu convex_up)
+
+lemma convex_iu_assoc:
+  "(R \<union>\<union>\<updown> S) \<union>\<union>\<updown> T = R \<union>\<union>\<updown> (S \<union>\<union>\<updown> T)"
+  by (smt convex_iu_convex_left convex_iu_convex_right p_prod_assoc)
+
+lemma convex_iu_comm:
+  "R \<union>\<union>\<updown> S = S \<union>\<union>\<updown> R"
+  by (simp add: p_prod_comm)
+
+lemma convex_iu_unit:
+  "R = R\<updown> \<Longrightarrow> R \<union>\<union>\<updown> 1\<^sub>\<union>\<^sub>\<union> = R"
+  by simp
+
+abbreviation "convex_ii" (infixl "\<inter>\<inter>\<updown>" 70)
+  where "R \<inter>\<inter>\<updown> S \<equiv> (R \<inter>\<inter> S)\<updown>"
+
+lemma convex_ii:
+  "R \<inter>\<inter>\<updown> S = (R\<up> \<inter>\<inter> S\<up>) \<inter> R\<down> \<inter> S\<down>"
+  by (simp add: down_dist_ii_oi inf_assoc up_dist_ii)
+
+lemma convex_ii_sub:
+  "R\<updown> \<inter>\<inter> S \<subseteq> R \<inter>\<inter>\<updown> S"
+  by (meson equalityE ii_Convex_left_isotone)
+
+lemma convex_ii_convex_left:
+  "R \<inter>\<inter>\<updown> S = R\<updown> \<inter>\<inter>\<updown> S"
+  by (simp add: convex_down convex_ii convex_up)
+
+lemma convex_ii_convex_right:
+  "R \<inter>\<inter>\<updown> S = R \<inter>\<inter>\<updown> S\<updown>"
+  by (simp add: convex_down convex_ii convex_up)
+
+lemma convex_ii_convex:
+  "R \<inter>\<inter>\<updown> S = R\<updown> \<inter>\<inter>\<updown> S\<updown>"
+  by (simp add: convex_down convex_ii convex_up)
+
+lemma convex_ii_assoc:
+  "(R \<inter>\<inter>\<updown> S) \<inter>\<inter>\<updown> T = R \<inter>\<inter>\<updown> (S \<inter>\<inter>\<updown> T)"
+  by (smt convex_ii_convex_left convex_ii_convex_right ii_assoc)
+
+lemma convex_ii_comm:
+  "R \<inter>\<inter>\<updown> S = S \<inter>\<inter>\<updown> R"
+  by (simp add: ii_commute)
+
+lemma convex_ii_unit:
+  "R = R\<updown> \<Longrightarrow> R \<inter>\<inter>\<updown> 1\<^sub>\<inter>\<^sub>\<inter> = R"
+  by simp
+
+lemma convex_iu_ic:
+  "\<sim>(R \<union>\<union>\<updown> S) = \<sim>R \<inter>\<inter>\<updown> \<sim>S"
+  by (simp add: ic_antidist_iu ic_convex)
+
+lemma convex_ii_ic:
+  "\<sim>(R \<inter>\<inter>\<updown> S) = \<sim>R \<union>\<union>\<updown> \<sim>S"
+  by (simp add: ic_antidist_ii ic_convex)
+
+abbreviation convex_sup :: "('a,'b) mrel set \<Rightarrow> ('a,'b) mrel" ("\<Union>\<updown>") where
+  "\<Union>\<updown>X \<equiv> (\<Union>X)\<updown>"
+
+lemma convex_sup_convex:
+  "\<Union>\<updown>X = (\<Union>\<updown>X)\<updown>"
+  by simp
+
+lemma convex_sup_inter:
+  "\<Union>\<updown>X = \<Inter>{ Y . Y = Y\<updown> \<and> \<Union>X \<subseteq> Y }"
+  apply (rule antisym)
+  apply (smt (verit) Inf_greatest convex_isotone mem_Collect_eq)
+  by (smt (verit, del_insts) Inter_lower convex_down convex_increasing convex_up mem_Collect_eq)
+
+lemma convex_iu_dist_convex_sup:
+  "\<Union>\<updown>X \<union>\<union>\<updown> S = \<Union>\<updown>{ R \<union>\<union>\<updown> S | R . R \<in> X }"
+proof -
+  have "\<Union>\<updown>X \<union>\<union>\<updown> S = \<Union>X \<union>\<union>\<updown> S"
+    using convex_iu_convex_left by blast
+  also have "... = \<Union>\<updown>{ R \<union>\<union> S | R . R \<in> X }"
+    by (simp add: Setcompr_eq_image iu_right_dist_oU)
+  also have "... = \<Union>\<updown>{ R \<union>\<union>\<updown> S | R . R \<in> X }"
+  proof (rule antisym)
+    show "\<Union>\<updown>{ R \<union>\<union> S | R . R \<in> X } \<subseteq> \<Union>\<updown>{ R \<union>\<union>\<updown> S | R . R \<in> X }"
+      by (smt (verit, ccfv_SIG) Convex_transitive Sup_mono dual_order.refl mem_Collect_eq subset_Convex)
+    have "\<forall>R\<in>X . R \<union>\<union>\<updown> S \<subseteq> \<Union>\<updown>{ R \<union>\<union> S | R . R \<in> X }"
+      by (smt (verit, ccfv_SIG) Union_upper convex_isotone mem_Collect_eq)
+    thus "\<Union>\<updown>{ R \<union>\<union>\<updown> S | R . R \<in> X } \<subseteq> \<Union>\<updown>{ R \<union>\<union> S | R . R \<in> X }"
+      apply (subst convex_order_Convex)
+      apply (rule Union_least)
+      by blast
+  qed
+  finally show ?thesis
+    .
+qed
+
+lemma convex_ii_dist_convex_sup:
+  "\<Union>\<updown>X \<inter>\<inter>\<updown> S = \<Union>\<updown>{ R \<inter>\<inter>\<updown> S | R . R \<in> X }"
+proof -
+  have "\<Union>\<updown>X \<inter>\<inter>\<updown> S = \<Union>X \<inter>\<inter>\<updown> S"
+    using convex_ii_convex_left by blast
+  also have "... = \<Union>\<updown>{ R \<inter>\<inter> S | R . R \<in> X }"
+    by (simp add: Setcompr_eq_image ii_right_dist_oU)
+  also have "... = \<Union>\<updown>{ R \<inter>\<inter>\<updown> S | R . R \<in> X }"
+  proof (rule antisym)
+    show "\<Union>\<updown>{ R \<inter>\<inter> S | R . R \<in> X } \<subseteq> \<Union>\<updown>{ R \<inter>\<inter>\<updown> S | R . R \<in> X }"
+      by (smt (verit, ccfv_SIG) Convex_transitive Sup_mono dual_order.refl mem_Collect_eq subset_Convex)
+    have "\<forall>R\<in>X . R \<inter>\<inter>\<updown> S \<subseteq> \<Union>\<updown>{ R \<inter>\<inter> S | R . R \<in> X }"
+      by (smt (verit, ccfv_SIG) Union_upper convex_isotone mem_Collect_eq)
+    thus "\<Union>\<updown>{ R \<inter>\<inter>\<updown> S | R . R \<in> X } \<subseteq> \<Union>\<updown>{ R \<inter>\<inter> S | R . R \<in> X }"
+      apply (subst convex_order_Convex)
+      apply (rule Union_least)
+      by blast
+  qed
+  finally show ?thesis
+    .
+qed
+
+lemma convex_dist_sup:
+  "(\<Union>X)\<updown> = \<Union>\<updown>{ R\<updown> | R . R \<in> X }"
+proof (rule antisym)
+  have "\<forall>R\<in>X . R \<subseteq> \<Union>\<updown>{ R\<updown> | R . R \<in> X }"
+    by (metis (mono_tags, lifting) Sup_upper2 convex_increasing mem_Collect_eq subset_Convex)
+  thus "(\<Union>X)\<updown> \<subseteq> \<Union>\<updown>{ R\<updown> | R . R \<in> X }"
+    by (meson Sup_least convex_order_Convex)
+  have "\<forall>R\<in>X . R\<updown> \<subseteq> (\<Union>X)\<updown>"
+    by (meson Union_upper convex_isotone)
+  thus "\<Union>\<updown>{ R\<updown> | R . R \<in> X } \<subseteq> (\<Union>X)\<updown>"
+    apply (subst convex_order_Convex)
+    apply (rule Union_least)
+    by blast
+qed
 
 section \<open>Fusion and Fission\<close>
 
@@ -5788,8 +6012,103 @@ proof -
     by (smt abox_test adia_test assms sup_commute test_galois_1 test_implication_closed test_shunting)
 qed
 
-lemma "(s_id \<union> p_id) * R = R \<union> p_id"
+lemma s_p_id_sp:
+  "(s_id \<union> p_id) * R = R \<union> p_id"
   by (simp add: s_prod_distr)
+
+subsection \<open>Propositional Hoare logic\<close>
+
+abbreviation hoare :: "('a,'a) mrel \<Rightarrow> ('a,'b) mrel \<Rightarrow> ('b,'b) mrel \<Rightarrow> bool" ("_\<lbrace>_\<rbrace>_" [50,60,50] 95)
+  where "p\<lbrace>R\<rbrace>q \<equiv> p \<subseteq> |R]q"
+
+abbreviation if_then_else :: "('a,'a) mrel \<Rightarrow> ('a,'b) mrel \<Rightarrow> ('a,'b) mrel \<Rightarrow> ('a,'b) mrel"
+  where "if_then_else p R S \<equiv> p * R \<union> \<wrong> p * S"
+
+abbreviation while_do :: "('a,'a) mrel \<Rightarrow> ('a,'a) mrel \<Rightarrow> ('a,'a) mrel"
+  where "while_do p R \<equiv> (p * R)\<^sup>* * \<wrong> p"
+
+lemma hoare_skip:
+  assumes "test p"
+    shows "p\<lbrace>1\<rbrace>p"
+  by (simp add: assms sp_unit_abox)
+
+lemma hoare_cons:
+  assumes "test s"
+      and "r \<subseteq> p"
+      and "q \<subseteq> s"
+      and "p\<lbrace>R\<rbrace>q"
+    shows "r\<lbrace>R\<rbrace>s"
+  by (meson abox_right_isotone assms order_trans)
+
+lemma hoare_seq:
+  assumes "test q"
+      and "test r"
+      and "p\<lbrace>R\<rbrace>q"
+      and "q\<lbrace>S\<rbrace>r"
+    shows "p\<lbrace>R*S\<rbrace>r"
+proof -
+  have "p \<subseteq> |R]q"
+    by (simp add: assms(3))
+  also have "... \<subseteq> |R]|S]r"
+    by (simp add: abox_right_isotone abox_test assms(1,2,4))
+  also have "... \<subseteq> |R*S]r"
+    by (simp add: abox_sp_3 assms(2))
+  finally show ?thesis
+    by simp
+qed
+
+lemma hoare_if:
+  assumes "test p"
+      and "test q"
+      and "test r"
+      and "(p*q)\<lbrace>R\<rbrace>r"
+      and "((\<wrong> p)*q)\<lbrace>S\<rbrace>r"
+  shows "q\<lbrace>if_then_else p R S\<rbrace>r"
+  by (smt (verit, ccfv_threshold) abox_left_dist_ou abox_test_sp assms inf.absorb_iff2 inf_le2 sp_oi_subdist test_galois_1 test_sp_idempotent)
+
+lemma hoare_while:
+  assumes "test p"
+      and "test q"
+      and "(p*q)\<lbrace>R\<rbrace>q"
+    shows "q\<lbrace>while_do p R\<rbrace>(q*(\<wrong> p))"
+proof -
+  have "q \<subseteq> p \<rightarrow> |R]q"
+    by (meson assms test_galois_1)
+  also have "... = |p]|R]q"
+    by (simp add: abox_test assms(1,2) test_abox)
+  also have "... \<subseteq> |p*R]q"
+    by (simp add: abox_sp_3 assms(2))
+  finally have "q \<subseteq> |(p*R)\<^sup>*]q"
+    by (meson abox_star_induct assms(2))
+  also have "... \<subseteq> |(p*R)\<^sup>*](q \<union> p)"
+    by (simp add: abox_right_isotone assms(1,2))
+  also have "... = |(p*R)\<^sup>*](\<wrong>p \<rightarrow> (q*(\<wrong> p)))"
+    by (smt (verit, best) Un_assoc Un_upper1 assms(1,2) inf_commute sup.commute sup.order_iff test_double_complement test_galois_1 test_s_prod_is_meet)
+  also have "... = |(p*R)\<^sup>*]|\<wrong>p](q*(\<wrong> p))"
+    by (simp add: assms(2) test_abox test_shunting)
+  also have "... \<subseteq> |while_do p R](q*(\<wrong> p))"
+    by (simp add: abox_sp_3 assms(2) test_galois_1)
+  finally show ?thesis
+    by simp
+qed
+
+lemma hoare_par:
+  assumes "test q"
+      and "p\<lbrace>R\<rbrace>q"
+      and "p\<lbrace>S\<rbrace>q"
+    shows "p\<lbrace>R \<union>\<union> S\<rbrace>q"
+proof -
+  have 1: "p \<subseteq> |R\<rangle>1 \<rightarrow> |S]q"
+    by (simp add: assms(3) le_supI2)
+  have "p \<subseteq> |S\<rangle>1 \<rightarrow> |R]q"
+    by (simp add: assms(2) le_supI2)
+  hence "p \<subseteq> ( |R\<rangle>1 \<rightarrow> |S]q) \<inter> ( |S\<rangle>1 \<rightarrow> |R]q)"
+    using 1 by simp
+  also have "... = |R \<union>\<union> S]q"
+    by (smt (verit) abox_dist_iu_3 abox_test assms(1) inf.orderE test_implication_closed test_oi_closed test_s_prod_is_meet)
+  finally show ?thesis
+    by simp
+qed
 
 section \<open>Counterexamples\<close>
 

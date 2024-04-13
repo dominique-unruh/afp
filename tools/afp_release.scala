@@ -7,8 +7,6 @@ package afp
 
 import isabelle.*
 
-import afp.Metadata.{Entry, Isabelle, Release}
-
 import java.time.LocalDate
 
 
@@ -23,10 +21,10 @@ object AFP_Release {
   ): Unit = {
     val Release_Tar = """afp-(.+)-(\d{4}-\d{2}-\d{2})\.tar\.gz""".r
 
-    val afp_structure = AFP_Structure(base_dir)
+    val afp = AFP_Structure(base_dir)
 
     val isabelle_releases =
-      split_lines(File.read(afp_structure.metadata_dir + Path.basic("release-dates")))
+      split_lines(File.read(afp.metadata_dir + Path.basic("release-dates")))
     val Isa_Release = """(.+) = (.+)""".r
     val release_dates = isabelle_releases.filterNot(_.isBlank).map {
       case Isa_Release(isabelle_version, date) => LocalDate.parse(date) -> isabelle_version
@@ -38,24 +36,24 @@ object AFP_Release {
         case Release_Tar(entry, date_str) =>
           val date = LocalDate.parse(date_str)
           release_dates.findLast { case (isa_date, _) => !isa_date.isAfter(date) } match {
-            case Some(_, isabelle) => Release(entry, date, isabelle)
+            case Some(_, isabelle) => Metadata.Release(entry, date, isabelle)
             case None => error("No Isabelle version found for " + date_str)
           }
       }
 
-      afp_structure.save_releases(releases)
+      afp.save_releases(releases)
     }
   }
 
-  def afp_release(date: LocalDate, isabelle: Isabelle.Version, base_dir: Path): Unit = {
-    def add_release(entry: Entry): Entry =
-      entry.copy(releases = entry.releases :+ Release(entry.name, date, isabelle))
+  def afp_release(date: LocalDate, isabelle: Metadata.Isabelle.Version, base_dir: Path): Unit = {
+    def add_release(entry: Metadata.Entry): Metadata.Entry =
+      entry.copy(releases = entry.releases :+ Metadata.Release(entry.name, date, isabelle))
 
-    val afp_structure = AFP_Structure(base_dir)
+    val afp = AFP_Structure(base_dir)
 
-    val releases = afp_structure.load().map(add_release).flatMap(_.releases)
+    val releases = afp.load_entries().values.toList.map(add_release).flatMap(_.releases)
 
-    afp_structure.save_releases(releases)
+    afp.save_releases(releases)
   }
 
   val isabelle_tool = Isabelle_Tool("afp_release", "Create an AFP release",

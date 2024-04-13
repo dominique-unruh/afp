@@ -69,9 +69,9 @@ end
 
 structure Data_Tree_Args : GENERIC_DATA_ARGS =
 struct
-  type T = C_Position.reports_text * C_Env.error_lines
+  type T = Position.report_text list * C_Env.error_lines
   val empty = ([], [])
-  fun merge ((l11, l12), (l21, l22)) = (l11 @ l21, l12 @ l22)
+  fun merge ((l11, l12), (l21, l22)) = (Library.merge (op =) (l11, l21), Library.merge (op =) (l12, l22))
 end
 
 structure Data_Tree = Generic_Data (Data_Tree_Args)
@@ -84,8 +84,8 @@ fun setmp_tree f context =
 fun stack_exec0 f {context, reports_text, error_lines} =
   let val ((reports_text', error_lines'), context) = setmp_tree f context
   in { context = context
-     , reports_text = append reports_text' reports_text
-     , error_lines = append error_lines' error_lines } end
+     , reports_text = reports_text' @ reports_text
+     , error_lines = error_lines' @ error_lines } end
 
 fun stack_exec env_dir data_put =
   stack_exec0 o Data_Lang.setmp (SOME (apsnd (C_Env.map_env_directives (K env_dir)) data_put))
@@ -776,7 +776,7 @@ fun eval' env start err accept ants =
   Context.>>> (fn context =>
                C_Env_Ext.context_map'
                  (eval (env context) (start context) err accept ants
-                  #> apsnd (tap (Position.reports_text o #reports_text)
+                  #> apsnd (Context_Position.reports_enabled_generic context ? tap (Position.reports_text o #reports_text)
                             #> tap (#error_lines #> (fn [] => () | l => error (cat_lines (rev l))))
                             #> (C_Env.empty_env_tree o #context)))
                  context)

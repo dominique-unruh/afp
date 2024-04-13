@@ -452,6 +452,23 @@ host = [
 [berghofer.homepages]
 berghofer_homepage = "http://www.in.tum.de/~berghofe"
 
+[bergstroem]
+name = "Axel Bergström"
+
+[bergstroem.emails]
+
+[bergstroem.emails.bergstroem_email]
+user = [
+  "axel",
+  "bergstrom00",
+]
+host = [
+  "gmail",
+  "com",
+]
+
+[bergstroem.homepages]
+
 [beringer]
 name = "Lennart Beringer"
 
@@ -1122,6 +1139,24 @@ name = "L. Chen"
 [chen.emails]
 
 [chen.homepages]
+
+[chenj]
+name = "Jamie Chen"
+orcid = "0009-0008-5396-6059"
+
+[chenj.emails]
+
+[chenj.emails.chenj_email]
+user = [
+  "jamiechen",
+]
+host = [
+  "tutanota",
+  "com",
+]
+
+[chenj.homepages]
+chenj_homepage = "https://gitlab.com/Jamie-Chen"
 
 [chevalier]
 name = "Loïc Chevalier"
@@ -4193,6 +4228,13 @@ host = [
 [marmsoler.homepages]
 marmsoler_homepage = "http://marmsoler.com"
 
+[massacrier]
+name = "Tanguy Massacrier"
+
+[massacrier.emails]
+
+[massacrier.homepages]
+
 [matache]
 name = "Cristina Matache"
 
@@ -4983,6 +5025,24 @@ host = [
 ]
 
 [palmer.homepages]
+
+[parent]
+name = "Xavier Parent"
+
+[parent.emails]
+
+[parent.emails.parent_email]
+user = [
+  "x",
+  "parent",
+  "xavier",
+]
+host = [
+  "gmail",
+  "com",
+]
+
+[parent.homepages]
 
 [park]
 name = "Seung Hoon Park"
@@ -5946,6 +6006,23 @@ host = [
 
 [schou.homepages]
 
+[schulz]
+name = "Jakob Schulz"
+
+[schulz.emails]
+
+[schulz.emails.schulz_email]
+user = [
+  "jakob",
+  "schulz",
+]
+host = [
+  "tum",
+  "de",
+]
+
+[schulz.homepages]
+
 [scott]
 name = "Dana Scott"
 
@@ -6511,6 +6588,15 @@ host = [
 ]
 
 [stueber.homepages]
+
+[stuebinger]
+name = "Terru Stübinger"
+orcid = "0009-0006-7411-2533"
+
+[stuebinger.emails]
+
+[stuebinger.homepages]
+stuebinger_homepage = "https://stuebinm.eu/"
 
 [stuewe]
 name = "Daniel Stüwe"
@@ -7412,6 +7498,22 @@ host = [
 
 [yamada.homepages]
 yamada_homepage = "http://group-mmm.org/~ayamada/"
+
+[yang]
+name = "Jiong Yang"
+
+[yang.emails]
+
+[yang.emails.yang_email]
+user = [
+  "jiongyangcobe",
+]
+host = [
+  "gmail",
+  "com",
+]
+
+[yang.homepages]
 
 [ye]
 name = "Lina Ye"

@@ -7,7 +7,7 @@ package afp
 
 import isabelle.*
 
-import afp.Metadata.{Author, DOI, Email, Homepage, TOML, Topic}
+import afp.Metadata.TOML
 import isabelle.TOML.{parse, Format, Key, Table}
 
 
@@ -19,26 +19,23 @@ object AFP_Check_Metadata {
     }
 
   def afp_check_metadata(
-    strict: Boolean,
-    reformat: Boolean,
-    slow: Boolean,
-    afp_structure: AFP_Structure,
-    verbose: Boolean,
-    progress: Progress
+    afp: AFP_Structure,
+    strict: Boolean = false,
+    reformat: Boolean = false,
+    format_all: Boolean = false,
+    slow: Boolean = false,
+    verbose: Boolean = false,
+    progress: Progress = new Progress
   ): Unit = {
     def warn(msg: String): Unit = if (strict) error(msg) else progress.echo_warning(msg)
 
     progress.echo_if(verbose, "Loading metadata...")
-    val orig_authors = afp_structure.load_authors
-    val orig_topics = afp_structure.load_topics
-    val orig_licenses = afp_structure.load_licenses
-    val orig_releases = afp_structure.load_releases
-    val authors = orig_authors.map(author => author.id -> author).toMap
-    val topics = Utils.grouped_sorted(orig_topics.flatMap(_.all_topics), (t: Topic) => t.id)
-    val licenses = orig_licenses.map(license => license.id -> license).toMap
-    val releases = orig_releases.groupBy(_.entry)
-    val entries = afp_structure.entries.map(name =>
-      afp_structure.load_entry(name, authors, topics, licenses, releases))
+    val authors = afp.load_authors
+    val topics = afp.load_topics
+    val licenses = afp.load_licenses
+    val releases = afp.load_releases
+    val entries = afp.entries.map(name =>
+      afp.load_entry(name, authors, topics, licenses, releases))
 
 
     /* TOML encoding/decoding */
@@ -48,7 +45,7 @@ object AFP_Check_Metadata {
 
     progress.echo_if(verbose, "Checking toml conversions...")
     check_toml("authors", authors.values.toList, TOML.from_authors, TOML.to_authors)
-    check_toml("topics", orig_topics, TOML.from_topics, TOML.to_topics)
+    check_toml("topics", Metadata.Topics.root_topics(topics), TOML.from_topics, TOML.to_topics)
     check_toml("licenses", licenses.values.toList, TOML.from_licenses, TOML.to_licenses)
     check_toml("releases", releases.values.flatten.toList, TOML.from_releases, TOML.to_releases)
     entries.foreach(entry => check_toml("entry " + entry.name, entry, TOML.from_entry, t =>
@@ -84,11 +81,11 @@ object AFP_Check_Metadata {
       if (diff_keys.nonEmpty) warn("Unused fields: " + commas_quote(diff_keys))
     }
 
-    check_unused_toml(afp_structure.authors_file, TOML.to_authors, TOML.from_authors)
-    check_unused_toml(afp_structure.topics_file, TOML.to_topics, TOML.from_topics)
-    check_unused_toml(afp_structure.licenses_file, TOML.to_licenses, TOML.from_licenses)
-    check_unused_toml(afp_structure.releases_file, TOML.to_releases, TOML.from_releases)
-    entries.foreach(entry => check_unused_toml(afp_structure.entry_file(entry.name), t =>
+    check_unused_toml(afp.authors_file, TOML.to_authors, TOML.from_authors)
+    check_unused_toml(afp.topics_file, TOML.to_topics, TOML.from_topics)
+    check_unused_toml(afp.licenses_file, TOML.to_licenses, TOML.from_licenses)
+    check_unused_toml(afp.releases_file, TOML.to_releases, TOML.from_releases)
+    entries.foreach(entry => check_unused_toml(afp.entry_file(entry.name), t =>
       TOML.to_entry(entry.name, t, authors, topics, licenses, releases.getOrElse(entry.name, Nil)),
       TOML.from_entry))
 
@@ -103,13 +100,13 @@ object AFP_Check_Metadata {
     val all_affils = entries.flatMap(entry => entry.authors ++ entry.contributors ++ entry.notifies)
     warn_unused("authors", authors.keySet diff all_affils.map(_.author).toSet)
 
-    def author_affil_id(author: Author.ID, affil: String): String = author + " " + affil
+    def author_affil_id(author: Metadata.Author.ID, affil: String): String = author + " " + affil
 
     val affils = authors.values.flatMap(author =>
       (author.emails.map(_.id) ++ author.homepages.map(_.id)).map(author_affil_id(author.id, _)))
     val used_affils = all_affils.collect {
-      case Email(author, id, _) => author_affil_id(author, id)
-      case Homepage(author, id, _) => author_affil_id(author, id)
+      case Metadata.Email(author, id, _) => author_affil_id(author, id)
+      case Metadata.Homepage(author, id, _) => author_affil_id(author, id)
     }
     warn_unused("affiliations", affils.toSet diff used_affils.toSet)
     val leaf_topics = topics.values.filter(_.sub_topics.isEmpty).map(_.id)
@@ -119,7 +116,16 @@ object AFP_Check_Metadata {
 
     /* formatting of commonly patched files */
 
-    if (reformat) afp_structure.save_authors(orig_authors)
+    if (reformat) {
+      afp.save_authors(authors.values.toList)
+
+      if (format_all) {
+        afp.save_topics(Metadata.Topics.root_topics(topics))
+        afp.save_licenses(licenses.values.toList)
+        afp.save_releases(releases.values.toList.flatten)
+        entries.foreach(afp.save_entry)
+      }
+    }
     else {
       def check_toml_format(toml: Table, file: Path): Unit = {
         val present = File.read(file)
@@ -128,7 +134,16 @@ object AFP_Check_Metadata {
       }
 
       progress.echo_if(verbose, "Checking formatting...")
-      check_toml_format(TOML.from_authors(orig_authors), afp_structure.authors_file)
+      check_toml_format(TOML.from_authors(authors.values.toList), afp.authors_file)
+
+      if (format_all) {
+        check_toml_format(TOML.from_topics(topics.values.toList), afp.topics_file)
+        check_toml_format(TOML.from_licenses(licenses.values.toList), afp.licenses_file)
+        check_toml_format(TOML.from_releases(releases.values.toList.flatten),
+          afp.releases_file)
+        entries.foreach(entry =>
+          check_toml_format(TOML.from_entry(entry), afp.entry_file(entry.name)))
+      }
     }
 
 
@@ -136,7 +151,7 @@ object AFP_Check_Metadata {
 
     if (slow) {
       progress.echo_if(verbose, "Checking DOIs...")
-      entries.flatMap(entry => entry.related).collect { case d: DOI => d.formatted() }
+      entries.flatMap(entry => entry.related).collect { case d: Metadata.DOI => d.formatted() }
     }
 
     progress.echo_if(verbose, "Checked " + authors.size + " authors with " + affils.size +
@@ -150,6 +165,7 @@ object AFP_Check_Metadata {
 
     var slow = false
     var reformat = false
+    var format_all = false
     var strict = false
     var verbose = false
 
@@ -157,6 +173,7 @@ object AFP_Check_Metadata {
 Usage: isabelle afp_check_metadata [OPTIONS]
 
   Options are:
+    -a    check formatting of all metadata
     -s    activate slow checks
     -v    verbose
     -R    reformat metadata files
@@ -164,6 +181,7 @@ Usage: isabelle afp_check_metadata [OPTIONS]
 
   Check AFP metadata files for consistency.
 """,
+      "a" -> (_ => format_all = true),
       "s" -> (_ => slow = true),
       "v" -> (_ => verbose = true),
       "R" -> (_ => reformat = true),
@@ -172,8 +190,9 @@ Usage: isabelle afp_check_metadata [OPTIONS]
     getopts(args)
 
     val progress = new Console_Progress()
-    val afp_structure = AFP_Structure()
+    val afp = AFP_Structure()
 
-    afp_check_metadata(strict, reformat, slow, afp_structure, verbose, progress)
+    afp_check_metadata(afp, strict = strict, reformat = reformat, format_all = format_all,
+      slow = slow, verbose = verbose, progress = progress)
   })
 }
