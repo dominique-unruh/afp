@@ -1263,7 +1263,7 @@ proof -
   have \<open>Rep_ell2 (A *\<^sub>V \<phi>) y = Rep_ell2 (A *\<^sub>V (\<Sum>\<^sub>\<infinity>x. Rep_ell2 \<phi> x *\<^sub>C ket x)) y\<close>
     by (simp flip: ell2_decompose_infsum)
   also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>x. Rep_ell2 (A *\<^sub>V (Rep_ell2 \<phi> x *\<^sub>C ket x)) y)\<close>
-    apply (subst infsum_bounded_linear[symmetric, where f=\<open>\<lambda>z. Rep_ell2 (A *\<^sub>V z) y\<close>])
+    apply (subst infsum_bounded_linear[symmetric, where h=\<open>\<lambda>z. Rep_ell2 (A *\<^sub>V z) y\<close>])
     using 1 2 by (auto simp: o_def)
   also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>x. Rep_ell2 \<phi> x * Rep_ell2 (A *\<^sub>V ket x) y)\<close>
     by (simp add: cblinfun.scaleC_right scaleC_ell2.rep_eq)

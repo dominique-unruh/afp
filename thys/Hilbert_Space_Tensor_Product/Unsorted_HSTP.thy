@@ -5635,22 +5635,22 @@ lemma bounded_clinear_partial_trace[bounded_clinear, iff]: \<open>bounded_clinea
 
 
 lemma infsum_bounded_linear_invertible:
-  assumes \<open>bounded_linear f\<close>
-  assumes \<open>bounded_linear f'\<close>
-  assumes \<open>f' o f = id\<close>
-  shows \<open>infsum (f \<circ> g) S = f (infsum g S)\<close>
-proof (cases \<open>g summable_on S\<close>)
+  assumes \<open>bounded_linear h\<close>
+  assumes \<open>bounded_linear h'\<close>
+  assumes \<open>h' o h = id\<close>
+  shows \<open>infsum (\<lambda>x. h (f x)) A = h (infsum f A)\<close>
+proof (cases \<open>f summable_on A\<close>)
   case True
   then show ?thesis
     using assms(1) infsum_bounded_linear by blast
 next
   case False
-  have \<open>\<not> (f o g) summable_on S\<close>
+  have \<open>\<not> (\<lambda>x. h (f x)) summable_on A\<close>
   proof (rule ccontr)
-    assume \<open>\<not> \<not> f \<circ> g summable_on S\<close>
-    with \<open>bounded_linear f'\<close> have \<open>f' o f o g summable_on S\<close>
+    assume \<open>\<not> \<not> (\<lambda>x. h (f x)) summable_on A\<close>
+    with \<open>bounded_linear h'\<close> have \<open>h' o h o f summable_on A\<close>
       by (auto intro: summable_on_bounded_linear simp: o_def)
-    then have \<open>g summable_on S\<close>
+    then have \<open>f summable_on A\<close>
       by (simp add: assms(3))
     with False show False
       by blast
