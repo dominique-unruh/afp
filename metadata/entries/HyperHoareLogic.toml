@@ -21,13 +21,12 @@ email = "dardinier_email"
 dardinier = "dardinier_email"
 
 [history]
-<2024>-<04>-<12> = "additional rules for compositionality, syntactic hyper-assertions, and loops"
+2024-04-12 = "additional rules for compositionality, syntactic hyper-assertions, and loops"
 
 [extra]
 
 [related]
 dois = [
-  "10.48550/arXiv.2301.10037",
-  "10.1145/3656437"
+  "10.48550/arXiv.2301.10037"
 ]
 pubs = []

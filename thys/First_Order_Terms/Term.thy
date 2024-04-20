@@ -17,6 +17,9 @@ datatype (funs_term : 'f, vars_term : 'v) "term" =
 where
   "args (Var _) = []"
 
+lemmas is_VarI = term.disc(1)
+lemmas is_FunI = term.disc(2)
+
 abbreviation "is_Fun t \<equiv> \<not> is_Var t"
 
 lemma is_VarE [elim]:
@@ -30,6 +33,13 @@ lemma is_FunE [elim]:
 lemma inj_on_Var[simp]: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
   "inj_on Var A"
   by (rule inj_onI) simp
+
+lemma \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
+  inj_on_Fun_fun[simp]: "\<And>A ts. inj_on (\<lambda>f. Fun f ts) A" and
+  inj_on_Fun_args[simp]: "\<And>A f. inj_on (\<lambda>ts. Fun f ts) A" and
+  inj_on_Fun[simp]: "\<And>A. inj_on Fun A"
+  unfolding atomize_conj atomize_all
+  by (metis (mono_tags, lifting) inj_on_def term.inject(2))
 
 lemma member_image_the_Var_image_subst: \<^marker>\<open>contributor \<open>Martin Desharnais\<close>\<close>
   assumes is_var_\<sigma>: "\<forall>x. is_Var (\<sigma> x)"

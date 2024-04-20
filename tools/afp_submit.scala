@@ -545,12 +545,7 @@ object AFP_Submit {
         archive: Bytes,
         ext: String
       ): (ID, State) = {
-        val entry =
-          metadata.entries match {
-            case e :: Nil => e
-            case _ => isabelle.error("Must be a single entry")
-          }
-
+        val entry = Library.the_single(metadata.entries)
         val old = state.entries(entry.name)
         val updated =
           old.copy(title = entry.title, authors = entry.authors, topics = entry.topics,
@@ -639,7 +634,7 @@ object AFP_Submit {
         val dir = up(id)
         dir.file.mkdirs()
 
-        val structure = AFP_Structure(dir)
+        val structure = AFP_Structure(base_dir = dir)
         structure.save_authors(metadata.authors.values.toList.sortBy(_.id))
         metadata.entries.foreach(structure.save_entry)
 
@@ -668,12 +663,12 @@ object AFP_Submit {
             val id = ID(date)
             val day = date.rep.toLocalDate
             read_status(id).map(
-              Model.Overview(id, day, AFP_Structure(up(id)).entries_unchecked.head, _))
+              Model.Overview(id, day, AFP_Structure(base_dir = up(id)).entries_unchecked.head, _))
           })
 
       def get(id: ID, state: State): Option[Model.Submission] =
         ID.check(id).filter(up(_).file.exists).map { id =>
-          val structure = AFP_Structure(up(id))
+          val structure = AFP_Structure(base_dir = up(id))
           val authors = structure.load_authors
           val entries = structure.entries_unchecked.map(
             structure.load_entry(_, authors, state.topics, state.licenses, state.releases))
@@ -831,8 +826,7 @@ object AFP_Submit {
     def frontend_link(path: Path, params: Properties.T, body: XML.Body): XML.Elem =
       link(paths.frontend_url(path, params).toString, body) + ("target" -> "_parent")
 
-    def fieldlabel(for_elem: Params.Key, txt: String): XML.Elem =
-      label(for_elem, " " + txt + ": ")
+    def fieldlabel(for_elem: Params.Key, txt: String): XML.Elem = label(for_elem, " " + txt + ": ")
 
     def explanation(for_elem: Params.Key, txt: String): XML.Elem =
       par(List(emph(List(label(for_elem, txt)))))
@@ -874,7 +868,7 @@ object AFP_Submit {
           par(fieldlabel(key + DATE, "Date") ::
             hidden(key + DATE, entry.date.toString) ::
             text(entry.date.toString)),
-          par(List(fieldlabel(Params.Key.empty, "Topics"),
+          par(List(fieldlabel(key + TOPIC, "Topics"),
             list(Params.indexed(key + TOPIC, entry.topics, render_topic)))),
           par(fieldlabel(key + LICENSE, "License") ::
             hidden(key + LICENSE, entry.license.id) ::
@@ -882,11 +876,11 @@ object AFP_Submit {
           par(List(fieldlabel(key + ABSTRACT, "Abstract"),
             hidden(key + ABSTRACT, entry.`abstract`),
             class_("mathjax_process")(span(List(input_raw(entry.`abstract`)))))),
-          par(List(fieldlabel(Params.Key.empty, "Authors"),
+          par(List(fieldlabel(key + AUTHOR, "Authors"),
             list(Params.indexed(key + AUTHOR, entry.authors, render_affil)))),
-          par(List(fieldlabel(Params.Key.empty, "Contact"),
+          par(List(fieldlabel(key + NOTIFY, "Contact"),
             list(Params.indexed(key + NOTIFY, entry.notifies, render_affil)))),
-          par(List(fieldlabel(Params.Key.empty, "Related Publications"),
+          par(List(fieldlabel(key + RELATED, "Related Publications"),
             list(Params.indexed(key + RELATED, entry.related, render_related))))))
 
       def render_new_author(key: Params.Key, author: Author): XML.Elem =
@@ -972,7 +966,7 @@ object AFP_Submit {
               entry.topic_input.map(_.id),
               state.topics.values.toList.map(topic => option(topic.id, topic.id))) ::
             action_button(paths.api_route(API.SUBMISSION_ENTRY_TOPICS_ADD), "add", key) ::
-            render_error(Params.Key.empty, entry.topics)) ::
+            render_error(key + TOPIC, entry.topics)) ::
           par(List(
             fieldlabel(key + LICENSE, "License"),
             radio(key + LICENSE,
@@ -1013,7 +1007,7 @@ object AFP_Submit {
               "1. They are used to send you updates about the state of your submission. " +
               "2. They are the maintainers of the entry once it is accepted. " +
               "Typically this will be one or more of the authors.") ::
-            render_error(Params.Key.empty, entry.notifies)) ::
+            render_error(key + NOTIFY, entry.notifies)) ::
           fieldset(legend("Related Publications") ::
             Params.indexed(key + RELATED, entry.related, render_related) :::
             selection(key + RELATED + KIND,
@@ -1055,25 +1049,25 @@ object AFP_Submit {
 
       List(submit_form(paths.api_route(API.SUBMISSION),
         Params.indexed(ENTRY, model.entries.v, render_entry) :::
-        render_error(Params.Key.empty, model.entries) :::
+        render_error(ENTRY, model.entries) :::
         render_if(mode == Mode.SUBMISSION,
           par(List(
-            explanation(Params.Key.empty,
+            explanation(ENTRY,
               "You can submit multiple entries at once. " +
               "Put the corresponding folders in the archive " +
               "and use the button below to add more input fields for metadata. "),
             api_button(paths.api_route(API.SUBMISSION_ENTRIES_ADD), "additional entry")))) ::: break :::
         fieldset(legend("New Authors") ::
-          explanation(Params.Key.empty, "If you are new to the AFP, add yourself here.") ::
+          explanation(AUTHOR, "If you are new to the AFP, add yourself here.") ::
           Params.indexed(AUTHOR, model.new_authors.v, render_new_author) :::
           fieldlabel(AUTHOR + NAME, "Name") ::
           textfield(AUTHOR + NAME, "Gerwin Klein", model.new_author_input) ::
           fieldlabel(AUTHOR + ORCID, "ORCID id (optional)") ::
           textfield(AUTHOR + ORCID, "0000-0002-1825-0097", model.new_author_orcid) ::
           api_button(paths.api_route(API.SUBMISSION_AUTHORS_ADD), "add") ::
-          render_error(Params.Key.empty, model.new_authors)) ::
+          render_error(AUTHOR, model.new_authors)) ::
         fieldset(legend("New email or homepage") ::
-          explanation(Params.Key.empty,
+          explanation(AFFILIATION,
             "Add new email or homepages here. " +
             "If you would like to update an existing, " +
             "submit with the old one and write to the editors.") ::
@@ -1087,7 +1081,7 @@ object AFP_Submit {
           textfield(AFFILIATION + ADDRESS, "https://proofcraft.org",
             model.new_affils_input) ::
           api_button(paths.api_route(API.SUBMISSION_AFFILIATIONS_ADD), "add") ::
-          render_error(Params.Key.empty, model.new_affils)) :: break :::
+          render_error(AFFILIATION, model.new_affils)) :: break :::
         fieldset(List(legend(upload),
           api_button(paths.api_route(API.SUBMISSION_UPLOAD), preview))) :: Nil))
     }
@@ -1308,8 +1302,8 @@ object AFP_Submit {
           affils = Val.ok(affils),
           notifies = Val.ok(notifies),
           related = related,
-          related_kind = Model.Related.from_string(params(RELATED + KIND)),
-          related_input = Val.ok(params(RELATED + INPUT)))
+          related_kind = Model.Related.from_string(params(key + RELATED + KIND)),
+          related_input = Val.ok(params(key + RELATED + INPUT)))
 
       for {
         (new_author_ids, all_authors) <-
@@ -1386,7 +1380,6 @@ object AFP_Submit {
       action.get(AFFILIATION).flatMap(_.num)
 
     def parse_id(props: Properties.T): Option[String] = Properties.get(props, ID.print)
-
 
     def action(params: Params.Data): Params.Key = Params.Key.explode(params(ACTION))
     def message(params: Params.Data): String = params(MESSAGE)
@@ -1675,10 +1668,9 @@ object AFP_Submit {
       var devel = false
       var verbose = false
       var port = 8080
-      var dir: Option[Path] = None
 
       val getopts = Getopts("""
-Usage: isabelle afp_submit [OPTIONS]
+Usage: isabelle afp_submit [OPTIONS] DIR
 
   Options are:
       -a PATH      backend path (if endpoint is not server root)
@@ -1686,33 +1678,65 @@ Usage: isabelle afp_submit [OPTIONS]
       -d           devel mode (serves frontend and skips automatic AFP repository updates)
       -p PORT      server port. Default: """ + port + """
       -v           verbose
-      -D DIR       submission directory
 
-  Start afp submission server. Server is in "edit" mode
-  unless directory to store submissions in is specified.
+  Start afp submission server for specified submission directory.
 """,
         "a:" -> (arg => backend_path = Path.explode(arg)),
         "b:" -> (arg => frontend = arg),
         "d" -> (_ => devel = true),
         "p:" -> (arg => port = Value.Int.parse(arg)),
-        "v" -> (_ => verbose = true),
-        "D:" -> (arg => dir = Some(Path.explode(arg))))
+        "v" -> (_ => verbose = true))
 
-      getopts(args)
+      val dir =
+        getopts(args) match {
+          case dir :: Nil => Path.explode(dir)
+          case _ => getopts.usage()
+        }
 
       val afp = AFP_Structure()
 
       val progress = new Console_Progress(verbose = verbose)
 
-      val (handler, mode) = dir match {
-        case Some(dir) => (Handler.Adapter(dir, afp), Mode.SUBMISSION)
-        case None => (Handler.Edit(afp), Mode.EDIT)
-      }
+      val handler = Handler.Adapter(dir, afp)
 
       val paths = Web_App.Paths(Url(frontend + ":" + port), backend_path, serve_frontend = devel,
-        landing = Page.SUBMISSIONS)
-      val server = new Server(paths = paths, afp = afp, mode = mode,
+        landing = Page.SUBMIT)
+      val server = new Server(paths = paths, afp = afp, mode = Mode.SUBMISSION,
         handler = handler, devel = devel, verbose = verbose, progress = progress, port = port)
+
+      server.run()
+    })
+
+  val isabelle_tool1 = Isabelle_Tool("afp_edit_metadata", "edit AFP metadata",
+    Scala_Project.here,
+    { args =>
+      var verbose = false
+      var port = 8080
+
+      val getopts = Getopts("""
+Usage: isabelle afp_edit_metadata [OPTIONS]
+
+  Options are:
+      -p PORT      server port. Default: """ + port + """
+      -v           verbose
+
+  Start afp server to edit metadata.
+""",
+        "p:" -> (arg => port = Value.Int.parse(arg)),
+        "v" -> (_ => verbose = true))
+
+      if (getopts(args).nonEmpty) getopts.usage()
+
+      val afp = AFP_Structure()
+
+      val progress = new Console_Progress(verbose = verbose)
+
+      val handler = Handler.Edit(afp)
+
+      val paths = Web_App.Paths(Url("http://localhost:" + port), Path.current,
+        serve_frontend = true, landing = Page.SUBMISSIONS)
+      val server = new Server(paths = paths, afp = afp, mode = Mode.EDIT, handler = handler,
+        devel = true, verbose = verbose, progress = progress, port = port)
 
       server.run()
     })
