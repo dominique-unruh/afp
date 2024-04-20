@@ -12,9 +12,6 @@ no_notation Set_Algebras.elt_set_eq (infix "=o" 50)
 
 unbundle cblinfun_notation
 
-definition selfadjoint :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow> bool\<close> where
-  \<open>selfadjoint a \<longleftrightarrow> a* = a\<close>
-
 definition \<open>commutant F = {x. \<forall>y\<in>F. x o\<^sub>C\<^sub>L y = y o\<^sub>C\<^sub>L x}\<close>
 
 lemma sandwich_unitary_commutant: 

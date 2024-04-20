@@ -160,10 +160,10 @@ proof -
       apply (auto simp: S_def cinner_diff_right cblinfun.diff_left scaleR_scaleC cdot_square_norm k_def complex_of_real_mono_iff[where y=1, simplified]
           simp flip: assms of_real_inverse of_real_power of_real_mult power_mult_distrib power_inverse
           intro!: power_le_one)
-      by (smt (z3) \<open>norm x = 1\<close> assms cinner_pos_if_pos complex_inner_class.Cauchy_Schwarz_ineq2 complex_of_real_cmod complex_of_real_leq_1_iff left_inverse linordered_field_class.inverse_nonnegative_iff_nonnegative mult_cancel_left2 mult_cancel_right1 mult_left_mono norm_cblinfun norm_of_real of_real_mult)
+      by (smt (verit, del_insts) Reals_cnj_iff \<open>norm x = 1\<close> assms cinner_adj_left cinner_commute cinner_scaleR_left cinner_scaleR_right cmod_Re complex_inner_class.Cauchy_Schwarz_ineq2 left_inverse less_eq_complex_def linordered_field_class.inverse_nonnegative_iff_nonnegative mult_cancel_left2 mult_left_mono norm_cblinfun norm_ge_zero norm_mult norm_of_real norm_one positive_hermitianI reals_zero_comparable zero_less_one_class.zero_le_one)
   qed
   have [simp]: \<open>S* = S\<close>
-    using \<open>S \<le> 0\<close> adj_0 comparable_hermitean' by blast
+    using \<open>S \<le> 0\<close> adj_0 comparable_hermitean' selfadjoint_def by blast
   have \<open>- id_cblinfun \<le> S\<close>
     by (simp add: S_def assms k_def scaleR_nonneg_nonneg)
   then have \<open>norm (S *\<^sub>V f) \<le> norm f\<close> for f
@@ -174,7 +174,8 @@ proof -
       by (metis \<open>- id_cblinfun \<le> S\<close> id_cblinfun_apply less_eq_cblinfun_def minus_le_iff)
 
     have \<open>(norm (S *\<^sub>V f))^4 = complex_of_real ((cmod ((- S *\<^sub>V f) \<bullet>\<^sub>C (- S *\<^sub>V f)))\<^sup>2)\<close>
-      by (auto simp: power4_eq_xxxx cblinfun.minus_left complex_of_real_cmod power2_eq_square simp flip: power2_norm_eq_cinner)
+      apply (auto simp: power4_eq_xxxx cblinfun.minus_left complex_of_real_cmod power2_eq_square simp flip: power2_norm_eq_cinner)
+      by (smt (verit, ccfv_SIG) complex_of_real_cmod mult.assoc norm_ge_zero norm_mult norm_of_real of_real_mult)
     also have \<open>\<dots> \<le> (- S *\<^sub>V f) \<bullet>\<^sub>C (- S *\<^sub>V - S *\<^sub>V f) * (f \<bullet>\<^sub>C (- S *\<^sub>V f))\<close>
       apply (rule generalized_Cauchy_Schwarz[where A=\<open>-S\<close> and x = \<open>-S *\<^sub>V f\<close> and y = f])
       by (fact 1)
@@ -192,14 +193,14 @@ proof -
     finally have \<open>norm (S *\<^sub>V f) ^ 4 \<le> (norm (S *\<^sub>V f))\<^sup>2 * (norm f)\<^sup>2\<close>
       using complex_of_real_mono_iff by blast
     then have \<open>(norm (S *\<^sub>V f))\<^sup>2 \<le> (norm f)\<^sup>2\<close>
-      by (smt (verit, best) \<open>complex_of_real (norm (S *\<^sub>V f) ^ 4) = complex_of_real ((cmod ((- S *\<^sub>V f) \<bullet>\<^sub>C (- S *\<^sub>V f)))\<^sup>2)\<close> cblinfun.minus_left cdot_square_norm cinner_commute cinner_ge_zero complex_norm_square complex_of_real_cmod mult.commute mult_cancel_left mult_right_mono norm_minus_cancel norm_mult norm_power of_real_eq_iff of_real_power realpow_square_minus_le)
+      by (smt (verit, best) \<open>complex_of_real (norm (S *\<^sub>V f) ^ 4) = complex_of_real ((cmod ((- S *\<^sub>V f) \<bullet>\<^sub>C (- S *\<^sub>V f)))\<^sup>2)\<close> cblinfun.real.minus_left cinner_ge_zero cmod_Re mult_cancel_left mult_left_mono norm_minus_cancel of_real_eq_iff power2_eq_square power2_norm_eq_cinner' zero_less_norm_iff)
     then show \<open>norm (S *\<^sub>V f) \<le> norm f\<close>
       by auto
   qed
   then have norm_Snf: \<open>norm (cblinfun_power S n *\<^sub>V f) \<le> norm f\<close> for f n
     by (induction n, auto simp: cblinfun_power_Suc' intro: order.trans)
   have fSnf: \<open>cmod (f \<bullet>\<^sub>C (cblinfun_power S n *\<^sub>V f)) \<le> cmod (f \<bullet>\<^sub>C f)\<close> for f n
-    by (smt (verit, ccfv_SIG) Re_complex_of_real cinner_ge_zero complex_inner_class.Cauchy_Schwarz_ineq2 complex_of_real_cmod mult_left_mono norm_Snf norm_ge_zero power2_eq_square power2_norm_eq_cinner')
+    by (smt (z3) One_nat_def Re_complex_of_real Suc_1 cdot_square_norm cinner_ge_zero cmod_Re complex_inner_class.Cauchy_Schwarz_ineq2 mult.commute mult_cancel_right1 mult_left_mono norm_Snf norm_ge_zero power_0 power_Suc)
   from norm_Snf have norm_Sn: \<open>norm (cblinfun_power S n) \<le> 1\<close> for n
     apply (rule_tac norm_cblinfun_bound)
     by auto
@@ -275,7 +276,7 @@ proof -
       have *: \<open>- (complex_of_real (abs (1 / 2 gchoose x)) * (f \<bullet>\<^sub>C f))
          \<le> complex_of_real (1 / 2 gchoose x) * (f \<bullet>\<^sub>C (cblinfun_power S x *\<^sub>V f))\<close> for x
         apply (rule aux)
-        by (auto simp: cblinfun_power_adj norm_mult fSnf
+        by (auto simp: cblinfun_power_adj norm_mult fSnf selfadjoint_def
             intro!: cinner_real cinner_hermitian_real mult_left_mono Reals_mult mult_nonneg_nonneg)
       show ?thesis
         apply (subst diff_conv_add_uminus) apply (rule add_left_mono)
@@ -600,7 +601,7 @@ proof -
     using sqrt_op_existence
     by (meson positive_cblinfun_squareI sqrt_op_existence)
   from \<open>B \<ge> 0\<close> have \<open>B = B*\<close>
-    by (simp add: comparable_hermitean)
+    by (simp add: comparable_hermitean[unfolded selfadjoint_def])
   from AAF have \<open>B o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L B\<close> if \<open>A o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L A\<close> for F
     by (metis assms cblinfun_assoc_left(1) that)
   then have \<open>B o\<^sub>C\<^sub>L A = A o\<^sub>C\<^sub>L B\<close>
@@ -710,7 +711,7 @@ proof -
   qed
   
   from eq_sq have \<open>sqrt_op a = sq\<close>
-    by (simp add: \<open>0 \<le> a\<close> comparable_hermitean)
+    by (simp add: \<open>0 \<le> a\<close> comparable_hermitean[unfolded selfadjoint_def])
   moreover from eq_sq have \<open>b = sq\<close>
     by (simp add: assms(1) assms(2))
   ultimately show \<open>b = sqrt_op a\<close>
@@ -1066,7 +1067,7 @@ qed
 
 
 (* TODO move to partial_isometry-theory *)
-(* TODO might replace partial_isometry_square_proj by this *)
+(* TODO might replace partial_isometry_square_proj by this *) thm partial_isometry_square_proj
 lemma partial_isometry_iff_square_proj:
   \<comment> \<open>@{cite conway2013course}, Exercise VIII.3.15\<close>
   fixes A :: \<open>'a :: chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b :: chilbert_space\<close>

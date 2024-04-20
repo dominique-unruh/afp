@@ -38,15 +38,16 @@ declare cblinfun.scaleC_left[simp]
 lemma cblinfun_apply_clinear[simp]: \<open>clinear (cblinfun_apply A)\<close>
   using bounded_clinear.axioms(1) cblinfun_apply by blast
 
-(* TODO: Strengthen: only norm \<psi> = 1, see Kraus_Maps *)
 lemma cblinfun_cinner_eqI:
   fixes A B :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
-  assumes \<open>\<And>\<psi>. cinner \<psi> (A *\<^sub>V \<psi>) = cinner \<psi> (B *\<^sub>V \<psi>)\<close>
+  assumes \<open>\<And>\<psi>. norm \<psi> = 1 \<Longrightarrow> cinner \<psi> (A *\<^sub>V \<psi>) = cinner \<psi> (B *\<^sub>V \<psi>)\<close>
   shows \<open>A = B\<close>
 proof -
   define C where \<open>C = A - B\<close>
   have C0[simp]: \<open>cinner \<psi> (C \<psi>) = 0\<close> for \<psi>
-    by (simp add: C_def assms cblinfun.diff_left cinner_diff_right)
+    apply (cases \<open>\<psi> = 0\<close>)
+    using assms[of \<open>sgn \<psi>\<close>]
+    by (simp_all add: C_def norm_sgn sgn_div_norm cblinfun.scaleR_right assms cblinfun.diff_left cinner_diff_right)
   { fix f g \<alpha>
     have \<open>0 = cinner (f + \<alpha> *\<^sub>C g) (C *\<^sub>V (f + \<alpha> *\<^sub>C g))\<close>
       by (simp add: cinner_diff_right minus_cblinfun.rep_eq)
@@ -1127,6 +1128,9 @@ lift_definition
   adj :: "'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner \<Rightarrow> 'b \<Rightarrow>\<^sub>C\<^sub>L 'a" ("_*" [99] 100)
   is cadjoint by (fact cadjoint_bounded_clinear)
 
+definition selfadjoint :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow> bool\<close> where
+  \<open>selfadjoint a \<longleftrightarrow> a* = a\<close>
+
 lemma id_cblinfun_adjoint[simp]: "id_cblinfun* = id_cblinfun"
   by (metis adj.rep_eq apply_id_cblinfun cadjoint_id cblinfun_apply_inject)
 
@@ -1188,6 +1192,9 @@ lemma cinner_adj_right:
 
 lemma adj_0[simp]: \<open>0* = 0\<close>
   by (metis add_cancel_right_left adj_plus)
+
+lemma selfadjoint_0[simp]: \<open>selfadjoint 0\<close>
+  by (simp add: selfadjoint_def)
 
 lemma norm_adj[simp]: \<open>norm (A*) = norm A\<close>
   for A :: \<open>'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'c::complex_inner\<close>
@@ -1360,9 +1367,8 @@ lemma has_sum_adj:
 lemma adj_minus: \<open>(A - B)* = (A*) - (B*)\<close>
   by (metis add_implies_diff adj_plus diff_add_cancel)
 
-(* TODO: use constant "selfadjoint A" *)
-lemma cinner_hermitian_real: \<open>x \<bullet>\<^sub>C (A *\<^sub>V x) \<in> \<real>\<close> if \<open>A* = A\<close>
-  by (metis Reals_cnj_iff cinner_adj_right cinner_commute' that)
+lemma cinner_hermitian_real: \<open>x \<bullet>\<^sub>C (A *\<^sub>V x) \<in> \<real>\<close> if \<open>selfadjoint A\<close>
+  by (metis Reals_cnj_iff cinner_adj_right cinner_commute' that selfadjoint_def)
 
 lemma adj_inject: \<open>adj a = adj b \<longleftrightarrow> a = b\<close>
   by (metis (no_types, opaque_lifting) adj_minus eq_iff_diff_eq_0 norm_adj norm_eq_zero)
@@ -3314,8 +3320,7 @@ end
 lemma id_cblinfun_eq_1[simp]: \<open>id_cblinfun = 1\<close>
   by transfer auto
 
-(* TODO rename: apply \<rightarrow> cblinfun_compose *)
-lemma one_dim_apply_is_times[simp]:
+lemma one_dim_cblinfun_compose_is_times[simp]:
   fixes A :: "'a::one_dim \<Rightarrow>\<^sub>C\<^sub>L 'a" and B :: "'a \<Rightarrow>\<^sub>C\<^sub>L 'a"
   shows "A o\<^sub>C\<^sub>L B = A * B"
   by transfer simp
@@ -3552,10 +3557,8 @@ lemma positive_cblinfunI: \<open>A \<ge> 0\<close> if \<open>\<And>x. norm x = 1
   using that by simp
 
 lemma less_eq_scaled_id_norm: 
-  assumes \<open>norm A \<le> c\<close> and \<open>A = A*\<close>
-  shows \<open>A \<le> complex_of_real c *\<^sub>C id_cblinfun\<close>
-(* TODO: should be *\<^sub>R instead *)
-(* TODO: should assume "selfadjoint A" *)
+  assumes \<open>norm A \<le> c\<close> and \<open>selfadjoint A\<close>
+  shows \<open>A \<le> c *\<^sub>R id_cblinfun\<close>
 proof -
   have \<open>x \<bullet>\<^sub>C (A *\<^sub>V x) \<le> complex_of_real c\<close> if \<open>norm x = 1\<close> for x
   proof -
@@ -3570,10 +3573,10 @@ proof -
     moreover have \<open>x \<bullet>\<^sub>C (A *\<^sub>V x) \<in> \<real>\<close>
       by (metis assms(2) cinner_hermitian_real)
     ultimately show ?thesis
-      by (metis cnorm_le_square complex_of_real_cmod complex_of_real_mono complex_of_real_nn_iff dual_order.trans reals_zero_comparable)
+      by (smt (verit) Re_complex_of_real Reals_cases complex_of_real_nn_iff less_eq_complex_def norm_of_real reals_zero_comparable)
   qed
   then show ?thesis
-    by (smt (verit) cblinfun.scaleC_left cblinfun_id_cblinfun_apply cblinfun_leI cinner_scaleC_right cnorm_eq_1 mult_cancel_left2)
+    by (smt (verit) cblinfun.scaleC_left cblinfun_id_cblinfun_apply cblinfun_leI cinner_scaleC_right cnorm_eq_1 mult_cancel_left2 scaleR_scaleC)
 qed
 
 (* Note: this does not require B to be a square operator *)
@@ -3612,19 +3615,17 @@ proof (rule cblinfun_eq_0_on_UNIV_span[where basis=UNIV]; simp)
     by simp
 qed
 
-(* TODO formulate using "selfadjoint" *)
 lemma comparable_hermitean:
   assumes \<open>a \<le> b\<close>
-  assumes \<open>a* = a\<close>
-  shows \<open>b* = b\<close>
-  by (smt (verit, best) assms(1) assms(2) cinner_hermitian_real cinner_real_hermiteanI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def)
+  assumes \<open>selfadjoint a\<close>
+  shows \<open>selfadjoint b\<close>
+  by (smt (verit, best) assms(1) assms(2) cinner_hermitian_real cinner_real_hermiteanI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def selfadjoint_def)
 
-(* TODO formulate using "selfadjoint" *)
 lemma comparable_hermitean':
   assumes \<open>a \<le> b\<close>
-  assumes \<open>b* = b\<close>
-  shows \<open>a* = a\<close>
-  by (smt (verit, best) assms(1) assms(2) cinner_hermitian_real cinner_real_hermiteanI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def)
+  assumes \<open>selfadjoint b\<close>
+  shows \<open>selfadjoint a\<close>
+  by (smt (verit, best) assms(1) assms(2) cinner_hermitian_real cinner_real_hermiteanI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def selfadjoint_def)
 
 lemma Proj_mono: \<open>Proj S \<le> Proj T \<longleftrightarrow> S \<le> T\<close>
 proof (rule iffI)
@@ -4360,7 +4361,7 @@ proof transfer
     finally have \<open>f t = (norm t)*(norm t)\<close>
       by blast
     thus ?thesis
-      by (metis False Re_complex_of_real \<open>\<And>x. f x = cinner t x\<close> cinner_ge_zero complex_of_real_cmod nonzero_divide_eq_eq)
+      by (metis \<open>f t = t \<bullet>\<^sub>C t\<close> norm_eq_sqrt_cinner norm_ge_zero real_div_sqrt)
   qed
   ultimately have \<open>Sup {(norm (f x)) / (norm x)| x. True} = norm t\<close>
     by (smt cSup_eq_maximum mem_Collect_eq)

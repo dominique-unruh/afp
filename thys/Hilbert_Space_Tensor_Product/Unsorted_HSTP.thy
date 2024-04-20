@@ -3406,10 +3406,6 @@ by -
     by (auto intro!: eigenvaluesI[where h=f])
 qed
 
-(* TODO replace *) thm complex_of_real_cmod
-lemma complex_of_real_cmod: \<open>complex_of_real (cmod x) = abs x\<close>
-  by (simp add: abs_complex_def)
-
 
 lemma norm_is_eigenvalue:
   (* TODO Cite: Conway, Functional, Lemma II.5.9 *)

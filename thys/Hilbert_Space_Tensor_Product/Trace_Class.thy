@@ -168,7 +168,7 @@ proof -
   define B where \<open>B = sqrt_op (abs_op A)\<close>
   have \<open>complex_of_real (cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) = (B* *\<^sub>V B*\<^sub>V e) \<bullet>\<^sub>C e\<close> for e
     apply (simp add: B_def positive_hermitianI flip: cblinfun_apply_cblinfun_compose)
-    by (metis (no_types, lifting) abs_op_pos cblinfun.zero_left cinner_commute cinner_zero_right complex_cnj_complex_of_real complex_of_real_cmod less_eq_cblinfun_def)
+    by (metis abs_op_pos abs_pos cinner_commute cinner_pos_if_pos complex_cnj_complex_of_real complex_of_real_cmod)
   also have \<open>\<dots> e = complex_of_real ((norm (B *\<^sub>V e))\<^sup>2)\<close> for e
     apply (subst cdot_square_norm[symmetric])
     apply (subst cinner_adj_left[symmetric])
@@ -957,7 +957,10 @@ proof intro_classes
   show \<open>norm x = sqrt (cmod (x \<bullet>\<^sub>C x))\<close>
     apply transfer
     apply (auto simp: hilbert_schmidt_norm_def)
-    by (metis abs_op_def complex_of_real_cmod complex_of_real_nn_iff of_real_eq_iff positive_cblinfun_squareI sqrt_op_unique trace_abs_op trace_norm_nneg)
+try0
+    sledgehammer [dont_slice]
+    by -
+        by (metis abs_op_def complex_of_real_cmod complex_of_real_nn_iff of_real_eq_iff positive_cblinfun_squareI sqrt_op_unique trace_abs_op trace_norm_nneg)
 qed
 end
 
