@@ -821,8 +821,8 @@ next
         fix x :: 'a
         have \<open>x \<in> scaleR (nat (ceiling (norm x)) + 1) ` cball (0::'a) 1\<close>
           apply (rule image_eqI[where x=\<open>x /\<^sub>R (nat (ceiling (norm x)) + 1)\<close>])
-           apply (auto intro!: simp: )
-          by (smt (verit, ccfv_threshold) left_inverse mult_minus_left mult_mono' norm_ge_zero of_nat_ceiling)
+           apply (metis add_is_0 divideR_right of_nat_eq_0_iff zero_neq_one)
+          by (smt (verit, del_insts) add_is_0 le_add_same_cancel1 left_inverse linordered_field_class.inverse_nonnegative_iff_nonnegative mem_cball_0 mult_left_mono nat_ceiling_le_eq norm_scaleR of_nat_0_le_iff of_nat_eq_0_iff zero_less_one_class.zero_le_one zero_neq_one)
         then show \<open>x \<in> (\<Union>x::nat. (*\<^sub>R) (real x) ` cball 0 1)\<close>
           by blast
       qed
