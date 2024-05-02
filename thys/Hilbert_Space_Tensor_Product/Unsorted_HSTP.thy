@@ -1868,8 +1868,6 @@ qed
 lemma sandwich_mono: \<open>sandwich A B \<le> sandwich A C\<close> if \<open>B \<le> C\<close>
   by (metis cblinfun.real.diff_right diff_ge_0_iff_ge sandwich_pos that)
 
-lemma abs_op_id_on_pos: \<open>a \<ge> 0 \<Longrightarrow> abs_op a = a\<close>
-  using abs_opI by force
 
 lemma trace_norm_bounded:
   fixes A B :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
@@ -2428,9 +2426,6 @@ lemma bounded_clinear_trace_tc[bounded_clinear, simp]: \<open>bounded_clinear tr
   apply (rule bounded_clinearI[where K=1])
   by (auto simp: trace_tc_scaleC trace_tc_plus intro!: trace_tc_norm)
 
-
-lemma trace_norm_pos: \<open>trace_norm A = trace A\<close> if \<open>A \<ge> 0\<close>
-  by (metis abs_op_id_on_pos that trace_abs_op)
 
 lemma norm_tc_pos: \<open>norm A = trace_tc A\<close> if \<open>A \<ge> 0\<close>
    using that apply transfer by (simp add: trace_norm_pos)

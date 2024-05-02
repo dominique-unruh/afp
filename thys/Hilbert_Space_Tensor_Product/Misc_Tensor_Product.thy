@@ -292,7 +292,11 @@ definition \<open>infsum_in T f A = (let L = Collect (has_sum_in T f A) in if ca
 (* The reason why we return 0 also in the case that there are several solutions is to make sure infsum_in is parametric.
 (See lemma 'infsum_in_parametric' below. *)
 
-definition hausdorff where \<open>hausdorff T \<longleftrightarrow> (\<forall>x \<in> topspace T. \<forall>y \<in> topspace T. x \<noteq> y \<longrightarrow> (\<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
+(* TODO: Legacy *)
+abbreviation (input) \<open>hausdorff \<equiv> Hausdorff_space\<close>
+(* TODO: Legacy *)
+lemma hausdorff_def: \<open>hausdorff T \<longleftrightarrow> (\<forall>x \<in> topspace T. \<forall>y \<in> topspace T. x \<noteq> y \<longrightarrow> (\<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
+  by (auto simp: Hausdorff_space_def disjnt_def)
 
 lemma hausdorffI: 
   assumes \<open>\<And>x y. x \<in> topspace T \<Longrightarrow> y \<in> topspace T \<Longrightarrow> x \<noteq> y \<Longrightarrow> \<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}\<close>
@@ -2031,6 +2035,11 @@ lemma choice3: \<open>\<exists>f. (\<forall>x. Q1 x (f x)) \<and> (\<forall>x. Q
 lemma choice4: \<open>\<exists>f. (\<forall>x. Q1 x (f x)) \<and> (\<forall>x. Q2 x (f x)) \<and> (\<forall>x. Q3 x (f x)) \<and> (\<forall>x. Q4 x (f x))\<close>
   if \<open>\<forall>x. \<exists>y. Q1 x y \<and> Q2 x y \<and> Q3 x y \<and> Q4 x y\<close>
   by (meson that)
+
+lemma choice5: \<open>\<exists>f. (\<forall>x. Q1 x (f x)) \<and> (\<forall>x. Q2 x (f x)) \<and> (\<forall>x. Q3 x (f x)) \<and> (\<forall>x. Q4 x (f x)) \<and> (\<forall>x. Q5 x (f x))\<close>
+  if \<open>\<forall>x. \<exists>y. Q1 x y \<and> Q2 x y \<and> Q3 x y \<and> Q4 x y \<and> Q5 x y\<close>
+  apply (simp only: flip: all_conj_distrib)
+  using that by (rule choice)
 
 definition (in order) \<open>is_Sup X s \<longleftrightarrow> (\<forall>x\<in>X. x \<le> s) \<and> (\<forall>y. (\<forall>x\<in>X. x \<le> y) \<longrightarrow> s \<le> y)\<close>
 definition (in order) \<open>has_Sup X \<longleftrightarrow> (\<exists>s. is_Sup X s)\<close>

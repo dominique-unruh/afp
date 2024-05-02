@@ -1052,6 +1052,9 @@ lemma abs_opI:
   shows \<open>a = abs_op b\<close>
   by (simp add: abs_op_def assms(1) assms(2) sqrt_op_unique)
 
+lemma abs_op_id_on_pos: \<open>a \<ge> 0 \<Longrightarrow> abs_op a = a\<close>
+  using abs_opI by force
+
 lemma norm_abs_op[simp]: \<open>norm (abs_op a) = norm a\<close> 
   for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
 proof -

@@ -251,6 +251,10 @@ next
     by (simp add: trace_def trace_norm_def)
 qed
 
+lemma trace_norm_pos: \<open>trace_norm A = trace A\<close> if \<open>A \<ge> 0\<close>
+  by (metis abs_op_id_on_pos that trace_abs_op)
+
+
 lemma trace_norm_alt_def:
   assumes \<open>is_onb B\<close>
   shows \<open>trace_norm A = (if trace_class A then (\<Sum>\<^sub>\<infinity>e\<in>B. cmod (e  \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) else 0)\<close>
@@ -957,10 +961,7 @@ proof intro_classes
   show \<open>norm x = sqrt (cmod (x \<bullet>\<^sub>C x))\<close>
     apply transfer
     apply (auto simp: hilbert_schmidt_norm_def)
-try0
-    sledgehammer [dont_slice]
-    by -
-        by (metis abs_op_def complex_of_real_cmod complex_of_real_nn_iff of_real_eq_iff positive_cblinfun_squareI sqrt_op_unique trace_abs_op trace_norm_nneg)
+    by (metis Re_complex_of_real cmod_Re positive_cblinfun_squareI trace_norm_pos trace_pos)
 qed
 end
 
