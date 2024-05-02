@@ -39,6 +39,9 @@ proof (rule Set.set_eqI)
     by -
 qed
 
+instance cblinfun :: (chilbert_space,chilbert_space) ordered_comm_monoid_add
+  by intro_classes
+
 
 unbundle no_cblinfun_notation
 

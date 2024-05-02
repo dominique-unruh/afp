@@ -1156,5 +1156,34 @@ proof -
     by (simp add: Proj_ortho_compl flip: cblinfun_compose_add_right)
 qed
 
+lemma norm_cblinfun_mono:
+\<comment> \<open>Would logically belong in \<^theory>\<open>Complex_Bounded_Operators.Complex_Bounded_Linear_Function\<close>
+      but uses \<^const>\<open>sqrt_op\<close> from this theory in the proof.\<close>
+  fixes A B :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
+  assumes \<open>A \<ge> 0\<close>
+  assumes \<open>A \<le> B\<close>
+  shows \<open>norm A \<le> norm B\<close>
+proof -
+  have \<open>B \<ge> 0\<close>
+    using assms by force
+  have sqrtA: \<open>(sqrt_op A)* o\<^sub>C\<^sub>L sqrt_op A = A\<close>
+    by (simp add: \<open>A \<ge> 0\<close> positive_hermitianI)
+  have sqrtB: \<open>(sqrt_op B)* o\<^sub>C\<^sub>L sqrt_op B = B\<close>
+    by (simp add: \<open>B \<ge> 0\<close> positive_hermitianI)
+  have \<open>norm (sqrt_op A \<psi>) \<le> norm (sqrt_op B \<psi>)\<close> for \<psi>
+    apply (auto intro!: cnorm_le[THEN iffD2]
+        simp: sqrtA sqrtB
+        simp flip: cinner_adj_right cblinfun_apply_cblinfun_compose)
+    using assms less_eq_cblinfun_def by auto
+  then have \<open>norm (sqrt_op A) \<le> norm (sqrt_op B)\<close>
+    by (meson dual_order.trans norm_cblinfun norm_cblinfun_bound norm_ge_zero)
+  moreover have \<open>norm A = (norm (sqrt_op A))\<^sup>2\<close>
+    by (metis norm_AadjA sqrtA)
+  moreover have \<open>norm B = (norm (sqrt_op B))\<^sup>2\<close>
+    by (metis norm_AadjA sqrtB)
+  ultimately show \<open>norm A \<le> norm B\<close>
+    by force
+qed
+
 
 end

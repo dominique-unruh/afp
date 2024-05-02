@@ -2099,4 +2099,176 @@ lemma SMT_choices:
   by metis+
 
 
+lemma closedin_pullback_topology:
+  "closedin (pullback_topology A f T) S \<longleftrightarrow> (\<exists>C. closedin T C \<and> S = f-`C \<inter> A)"
+proof (rule iffI)
+  define TT PT where \<open>TT = topspace T\<close> and \<open>PT = topspace (pullback_topology A f T)\<close>
+  assume closed: \<open>closedin (pullback_topology A f T) S\<close>
+  then have \<open>S \<subseteq> PT\<close>
+    using PT_def closedin_subset by blast
+  from closed have \<open>openin (pullback_topology A f T) (PT - S)\<close>
+    by (auto intro!: simp: closedin_def PT_def)
+  then obtain U where \<open>openin T U\<close> and S_fUA: \<open>PT - S = f -` U \<inter> A\<close>
+    by (auto simp: openin_pullback_topology)
+  define C where \<open>C = TT - U\<close>
+  have \<open>closedin T C\<close>
+    using C_def TT_def \<open>openin T U\<close> by blast
+  moreover have \<open>S = f -` C \<inter> A\<close>
+    using S_fUA \<open>S \<subseteq> PT\<close>
+    apply (simp only: C_def PT_def TT_def)
+    by (metis Diff_Diff_Int Diff_Int_distrib2  inf.absorb_iff2 topspace_pullback_topology vimage_Diff)
+  ultimately show \<open>\<exists>C. closedin T C \<and> S = f -` C \<inter> A\<close>
+    by auto
+next
+  assume \<open>\<exists>U. closedin T U \<and> S = f -` U \<inter> A\<close>
+  then show \<open>closedin (pullback_topology A f T) S\<close>
+    apply (simp add: openin_pullback_topology closedin_def topspace_pullback_topology)
+    by blast
+qed
+
+
+lemma regular_space_pullback[intro]:
+  assumes \<open>regular_space T\<close>
+  shows \<open>regular_space (pullback_topology A f T)\<close>
+proof (unfold regular_space_def, intro allI impI)
+  define TT PT where \<open>TT = topspace T\<close> and \<open>PT = topspace (pullback_topology A f T)\<close>
+  fix S y
+  assume asm: \<open>closedin (pullback_topology A f T) S \<and> y \<in> PT - S\<close>
+  from asm obtain C where \<open>closedin T C\<close> and S_fCA: \<open>S = f -` C \<inter> A\<close>
+    by (auto simp: closedin_pullback_topology)
+  from asm S_fCA
+  have \<open>f y \<in> TT - C\<close>
+    by (auto simp: PT_def TT_def topspace_pullback_topology)
+  then obtain U' V' where \<open>openin T U'\<close> and \<open>openin T V'\<close> and \<open>f y \<in> U'\<close> and \<open>C \<subseteq> V'\<close> and \<open>U' \<inter> V' = {}\<close>
+    by (metis TT_def \<open>closedin T C\<close> assms regular_space_def disjnt_def)
+  define U V where \<open>U = f -` U' \<inter> A\<close> and \<open>V = f -` V' \<inter> A\<close>
+  have \<open>openin (pullback_topology A f T) U\<close>
+    using U_def \<open>openin T U'\<close> openin_pullback_topology by blast
+  moreover have \<open>openin (pullback_topology A f T) V\<close>
+    using V_def \<open>openin T V'\<close> openin_pullback_topology by blast
+  moreover have \<open>y \<in> U\<close>
+    by (metis DiffD1 Int_iff PT_def U_def \<open>f y \<in> U'\<close> asm topspace_pullback_topology vimageI)
+  moreover have \<open>S \<subseteq> V\<close>
+    using S_fCA V_def \<open>C \<subseteq> V'\<close> by blast
+  moreover have \<open>disjnt U V\<close>
+    using U_def V_def \<open>U' \<inter> V' = {}\<close> disjnt_def by blast
+
+  ultimately show \<open>\<exists>U V. openin (pullback_topology A f T) U \<and> openin (pullback_topology A f T) V \<and> y \<in> U \<and> S \<subseteq> V \<and> disjnt U V\<close>
+    apply (rule_tac exI[of _ U], rule_tac exI[of _ V])
+    by auto
+qed
+
+lemma t3_space_euclidean_regular[iff]: \<open>regular_space (euclidean :: 'a::t3_space topology)\<close>
+  using t3_space
+  apply (simp add: regular_space_def disjnt_def)
+  by fast
+
+definition increasing_filter :: \<open>'a::order filter \<Rightarrow> bool\<close> where
+  \<open>increasing_filter F \<longleftrightarrow> (\<forall>\<^sub>F x in F. \<forall>\<^sub>F y in F. y \<ge> x)\<close>
+
+lemma increasing_filtermap:
+  fixes F :: \<open>'a::order filter\<close> and f :: \<open>'a \<Rightarrow> 'b::order\<close> and X :: \<open>'a set\<close>
+  assumes increasing: \<open>increasing_filter F\<close>
+  assumes mono: \<open>mono_on X f\<close>
+  assumes ev_X: \<open>eventually (\<lambda>x. x \<in> X) F\<close>
+  shows \<open>increasing_filter (filtermap f F)\<close>
+proof -
+  from increasing
+  have incr: \<open>\<forall>\<^sub>F x in F. \<forall>\<^sub>F y in F. x \<le> y\<close>
+    apply (simp add: increasing_filter_def)
+    by -
+  have \<open>\<forall>\<^sub>F x in F. \<forall>\<^sub>F y in F. f x \<le> f y\<close>
+  proof (rule eventually_elim2[OF ev_X incr])
+    fix x
+    assume \<open>x \<in> X\<close>
+    assume \<open>\<forall>\<^sub>F y in F. x \<le> y\<close>
+    then show \<open>\<forall>\<^sub>F y in F. f x \<le> f y\<close>
+    proof (rule eventually_elim2[OF ev_X])
+      fix y assume \<open>y \<in> X\<close> and \<open>x \<le> y\<close>
+      with \<open>x \<in> X\<close> show \<open>f x \<le> f y\<close>
+        using mono by (simp add: mono_on_def)
+    qed
+  qed
+  then show \<open>increasing_filter (filtermap f F)\<close>
+    by (simp add: increasing_filter_def eventually_filtermap)
+qed
+
+(* TODO: reference: https://math.stackexchange.com/a/4749216/403528 *)
+lemma increasing_finite_subsets_at_top[simp]: \<open>increasing_filter (finite_subsets_at_top X)\<close>
+  apply (simp add: increasing_filter_def eventually_finite_subsets_at_top)
+  by force
+
+(* TODO: reference: https://math.stackexchange.com/a/4749216/403528 *)
+lemma monotone_convergence:
+  fixes f :: \<open>'b \<Rightarrow> 'a::{order_topology, conditionally_complete_linorder}\<close>
+  assumes bounded: \<open>\<forall>\<^sub>F x in F. f x \<le> B\<close>
+  assumes increasing: \<open>increasing_filter (filtermap f F)\<close>
+  shows \<open>\<exists>l. (f \<longlongrightarrow> l) F\<close>
+proof (cases \<open>F \<noteq> \<bottom>\<close>)
+  case True
+  note [simp] = True
+  define S l where \<open>S x \<longleftrightarrow> (\<forall>\<^sub>F y in F. f y \<ge> x) \<and> x \<le> B\<close> 
+    and \<open>l = Sup (Collect S)\<close> for x
+  from bounded increasing
+  have ev_S: \<open>eventually S (filtermap f F)\<close>
+    by (auto intro!: eventually_conj simp: S_def[abs_def] increasing_filter_def eventually_filtermap)
+  have bdd_S: \<open>bdd_above (Collect S)\<close>
+    by (auto simp: S_def)
+  have S_nonempty: \<open>Collect S \<noteq> {}\<close>
+    using ev_S
+    by (metis Collect_empty_eq_bot Set.empty_def True eventually_False filtermap_bot_iff)
+  have \<open>(f \<longlongrightarrow> l) F\<close>
+  proof (rule order_tendstoI; rename_tac x)
+    fix x
+    assume \<open>x < l\<close>
+    then obtain s where \<open>S s\<close> and \<open>x < s\<close>
+      using less_cSupD[OF S_nonempty] l_def
+      by blast
+    then 
+    show \<open>\<forall>\<^sub>F y in F. x < f y\<close>
+      using S_def basic_trans_rules(22) eventually_mono by force
+  next
+    fix x
+    assume asm: \<open>l < x\<close>
+    from ev_S
+    show \<open>\<forall>\<^sub>F y in F. f y < x\<close>
+      unfolding eventually_filtermap
+      apply (rule eventually_mono)
+      using asm
+      by (metis bdd_S cSup_upper dual_order.strict_trans2 l_def mem_Collect_eq)
+  qed
+  then show \<open>\<exists>l. (f \<longlongrightarrow> l) F\<close>
+    by (auto intro!: exI[of _ l] simp: filterlim_def)
+next
+  case False
+  then show \<open>\<exists>l. (f \<longlongrightarrow> l) F\<close>
+    by (auto intro!: exI)
+qed
+
+
+lemma monotone_convergence_complex:
+  fixes f :: \<open>'b \<Rightarrow> complex\<close>
+  assumes bounded: \<open>\<forall>\<^sub>F x in F. f x \<le> B\<close>
+  assumes increasing: \<open>increasing_filter (filtermap f F)\<close>
+  shows \<open>\<exists>l. (f \<longlongrightarrow> l) F\<close>
+proof -
+  have inc_re: \<open>increasing_filter (filtermap (\<lambda>x. Re (f x)) F)\<close>
+    using increasing_filtermap[OF increasing, where f=Re and X=UNIV]
+    by (simp add: less_eq_complex_def[abs_def] mono_def monotone_def filtermap_filtermap)
+  from bounded have \<open>\<forall>\<^sub>F x in F. Re (f x) \<le> Re B\<close>
+    using eventually_mono less_eq_complex_def by fastforce
+  from monotone_convergence[OF this inc_re]
+  obtain re where lim_re: \<open>((\<lambda>x. Re (f x)) \<longlongrightarrow> re) F\<close>
+    by auto
+  from bounded have \<open>\<forall>\<^sub>F x in F. Im (f x) = Im B\<close>
+    by (simp add: less_eq_complex_def[abs_def] eventually_mono)
+  then have lim_im: \<open>((\<lambda>x. Im (f x)) \<longlongrightarrow> Im B) F\<close>
+    by (simp add: tendsto_eventually)
+  from lim_re lim_im have \<open>(f \<longlongrightarrow> Complex re (Im B)) F\<close>
+    by (simp add: tendsto_complex_iff)
+  then show ?thesis
+    by auto
+qed
+
+
 end

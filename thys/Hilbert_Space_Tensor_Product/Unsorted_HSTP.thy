@@ -1838,33 +1838,6 @@ proof -
     by auto
 qed
 
-lemma norm_cblinfun_mono:
-  fixes A B :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
-  assumes \<open>A \<ge> 0\<close>
-  assumes \<open>A \<le> B\<close>
-  shows \<open>norm A \<le> norm B\<close>
-proof -
-  have \<open>B \<ge> 0\<close>
-    using assms by force
-  have sqrtA: \<open>(sqrt_op A)* o\<^sub>C\<^sub>L sqrt_op A = A\<close>
-    by (simp add: \<open>A \<ge> 0\<close> positive_hermitianI)
-  have sqrtB: \<open>(sqrt_op B)* o\<^sub>C\<^sub>L sqrt_op B = B\<close>
-    by (simp add: \<open>B \<ge> 0\<close> positive_hermitianI)
-  have \<open>norm (sqrt_op A \<psi>) \<le> norm (sqrt_op B \<psi>)\<close> for \<psi>
-    apply (auto intro!: cnorm_le[THEN iffD2]
-        simp: sqrtA sqrtB
-        simp flip: cinner_adj_right cblinfun_apply_cblinfun_compose)
-    using assms less_eq_cblinfun_def by auto
-  then have \<open>norm (sqrt_op A) \<le> norm (sqrt_op B)\<close>
-    by (meson dual_order.trans norm_cblinfun norm_cblinfun_bound norm_ge_zero)
-  moreover have \<open>norm A = (norm (sqrt_op A))\<^sup>2\<close>
-    by (metis norm_AadjA sqrtA)
-  moreover have \<open>norm B = (norm (sqrt_op B))\<^sup>2\<close>
-    by (metis norm_AadjA sqrtB)
-  ultimately show \<open>norm A \<le> norm B\<close>
-    by force
-qed
-
 lemma sandwich_mono: \<open>sandwich A B \<le> sandwich A C\<close> if \<open>B \<le> C\<close>
   by (metis cblinfun.real.diff_right diff_ge_0_iff_ge sandwich_pos that)
 
@@ -2149,57 +2122,12 @@ next
     by (subst zero, simp)+
 qed
 
-lemma has_sum_mono_neutral_wot:
-  fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
-  assumes \<open>has_sum_in cweak_operator_topology f A a\<close> and "has_sum_in cweak_operator_topology g B b"
-  assumes \<open>\<And>x. x \<in> A\<inter>B \<Longrightarrow> f x \<le> g x\<close>
-  assumes \<open>\<And>x. x \<in> A-B \<Longrightarrow> f x \<le> 0\<close>
-  assumes \<open>\<And>x. x \<in> B-A \<Longrightarrow> g x \<ge> 0\<close>
-  shows "a \<le> b"
-proof -
-  have \<psi>_eq: \<open>\<psi> \<bullet>\<^sub>C a \<psi> \<le> \<psi> \<bullet>\<^sub>C b \<psi>\<close> for \<psi>
-  proof -
-    from assms(1)
-    have sumA: \<open>((\<lambda>x. \<psi> \<bullet>\<^sub>C f x \<psi>) has_sum \<psi> \<bullet>\<^sub>C a \<psi>) A\<close>
-      by (simp add: has_sum_in_def has_sum_def limitin_cweak_operator_topology
-          cblinfun.sum_left cinner_sum_right)
-    from assms(2)
-    have sumB: \<open>((\<lambda>x. \<psi> \<bullet>\<^sub>C g x \<psi>) has_sum \<psi> \<bullet>\<^sub>C b \<psi>) B\<close>
-      by (simp add: has_sum_in_def has_sum_def limitin_cweak_operator_topology
-          cblinfun.sum_left cinner_sum_right)
-    from sumA sumB
-    show ?thesis
-      apply (rule has_sum_mono_neutral_complex)
-      using assms(3-5)
-      by (auto simp: less_eq_cblinfun_def)
-  qed
-  then show \<open>a \<le> b\<close>
-    by (simp add: less_eq_cblinfun_def)
-qed
-
-lemma has_sum_mono_wot:
-  fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
-  assumes "has_sum_in cweak_operator_topology f A x" and "has_sum_in cweak_operator_topology g A y"
-  assumes \<open>\<And>x. x \<in> A \<Longrightarrow> f x \<le> g x\<close>
-  shows "x \<le> y"
-  using assms has_sum_mono_neutral_wot by force
-
 lemma infsum_mono_wot:
   fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
   assumes "summable_on_in cweak_operator_topology f A" and "summable_on_in cweak_operator_topology g A"
   assumes \<open>\<And>x. x \<in> A \<Longrightarrow> f x \<le> g x\<close>
   shows "infsum_in cweak_operator_topology f A \<le> infsum_in cweak_operator_topology g A"
   by (meson assms has_sum_in_infsum_in has_sum_mono_wot hausdorff_cweak_operator_topology)
-
-lemma infsum_mono_neutral_wot:
-  fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
-  assumes "summable_on_in cweak_operator_topology f A" and "summable_on_in cweak_operator_topology g B"
-  assumes \<open>\<And>x. x \<in> A\<inter>B \<Longrightarrow> f x \<le> g x\<close>
-  assumes \<open>\<And>x. x \<in> A-B \<Longrightarrow> f x \<le> 0\<close>
-  assumes \<open>\<And>x. x \<in> B-A \<Longrightarrow> g x \<ge> 0\<close>
-  shows "infsum_in cweak_operator_topology f A \<le> infsum_in cweak_operator_topology g B"
-  using assms
-  by (metis (mono_tags, lifting) has_sum_in_infsum_in has_sum_mono_neutral_wot hausdorff_cweak_operator_topology)
 
 lemma has_sum_mono_neutral_cblinfun:
   fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
@@ -5682,6 +5610,12 @@ lemma trace_tc_mono:
 
 lemma trace_tc_0[simp]: \<open>trace_tc 0 = 0\<close>
   apply transfer' by simp
+
+lift_definition adj_wot :: \<open>('a::chilbert_space, 'b::complex_inner) cblinfun_wot \<Rightarrow> ('b, 'a) cblinfun_wot\<close> is adj.
+lift_definition cblinfun_compose_wot :: \<open>('a::complex_inner, 'b::complex_inner) cblinfun_wot \<Rightarrow>
+    ('c::complex_normed_vector, 'a) cblinfun_wot \<Rightarrow>
+    ('c, 'b) cblinfun_wot\<close> is cblinfun_compose.
+
 
 
 end
