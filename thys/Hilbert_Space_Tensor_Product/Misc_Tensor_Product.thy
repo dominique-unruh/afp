@@ -1520,6 +1520,27 @@ qed
 
 definition \<open>the_default def S = (if card S = 1 then (THE x. x \<in> S) else def)\<close>
 
+lemma card1I:
+  assumes "a \<in> A"
+  assumes "\<And>x. x \<in> A \<Longrightarrow> x = a"
+  shows \<open>card A = 1\<close>
+  by (metis One_nat_def assms(1) assms(2) card_eq_Suc_0_ex1)
+
+lemma the_default_CollectI:
+  assumes "P a"
+    and "\<And>x. P x \<Longrightarrow> x = a"
+  shows "P (the_default d (Collect P))"
+proof -
+  have card: \<open>card (Collect P) = 1\<close>
+    apply (rule card1I)
+    using assms by auto
+  from assms have \<open>P (THE x. P x)\<close>
+    by (rule theI)
+  then show ?thesis
+    by (simp add: the_default_def card)
+qed
+
+
 lemma the_default_singleton[simp]: \<open>the_default def {x} = x\<close>
   unfolding the_default_def by auto
 

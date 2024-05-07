@@ -845,4 +845,9 @@ proof (rule summable_wot_boundedI')
   qed
 qed
 
+lift_definition compose_wot :: \<open>('b::complex_inner,'c::complex_inner) cblinfun_wot \<Rightarrow> ('a::complex_normed_vector,'b) cblinfun_wot \<Rightarrow> ('a,'c) cblinfun_wot\<close> is
+  cblinfun_compose.
+
+
+
 end
