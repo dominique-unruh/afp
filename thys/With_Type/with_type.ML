@@ -7,7 +7,7 @@ type with_type_info = {
                                 The two occurrences of rep_class_data must have different ?'abs *)
   transfer: thm option (* bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (snd rep_class_data r ===> (\<longleftrightarrow>)) (fst rep_class_data (Collect (Domainp r))) class.class *)
                        (* The two occurrences of rep_class_data must have different ?'abs *)
-                       (* class.class is the class-predicate-constant (e.g. semigroup_add.class), possibly curried (e.g. \<lambda>(x,y,z). const x y z) *)
+                       (* class.class is the class-predicate-constant (e.g. semigroup_add.class), possibly uncurried (e.g. \<lambda>(x,y,z). const x y z) *)
 }
 
 val add_with_type_info_global : with_type_info -> theory -> theory
@@ -26,7 +26,10 @@ val get_relator : Proof.context -> string -> (Proof.context -> (typ -> term) -> 
 val get_with_type_info_by_class : Proof.context -> class -> with_type_info option
 
 (* Debug only *)
-val get_all_type_info : Proof.context -> { by_class: with_type_info Symtab.table, by_const: with_type_info Symtab.table, relators: (Proof.context -> (typ -> term) -> typ -> term) Symtab.table }
+val get_all_type_info : Proof.context -> {
+  by_class: with_type_info Symtab.table,
+  by_const: with_type_info Symtab.table,
+  relators: (Proof.context -> (typ -> term) -> typ -> term) Symtab.table }
 
 end = struct
 

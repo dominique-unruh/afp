@@ -1,5 +1,5 @@
 theory With_Type_Inst_HOL
-  imports With_Type Complex_Main
+  imports With_Type_Declare Complex_Main
 begin
 
 setup \<open>With_Type.add_relator_global \<^type_name>\<open>list\<close>
