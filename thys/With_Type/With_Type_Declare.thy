@@ -4,6 +4,36 @@ begin
 
 subsection \<open>Automatic configuration of new class\<close>
 
+lemma bi_unique_left_unique: \<open>bi_unique R \<Longrightarrow> left_unique R\<close>
+  by (simp add: bi_unique_alt_def)
+lemma bi_unique_right_unique: \<open>bi_unique R \<Longrightarrow> right_unique R\<close>
+  by (simp add: bi_unique_alt_def)
+
+
+ML \<open>
+structure With_Type_Declare_Data = Generic_Data (
+  type T = { relators: (Proof.context -> (typ -> term) -> typ -> term) Symtab.table }
+  val empty = { relators = Symtab.empty }
+  fun merge ({relators}, {relators=relators'}) =
+    {relators = Symtab.merge (K true) (relators, relators')}
+)
+
+fun map_relators_generic f = With_Type_Declare_Data.map (fn {relators} => 
+    {relators = f relators})
+
+val get_relators_generic = With_Type_Declare_Data.get #> #relators
+
+fun add_relator_generic typ_name f = map_relators_generic (Symtab.insert (K false) (typ_name, f))
+
+fun add_relator_global typ_name f = Context.theory_map (add_relator_generic typ_name f)
+
+fun get_relator_generic context typ_name = Symtab.lookup (get_relators_generic context) typ_name
+fun get_relator ctxt = get_relator_generic (Context.Proof ctxt)
+
+
+\<close>
+
+
 ML \<open>
 (* TODO: check if Term.strip_comb is a replacement *)
 fun dest_args args (t $ u) = dest_args (u :: args) t
@@ -233,7 +263,7 @@ fun mk_relation_for_type ctxt name_fun (T:typ) = let
     | \<^Type>\<open>itself T\<close> => 
         let val T' = mk_relation_replaceT name_fun T
         in \<^Const>\<open>rel_itself T' T\<close> end
-    | Type(name, _) => (case With_Type.get_relator ctxt name of
+    | Type(name, _) => (case get_relator ctxt name of
                          NONE => raise TYPE("mk_relation_for_type: don't know how to handle type " ^ name, [T,T'], [])
                         | SOME f => \<^try>\<open>f ctxt mk T'
                                     catch e as TYPE _ => raise e
@@ -368,9 +398,9 @@ fun has_tfree (TFree _) = true
 \<close>
 
 setup \<open>
-   With_Type.add_relator_global \<^type_name>\<open>fun\<close> (fn ctxt => fn mk => fn \<^Type>\<open>fun T U\<close> => \<^Term>\<open>rel_fun \<open>mk T\<close> \<open>mk U\<close>\<close> ctxt)
-#> With_Type.add_relator_global \<^type_name>\<open>prod\<close> (fn ctxt => fn mk => fn \<^Type>\<open>prod T U\<close> => \<^Term>\<open>rel_prod \<open>mk T\<close> \<open>mk U\<close>\<close> ctxt)
-#> With_Type.add_relator_global \<^type_name>\<open>set\<close> (fn ctxt => fn mk => fn \<^Type>\<open>set T\<close> => \<^Term>\<open>rel_set \<open>mk T\<close>\<close> ctxt)
+   add_relator_global \<^type_name>\<open>fun\<close> (fn ctxt => fn mk => fn \<^Type>\<open>fun T U\<close> => \<^Term>\<open>rel_fun \<open>mk T\<close> \<open>mk U\<close>\<close> ctxt)
+#> add_relator_global \<^type_name>\<open>prod\<close> (fn ctxt => fn mk => fn \<^Type>\<open>prod T U\<close> => \<^Term>\<open>rel_prod \<open>mk T\<close> \<open>mk U\<close>\<close> ctxt)
+#> add_relator_global \<^type_name>\<open>set\<close> (fn ctxt => fn mk => fn \<^Type>\<open>set T\<close> => \<^Term>\<open>rel_set \<open>mk T\<close>\<close> ctxt)
 \<close>
 
 
@@ -651,6 +681,14 @@ fun create_transfer_thm ctxt class (* rel_const rel_const_def_thm *) = let
   end
 
 \<close>
+
+lemma with_type_split_aux:
+  includes lifting_syntax
+  assumes \<open>(R ===> (\<longleftrightarrow>)) A B\<close>
+  assumes \<open>\<And>x. Domainp R x \<Longrightarrow> C x\<close>
+  shows \<open>(R ===> (\<longleftrightarrow>)) (\<lambda>x. C x \<and> A x) B\<close>
+  by (smt (verit) DomainPI assms(1) assms(2) rel_fun_def)
+
 
 lemma aux: 
   includes lifting_syntax

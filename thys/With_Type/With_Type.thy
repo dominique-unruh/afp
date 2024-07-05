@@ -99,18 +99,6 @@ qed
   using Domainp_pred_fun_eq[OF assms, of S]
   by auto *)
 
-lemma with_type_split_aux:
-  includes lifting_syntax
-  assumes \<open>(R ===> (\<longleftrightarrow>)) A B\<close>
-  assumes \<open>\<And>x. Domainp R x \<Longrightarrow> C x\<close>
-  shows \<open>(R ===> (\<longleftrightarrow>)) (\<lambda>x. C x \<and> A x) B\<close>
-  by (smt (verit) DomainPI assms(1) assms(2) rel_fun_def)
-
-lemma bi_unique_left_unique: \<open>bi_unique R \<Longrightarrow> left_unique R\<close>
-  by (simp add: bi_unique_alt_def)
-lemma bi_unique_right_unique: \<open>bi_unique R \<Longrightarrow> right_unique R\<close>
-  by (simp add: bi_unique_alt_def)
-
 lemma with_type_class_axioms:
   includes lifting_syntax
   fixes Rep :: \<open>'abs \<Rightarrow> 'rep\<close>

@@ -2,7 +2,7 @@ theory With_Type_Inst_HOL
   imports With_Type_Declare Complex_Main
 begin
 
-setup \<open>With_Type.add_relator_global \<^type_name>\<open>list\<close>
+setup \<open>add_relator_global \<^type_name>\<open>list\<close>
   (fn ctxt => fn mk => fn \<^Type>\<open>list T\<close> => \<^Term>\<open>list_all2 \<open>mk T\<close>\<close> ctxt)\<close>
 
 lemma rel_square_rel_list: \<open>rel_square (list_all2 a) = list_all2 (rel_square a)\<close>
@@ -209,7 +209,7 @@ qed
 
 declare prod.Domainp_rel[with_type_simps]
 
-setup \<open>With_Type.add_relator_global \<^type_name>\<open>filter\<close>
+setup \<open>add_relator_global \<^type_name>\<open>filter\<close>
   (fn ctxt => fn mk => fn \<^Type>\<open>filter T\<close> => \<^Term>\<open>rel_filter \<open>mk T\<close>\<close> ctxt)\<close>
 
 declare prod.right_total_rel[with_type_transfer_rules]
