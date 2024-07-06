@@ -1383,12 +1383,12 @@ proof (rule with_typeI)
   show \<open>fst (some_chilbert_basis_of X, ()) \<noteq> {}\<close>
     using some_chilbert_basis_of_ccspan[of X] assms
     by (auto simp del: some_chilbert_basis_of_ccspan)
-  show \<open>fst with_type_type_class (fst (some_chilbert_basis_of X, ()))
+  show \<open>WITH_TYPE_CLASS_type (fst (some_chilbert_basis_of X, ()))
      (snd (some_chilbert_basis_of X, ()))\<close>
-    by (simp add: with_type_type_class_def)
-  show \<open>with_type_compat_rel (fst with_type_type_class) (fst (some_chilbert_basis_of X, ()))
-     (snd with_type_type_class)\<close>
-    by (auto simp add: with_type_type_class_def with_type_compat_rel_def)
+    by (simp add: WITH_TYPE_CLASS_type_def WITH_TYPE_REL_type_def)
+  show \<open>with_type_compat_rel (WITH_TYPE_CLASS_type) (fst (some_chilbert_basis_of X, ()))
+     (WITH_TYPE_REL_type)\<close>
+    by (auto simp add: WITH_TYPE_CLASS_type_def WITH_TYPE_REL_type_def with_type_compat_rel_def)
   fix Rep :: \<open>'b \<Rightarrow> 'a\<close> and Abs
   assume \<open>type_definition Rep Abs (fst (some_chilbert_basis_of X, ()))\<close>
   then interpret type_definition Rep Abs \<open>some_chilbert_basis_of X\<close>

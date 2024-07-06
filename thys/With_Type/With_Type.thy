@@ -36,23 +36,26 @@ definition \<open>with_type = (\<lambda>(C,R) (S,rep_ops) P. S\<noteq>{} \<and> 
   and R :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool)\<close>
   and C :: \<open>'rep set \<Rightarrow> 'rep_ops \<Rightarrow> bool\<close> and rep_ops :: \<open>'rep_ops\<close>
 
-definition with_type_type_class where \<open>with_type_type_class = ((\<lambda>_ (_::unit). True), (\<lambda>_. (=)))\<close>
+definition \<open>WITH_TYPE_CLASS_type S ops = True\<close>
+definition \<open>WITH_TYPE_REL_type r = (=)\<close>
 
-lemma with_type_compat_rel_type: \<open>with_type_compat_rel (fst with_type_type_class) S (snd with_type_type_class)\<close>
-  by (simp add: with_type_type_class_def with_type_compat_rel_def Domainp_iff)
+(* definition with_type_type_class where \<open>with_type_type_class = ((\<lambda>_ (_::unit). True), (\<lambda>_. (=)))\<close> *)
+
+lemma with_type_compat_rel_type: \<open>with_type_compat_rel WITH_TYPE_CLASS_type S WITH_TYPE_REL_type\<close>
+  by (simp add: WITH_TYPE_REL_type_def WITH_TYPE_CLASS_type_def with_type_compat_rel_def Domainp_iff)
 
 (* Demonstration *)
-lemma \<open>with_type with_type_type_class (S,()) P \<longleftrightarrow> S\<noteq>{} \<and> (\<forall>Rep Abs. type_definition Rep Abs S \<longrightarrow> P Rep Abs)\<close>
-  by (auto simp: with_type_def with_type_type_class_def with_type_compat_rel_def)
+lemma \<open>with_type (WITH_TYPE_CLASS_type,WITH_TYPE_REL_type) (S,()) P \<longleftrightarrow> S\<noteq>{} \<and> (\<forall>Rep Abs. type_definition Rep Abs S \<longrightarrow> P Rep Abs)\<close>
+  by (auto simp: with_type_def WITH_TYPE_REL_type_def WITH_TYPE_CLASS_type_def with_type_compat_rel_def)
 
 lemma with_typeI:
   fixes Sp :: \<open>'a set \<times> 'c\<close> and CR
-  defines \<open>C \<equiv> fst CR\<close> and \<open>R \<equiv> snd CR\<close> and \<open>S \<equiv> fst Sp\<close> and \<open>p \<equiv> snd Sp\<close>
+  defines \<open>S \<equiv> fst Sp\<close> and \<open>p \<equiv> snd Sp\<close>
   assumes \<open>S \<noteq> {}\<close>
   assumes \<open>C S p\<close>
   assumes \<open>with_type_compat_rel C S R\<close>
   assumes \<open>\<And>Rep Abs abs_ops. type_definition Rep Abs S \<Longrightarrow> R (\<lambda>x y. x = Rep y) p abs_ops \<Longrightarrow> P Rep Abs\<close>
-  shows \<open>with_type CR Sp P\<close>
+  shows \<open>with_type (C,R) Sp P\<close>
   using assms
   by (auto simp add: with_type_def case_prod_beta)
 
@@ -157,9 +160,10 @@ attribute_setup cancel_with_type =
 setup \<open>
 With_Type.add_with_type_info_global {
   class = \<^class>\<open>type\<close>,
-  rep_class_data = \<^const_name>\<open>with_type_type_class\<close>,
+  rep_class = \<^const_name>\<open>WITH_TYPE_CLASS_type\<close>,
+  rep_rel = \<^const_name>\<open>WITH_TYPE_REL_type\<close>,
   with_type_compat_rel = @{thm with_type_compat_rel_type},
-  rep_class_data_thm = NONE,
+  (* rep_class_data_thm = NONE, *)
   transfer = NONE
 }
 \<close>
@@ -171,7 +175,10 @@ parse_translation \<open>[
   (\<^syntax_const>\<open>_with_type_with\<close>, With_Type.with_type_parse_translation)
 ]\<close>
 
-term \<open>\<forall>\<^sub>\<tau>'t::type = N. (rep_t = rep_t)\<close>
+(* print_translation \<open>[ (\<^const_syntax>\<open>with_type\<close>, With_Type.with_type_print_translation) ]\<close> *)
+
+
+term \<open>\<forall>\<^sub>\<tau> 't::type = N. (rep_t = rep_t)\<close>
 (* term \<open>\<forall>\<^sub>\<tau>'t::type = N with pls. (rep_t = rep_t)\<close> *)
 
 

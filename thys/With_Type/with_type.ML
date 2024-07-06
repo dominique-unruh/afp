@@ -1,12 +1,13 @@
 structure With_Type : sig 
 type with_type_info = {
   class: class,
-  rep_class_data: string,
-  rep_class_data_thm: thm option, (* Of the form \<open>rep_class_axioms = (const,const)\<close> *)
-  with_type_compat_rel: thm, (* with_type_compat_rel (fst rep_class_data) S (snd rep_class_data)
-                                The two occurrences of rep_class_data must have different ?'abs *)
-  transfer: thm option (* bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (snd rep_class_data r ===> (\<longleftrightarrow>)) (fst rep_class_data (Collect (Domainp r))) class.class *)
-                       (* The two occurrences of rep_class_data must have different ?'abs *)
+  rep_class: string,
+  rep_rel: string,
+  (* rep_class_data_thm: thm option, (* Of the form \<open>rep_class_axioms = (const,const)\<close> *) *)
+  with_type_compat_rel: thm, (* with_type_compat_rel rep_class S rep_rel;
+                                rep_class/rep_rel must have different ?'abs *)
+  transfer: thm option (* bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (rep_rel r ===> (\<longleftrightarrow>)) (rep_class (Collect (Domainp r))) class.class *)
+                       (* rep_class/rep_rel must have different ?'abs *)
                        (* class.class is the class-predicate-constant (e.g. semigroup_add.class), possibly uncurried (e.g. \<lambda>(x,y,z). const x y z) *)
 }
 
@@ -18,6 +19,8 @@ val morphism : Morphism.morphism -> with_type_info -> with_type_info
 val with_type_cancel : Proof.context -> thm -> thm
 
 val with_type_parse_translation : Proof.context -> term list -> term
+
+val with_type_print_translation : Proof.context -> term list -> term
 
 val get_with_type_info_by_class : Proof.context -> class -> with_type_info option
 
@@ -37,15 +40,16 @@ fun unify_prems_12 thm = (@{thm distinct_prems_rl_protected} OF [protect_thm thm
 
 type with_type_info = {
   class: class,
-  rep_class_data: string,
-  rep_class_data_thm: thm option,
+  rep_class: string,
+  rep_rel: string,
+  (* rep_class_data_thm: thm option, *)
   with_type_compat_rel: thm, 
   transfer: thm option
 }
 
-fun morphism m ({class, rep_class_data, rep_class_data_thm, with_type_compat_rel, transfer} : with_type_info) : with_type_info =
-  {class=class, rep_class_data=rep_class_data, 
-    rep_class_data_thm = Option.map (Morphism.thm m) rep_class_data_thm,
+fun morphism m ({class, rep_class, rep_rel, with_type_compat_rel, transfer} : with_type_info) : with_type_info =
+  {class=class, rep_class=rep_class, rep_rel=rep_rel, 
+    (* rep_class_data_thm = Option.map (Morphism.thm m) rep_class_data_thm, *)
     with_type_compat_rel = Morphism.thm m with_type_compat_rel,
     transfer = Option.map (Morphism.thm m) transfer}
 
@@ -62,7 +66,7 @@ fun check_with_type_info _ _ = ()
 fun add_with_type_info_generic data context = (check_with_type_info context data;
   With_Type_Data.map (fn {by_class, by_const} => 
     {by_class = Symtab.update (#class data, data) by_class,
-     by_const = Symtab.update (#rep_class_data data, data) by_const}) context
+     by_const = Symtab.update (#rep_class data, data) by_const}) context
 )
 val add_with_type_info_global = Context.theory_map o add_with_type_info_generic
 
@@ -103,16 +107,20 @@ fun unoverload_type_local ctxt tvars thm = let
   in thm''' end
 
 fun with_type_cancel ctxt thm = let
-  val (const, abs_type) = case Thm.prop_of thm of
-      \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type _ _ abs _\<close> $ Const(const,_) $ _ $ _) => (const,abs)
-    | t => raise TERM ("with_type_cancel: theorem must be of the form (with_type constant ...)", [t])
+  val (const_class, const_rel, abs_type) = case Thm.prop_of thm of
+      \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type _ _ abs _\<close>
+                            $ (\<^Const_>\<open>Pair _ _\<close> $ Const(const_class, _) $ Const(const_rel, _))
+                            $ _ $ _) 
+             => (const_class, const_rel, abs)
+    | t => raise TERM ("with_type_cancel: theorem must be of the form (with_type (constant,constant) ...)", [t])
   
   val abs_type_name = case abs_type of
     TVar (n,_) => n
     | _ => raise TYPE ("with_type_cancel: abstract type must be a type variable (?'something)", [abs_type], [Thm.prop_of thm])
   
-  val info = get_with_type_info_by_const ctxt const |> the
-  
+  val info = get_with_type_info_by_const ctxt const_class |> the
+  val _ = #rep_rel info = const_rel orelse raise TERM ("with_type_cancel: expected relator " ^ #rep_rel info ^ " instead of " ^ const_rel, [Thm.prop_of thm])
+
   (* "with_type CR ?Sp ?P \<Longrightarrow>
       \<exists>Rep Abs. type_definition Rep Abs (fst ?Sp) \<Longrightarrow> \<exists>x. class.name' x" *)
   (* Here class.name' is class.name, possibly uncurried (e.g., \<lambda>(x,y,z) class.name' x y z) *)
@@ -183,10 +191,13 @@ fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
   val propT = (typ --> dummyT) --> (dummyT --> typ) --> HOLogic.boolT
   (* The "Config.put show_sorts true" is necessary because otherwise "term_of_typ" ignores sorts. *)
   val prop = Const(\<^syntax_const>\<open>_constrain\<close>, dummyT) $ prop $ Syntax_Phases.term_of_typ (Config.put show_sorts true ctxt) propT
-  in Const(\<^const_name>\<open>with_type\<close>, dummyT) $ Const(#rep_class_data info, dummyT) $ 
+  in Const(\<^const_name>\<open>with_type\<close>, dummyT) $ HOLogic.mk_prod (Const(#rep_class info, dummyT), Const(#rep_rel info, dummyT)) $ 
         (Const(\<^const_name>\<open>Pair\<close>, dummyT) $ carrier $ ops) $ prop end
 
   | with_type_parse_translation ctxt [typ_term, carrier, prop] = with_type_parse_translation ctxt [typ_term, carrier, \<^term>\<open>()\<close>, prop]
   | with_type_parse_translation _ Ts = raise TERM ("with_type_parse_translation: called with wrong number of arguments", Ts)
+
+fun with_type_print_translation ctxt args = raise TERM ("with_type_print_translation: nyi", [])
+
 
 end

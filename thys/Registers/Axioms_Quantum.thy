@@ -132,9 +132,9 @@ lemma register_decomposition:
               (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
   \<comment> \<open>Proof based on @{cite daws21unitalanswer}\<close>
 proof (rule with_typeI; unfold fst_conv snd_conv)
-  show \<open>fst with_type_type_class (register_decomposition_basis \<Phi>) ()\<close>
-    by (simp add: with_type_type_class_def)
-  show \<open>with_type_compat_rel (fst with_type_type_class) (register_decomposition_basis \<Phi>) (snd with_type_type_class)\<close>
+  show \<open>WITH_TYPE_CLASS_type (register_decomposition_basis \<Phi>) ()\<close>
+    by (simp add: WITH_TYPE_CLASS_type_def WITH_TYPE_REL_type_def)
+  show \<open>with_type_compat_rel (WITH_TYPE_CLASS_type) (register_decomposition_basis \<Phi>) (WITH_TYPE_REL_type)\<close>
     using with_type_compat_rel_type by blast
 
   (* note [[simproc del: compatibility_warn]] *)
