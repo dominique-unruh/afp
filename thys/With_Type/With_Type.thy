@@ -1,6 +1,7 @@
 theory With_Type
   imports "HOL-Types_To_Sets.Types_To_Sets" Misc_With_Type Instantiate_Term_Antiquotation
     "HOL-Eisbach.Eisbach"
+  keywords "with_type_case" :: prf_asm % "proof"
 begin
 
 definition with_type_compat_rel where
@@ -61,7 +62,8 @@ lemma with_typeI:
 
 lemma with_type_mp: 
   assumes \<open>with_type (C,R) (S,p) P\<close>
-  shows \<open>(\<And>Rep Abs. type_definition Rep Abs S \<Longrightarrow> C S p \<Longrightarrow> P Rep Abs \<Longrightarrow> Q Rep Abs) \<Longrightarrow> with_type (C,R) (S,p) Q\<close>
+  assumes \<open>\<And>Rep Abs. type_definition Rep Abs S \<Longrightarrow> C S p \<Longrightarrow> P Rep Abs \<Longrightarrow> Q Rep Abs\<close>
+  shows \<open>with_type (C,R) (S,p) Q\<close>
   using assms by (auto simp add: with_type_def case_prod_beta)
 
 lemma with_type_nonempty: \<open>with_type CR (S,p) P \<Longrightarrow> S \<noteq> {}\<close>
@@ -189,6 +191,110 @@ lemma [with_type_intros]: \<open>WITH_TYPE_CLASS_type S ops\<close>
 declare with_type_compat_rel_type[with_type_intros]
 
 method with_type_intro = rule with_typeI; (intro with_type_intros)?
+(* method with_type_mp = rule with_type_mp; (intro with_type_intros)? *)
+
+
+
+
+ML \<open>
+fun subst_all u (\<^Const_>\<open>Pure.all _\<close> $ t) = betapply (t, u)
+
+fun absT_name T = case T of TFree(name, _) => String.extract (name, 1, NONE) | _ => "t"
+
+exception ERROR_IN_TACTIC of unit -> string
+fun with_type_mp_tac pos facts (ctxt, st) = let
+    val fact = case facts of [fact] => fact
+            | _ => raise THM ("with_type_mp: expected exactly one fact", 1, facts)
+    val rule = @{thm with_type_mp} OF [fact]
+    val (repT, absT, C, S, ops, P) = case Thm.cprem_of st 1 |> Thm.term_of of
+             \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type repT rep_opsT absT abs_opsT\<close> 
+                                    $ (\<^Const_>\<open>Pair _ _\<close> $ C $ _) $ (\<^Const_>\<open>Pair _ _\<close> $ S $ ops) $ P)
+                   => (repT, absT, C, S, ops, P)
+             | _ => raise ERROR_IN_TACTIC (fn _ => "with_type_mp: goal of the wrong form")
+    val rep_name = "rep_" ^ absT_name absT
+    val abs_name = "abs_" ^ absT_name absT
+    val rep = Free(rep_name, absT --> repT)
+    val abs = Free(abs_name, repT --> absT)
+    val st = case SINGLE (resolve_tac ctxt [rule] 1) st of SOME st => st
+              | NONE => raise ERROR_IN_TACTIC (fn _ => "with_type_mp: could not apply with_type_mp")
+(*     val prems_of_subgoal = Thm.cprem_of st 1 |> Thm.term_of |> subst_all rep |> subst_all abs
+        |> Logic.strip_imp_prems *)
+    val _ = Thm.cprem_of st 1 |> \<^print>
+    val prems_of_subgoal = Thm.cprem_of st 1 |> Thm.term_of |> Logic.strip_assums_hyp
+          |> map (fn t => Abs(rep_name, absT --> repT, Abs(abs_name, repT --> absT, t)))
+    val assm_typedef :: assm_class :: assm_prem :: assm_hyps = prems_of_subgoal
+        (* Thm.cprem_of st 1 |> Thm.term_of |> Term. *)
+    val rule_case = Rule_Cases.Case {
+          fixes = [(Binding.make (rep_name, pos), absT --> repT), (Binding.make (abs_name, pos), repT --> absT)],
+          assumes = [("typedef", [assm_typedef]), ("class", [assm_class]), ("premise", [assm_prem]), ("hyps", assm_hyps)], 
+          binds = [(("concl",0), SOME P)],
+          cases = []}
+    val ctxt = Proof_Context.update_cases [("with_type_mp", SOME rule_case)] ctxt
+  (* TODO: Add to context the following info:
+    - 'abs, 'rep types
+    - carrier set S, ops
+    - C
+    - the mp premise
+   *)
+  in
+    Seq.single (ctxt, st) |> Seq.make_results
+  end
+  handle ERROR_IN_TACTIC error => Seq.single (Seq.Error error)
+\<close>
+
+
+method_setup with_type_mp = \<open>Scan.succeed () >> 
+  (fn (_) => fn ctxt => CONTEXT_METHOD (fn facts =>
+      Method.RUNTIME (with_type_mp_tac \<^here> facts)))\<close>
+
+
+
+ML \<open>
+fun with_type_case_cmd pos state : Proof.state = let
+    (* val ctxt = Proof.context_of state; *)
+(*     val case_mp = Proof_Context.check_case ctxt true ("with_type_mp", pos) []
+    val (assms, state) = Proof.map_context_result (Proof_Context.apply_case case_mp) state *)
+    val state = Proof.case_ ((Binding.empty, []), (("with_type_mp", Position.none), [])) state
+    val thm_type_def = Proof_Context.get_fact_single (Proof.context_of state) (Facts.named "local.with_type_mp.typedef")
+    val (rep, abs, S) = case Thm.prop_of thm_type_def of
+        \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>type_definition _ _\<close> $ rep $ abs $ S) => (rep,abs,S)
+    val \<^Type>\<open>fun absT _\<close> = fastype_of rep
+    val state = Interpretation.interpret
+              ([(\<^locale>\<open>type_definition\<close>,(("type_definition_" ^ absT_name absT,true), (Expression.Positional [SOME rep, SOME abs, SOME S], [])))],
+              [(Binding.make ("i_dont_know_where_this_ends_up", Position.none), NONE, NoSyn)]) state
+    val state = Proof.local_future_terminal_proof 
+                    (((Method.Basic (Method.fact [thm_type_def]), Position.no_range), NONE)) state
+  in state end
+\<close>
+
+ML \<open>
+val _ =
+  Outer_Syntax.command \<^command_keyword>\<open>with_type_case\<close> "TODO"
+    (Scan.succeed (Toplevel.proof (with_type_case_cmd \<^here>)))
+(* TODO: print informative text *)
+\<close>
+
+
+
+lemma 
+  assumes \<open>finite X\<close>
+  shows True
+  using assms
+proof -
+  fix T :: \<open>'a set\<close> and yy xx :: 't
+  have \<open>\<forall>\<^sub>\<tau> 't::type = T.
+        yy = (xx :: 't)\<close>
+    sorry
+  then
+  have \<open>\<forall>\<^sub>\<tau> 't::type = T.
+        undefined rep_t xx = (yy :: 't)\<close>
+  proof with_type_mp
+    with_type_case
+    
+    show ?concl
+      sorry
+  qed
+qed simp
 
 
 end

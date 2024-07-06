@@ -2076,13 +2076,10 @@ next
   from ccsubspace_as_whole_type[OF False]
   have \<open>\<forall>\<^sub>\<tau> 't::type = some_chilbert_basis_of T.
         (INF x\<in>X. S x) \<otimes>\<^sub>S T = (INF x\<in>X. S x \<otimes>\<^sub>S T)\<close>
-  proof (rule with_type_mp)
-    fix Rep :: \<open>'t \<Rightarrow> 'c ell2\<close> and Abs
-    assume \<open>type_definition Rep Abs (some_chilbert_basis_of T)\<close>
-    then interpret type_definition Rep Abs \<open>some_chilbert_basis_of T\<close>
-      by simp
-    assume \<open>\<exists>U :: 't ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2. isometry U \<and> U *\<^sub>S \<top> = T\<close>
-    then obtain U :: \<open>'t ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> where [simp]: \<open>isometry U\<close> and imU: \<open>U *\<^sub>S \<top> = T\<close>
+  proof with_type_mp
+    with_type_case
+    from with_type_mp.premise
+    obtain U :: \<open>'t ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> where [simp]: \<open>isometry U\<close> and imU: \<open>U *\<^sub>S \<top> = T\<close>
       by auto
     have \<open>(id_cblinfun \<otimes>\<^sub>o U) *\<^sub>S ((\<Sqinter>x\<in>X. S x) \<otimes>\<^sub>S \<top>) = (id_cblinfun \<otimes>\<^sub>o U) *\<^sub>S (\<Sqinter>x\<in>X. S x \<otimes>\<^sub>S \<top>)\<close>
       apply (rule arg_cong[where f=\<open>\<lambda>x. _ *\<^sub>S x\<close>])  
