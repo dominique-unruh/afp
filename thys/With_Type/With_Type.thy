@@ -50,30 +50,29 @@ lemma \<open>with_type (WITH_TYPE_CLASS_type,WITH_TYPE_REL_type) (S,()) P \<long
 
 lemma with_typeI:
   fixes Sp :: \<open>'a set \<times> 'c\<close> and CR
-  defines \<open>S \<equiv> fst Sp\<close> and \<open>p \<equiv> snd Sp\<close>
   assumes \<open>S \<noteq> {}\<close>
   assumes \<open>C S p\<close>
   assumes \<open>with_type_compat_rel C S R\<close>
   assumes \<open>\<And>Rep Abs abs_ops. type_definition Rep Abs S \<Longrightarrow> R (\<lambda>x y. x = Rep y) p abs_ops \<Longrightarrow> P Rep Abs\<close>
-  shows \<open>with_type (C,R) Sp P\<close>
+  shows \<open>with_type (C,R) (S,p) P\<close>
   using assms
   by (auto simp add: with_type_def case_prod_beta)
 
 lemma with_type_mp: 
-  assumes \<open>with_type CR (S,p) P\<close>
-  shows \<open>(\<And>Rep Abs. type_definition Rep Abs S \<Longrightarrow> fst CR S p \<Longrightarrow> P Rep Abs \<Longrightarrow> Q Rep Abs) \<Longrightarrow> with_type CR (S,p) Q\<close>
+  assumes \<open>with_type (C,R) (S,p) P\<close>
+  shows \<open>(\<And>Rep Abs. type_definition Rep Abs S \<Longrightarrow> C S p \<Longrightarrow> P Rep Abs \<Longrightarrow> Q Rep Abs) \<Longrightarrow> with_type (C,R) (S,p) Q\<close>
   using assms by (auto simp add: with_type_def case_prod_beta)
 
-lemma with_type_nonempty: \<open>with_type CR Sp P \<Longrightarrow> fst Sp \<noteq> {}\<close>
+lemma with_type_nonempty: \<open>with_type CR (S,p) P \<Longrightarrow> S \<noteq> {}\<close>
   by (simp add: with_type_def case_prod_beta)
 
 lemma with_type_prepare_cancel:
   fixes Sp :: \<open>'rep set \<times> _\<close>
-  assumes wt: \<open>with_type CR Sp (\<lambda>_ (_::'rep\<Rightarrow>'abs). P)\<close>
-  assumes ex: \<open>(\<exists>(Rep::'abs\<Rightarrow>'rep) Abs. type_definition Rep Abs (fst Sp))\<close>
+  assumes wt: \<open>with_type CR (S,p) (\<lambda>_ (_::'rep\<Rightarrow>'abs). P)\<close>
+  assumes ex: \<open>(\<exists>(Rep::'abs\<Rightarrow>'rep) Abs. type_definition Rep Abs S)\<close>
   shows P
 proof -
-  define S p C R where \<open>S = fst Sp\<close> and \<open>p = snd Sp\<close> and \<open>C = fst CR\<close> and \<open>R = snd CR\<close>
+  define C R where \<open>C = fst CR\<close> and \<open>R = snd CR\<close>
   with ex obtain Rep :: \<open>'abs\<Rightarrow>'rep\<close> and Abs where td: \<open>type_definition Rep Abs S\<close>
     by auto
   define r where \<open>r = (\<lambda>x y. x = Rep y)\<close>
@@ -86,13 +85,13 @@ proof -
     apply (subst type_definition.Abs_inverse[OF td])
     by auto
   from wt have nice: \<open>with_type_compat_rel C S R\<close> and \<open>C S p\<close>
-    by (simp_all add: with_type_def p_def R_def S_def C_def case_prod_beta)
+    by (simp_all add: with_type_def R_def C_def case_prod_beta)
   from nice[unfolded with_type_compat_rel_def, rule_format, OF \<open>bi_unique r\<close> \<open>right_total r\<close> Sr \<open>C S p\<close>]
   obtain abs_ops where abs_ops: \<open>R (\<lambda>x y. x = Rep y) p abs_ops\<close>
     apply atomize_elim by (auto simp: r_def)
   from td abs_ops wt
   show P
-    by (auto simp: with_type_def case_prod_beta S_def p_def R_def)
+    by (auto simp: with_type_def case_prod_beta R_def)
 qed
 
 (* lemma Domainp_rel_fun_iff: (* TODO: use Domainp_pred_fun_eq instead *)
