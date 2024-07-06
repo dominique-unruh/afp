@@ -1379,16 +1379,10 @@ lemma ccsubspace_as_whole_type:
   assumes \<open>X \<noteq> 0\<close>
   shows \<open>\<forall>\<^sub>\<tau> 'b::type = some_chilbert_basis_of X.
          \<exists>U::'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a. isometry U \<and> U *\<^sub>S \<top> = X\<close>
-proof (rule with_typeI)
+proof with_type_intro
   show \<open>some_chilbert_basis_of X \<noteq> {}\<close>
     using some_chilbert_basis_of_ccspan[of X] assms
     by (auto simp del: some_chilbert_basis_of_ccspan)
-  show \<open>WITH_TYPE_CLASS_type (some_chilbert_basis_of X)
-     (())\<close>
-    by (simp add: WITH_TYPE_CLASS_type_def WITH_TYPE_REL_type_def)
-  show \<open>with_type_compat_rel (WITH_TYPE_CLASS_type) (some_chilbert_basis_of X)
-     (WITH_TYPE_REL_type)\<close>
-    by (auto simp add: WITH_TYPE_CLASS_type_def WITH_TYPE_REL_type_def with_type_compat_rel_def)
   fix Rep :: \<open>'b \<Rightarrow> 'a\<close> and Abs
   assume \<open>type_definition Rep Abs (some_chilbert_basis_of X)\<close>
   then interpret type_definition Rep Abs \<open>some_chilbert_basis_of X\<close>

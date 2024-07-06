@@ -1,5 +1,6 @@
 theory With_Type
   imports "HOL-Types_To_Sets.Types_To_Sets" Misc_With_Type Instantiate_Term_Antiquotation
+    "HOL-Eisbach.Eisbach"
 begin
 
 definition with_type_compat_rel where
@@ -180,8 +181,14 @@ parse_translation \<open>[
 term \<open>\<forall>\<^sub>\<tau> 't::type = N. (rep_t = rep_t)\<close>
 (* term \<open>\<forall>\<^sub>\<tau>'t::type = N with pls. (rep_t = rep_t)\<close> *)
 
+named_theorems with_type_intros
 
+lemma [with_type_intros]: \<open>WITH_TYPE_CLASS_type S ops\<close>
+  by (simp add: WITH_TYPE_CLASS_type_def)
 
+declare with_type_compat_rel_type[with_type_intros]
+
+method with_type_intro = rule with_typeI; (intro with_type_intros)?
 
 
 end

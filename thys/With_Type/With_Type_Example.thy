@@ -29,7 +29,7 @@ lemma carrier_ab_group_add: \<open>with_type_ab_group_add_class_pred carrier car
 
 lemma example_semigroup:
   shows \<open>\<forall>\<^sub>\<tau> 'abs::semigroup_add = carrier with carrier_plus. undefined (3::nat)\<close>
-  apply (rule with_typeI)
+  apply with_type_intro
   apply (simp_all add: with_type_semigroup_add_class_def)
      apply (rule carrier_nonempty)
     apply (rule carrier_semigroup)
