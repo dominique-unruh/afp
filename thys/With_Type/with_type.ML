@@ -12,6 +12,8 @@ type with_type_info = {
 }
 
 val add_with_type_info_global : with_type_info -> theory -> theory
+(* TODO: check whether the theorems are correct *)
+
 val add_with_type_info_generic : with_type_info -> Context.generic -> Context.generic
 
 val morphism : Morphism.morphism -> with_type_info -> with_type_info
