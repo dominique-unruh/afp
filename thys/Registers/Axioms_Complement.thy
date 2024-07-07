@@ -13,9 +13,10 @@ instance complement_domain_simple :: (domain, domain) domain..
 setup \<open> (* Supporting with-type for the dummy class `domain` *)
 With_Type.add_with_type_info_global {
   class = \<^class>\<open>domain\<close>,
-  rep_class_data = \<^const_name>\<open>with_type_type_class\<close>,
+  rep_class = \<^const_name>\<open>WITH_TYPE_CLASS_type\<close>,
+  rep_rel = \<^const_name>\<open>WITH_TYPE_REL_type\<close>,
   with_type_compat_rel = @{thm with_type_compat_rel_type},
-  rep_class_data_thm = NONE,
+  (* rep_class_data_thm = NONE, *)
   transfer = NONE
 }\<close>
 

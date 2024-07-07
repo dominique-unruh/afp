@@ -120,9 +120,10 @@ lemma unit_register_pair[simp]: \<open>equivalent_registers X (U; X)\<close> if 
 proof -
   from complement_exists[OF \<open>register X\<close>]
   have \<open>\<forall>\<^sub>\<tau> 'x::domain = cdc X. equivalent_registers X (U; X)\<close>
-  proof (rule with_type_mp)
+  proof with_type_mp
     note [[simproc del: compatibility_warn]]
-    assume \<open>\<exists>G :: 'x update \<Rightarrow> 'b update. complements X G\<close>
+    (* assume \<open>\<exists>G :: 'x update \<Rightarrow> 'b update. complements X G\<close> *)
+    with_type_case
     then obtain compX :: \<open>'x update \<Rightarrow> 'b update\<close> where compX: \<open>complements X compX\<close>
       by blast
     then have [simp]: \<open>register compX\<close> \<open>compatible X compX\<close>
@@ -157,9 +158,9 @@ lemma unit_register_compose_left:
 proof -
   from complement_exists[OF \<open>register A\<close>]
   have \<open>\<forall>\<^sub>\<tau> 'x::domain = cdc A. is_unit_register (A o U)\<close>
-  proof (rule with_type_mp)
+  proof with_type_mp
     note [[simproc del: compatibility_warn]]
-    assume \<open>\<exists>G :: 'x update \<Rightarrow> 'c update. complements A G\<close>
+    with_type_case 
     then obtain compA :: \<open>'x update \<Rightarrow> 'c update\<close> where compX: \<open>complements A compA\<close>
       by blast
     then have [simp]: \<open>register compA\<close> \<open>compatible A compA\<close>
@@ -254,8 +255,8 @@ proof -
   let ?U1 = \<open>complement id :: unit_register_domain update \<Rightarrow> some_domain update\<close>
   from complement_exists[OF register_id[where 'a='a]]
   have \<open>\<forall>\<^sub>\<tau> 'x::domain = cdc (id::'a update \<Rightarrow> _). is_unit_register ?U\<close>
-  proof (rule with_type_mp)
-    assume \<open>\<exists>G :: 'x update \<Rightarrow> 'a update. complements id G\<close>
+  proof with_type_mp
+    with_type_case
     then obtain U2 :: \<open>'x update \<Rightarrow> 'a update\<close> where comp1: \<open>complements id U2\<close>
       by blast
     then have [simp]: \<open>register U2\<close> \<open>compatible id U2\<close> \<open>compatible id U2\<close>
@@ -284,8 +285,9 @@ lemma unit_register_domain_tensor_unit:
 proof -
   from complement_exists[OF register_id[where 'a='b]]
   have \<open>\<forall>\<^sub>\<tau> 'x::domain = cdc (id :: 'b update \<Rightarrow> _). \<exists>I :: 'b::domain update \<Rightarrow> ('a*'b) update. iso_register I\<close>
-  proof (rule with_type_mp)
+  proof with_type_mp
     note [[simproc del: compatibility_warn]]
+    with_type_case
     assume \<open>\<exists>G :: 'x update \<Rightarrow> 'b update. complements id G\<close>
     then obtain U' :: \<open>'x update \<Rightarrow> 'b update\<close> where comp: \<open>complements id U'\<close>
       by blast

@@ -448,9 +448,10 @@ proof (rule continuous_map_iff_preserves_convergence, rename_tac K a)
   from register_decomposition
   have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
         limitin weak_star_topology (inv F) (inv F a) K\<close>
-  proof (rule with_type_mp)
+  proof with_type_mp
     from assms show \<open>register F\<close> by -
-    assume \<open>\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> (\<forall>\<theta>. F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
+  next
+    with_type_case
     then obtain U :: \<open>('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> 
       where \<open>unitary U\<close> and FU: \<open>F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
       by auto
@@ -512,10 +513,8 @@ lemma register_inj: \<open>inj_on F X\<close> if [simp]: \<open>register F\<clos
 proof -
   have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F. inj F\<close>
     using register_decomposition[OF \<open>register F\<close>] 
-  proof (rule with_type_mp)
-    fix rep :: \<open>'c \<Rightarrow> 'd\<close> and abs and S
-    assume \<open>type_definition rep abs S\<close>
-    assume \<open>\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> (\<forall>\<theta>. F \<theta> = Complex_Bounded_Linear_Function.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
+  proof with_type_mp
+    with_type_case
     then obtain U :: \<open>('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
       where \<open>unitary U\<close> and F: \<open>F a = Complex_Bounded_Linear_Function.sandwich U (a \<otimes>\<^sub>o id_cblinfun)\<close> for a
       apply atomize_elim by auto
@@ -537,11 +536,8 @@ proof -
   from register_decomposition[OF that]
   have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
          norm (F a) = norm a\<close>
-  proof (rule with_type_mp) 
-    fix Rep :: \<open>'c \<Rightarrow> 'b ell2\<close> and Abs
-      assume \<open>type_definition Rep Abs (register_decomposition_basis F)\<close>
-    assume \<open>(\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
-              (\<forall>\<theta>. F \<theta> = Complex_Bounded_Linear_Function.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
+  proof with_type_mp
+    with_type_case
     then obtain U :: \<open>('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> where \<open>unitary U\<close>
       and FU: \<open>F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
       by metis
@@ -569,10 +565,8 @@ proof -
   have \<open>\<forall>\<^sub>\<tau> 'g::type = register_decomposition_basis F.
         \<exists>T :: ('a \<times> 'b) update \<Rightarrow> ('a \<times> 'c) update. 
         register T \<and> (\<forall>a b. T (a \<otimes>\<^sub>o b) = a \<otimes>\<^sub>o F b)\<close>
-  proof (rule with_type_mp)
-    fix Rep :: \<open>'g \<Rightarrow> _\<close> and Abs
-    assume \<open>type_definition Rep Abs (register_decomposition_basis F)\<close>
-    assume \<open>\<exists>U :: ('b \<times> 'g) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2. unitary U \<and> (\<forall>\<theta>. F \<theta> = sandwich U *\<^sub>V \<theta> \<otimes>\<^sub>o id_cblinfun)\<close>
+  proof with_type_mp
+    with_type_case
     then obtain U :: \<open>('b \<times> 'g) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> 
       where [simp]: \<open>unitary U\<close> and F: \<open>F \<theta> = sandwich U *\<^sub>V \<theta> \<otimes>\<^sub>o id_cblinfun\<close> for \<theta>
       by auto
@@ -611,23 +605,21 @@ proof -
   from register_decomposition[OF \<open>register F\<close>] 
   have \<open>\<forall>\<^sub>\<tau> 'd::type = register_decomposition_basis F.
         \<exists>R. \<forall>a b. register R \<and> R (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close>
-  proof (rule with_type_mp)
-    fix Rep :: \<open>'d \<Rightarrow> 'c ell2\<close> and Abs
+  proof with_type_mp
+    with_type_case
+(*     fix Rep :: \<open>'d \<Rightarrow> 'c ell2\<close> and Abs
     assume \<open>type_definition Rep Abs (register_decomposition_basis F)\<close>
     assume \<open>(\<exists>U :: ('a \<times> 'd) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2. unitary U \<and> 
-              (\<forall>\<theta>. F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
+              (\<forall>\<theta>. F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close> *)
     then obtain U :: \<open>('a \<times> 'd) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> where [simp]: \<open>unitary U\<close>
       and FU: \<open>F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
       by metis
     from register_decomposition[OF \<open>register G\<close>]
-    have \<open>\<forall>\<^sub>\<tau> 'e::type = register_decomposition_basis G.
+    have \<open>\<forall>\<^sub>\<tau> 'f::type = register_decomposition_basis G.
           \<exists>R. \<forall>a b. register R \<and> R (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close>
-    proof (rule with_type_mp)
-      fix Rep :: \<open>'e \<Rightarrow> 'c ell2\<close> and Abs
-      assume \<open>type_definition Rep Abs (register_decomposition_basis G)\<close>
-      assume \<open>(\<exists>V :: ('b \<times> 'e) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2. unitary V \<and> 
-              (\<forall>\<theta>. G \<theta> = sandwich V (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
-      then obtain V :: \<open>('b \<times> 'e) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> where [simp]: \<open>unitary V\<close>
+    proof with_type_mp
+      with_type_case
+      then obtain V :: \<open>('b \<times> 'f) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2\<close> where [simp]: \<open>unitary V\<close>
         and GU: \<open>G \<theta> = sandwich V (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
         by metis
       show \<open>\<exists>FG. \<forall>a b. register FG \<and> FG (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close>
@@ -732,7 +724,7 @@ proof -
           by metis
       qed
     qed
-    from this[THEN with_type_prepare_cancel, cancel_type_definition, OF with_type_nonempty, OF this] (* TODO why does cancel_with_type fail here? *)
+    from this[cancel_with_type]
     show \<open>\<exists>R. \<forall>a b. register R \<and> R (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close>
       by -
   qed

@@ -203,16 +203,17 @@ proof -
   from register_decomposition
   have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
         \<exists>U. unitary U \<and> F = sandwich U\<close>
-  proof (rule with_type_mp)
+  proof with_type_mp
     show [simp]: \<open>register F\<close>
       using assms iso_register_is_register by blast 
+    with_type_case
 
-    assume register_decomposition:
+(*     assume register_decomposition:
       \<open>\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> (\<forall>\<theta>. F \<theta> = Complex_Bounded_Linear_Function.sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun))\<close>
-
+ *)
     let ?ida = \<open>id_cblinfun :: 'c ell2 \<Rightarrow>\<^sub>C\<^sub>L _\<close>
 
-    from register_decomposition
+    from with_type_mp.premise
     obtain V :: \<open>('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> where \<open>unitary V\<close>
       and FV: \<open>F \<theta> = sandwich V (\<theta> \<otimes>\<^sub>o ?ida)\<close> for \<theta>
       by auto
