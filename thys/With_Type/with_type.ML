@@ -109,67 +109,101 @@ fun unoverload_type_local ctxt tvars thm = let
   in thm''' end
 
 fun with_type_cancel ctxt thm = let
-  val (const_class, const_rel, abs_type) = case Thm.prop_of thm of
-      \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type _ _ abs _\<close>
-                            $ (\<^Const_>\<open>Pair _ _\<close> $ Const(const_class, _) $ Const(const_rel, _))
-                            $ _ $ _) 
-             => (const_class, const_rel, abs)
-    | t => raise TERM ("with_type_cancel: theorem must be of the form (with_type (constant,constant) ...)", [t])
+  fun debug (pos : Position.T) m = if true then tracing (Markup.markup (Markup.properties (Position.properties_of pos) Markup.position) "\<^here>" ^ " " ^ m ()) else ()
+
+  val _ = debug\<^here> (fn _ => "thm = " ^ \<^make_string> thm)
   
+  (* like thm, but with 'abs replaced by ?'abs, unless it's already a schematic variable *)
+  val thm = case Thm.prop_of thm of
+      \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type _ _ abs _\<close> $ _ $ _ $ _) =>
+         (case abs of
+            TVar _ => thm
+          | TFree (n,T) => Thm.generalize (Names.make1_set n, Names.empty) (Thm.maxidx_of thm + 1) thm
+          | _ => raise TYPE ("with_type_cancel: bound type must be a type variable", [abs], [Thm.prop_of thm]))
+    | t => raise TERM ("with_type_cancel: theorem must be of the form (with_type ...)", [t])
+  val _ = debug\<^here> (fn _ => "thm (after generalizing) = " ^ \<^make_string> thm)
+
+  val (const_class, const_rel, rep_type, abs_type, P) = case Thm.prop_of thm of
+      \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type rep _ abs _\<close>
+                            $ (\<^Const_>\<open>Pair _ _\<close> $ Const(const_class, _) $ Const(const_rel, _))
+                            $ _ $ P)
+             => (const_class, const_rel, rep, abs, P)
+    | t => raise TERM ("with_type_cancel: theorem must be of the form (with_type (constant,constant) ...)", [t])
+  val _ = debug\<^here> (fn _ => "const_class = " ^ \<^make_string> const_class ^ "; const_rel = " ^ \<^make_string> const_rel ^ "; abs_type = " ^ \<^make_string> abs_type ^ "; P = " ^ \<^make_string> P)
+
+  val _ = let val P' = betapplys (P, [Free("Rep", abs_type --> rep_type), Free("Abs", rep_type --> abs_type)])  in
+            exists_type (exists_subtype (fn T => T=abs_type)) P'
+              andalso raise TYPE ("with_type_cancel: body contains bound type", [abs_type], [P']) end
+
   val abs_type_name = case abs_type of
     TVar (n,_) => n
     | _ => raise TYPE ("with_type_cancel: abstract type must be a type variable (?'something)", [abs_type], [Thm.prop_of thm])
+  val _ = debug\<^here> (fn _ => "abs_type_name = " ^ \<^make_string> abs_type_name)
   
   val info = get_with_type_info_by_const ctxt const_class |> the
   val _ = #rep_rel info = const_rel orelse raise TERM ("with_type_cancel: expected relator " ^ #rep_rel info ^ " instead of " ^ const_rel, [Thm.prop_of thm])
 
-  (* "with_type CR ?Sp ?P \<Longrightarrow>
-      \<exists>Rep Abs. type_definition Rep Abs (fst ?Sp) \<Longrightarrow> \<exists>x. class.name' x" *)
-  (* Here class.name' is class.name, possibly uncurried (e.g., \<lambda>(x,y,z) class.name' x y z) *)
+  (* "with_type (C,R) (?S,?p) ?P \<Longrightarrow>
+      \<exists>Rep Abs. type_definition Rep Abs ?S \<Longrightarrow> \<exists>x. class.name' x" *)
+  (* Here class.name' is class.name, possibly uncurried (e.g., \<lambda>(x,y,z) class.name x y z) *)
   (* May be NONE *)
   val with_type_class_axioms = case #transfer info of SOME transfer => 
         (@{thm with_type_class_axioms} OF [transfer, #with_type_compat_rel info])
         |> (Tactic.assume_tac ctxt 1  THEN  Tactic.assume_tac ctxt 1) |> Seq.hd |> SOME
     | NONE => NONE
-  
-  (* class.name (\<dots> using ?'abs::type) \<Longrightarrow> with_type CR Sp (\<lambda>_ _. P) *)
+  val _ = debug\<^here> (fn _ => "with_type_class_axioms = " ^ \<^make_string> with_type_class_axioms)
+ 
+  (* class.name (\<dots> using ?'abs::type) \<Longrightarrow> with_type (C,R) (S,p) (\<lambda>_ _. P) *)
   (* class.name part may be absent for some type classes *)
   val unoverloaded = unoverload_type_local ctxt [abs_type_name] thm
+  val _ = debug\<^here> (fn _ => "unoverloaded = " ^ \<^make_string> unoverloaded)
+  val _ = case Thm.nprems_of unoverloaded of
+            0 => is_none with_type_class_axioms orelse raise THM ("with_type_cancel: unoverloading produced no `class.name` premise, but #transfer is not NONE", 0, [unoverloaded])
+          | 1 => is_none with_type_class_axioms andalso raise THM ("with_type_cancel: unoverloading produced a `class.name` premise, but #transfer is NONE", 0, [unoverloaded])
 
-  (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> \<exists>x::?'abs_params2. class.name' x *)
+  (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs S \<Longrightarrow> \<exists>x::?'abs_params2. class.name' x *)
   (* May be NONE *)
   val ex_class = Option.map (fn th => th OF [thm]) with_type_class_axioms
+  val _ = debug\<^here> (fn _ => "ex_class = " ^ \<^make_string> ex_class)
 
-  (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> class.name' (SOME \<dots>) *)
+  (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs S \<Longrightarrow> class.name' (SOME \<dots>) *)
   (* May be NONE *)
   val class_some = Option.map (fn thm => @{thm someI_ex} OF [thm]) ex_class
+  val _ = debug\<^here> (fn _ => "class_some = " ^ \<^make_string> class_some)
 
   open Conv
-  (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> class.name \<dots> \<dots> \<dots> *)
+  (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs S \<Longrightarrow> class.name \<dots> \<dots> \<dots> *)
   (* May be NONE *)
   val uncurry_conv = repeat_conv (rewr_conv @{thm case_prod_beta[THEN eq_reflection]}) |> HOLogic.Trueprop_conv |> implies_concl_conv
   val class_some_uncurried = Option.map (fconv_rule uncurry_conv) class_some
+  val _ = debug\<^here> (fn _ => "class_some_uncurried = " ^ \<^make_string> class_some_uncurried)
 
-  (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> with_type CR Sp (\<lambda>_ _. P) *)
+  (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs S \<Longrightarrow> with_type CR Sp (\<lambda>_ _. P) *)
   val unoverloaded' = case class_some_uncurried of SOME thm => unoverloaded OF [thm] | NONE => unoverloaded
-  
-  (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) [POSSIBLY TWICE!] \<Longrightarrow> P *)
+  val _ = debug\<^here> (fn _ => "unoverloaded' = " ^ \<^make_string> unoverloaded')
+
+  (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs S [POSSIBLY TWICE!] \<Longrightarrow> P *)
   val no_with_type = @{thm with_type_prepare_cancel} OF [unoverloaded']
-  
-  (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs (fst Sp) \<Longrightarrow> P *)
+  val _ = debug\<^here> (fn _ => "no_with_type = " ^ \<^make_string> no_with_type)
+
+  (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs S \<Longrightarrow> P *)
   val no_repetition = 
     if Thm.nprems_of no_with_type = 2 then unify_prems_12 no_with_type else no_with_type
+  val _ = debug\<^here> (fn _ => "no_repetition = " ^ \<^make_string> no_repetition)
 
   val _ = Thm.nprems_of no_repetition = 1 orelse raise THM ("with_type_cancel: could not remove duplicate premise", 0, [no_repetition])
 
-  (* fst Sp \<noteq> {} \<Longrightarrow> P *)
+  (* S \<noteq> {} \<Longrightarrow> P *)
   val removed_abs_type = Local_Typedef.cancel_type_definition no_repetition
+  val _ = debug\<^here> (fn _ => "removed_abs_type = " ^ \<^make_string> removed_abs_type)
   
-  (* fst Sp \<noteq> {} *)
+  (* S \<noteq> {} *)
   val non_empty = @{thm with_type_nonempty} OF [thm]
+  val _ = debug\<^here> (fn _ => "non_empty = " ^ \<^make_string> non_empty)
   val final_thm = removed_abs_type OF [non_empty]
+  val _ = debug\<^here> (fn _ => "final_thm = " ^ \<^make_string> final_thm)
   in
-  final_thm
+    final_thm
   end
 
 fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let

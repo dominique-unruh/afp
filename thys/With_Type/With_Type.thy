@@ -111,10 +111,9 @@ lemma with_type_class_axioms:
     and Sp
     and R :: \<open>('rep\<Rightarrow>'abs\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool)\<close>
     and R2 :: \<open>('rep\<Rightarrow>'abs2\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops2 \<Rightarrow> bool)\<close>
-  defines \<open>C \<equiv> fst CR\<close> and \<open>R \<equiv> snd CR\<close> and \<open>S \<equiv> fst Sp\<close> and \<open>p \<equiv> snd Sp\<close>
   assumes trans: \<open>\<And>r :: 'rep \<Rightarrow> 'abs2 \<Rightarrow> bool. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (R2 r ===> (\<longleftrightarrow>)) (C (Collect (Domainp r))) axioms\<close>
   assumes nice: \<open>with_type_compat_rel C S R2\<close>
-  assumes wt: \<open>with_type CR Sp P\<close>
+  assumes wt: \<open>with_type (C,R) (S,p) P\<close>
   assumes ex: \<open>\<exists>(Rep :: 'abs2\<Rightarrow>'rep) Abs. type_definition Rep Abs S\<close>
   shows \<open>\<exists>x::'abs_ops2. axioms x\<close>
 proof -
@@ -135,7 +134,7 @@ proof -
     by (meson type_definition.Rep_cases)
 
   from wt have sg: \<open>C S p\<close>
-    by (simp_all add: with_type_def C_def S_def p_def case_prod_beta)
+    by (simp_all add: with_type_def case_prod_beta)
 
   with nice have \<open>Domainp (R2 r) p\<close>
     by (simp add: bi_unique_r with_type_compat_rel_def rS right_total_r)
@@ -158,6 +157,18 @@ ML_file "with_type.ML"
 attribute_setup cancel_with_type = 
   \<open>Thm.rule_attribute [] (With_Type.with_type_cancel o Context.proof_of) |> Scan.succeed\<close>
   \<open>Transforms (\<forall>\<^sub>\<tau> 't=\<dots>. P) into P\<close>
+
+(* ML \<open>
+fun generalize typ ctxt thm = 
+    Thm.generalize (Names.make1_set typ, Names.empty) 0 thm
+ |> \<^print>
+\<close>
+
+
+attribute_setup generalize = 
+  \<open>Scan.lift Parse.typ >> (fn typ => Thm.rule_attribute [] (generalize typ o Context.proof_of))\<close>
+  \<open>TODO\<close>
+ *)
 
 setup \<open>
 With_Type.add_with_type_info_global {
@@ -282,6 +293,7 @@ lemma
   shows True
   using assms
 proof -
+  note [[show_types, show_sorts]]
   fix T :: \<open>'a set\<close> and yy xx :: 't
   have \<open>\<forall>\<^sub>\<tau> 't::type = T.
         yy = (xx :: 't)\<close> if \<open>x = 3\<close>
@@ -296,6 +308,7 @@ proof -
     show ?concl
       sorry
   qed
+  (* note this[cancel_with_type] *)
 qed simp
 
 

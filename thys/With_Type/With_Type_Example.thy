@@ -1,5 +1,5 @@
 theory With_Type_Example
-  imports With_Type_Inst_HOL
+  imports With_Type (* With_Type_Inst_HOL *)
 begin
 
 (* TODO: Introduce diagnostic command that provides the boilerplate for a given class.
@@ -8,6 +8,13 @@ The registration command
  *)
 
 unbundle lifting_syntax
+
+declare [[show_sorts]]
+
+lemma tmp: \<open>x + y = y + x\<close> for y :: \<open>'a :: semigroup_add\<close>
+  sorry
+
+lemmas tmp2 = tmp[internalize_sort \<open>'a :: semigroup_add\<close>]
 
 definition \<open>WITH_TYPE_CLASS_semigroup_add S plus \<longleftrightarrow> (\<forall>a\<in>S. \<forall>b\<in>S. plus a b \<in> S) \<and> (\<forall>a\<in>S. \<forall>b\<in>S. \<forall>c\<in>S. plus (plus a b) c = plus a (plus b c))\<close>
   for S :: \<open>'rep set\<close> and plus :: \<open>'rep \<Rightarrow> 'rep \<Rightarrow> 'rep\<close>
@@ -19,8 +26,35 @@ definition \<open>WITH_TYPE_REL_semigroup_add r = (r ===> r ===> r)\<close>
 lemma with_type_compat_rel_semigroup_add[with_type_intros]:
   \<open>with_type_compat_rel WITH_TYPE_CLASS_semigroup_add S WITH_TYPE_REL_semigroup_add\<close>
   by (simp add: with_type_compat_rel_def WITH_TYPE_CLASS_semigroup_add_def WITH_TYPE_REL_semigroup_add_def
-      fun.Domainp_rel Domainp_pred_fun_eq bi_unique_left_unique)
+      fun.Domainp_rel Domainp_pred_fun_eq bi_unique_alt_def)
 
+(* lemma with_type_relatable_semigroup_add[with_type_intros]:
+  \<open>with_type_relatable WITH_TYPE_CLASS_semigroup_add (WITH_TYPE_REL_semigroup_add :: ('rep \<Rightarrow> 'abs::semigroup_add \<Rightarrow> _) \<Rightarrow> _) (+)\<close>
+  unfolding with_type_relatable_def
+proof (intro allI impI)
+  fix S :: \<open>'rep set\<close> and rep_ops
+  assume CLASS: \<open>WITH_TYPE_CLASS_semigroup_add S rep_ops\<close>
+  assume \<open>\<exists>(Rep' :: 'abs \<Rightarrow> 'rep) Abs'. type_definition Rep' Abs' S\<close>
+  then obtain Rep' :: \<open>'abs \<Rightarrow> 'rep\<close> and Abs' where \<open>type_definition Rep' Abs' S\<close>
+    by auto
+  define Rep :: \<open>'abs \<Rightarrow> 'rep\<close> and Abs :: \<open>'rep \<Rightarrow> 'abs\<close>
+    where \<open>Rep = undefined\<close> and \<open>Abs = undefined\<close>
+  have td: \<open>type_definition Rep Abs S\<close>
+    by x
+  have rel: \<open>WITH_TYPE_REL_semigroup_add (\<lambda>x y. x = Rep y) rep_ops (+)\<close>
+    unfolding WITH_TYPE_REL_semigroup_add_def
+    using CLASS apply (simp add: rel_fun_def WITH_TYPE_CLASS_semigroup_add_def)
+try0
+sledgehammer [dont_slice]
+by -
+
+    by x
+  from td rel
+  show \<open>\<exists>(Rep :: 'abs\<Rightarrow>'rep) Abs. type_definition Rep Abs S \<and> WITH_TYPE_REL_semigroup_add (\<lambda>x y. x = Rep y) rep_ops (+)\<close>
+    by auto
+qed *)
+
+(* bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (rep_rel r ===> (\<longleftrightarrow>)) (rep_class (Collect (Domainp r))) class.class *)
 lemma with_type_transfer_semigroup_add:
   assumes [transfer_rule]: \<open>bi_unique r\<close> \<open>right_total r\<close>
   shows \<open>(WITH_TYPE_REL_semigroup_add r ===> (\<longleftrightarrow>))
@@ -43,16 +77,17 @@ proof -
     by (metis inj injD)
 qed
 
-lemma with_type_transfer_semigroup_add':
+(* lemma with_type_transfer_semigroup_add':
   assumes [transfer_rule]: \<open>bi_unique r\<close> \<open>right_total r\<close>
   shows \<open>(WITH_TYPE_REL_semigroup_add r ===> (\<longleftrightarrow>))
          (WITH_TYPE_CLASS_semigroup_add (Collect (Domainp r))) class.semigroup_add\<close>
-
+ *)
 
 
 setup \<open>
 With_Type.add_with_type_info_global {
   class = \<^class>\<open>semigroup_add\<close>,
+  (* class_ops = \<^cterm>\<open>(+) :: 'a::semigroup_add \<Rightarrow> _ \<Rightarrow> _\<close>, *)
   rep_class = \<^const_name>\<open>WITH_TYPE_CLASS_semigroup_add\<close>,
   rep_rel = \<^const_name>\<open>WITH_TYPE_REL_semigroup_add\<close>,
   with_type_compat_rel = @{thm with_type_compat_rel_semigroup_add},
@@ -71,8 +106,9 @@ definition \<open>WITH_TYPE_REL_ab_group_add r = (r ===> r ===> (\<longleftright
 
 lemma with_type_compat_rel_ab_group_add[with_type_intros]:
   \<open>with_type_compat_rel WITH_TYPE_CLASS_ab_group_add S WITH_TYPE_REL_ab_group_add\<close>
-  by (simp add: with_type_compat_rel_def WITH_TYPE_CLASS_ab_group_add_def WITH_TYPE_REL_ab_group_add_def
-      fun.Domainp_rel Domainp_pred_fun_eq bi_unique_left_unique prod.Domainp_rel DomainPI)
+  apply (simp add: with_type_compat_rel_def WITH_TYPE_CLASS_ab_group_add_def WITH_TYPE_REL_ab_group_add_def
+      fun.Domainp_rel Domainp_pred_fun_eq bi_unique_def prod.Domainp_rel DomainPI)
+  by -
 
 
 setup \<open>
@@ -112,10 +148,9 @@ lemma carrier_ab_group_add: \<open>WITH_TYPE_CLASS_ab_group_add carrier carrier_
   by (auto simp: WITH_TYPE_CLASS_ab_group_add_def
         carrier_def carrier_ab_group_add_def)
 
-term \<open>with_type (WITH_TYPE_CLASS_semigroup_add, WITH_TYPE_REL_semigroup_add)\<close>
-
 lemma example_semigroup:
-  shows \<open>\<forall>\<^sub>\<tau> 'abs::semigroup_add = carrier with carrier_plus. (x::'abs) + x + x + x = x\<close>
+  shows \<open>\<forall>\<^sub>\<tau> 'abs::semigroup_add = carrier with carrier_plus. 
+    let plus = (\<lambda>x y. abs (carrier_plus (rep x) (rep y))) in (x::'abs) + x + x + x = x\<close>
 proof with_type_intro
   show \<open>carrier \<noteq> {}\<close> by simp
   fix Rep :: \<open>'abs \<Rightarrow> int\<close> and Abs and pls
@@ -137,8 +172,18 @@ proof with_type_intro
     apply transfer
 (* TODO need a transfer theorem for semigroup_add *)
     by xxx
-  sorry
 qed
+
+lemma example_semigroup_tmp:
+  shows \<open>\<forall>\<^sub>\<tau> 'abs::semigroup_add = carrier with carrier_plus. 3=3\<close>
+  apply (auto intro!: with_typeI simp add: )
+  using carrier_semigroup apply auto[1] 
+  apply (simp add: with_type_compat_rel_semigroup_add) 
+by -
+
+declare [[show_types, show_sorts]]
+thm example_semigroup_tmp[cancel_with_type]
+
 
 lemma example_ab_group_add:
   shows \<open>\<forall>\<^sub>\<tau> 'abs::ab_group_add = carrier with carrier_ab_group_add. undefined (3::nat)\<close>
