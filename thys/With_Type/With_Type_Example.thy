@@ -256,51 +256,40 @@ lemma carrier_ab_group_add[with_type_intros]: \<open>WITH_TYPE_CLASS_ab_group_ad
   by (auto simp: WITH_TYPE_CLASS_ab_group_add_def carrier_plus_def
         carrier_def carrier_ab_group_add_def)
 
+declare [[show_sorts=false]]
 lemma example_ab_group:
   shows \<open>\<forall>\<^sub>\<tau> 'abs::ab_group_add = carrier with carrier_ab_group_add. 
-  (let (plus,zero,minus,uminus) = ops_abs in
-    (plus x y = plus y x \<and> plus x (plus x x) = plus (plus x x) x))\<close>
+    (plus_abs x y = plus_abs y x \<and> plus_abs x (plus_abs x x) = plus_abs (plus_abs x x) x)\<close>
 proof with_type_intro
   show \<open>carrier \<noteq> {}\<close> by simp
   fix Rep :: \<open>'abs \<Rightarrow> int\<close> and Abs and abs_ops
+  assume wt: \<open>WITH_TYPE_REL_ab_group_add (\<lambda>x y. x = Rep y) carrier_ab_group_add abs_ops\<close>
+  define plus zero minus uminus where \<open>plus = fst abs_ops\<close>
+    and \<open>zero = fst (snd abs_ops)\<close>
+    and \<open>minus = fst (snd (snd abs_ops))\<close>
+    and \<open>uminus = snd (snd (snd abs_ops)) \<close>
+
   assume \<open>type_definition Rep Abs carrier\<close>
   then interpret type_definition Rep Abs carrier
     by -
+  
   define r where \<open>r = (\<lambda>x y. x = Rep y)\<close>
   have [transfer_rule]: \<open>bi_unique r\<close>
     using \<open>type_definition Rep Abs carrier\<close> bi_unique_def r_def type_definition.Rep_inject by fastforce
   have [transfer_rule]: \<open>right_total r\<close>
     by (simp add: r_def right_total_def)
-  assume \<open>WITH_TYPE_REL_ab_group_add (\<lambda>x y. x = Rep y) carrier_ab_group_add abs_ops\<close>
-  then have transfer_carrier[transfer_rule]: \<open>((r ===> r ===> r) *** r *** (r ===> r ===> r) *** (r ===> r)) carrier_ab_group_add abs_ops\<close>
+  from wt have transfer_carrier[transfer_rule]: \<open>((r ===> r ===> r) *** r *** (r ===> r ===> r) *** (r ===> r)) carrier_ab_group_add abs_ops\<close>
     by (simp add: r_def WITH_TYPE_REL_ab_group_add_def)
-  have [transfer_rule]: \<open>((r ===> r ===> r) ===> r ===> (r ===> r ===> r) ===> (r ===> r) ===> (\<longleftrightarrow>))
-                         (\<lambda>p z m u. WITH_TYPE_CLASS_ab_group_add (Collect (Domainp r)) (p,z,m,u)) class.ab_group_add\<close>
-  proof (intro rel_funI)
-    fix pr pa zr za mr ma ur ua
-    assume rp[transfer_rule]: \<open>(r ===> r ===> r) pr pa\<close>
-    assume rm[transfer_rule]: \<open>(r ===> r ===> r) mr ma\<close>
-    assume ru[transfer_rule]: \<open>(r ===> r) ur ua\<close>
-    assume rz[transfer_rule]: \<open>r zr za\<close>
-
-    show \<open>WITH_TYPE_CLASS_ab_group_add (Collect (Domainp r)) (pr,zr,mr,ur) \<longleftrightarrow> class.ab_group_add pa za ma ua\<close>
-      unfolding class.ab_group_add_def class.comm_monoid_add_def class.ab_group_add_axioms_def
-        class.comm_monoid_add_axioms_def class.ab_semigroup_add_def class.semigroup_add_def 
-        class.ab_semigroup_add_axioms_def
-      apply transfer
-      apply (auto intro!: simp: WITH_TYPE_CLASS_ab_group_add_def)
-      using rz apply blast
-        apply (metis DomainPI rel_funD rp)
-       apply (metis DomainPI rel_funD rm) 
-      by (metis DomainPI rel_funD ru) 
-  qed
   have dom_r: \<open>Collect (Domainp r) = carrier\<close>
     apply (auto intro!: simp: Rep r_def Domainp_iff)
     by (meson Rep_cases)
-  define plus zero minus uminus where \<open>plus = (let (plus,zero,minus,uminus) = abs_ops in plus)\<close>
-    and \<open>zero = (let (plus,zero,minus,uminus) = abs_ops in zero)\<close>
-    and  \<open>minus = (let (plus,zero,minus,uminus) = abs_ops in minus)\<close>
-    and  \<open>uminus = (let (plus,zero,minus,uminus) = abs_ops in uminus)\<close>
+  
+  from with_type_transfer_ab_group_add[OF \<open>bi_unique r\<close> \<open>right_total r\<close>]
+  have [transfer_rule]: \<open>((r ===> r ===> r) ===> r ===> (r ===> r ===> r) ===> (r ===> r) ===> (\<longleftrightarrow>))
+                         (\<lambda>p z m u. WITH_TYPE_CLASS_ab_group_add carrier (p,z,m,u)) class.ab_group_add\<close>
+    unfolding dom_r WITH_TYPE_REL_ab_group_add_def
+    by (auto intro!: simp: rel_fun_def)
+
   interpret ab_group_add plus zero minus uminus
     unfolding zero_def plus_def minus_def uminus_def
     apply transfer
@@ -317,19 +306,14 @@ proof with_type_intro
     by (simp add: add_assoc)
 
   from 1 2
-  have \<open>plus x y = plus y x \<and> plus x (plus x x) = plus (plus x x) x\<close>
+  have final: \<open>plus x y = plus y x \<and> plus x (plus x x) = plus (plus x x) x\<close>
     by simp
 
-  then
-  show \<open>let (plus::'abs \<Rightarrow> 'abs \<Rightarrow> 'abs, zero::'abs, minus::'abs \<Rightarrow> 'abs \<Rightarrow> 'abs, uminus::'abs \<Rightarrow> 'abs) = abs_ops
-       in plus x y = plus y x \<and> plus x (plus x x) = plus (plus x x) x\<close>
+  show \<open>plus x y = plus y x \<and> plus x (plus x x) = plus (plus x x) x\<close>
+    using final
     by (simp add: plus_def case_prod_beta)
 
 qed
-
-
-
-
 
 end
 

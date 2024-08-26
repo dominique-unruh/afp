@@ -249,6 +249,24 @@ fun with_type_cancel ctxt thm = let
     final_thm
   end
 
+fun nth_of_m 0 1 t = t
+  | nth_of_m 0 m t = if m <= 1 then raise ERROR "m <= 1" else \<^Const>\<open>fst dummyT dummyT\<close> $ t
+  | nth_of_m n m t = if n <= 0 then raise ERROR "n <= 0" else \<^Const>\<open>snd dummyT dummyT\<close> $ (nth_of_m (n-1) (m-1) t)
+
+fun substitute_params term names suffix = let
+  val len = length names
+  val ops = Free("ops_" ^ suffix, dummyT)
+  val names = map (fn name => name ^ "_" ^ suffix) names
+  fun subst (t as Const _) = t
+    | subst (t $ u) = subst t $ subst u
+    | subst (t as Var _) = t
+    | subst (t as Bound _) = t
+    | subst (Abs (n,T,body)) = Abs(n,T,subst body)
+    | subst (t as Free(n,_)) = case find_index (fn m => n=m) names of
+        ~1 => t
+        | i => nth_of_m i len ops
+in subst term end
+
 fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
   val (typname_raw,sort) = case typ_term of 
     Const ("_ofsort", _) $ Free (_, _) $ Free _ =>
@@ -267,6 +285,7 @@ fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
   val rep = Free("rep_" ^ typname, dummyT)
   val abs = Free("abs_" ^ typname, dummyT)
   val abs_ops = Free("ops_" ^ typname, dummyT)
+  val prop = substitute_params prop (#param_names info) typname
   val prop = Syntax_Trans.abs_tr [rep, Syntax_Trans.abs_tr [abs, Syntax_Trans.abs_tr [abs_ops, prop]]]
   val propT = (typ --> dummyT) --> (dummyT --> typ) --> dummyT --> HOLogic.boolT
   (* The "Config.put show_sorts true" is necessary because otherwise "term_of_typ" ignores sorts. *)
@@ -277,7 +296,7 @@ fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
   | with_type_parse_translation ctxt [typ_term, carrier, prop] = with_type_parse_translation ctxt [typ_term, carrier, \<^term>\<open>()\<close>, prop]
   | with_type_parse_translation _ Ts = raise TERM ("with_type_parse_translation: called with wrong number of arguments", Ts)
 
-fun with_type_print_translation ctxt args = raise TERM ("with_type_print_translation: nyi", [])
+fun with_type_print_translation ctxt args = raise TERM ("with_type_print_translation: nyi", args)
 
 
 end

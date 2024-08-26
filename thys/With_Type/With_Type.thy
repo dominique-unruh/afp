@@ -26,7 +26,6 @@ so that it can transfer things back and forth.
 If \<^term>\<open>P\<close> does not contain \<^typ>\<open>'abs\<close>, we can erase the \<^term>\<open>with_type\<close> using the \<open>Types_To_Sets\<close> mechanism.
 See lemma \<open>erasure_example\<close> below.
 
-
 The intuitive meaning of \<^term>\<open>with_type (C,R) (S,rep_ops) P\<close> is that \<^term>\<open>P\<close> holds for
 any type \<^typ>\<open>'t\<close> that that can be represented by a concrete representation (S,rep_ops)
 and that has a type class matching the specification (C,R).
@@ -36,7 +35,8 @@ definition \<open>with_type = (\<lambda>(C,R) (S,rep_ops) P. S\<noteq>{} \<and> 
             P Rep Abs abs_ops))\<close>
   for S :: \<open>'rep set\<close> and P :: \<open>('abs \<Rightarrow> 'rep) \<Rightarrow> ('rep \<Rightarrow> 'abs) \<Rightarrow> bool\<close>
   and R :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool)\<close>
-  and C :: \<open>'rep set \<Rightarrow> 'rep_ops \<Rightarrow> bool\<close> and rep_ops :: \<open>'rep_ops\<close>
+  and C :: \<open>'rep set \<Rightarrow> 'rep_ops \<Rightarrow> bool\<close>
+  and rep_ops :: \<open>'rep_ops\<close>
 
 definition \<open>WITH_TYPE_CLASS_type S ops = True\<close>
 definition \<open>WITH_TYPE_REL_type r = (=)\<close>
