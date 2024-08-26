@@ -121,7 +121,7 @@ fun with_type_cancel ctxt thm = let
   
   (* like thm, but with 'abs replaced by ?'abs, unless it's already a schematic variable *)
   val thm = case Thm.prop_of thm of
-      \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type _ _ abs _\<close> $ _ $ _ $ _ $ _) =>
+      \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type _ _ abs _\<close> $ _ $ _ $ _ $ _ $ _) =>
          (case abs of
             TVar _ => thm
           | TFree (n,T) => Thm.generalize (Names.make1_set n, Names.empty) (Thm.maxidx_of thm + 1) thm
@@ -132,7 +132,7 @@ fun with_type_cancel ctxt thm = let
   val (const_class, const_rel, rep_type, abs_type, P, S) = case Thm.prop_of thm of
       \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type rep _ abs _\<close>
                             $ Const(const_class, _) $ Const(const_rel, _)
-                            $ (\<^Const_>\<open>Pair _ _\<close> $ S $ _) $ P)
+                            $ S $ _ $ P)
              => (const_class, const_rel, rep, abs, P, S)
     | t => raise TERM ("with_type_cancel: theorem must be of the form (with_type (constant,constant) ...)", [t])
   val _ = debug\<^here> (fn _ => "const_class = " ^ \<^make_string> const_class ^ "; const_rel = " ^ \<^make_string> const_rel ^ "; abs_type = " ^ \<^make_string> abs_type ^ "; P = " ^ \<^make_string> P)
@@ -291,7 +291,7 @@ fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
   (* The "Config.put show_sorts true" is necessary because otherwise "term_of_typ" ignores sorts. *)
   val prop = Const(\<^syntax_const>\<open>_constrain\<close>, dummyT) $ prop $ Syntax_Phases.term_of_typ (Config.put show_sorts true ctxt) propT
   in Const(\<^const_name>\<open>with_type\<close>, dummyT) $ Const(#rep_class info, dummyT) $ Const(#rep_rel info, dummyT) $ 
-        (Const(\<^const_name>\<open>Pair\<close>, dummyT) $ carrier $ ops) $ prop end
+        carrier $ ops $ prop end
 
   | with_type_parse_translation ctxt [typ_term, carrier, prop] = with_type_parse_translation ctxt [typ_term, carrier, \<^term>\<open>()\<close>, prop]
   | with_type_parse_translation _ Ts = raise TERM ("with_type_parse_translation: called with wrong number of arguments", Ts)
