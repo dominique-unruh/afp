@@ -30,7 +30,7 @@ The intuitive meaning of \<^term>\<open>with_type (C,R) (S,rep_ops) P\<close> is
 any type \<^typ>\<open>'t\<close> that that can be represented by a concrete representation (S,rep_ops)
 and that has a type class matching the specification (C,R).
 \<close>
-definition \<open>with_type = (\<lambda>(C,R) (S,rep_ops) P. S\<noteq>{} \<and> C S rep_ops \<and> with_type_compat_rel C S R
+definition \<open>with_type = (\<lambda>C R (S,rep_ops) P. S\<noteq>{} \<and> C S rep_ops \<and> with_type_compat_rel C S R
     \<and> (\<forall>Rep Abs abs_ops. type_definition Rep Abs S \<longrightarrow> (R (\<lambda>x y. x = Rep y) rep_ops abs_ops) \<longrightarrow> 
             P Rep Abs abs_ops))\<close>
   for S :: \<open>'rep set\<close> and P :: \<open>('abs \<Rightarrow> 'rep) \<Rightarrow> ('rep \<Rightarrow> 'abs) \<Rightarrow> bool\<close>
@@ -47,7 +47,7 @@ lemma with_type_compat_rel_type: \<open>with_type_compat_rel WITH_TYPE_CLASS_typ
   by (simp add: WITH_TYPE_REL_type_def WITH_TYPE_CLASS_type_def with_type_compat_rel_def Domainp_iff)
 
 (* Demonstration *)
-lemma \<open>with_type (WITH_TYPE_CLASS_type,WITH_TYPE_REL_type) (S,()) P \<longleftrightarrow> S\<noteq>{} \<and> (\<forall>Rep Abs. type_definition Rep Abs S \<longrightarrow> P Rep Abs ())\<close>
+lemma \<open>with_type WITH_TYPE_CLASS_type WITH_TYPE_REL_type (S,()) P \<longleftrightarrow> S\<noteq>{} \<and> (\<forall>Rep Abs. type_definition Rep Abs S \<longrightarrow> P Rep Abs ())\<close>
   by (auto simp: with_type_def WITH_TYPE_REL_type_def WITH_TYPE_CLASS_type_def with_type_compat_rel_def)
 
 lemma with_typeI:
@@ -56,27 +56,26 @@ lemma with_typeI:
   assumes \<open>C S p\<close>
   assumes \<open>with_type_compat_rel C S R\<close>
   assumes \<open>\<And>Rep Abs abs_ops. type_definition Rep Abs S \<Longrightarrow> R (\<lambda>x y. x = Rep y) p abs_ops \<Longrightarrow> P Rep Abs abs_ops\<close>
-  shows \<open>with_type (C,R) (S,p) P\<close>
+  shows \<open>with_type C R (S,p) P\<close>
   using assms
   by (auto simp add: with_type_def case_prod_beta)
 
 lemma with_type_mp: 
-  assumes \<open>with_type (C,R) (S,p) P\<close>
+  assumes \<open>with_type C R (S,p) P\<close>
   assumes \<open>\<And>Rep Abs abs_ops. type_definition Rep Abs S \<Longrightarrow> C S p \<Longrightarrow> P Rep Abs abs_ops \<Longrightarrow> Q Rep Abs abs_ops\<close>
-  shows \<open>with_type (C,R) (S,p) Q\<close>
+  shows \<open>with_type C R (S,p) Q\<close>
   using assms by (auto simp add: with_type_def case_prod_beta)
 
-lemma with_type_nonempty: \<open>with_type CR (S,p) P \<Longrightarrow> S \<noteq> {}\<close>
+lemma with_type_nonempty: \<open>with_type C R (S,p) P \<Longrightarrow> S \<noteq> {}\<close>
   by (simp add: with_type_def case_prod_beta)
 
 lemma with_type_prepare_cancel:
   fixes Sp :: \<open>'rep set \<times> _\<close>
-  assumes wt: \<open>with_type CR (S,p) (\<lambda>_ (_::'rep\<Rightarrow>'abs) _. P)\<close>
+  assumes wt: \<open>with_type C R (S,p) (\<lambda>_ (_::'rep\<Rightarrow>'abs) _. P)\<close>
   assumes ex: \<open>(\<exists>(Rep::'abs\<Rightarrow>'rep) Abs. type_definition Rep Abs S)\<close>
   shows P
 proof -
-  define C R where \<open>C = fst CR\<close> and \<open>R = snd CR\<close>
-  with ex obtain Rep :: \<open>'abs\<Rightarrow>'rep\<close> and Abs where td: \<open>type_definition Rep Abs S\<close>
+  from ex obtain Rep :: \<open>'abs\<Rightarrow>'rep\<close> and Abs where td: \<open>type_definition Rep Abs S\<close>
     by auto
   define r where \<open>r = (\<lambda>x y. x = Rep y)\<close>
   have [simp]: \<open>bi_unique r\<close> \<open>right_total r\<close>
@@ -88,13 +87,13 @@ proof -
     apply (subst type_definition.Abs_inverse[OF td])
     by auto
   from wt have nice: \<open>with_type_compat_rel C S R\<close> and \<open>C S p\<close>
-    by (simp_all add: with_type_def R_def C_def case_prod_beta)
+    by (simp_all add: with_type_def case_prod_beta)
   from nice[unfolded with_type_compat_rel_def, rule_format, OF \<open>bi_unique r\<close> \<open>right_total r\<close> Sr \<open>C S p\<close>]
   obtain abs_ops where abs_ops: \<open>R (\<lambda>x y. x = Rep y) p abs_ops\<close>
     apply atomize_elim by (auto simp: r_def)
   from td abs_ops wt
   show P
-    by (auto simp: with_type_def case_prod_beta R_def)
+    by (auto simp: with_type_def case_prod_beta)
 qed
 
 (* lemma Domainp_rel_fun_iff: (* TODO: use Domainp_pred_fun_eq instead *)
@@ -107,13 +106,12 @@ qed
 lemma with_type_class_axioms:
   includes lifting_syntax
   fixes Rep :: \<open>'abs \<Rightarrow> 'rep\<close>
-    and CR :: \<open>_ \<times> (('rep\<Rightarrow>'abs\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool))\<close>
-    and Sp
+    and C S
     and R :: \<open>('rep\<Rightarrow>'abs\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool)\<close>
     and R2 :: \<open>('rep\<Rightarrow>'abs2\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops2 \<Rightarrow> bool)\<close>
   assumes trans: \<open>\<And>r :: 'rep \<Rightarrow> 'abs2 \<Rightarrow> bool. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (R2 r ===> (\<longleftrightarrow>)) (C (Collect (Domainp r))) axioms\<close>
   assumes nice: \<open>with_type_compat_rel C S R2\<close>
-  assumes wt: \<open>with_type (C,R) (S,p) P\<close>
+  assumes wt: \<open>with_type C R (S,p) P\<close>
   assumes ex: \<open>\<exists>(Rep :: 'abs2\<Rightarrow>'rep) Abs. type_definition Rep Abs S\<close>
   shows \<open>\<exists>x::'abs_ops2. axioms x\<close>
 proof -
@@ -155,14 +153,13 @@ qed
 lemma with_type_class_axioms2:
   includes lifting_syntax
   fixes Rep :: \<open>'abs \<Rightarrow> 'rep\<close>
-    and CR :: \<open>_ \<times> (('rep\<Rightarrow>'abs\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs itself \<Rightarrow> bool))\<close>
-    and Sp
+    and C S
     and R :: \<open>('rep\<Rightarrow>'abs\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs itself \<Rightarrow> bool)\<close>
     and R2 :: \<open>('rep\<Rightarrow>'abs2\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs2 itself \<Rightarrow> bool)\<close>
   assumes trans: \<open>\<And>r :: 'rep \<Rightarrow> 'abs2 \<Rightarrow> bool. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (R2 r ===> (\<longleftrightarrow>)) (C (Collect (Domainp r))) axioms\<close>
   assumes nice: \<open>with_type_compat_rel C S R2\<close> (* Not used, but the ML-code expects it to be there currently. *)
   assumes rel_itself: \<open>\<And>(r :: 'rep \<Rightarrow> 'abs2 \<Rightarrow> bool) p. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (R2 r) p TYPE('abs2)\<close>
-  assumes wt: \<open>with_type (C,R) (S,p) P\<close>
+  assumes wt: \<open>with_type C R (S,p) P\<close>
   assumes ex: \<open>\<exists>(Rep :: 'abs2\<Rightarrow>'rep) Abs. type_definition Rep Abs S\<close>
   shows \<open>axioms TYPE('abs2)\<close>
 proof -
@@ -244,7 +241,7 @@ parse_translation \<open>[
   (\<^syntax_const>\<open>_with_type_with\<close>, With_Type.with_type_parse_translation)
 ]\<close>
 
-(* print_translation \<open>[ (\<^const_syntax>\<open>with_type\<close>, With_Type.with_type_print_translation) ]\<close> *)
+(* typed_print_translation \<open>[ (\<^const_syntax>\<open>with_type\<close>, With_Type.with_type_print_translation) ]\<close> *)
 
 
 term \<open>\<forall>\<^sub>\<tau> 't::type = N. (rep_t = rep_t)\<close>
@@ -275,7 +272,7 @@ fun with_type_mp_tac pos facts (ctxt, st) = let
     val rule = @{thm with_type_mp} OF [fact]
     val (repT, absT, C, S, ops, P, abs_opsT) = case Thm.cprem_of st 1 |> Thm.term_of of
              \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type repT rep_opsT absT abs_opsT\<close> 
-                                    $ (\<^Const_>\<open>Pair _ _\<close> $ C $ _) $ (\<^Const_>\<open>Pair _ _\<close> $ S $ ops) $ P)
+                                    $ C $ _ $ (\<^Const_>\<open>Pair _ _\<close> $ S $ ops) $ P)
                    => (repT, absT, C, S, ops, P, abs_opsT)
              | _ => raise ERROR_IN_TACTIC (fn _ => "with_type_mp: goal of the wrong form")
     val rep_name = "rep_" ^ absT_name absT

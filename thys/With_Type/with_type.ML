@@ -23,7 +23,7 @@ val with_type_cancel : Proof.context -> thm -> thm
 
 val with_type_parse_translation : Proof.context -> term list -> term
 
-val with_type_print_translation : Proof.context -> term list -> term
+val with_type_print_translation : Proof.context -> typ -> term list -> term
 
 val get_with_type_info_by_class : Proof.context -> class -> with_type_info option
 
@@ -121,7 +121,7 @@ fun with_type_cancel ctxt thm = let
   
   (* like thm, but with 'abs replaced by ?'abs, unless it's already a schematic variable *)
   val thm = case Thm.prop_of thm of
-      \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type _ _ abs _\<close> $ _ $ _ $ _) =>
+      \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type _ _ abs _\<close> $ _ $ _ $ _ $ _) =>
          (case abs of
             TVar _ => thm
           | TFree (n,T) => Thm.generalize (Names.make1_set n, Names.empty) (Thm.maxidx_of thm + 1) thm
@@ -131,7 +131,7 @@ fun with_type_cancel ctxt thm = let
 
   val (const_class, const_rel, rep_type, abs_type, P, S) = case Thm.prop_of thm of
       \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type rep _ abs _\<close>
-                            $ (\<^Const_>\<open>Pair _ _\<close> $ Const(const_class, _) $ Const(const_rel, _))
+                            $ Const(const_class, _) $ Const(const_rel, _)
                             $ (\<^Const_>\<open>Pair _ _\<close> $ S $ _) $ P)
              => (const_class, const_rel, rep, abs, P, S)
     | t => raise TERM ("with_type_cancel: theorem must be of the form (with_type (constant,constant) ...)", [t])
@@ -290,13 +290,19 @@ fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
   val propT = (typ --> dummyT) --> (dummyT --> typ) --> dummyT --> HOLogic.boolT
   (* The "Config.put show_sorts true" is necessary because otherwise "term_of_typ" ignores sorts. *)
   val prop = Const(\<^syntax_const>\<open>_constrain\<close>, dummyT) $ prop $ Syntax_Phases.term_of_typ (Config.put show_sorts true ctxt) propT
-  in Const(\<^const_name>\<open>with_type\<close>, dummyT) $ HOLogic.mk_prod (Const(#rep_class info, dummyT), Const(#rep_rel info, dummyT)) $ 
+  in Const(\<^const_name>\<open>with_type\<close>, dummyT) $ Const(#rep_class info, dummyT) $ Const(#rep_rel info, dummyT) $ 
         (Const(\<^const_name>\<open>Pair\<close>, dummyT) $ carrier $ ops) $ prop end
 
   | with_type_parse_translation ctxt [typ_term, carrier, prop] = with_type_parse_translation ctxt [typ_term, carrier, \<^term>\<open>()\<close>, prop]
   | with_type_parse_translation _ Ts = raise TERM ("with_type_parse_translation: called with wrong number of arguments", Ts)
 
-fun with_type_print_translation ctxt args = raise TERM ("with_type_print_translation: nyi", args)
+fun with_type_print_translation' ctxt typ args = let
+  val [] = args
+in raise Bind end
+(* raise TERM ("with_type_print_translation: nyi", args) *)
 
+fun with_type_print_translation ctxt typ args = 
+  with_type_print_translation' ctxt typ args
+  handle Bind => fold (fn t => fn u => u $ t) args (Const("with_type", typ))
 
 end
