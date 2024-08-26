@@ -272,8 +272,7 @@ fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
     Const ("_ofsort", _) $ Free (_, _) $ Free _ =>
       raise TERM ("with_type_parse_translation: abstract type must be annotated with a type class", [typ_term])
     | Const ("_ofsort", _) $ (Const ("_ofsort", _) $ Free (n, _) $ Free _) $ sort => (n, sort)
-    | _ => (\<^print> typ_term;
-         raise TERM ("parse_transtation _with_type: first argument must be a type variable", [typ_term]))
+    | _ => raise TERM ("parse_translation _with_type: first argument must be a type variable", [typ_term])
   val typname = if typname_raw = "" then raise TERM ("parse_transtation _with_type: empty type variable name", [typ_term])
       else if not (String.isPrefix "'" typname_raw) then raise TERM ("parse_transtation _with_type: type variable name does not start with '", [typ_term])
       else String.extract (typname_raw,1,NONE)
@@ -297,12 +296,33 @@ fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
   | with_type_parse_translation _ Ts = raise TERM ("with_type_parse_translation: called with wrong number of arguments", Ts)
 
 fun with_type_print_translation' ctxt typ args = let
-  val [] = args
-in raise Bind end
-(* raise TERM ("with_type_print_translation: nyi", args) *)
+  val [Const(C,_), Const(R,_), S, rep_ops, P (* Abs(_,_, Abs(_,_, Abs(_,_,P))) *)] = args 
+  val Type("fun", [_, Type("fun", [Type("fun", [Type("fun", absT), _]), _])]) = typ
+  val TFree(absT, abs_sort) = typ |> range_type |> domain_type |> domain_type |> range_type |> domain_type
+  val [class] = abs_sort
+  val _ = String.isPrefix "'" absT orelse raise Bind
+  val suffix = String.extract (absT,1,NONE)
+  val C = Lexicon.unmark_const C handle Fail _ => raise Bind
+  val R = Lexicon.unmark_const R handle Fail _ => raise Bind
+  val SOME info = get_with_type_info_by_class ctxt class
+  val _ = C = #rep_class info orelse raise Bind
+  val _ = R = #rep_rel info orelse raise Bind
+(*    val output_typ = Syntax.const "_ofsort" $ (Syntax.const "_tfree" $ Syntax.free absT) $ 
+      (Syntax.const "_sort" $ Syntax.const (Lexicon.mark_class class) ) *)
+   val output_typ = Syntax.const "_with_type_sort_annotation" $ (Syntax.const "_tfree" $ Syntax.free absT) $ 
+        Syntax.const (Lexicon.mark_class class)
+  fun mark_var v = Syntax.const "_bound" $ Syntax.free (v^suffix)
+  val P = Term.betapplys (P, [mark_var "rep_", mark_var "abs_", mark_var "ops_"])
+  val rep_ops_unit = case rep_ops of Const(\<^const_syntax>\<open>Unity\<close>,_) => true | _ => false
+in 
+  if rep_ops_unit
+  then Const(\<^syntax_const>\<open>_with_type\<close>, dummyT) $ output_typ $ S $ P
+  else Const(\<^syntax_const>\<open>_with_type_with\<close>, dummyT) $ output_typ $ S $ rep_ops $ P
+end
 
 fun with_type_print_translation ctxt typ args = 
   with_type_print_translation' ctxt typ args
-  handle Bind => fold (fn t => fn u => u $ t) args (Const("with_type", typ))
+  handle Bind => 
+     fold (fn t => fn u => u $ t) args (Free("with_type", typ))
 
 end

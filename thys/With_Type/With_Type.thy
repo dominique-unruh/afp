@@ -196,6 +196,9 @@ lemma [simp]: \<open>Domainp rel_unit_itself x\<close>
 lemma [simp]: \<open>rel_unit_itself () y \<longleftrightarrow> (y = TYPE('a))\<close>
   by (simp add: rel_unit_itself.simps)
 
+syntax "_with_type" :: "type \<Rightarrow> 'a => 'b \<Rightarrow> 'c" ("\<forall>\<^sub>\<tau> _ = _. _" [0,0,10] 10)
+syntax "_with_type_with" :: "type \<Rightarrow> 'a => args \<Rightarrow> 'b \<Rightarrow> 'c" ("\<forall>\<^sub>\<tau> _ = _ with _. _" [0,0,10] 10)
+syntax (output) "_with_type_sort_annotation" :: "type \<Rightarrow> sort \<Rightarrow> type" ("_::_")
 
 ML_file "with_type.ML"
 
@@ -234,15 +237,13 @@ With_Type.add_with_type_info_global {
 }
 \<close>
 
-syntax "_with_type" :: "type \<Rightarrow> 'a => 'b \<Rightarrow> 'c" ("\<forall>\<^sub>\<tau> _=_. _" [0,0,10] 10)
-syntax "_with_type_with" :: "type \<Rightarrow> 'a => args \<Rightarrow> 'b \<Rightarrow> 'c" ("\<forall>\<^sub>\<tau> _=_ with _. _" [0,0,10] 10)
 parse_translation \<open>[
   (\<^syntax_const>\<open>_with_type\<close>, With_Type.with_type_parse_translation),
   (\<^syntax_const>\<open>_with_type_with\<close>, With_Type.with_type_parse_translation)
 ]\<close>
 
-(* typed_print_translation \<open>[ (\<^const_syntax>\<open>with_type\<close>, With_Type.with_type_print_translation) ]\<close> *)
-
+(* TODO config option to disable print translation *)
+typed_print_translation \<open>[ (\<^const_syntax>\<open>with_type\<close>, With_Type.with_type_print_translation) ]\<close>
 
 term \<open>\<forall>\<^sub>\<tau> 't::type = N. (rep_t = rep_t)\<close>
 (* term \<open>\<forall>\<^sub>\<tau>'t::type = N with pls. (rep_t = rep_t)\<close> *)
