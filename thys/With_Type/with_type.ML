@@ -3,12 +3,13 @@ type with_type_info = {
   class: class,
   rep_class: string,
   rep_rel: string,
-  (* rep_class_data_thm: thm option, (* Of the form \<open>rep_class_axioms = (const,const)\<close> *) *)
+  param_names: string list,
   with_type_compat_rel: thm, (* with_type_compat_rel rep_class S rep_rel;
                                 rep_class/rep_rel must have different ?'abs *)
-  transfer: thm option (* bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (rep_rel r ===> (\<longleftrightarrow>)) (rep_class (Collect (Domainp r))) class.class *)
+  transfer: thm option, (* bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (rep_rel r ===> (\<longleftrightarrow>)) (rep_class (Collect (Domainp r))) class.class *)
                        (* rep_class/rep_rel must have different ?'abs *)
                        (* class.class is the class-predicate-constant (e.g. semigroup_add.class), possibly uncurried (e.g. \<lambda>(x,y,z). const x y z) *)
+  rep_rel_itself: thm option (* bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (R2 r) p TYPE('abs2) *)
 }
 
 val add_with_type_info_global : with_type_info -> theory -> theory
@@ -44,16 +45,19 @@ type with_type_info = {
   class: class,
   rep_class: string,
   rep_rel: string,
+  param_names: string list,
   (* rep_class_data_thm: thm option, *)
   with_type_compat_rel: thm, 
-  transfer: thm option
+  transfer: thm option,
+  rep_rel_itself: thm option
 }
 
-fun morphism m ({class, rep_class, rep_rel, with_type_compat_rel, transfer} : with_type_info) : with_type_info =
+fun morphism m ({class, rep_class, rep_rel, with_type_compat_rel, transfer, rep_rel_itself, param_names} : with_type_info) : with_type_info =
   {class=class, rep_class=rep_class, rep_rel=rep_rel, 
-    (* rep_class_data_thm = Option.map (Morphism.thm m) rep_class_data_thm, *)
     with_type_compat_rel = Morphism.thm m with_type_compat_rel,
-    transfer = Option.map (Morphism.thm m) transfer}
+    transfer = Option.map (Morphism.thm m) transfer,
+    param_names = param_names,
+    rep_rel_itself = Option.map (Morphism.thm m) rep_rel_itself}
 
 structure With_Type_Data = Generic_Data (
   type T = { by_class: with_type_info Symtab.table, by_const: with_type_info Symtab.table }
@@ -108,7 +112,9 @@ fun unoverload_type_local ctxt tvars thm = let
   val thm''' = fold remove_hyp (hyps |> map_index fst |> rev) thm_tfree
   in thm''' end
 
+
 fun with_type_cancel ctxt thm = let
+  datatype class_premise = CLASS_PREMISE_NONE | CLASS_PREMISE_ITSELF | CLASS_PREMISE_PARAMS
   fun debug (pos : Position.T) m = if true then tracing (Markup.markup (Markup.properties (Position.properties_of pos) Markup.position) "\<^here>" ^ " " ^ m ()) else ()
 
   val _ = debug\<^here> (fn _ => "thm = " ^ \<^make_string> thm)
@@ -123,17 +129,20 @@ fun with_type_cancel ctxt thm = let
     | t => raise TERM ("with_type_cancel: theorem must be of the form (with_type ...)", [t])
   val _ = debug\<^here> (fn _ => "thm (after generalizing) = " ^ \<^make_string> thm)
 
-  val (const_class, const_rel, rep_type, abs_type, P) = case Thm.prop_of thm of
+  val (const_class, const_rel, rep_type, abs_type, P, S) = case Thm.prop_of thm of
       \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type rep _ abs _\<close>
                             $ (\<^Const_>\<open>Pair _ _\<close> $ Const(const_class, _) $ Const(const_rel, _))
-                            $ _ $ P)
-             => (const_class, const_rel, rep, abs, P)
+                            $ (\<^Const_>\<open>Pair _ _\<close> $ S $ _) $ P)
+             => (const_class, const_rel, rep, abs, P, S)
     | t => raise TERM ("with_type_cancel: theorem must be of the form (with_type (constant,constant) ...)", [t])
   val _ = debug\<^here> (fn _ => "const_class = " ^ \<^make_string> const_class ^ "; const_rel = " ^ \<^make_string> const_rel ^ "; abs_type = " ^ \<^make_string> abs_type ^ "; P = " ^ \<^make_string> P)
 
-  val _ = let val P' = betapplys (P, [Free("Rep", abs_type --> rep_type), Free("Abs", rep_type --> abs_type)])  in
+  val rep_ctyp = Thm.ctyp_of ctxt rep_type
+  val S_cterm = Thm.cterm_of ctxt S
+
+  val _ = let val P' = betapplys (P, [Free("Rep", abs_type --> rep_type), Free("Abs", rep_type --> abs_type), Free("abs_ops", dummyT)])  in
             exists_type (exists_subtype (fn T => T=abs_type)) P'
-              andalso raise TYPE ("with_type_cancel: body contains bound type", [abs_type], [P']) end
+              andalso raise ERROR ("with_type_cancel: body contains type " ^ Syntax.string_of_typ ctxt abs_type ^ " that is supposed to be removed") end
 
   val abs_type_name = case abs_type of
     TVar (n,_) => n
@@ -143,46 +152,80 @@ fun with_type_cancel ctxt thm = let
   val info = get_with_type_info_by_const ctxt const_class |> the
   val _ = #rep_rel info = const_rel orelse raise TERM ("with_type_cancel: expected relator " ^ #rep_rel info ^ " instead of " ^ const_rel, [Thm.prop_of thm])
 
-  (* "with_type (C,R) (?S,?p) ?P \<Longrightarrow>
-      \<exists>Rep Abs. type_definition Rep Abs ?S \<Longrightarrow> \<exists>x. class.name' x" *)
-  (* Here class.name' is class.name, possibly uncurried (e.g., \<lambda>(x,y,z) class.name x y z) *)
-  (* May be NONE *)
-  val with_type_class_axioms = case #transfer info of SOME transfer => 
-        (@{thm with_type_class_axioms} OF [transfer, #with_type_compat_rel info])
-        |> (Tactic.assume_tac ctxt 1  THEN  Tactic.assume_tac ctxt 1) |> Seq.hd |> SOME
-    | NONE => NONE
-  val _ = debug\<^here> (fn _ => "with_type_class_axioms = " ^ \<^make_string> with_type_class_axioms)
- 
   (* class.name (\<dots> using ?'abs::type) \<Longrightarrow> with_type (C,R) (S,p) (\<lambda>_ _. P) *)
   (* class.name part may be absent for some type classes *)
   val unoverloaded = unoverload_type_local ctxt [abs_type_name] thm
   val _ = debug\<^here> (fn _ => "unoverloaded = " ^ \<^make_string> unoverloaded)
-  val _ = case Thm.nprems_of unoverloaded of
-            0 => is_none with_type_class_axioms orelse raise THM ("with_type_cancel: unoverloading produced no `class.name` premise, but #transfer is not NONE", 0, [unoverloaded])
-          | 1 => is_none with_type_class_axioms andalso raise THM ("with_type_cancel: unoverloading produced a `class.name` premise, but #transfer is NONE", 0, [unoverloaded])
+  val class_premise = case Thm.nprems_of unoverloaded of
+       0 => CLASS_PREMISE_NONE
+     | 1 => (case Thm.prems_of unoverloaded |> hd of
+               \<^Const_>\<open>Trueprop\<close> $ (_ $ \<^Const_>\<open>Pure.type _\<close>) => CLASS_PREMISE_ITSELF
+             | _ => CLASS_PREMISE_PARAMS)
+     | _ => raise THM ("with_type_cancel: unoverload_type_local produced more premises", Thm.nprems_of unoverloaded, [thm, unoverloaded])
+  val _ = debug\<^here> (fn _ => "class_premise = " ^ \<^make_string> class_premise)
 
+  (* "with_type (C,R) (?S,?p) ?P \<Longrightarrow>
+      \<exists>Rep Abs. type_definition Rep Abs ?S \<Longrightarrow> \<exists>x. class.name' x" *)
+  (* Here class.name' is class.name, possibly uncurried (e.g., \<lambda>(x,y,z) class.name x y z) *)
+  (* Only defined if class_premise = CLASS_PREMISE_PARAMS *)
+  val with_type_class_axioms = 
+    if class_premise = CLASS_PREMISE_PARAMS then
+      case #transfer info of SOME transfer => 
+        (@{thm with_type_class_axioms} OF [transfer, #with_type_compat_rel info])
+        |> (Tactic.assume_tac ctxt 1  THEN  Tactic.assume_tac ctxt 1) |> Seq.hd |> SOME
+         | NONE => raise THM ("with_type_cancel: unoverloading produced a `class.name` premise, but #transfer is NONE", 0, [unoverloaded])
+    else
+      NONE
+  val _ = debug\<^here> (fn _ => "with_type_class_axioms = " ^ \<^make_string> with_type_class_axioms)
+ 
   (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs S \<Longrightarrow> \<exists>x::?'abs_params2. class.name' x *)
-  (* May be NONE *)
+  (* Only defined if class_premise = CLASS_PREMISE_PARAMS *)
   val ex_class = Option.map (fn th => th OF [thm]) with_type_class_axioms
   val _ = debug\<^here> (fn _ => "ex_class = " ^ \<^make_string> ex_class)
 
   (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs S \<Longrightarrow> class.name' (SOME \<dots>) *)
-  (* May be NONE *)
+  (* Only defined if class_premise = CLASS_PREMISE_PARAMS *)
   val class_some = Option.map (fn thm => @{thm someI_ex} OF [thm]) ex_class
   val _ = debug\<^here> (fn _ => "class_some = " ^ \<^make_string> class_some)
 
   open Conv
   (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs S \<Longrightarrow> class.name \<dots> \<dots> \<dots> *)
-  (* May be NONE *)
+  (* Only defined if class_premise = CLASS_PREMISE_PARAMS *)
   val uncurry_conv = repeat_conv (rewr_conv @{thm case_prod_beta[THEN eq_reflection]}) |> HOLogic.Trueprop_conv |> implies_concl_conv
   val class_some_uncurried = Option.map (fconv_rule uncurry_conv) class_some
   val _ = debug\<^here> (fn _ => "class_some_uncurried = " ^ \<^make_string> class_some_uncurried)
 
+  (* with_type (C,R) (S,?p) ?P \<Longrightarrow>\<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs S \<Longrightarrow> class.name TYPE(?'abs2) *)
+  (* Only defined if class_premise = CLASS_PREMISE_ITSELF *)
+  val class_type' =
+    if class_premise = CLASS_PREMISE_ITSELF then
+      case (#transfer info, #rep_rel_itself info) of (SOME transfer, SOME itself) => 
+            @{thm with_type_class_axioms2}
+            |> Drule.infer_instantiate ctxt [(("S",0), S_cterm)]
+            |> (fn thm => thm OF [transfer, #with_type_compat_rel info, itself])
+            |> (Tactic.assume_tac ctxt 1  THEN  Tactic.assume_tac ctxt 1  THEN  Tactic.assume_tac ctxt 1  THEN  Tactic.assume_tac ctxt 1) |> Seq.hd
+            (* |> Thm.instantiate' [SOME rep_ctyp] [] *)
+            |> SOME
+       | (NONE, _) => raise THM ("with_type_cancel: unoverloading produced a `class.name` premise, but #transfer is NONE", 0, [unoverloaded])
+       | (_, NONE) => raise THM ("with_type_cancel: unoverloading produced a `class.name TYPE(\<dots>)` premise, but #rep_rel_itself is NONE", 0, [unoverloaded])
+    else
+      NONE
+  val _ = debug\<^here> (fn _ => "class_type' = " ^ \<^make_string> class_type')
+
+  (* type_definition Rep Abs S \<Longrightarrow> class.name TYPE(?'abs2) *)
+  (* Only defined if class_premise = CLASS_PREMISE_ITSELF *)
+  val class_type = Option.map (fn th => th OF [thm]) class_type'
+  val _ = debug\<^here> (fn _ => "class_type = " ^ \<^make_string> class_type)
+
+  val class = case class_premise of
+                CLASS_PREMISE_ITSELF => class_type | CLASS_PREMISE_PARAMS => class_some_uncurried | CLASS_PREMISE_NONE => NONE
+
   (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs S \<Longrightarrow> with_type CR Sp (\<lambda>_ _. P) *)
-  val unoverloaded' = case class_some_uncurried of SOME thm => unoverloaded OF [thm] | NONE => unoverloaded
+  val unoverloaded' = case class of SOME thm => unoverloaded OF [thm] | NONE => unoverloaded
   val _ = debug\<^here> (fn _ => "unoverloaded' = " ^ \<^make_string> unoverloaded')
 
   (* \<exists>(Rep::?'abs\<Rightarrow>_) Abs. type_definition Rep Abs S [POSSIBLY TWICE!] \<Longrightarrow> P *)
+  (* TWICE if class_premise = CLASS_PREMISE_PARAMS or CLASS_PREMISE_ITSELF *)
   val no_with_type = @{thm with_type_prepare_cancel} OF [unoverloaded']
   val _ = debug\<^here> (fn _ => "no_with_type = " ^ \<^make_string> no_with_type)
 
@@ -223,8 +266,9 @@ fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
   val typ = TFree("'" ^ typname, [class])
   val rep = Free("rep_" ^ typname, dummyT)
   val abs = Free("abs_" ^ typname, dummyT)
-  val prop = Syntax_Trans.abs_tr [rep, Syntax_Trans.abs_tr [abs, prop]]
-  val propT = (typ --> dummyT) --> (dummyT --> typ) --> HOLogic.boolT
+  val abs_ops = Free("ops_" ^ typname, dummyT)
+  val prop = Syntax_Trans.abs_tr [rep, Syntax_Trans.abs_tr [abs, Syntax_Trans.abs_tr [abs_ops, prop]]]
+  val propT = (typ --> dummyT) --> (dummyT --> typ) --> dummyT --> HOLogic.boolT
   (* The "Config.put show_sorts true" is necessary because otherwise "term_of_typ" ignores sorts. *)
   val prop = Const(\<^syntax_const>\<open>_constrain\<close>, dummyT) $ prop $ Syntax_Phases.term_of_typ (Config.put show_sorts true ctxt) propT
   in Const(\<^const_name>\<open>with_type\<close>, dummyT) $ HOLogic.mk_prod (Const(#rep_class info, dummyT), Const(#rep_rel info, dummyT)) $ 

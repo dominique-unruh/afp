@@ -33,7 +33,7 @@ and that has a type class matching the specification (C,R).
 \<close>
 definition \<open>with_type = (\<lambda>(C,R) (S,rep_ops) P. S\<noteq>{} \<and> C S rep_ops \<and> with_type_compat_rel C S R
     \<and> (\<forall>Rep Abs abs_ops. type_definition Rep Abs S \<longrightarrow> (R (\<lambda>x y. x = Rep y) rep_ops abs_ops) \<longrightarrow> 
-            P Rep Abs))\<close>
+            P Rep Abs abs_ops))\<close>
   for S :: \<open>'rep set\<close> and P :: \<open>('abs \<Rightarrow> 'rep) \<Rightarrow> ('rep \<Rightarrow> 'abs) \<Rightarrow> bool\<close>
   and R :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool)\<close>
   and C :: \<open>'rep set \<Rightarrow> 'rep_ops \<Rightarrow> bool\<close> and rep_ops :: \<open>'rep_ops\<close>
@@ -47,7 +47,7 @@ lemma with_type_compat_rel_type: \<open>with_type_compat_rel WITH_TYPE_CLASS_typ
   by (simp add: WITH_TYPE_REL_type_def WITH_TYPE_CLASS_type_def with_type_compat_rel_def Domainp_iff)
 
 (* Demonstration *)
-lemma \<open>with_type (WITH_TYPE_CLASS_type,WITH_TYPE_REL_type) (S,()) P \<longleftrightarrow> S\<noteq>{} \<and> (\<forall>Rep Abs. type_definition Rep Abs S \<longrightarrow> P Rep Abs)\<close>
+lemma \<open>with_type (WITH_TYPE_CLASS_type,WITH_TYPE_REL_type) (S,()) P \<longleftrightarrow> S\<noteq>{} \<and> (\<forall>Rep Abs. type_definition Rep Abs S \<longrightarrow> P Rep Abs ())\<close>
   by (auto simp: with_type_def WITH_TYPE_REL_type_def WITH_TYPE_CLASS_type_def with_type_compat_rel_def)
 
 lemma with_typeI:
@@ -55,14 +55,14 @@ lemma with_typeI:
   assumes \<open>S \<noteq> {}\<close>
   assumes \<open>C S p\<close>
   assumes \<open>with_type_compat_rel C S R\<close>
-  assumes \<open>\<And>Rep Abs abs_ops. type_definition Rep Abs S \<Longrightarrow> R (\<lambda>x y. x = Rep y) p abs_ops \<Longrightarrow> P Rep Abs\<close>
+  assumes \<open>\<And>Rep Abs abs_ops. type_definition Rep Abs S \<Longrightarrow> R (\<lambda>x y. x = Rep y) p abs_ops \<Longrightarrow> P Rep Abs abs_ops\<close>
   shows \<open>with_type (C,R) (S,p) P\<close>
   using assms
   by (auto simp add: with_type_def case_prod_beta)
 
 lemma with_type_mp: 
   assumes \<open>with_type (C,R) (S,p) P\<close>
-  assumes \<open>\<And>Rep Abs. type_definition Rep Abs S \<Longrightarrow> C S p \<Longrightarrow> P Rep Abs \<Longrightarrow> Q Rep Abs\<close>
+  assumes \<open>\<And>Rep Abs abs_ops. type_definition Rep Abs S \<Longrightarrow> C S p \<Longrightarrow> P Rep Abs abs_ops \<Longrightarrow> Q Rep Abs abs_ops\<close>
   shows \<open>with_type (C,R) (S,p) Q\<close>
   using assms by (auto simp add: with_type_def case_prod_beta)
 
@@ -71,7 +71,7 @@ lemma with_type_nonempty: \<open>with_type CR (S,p) P \<Longrightarrow> S \<note
 
 lemma with_type_prepare_cancel:
   fixes Sp :: \<open>'rep set \<times> _\<close>
-  assumes wt: \<open>with_type CR (S,p) (\<lambda>_ (_::'rep\<Rightarrow>'abs). P)\<close>
+  assumes wt: \<open>with_type CR (S,p) (\<lambda>_ (_::'rep\<Rightarrow>'abs) _. P)\<close>
   assumes ex: \<open>(\<exists>(Rep::'abs\<Rightarrow>'rep) Abs. type_definition Rep Abs S)\<close>
   shows P
 proof -
@@ -152,7 +152,61 @@ proof -
     by auto
 qed
 
+lemma with_type_class_axioms2:
+  includes lifting_syntax
+  fixes Rep :: \<open>'abs \<Rightarrow> 'rep\<close>
+    and CR :: \<open>_ \<times> (('rep\<Rightarrow>'abs\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs itself \<Rightarrow> bool))\<close>
+    and Sp
+    and R :: \<open>('rep\<Rightarrow>'abs\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs itself \<Rightarrow> bool)\<close>
+    and R2 :: \<open>('rep\<Rightarrow>'abs2\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs2 itself \<Rightarrow> bool)\<close>
+  assumes trans: \<open>\<And>r :: 'rep \<Rightarrow> 'abs2 \<Rightarrow> bool. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (R2 r ===> (\<longleftrightarrow>)) (C (Collect (Domainp r))) axioms\<close>
+  assumes nice: \<open>with_type_compat_rel C S R2\<close> (* Not used, but the ML-code expects it to be there currently. *)
+  assumes rel_itself: \<open>\<And>(r :: 'rep \<Rightarrow> 'abs2 \<Rightarrow> bool) p. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (R2 r) p TYPE('abs2)\<close>
+  assumes wt: \<open>with_type (C,R) (S,p) P\<close>
+  assumes ex: \<open>\<exists>(Rep :: 'abs2\<Rightarrow>'rep) Abs. type_definition Rep Abs S\<close>
+  shows \<open>axioms TYPE('abs2)\<close>
+proof -
+  from ex obtain Rep :: \<open>'abs2\<Rightarrow>'rep\<close> and Abs where td: \<open>type_definition Rep Abs S\<close>
+    by auto
+  define r where \<open>r x y = (x = Rep y)\<close> for x y
+  have bi_unique_r: \<open>bi_unique r\<close>
+    using bi_unique_def td type_definition.Rep_inject r_def by fastforce
+  have right_total_r: \<open>right_total r\<close>
+    by (simp add: right_totalI r_def)
+  have right_total_R[transfer_rule]: \<open>right_total (r ===> r ===> r)\<close>
+    by (meson bi_unique_r right_total_r bi_unique_alt_def right_total_fun)
+
+  from td
+  have rS: \<open>Collect (Domainp r) = S\<close>
+    apply (auto simp: r_def Domainp_iff type_definition.Rep)
+    by (meson type_definition.Rep_cases)
+
+  note trans = trans[OF bi_unique_r, OF right_total_r, unfolded rS, transfer_rule]
+
+  note rel_itself = rel_itself[OF bi_unique_r, OF right_total_r, of p, transfer_rule]
+
+  from wt have sg: \<open>C S p\<close>
+    by (simp_all add: with_type_def case_prod_beta)
+  then show \<open>axioms TYPE('abs2)\<close>
+    by transfer
+qed
+
+inductive rel_unit_itself :: \<open>unit \<Rightarrow> 'a itself \<Rightarrow> bool\<close> where
+  \<open>rel_unit_itself () TYPE('a)\<close>
+
+lemma [simp]: \<open>Domainp rel_unit_itself x\<close>
+  by (simp add: Domainp_iff rel_unit_itself.simps)
+lemma [simp]: \<open>rel_unit_itself () y \<longleftrightarrow> (y = TYPE('a))\<close>
+  by (simp add: rel_unit_itself.simps)
+
+
 ML_file "with_type.ML"
+
+(* declare [[show_types]]
+ML \<open>
+Thm.instantiate' [SOME \<^ctyp>\<open>'a\<close>] [] @{thm refl}
+\<close>
+ *)
 
 attribute_setup cancel_with_type = 
   \<open>Thm.rule_attribute [] (With_Type.with_type_cancel o Context.proof_of) |> Scan.succeed\<close>
@@ -177,7 +231,9 @@ With_Type.add_with_type_info_global {
   rep_rel = \<^const_name>\<open>WITH_TYPE_REL_type\<close>,
   with_type_compat_rel = @{thm with_type_compat_rel_type},
   (* rep_class_data_thm = NONE, *)
-  transfer = NONE
+  param_names = [],
+  transfer = NONE,
+  rep_rel_itself = NONE
 }
 \<close>
 
@@ -217,26 +273,28 @@ fun with_type_mp_tac pos facts (ctxt, st) = let
     val fact = case facts of [fact] => fact
             | _ => raise THM ("with_type_mp: expected exactly one fact", 1, facts)
     val rule = @{thm with_type_mp} OF [fact]
-    val (repT, absT, C, S, ops, P) = case Thm.cprem_of st 1 |> Thm.term_of of
+    val (repT, absT, C, S, ops, P, abs_opsT) = case Thm.cprem_of st 1 |> Thm.term_of of
              \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type repT rep_opsT absT abs_opsT\<close> 
                                     $ (\<^Const_>\<open>Pair _ _\<close> $ C $ _) $ (\<^Const_>\<open>Pair _ _\<close> $ S $ ops) $ P)
-                   => (repT, absT, C, S, ops, P)
+                   => (repT, absT, C, S, ops, P, abs_opsT)
              | _ => raise ERROR_IN_TACTIC (fn _ => "with_type_mp: goal of the wrong form")
     val rep_name = "rep_" ^ absT_name absT
     val abs_name = "abs_" ^ absT_name absT
+    val abs_ops_name = "ops_" ^ absT_name absT
     val rep = Free(rep_name, absT --> repT)
     val abs = Free(abs_name, repT --> absT)
+    val abs_ops = Free(abs_ops_name, abs_opsT)
     val st = case SINGLE (resolve_tac ctxt [rule] 1) st of SOME st => st
               | NONE => raise ERROR_IN_TACTIC (fn _ => "with_type_mp: could not apply with_type_mp")
 (*     val prems_of_subgoal = Thm.cprem_of st 1 |> Thm.term_of |> subst_all rep |> subst_all abs
         |> Logic.strip_imp_prems *)
     val _ = Thm.cprems_of st |> \<^print>
     val prems_of_subgoal = Thm.cprem_of st (Thm.nprems_of st) |> Thm.term_of |> Logic.strip_assums_hyp
-          |> map (fn t => Abs(rep_name, absT --> repT, Abs(abs_name, repT --> absT, t)))
+          |> map (fn t => Abs(rep_name, absT --> repT, Abs(abs_name, repT --> absT, Abs (abs_ops_name, abs_opsT, t))))
     val assm_typedef :: assm_class :: assm_prem :: _ = prems_of_subgoal
         (* Thm.cprem_of st 1 |> Thm.term_of |> Term. *)
     val rule_case = Rule_Cases.Case {
-          fixes = [(Binding.make (rep_name, pos), absT --> repT), (Binding.make (abs_name, pos), repT --> absT)],
+          fixes = [(Binding.make (rep_name, pos), absT --> repT), (Binding.make (abs_name, pos), repT --> absT), (Binding.make (abs_ops_name, pos), abs_opsT)],
           assumes = [("typedef", [assm_typedef]), ("class", [assm_class]), ("premise", [assm_prem])], 
           binds = [(("concl",0), SOME P)],
           cases = []}
