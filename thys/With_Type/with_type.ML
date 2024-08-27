@@ -1,19 +1,42 @@
 structure With_Type : sig 
 type with_type_info = {
+  (* Name of the class that is being registered. *)
   class: class,
+  (* Name of the WITH_TYPE_CLASS_xxx constant.
+     It has to be of type \<open>'rep set \<Rightarrow> REP_OPS \<Rightarrow> bool\<close> for some type REP_OPS.
+     It describes which carrier sets and class operations (on the concrete type) are valid. *)
   rep_class: string,
+  (* Name of the WITH_TYPE_REL_xxx constant.
+     It has to be of type \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> REP_OPS \<Rightarrow> ABS_OPS\<close>.
+     It transforms a relation between the concrete/abstract type into one between
+     the operations on the concrete/abstract type.
+     ABS_OPS must be the tuple of the class parameters (e.g., (plus,zero,minus,uminus)).
+     If the class has no parameters (and no constant class.xxx is defined), then ABS_OPS=unit (and rep_rel r = (=)),
+     if the class has no parameters (and class.xxx is defined), then ABS_OPS=TYPE('abs) (and rep_rel r = rel_unit_itself).     *)
   rep_rel: string,
+  (* Names of the parameters of the class.
+     E.g., ["plus","zero",\<dots>]. *)
   param_names: string list,
-  with_type_wellformed: thm, (* with_type_wellformed rep_class S rep_rel;
-                                rep_class/rep_rel must have different ?'abs *)
-  transfer: thm option, (* bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (rep_rel r ===> (\<longleftrightarrow>)) (rep_class (Collect (Domainp r))) class.class *)
-                       (* rep_class/rep_rel must have different ?'abs *)
-                       (* class.class is the class-predicate-constant (e.g. semigroup_add.class), possibly uncurried (e.g. \<lambda>(x,y,z). const x y z) *)
-  rep_rel_itself: thm option (* bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (R2 r) p TYPE('abs2) *)
+  (* Wellformedness theorem. It must say
+     \<open>with_type_wellformed REP_CLASS ?S REP_REL\<close>
+     (here REP_CLASS, REP_REL are the constants named by rep_class, rep_rel above.) *)
+  with_type_wellformed: thm,
+  (* Transfer theorem. It must say:
+     \<open>bi_unique ?r \<Longrightarrow> right_total ?r \<Longrightarrow> (REP_REL ?r ===> (\<longleftrightarrow>)) (REP_CLASS (Collect (Domainp ?r))) CLASS'\<close>
+     Here CLASS' is the constant defining the class (class.xxx), but uncurried (if it has several parameters),
+     e.g., CLASS' := (\<lambda>(plus,zero). class.monoid_add plus zero).
+     When the class has no defining constant (e.g., type class \<open>type\<close>), then transfer=NONE. *)
+  transfer: thm option,
+  (* Wellformedness property for REP_REL for operation-less classes. It must say:
+     \<open>bi_unique ?r \<Longrightarrow> right_total ?r \<Longrightarrow> (REP_REL ?r) ?p TYPE(?'abs)\<close>
+     Only needed if the class has a defining constant, but no operations.
+     (I.e., the defining constant is of type \<open>'a itself \<Rightarrow> bool\<close>, cf. e.g. class.finite) *)
+  rep_rel_itself: thm option
 }
 
+(* Register a `with_type_info` for a new class. *)
 val add_with_type_info_global : with_type_info -> theory -> theory
-(* TODO: check whether the theorems are correct *)
+(* TODO Check if all the requirements are satisfied *)
 
 val add_with_type_info_generic : with_type_info -> Context.generic -> Context.generic
 
@@ -27,7 +50,7 @@ val with_type_print_translation : Proof.context -> typ -> term list -> term
 
 val get_with_type_info_by_class : Proof.context -> class -> with_type_info option
 
-(* Debug only *)
+(* For debugging purposes only. *)
 val get_all_type_info : Proof.context -> {
   by_class: with_type_info Symtab.table,
   by_const: with_type_info Symtab.table }
@@ -49,7 +72,6 @@ type with_type_info = {
   rep_class: string,
   rep_rel: string,
   param_names: string list,
-  (* rep_class_data_thm: thm option, *)
   with_type_wellformed: thm, 
   transfer: thm option,
   rep_rel_itself: thm option

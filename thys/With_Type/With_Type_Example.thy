@@ -42,7 +42,6 @@ setup \<open>
 With_Type.add_with_type_info_global {
   class = \<^class>\<open>finite\<close>,
   param_names = [],
-  (* class_ops = \<^cterm>\<open>(+) :: 'a::semigroup_add \<Rightarrow> _ \<Rightarrow> _\<close>, *)
   rep_class = \<^const_name>\<open>WITH_TYPE_CLASS_finite\<close>,
   rep_rel = \<^const_name>\<open>WITH_TYPE_REL_finite\<close>,
   with_type_wellformed = @{thm with_type_wellformed_finite},

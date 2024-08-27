@@ -7,6 +7,9 @@ definition with_type_wellformed where
   \<comment> \<open>This states, roughly, that if operations \<^term>\<open>rp\<close> satisfy the axioms of the class,
       then they are in the domain of the relation between abstract/concrete operations.\<close>
   \<open>with_type_wellformed C S R \<longleftrightarrow> (\<forall>r rp. bi_unique r \<longrightarrow> right_total r \<longrightarrow> S = Collect (Domainp r) \<longrightarrow> C S rp \<longrightarrow> Domainp (R r) rp)\<close>
+    for C :: \<open>'rep set \<Rightarrow> 'rep_ops \<Rightarrow> bool\<close>
+    and S :: \<open>'rep set\<close>
+    and R :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool)\<close>
 
 text \<open>
 \<^term>\<open>S\<close> -- the carrier set of the representation of the type (concrete type)
@@ -40,8 +43,8 @@ text \<open>For every type class that we want to use with \<^const>\<open>with_t
   specifying how a relation between concrete/abstract type is lifted to a relation between
   concrete/abstract operations (\<^term>\<open>WITH_TYPE_REL_classname\<close>). Here we give the
   trivial definitions for the default type class \<^class>\<open>type\<close>\<close>
-definition \<open>WITH_TYPE_CLASS_type S ops = True\<close> for S :: \<open>'rep set\<close> and ops :: \<open>'rep_ops\<close>
-definition \<open>WITH_TYPE_REL_type r = (=)\<close> for r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
+definition \<open>WITH_TYPE_CLASS_type S ops = True\<close> for S :: \<open>'rep set\<close> and ops :: unit
+definition \<open>WITH_TYPE_REL_type r = ((=) :: unit \<Rightarrow> _ \<Rightarrow> _)\<close> for r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
 
 named_theorems with_type_intros
   \<comment> \<open>In this named fact collection, we collect introduction rules that are used to automatically
@@ -53,7 +56,8 @@ lemma [with_type_intros]: \<open>WITH_TYPE_CLASS_type S ops\<close>
 text \<open>We need to show that \<^term>\<open>WITH_TYPE_CLASS_classname\<close> and \<^term>\<open>WITH_TYPE_REL_classname\<close>
   are wellbehaved. We do this here for class \<^class>\<open>type\<close>. We will need this lemma also for
   registering the type class \<^class>\<open>type\<close> later.\<close>
-lemma with_type_wellformed_type[with_type_intros]: \<open>with_type_wellformed WITH_TYPE_CLASS_type S WITH_TYPE_REL_type\<close>
+lemma with_type_wellformed_type[with_type_intros]:
+  \<open>with_type_wellformed WITH_TYPE_CLASS_type S WITH_TYPE_REL_type\<close>
   by (simp add: WITH_TYPE_REL_type_def WITH_TYPE_CLASS_type_def with_type_wellformed_def Domainp_iff)
 
 lemma with_type_simple: \<open>with_type WITH_TYPE_CLASS_type WITH_TYPE_REL_type S () P \<longleftrightarrow> S\<noteq>{} \<and> (\<forall>rep. bij_betw rep UNIV S \<longrightarrow> P rep ())\<close>
@@ -221,7 +225,6 @@ With_Type.add_with_type_info_global {
   transfer = NONE,
   rep_rel_itself = NONE
 }\<close>
-
 
 text \<open>Enabling input/output syntax for \<^const>\<open>with_type\<close>. This allows to write, e.g.,
   \<open>\<forall>\<^sub>\<tau> 't::type = S. P\<close>, and the various relevant parameters such as \<^const>\<open>WITH_TYPE_CLASS_type\<close> etc.
