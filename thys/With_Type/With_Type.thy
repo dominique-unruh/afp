@@ -245,7 +245,7 @@ term \<open>\<forall>\<^sub>\<tau> 't::type = N. (rep_t = rep_t)\<close>
 text \<open>Removes a toplevel \<open>\<forall>\<^sub>\<tau> 't=\<dots>\<close> from a proposition \<open>\<forall>\<^sub>\<tau> 't=\<dots>. P\<close>. This only works if \<^term>\<open>P\<close> does
   not refer to the type \<^typ>\<open>'t\<close>.\<close>
 attribute_setup cancel_with_type =
-  \<open>Thm.rule_attribute [] (With_Type.with_type_cancel o Context.proof_of) |> Scan.succeed\<close>
+  \<open>Thm.rule_attribute [] (With_Type.cancel_with_type o Context.proof_of) |> Scan.succeed\<close>
   \<open>Transforms (\<forall>\<^sub>\<tau> 't=\<dots>. P) into P\<close>
 
 
