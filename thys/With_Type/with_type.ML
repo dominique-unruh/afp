@@ -39,7 +39,10 @@ val unprotect_conv = Conv.rewr_conv (@{thm Pure.prop_def})
 fun protect_thm thm = Conv.fconv_rule protect_conv thm 
 fun unprotect_thm thm = Conv.fconv_rule unprotect_conv thm 
 
-fun unify_prems_12 thm = (@{thm distinct_prems_rl_protected} OF [protect_thm thm]) |> unprotect_thm
+fun unify_prems_12 thm = 
+  (@{lemma \<open>PROP Pure.prop (PROP A \<Longrightarrow> PROP A \<Longrightarrow> PROP B) \<Longrightarrow> PROP Pure.prop (PROP A \<Longrightarrow> PROP B)\<close> 
+       by (unfold Pure.prop_def, rule distinct_prems_rl)}
+    OF [protect_thm thm]) |> unprotect_thm
 
 type with_type_info = {
   class: class,
