@@ -131,12 +131,13 @@ lemma example_semigroup:
 proof with_type_intro
   show \<open>carrier \<noteq> {}\<close> by simp
   fix Rep :: \<open>'abs \<Rightarrow> int\<close> and Abs and pls
-  assume \<open>type_definition Rep Abs carrier\<close>
-  then interpret type_definition Rep Abs carrier
-    by -
+  assume \<open>bij_betw Rep UNIV carrier\<close>
+  then interpret type_definition Rep \<open>inv Rep\<close> carrier
+    using type_definition_bij_betw_iff by blast
+  print_theorems
   define r where \<open>r = (\<lambda>x y. x = Rep y)\<close>
   have [transfer_rule]: \<open>bi_unique r\<close>
-    using \<open>type_definition Rep Abs carrier\<close> bi_unique_def r_def type_definition.Rep_inject by fastforce
+    by (simp add: Rep_inject bi_unique_def r_def)
   have [transfer_rule]: \<open>right_total r\<close>
     by (simp add: r_def right_total_def)
   assume \<open>WITH_TYPE_REL_semigroup_add (\<lambda>x y. x = Rep y) carrier_plus pls\<close>
@@ -262,20 +263,20 @@ lemma example_ab_group:
     (plus_abs x y = plus_abs y x \<and> plus_abs x (plus_abs x x) = plus_abs (plus_abs x x) x)\<close>
 proof with_type_intro
   show \<open>carrier \<noteq> {}\<close> by simp
-  fix Rep :: \<open>'abs \<Rightarrow> int\<close> and Abs and abs_ops
+  fix Rep :: \<open>'abs \<Rightarrow> int\<close> and abs_ops
   assume wt: \<open>WITH_TYPE_REL_ab_group_add (\<lambda>x y. x = Rep y) carrier_ab_group_add abs_ops\<close>
   define plus zero minus uminus where \<open>plus = fst abs_ops\<close>
     and \<open>zero = fst (snd abs_ops)\<close>
     and \<open>minus = fst (snd (snd abs_ops))\<close>
     and \<open>uminus = snd (snd (snd abs_ops)) \<close>
 
-  assume \<open>type_definition Rep Abs carrier\<close>
-  then interpret type_definition Rep Abs carrier
-    by -
-  
+  assume \<open>bij_betw Rep UNIV carrier\<close>
+  then interpret type_definition Rep \<open>inv Rep\<close> carrier
+    by (simp add: type_definition_bij_betw_iff)
+
   define r where \<open>r = (\<lambda>x y. x = Rep y)\<close>
   have [transfer_rule]: \<open>bi_unique r\<close>
-    using \<open>type_definition Rep Abs carrier\<close> bi_unique_def r_def type_definition.Rep_inject by fastforce
+    by (simp add: Rep_inject bi_unique_def r_def)
   have [transfer_rule]: \<open>right_total r\<close>
     by (simp add: r_def right_total_def)
   from wt have transfer_carrier[transfer_rule]: \<open>((r ===> r ===> r) *** r *** (r ===> r ===> r) *** (r ===> r)) carrier_ab_group_add abs_ops\<close>

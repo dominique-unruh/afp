@@ -1384,9 +1384,9 @@ proof with_type_intro
     using some_chilbert_basis_of_ccspan[of X] assms
     by (auto simp del: some_chilbert_basis_of_ccspan)
   fix Rep :: \<open>'b \<Rightarrow> 'a\<close> and Abs
-  assume \<open>type_definition Rep Abs (some_chilbert_basis_of X)\<close>
-  then interpret type_definition Rep Abs \<open>some_chilbert_basis_of X\<close>
-    by simp
+  assume \<open>bij_betw Rep UNIV (some_chilbert_basis_of X)\<close>
+  then interpret type_definition Rep \<open>inv Rep\<close> \<open>some_chilbert_basis_of X\<close>
+    by (simp add: type_definition_bij_betw_iff)
   define U where \<open>U = cblinfun_extension (range ket) (Rep o inv ket)\<close>
   have [simp]: \<open>Rep i \<bullet>\<^sub>C Rep j = 0\<close> if \<open>i \<noteq> j\<close> for i j
     using Rep some_chilbert_basis_of_is_ortho_set[unfolded is_ortho_set_def] that

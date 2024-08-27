@@ -31,9 +31,9 @@ any type \<^typ>\<open>'t\<close> that that can be represented by a concrete rep
 and that has a type class matching the specification (C,R).
 \<close>
 definition \<open>with_type = (\<lambda>C R S rep_ops P. S\<noteq>{} \<and> C S rep_ops \<and> with_type_compat_rel C S R
-    \<and> (\<forall>Rep Abs abs_ops. type_definition Rep Abs S \<longrightarrow> (R (\<lambda>x y. x = Rep y) rep_ops abs_ops) \<longrightarrow> 
-            P Rep Abs abs_ops))\<close>
-  for S :: \<open>'rep set\<close> and P :: \<open>('abs \<Rightarrow> 'rep) \<Rightarrow> ('rep \<Rightarrow> 'abs) \<Rightarrow> bool\<close>
+    \<and> (\<forall>rep abs_ops. bij_betw rep UNIV S \<longrightarrow> (R (\<lambda>x y. x = rep y) rep_ops abs_ops) \<longrightarrow> 
+            P rep abs_ops))\<close>
+  for S :: \<open>'rep set\<close> and P :: \<open>('abs \<Rightarrow> 'rep) \<Rightarrow> 'abs_ops \<Rightarrow> bool\<close>
   and R :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool)\<close>
   and C :: \<open>'rep set \<Rightarrow> 'rep_ops \<Rightarrow> bool\<close>
   and rep_ops :: \<open>'rep_ops\<close>
@@ -43,41 +43,51 @@ definition \<open>WITH_TYPE_REL_type r = (=)\<close>
 
 (* definition with_type_type_class where \<open>with_type_type_class = ((\<lambda>_ (_::unit). True), (\<lambda>_. (=)))\<close> *)
 
+lemma type_definition_bij_betw_iff: \<open>type_definition rep (inv rep) S \<longleftrightarrow> bij_betw rep UNIV S\<close>
+  by (smt (verit, best) UNIV_I bij_betw_def bij_betw_iff_bijections inj_on_def inv_f_eq type_definition.Rep_inject type_definition.Rep_range type_definition.intro)
+
+
 lemma with_type_compat_rel_type: \<open>with_type_compat_rel WITH_TYPE_CLASS_type S WITH_TYPE_REL_type\<close>
   by (simp add: WITH_TYPE_REL_type_def WITH_TYPE_CLASS_type_def with_type_compat_rel_def Domainp_iff)
 
 (* Demonstration *)
-lemma \<open>with_type WITH_TYPE_CLASS_type WITH_TYPE_REL_type S () P \<longleftrightarrow> S\<noteq>{} \<and> (\<forall>Rep Abs. type_definition Rep Abs S \<longrightarrow> P Rep Abs ())\<close>
+lemma \<open>with_type WITH_TYPE_CLASS_type WITH_TYPE_REL_type S () P \<longleftrightarrow> S\<noteq>{} \<and> (\<forall>rep. bij_betw rep UNIV S \<longrightarrow> P rep ())\<close>
   by (auto simp: with_type_def WITH_TYPE_REL_type_def WITH_TYPE_CLASS_type_def with_type_compat_rel_def)
 
 lemma with_typeI:
-  fixes Sp :: \<open>'a set \<times> 'c\<close> and CR
   assumes \<open>S \<noteq> {}\<close>
   assumes \<open>C S p\<close>
   assumes \<open>with_type_compat_rel C S R\<close>
-  assumes \<open>\<And>Rep Abs abs_ops. type_definition Rep Abs S \<Longrightarrow> R (\<lambda>x y. x = Rep y) p abs_ops \<Longrightarrow> P Rep Abs abs_ops\<close>
+  assumes main: \<open>\<And>(rep :: 'abs \<Rightarrow> 'rep) abs_ops. bij_betw rep UNIV S \<Longrightarrow> R (\<lambda>x y. x = rep y) p abs_ops \<Longrightarrow> P rep abs_ops\<close>
   shows \<open>with_type C R S p P\<close>
   using assms
-  by (auto simp add: with_type_def case_prod_beta)
+  by (auto intro!: simp: with_type_def type_definition_bij_betw_iff)
+
 
 lemma with_type_mp: 
   assumes \<open>with_type C R S p P\<close>
-  assumes \<open>\<And>Rep Abs abs_ops. type_definition Rep Abs S \<Longrightarrow> C S p \<Longrightarrow> P Rep Abs abs_ops \<Longrightarrow> Q Rep Abs abs_ops\<close>
+  assumes \<open>\<And>rep abs_ops. bij_betw rep UNIV S \<Longrightarrow> C S p \<Longrightarrow> P rep abs_ops \<Longrightarrow> Q rep abs_ops\<close>
   shows \<open>with_type C R S p Q\<close>
-  using assms by (auto simp add: with_type_def case_prod_beta)
+  using assms by (auto simp add: with_type_def case_prod_beta type_definition_bij_betw_iff)
 
 lemma with_type_nonempty: \<open>with_type C R S p P \<Longrightarrow> S \<noteq> {}\<close>
   by (simp add: with_type_def case_prod_beta)
 
 lemma with_type_prepare_cancel:
-  fixes Sp :: \<open>'rep set \<times> _\<close>
-  assumes wt: \<open>with_type C R S p (\<lambda>_ (_::'rep\<Rightarrow>'abs) _. P)\<close>
-  assumes ex: \<open>(\<exists>(Rep::'abs\<Rightarrow>'rep) Abs. type_definition Rep Abs S)\<close>
+  fixes S :: \<open>'rep set\<close> and P :: bool
+    and R :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool)\<close>
+    and C :: \<open>'rep set \<Rightarrow> 'rep_ops \<Rightarrow> bool\<close>
+    and p :: \<open>'rep_ops\<close>
+  assumes wt: \<open>with_type C R S p (\<lambda>(_::'abs\<Rightarrow>'rep) _. P)\<close>
+  assumes ex: \<open>(\<exists>(rep::'abs\<Rightarrow>'rep) abs. type_definition rep abs S)\<close>
   shows P
 proof -
-  from ex obtain Rep :: \<open>'abs\<Rightarrow>'rep\<close> and Abs where td: \<open>type_definition Rep Abs S\<close>
+  from ex
+  obtain rep :: \<open>'abs \<Rightarrow> 'rep\<close> and abs where td: \<open>type_definition rep abs S\<close>
     by auto
-  define r where \<open>r = (\<lambda>x y. x = Rep y)\<close>
+  then have bij: \<open>bij_betw rep UNIV S\<close>
+    by (simp add: bij_betw_def inj_on_def type_definition.Rep_inject type_definition.Rep_range)
+  define r where \<open>r = (\<lambda>x y. x = rep y)\<close>
   have [simp]: \<open>bi_unique r\<close> \<open>right_total r\<close>
     using r_def td typedef_bi_unique apply blast
     by (simp add: r_def right_totalI)
@@ -89,19 +99,12 @@ proof -
   from wt have nice: \<open>with_type_compat_rel C S R\<close> and \<open>C S p\<close>
     by (simp_all add: with_type_def case_prod_beta)
   from nice[unfolded with_type_compat_rel_def, rule_format, OF \<open>bi_unique r\<close> \<open>right_total r\<close> Sr \<open>C S p\<close>]
-  obtain abs_ops where abs_ops: \<open>R (\<lambda>x y. x = Rep y) p abs_ops\<close>
+  obtain abs_ops where abs_ops: \<open>R (\<lambda>x y. x = rep y) p abs_ops\<close>
     apply atomize_elim by (auto simp: r_def)
-  from td abs_ops wt
+  from bij abs_ops wt
   show P
     by (auto simp: with_type_def case_prod_beta)
 qed
-
-(* lemma Domainp_rel_fun_iff: (* TODO: use Domainp_pred_fun_eq instead *)
-  includes lifting_syntax
-  assumes \<open>left_unique R\<close>
-  shows \<open>Domainp (R ===> S) p \<longleftrightarrow> (\<forall>x. Domainp R x \<longrightarrow> Domainp S (p x))\<close>
-  using Domainp_pred_fun_eq[OF assms, of S]
-  by auto *)
 
 lemma with_type_class_axioms:
   includes lifting_syntax
@@ -277,10 +280,10 @@ fun with_type_mp_tac pos facts (ctxt, st) = let
                    => (repT, absT, C, S, ops, P, abs_opsT)
              | _ => raise ERROR_IN_TACTIC (fn _ => "with_type_mp: goal of the wrong form")
     val rep_name = "rep_" ^ absT_name absT
-    val abs_name = "abs_" ^ absT_name absT
+    (* val abs_name = "abs_" ^ absT_name absT *)
     val abs_ops_name = "ops_" ^ absT_name absT
     val rep = Free(rep_name, absT --> repT)
-    val abs = Free(abs_name, repT --> absT)
+    (* val abs = Free(abs_name, repT --> absT) *)
     val abs_ops = Free(abs_ops_name, abs_opsT)
     val st = case SINGLE (resolve_tac ctxt [rule] 1) st of SOME st => st
               | NONE => raise ERROR_IN_TACTIC (fn _ => "with_type_mp: could not apply with_type_mp")
@@ -288,12 +291,12 @@ fun with_type_mp_tac pos facts (ctxt, st) = let
         |> Logic.strip_imp_prems *)
     val _ = Thm.cprems_of st |> \<^print>
     val prems_of_subgoal = Thm.cprem_of st (Thm.nprems_of st) |> Thm.term_of |> Logic.strip_assums_hyp
-          |> map (fn t => Abs(rep_name, absT --> repT, Abs(abs_name, repT --> absT, Abs (abs_ops_name, abs_opsT, t))))
-    val assm_typedef :: assm_class :: assm_prem :: _ = prems_of_subgoal
+          |> map (fn t => Abs(rep_name, absT --> repT, Abs (abs_ops_name, abs_opsT, t)))
+    val assm_bij :: assm_class :: assm_prem :: _ = prems_of_subgoal
         (* Thm.cprem_of st 1 |> Thm.term_of |> Term. *)
     val rule_case = Rule_Cases.Case {
-          fixes = [(Binding.make (rep_name, pos), absT --> repT), (Binding.make (abs_name, pos), repT --> absT), (Binding.make (abs_ops_name, pos), abs_opsT)],
-          assumes = [("typedef", [assm_typedef]), ("class", [assm_class]), ("premise", [assm_prem])], 
+          fixes = [(Binding.make (rep_name, pos), absT --> repT), (Binding.make (abs_ops_name, pos), abs_opsT)],
+          assumes = [("bij", [assm_bij]), ("class", [assm_class]), ("premise", [assm_prem])], 
           binds = [(("concl",0), SOME P)],
           cases = []}
     val ctxt = Proof_Context.update_cases [("with_type_mp", SOME rule_case)] ctxt
@@ -322,14 +325,17 @@ fun with_type_case_cmd args state : Proof.state = let
 (*     val case_mp = Proof_Context.check_case ctxt true ("with_type_mp", pos) []
     val (assms, state) = Proof.map_context_result (Proof_Context.apply_case case_mp) state *)
     val state = Proof.case_ ((Binding.empty, []), (("with_type_mp", Position.none), args)) state
-    val thm_type_def = Proof_Context.get_fact_single (Proof.context_of state) (Facts.named "local.with_type_mp.typedef")
+    val thm_bij = Proof_Context.get_fact_single (Proof.context_of state) (Facts.named "local.with_type_mp.bij")
     val thm_class = Proof_Context.get_fact_single (Proof.context_of state) (Facts.named "local.with_type_mp.class")
     val thm_premise = Proof_Context.get_fact_single (Proof.context_of state) (Facts.named "local.with_type_mp.premise")
+(*     val (rep, S) = case Thm.prop_of thm_bij of
+        \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>bij_betw _ _\<close> $ rep $ S) => (rep,S) *)
+    val thm_type_def = @{thm type_definition_bij_betw_iff[THEN iffD2]} OF [thm_bij]
     val (rep, abs, S) = case Thm.prop_of thm_type_def of
         \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>type_definition _ _\<close> $ rep $ abs $ S) => (rep,abs,S)
     val \<^Type>\<open>fun absT _\<close> = fastype_of rep
     val state = Interpretation.interpret
-              ([(\<^locale>\<open>type_definition\<close>,(("type_definition_" ^ absT_name absT,true), (Expression.Positional [SOME rep, SOME abs, SOME S], [])))],
+              ([(\<^locale>\<open>type_definition\<close>, (("type_definition_" ^ absT_name absT,true), (Expression.Positional [SOME rep, SOME abs, SOME S], [])))],
               [(Binding.make ("i_dont_know_where_this_ends_up", Position.none), NONE, NoSyn)]) state
     val state = Proof.local_future_terminal_proof 
                     (((Method.Basic (Method.fact [thm_type_def]), Position.no_range), NONE)) state

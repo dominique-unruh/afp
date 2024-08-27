@@ -137,10 +137,10 @@ fun with_type_cancel ctxt thm = let
     | t => raise TERM ("with_type_cancel: theorem must be of the form (with_type (constant,constant) ...)", [t])
   val _ = debug\<^here> (fn _ => "const_class = " ^ \<^make_string> const_class ^ "; const_rel = " ^ \<^make_string> const_rel ^ "; abs_type = " ^ \<^make_string> abs_type ^ "; P = " ^ \<^make_string> P)
 
-  val rep_ctyp = Thm.ctyp_of ctxt rep_type
+  (* val rep_ctyp = Thm.ctyp_of ctxt rep_type *)
   val S_cterm = Thm.cterm_of ctxt S
 
-  val _ = let val P' = betapplys (P, [Free("Rep", abs_type --> rep_type), Free("Abs", rep_type --> abs_type), Free("abs_ops", dummyT)])  in
+  val _ = let val P' = betapplys (P, [Free("Rep", abs_type --> rep_type), Free("abs_ops", dummyT)])  in
             exists_type (exists_subtype (fn T => T=abs_type)) P'
               andalso raise ERROR ("with_type_cancel: body contains type " ^ Syntax.string_of_typ ctxt abs_type ^ " that is supposed to be removed") end
 
@@ -282,11 +282,11 @@ fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
               | NONE => error ("with_type_parse_translation: class "^ Syntax.string_of_sort ctxt [class] ^" not registered for use with \<forall>\<^sub>\<tau>")
   val typ = TFree("'" ^ typname, [class])
   val rep = Free("rep_" ^ typname, dummyT)
-  val abs = Free("abs_" ^ typname, dummyT)
+  (* val abs = Free("abs_" ^ typname, dummyT) *)
   val abs_ops = Free("ops_" ^ typname, dummyT)
   val prop = substitute_params prop (#param_names info) typname
-  val prop = Syntax_Trans.abs_tr [rep, Syntax_Trans.abs_tr [abs, Syntax_Trans.abs_tr [abs_ops, prop]]]
-  val propT = (typ --> dummyT) --> (dummyT --> typ) --> dummyT --> HOLogic.boolT
+  val prop = Syntax_Trans.abs_tr [rep, Syntax_Trans.abs_tr [abs_ops, prop]]
+  val propT = (typ --> dummyT) --> dummyT --> HOLogic.boolT
   (* The "Config.put show_sorts true" is necessary because otherwise "term_of_typ" ignores sorts. *)
   val prop = Const(\<^syntax_const>\<open>_constrain\<close>, dummyT) $ prop $ Syntax_Phases.term_of_typ (Config.put show_sorts true ctxt) propT
   in Const(\<^const_name>\<open>with_type\<close>, dummyT) $ Const(#rep_class info, dummyT) $ Const(#rep_rel info, dummyT) $ 
@@ -312,7 +312,7 @@ fun with_type_print_translation' ctxt typ args = let
    val output_typ = Syntax.const "_with_type_sort_annotation" $ (Syntax.const "_tfree" $ Syntax.free absT) $ 
         Syntax.const (Lexicon.mark_class class)
   fun mark_var v = Syntax.const "_bound" $ Syntax.free (v^suffix)
-  val P = Term.betapplys (P, [mark_var "rep_", mark_var "abs_", mark_var "ops_"])
+  val P = Term.betapplys (P, [mark_var "rep_", mark_var "ops_"])
   val rep_ops_unit = case rep_ops of Const(\<^const_syntax>\<open>Unity\<close>,_) => true | _ => false
 in 
   if rep_ops_unit

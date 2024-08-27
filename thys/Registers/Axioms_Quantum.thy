@@ -268,14 +268,13 @@ proof with_type_intro
     unfolding is_ortho_set_def
     apply auto by (metis cinner_eq_zero_iff that)
 
-  fix rep_c :: \<open>'c \<Rightarrow> 'b ell2\<close> and abs_c
-  assume typedef_c: \<open>type_definition rep_c abs_c (register_decomposition_basis \<Phi>)\<close>
-  then interpret type_definition rep_c abs_c \<open>register_decomposition_basis \<Phi>\<close> .
+  fix rep_c :: \<open>'c \<Rightarrow> 'b ell2\<close>
+  assume bij_rep_c: \<open>bij_betw rep_c UNIV (register_decomposition_basis \<Phi>)\<close>
+  then interpret type_definition rep_c \<open>inv rep_c\<close> \<open>register_decomposition_basis \<Phi>\<close>
+    by (simp add: type_definition_bij_betw_iff)
 
-  have bij_rep_c: \<open>bij_betw rep_c (UNIV :: 'c set) (B \<xi>0)\<close>
-    unfolding B\<xi>0
-    apply (rule bij_betwI[where g=abs_c])
-    using Rep Rep_inverse Abs_inverse by blast+
+  from bij_rep_c have bij_rep_c: \<open>bij_betw rep_c (UNIV :: 'c set) (B \<xi>0)\<close>
+    unfolding B\<xi>0 by simp
 
   define u where \<open>u = (\<lambda>(\<xi>,\<alpha>). \<Phi> (butterfly (ket \<xi>) (ket \<xi>0)) *\<^sub>V rep_c \<alpha>)\<close> for \<xi> :: 'a and \<alpha> :: \<open>'c\<close>
 
