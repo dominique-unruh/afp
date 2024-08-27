@@ -16,9 +16,9 @@ definition \<open>WITH_TYPE_CLASS_finite S (_::unit) \<longleftrightarrow> finit
 definition \<open>WITH_TYPE_REL_finite r = (rel_unit_itself :: _ \<Rightarrow> 'abs itself \<Rightarrow> _)\<close>
   for r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close> and rep_ops :: \<open>'rep \<Rightarrow> 'rep \<Rightarrow> 'rep\<close> and abs_ops :: \<open>'abs \<Rightarrow> 'abs \<Rightarrow> 'abs\<close>
 
-lemma with_type_compat_rel_finite[with_type_intros]:
-  \<open>with_type_compat_rel WITH_TYPE_CLASS_finite S WITH_TYPE_REL_finite\<close>
-  by (simp add: with_type_compat_rel_def WITH_TYPE_REL_finite_def)
+lemma with_type_wellformed_finite[with_type_intros]:
+  \<open>with_type_wellformed WITH_TYPE_CLASS_finite S WITH_TYPE_REL_finite\<close>
+  by (simp add: with_type_wellformed_def WITH_TYPE_REL_finite_def)
 
 lemma with_type_transfer_finite:
   fixes r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
@@ -45,7 +45,7 @@ With_Type.add_with_type_info_global {
   (* class_ops = \<^cterm>\<open>(+) :: 'a::semigroup_add \<Rightarrow> _ \<Rightarrow> _\<close>, *)
   rep_class = \<^const_name>\<open>WITH_TYPE_CLASS_finite\<close>,
   rep_rel = \<^const_name>\<open>WITH_TYPE_REL_finite\<close>,
-  with_type_compat_rel = @{thm with_type_compat_rel_finite},
+  with_type_wellformed = @{thm with_type_wellformed_finite},
   transfer = SOME @{thm with_type_transfer_finite},
   rep_rel_itself = SOME @{lemma \<open>bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (WITH_TYPE_REL_finite r) p TYPE('abs2)\<close>
       by (simp add: WITH_TYPE_REL_finite_def rel_unit_itself.simps Transfer.Rel_def)}
@@ -73,9 +73,9 @@ definition \<open>WITH_TYPE_CLASS_semigroup_add S plus \<longleftrightarrow> (\<
 definition \<open>WITH_TYPE_REL_semigroup_add r = (r ===> r ===> r)\<close>
   for r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close> and rep_ops :: \<open>'rep \<Rightarrow> 'rep \<Rightarrow> 'rep\<close> and abs_ops :: \<open>'abs \<Rightarrow> 'abs \<Rightarrow> 'abs\<close>
 
-lemma with_type_compat_rel_semigroup_add[with_type_intros]:
-  \<open>with_type_compat_rel WITH_TYPE_CLASS_semigroup_add S WITH_TYPE_REL_semigroup_add\<close>
-  by (simp add: with_type_compat_rel_def WITH_TYPE_CLASS_semigroup_add_def WITH_TYPE_REL_semigroup_add_def
+lemma with_type_wellformed_semigroup_add[with_type_intros]:
+  \<open>with_type_wellformed WITH_TYPE_CLASS_semigroup_add S WITH_TYPE_REL_semigroup_add\<close>
+  by (simp add: with_type_wellformed_def WITH_TYPE_CLASS_semigroup_add_def WITH_TYPE_REL_semigroup_add_def
       fun.Domainp_rel Domainp_pred_fun_eq bi_unique_alt_def)
 
 lemma with_type_transfer_semigroup_add:
@@ -107,7 +107,7 @@ With_Type.add_with_type_info_global {
   (* class_ops = \<^cterm>\<open>(+) :: 'a::semigroup_add \<Rightarrow> _ \<Rightarrow> _\<close>, *)
   rep_class = \<^const_name>\<open>WITH_TYPE_CLASS_semigroup_add\<close>,
   rep_rel = \<^const_name>\<open>WITH_TYPE_REL_semigroup_add\<close>,
-  with_type_compat_rel = @{thm with_type_compat_rel_semigroup_add},
+  with_type_wellformed = @{thm with_type_wellformed_semigroup_add},
   transfer = SOME @{thm with_type_transfer_semigroup_add},
   rep_rel_itself = NONE
 }
@@ -205,9 +205,9 @@ definition \<open>WITH_TYPE_CLASS_ab_group_add S = (\<lambda>(plus,zero,minus,um
 definition \<open>WITH_TYPE_REL_ab_group_add r = (r ===> r ===> r) *** r *** (r ===> r ===> r) *** (r ===> r)\<close>
   for r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close> and rep_ops :: \<open>'rep \<Rightarrow> 'rep \<Rightarrow> 'rep\<close> and abs_ops :: \<open>'abs \<Rightarrow> 'abs \<Rightarrow> 'abs\<close>
 
-lemma with_type_compat_rel_ab_group_add[with_type_intros]:
-  \<open>with_type_compat_rel WITH_TYPE_CLASS_ab_group_add S WITH_TYPE_REL_ab_group_add\<close>
-  by (simp add: with_type_compat_rel_def WITH_TYPE_CLASS_ab_group_add_def WITH_TYPE_REL_ab_group_add_def
+lemma with_type_wellformed_ab_group_add[with_type_intros]:
+  \<open>with_type_wellformed WITH_TYPE_CLASS_ab_group_add S WITH_TYPE_REL_ab_group_add\<close>
+  by (simp add: with_type_wellformed_def WITH_TYPE_CLASS_ab_group_add_def WITH_TYPE_REL_ab_group_add_def
       fun.Domainp_rel Domainp_pred_fun_eq bi_unique_alt_def prod.Domainp_rel DomainPI)
 
 lemma with_type_transfer_ab_group_add:
@@ -243,7 +243,7 @@ With_Type.add_with_type_info_global {
   param_names = ["plus", "zero", "minus", "uminus"],
   rep_class = \<^const_name>\<open>WITH_TYPE_CLASS_ab_group_add\<close>,
   rep_rel = \<^const_name>\<open>WITH_TYPE_REL_ab_group_add\<close>,
-  with_type_compat_rel = @{thm with_type_compat_rel_ab_group_add},
+  with_type_wellformed = @{thm with_type_wellformed_ab_group_add},
   transfer = SOME @{thm with_type_transfer_ab_group_add},
   rep_rel_itself = NONE
 }

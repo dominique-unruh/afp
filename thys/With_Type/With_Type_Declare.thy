@@ -721,9 +721,9 @@ lemma xxxxx:
   assumes class1_def: \<open>class1 \<equiv> (class1P, class1R)\<close>
   assumes class2_def: \<open>class2 \<equiv> (class2P, class2R)\<close>
   assumes class1P_def: \<open>class1P \<equiv> \<lambda>S p. D S p \<and> pred' S p\<close>
-  shows \<open>with_type_compat_rel (fst class1) S (snd class2)\<close>
+  shows \<open>with_type_wellformed (fst class1) S (snd class2)\<close>
   using has_dom
-  by (simp add: with_type_has_domain_def with_type_compat_rel_def class1_def class2_def class1P_def)
+  by (simp add: with_type_has_domain_def with_type_wellformed_def class1_def class2_def class1P_def)
 
 
 ML \<open>
@@ -784,7 +784,7 @@ fun define_stuff pos class lthy = let
   val info : With_Type.with_type_info = {
     class = class,
     rep_class_data = wt_class_const |> gen_term lthy |> dest_Const |> fst,
-    with_type_compat_rel = gen_thm lthy with_compat_rel_thm,
+    with_type_wellformed = gen_thm lthy with_compat_rel_thm,
     rep_class_data_thm = NONE, (* TODO put something here? *)
     transfer = SOME (gen_thm lthy transfer_thm')
   }

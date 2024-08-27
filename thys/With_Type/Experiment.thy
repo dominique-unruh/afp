@@ -6,8 +6,8 @@ unbundle lifting_syntax
 definition \<open>WITH_TYPE_CLASS_semigroup_add S p \<longleftrightarrow> (\<forall>a\<in>S. \<forall>b\<in>S. p a b \<in> S) \<and> (\<forall>a\<in>S. \<forall>b\<in>S. \<forall>c\<in>S. p a (p b c) = p (p a b) c)\<close>
 definition \<open>WITH_TYPE_REL_semigroup_add r = (r ===> r ===> r)\<close>
 
-lemma WITH_TYPE_semigroup_add: \<open>with_type_compat_rel WITH_TYPE_CLASS_semigroup_add S WITH_TYPE_REL_semigroup_add\<close>
-  by (auto intro!: simp: with_type_compat_rel_def WITH_TYPE_CLASS_semigroup_add_def
+lemma WITH_TYPE_semigroup_add: \<open>with_type_wellformed WITH_TYPE_CLASS_semigroup_add S WITH_TYPE_REL_semigroup_add\<close>
+  by (auto intro!: simp: with_type_wellformed_def WITH_TYPE_CLASS_semigroup_add_def
       WITH_TYPE_REL_semigroup_add_def Domainp_pred_fun_eq bi_unique_alt_def)
 
 setup \<open>
@@ -15,7 +15,7 @@ With_Type.add_with_type_info_global {
 class = \<^class>\<open>semigroup_add\<close>,
 rep_class = \<^const_name>\<open>WITH_TYPE_CLASS_semigroup_add\<close>,
 rep_rel = \<^const_name>\<open>WITH_TYPE_REL_semigroup_add\<close>,
-with_type_compat_rel = @{thm WITH_TYPE_semigroup_add},
+with_type_wellformed = @{thm WITH_TYPE_semigroup_add},
 transfer = NONE
 }
 \<close>
@@ -23,7 +23,7 @@ transfer = NONE
 lemma \<open>\<forall>\<^sub>\<tau> 't::semigroup_add = XXX with ZZZ. YYY\<close>
 
 
-definition \<open>with_type2 = (\<lambda>(C,R) (S,rep_ops) abs_ops P. S\<noteq>{} \<and> C S rep_ops \<and> with_type_compat_rel C S R
+definition \<open>with_type2 = (\<lambda>(C,R) (S,rep_ops) abs_ops P. S\<noteq>{} \<and> C S rep_ops \<and> with_type_wellformed C S R
     \<and> (\<forall>Rep Abs. type_definition Rep Abs S \<longrightarrow> (R (\<lambda>x y. x = Rep y) rep_ops abs_ops) \<longrightarrow> 
             P Rep Abs))\<close>
 
@@ -43,8 +43,8 @@ definition \<open>WITH_TYPE_REL_semigroup_add r = (r ===> r ===> r)\<close>
 lemma mysemigroup: \<open>WITH_TYPE_CLASS_semigroup_add mygroup myplus\<close>
   by (auto intro!: simp: WITH_TYPE_CLASS_semigroup_add_def myplus_def)
 
-lemma myrel: \<open>with_type_compat_rel WITH_TYPE_CLASS_semigroup_add mygroup WITH_TYPE_REL_semigroup_add\<close>
-  by (auto intro!: simp: with_type_compat_rel_def WITH_TYPE_CLASS_semigroup_add_def
+lemma myrel: \<open>with_type_wellformed WITH_TYPE_CLASS_semigroup_add mygroup WITH_TYPE_REL_semigroup_add\<close>
+  by (auto intro!: simp: with_type_wellformed_def WITH_TYPE_CLASS_semigroup_add_def
       WITH_TYPE_REL_semigroup_add_def mygroup_def
       Domainp_pred_fun_eq bi_unique_alt_def)
 
@@ -109,14 +109,14 @@ proof -
   have sem: \<open>WITH_TYPE_CLASS_semigroup_add mygroup myplus\<close> 
     by (auto simp add: with_type2_def)
   from wt_thm_2
-  have rel: \<open>with_type_compat_rel WITH_TYPE_CLASS_semigroup_add mygroup (WITH_TYPE_REL_semigroup_add :: (_ \<Rightarrow> 't \<Rightarrow> _) \<Rightarrow> _ \<Rightarrow> _)\<close>
+  have rel: \<open>with_type_wellformed WITH_TYPE_CLASS_semigroup_add mygroup (WITH_TYPE_REL_semigroup_add :: (_ \<Rightarrow> 't \<Rightarrow> _) \<Rightarrow> _ \<Rightarrow> _)\<close>
     by (auto simp add: with_type2_def)
   have dom_r: \<open>mygroup = Collect (Domainp r)\<close>
     apply (auto intro!: Rep elim!: Rep_cases simp: r_def Domainp_iff )
     by -
   have dom: \<open>Domainp R myplus\<close>
     unfolding R_def
-    apply (rule rel[unfolded with_type_compat_rel_def, rule_format, where r=r])
+    apply (rule rel[unfolded with_type_wellformed_def, rule_format, where r=r])
     by (auto intro!: dom_r sem simp: )
 
   from rt (* Should come from with-type *)

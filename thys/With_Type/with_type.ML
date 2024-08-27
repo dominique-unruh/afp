@@ -4,7 +4,7 @@ type with_type_info = {
   rep_class: string,
   rep_rel: string,
   param_names: string list,
-  with_type_compat_rel: thm, (* with_type_compat_rel rep_class S rep_rel;
+  with_type_wellformed: thm, (* with_type_wellformed rep_class S rep_rel;
                                 rep_class/rep_rel must have different ?'abs *)
   transfer: thm option, (* bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (rep_rel r ===> (\<longleftrightarrow>)) (rep_class (Collect (Domainp r))) class.class *)
                        (* rep_class/rep_rel must have different ?'abs *)
@@ -47,14 +47,14 @@ type with_type_info = {
   rep_rel: string,
   param_names: string list,
   (* rep_class_data_thm: thm option, *)
-  with_type_compat_rel: thm, 
+  with_type_wellformed: thm, 
   transfer: thm option,
   rep_rel_itself: thm option
 }
 
-fun morphism m ({class, rep_class, rep_rel, with_type_compat_rel, transfer, rep_rel_itself, param_names} : with_type_info) : with_type_info =
+fun morphism m ({class, rep_class, rep_rel, with_type_wellformed, transfer, rep_rel_itself, param_names} : with_type_info) : with_type_info =
   {class=class, rep_class=rep_class, rep_rel=rep_rel, 
-    with_type_compat_rel = Morphism.thm m with_type_compat_rel,
+    with_type_wellformed = Morphism.thm m with_type_wellformed,
     transfer = Option.map (Morphism.thm m) transfer,
     param_names = param_names,
     rep_rel_itself = Option.map (Morphism.thm m) rep_rel_itself}
@@ -113,6 +113,7 @@ fun unoverload_type_local ctxt tvars thm = let
   in thm''' end
 
 
+(* TODO rename \<rightarrow> cancel_with_type *)
 fun with_type_cancel ctxt thm = let
   datatype class_premise = CLASS_PREMISE_NONE | CLASS_PREMISE_ITSELF | CLASS_PREMISE_PARAMS
   fun debug (pos : Position.T) m = if true then tracing (Markup.markup (Markup.properties (Position.properties_of pos) Markup.position) "\<^here>" ^ " " ^ m ()) else ()
@@ -168,19 +169,19 @@ fun with_type_cancel ctxt thm = let
       \<exists>Rep Abs. type_definition Rep Abs ?S \<Longrightarrow> \<exists>x. class.name' x" *)
   (* Here class.name' is class.name, possibly uncurried (e.g., \<lambda>(x,y,z) class.name x y z) *)
   (* Only defined if class_premise = CLASS_PREMISE_PARAMS *)
-  val with_type_class_axioms = 
+  val with_type_transfer_class = 
     if class_premise = CLASS_PREMISE_PARAMS then
       case #transfer info of SOME transfer => 
-        (@{thm with_type_class_axioms} OF [transfer, #with_type_compat_rel info])
+        (@{thm with_type_transfer_class} OF [transfer, #with_type_wellformed info])
         |> (Tactic.assume_tac ctxt 1  THEN  Tactic.assume_tac ctxt 1) |> Seq.hd |> SOME
          | NONE => raise THM ("with_type_cancel: unoverloading produced a `class.name` premise, but #transfer is NONE", 0, [unoverloaded])
     else
       NONE
-  val _ = debug\<^here> (fn _ => "with_type_class_axioms = " ^ \<^make_string> with_type_class_axioms)
+  val _ = debug\<^here> (fn _ => "with_type_transfer_class = " ^ \<^make_string> with_type_transfer_class)
  
   (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs S \<Longrightarrow> \<exists>x::?'abs_params2. class.name' x *)
   (* Only defined if class_premise = CLASS_PREMISE_PARAMS *)
-  val ex_class = Option.map (fn th => th OF [thm]) with_type_class_axioms
+  val ex_class = Option.map (fn th => th OF [thm]) with_type_transfer_class
   val _ = debug\<^here> (fn _ => "ex_class = " ^ \<^make_string> ex_class)
 
   (* \<exists>(Rep::?'abs2\<Rightarrow>_) Abs. type_definition Rep Abs S \<Longrightarrow> class.name' (SOME \<dots>) *)
@@ -200,9 +201,9 @@ fun with_type_cancel ctxt thm = let
   val class_type' =
     if class_premise = CLASS_PREMISE_ITSELF then
       case (#transfer info, #rep_rel_itself info) of (SOME transfer, SOME itself) => 
-            @{thm with_type_class_axioms2}
+            @{thm with_type_transfer_class2}
             |> Drule.infer_instantiate ctxt [(("S",0), S_cterm)]
-            |> (fn thm => thm OF [transfer, #with_type_compat_rel info, itself])
+            |> (fn thm => thm OF [transfer, #with_type_wellformed info, itself])
             |> (Tactic.assume_tac ctxt 1  THEN  Tactic.assume_tac ctxt 1  THEN  Tactic.assume_tac ctxt 1  THEN  Tactic.assume_tac ctxt 1) |> Seq.hd
             (* |> Thm.instantiate' [SOME rep_ctyp] [] *)
             |> SOME

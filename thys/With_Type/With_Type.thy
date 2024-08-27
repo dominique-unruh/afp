@@ -4,33 +4,31 @@ theory With_Type
   keywords "with_type_case" :: prf_asm % "proof"
 begin
 
-definition with_type_compat_rel where
-  \<open>with_type_compat_rel C S R \<longleftrightarrow> 
-      (\<forall>r rp. bi_unique r \<longrightarrow> right_total r \<longrightarrow> S = Collect (Domainp r) \<longrightarrow> C S rp \<longrightarrow> Domainp (R r) rp)\<close>
+definition with_type_wellformed where
+  \<comment> \<open>This states, roughly, that if operations \<^term>\<open>rp\<close> satisfy the axioms of the class,
+      then they are in the domain of the relation between abstract/concrete operations.\<close>
+  \<open>with_type_wellformed C S R \<longleftrightarrow> (\<forall>r rp. bi_unique r \<longrightarrow> right_total r \<longrightarrow> S = Collect (Domainp r) \<longrightarrow> C S rp \<longrightarrow> Domainp (R r) rp)\<close>
 
 text \<open>
-\<^term>\<open>S\<close> -- the carrier set of the representation of the type
+\<^term>\<open>S\<close> -- the carrier set of the representation of the type (concrete type)
 
-\<^term>\<open>rep_ops\<close> -- operations of the representation type (i.e., operations like addition or similar)
+\<^term>\<open>rep_ops\<close> -- operations on the concrete type (i.e., operations like addition or similar)
 
-\<^term>\<open>C\<close> -- the properties that \<^term>\<open>R\<close> and \<^term>\<open>rep_ops\<close> are guaranteed to satisfy
+\<^term>\<open>C\<close> -- the properties that \<^term>\<open>S\<close> and \<^term>\<open>rep_ops\<close> are guaranteed to satisfy
 (basically, the type-class definition)
 
-\<^term>\<open>R\<close> -- transfers a relation \<^term>\<open>r\<close> between representation and abstract type to a relation
-between representation operations and abstract operations (\<^term>\<open>r\<close> is always bi-unique and right-total)
+\<^term>\<open>R\<close> -- transfers a relation \<^term>\<open>r\<close> between concrete/abstract type to a relation
+between concrete/abstract operations (\<^term>\<open>r\<close> is always bi-unique and right-total)
 
 \<^term>\<open>P\<close> -- the predicate that we claim holds.
-It can work on the type \<^typ>\<open>'abs\<close> (which is type-classed) but it also gets \<^term>\<open>Rep\<close> and \<^term>\<open>Abs\<close>
-so that it can transfer things back and forth.
+It can work on the type \<^typ>\<open>'abs\<close> (which is type-classed) but it also gets \<^term>\<open>rep\<close> and \<^term>\<open>abs_ops\<close>
+where \<^term>\<open>rep\<close> is an embedding of the abstract into the concrete type, and \<^term>\<open>abs_ops\<close> operations on the abstract type.
 
-If \<^term>\<open>P\<close> does not contain \<^typ>\<open>'abs\<close>, we can erase the \<^term>\<open>with_type\<close> using the \<open>Types_To_Sets\<close> mechanism.
-See lemma \<open>erasure_example\<close> below.
-
-The intuitive meaning of \<^term>\<open>with_type (C,R) (S,rep_ops) P\<close> is that \<^term>\<open>P\<close> holds for
-any type \<^typ>\<open>'t\<close> that that can be represented by a concrete representation (S,rep_ops)
-and that has a type class matching the specification (C,R).
+The intuitive meaning of \<^term>\<open>with_type C R S rep_ops P\<close> is that \<^term>\<open>P\<close> holds for
+any type \<^typ>\<open>'t\<close> that that can be represented by a concrete representation \<^term>\<open>(S,rep_ops)\<close>
+and that has a type class matching the specification \<^term>\<open>(C,R)\<close>.
 \<close>
-definition \<open>with_type = (\<lambda>C R S rep_ops P. S\<noteq>{} \<and> C S rep_ops \<and> with_type_compat_rel C S R
+definition \<open>with_type = (\<lambda>C R S rep_ops P. S\<noteq>{} \<and> C S rep_ops \<and> with_type_wellformed C S R
     \<and> (\<forall>rep abs_ops. bij_betw rep UNIV S \<longrightarrow> (R (\<lambda>x y. x = rep y) rep_ops abs_ops) \<longrightarrow> 
             P rep abs_ops))\<close>
   for S :: \<open>'rep set\<close> and P :: \<open>('abs \<Rightarrow> 'rep) \<Rightarrow> 'abs_ops \<Rightarrow> bool\<close>
@@ -38,33 +36,41 @@ definition \<open>with_type = (\<lambda>C R S rep_ops P. S\<noteq>{} \<and> C S 
   and C :: \<open>'rep set \<Rightarrow> 'rep_ops \<Rightarrow> bool\<close>
   and rep_ops :: \<open>'rep_ops\<close>
 
-definition \<open>WITH_TYPE_CLASS_type S ops = True\<close>
-definition \<open>WITH_TYPE_REL_type r = (=)\<close>
+text \<open>For every type class that we want to use with \<^const>\<open>with_type\<close>, we need to define two
+  constants specifying the axioms of the class (\<^term>\<open>WITH_TYPE_CLASS_classname\<close>) and
+  specifying how a relation between concrete/abstract type is lifted to a relation between
+  concrete/abstract operations (\<^term>\<open>WITH_TYPE_REL_classname\<close>). Here we give the
+  trivial definitions for the default type class \<^class>\<open>type\<close>\<close>
+definition \<open>WITH_TYPE_CLASS_type S ops = True\<close> for S :: \<open>'rep set\<close> and ops :: \<open>'rep_ops\<close>
+definition \<open>WITH_TYPE_REL_type r = (=)\<close> for r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
 
-(* definition with_type_type_class where \<open>with_type_type_class = ((\<lambda>_ (_::unit). True), (\<lambda>_. (=)))\<close> *)
+named_theorems with_type_intros
+  \<comment> \<open>In this named fact collection, we collect introduction rules that are used to automatically
+  discharge some simple premises in automated methods (currently only \<open>with_type_intro\<close>).\<close>
 
-lemma type_definition_bij_betw_iff: \<open>type_definition rep (inv rep) S \<longleftrightarrow> bij_betw rep UNIV S\<close>
-  by (smt (verit, best) UNIV_I bij_betw_def bij_betw_iff_bijections inj_on_def inv_f_eq type_definition.Rep_inject type_definition.Rep_range type_definition.intro)
+lemma [with_type_intros]: \<open>WITH_TYPE_CLASS_type S ops\<close>
+  by (simp add: WITH_TYPE_CLASS_type_def)
 
+text \<open>We need to show that \<^term>\<open>WITH_TYPE_CLASS_classname\<close> and \<^term>\<open>WITH_TYPE_REL_classname\<close>
+  are wellbehaved. We do this here for class \<^class>\<open>type\<close>. We will need this lemma also for
+  registering the type class \<^class>\<open>type\<close> later.\<close>
+lemma with_type_wellformed_type[with_type_intros]: \<open>with_type_wellformed WITH_TYPE_CLASS_type S WITH_TYPE_REL_type\<close>
+  by (simp add: WITH_TYPE_REL_type_def WITH_TYPE_CLASS_type_def with_type_wellformed_def Domainp_iff)
 
-lemma with_type_compat_rel_type: \<open>with_type_compat_rel WITH_TYPE_CLASS_type S WITH_TYPE_REL_type\<close>
-  by (simp add: WITH_TYPE_REL_type_def WITH_TYPE_CLASS_type_def with_type_compat_rel_def Domainp_iff)
-
-(* Demonstration *)
-lemma \<open>with_type WITH_TYPE_CLASS_type WITH_TYPE_REL_type S () P \<longleftrightarrow> S\<noteq>{} \<and> (\<forall>rep. bij_betw rep UNIV S \<longrightarrow> P rep ())\<close>
-  by (auto simp: with_type_def WITH_TYPE_REL_type_def WITH_TYPE_CLASS_type_def with_type_compat_rel_def)
+lemma with_type_simple: \<open>with_type WITH_TYPE_CLASS_type WITH_TYPE_REL_type S () P \<longleftrightarrow> S\<noteq>{} \<and> (\<forall>rep. bij_betw rep UNIV S \<longrightarrow> P rep ())\<close>
+  \<comment> \<open>For class \<^class>\<open>type\<close>, \<^const>\<open>with_type\<close> can be rewritten in a much more compact and simpler way.\<close>
+  by (auto simp: with_type_def WITH_TYPE_REL_type_def WITH_TYPE_CLASS_type_def with_type_wellformed_def)
 
 lemma with_typeI:
   assumes \<open>S \<noteq> {}\<close>
   assumes \<open>C S p\<close>
-  assumes \<open>with_type_compat_rel C S R\<close>
+  assumes \<open>with_type_wellformed C S R\<close>
   assumes main: \<open>\<And>(rep :: 'abs \<Rightarrow> 'rep) abs_ops. bij_betw rep UNIV S \<Longrightarrow> R (\<lambda>x y. x = rep y) p abs_ops \<Longrightarrow> P rep abs_ops\<close>
   shows \<open>with_type C R S p P\<close>
   using assms
-  by (auto intro!: simp: with_type_def type_definition_bij_betw_iff)
+  by (auto intro!: simp: with_type_def)
 
-
-lemma with_type_mp: 
+lemma with_type_mp:
   assumes \<open>with_type C R S p P\<close>
   assumes \<open>\<And>rep abs_ops. bij_betw rep UNIV S \<Longrightarrow> C S p \<Longrightarrow> P rep abs_ops \<Longrightarrow> Q rep abs_ops\<close>
   shows \<open>with_type C R S p Q\<close>
@@ -74,6 +80,7 @@ lemma with_type_nonempty: \<open>with_type C R S p P \<Longrightarrow> S \<noteq
   by (simp add: with_type_def case_prod_beta)
 
 lemma with_type_prepare_cancel:
+  \<comment> \<open>Auxiliary lemma used by the implementation of the \<open>cancel_with_type\<close>-mechanism (see below)\<close>
   fixes S :: \<open>'rep set\<close> and P :: bool
     and R :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool)\<close>
     and C :: \<open>'rep set \<Rightarrow> 'rep_ops \<Rightarrow> bool\<close>
@@ -96,9 +103,9 @@ proof -
     apply (auto simp: r_def intro!: DomainPI)
     apply (subst type_definition.Abs_inverse[OF td])
     by auto
-  from wt have nice: \<open>with_type_compat_rel C S R\<close> and \<open>C S p\<close>
+  from wt have nice: \<open>with_type_wellformed C S R\<close> and \<open>C S p\<close>
     by (simp_all add: with_type_def case_prod_beta)
-  from nice[unfolded with_type_compat_rel_def, rule_format, OF \<open>bi_unique r\<close> \<open>right_total r\<close> Sr \<open>C S p\<close>]
+  from nice[unfolded with_type_wellformed_def, rule_format, OF \<open>bi_unique r\<close> \<open>right_total r\<close> Sr \<open>C S p\<close>]
   obtain abs_ops where abs_ops: \<open>R (\<lambda>x y. x = rep y) p abs_ops\<close>
     apply atomize_elim by (auto simp: r_def)
   from bij abs_ops wt
@@ -106,14 +113,15 @@ proof -
     by (auto simp: with_type_def case_prod_beta)
 qed
 
-lemma with_type_class_axioms:
+lemma with_type_transfer_class:
+  \<comment> \<open>Auxiliary lemma used by ML function \<open>cancel_with_type\<close>\<close>
   includes lifting_syntax
   fixes Rep :: \<open>'abs \<Rightarrow> 'rep\<close>
     and C S
     and R :: \<open>('rep\<Rightarrow>'abs\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool)\<close>
     and R2 :: \<open>('rep\<Rightarrow>'abs2\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops2 \<Rightarrow> bool)\<close>
   assumes trans: \<open>\<And>r :: 'rep \<Rightarrow> 'abs2 \<Rightarrow> bool. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (R2 r ===> (\<longleftrightarrow>)) (C (Collect (Domainp r))) axioms\<close>
-  assumes nice: \<open>with_type_compat_rel C S R2\<close>
+  assumes nice: \<open>with_type_wellformed C S R2\<close>
   assumes wt: \<open>with_type C R S p P\<close>
   assumes ex: \<open>\<exists>(Rep :: 'abs2\<Rightarrow>'rep) Abs. type_definition Rep Abs S\<close>
   shows \<open>\<exists>x::'abs_ops2. axioms x\<close>
@@ -138,7 +146,7 @@ proof -
     by (simp_all add: with_type_def case_prod_beta)
 
   with nice have \<open>Domainp (R2 r) p\<close>
-    by (simp add: bi_unique_r with_type_compat_rel_def rS right_total_r)
+    by (simp add: bi_unique_r with_type_wellformed_def rS right_total_r)
   
   with sg
   have \<open>\<exists>x :: 'abs_ops2. axioms x\<close>
@@ -153,14 +161,15 @@ proof -
     by auto
 qed
 
-lemma with_type_class_axioms2:
+lemma with_type_transfer_class2:
+  \<comment> \<open>Auxiliary lemma used by ML function \<open>cancel_with_type\<close>\<close>
   includes lifting_syntax
   fixes Rep :: \<open>'abs \<Rightarrow> 'rep\<close>
     and C S
     and R :: \<open>('rep\<Rightarrow>'abs\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs itself \<Rightarrow> bool)\<close>
     and R2 :: \<open>('rep\<Rightarrow>'abs2\<Rightarrow>bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs2 itself \<Rightarrow> bool)\<close>
   assumes trans: \<open>\<And>r :: 'rep \<Rightarrow> 'abs2 \<Rightarrow> bool. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (R2 r ===> (\<longleftrightarrow>)) (C (Collect (Domainp r))) axioms\<close>
-  assumes nice: \<open>with_type_compat_rel C S R2\<close> (* Not used, but the ML-code expects it to be there currently. *)
+  assumes nice: \<open>with_type_wellformed C S R2\<close> (* Not used, but the ML-code expects it to be there currently. *)
   assumes rel_itself: \<open>\<And>(r :: 'rep \<Rightarrow> 'abs2 \<Rightarrow> bool) p. bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (R2 r) p TYPE('abs2)\<close>
   assumes wt: \<open>with_type C R S p P\<close>
   assumes ex: \<open>\<exists>(Rep :: 'abs2\<Rightarrow>'rep) Abs. type_definition Rep Abs S\<close>
@@ -191,77 +200,58 @@ proof -
     by transfer
 qed
 
-inductive rel_unit_itself :: \<open>unit \<Rightarrow> 'a itself \<Rightarrow> bool\<close> where
-  \<open>rel_unit_itself () TYPE('a)\<close>
-
-lemma [simp]: \<open>Domainp rel_unit_itself x\<close>
-  by (simp add: Domainp_iff rel_unit_itself.simps)
-lemma [simp]: \<open>rel_unit_itself () y \<longleftrightarrow> (y = TYPE('a))\<close>
-  by (simp add: rel_unit_itself.simps)
-
+text \<open>Syntactic constants for rendering \<^const>\<open>with_type\<close> nicely.\<close>
 syntax "_with_type" :: "type \<Rightarrow> 'a => 'b \<Rightarrow> 'c" ("\<forall>\<^sub>\<tau> _ = _. _" [0,0,10] 10)
 syntax "_with_type_with" :: "type \<Rightarrow> 'a => args \<Rightarrow> 'b \<Rightarrow> 'c" ("\<forall>\<^sub>\<tau> _ = _ with _. _" [0,0,10] 10)
 syntax (output) "_with_type_sort_annotation" :: "type \<Rightarrow> sort \<Rightarrow> type" ("_::_")
+  \<comment> \<open>An auxiliary syntactic constant used to enforce the printing of sort constraints in certain terms.\<close>
 
 ML_file "with_type.ML"
 
-(* declare [[show_types]]
-ML \<open>
-Thm.instantiate' [SOME \<^ctyp>\<open>'a\<close>] [] @{thm refl}
-\<close>
- *)
 
-attribute_setup cancel_with_type = 
-  \<open>Thm.rule_attribute [] (With_Type.with_type_cancel o Context.proof_of) |> Scan.succeed\<close>
-  \<open>Transforms (\<forall>\<^sub>\<tau> 't=\<dots>. P) into P\<close>
-
-(* ML \<open>
-fun generalize typ ctxt thm = 
-    Thm.generalize (Names.make1_set typ, Names.empty) 0 thm
- |> \<^print>
-\<close>
-
-
-attribute_setup generalize = 
-  \<open>Scan.lift Parse.typ >> (fn typ => Thm.rule_attribute [] (generalize typ o Context.proof_of))\<close>
-  \<open>TODO\<close>
- *)
-
+text \<open>Register the type class \<^class>\<open>type\<close> with the \<^const>\<open>with_type\<close>-mechanism.
+  This enables readable syntax, and contains information needed by various tools
+  such as the \<open>cancel_with_type\<close> attribute.\<close>
 setup \<open>
 With_Type.add_with_type_info_global {
   class = \<^class>\<open>type\<close>,
   rep_class = \<^const_name>\<open>WITH_TYPE_CLASS_type\<close>,
   rep_rel = \<^const_name>\<open>WITH_TYPE_REL_type\<close>,
-  with_type_compat_rel = @{thm with_type_compat_rel_type},
-  (* rep_class_data_thm = NONE, *)
+  with_type_wellformed = @{thm with_type_wellformed_type},
   param_names = [],
   transfer = NONE,
   rep_rel_itself = NONE
-}
-\<close>
+}\<close>
 
+
+text \<open>Enabling input/output syntax for \<^const>\<open>with_type\<close>. This allows to write, e.g.,
+  \<open>\<forall>\<^sub>\<tau> 't::type = S. P\<close>, and the various relevant parameters such as \<^const>\<open>WITH_TYPE_CLASS_type\<close> etc.
+  are automatically looked up based on the indicated type class.
+  This only works with type classes that have been registered beforehand.
+\<close>
 parse_translation \<open>[
   (\<^syntax_const>\<open>_with_type\<close>, With_Type.with_type_parse_translation),
   (\<^syntax_const>\<open>_with_type_with\<close>, With_Type.with_type_parse_translation)
 ]\<close>
-
 (* TODO config option to disable print translation *)
 typed_print_translation \<open>[ (\<^const_syntax>\<open>with_type\<close>, With_Type.with_type_print_translation) ]\<close>
 
+(* Example of input syntax. *)
 term \<open>\<forall>\<^sub>\<tau> 't::type = N. (rep_t = rep_t)\<close>
-(* term \<open>\<forall>\<^sub>\<tau>'t::type = N with pls. (rep_t = rep_t)\<close> *)
 
-named_theorems with_type_intros
 
-lemma [with_type_intros]: \<open>WITH_TYPE_CLASS_type S ops\<close>
-  by (simp add: WITH_TYPE_CLASS_type_def)
+text \<open>Removes a toplevel \<open>\<forall>\<^sub>\<tau> 't=\<dots>\<close> from a proposition \<open>\<forall>\<^sub>\<tau> 't=\<dots>. P\<close>. This only works if \<^term>\<open>P\<close> does
+  not refer to the type \<^typ>\<open>'t\<close>.\<close>
+attribute_setup cancel_with_type =
+  \<open>Thm.rule_attribute [] (With_Type.with_type_cancel o Context.proof_of) |> Scan.succeed\<close>
+  \<open>Transforms (\<forall>\<^sub>\<tau> 't=\<dots>. P) into P\<close>
 
-declare with_type_compat_rel_type[with_type_intros]
 
+text \<open>Convenience method for proving a theorem of the form \<open>\<forall>\<^sub>\<tau> 't=\<dots>\<close>.\<close>
 method with_type_intro = rule with_typeI; (intro with_type_intros)?
-(* method with_type_mp = rule with_type_mp; (intro with_type_intros)? *)
 
 
+(* TODO cleanup/document from here *)
 
 
 ML \<open>

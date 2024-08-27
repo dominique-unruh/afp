@@ -2,6 +2,8 @@ theory Misc_With_Type
   imports Main
 begin
 
+(* TODO cleanup *)
+
 lemma distinct_prems_rl_protected: \<open>PROP Pure.prop (PROP A \<Longrightarrow> PROP A \<Longrightarrow> PROP B) \<Longrightarrow> PROP Pure.prop (PROP A \<Longrightarrow> PROP B)\<close>
   unfolding Pure.prop_def by (rule distinct_prems_rl)
 
@@ -24,5 +26,20 @@ proof (rule equivI)
   show \<open>trans {(x, y). rel_square r x y}\<close>
     by (smt (verit, best) CollectD CollectI OO_def assms(2) case_prodD conversep_iff curryE curry_case_prod rel_square_def right_unique_def transI)
 qed
+
+lemma type_definition_bij_betw_iff: \<open>type_definition rep (inv rep) S \<longleftrightarrow> bij_betw rep UNIV S\<close>
+  by (smt (verit, best) UNIV_I bij_betw_def bij_betw_iff_bijections inj_on_def inv_f_eq type_definition.Rep_inject type_definition.Rep_range type_definition.intro)
+
+inductive rel_unit_itself :: \<open>unit \<Rightarrow> 'a itself \<Rightarrow> bool\<close> where
+\<comment> \<open>A canonical relation between \<^typ>\<open>unit\<close> and \<^typ>\<open>'a itself\<close>.
+  Note that while the latter may not be a singleton type, in many situations we treat it as 
+  one by only using the element \<^term>\<open>TYPE('a)\<close>.\<close>
+  \<open>rel_unit_itself () TYPE('a)\<close>
+
+lemma Domain_rel_unit_itself[simp]: \<open>Domainp rel_unit_itself x\<close>
+  by (simp add: Domainp_iff rel_unit_itself.simps)
+lemma [simp]: \<open>rel_unit_itself () y \<longleftrightarrow> (y = TYPE('a))\<close>
+  by (simp add: rel_unit_itself.simps)
+
 
 end
