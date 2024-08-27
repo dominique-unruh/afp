@@ -1,6 +1,5 @@
 theory With_Type
-  imports "HOL-Types_To_Sets.Types_To_Sets" Misc_With_Type Instantiate_Term_Antiquotation
-    "HOL-Eisbach.Eisbach"
+  imports "HOL-Types_To_Sets.Types_To_Sets" Misc_With_Type "HOL-Eisbach.Eisbach"
   keywords "with_type_case" :: prf_asm % "proof"
 begin
 
