@@ -7,65 +7,9 @@ Should: provide WITH_TYPE_(CLASS/REL)_ including arguments (ops!)
 The registration command
  *)
 
-subsection \<open>Finite\<close>
-
-unbundle lifting_syntax
-
-definition \<open>WITH_TYPE_CLASS_finite S (_::unit) \<longleftrightarrow> finite S\<close>
-  for S :: \<open>'rep set\<close> and plus :: \<open>'rep \<Rightarrow> 'rep \<Rightarrow> 'rep\<close>
-definition \<open>WITH_TYPE_REL_finite r = (rel_unit_itself :: _ \<Rightarrow> 'abs itself \<Rightarrow> _)\<close>
-  for r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close> and rep_ops :: \<open>'rep \<Rightarrow> 'rep \<Rightarrow> 'rep\<close> and abs_ops :: \<open>'abs \<Rightarrow> 'abs \<Rightarrow> 'abs\<close>
-
-lemma with_type_wellformed_finite[with_type_intros]:
-  \<open>with_type_wellformed WITH_TYPE_CLASS_finite S WITH_TYPE_REL_finite\<close>
-  by (simp add: with_type_wellformed_def WITH_TYPE_REL_finite_def)
-
-lemma with_type_transfer_finite:
-  fixes r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
-  assumes [transfer_rule]: \<open>bi_unique r\<close> \<open>right_total r\<close>
-  shows \<open>(WITH_TYPE_REL_finite r ===> (\<longleftrightarrow>))
-         (WITH_TYPE_CLASS_finite (Collect (Domainp r))) class.finite\<close>
-  unfolding WITH_TYPE_REL_finite_def
-proof (rule rel_funI)
-  fix x :: unit and y :: \<open>'abs itself\<close>
-  assume \<open>rel_unit_itself x y\<close>
-  then have [simp]: \<open>y = TYPE('abs)\<close>
-    by simp
-  note right_total_UNIV_transfer[transfer_rule]
-  show \<open>WITH_TYPE_CLASS_finite (Collect (Domainp r)) x \<longleftrightarrow> class.finite y\<close>
-    apply (simp add: WITH_TYPE_CLASS_finite_def class.finite_def)
-    apply transfer
-    by simp
-qed
-
-setup \<open>
-With_Type.add_with_type_info_global {
-  class = \<^class>\<open>finite\<close>,
-  param_names = [],
-  rep_class = \<^const_name>\<open>WITH_TYPE_CLASS_finite\<close>,
-  rep_rel = \<^const_name>\<open>WITH_TYPE_REL_finite\<close>,
-  with_type_wellformed = @{thm with_type_wellformed_finite},
-  transfer = SOME @{thm with_type_transfer_finite},
-  rep_rel_itself = SOME @{lemma \<open>bi_unique r \<Longrightarrow> right_total r \<Longrightarrow> (WITH_TYPE_REL_finite r) p TYPE('abs2)\<close>
-      by (simp add: WITH_TYPE_REL_finite_def rel_unit_itself.simps Transfer.Rel_def)}
-}
-\<close>
-
-subsubsection \<open>Example\<close>
-
-
-
-lemma example_finite:
-  \<open>\<forall>\<^sub>\<tau> 'abs::finite = undefined::int set. undefined (3::nat)\<close>
-  sorry
-
-thm example_finite[cancel_with_type]
-ML \<open>
-With_Type.with_type_cancel \<^context> @{thm example_finite}
-\<close>
-
 subsection \<open>Semigroup-add\<close>
 
+unbundle lifting_syntax
 
 definition \<open>WITH_TYPE_CLASS_semigroup_add S plus \<longleftrightarrow> (\<forall>a\<in>S. \<forall>b\<in>S. plus a b \<in> S) \<and> (\<forall>a\<in>S. \<forall>b\<in>S. \<forall>c\<in>S. plus (plus a b) c = plus a (plus b c))\<close>
   for S :: \<open>'rep set\<close> and plus :: \<open>'rep \<Rightarrow> 'rep \<Rightarrow> 'rep\<close>
@@ -103,7 +47,6 @@ setup \<open>
 With_Type.add_with_type_info_global {
   class = \<^class>\<open>semigroup_add\<close>,
   param_names = ["plus"],
-  (* class_ops = \<^cterm>\<open>(+) :: 'a::semigroup_add \<Rightarrow> _ \<Rightarrow> _\<close>, *)
   rep_class = \<^const_name>\<open>WITH_TYPE_CLASS_semigroup_add\<close>,
   rep_rel = \<^const_name>\<open>WITH_TYPE_REL_semigroup_add\<close>,
   with_type_wellformed = @{thm with_type_wellformed_semigroup_add},

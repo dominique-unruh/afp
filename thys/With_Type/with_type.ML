@@ -50,6 +50,10 @@ val with_type_print_translation : Proof.context -> typ -> term list -> term
 
 val get_with_type_info_by_class : Proof.context -> class -> with_type_info option
 
+val with_type_mp_tac : Position.T -> thm list -> context_tactic
+
+val with_type_case_cmd : binding option list -> Proof.state -> Proof.state
+
 (* For debugging purposes only. *)
 val get_all_type_info : Proof.context -> {
   by_class: with_type_info Symtab.table,
@@ -356,5 +360,53 @@ fun with_type_print_translation ctxt typ args = let
     then with_type_print_translation' ctxt typ args handle Bind => no_processing()
     else no_processing()
   end
+
+fun absT_name T = case T of TFree(name, _) => String.extract (name, 1, NONE) | _ => "t"
+
+exception ERROR_IN_TACTIC of unit -> string
+fun with_type_mp_tac pos facts (ctxt, st) = let
+    val fact = case facts of [fact] => fact
+            | _ => raise THM ("with_type_mp: expected exactly one fact", 1, facts)
+    val rule = @{thm with_type_mp} OF [fact]
+    val (repT, absT, C, S, ops, P, abs_opsT) = case Thm.cprem_of st 1 |> Thm.term_of of
+             \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>with_type repT rep_opsT absT abs_opsT\<close> 
+                                    $ C $ _ $ S $ ops $ P)
+                   => (repT, absT, C, S, ops, P, abs_opsT)
+             | _ => raise ERROR_IN_TACTIC (fn _ => "with_type_mp: goal of the wrong form")
+    val rep_name = "rep_" ^ absT_name absT
+    val abs_ops_name = "ops_" ^ absT_name absT
+    val st = case SINGLE (resolve_tac ctxt [rule] 1) st of SOME st => st
+              | NONE => raise ERROR_IN_TACTIC (fn _ => "with_type_mp: could not apply with_type_mp")
+    val prems_of_subgoal = Thm.cprem_of st (Thm.nprems_of st) |> Thm.term_of |> Logic.strip_assums_hyp
+          |> map (fn t => Abs(rep_name, absT --> repT, Abs (abs_ops_name, abs_opsT, t)))
+    val assm_bij :: assm_class :: assm_prem :: _ = prems_of_subgoal
+    val rule_case = Rule_Cases.Case {
+          fixes = [(Binding.make (rep_name, pos), absT --> repT), (Binding.make (abs_ops_name, pos), abs_opsT)],
+          assumes = [("bij", [assm_bij]), ("class", [assm_class]), ("premise", [assm_prem])], 
+          binds = [(("concl",0), SOME P)],
+          cases = []}
+    val ctxt = Proof_Context.update_cases [("with_type_mp", SOME rule_case)] ctxt
+  in
+    Seq.single (ctxt, st) |> Seq.make_results
+  end
+  handle ERROR_IN_TACTIC error => Seq.single (Seq.Error error)
+
+(* TODO: print additional informative text when invoked *)
+fun with_type_case_cmd args state : Proof.state = let
+    val state = Proof.case_ ((Binding.empty, []), (("with_type_mp", Position.none), args)) state
+    val thm_bij = Proof_Context.get_fact_single (Proof.context_of state) (Facts.named "local.with_type_mp.bij")
+    val thm_class = Proof_Context.get_fact_single (Proof.context_of state) (Facts.named "local.with_type_mp.class")
+    val thm_premise = Proof_Context.get_fact_single (Proof.context_of state) (Facts.named "local.with_type_mp.premise")
+    val thm_type_def = @{thm type_definition_bij_betw_iff[THEN iffD2]} OF [thm_bij]
+    val (rep, abs, S) = case Thm.prop_of thm_type_def of
+        \<^Const_>\<open>Trueprop\<close> $ (\<^Const_>\<open>type_definition _ _\<close> $ rep $ abs $ S) => (rep,abs,S)
+    val \<^Type>\<open>fun absT _\<close> = fastype_of rep
+    val state = Interpretation.interpret
+              ([(\<^locale>\<open>type_definition\<close>, (("type_definition_" ^ absT_name absT,true), (Expression.Positional [SOME rep, SOME abs, SOME S], [])))],
+              [(Binding.make ("i_dont_know_where_this_ends_up", Position.none), NONE, NoSyn)]) state
+    val state = Proof.local_future_terminal_proof 
+                    (((Method.Basic (Method.fact [thm_type_def]), Position.no_range), NONE)) state
+    val state = Proof.set_facts [thm_type_def, thm_class, thm_premise] state
+  in state end
 
 end

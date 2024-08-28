@@ -1,15 +1,13 @@
 theory Example_Euclidean_Space
-  imports With_Type "HOL-Analysis.Euclidean_Space" Tensor_Product.Compact_Operators
+  imports With_Type "HOL-Analysis.Euclidean_Space" "HOL-Analysis.Topology_Euclidean_Space"
 begin
 
-subsection \<open>Finite\<close>
+subsection \<open>Setting up type class \<^class>\<open>finite\<close> for \<^const>\<open>with_type\<close>\<close>
 
-unbundle lifting_syntax
-
-definition \<open>WITH_TYPE_CLASS_finite S (_::unit) \<longleftrightarrow> finite S\<close>
-  for S :: \<open>'rep set\<close> and plus :: \<open>'rep \<Rightarrow> 'rep \<Rightarrow> 'rep\<close>
+definition \<open>WITH_TYPE_CLASS_finite S u \<longleftrightarrow> finite S\<close>
+  for S :: \<open>'rep set\<close> and u :: unit
 definition \<open>WITH_TYPE_REL_finite r = (rel_unit_itself :: _ \<Rightarrow> 'abs itself \<Rightarrow> _)\<close>
-  for r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close> and rep_ops :: \<open>'rep \<Rightarrow> 'rep \<Rightarrow> 'rep\<close> and abs_ops :: \<open>'abs \<Rightarrow> 'abs \<Rightarrow> 'abs\<close>
+  for r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
 
 lemma [with_type_intros]: \<open>finite S \<Longrightarrow> WITH_TYPE_CLASS_finite S x\<close>
   using WITH_TYPE_CLASS_finite_def by blast
@@ -19,6 +17,7 @@ lemma with_type_wellformed_finite[with_type_intros]:
   by (simp add: with_type_wellformed_def WITH_TYPE_REL_finite_def)
 
 lemma with_type_transfer_finite:
+  includes lifting_syntax
   fixes r :: \<open>'rep \<Rightarrow> 'abs \<Rightarrow> bool\<close>
   assumes [transfer_rule]: \<open>bi_unique r\<close> \<open>right_total r\<close>
   shows \<open>(WITH_TYPE_REL_finite r ===> (\<longleftrightarrow>))
@@ -49,8 +48,10 @@ With_Type.add_with_type_info_global {
 }
 \<close>
 
-subsection \<open>vs-over\<close>
+subsection \<open>Vector space over a given basis\<close>
 
+text \<open>\<open>'a vs_over\<close> is defined to be the vector space with an orthonormal basis enumerated by
+  elements of \<^typ>\<open>'a\<close>, in other words $\mathbb R^\mathtt{'a}$. We require \<^typ>\<open>'a\<close> to be finite.\<close>
 typedef 'a vs_over = \<open>UNIV :: ('a::finite\<Rightarrow>real) set\<close>
   by (rule exI[of _ \<open>\<lambda>_. 0\<close>], auto)
 setup_lifting type_definition_vs_over
@@ -70,7 +71,7 @@ end
 instantiation vs_over :: (finite) real_normed_vector begin
 lift_definition norm_vs_over :: \<open>'a vs_over \<Rightarrow> real\<close> is \<open>\<lambda>x. L2_set x UNIV\<close>.
 definition dist_vs_over :: \<open>'a vs_over \<Rightarrow> 'a vs_over \<Rightarrow> real\<close> where \<open>dist_vs_over x y = norm (x - y)\<close>
-definition uniformity_vs_over :: \<open>('a vs_over \<times> 'a vs_over) filter\<close> where \<open>uniformity_vs_over = (\<Sqinter>e\<in>{0<..}. principal {(x, y). dist x y < e})\<close>
+definition uniformity_vs_over :: \<open>('a vs_over \<times> 'a vs_over) filter\<close> where \<open>uniformity_vs_over = (INF e\<in>{0<..}. principal {(x, y). dist x y < e})\<close>
 definition sgn_vs_over :: \<open>'a vs_over \<Rightarrow> 'a vs_over\<close> where \<open>sgn_vs_over x = x /\<^sub>R norm x\<close>
 definition open_vs_over :: \<open>'a vs_over set \<Rightarrow> bool\<close> where \<open>open_vs_over U = (\<forall>x\<in>U. \<forall>\<^sub>F (x', y) in uniformity. x' = x \<longrightarrow> y \<in> U)\<close>
 instance
@@ -80,7 +81,7 @@ proof intro_classes
   using dist_vs_over_def by presburger
   show \<open>sgn x = x /\<^sub>R norm x\<close>
   using sgn_vs_over_def by blast
-  show \<open>(uniformity :: ('a vs_over \<times> 'a vs_over) filter) = (\<Sqinter>e\<in>{0<..}. principal {(x, y). dist x y < e})\<close>
+  show \<open>(uniformity :: ('a vs_over \<times> 'a vs_over) filter) = (INF e\<in>{0<..}. principal {(x, y). dist x y < e})\<close>
   using uniformity_vs_over_def by blast
   show \<open>(norm x = 0) = (x = 0)\<close>
     apply transfer
@@ -107,6 +108,7 @@ instance
 end
 
 instantiation vs_over :: (finite) euclidean_space begin
+text \<open>Returns the basis vector corresponding to \<^typ>\<open>'a\<close>.\<close>
 lift_definition basis_vec :: \<open>'a \<Rightarrow> 'a vs_over\<close> is \<open>\<lambda>a::'a. indicator {a}\<close>.
 definition Basis_vs_over :: \<open>'a vs_over set\<close> where \<open>Basis = range basis_vec\<close>
 instance
@@ -116,11 +118,17 @@ instance
 end
 
 
-subsection \<open>compact\<close>
+subsection \<open>Compactness of the unit sphere.\<close>
 
-lemma 
+text \<open>@{thm compact_sphere} shows that a sphere in an Euclidean vector space
+  (type class \<^class>\<open>euclidean_space\<close>) is compact. We wish to transfer this result to
+  any space with a finite orthonormal basis. Mathematically, this is the same statement,
+  but the conversion between a statement based on type classes and one based on predicates
+  about bases is non-trivial in Isabelle.\<close>
+
+lemma compact_sphere_onb:
   fixes B :: \<open>'a::real_inner set\<close>
-  assumes \<open>finite B\<close> and \<open>span B = UNIV\<close> and onb: \<open>\<forall>b\<in>B. \<forall>c\<in>B. b \<bullet> c = of_bool (b=c)\<close>
+  assumes \<open>finite B\<close> and \<open>span B = UNIV\<close> and onb: \<open>\<forall>b\<in>B. \<forall>c\<in>B. inner b c = of_bool (b=c)\<close>
   shows \<open>compact (sphere (0::'a) r)\<close>
 proof (cases \<open>B = {}\<close>)
   case True
@@ -151,7 +159,7 @@ next
       by (auto intro!: linearI sum.distrib simp: f_def plus_vs_over.rep_eq scaleR_vs_over.rep_eq
           scaleR_add_left scaleR_right.sum simp flip: scaleR_scaleR)
     then have \<open>continuous_on X f\<close> for X
-      by (simp add: differentiable_imp_continuous_on linear_imp_differentiable_on)
+      using linear_continuous_on linear_linear by blast
     moreover from with_type_mp.premise have \<open>compact (sphere (0::'t vs_over) r)\<close>
       by -
     ultimately have compact_fsphere: \<open>compact (f ` sphere 0 r)\<close>
@@ -182,15 +190,15 @@ next
     qed
     have \<open>norm (f x) = norm x\<close> for x
     proof -
-      have rep_inner: \<open>rep_t t \<bullet> rep_t u = of_bool (t=u)\<close> for t u
+      have rep_inner: \<open>inner (rep_t t) (rep_t u) = of_bool (t=u)\<close> for t u
         by (simp add: onb type_definition_t.Rep type_definition_t.Rep_inject)
       have \<open>(norm (f x))\<^sup>2 = inner (f x) (f x)\<close>
       by (simp add: dot_square_norm)
-    also have \<open>\<dots> = (\<Sum>(t,t')\<in>UNIV. (Rep_vs_over x t * Rep_vs_over x t') * (rep_t t \<bullet> rep_t t'))\<close>
+    also have \<open>\<dots> = (\<Sum>(t,t')\<in>UNIV. (Rep_vs_over x t * Rep_vs_over x t') * inner (rep_t t) (rep_t t'))\<close>
       apply (auto intro!: simp: f_def inner_sum_right inner_sum_left sum_distrib_left sum.cartesian_product
           case_prod_beta)
       by (metis (no_types, lifting) inner_commute vector_space_over_itself.scale_scale)
-    also have \<open>\<dots> = (\<Sum>(t,t')\<in>(\<lambda>t. (t,t))`UNIV. (Rep_vs_over x t * Rep_vs_over x t') * (rep_t t \<bullet> rep_t t'))\<close>
+    also have \<open>\<dots> = (\<Sum>(t,t')\<in>(\<lambda>t. (t,t))`UNIV. (Rep_vs_over x t * Rep_vs_over x t') * inner (rep_t t) (rep_t t'))\<close>
       apply (auto intro!: sum.mono_neutral_cong_right simp: )
       by (metis (mono_tags, lifting) of_bool_eq(1) onb rangeI type_definition_t.Rep type_definition_t.Rep_inverse)
     also have \<open>\<dots> = (\<Sum>t\<in>UNIV. (Rep_vs_over x t)\<^sup>2)\<close>
