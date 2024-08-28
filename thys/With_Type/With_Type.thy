@@ -12,6 +12,12 @@ definition with_type_wellformed where
     and R :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool)\<close>
 
 text \<open>
+Roughly speaking, \<^term>\<open>with_type C R S rep_ops P\<close> means that predicate \<^term>\<open>P\<close> holds whenever
+type \<^typ>\<open>'abs\<close> (called the abstract type, and determined by the type of \<^term>\<open>P\<close>)
+is an instance of the type class described by C,R, and is a stands in 1-1 correspondence 
+to the subset \<^term>\<open>S\<close> of some concrete type \<^typ>\<open>'rep\<close> (i.e., as if defined by
+\<open>typedef 'abs = S\<close>).
+
 \<^term>\<open>S\<close> -- the carrier set of the representation of the type (concrete type)
 
 \<^term>\<open>rep_ops\<close> -- operations on the concrete type (i.e., operations like addition or similar)
@@ -230,13 +236,14 @@ text \<open>Enabling input/output syntax for \<^const>\<open>with_type\<close>. 
   \<open>\<forall>\<^sub>\<tau> 't::type = S. P\<close>, and the various relevant parameters such as \<^const>\<open>WITH_TYPE_CLASS_type\<close> etc.
   are automatically looked up based on the indicated type class.
   This only works with type classes that have been registered beforehand.
-\<close>
+
+  Using the syntax when printing can be disabled by \<open>declare [[with_type_syntax=false]]\<close>.\<close>
 parse_translation \<open>[
   (\<^syntax_const>\<open>_with_type\<close>, With_Type.with_type_parse_translation),
   (\<^syntax_const>\<open>_with_type_with\<close>, With_Type.with_type_parse_translation)
 ]\<close>
-(* TODO config option to disable print translation *)
 typed_print_translation \<open>[ (\<^const_syntax>\<open>with_type\<close>, With_Type.with_type_print_translation) ]\<close>
+
 
 (* Example of input syntax. *)
 term \<open>\<forall>\<^sub>\<tau> 't::type = N. (rep_t = rep_t)\<close>
@@ -281,7 +288,7 @@ fun with_type_mp_tac pos facts (ctxt, st) = let
               | NONE => raise ERROR_IN_TACTIC (fn _ => "with_type_mp: could not apply with_type_mp")
 (*     val prems_of_subgoal = Thm.cprem_of st 1 |> Thm.term_of |> subst_all rep |> subst_all abs
         |> Logic.strip_imp_prems *)
-    val _ = Thm.cprems_of st |> \<^print>
+    (* val _ = Thm.cprems_of st |> \<^print> *)
     val prems_of_subgoal = Thm.cprem_of st (Thm.nprems_of st) |> Thm.term_of |> Logic.strip_assums_hyp
           |> map (fn t => Abs(rep_name, absT --> repT, Abs (abs_ops_name, abs_opsT, t)))
     val assm_bij :: assm_class :: assm_prem :: _ = prems_of_subgoal
@@ -339,7 +346,7 @@ ML \<open>
 val _ =
   Outer_Syntax.command \<^command_keyword>\<open>with_type_case\<close> "TODO"
     (Scan.repeat (Parse.maybe Parse.binding) >> (fn args => Toplevel.proof (with_type_case_cmd args)))
-(* TODO: print informative text *)
+  (* TODO: print additional informative text *)
 \<close>
 
 lemma 
@@ -356,7 +363,7 @@ proof -
   have \<open>\<forall>\<^sub>\<tau> 't::type = T.
         undefined rep_t xx = (yy :: 't)\<close>
   proof with_type_mp
-    show \<open>x = 3\<close>sorry
+    show \<open>x = 3\<close> sorry
     with_type_case R A
     
     show ?concl

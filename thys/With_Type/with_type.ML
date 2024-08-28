@@ -1,6 +1,6 @@
 structure With_Type : sig 
 type with_type_info = {
-  (* Name of the class that is being registered. *)
+  (* Name of the class that is being registered (xxx in the following comments). *)
   class: class,
   (* Name of the WITH_TYPE_CLASS_xxx constant.
      It has to be of type \<open>'rep set \<Rightarrow> REP_OPS \<Rightarrow> bool\<close> for some type REP_OPS.
@@ -346,9 +346,15 @@ in
   else Const(\<^syntax_const>\<open>_with_type_with\<close>, dummyT) $ output_typ $ S $ rep_ops $ P
 end
 
-fun with_type_print_translation ctxt typ args = 
-  with_type_print_translation' ctxt typ args
-  handle Bind => 
-     fold (fn t => fn u => u $ t) args (Free("with_type", typ))
+val with_type_syntax = Attrib.setup_config_bool \<^binding>\<open>with_type_syntax\<close> (K true)
+
+fun with_type_print_translation ctxt typ args = let
+  fun no_processing () = fold (fn t => fn u => u $ t) args (Free("with_type", typ))
+  val enabled = Config.get ctxt with_type_syntax
+  in
+    if enabled
+    then with_type_print_translation' ctxt typ args handle Bind => no_processing()
+    else no_processing()
+  end
 
 end
