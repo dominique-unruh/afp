@@ -1,10 +1,12 @@
 theory With_Type_Example
-  imports With_Type "HOL-Computational_Algebra.Factorial_Ring"
+  imports With_Type "HOL-Computational_Algebra.Factorial_Ring" Mersenne_Primes.Lucas_Lehmer_Code
 begin
+
+unbundle lifting_syntax
+no_notation m_inv ("inv\<index> _" [81] 80)
 
 subsection \<open>Semigroups (class with one parameter)\<close>
 
-unbundle lifting_syntax
 
 definition \<open>WITH_TYPE_CLASS_semigroup_add S plus \<longleftrightarrow> (\<forall>a\<in>S. \<forall>b\<in>S. plus a b \<in> S) \<and> (\<forall>a\<in>S. \<forall>b\<in>S. \<forall>c\<in>S. plus (plus a b) c = plus a (plus b c))\<close>
   for S :: \<open>'rep set\<close> and plus :: \<open>'rep \<Rightarrow> 'rep \<Rightarrow> 'rep\<close>
@@ -89,7 +91,7 @@ proof (with_type_intro)
       unfolding class.semigroup_add_def
       apply transfer
       apply (auto intro!: simp: WITH_TYPE_CLASS_semigroup_add_def)
-       apply fast
+       apply blast
       by (metis DomainPI rel_funD xy)
   qed
   have dom_r: \<open>Collect (Domainp r) = carrier\<close>
@@ -113,18 +115,25 @@ proof (with_type_intro)
 qed
 
 text \<open>Some hypothetical lemma where we use the existence of a commutative semigroup to 
-  derive that 1000000007 is prime. (The lemma is true since 1000000007 is prime,
+  derive that 2147483647 is prime. (The lemma is true since 2147483647 is prime,
   but otherwise this is completely fictional.)\<close>
-lemma artificial_lemma: \<open>(\<exists>p (x::_::semigroup_add) y. p x y = p y x) \<Longrightarrow> prime (1000000007 :: nat)\<close>
-  sorry
+lemma artificial_lemma: \<open>(\<exists>p (x::_::semigroup_add) y. p x y = p y x) \<Longrightarrow> prime (2147483647 :: nat)\<close>
+proof - \<comment> \<open>This proof can be ignored. We just didn't want to have a "sorry" in the theory file\<close>
+  have "prime (2 ^ 31 - 1 :: nat)"
+    by (subst lucas_lehmer_correct') eval
+  also have \<open>\<dots> = 2147483647\<close>
+    by eval
+  finally show \<open>prime (2147483647 :: nat)\<close>
+    by -
+qed
 
-lemma prime_1000000007: \<open>prime (1000000007 :: nat)\<close>
+lemma prime_2147483647: \<open>prime (2147483647 :: nat)\<close>
 proof -
   from example_semigroup
-  have \<open>\<forall>\<^sub>\<tau> 't::semigroup_add = carrier with carrier_plus. prime (1000000007 :: nat)\<close>
+  have \<open>\<forall>\<^sub>\<tau> 't::semigroup_add = carrier with carrier_plus. prime (2147483647 :: nat)\<close>
   proof with_type_mp
     with_type_case
-    show \<open>prime (1000000007 :: nat)\<close>
+    show \<open>prime (2147483647 :: nat)\<close>
       apply (rule artificial_lemma)
       using with_type_mp.premise by auto
   qed
@@ -261,16 +270,23 @@ proof with_type_intro
     by (simp add: plus_def case_prod_beta)
 qed
 
-lemma artificial_lemma': \<open>(\<exists>p (x::_::group_add) y. p x y = p y x) \<Longrightarrow> prime (1000000007 :: nat)\<close>
-  sorry
+lemma artificial_lemma': \<open>(\<exists>p (x::_::group_add) y. p x y = p y x) \<Longrightarrow> prime (2305843009213693951 :: nat)\<close>
+proof - \<comment> \<open>This proof can be ignored. We just didn't want to have a "sorry" in the theory file\<close>
+  have "prime (2 ^ 61 - 1 :: nat)"
+    by (subst lucas_lehmer_correct') eval
+  also have \<open>\<dots> = 2305843009213693951\<close>
+    by eval
+  finally show \<open>prime (2305843009213693951 :: nat)\<close>
+    by -
+qed
 
-lemma prime_1000000007': \<open>prime (1000000007 :: nat)\<close>
+lemma prime_2305843009213693951: \<open>prime (2305843009213693951 :: nat)\<close>
 proof -
   from example_ab_group
-  have \<open>\<forall>\<^sub>\<tau> 't::ab_group_add = carrier with carrier_group. prime (1000000007 :: nat)\<close>
+  have \<open>\<forall>\<^sub>\<tau> 't::ab_group_add = carrier with carrier_group. prime (2305843009213693951 :: nat)\<close>
   proof with_type_mp
     with_type_case
-    show \<open>prime (1000000007 :: nat)\<close>
+    show \<open>prime (2305843009213693951 :: nat)\<close>
       apply (rule artificial_lemma')
       using with_type_mp.premise by auto
   qed
