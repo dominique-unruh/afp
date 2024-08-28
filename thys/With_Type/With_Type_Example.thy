@@ -1,13 +1,8 @@
 theory With_Type_Example
-  imports With_Type (* With_Type_Inst_HOL *)
+  imports With_Type "HOL-Computational_Algebra.Factorial_Ring"
 begin
 
-(* TODO: Introduce diagnostic command that provides the boilerplate for a given class.
-Should: provide WITH_TYPE_(CLASS/REL)_ including arguments (ops!)
-The registration command
- *)
-
-subsection \<open>Semigroup-add\<close>
+subsection \<open>Semigroups (class with one parameter)\<close>
 
 unbundle lifting_syntax
 
@@ -67,23 +62,24 @@ lemma carrier_semigroup[with_type_intros]: \<open>WITH_TYPE_CLASS_semigroup_add 
   by (auto simp: WITH_TYPE_CLASS_semigroup_add_def
         carrier_def carrier_plus_def)
 
+text \<open>This proof uses both properties of the specific carrier (existence of two different elements)
+  and of semigroups in general (associativity)\<close>
 lemma example_semigroup:
-  shows \<open>\<forall>\<^sub>\<tau> 'abs::semigroup_add = carrier with carrier_plus. 
-    (ops_abs x y = ops_abs y x \<and> ops_abs x (ops_abs x x) = ops_abs (ops_abs x x) x)\<close>
-proof with_type_intro
+  shows \<open>\<forall>\<^sub>\<tau> 't::semigroup_add = carrier with carrier_plus. \<forall>x y.
+    (plus_t x y = plus_t y x \<and> plus_t x (plus_t x x) = plus_t (plus_t x x) x)\<close>
+proof (with_type_intro)
   show \<open>carrier \<noteq> {}\<close> by simp
-  fix Rep :: \<open>'abs \<Rightarrow> int\<close> and Abs and pls
+  fix Rep :: \<open>'t \<Rightarrow> int\<close> and T and plus_t
   assume \<open>bij_betw Rep UNIV carrier\<close>
   then interpret type_definition Rep \<open>inv Rep\<close> carrier
     using type_definition_bij_betw_iff by blast
-  print_theorems
   define r where \<open>r = (\<lambda>x y. x = Rep y)\<close>
   have [transfer_rule]: \<open>bi_unique r\<close>
     by (simp add: Rep_inject bi_unique_def r_def)
   have [transfer_rule]: \<open>right_total r\<close>
     by (simp add: r_def right_total_def)
-  assume \<open>WITH_TYPE_REL_semigroup_add (\<lambda>x y. x = Rep y) carrier_plus pls\<close>
-  then have transfer_carrier[transfer_rule]: \<open>(r ===> r ===> r) carrier_plus pls\<close>
+  assume \<open>WITH_TYPE_REL_semigroup_add (\<lambda>x y. x = Rep y) carrier_plus plus_t\<close>
+  then have transfer_carrier[transfer_rule]: \<open>(r ===> r ===> r) carrier_plus plus_t\<close>
     by (simp add: r_def WITH_TYPE_REL_semigroup_add_def)
   have [transfer_rule]: \<open>((r ===> r ===> r) ===> (\<longleftrightarrow>)) (WITH_TYPE_CLASS_semigroup_add (Collect (Domainp r))) class.semigroup_add\<close>
   proof (intro rel_funI)
@@ -99,43 +95,49 @@ proof with_type_intro
   have dom_r: \<open>Collect (Domainp r) = carrier\<close>
     apply (auto intro!: simp: Rep r_def Domainp_iff)
     by (meson Rep_cases)
-  interpret semigroup_add pls
+  interpret semigroup_add plus_t
     apply transfer
     using carrier_semigroup dom_r by auto
 
-  have 1: \<open>pls x y = pls y x\<close>
+  have 1: \<open>plus_t x y = plus_t y x\<close> for x y
     apply transfer
     apply (simp add: carrier_plus_def)
     by presburger
 
-  have 2: \<open>pls x (pls x x) = pls (pls x x) x\<close>
+  have 2: \<open>plus_t x (plus_t x x) = plus_t (plus_t x x) x\<close> for x
     by (simp add: add_assoc)
 
   from 1 2
-  show \<open>pls x y = pls y x \<and> pls x (pls x x) = pls (pls x x) x\<close>
+  show \<open>\<forall>x y. plus_t x y = plus_t y x \<and> plus_t x (plus_t x x) = plus_t (plus_t x x) x\<close>
     by simp
 qed
 
+text \<open>Some hypothetical lemma where we use the existence of a commutative semigroup to 
+  derive that 1000000007 is prime. (The lemma is true since 1000000007 is prime,
+  but otherwise this is completely fictional.)\<close>
+lemma artificial_lemma: \<open>(\<exists>p (x::_::semigroup_add) y. p x y = p y x) \<Longrightarrow> prime (1000000007 :: nat)\<close>
+  sorry
 
-lemma tmp1: \<open>p x y = p y x \<Longrightarrow> 3=3\<close>
-  by simp
-
-lemma example_semigroup_tmp:
-  shows \<open>\<forall>\<^sub>\<tau> 'abs::semigroup_add = carrier with carrier_plus. 3=(3)\<close>
-  using example_semigroup[of x y]
-proof with_type_mp
-  case with_type_mp
-  then have \<open>ops_abs x (ops_abs x x) = ops_abs (ops_abs x x) x\<close>
-    by simp
-  then show \<open>3=3\<close>
-    by (rule tmp1)
+lemma prime_1000000007: \<open>prime (1000000007 :: nat)\<close>
+proof -
+  from example_semigroup
+  have \<open>\<forall>\<^sub>\<tau> 't::semigroup_add = carrier with carrier_plus. prime (1000000007 :: nat)\<close>
+  proof with_type_mp
+    with_type_case
+    show \<open>prime (1000000007 :: nat)\<close>
+      apply (rule artificial_lemma)
+      using with_type_mp.premise by auto
+  qed
+  from this[cancel_with_type]
+  show ?thesis
+    by -
 qed
 
-declare [[show_types, show_sorts]]
-thm example_semigroup_tmp[cancel_with_type]
 
+subsection \<open>Abelian groups (class with several parameters)\<close>
 
-subsection \<open>Ab-group-add\<close>
+text \<open>Here we do exactly the same as for semigroups, except that now we use an abelian group.
+  This shows the additional subtleties that arise when a class has more than one parameter.\<close>
 
 notation rel_prod (infixr \<open>***\<close> 80)
 
@@ -193,24 +195,24 @@ With_Type.add_with_type_info_global {
 
 subsubsection \<open>Example\<close>
 
-definition carrier_ab_group_add where \<open>carrier_ab_group_add = (carrier_plus, 0::int, (\<lambda> i j. (i - j) mod 3), (\<lambda>i. (- i) mod 3))\<close>
+definition carrier_group where \<open>carrier_group = (carrier_plus, 0::int, (\<lambda> i j. (i - j) mod 3), (\<lambda>i. (- i) mod 3))\<close>
 
-lemma carrier_ab_group_add[with_type_intros]: \<open>WITH_TYPE_CLASS_ab_group_add carrier carrier_ab_group_add\<close>
+lemma carrier_ab_group_add[with_type_intros]: \<open>WITH_TYPE_CLASS_ab_group_add carrier carrier_group\<close>
   by (auto simp: WITH_TYPE_CLASS_ab_group_add_def carrier_plus_def
-        carrier_def carrier_ab_group_add_def)
+        carrier_def carrier_group_def)
 
 declare [[show_sorts=false]]
 lemma example_ab_group:
-  shows \<open>\<forall>\<^sub>\<tau> 'abs::ab_group_add = carrier with carrier_ab_group_add. 
-    (plus_abs x y = plus_abs y x \<and> plus_abs x (plus_abs x x) = plus_abs (plus_abs x x) x)\<close>
+  shows \<open>\<forall>\<^sub>\<tau> 't::ab_group_add = carrier with carrier_group. \<forall>x y.
+    (plus_t x y = plus_t y x \<and> plus_t x (plus_t x x) = plus_t (plus_t x x) x)\<close>
 proof with_type_intro
   show \<open>carrier \<noteq> {}\<close> by simp
-  fix Rep :: \<open>'abs \<Rightarrow> int\<close> and abs_ops
-  assume wt: \<open>WITH_TYPE_REL_ab_group_add (\<lambda>x y. x = Rep y) carrier_ab_group_add abs_ops\<close>
-  define plus zero minus uminus where \<open>plus = fst abs_ops\<close>
-    and \<open>zero = fst (snd abs_ops)\<close>
-    and \<open>minus = fst (snd (snd abs_ops))\<close>
-    and \<open>uminus = snd (snd (snd abs_ops)) \<close>
+  fix Rep :: \<open>'t \<Rightarrow> int\<close> and t_ops
+  assume wt: \<open>WITH_TYPE_REL_ab_group_add (\<lambda>x y. x = Rep y) carrier_group t_ops\<close>
+  define plus zero minus uminus where \<open>plus = fst t_ops\<close>
+    and \<open>zero = fst (snd t_ops)\<close>
+    and \<open>minus = fst (snd (snd t_ops))\<close>
+    and \<open>uminus = snd (snd (snd t_ops))\<close>
 
   assume \<open>bij_betw Rep UNIV carrier\<close>
   then interpret type_definition Rep \<open>inv Rep\<close> carrier
@@ -221,8 +223,13 @@ proof with_type_intro
     by (simp add: Rep_inject bi_unique_def r_def)
   have [transfer_rule]: \<open>right_total r\<close>
     by (simp add: r_def right_total_def)
-  from wt have transfer_carrier[transfer_rule]: \<open>((r ===> r ===> r) *** r *** (r ===> r ===> r) *** (r ===> r)) carrier_ab_group_add abs_ops\<close>
+  from wt have transfer_carrier[transfer_rule]: \<open>((r ===> r ===> r) *** r *** (r ===> r ===> r) *** (r ===> r)) carrier_group t_ops\<close>
     by (simp add: r_def WITH_TYPE_REL_ab_group_add_def)
+  have transfer_plus[transfer_rule]: \<open>(r ===> r ===> r) carrier_plus plus\<close>
+    apply (subst asm_rl[of \<open>carrier_plus = fst (carrier_group)\<close>])
+     apply (simp add: carrier_group_def)
+    unfolding plus_def
+    by transfer_prover
   have dom_r: \<open>Collect (Domainp r) = carrier\<close>
     apply (auto intro!: simp: Rep r_def Domainp_iff)
     by (meson Rep_cases)
@@ -239,24 +246,39 @@ proof with_type_intro
     using carrier_ab_group_add dom_r
     by (auto intro!: simp: Let_def case_prod_beta)
 
-  have 1: \<open>plus x y = plus y x\<close>
-    unfolding plus_def
+  have 1: \<open>plus x y = plus y x\<close> for x y
+    \<comment> \<open>We could prove this simply with \<open>by (simp add: add_commute)\<close>, but we use the approach of
+      going to the concrete type for demonstration.\<close>
     apply transfer
-    apply (simp add: carrier_ab_group_add_def carrier_plus_def)
+    apply (simp add: carrier_plus_def)
     by presburger
 
-  have 2: \<open>plus x (plus x x) = plus (plus x x) x\<close>
+  have 2: \<open>plus x (plus x x) = plus (plus x x) x\<close> for x
     by (simp add: add_assoc)
 
   from 1 2
-  have final: \<open>plus x y = plus y x \<and> plus x (plus x x) = plus (plus x x) x\<close>
-    by simp
-
-  show \<open>plus x y = plus y x \<and> plus x (plus x x) = plus (plus x x) x\<close>
-    using final
+  show \<open>\<forall>x y. plus x y = plus y x \<and> plus x (plus x x) = plus (plus x x) x\<close>
     by (simp add: plus_def case_prod_beta)
-
 qed
+
+lemma artificial_lemma': \<open>(\<exists>p (x::_::group_add) y. p x y = p y x) \<Longrightarrow> prime (1000000007 :: nat)\<close>
+  sorry
+
+lemma prime_1000000007': \<open>prime (1000000007 :: nat)\<close>
+proof -
+  from example_ab_group
+  have \<open>\<forall>\<^sub>\<tau> 't::ab_group_add = carrier with carrier_group. prime (1000000007 :: nat)\<close>
+  proof with_type_mp
+    with_type_case
+    show \<open>prime (1000000007 :: nat)\<close>
+      apply (rule artificial_lemma')
+      using with_type_mp.premise by auto
+  qed
+  from this[cancel_with_type]
+  show ?thesis
+    by -
+qed
+
 
 end
 

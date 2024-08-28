@@ -312,12 +312,11 @@ fun with_type_parse_translation ctxt [typ_term, carrier, ops, prop] = let
               | NONE => error ("with_type_parse_translation: class "^ Syntax.string_of_sort ctxt [class] ^" not registered for use with \<forall>\<^sub>\<tau>")
   val typ = TFree("'" ^ typname, [class])
   val rep = Free("rep_" ^ typname, dummyT)
-  (* val abs = Free("abs_" ^ typname, dummyT) *)
   val abs_ops = Free("ops_" ^ typname, dummyT)
   val prop = substitute_params prop (#param_names info) typname
   val prop = Syntax_Trans.abs_tr [rep, Syntax_Trans.abs_tr [abs_ops, prop]]
   val propT = (typ --> dummyT) --> dummyT --> HOLogic.boolT
-  (* The "Config.put show_sorts true" is necessary because otherwise "term_of_typ" ignores sorts. *)
+  (* The "Config.put show_sorts true" is necessary here because otherwise "term_of_typ" ignores sorts. *)
   val prop = Const(\<^syntax_const>\<open>_constrain\<close>, dummyT) $ prop $ Syntax_Phases.term_of_typ (Config.put show_sorts true ctxt) propT
   in Const(\<^const_name>\<open>with_type\<close>, dummyT) $ Const(#rep_class info, dummyT) $ Const(#rep_rel info, dummyT) $ 
         carrier $ ops $ prop end

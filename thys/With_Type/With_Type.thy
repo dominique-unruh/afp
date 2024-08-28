@@ -260,11 +260,10 @@ text \<open>Convenience method for proving a theorem of the form \<open>\<forall
 method with_type_intro = rule with_typeI; (intro with_type_intros)?
 
 
-(* TODO cleanup/document from here *)
-
 text \<open>Method for doing a modus ponens inside \<open>\<forall>\<^sub>\<tau> 't=\<dots>\<close>.
 Use as: \<open>using PREMISE proof with_type_mp\<close>.
-And inside the proof, use the command \<open>with_type_mp\<close> before proving the main goal.
+And inside the proof, use the command \<open>with_type_case\<close> before proving the main goal.
+Try \<open>print_theorems\<close> after \<open>with_type_case\<close> to see what it sets up.
 \<close>
 method_setup with_type_mp = \<open>Scan.succeed () >> 
   (fn (_) => fn ctxt => CONTEXT_METHOD (fn facts =>
