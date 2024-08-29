@@ -4,4 +4,4 @@ session With_Type = Mersenne_Primes +
   sessions "HOL-Types_To_Sets" "HOL-Eisbach" "HOL-Computational_Algebra" "HOL-Analysis" Mersenne_Primes
   theories With_Type With_Type_Example Example_Euclidean_Space
   document_files
-    "root.tex" (* "root.bib" *)
+    "root.tex" "root.bib"
