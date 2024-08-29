@@ -14,7 +14,7 @@ definition with_type_wellformed where
     and R :: \<open>('rep \<Rightarrow> 'abs \<Rightarrow> bool) \<Rightarrow> ('rep_ops \<Rightarrow> 'abs_ops \<Rightarrow> bool)\<close>
 
 text \<open>
-Roughly speaking, \<^term>\<open>with_type C R S rep_ops P\<close> means that predicate \<^term>\<open>P\<close> holds whenever
+In the following definition, roughly speaking, \<^term>\<open>with_type C R S rep_ops P\<close> means that predicate \<^term>\<open>P\<close> holds whenever
 type \<^typ>\<open>'abs\<close> (called the abstract type, and determined by the type of \<^term>\<open>P\<close>)
 is an instance of the type class described by C,R, and is a stands in 1-1 correspondence 
 to the subset \<^term>\<open>S\<close> of some concrete type \<^typ>\<open>'rep\<close> (i.e., as if defined by
