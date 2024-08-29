@@ -1,3 +1,5 @@
+section \<open>\<open>Misc_With_Type\<close> -- Some auxiliary definitions and lemmas\<close>
+
 theory Misc_With_Type
   imports Main
 begin

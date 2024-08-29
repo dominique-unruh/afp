@@ -127,7 +127,7 @@ definition \<open>register_decomposition_basis \<Phi> = (SOME B. is_ortho_set B 
 lemma register_decomposition:
   fixes \<Phi> :: \<open>'a update \<Rightarrow> 'b update\<close>
   assumes [simp]: \<open>register \<Phi>\<close>
-  shows \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis \<Phi>.
+  shows \<open>let 'c::type = register_decomposition_basis \<Phi> in
          (\<exists>U :: ('a \<times> 'c) ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2. unitary U \<and> 
               (\<forall>\<theta>. \<Phi> \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)))\<close>
   \<comment> \<open>Proof based on @{cite daws21unitalanswer}\<close>
@@ -445,7 +445,7 @@ proof (rule continuous_map_iff_preserves_convergence, rename_tac K a)
   fix K a
   assume limit_id: \<open>limitin (subtopology weak_star_topology (range F)) id a K\<close>
   from register_decomposition
-  have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
+  have \<open>let 'c::type = register_decomposition_basis F in
         limitin weak_star_topology (inv F) (inv F a) K\<close>
   proof with_type_mp
     from assms show \<open>register F\<close> by -
@@ -510,7 +510,7 @@ qed
 
 lemma register_inj: \<open>inj_on F X\<close> if [simp]: \<open>register F\<close>
 proof -
-  have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F. inj F\<close>
+  have \<open>let 'c::type = register_decomposition_basis F in inj F\<close>
     using register_decomposition[OF \<open>register F\<close>] 
   proof with_type_mp
     with_type_case
@@ -533,7 +533,7 @@ qed
 lemma register_norm: \<open>norm (F a) = norm a\<close> if \<open>register F\<close>
 proof -
   from register_decomposition[OF that]
-  have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
+  have \<open>let 'c::type = register_decomposition_basis F in
          norm (F a) = norm a\<close>
   proof with_type_mp
     with_type_case
@@ -561,7 +561,7 @@ lemma right_register_tensor_ex: \<open>\<exists>T :: ('a \<times> 'b) update \<R
         register T \<and> (\<forall>a b. T (a \<otimes>\<^sub>o b) = a \<otimes>\<^sub>o F b)\<close> if \<open>register F\<close>
 proof -
   from register_decomposition[OF \<open>register F\<close>]
-  have \<open>\<forall>\<^sub>\<tau> 'g::type = register_decomposition_basis F.
+  have \<open>let 'g::type = register_decomposition_basis F in
         \<exists>T :: ('a \<times> 'b) update \<Rightarrow> ('a \<times> 'c) update. 
         register T \<and> (\<forall>a b. T (a \<otimes>\<^sub>o b) = a \<otimes>\<^sub>o F b)\<close>
   proof with_type_mp
@@ -602,7 +602,7 @@ proof -
   have *: \<open>register_pair F G = (SOME R. \<forall>a b. register R \<and> R (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b)\<close>
     using assms unfolding register_pair_def by simp
   from register_decomposition[OF \<open>register F\<close>] 
-  have \<open>\<forall>\<^sub>\<tau> 'd::type = register_decomposition_basis F.
+  have \<open>let 'd::type = register_decomposition_basis F in
         \<exists>R. \<forall>a b. register R \<and> R (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close>
   proof with_type_mp
     with_type_case
@@ -614,7 +614,7 @@ proof -
       and FU: \<open>F \<theta> = sandwich U (\<theta> \<otimes>\<^sub>o id_cblinfun)\<close> for \<theta>
       by metis
     from register_decomposition[OF \<open>register G\<close>]
-    have \<open>\<forall>\<^sub>\<tau> 'f::type = register_decomposition_basis G.
+    have \<open>let 'f::type = register_decomposition_basis G in
           \<exists>R. \<forall>a b. register R \<and> R (a \<otimes>\<^sub>o b) = F a o\<^sub>C\<^sub>L G b\<close>
     proof with_type_mp
       with_type_case

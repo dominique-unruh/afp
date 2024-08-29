@@ -201,7 +201,7 @@ lemma iso_register_decomposition:
   shows \<open>\<exists>U. unitary U \<and> F = sandwich U\<close>
 proof -
   from register_decomposition
-  have \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
+  have \<open>let 'c::type = register_decomposition_basis F in
         \<exists>U. unitary U \<and> F = sandwich U\<close>
   proof with_type_mp
     show [simp]: \<open>register F\<close>
@@ -313,7 +313,7 @@ qed
 lemma complement_exists:
   fixes F :: \<open>'a update \<Rightarrow> 'b update\<close>
   assumes \<open>register F\<close>
-  shows \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
+  shows \<open>let 'c::type = register_decomposition_basis F in
          \<exists>G :: 'c update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
 proof (use register_decomposition[OF \<open>register F\<close>] in \<open>rule with_type_mp\<close>)
   note [[simproc del: Laws_Quantum.compatibility_warn]]

@@ -1,3 +1,5 @@
+section \<open>\<open>Example_Euclidean_Space\<close> -- Example: compactness of the sphere\<close>
+
 theory Example_Euclidean_Space
   imports With_Type "HOL-Analysis.Euclidean_Space" "HOL-Analysis.Topology_Euclidean_Space"
 begin
@@ -118,7 +120,7 @@ instance
 end
 
 
-subsection \<open>Compactness of the unit sphere.\<close>
+subsection \<open>Compactness of the sphere.\<close>
 
 text \<open>@{thm compact_sphere} shows that a sphere in an Euclidean vector space
   (type class \<^class>\<open>euclidean_space\<close>) is compact. We wish to transfer this result to
@@ -140,7 +142,7 @@ proof (cases \<open>B = {}\<close>)
     by fastforce
 next
   case False
-  have \<open>\<forall>\<^sub>\<tau> 't::finite = B. compact (sphere (0::'t vs_over) r)\<close>
+  have \<open>let 't::finite = B in compact (sphere (0::'t vs_over) r)\<close>
   proof with_type_intro
     from False show \<open>B \<noteq> {}\<close> by -
     from assms show \<open>finite B\<close> by -
@@ -150,7 +152,7 @@ next
     show \<open>compact (sphere (0::'t vs_over) r)\<close>
       by simp
   qed
-  then have \<open>\<forall>\<^sub>\<tau> 't::finite = B. compact (sphere (0::'a) r)\<close>
+  then have \<open>let 't::finite = B in compact (sphere (0::'a) r)\<close>
   proof with_type_mp
     with_type_case
 

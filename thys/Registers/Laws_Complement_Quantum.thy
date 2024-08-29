@@ -20,7 +20,7 @@ lemma complementsI: \<open>compatible F G \<Longrightarrow> iso_register (F;G) \
 lemma complement_exists: 
   fixes F :: \<open>'a::type update \<Rightarrow> 'b::type update\<close>
   assumes \<open>register F\<close>
-  shows \<open>\<forall>\<^sub>\<tau> 'c::type = register_decomposition_basis F.
+  shows \<open>let 'c::type = register_decomposition_basis F in
           \<exists>G :: 'c update \<Rightarrow> 'b update. complements F G\<close>
   by (simp add: assms complement_exists complements_def)
 
@@ -124,7 +124,8 @@ lemma compatible_complement_right[simp]: \<open>register X \<Longrightarrow> com
 lemma unit_register_pair[simp]: \<open>equivalent_registers X (U; X)\<close> if [simp]: \<open>is_unit_register U\<close> \<open>register X\<close>
 proof -
   from complement_exists[OF \<open>register X\<close>]
-  have \<open>\<forall>\<^sub>\<tau> 'x::type = register_decomposition_basis X. equivalent_registers X (U; X)\<close>
+  have \<open>let 'x::type = register_decomposition_basis X in
+        equivalent_registers X (U; X)\<close>
   proof with_type_mp
     note [[simproc del: compatibility_warn]]
     with_type_case
@@ -161,7 +162,8 @@ lemma unit_register_compose_left:
   shows \<open>is_unit_register (A o U)\<close>
 proof -
   from complement_exists[OF \<open>register A\<close>]
-  have \<open>\<forall>\<^sub>\<tau> 'x::type = register_decomposition_basis A. is_unit_register (A o U)\<close>
+  have \<open>let 'x::type = register_decomposition_basis A in
+        is_unit_register (A o U)\<close>
   proof with_type_mp
     note [[simproc del: compatibility_warn]]
     with_type_case
@@ -258,7 +260,8 @@ proof -
   let ?U = \<open>unit_register :: unit_register_domain update \<Rightarrow> 'a::type update\<close>
   let ?U1 = \<open>complement id :: unit_register_domain update \<Rightarrow> unit update\<close>
   from complement_exists[OF register_id[where 'a='a]]
-  have \<open>\<forall>\<^sub>\<tau> 'x::type = register_decomposition_basis (id::'a update \<Rightarrow> _). is_unit_register ?U\<close>
+  have \<open>let 'x::type = register_decomposition_basis (id::'a update \<Rightarrow> _) in
+        is_unit_register ?U\<close>
   proof with_type_mp
     with_type_case
     then obtain U2 :: \<open>'x update \<Rightarrow> 'a update\<close> where comp1: \<open>complements id U2\<close>
@@ -288,7 +291,8 @@ lemma unit_register_domain_tensor_unit:
   (* Can we show that I = (\<lambda>x. tensor_op id_cblinfun x) ? It would be nice but I do not see how to prove it. *)
 proof -
   from complement_exists[OF register_id[where 'a='b]]
-  have \<open>\<forall>\<^sub>\<tau> 'x::type = register_decomposition_basis (id :: 'b update \<Rightarrow> _). \<exists>I :: 'b::type update \<Rightarrow> ('a*'b) update. iso_register I\<close>
+  have \<open>let 'x::type = register_decomposition_basis (id :: 'b update \<Rightarrow> _) in
+        \<exists>I :: 'b::type update \<Rightarrow> ('a*'b) update. iso_register I\<close>
   proof with_type_mp
     note [[simproc del: compatibility_warn]]
     with_type_case

@@ -2074,7 +2074,7 @@ proof (cases \<open>T=0\<close>)
 next
   case False
   from ccsubspace_as_whole_type[OF False]
-  have \<open>\<forall>\<^sub>\<tau> 't::type = some_chilbert_basis_of T.
+  have \<open>let 't::type = some_chilbert_basis_of T in
         (INF x\<in>X. S x) \<otimes>\<^sub>S T = (INF x\<in>X. S x \<otimes>\<^sub>S T)\<close>
   proof with_type_mp
     with_type_case

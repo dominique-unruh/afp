@@ -1,3 +1,5 @@
+section \<open>\<open>With_Type\<close> -- Setting up the \<^term>\<open>with_type\<close> mechanism\<close>
+
 theory With_Type
   imports "HOL-Types_To_Sets.Types_To_Sets" Misc_With_Type "HOL-Eisbach.Eisbach"
   keywords "with_type_case" :: prf_asm % "proof"
@@ -210,8 +212,8 @@ proof -
 qed
 
 text \<open>Syntactic constants for rendering \<^const>\<open>with_type\<close> nicely.\<close>
-syntax "_with_type" :: "type \<Rightarrow> 'a => 'b \<Rightarrow> 'c" ("\<forall>\<^sub>\<tau> _ = _. _" [0,0,10] 10)
-syntax "_with_type_with" :: "type \<Rightarrow> 'a => args \<Rightarrow> 'b \<Rightarrow> 'c" ("\<forall>\<^sub>\<tau> _ = _ with _. _" [0,0,10] 10)
+syntax "_with_type" :: "type \<Rightarrow> 'a => 'b \<Rightarrow> 'c" ("let _ = _ in _" [0,0,10] 10)
+syntax "_with_type_with" :: "type \<Rightarrow> 'a => args \<Rightarrow> 'b \<Rightarrow> 'c" ("let _ = _ with _ in _" [0,0,10] 10)
 syntax (output) "_with_type_sort_annotation" :: "type \<Rightarrow> sort \<Rightarrow> type" ("_::_")
   \<comment> \<open>An auxiliary syntactic constant used to enforce the printing of sort constraints in certain terms.\<close>
 
@@ -233,7 +235,7 @@ With_Type.add_with_type_info_global {
 }\<close>
 
 text \<open>Enabling input/output syntax for \<^const>\<open>with_type\<close>. This allows to write, e.g.,
-  \<open>\<forall>\<^sub>\<tau> 't::type = S. P\<close>, and the various relevant parameters such as \<^const>\<open>WITH_TYPE_CLASS_type\<close> etc.
+  \<open>let 't::type = S in P\<close>, and the various relevant parameters such as \<^const>\<open>WITH_TYPE_CLASS_type\<close> etc.
   are automatically looked up based on the indicated type class.
   This only works with type classes that have been registered beforehand.
 
@@ -246,21 +248,21 @@ typed_print_translation \<open>[ (\<^const_syntax>\<open>with_type\<close>, With
 
 
 (* Example of input syntax. *)
-term \<open>\<forall>\<^sub>\<tau> 't::type = N. (rep_t = rep_t)\<close>
+term \<open>let 't::type = N in rep_t = rep_t\<close>
 
 
-text \<open>Removes a toplevel \<open>\<forall>\<^sub>\<tau> 't=\<dots>\<close> from a proposition \<open>\<forall>\<^sub>\<tau> 't=\<dots>. P\<close>. This only works if \<^term>\<open>P\<close> does
-  not refer to the type \<^typ>\<open>'t\<close>.\<close>
+text \<open>Removes a toplevel \<open>let 't=\<dots>\<close> from a proposition \<open>let 't=\<dots> in P\<close>.
+  This only works if \<^term>\<open>P\<close> does not refer to the type \<^typ>\<open>'t\<close>.\<close>
 attribute_setup cancel_with_type =
   \<open>Thm.rule_attribute [] (With_Type.cancel_with_type o Context.proof_of) |> Scan.succeed\<close>
-  \<open>Transforms (\<forall>\<^sub>\<tau> 't=\<dots>. P) into P\<close>
+  \<open>Transforms (let 't=\<dots> in P) into P\<close>
 
 
-text \<open>Convenience method for proving a theorem of the form \<open>\<forall>\<^sub>\<tau> 't=\<dots>\<close>.\<close>
+text \<open>Convenience method for proving a theorem of the form \<open>let 't=\<dots>\<close>.\<close>
 method with_type_intro = rule with_typeI; (intro with_type_intros)?
 
 
-text \<open>Method for doing a modus ponens inside \<open>\<forall>\<^sub>\<tau> 't=\<dots>\<close>.
+text \<open>Method for doing a modus ponens inside \<open>let 't=\<dots>\<close>.
 Use as: \<open>using PREMISE proof with_type_mp\<close>.
 And inside the proof, use the command \<open>with_type_case\<close> before proving the main goal.
 Try \<open>print_theorems\<close> after \<open>with_type_case\<close> to see what it sets up.

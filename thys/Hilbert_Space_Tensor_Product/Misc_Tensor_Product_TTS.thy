@@ -1377,7 +1377,7 @@ qed
 lemma ccsubspace_as_whole_type:
   fixes X :: \<open>'a::chilbert_space ccsubspace\<close>
   assumes \<open>X \<noteq> 0\<close>
-  shows \<open>\<forall>\<^sub>\<tau> 'b::type = some_chilbert_basis_of X.
+  shows \<open>let 'b::type = some_chilbert_basis_of X in
          \<exists>U::'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a. isometry U \<and> U *\<^sub>S \<top> = X\<close>
 proof with_type_intro
   show \<open>some_chilbert_basis_of X \<noteq> {}\<close>

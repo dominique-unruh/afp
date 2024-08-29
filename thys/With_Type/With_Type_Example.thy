@@ -1,3 +1,5 @@
+section \<open>\<open>With_Type_Example\<close> -- Some contrieved simple examples\<close>
+
 theory With_Type_Example
   imports With_Type "HOL-Computational_Algebra.Factorial_Ring" Mersenne_Primes.Lucas_Lehmer_Code
 begin
@@ -67,7 +69,7 @@ lemma carrier_semigroup[with_type_intros]: \<open>WITH_TYPE_CLASS_semigroup_add 
 text \<open>This proof uses both properties of the specific carrier (existence of two different elements)
   and of semigroups in general (associativity)\<close>
 lemma example_semigroup:
-  shows \<open>\<forall>\<^sub>\<tau> 't::semigroup_add = carrier with carrier_plus. \<forall>x y.
+  shows \<open>let 't::semigroup_add = carrier with carrier_plus in \<forall>x y.
     (plus_t x y = plus_t y x \<and> plus_t x (plus_t x x) = plus_t (plus_t x x) x)\<close>
 proof (with_type_intro)
   show \<open>carrier \<noteq> {}\<close> by simp
@@ -130,7 +132,8 @@ qed
 lemma prime_2147483647: \<open>prime (2147483647 :: nat)\<close>
 proof -
   from example_semigroup
-  have \<open>\<forall>\<^sub>\<tau> 't::semigroup_add = carrier with carrier_plus. prime (2147483647 :: nat)\<close>
+  have \<open>let 't::semigroup_add = carrier with carrier_plus in
+        prime (2147483647 :: nat)\<close>
   proof with_type_mp
     with_type_case
     show \<open>prime (2147483647 :: nat)\<close>
@@ -212,7 +215,7 @@ lemma carrier_ab_group_add[with_type_intros]: \<open>WITH_TYPE_CLASS_ab_group_ad
 
 declare [[show_sorts=false]]
 lemma example_ab_group:
-  shows \<open>\<forall>\<^sub>\<tau> 't::ab_group_add = carrier with carrier_group. \<forall>x y.
+  shows \<open>let 't::ab_group_add = carrier with carrier_group in \<forall>x y.
     (plus_t x y = plus_t y x \<and> plus_t x (plus_t x x) = plus_t (plus_t x x) x)\<close>
 proof with_type_intro
   show \<open>carrier \<noteq> {}\<close> by simp
@@ -283,7 +286,7 @@ qed
 lemma prime_2305843009213693951: \<open>prime (2305843009213693951 :: nat)\<close>
 proof -
   from example_ab_group
-  have \<open>\<forall>\<^sub>\<tau> 't::ab_group_add = carrier with carrier_group. prime (2305843009213693951 :: nat)\<close>
+  have \<open>let 't::ab_group_add = carrier with carrier_group in prime (2305843009213693951 :: nat)\<close>
   proof with_type_mp
     with_type_case
     show \<open>prime (2305843009213693951 :: nat)\<close>
