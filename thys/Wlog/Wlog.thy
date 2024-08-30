@@ -6,6 +6,7 @@ begin
 
 ML_file "wlog.ML"
 
+
 text \<open>For symmetric predicates involving 3--5 variables on a linearly ordered type,
   the following lemmas are very useful for wlog-proofs.
   

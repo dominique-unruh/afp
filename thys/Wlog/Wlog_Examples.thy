@@ -23,18 +23,13 @@ lemma schur_ineq:
   shows \<open>a^k * (a - b) * (a - c) + b^k * (b - a) * (b - c) + c^k * (c - a) * (c - b) \<ge> 0\<close>
     (is \<open>?lhs \<ge> 0\<close>)
 proof -
-  wlog \<open>a \<le> b \<and> b \<le> c\<close> generalizing a b c keeping a0 b0 c0
-    (* TODO: we'd like to directly specify \<open>a \<le> b\<close> and \<open>b \<le> c\<close> *)
-    (* TODO: we'd like to add [simp] or similar to the wlog assumption *)
-    (* TODO: Informative message should not refer to "". *)
+  wlog ordered[simp]: \<open>a \<le> b\<close> \<open>b \<le> c\<close> generalizing a b c keeping a0 b0 c0
     apply (rule rev_mp[OF c0]; rule rev_mp[OF b0]; rule rev_mp[OF a0])
     apply (rule linorder_wlog_3[of _ a b c])
      apply (simp add: algebra_simps)
     by (simp add: hypothesis)
 
-  then have [simp]: \<open>a \<le> b\<close> \<open>b \<le> c\<close>
-    by auto
-  then have [simp]: \<open>a \<le> c\<close>
+  from ordered have [simp]: \<open>a \<le> c\<close>
     by linarith
 
   have \<open>?lhs = (c - b) * (c^k * (c - a) - b^k * (b - a)) + a^k * (c - a) * (b - a)\<close>
@@ -63,16 +58,15 @@ proof -
     using negation by blast
   text \<open>The already proven theorems cannot be accessed directly anymore (wlog starts a new proof block).
         Recovered versions are available, however:\<close>
-  thm wlog.test1
+  thm wlog_keep.test1
     \<comment> \<open>The fact is fully recovered since it did not depend on any assumptions.\<close>
-  thm wlog.test2
+  thm wlog_keep.test2
     \<comment> \<open>This fact depended on assumption \<open>a\<close> which we did not keep. So the original fact might not hold anymore.
-        Therefore, @{thm [source] wlog.test2} becomes \<^term>\<open>A \<Longrightarrow> A \<or> 1 \<noteq> 2\<close>. (Note the added \<^term>\<open>A\<close> premise.)\<close>
-  thm wlog.test3
+        Therefore, @{thm [source] wlog_keep.test2} becomes \<^term>\<open>A \<Longrightarrow> A \<or> 1 \<noteq> 2\<close>. (Note the added \<^term>\<open>A\<close> premise.)\<close>
+  thm wlog_keep.test3
     \<comment> \<open>This fact depended on assumptions \<open>a\<close> and \<open>b\<close>. But we kept @{thm [source] b}.
-        Therefore, @{thm [source] wlog.test2} becomes \<^term>\<open>A \<Longrightarrow> A \<and> B\<close>. (Note that only \<^term>\<open>A\<close> is added as a premise.)\<close>
+        Therefore, @{thm [source] wlog_keep.test2} becomes \<^term>\<open>A \<Longrightarrow> A \<and> B\<close>. (Note that only \<^term>\<open>A\<close> is added as a premise.)\<close>
   oops
     \<comment> \<open>Aborting the proof here because we cannot prove \<^term>\<open>A \<and> B\<close> anymore since we dropped assumption \<open>a\<close> for demonstration purposes.\<close>
-
 
 end
