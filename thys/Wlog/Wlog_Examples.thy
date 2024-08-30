@@ -1,3 +1,5 @@
+section \<open>\<open>Wlog_Examples\<close> – Examples how to use \texttt{wlog}\<close>
+
 theory Wlog_Examples
   imports Wlog Complex_Main
 begin
@@ -16,7 +18,7 @@ proof -
   finally show ?thesis .
 qed
 
-text \<open>This example follows very roughly Harrison, \<^url>\<open>https://www.cl.cam.ac.uk/~jrh13/papers/wlog.pdf\<close>\<close>
+text \<open>This example very roughly follows Harrison \<^cite>\<open>"harrison-wlog"\<close>:\<close>
 lemma schur_ineq:
   fixes a b c :: \<open>'a :: linordered_idom\<close> and k :: nat
   assumes a0: \<open>a \<ge> 0\<close> and b0: \<open>b \<ge> 0\<close> and c0: \<open>c \<ge> 0\<close>
@@ -40,7 +42,7 @@ proof -
     by -
 qed
 
-text \<open>This illustrates how facts already proven before a @{command wlog} can be still be used after the wlog.
+text \<open>The following illustrates how facts already proven before a @{command wlog} can be still be used after the wlog.
   The example does not do anything useful.\<close>
 lemma \<open>A \<Longrightarrow> B \<Longrightarrow> A \<and> B\<close>
 proof -
