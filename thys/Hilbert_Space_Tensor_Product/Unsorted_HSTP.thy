@@ -319,7 +319,7 @@ proof -
     by (simp_all add: continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star)
   have \<open>closedin weak_star_topology ((\<lambda>y. x o\<^sub>C\<^sub>L y - y o\<^sub>C\<^sub>L x) -` {0})\<close> for x :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
     using closedin_vimage[where U=\<open>weak_star_topology\<close> and S=\<open>{0}\<close> and T=weak_star_topology]
-    using cont by (auto simp add: closedin_singleton')
+    using cont by (auto simp add: closedin_Hausdorff_singleton)
   then show ?thesis
     apply (cases \<open>X = {}\<close>)
     using closedin_topspace[of weak_star_topology]
@@ -355,7 +355,7 @@ next
     have comm_a: \<open>commutant {a} = (\<lambda>b. a o\<^sub>C\<^sub>L b - b o\<^sub>C\<^sub>L a) -` {0}\<close>
       by (auto simp: commutant_def)
     have closed_0: \<open>closedin cstrong_operator_topology {0}\<close>
-      apply (rule closedin_singleton')
+      apply (rule closedin_Hausdorff_singleton)
       by simp_all
     have cont: \<open>continuous_map cstrong_operator_topology cstrong_operator_topology (\<lambda>b. a o\<^sub>C\<^sub>L b - b o\<^sub>C\<^sub>L a)\<close>
       by (intro continuous_intros continuous_map_left_comp_sot continuous_map_right_comp_sot)
@@ -1014,7 +1014,7 @@ proof (unfold closed_map_def, intro allI impI)
         by (simp add: f_def c_def comp_tensor_op)
       from 1 2 show \<open>l o\<^sub>C\<^sub>L c = c o\<^sub>C\<^sub>L l\<close>
         unfolding 3 o_def
-        by (meson hausdorff_sot limitin_unique that(3))
+        by (meson hausdorff_sot limitin_Hausdorff_unique that(3))
     qed
     then have \<open>l \<in> range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun)\<close>
       by (simp add: commutant_tensor1')

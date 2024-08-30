@@ -323,9 +323,9 @@ lemma openin_weak_star_topology': \<open>openin weak_star_topology U \<longleftr
 
 (* lemma openin_weak_star_topology: \<open>openin weak_star_topology U \<longleftrightarrow> (\<exists>V. open V \<and> U = (\<lambda>x t. trace (t o\<^sub>C\<^sub>L x)) -` V)\<close> *)
 
-lemma hausdorff_weak_star[simp]: \<open>hausdorff weak_star_topology\<close>
-  by (metis cweak_operator_topology_topspace hausdorff_cweak_operator_topology hausdorff_def weak_star_topology_topspace wot_weaker_than_weak_star')
-(* proof (unfold hausdorff_def, intro ballI impI)
+lemma hausdorff_weak_star[simp]: \<open>Hausdorff_space weak_star_topology\<close>
+  by (metis cweak_operator_topology_topspace hausdorff_cweak_operator_topology Hausdorff_space_def weak_star_topology_topspace wot_weaker_than_weak_star')
+(* proof (unfold Hausdorff_space_def, intro ballI impI)
   fix x y :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> assume \<open>x \<noteq> y\<close>
   then obtain a b where \<open>a \<bullet>\<^sub>C (x *\<^sub>V b) \<noteq> a \<bullet>\<^sub>C (y *\<^sub>V b)\<close>
     by (meson cblinfun_eqI cinner_extensionality)
@@ -390,16 +390,6 @@ next
     by (simp add: Rangep_set)
 qed
 
-
-lemma hausdorff_OFCLASS_t2_space: \<open>OFCLASS('a::topological_space, t2_space_class)\<close> if \<open>hausdorff (euclidean :: 'a topology)\<close>
-proof intro_classes
-  fix a b :: 'a
-  assume \<open>a \<noteq> b\<close>
-  from that
-  show \<open>\<exists>U V. open U \<and> open V \<and> a \<in> U \<and> b \<in> V \<and> U \<inter> V = {}\<close>
-    unfolding hausdorff_def
-    using \<open>a \<noteq> b\<close> by auto
-qed
 
 
 instance cblinfun_weak_star :: (chilbert_space, chilbert_space) t2_space
@@ -720,7 +710,7 @@ lemma weak_star_clinear_eq_butterfly_ketI:
   fixes F G :: \<open>('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2) \<Rightarrow> 'c::complex_vector\<close>
   assumes "clinear F" and "clinear G"
     and \<open>continuous_map weak_star_topology T F\<close> and \<open>continuous_map weak_star_topology T G\<close>
-    and \<open>hausdorff T\<close>
+    and \<open>Hausdorff_space T\<close>
   assumes "\<And>i j. F (butterfly (ket i) (ket j)) = G (butterfly (ket i) (ket j))"
   shows "F = G"
 proof -
@@ -728,7 +718,7 @@ proof -
     by (smt (verit) assms(1) assms(2) assms(6) complex_vector.linear_eq_on imageE split_def that)
   show ?thesis
     apply (rule ext)
-    using \<open>hausdorff T\<close> FG
+    using \<open>Hausdorff_space T\<close> FG
     apply (rule closure_of_eqI[where f=F and g=G and S=\<open>cspan ((\<lambda>(\<xi>,\<eta>). butterfly (ket \<xi>) (ket \<eta>)) ` UNIV)\<close>])
     using assms butterkets_weak_star_dense by auto
 qed

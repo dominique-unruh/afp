@@ -292,64 +292,36 @@ definition \<open>infsum_in T f A = (let L = Collect (has_sum_in T f A) in if ca
 (* The reason why we return 0 also in the case that there are several solutions is to make sure infsum_in is parametric.
 (See lemma 'infsum_in_parametric' below. *)
 
-(* TODO: Legacy *)
-abbreviation (input) \<open>hausdorff \<equiv> Hausdorff_space\<close>
-(* TODO: Legacy *)
-lemma hausdorff_def: \<open>hausdorff T \<longleftrightarrow> (\<forall>x \<in> topspace T. \<forall>y \<in> topspace T. x \<noteq> y \<longrightarrow> (\<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
-  by (auto simp: Hausdorff_space_def disjnt_def)
+lemma hausdorff_OFCLASS_t2_space: \<open>OFCLASS('a::topological_space, t2_space_class)\<close> if \<open>Hausdorff_space (euclidean :: 'a topology)\<close>
+proof intro_classes
+  fix a b :: 'a
+  assume \<open>a \<noteq> b\<close>
+  from that
+  show \<open>\<exists>U V. open U \<and> open V \<and> a \<in> U \<and> b \<in> V \<and> U \<inter> V = {}\<close>
+    unfolding Hausdorff_space_def disjnt_def
+    using \<open>a \<noteq> b\<close> by auto
+qed
 
 lemma hausdorffI: 
   assumes \<open>\<And>x y. x \<in> topspace T \<Longrightarrow> y \<in> topspace T \<Longrightarrow> x \<noteq> y \<Longrightarrow> \<exists>U V. openin T U \<and> openin T V \<and> x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}\<close>
-  shows \<open>hausdorff T\<close>
-  using assms by (auto simp: hausdorff_def)
+  shows \<open>Hausdorff_space T\<close>
+  using assms by (auto simp: Hausdorff_space_def disjnt_def)
 
-lemma hausdorff_euclidean[simp]: \<open>hausdorff (euclidean :: _::t2_space topology)\<close>
+lemma hausdorff_euclidean[simp]: \<open>Hausdorff_space (euclidean :: _::t2_space topology)\<close>
   apply (rule hausdorffI)
   by (metis (mono_tags, lifting) hausdorff open_openin)
 
-lemma limitin_unique:
-  assumes \<open>hausdorff T\<close>
-  assumes \<open>F \<noteq> bot\<close>
-  assumes lim: \<open>limitin T f l F\<close>
-  assumes lim': \<open>limitin T f l' F\<close>
-  shows \<open>l = l'\<close>
-proof (rule ccontr)
-  assume "l \<noteq> l'"
-  have \<open>l \<in> topspace T\<close> \<open>l' \<in> topspace T\<close>
-    by (meson lim lim' limitin_def)+
-  obtain U V where "openin T U" "openin T V" "l \<in> U" "l' \<in> V" "U \<inter> V = {}"
-    using \<open>hausdorff T\<close> \<open>l \<noteq> l'\<close> unfolding hausdorff_def
-    by (meson \<open>l \<in> topspace T\<close> \<open>l' \<in> topspace T\<close>)
-  have "eventually (\<lambda>x. f x \<in> U) F"
-    using lim \<open>openin T U\<close> \<open>l \<in> U\<close>
-    by (simp add: limitin_def)
-  moreover
-  have "eventually (\<lambda>x. f x \<in> V) F"
-    using lim' \<open>openin T V\<close> \<open>l' \<in> V\<close>
-    by (simp add: limitin_def)
-  ultimately
-  have "eventually (\<lambda>x. False) F"
-  proof eventually_elim
-    case (elim x)
-    then have "f x \<in> U \<inter> V" by simp
-    with \<open>U \<inter> V = {}\<close> show ?case by simp
-  qed
-  with \<open>\<not> trivial_limit F\<close> show "False"
-    by (simp add: trivial_limit_def)
-qed
-
-
 lemma has_sum_in_unique:
-  assumes \<open>hausdorff T\<close>
+  assumes \<open>Hausdorff_space T\<close>
   assumes \<open>has_sum_in T f A l\<close>
   assumes \<open>has_sum_in T f A l'\<close>
   shows \<open>l = l'\<close>
-  using assms(1) _ assms(2,3)[unfolded has_sum_in_def] 
-  apply (rule limitin_unique)
+  using assms(2,3)[unfolded has_sum_in_def] _ assms(1)
+  apply (rule limitin_Hausdorff_unique)
   by simp
 
 lemma infsum_in_def':
-  assumes \<open>hausdorff T\<close>
+  assumes \<open>Hausdorff_space T\<close>
   shows \<open>infsum_in T f A = (if summable_on_in T f A then (THE s. has_sum_in T f A s) else 0)\<close>
 proof (cases \<open>Collect (has_sum_in T f A) = {}\<close>)
   case True
@@ -360,7 +332,7 @@ next
   case False
   then have \<open>summable_on_in T f A\<close>
     by (metis (no_types, lifting) empty_Collect_eq summable_on_in_def)
-  from False \<open>hausdorff T\<close>
+  from False \<open>Hausdorff_space T\<close>
   have \<open>card (Collect (has_sum_in T f A)) = 1\<close>
     by (metis (mono_tags, opaque_lifting) has_sum_in_unique is_singletonI' is_singleton_altdef mem_Collect_eq)
   then show ?thesis
@@ -369,11 +341,11 @@ next
 qed
 
 lemma has_sum_in_infsum_in: 
-  assumes \<open>hausdorff T\<close> and summable: \<open>summable_on_in T f A\<close>
+  assumes \<open>Hausdorff_space T\<close> and summable: \<open>summable_on_in T f A\<close>
   shows \<open>has_sum_in T f A (infsum_in T f A)\<close>
-  apply (simp add: infsum_in_def'[OF \<open>hausdorff T\<close>] summable)
+  apply (simp add: infsum_in_def'[OF \<open>Hausdorff_space T\<close>] summable)
   apply (rule theI'[of \<open>has_sum_in T f A\<close>])
-  using has_sum_in_unique[OF \<open>hausdorff T\<close>, of f A] summable
+  using has_sum_in_unique[OF \<open>Hausdorff_space T\<close>, of f A] summable
   by (meson summable_on_in_def)
 
 
@@ -1476,13 +1448,13 @@ qed
 lemma hausdorff_parametric[transfer_rule]:
   includes lifting_syntax
   assumes [transfer_rule]: \<open>bi_unique R\<close>
-  shows \<open>(rel_topology R ===> (\<longleftrightarrow>)) hausdorff hausdorff\<close>
+  shows \<open>(rel_topology R ===> (\<longleftrightarrow>)) Hausdorff_space Hausdorff_space\<close>
 proof -
-  have hausdorff_def': \<open>hausdorff T \<longleftrightarrow> (\<forall>x\<in>topspace T. \<forall>y\<in>topspace T. x \<noteq> y \<longrightarrow> (\<exists>U \<in> opensets_in T. \<exists>V \<in> opensets_in T. x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
+  have Hausdorff_space_def': \<open>Hausdorff_space T \<longleftrightarrow> (\<forall>x\<in>topspace T. \<forall>y\<in>topspace T. x \<noteq> y \<longrightarrow> (\<exists>U \<in> opensets_in T. \<exists>V \<in> opensets_in T. x \<in> U \<and> y \<in> V \<and> U \<inter> V = {}))\<close>
     for T :: \<open>'z topology\<close>
-    unfolding opensets_in_def hausdorff_def Bex_def by auto
+    unfolding opensets_in_def Hausdorff_space_def disjnt_def Bex_def by auto
   show ?thesis
-    unfolding hausdorff_def'
+    unfolding Hausdorff_space_def'
     by transfer_prover
 qed
 
@@ -1933,27 +1905,6 @@ lemma closedin_vimage:
 lemma join_forall: \<open>(\<forall>x. P x) \<and> (\<forall>x. Q x) \<longleftrightarrow> (\<forall>x. P x \<and> Q x)\<close>
   by auto
 
-lemma closedin_singleton': 
-  assumes \<open>hausdorff T\<close> and \<open>x \<in> topspace T\<close>
-  shows \<open>closedin T {x}\<close>
-proof -
-  obtain U where openU: \<open>openin T (U y)\<close> and x_not_U: \<open>x \<notin> U y\<close> and yU: \<open>y \<in> U y\<close> if \<open>x \<noteq> y\<close> and \<open>y \<in> topspace T\<close> for y
-    apply atomize_elim unfolding join_forall apply (rule choice)
-    using assms(1)[unfolded hausdorff_def, rule_format, OF assms(2)]
-    by auto
-  have \<open>topspace T - {x} = (\<Union>y\<in>topspace T - {x}. U y)\<close>
-    using yU openU x_not_U apply auto
-    using openin_subset by fastforce
-  also have \<open>openin T \<dots>\<close>
-    using openU by fastforce
-  finally have \<open>openin T (topspace T - {x})\<close>
-    by -
-  then show ?thesis
-    using assms(2) closedin_def by blast
-qed
-
-
-
 lemma closedin_if_converge_inside:
   fixes A :: \<open>'a set\<close>
   assumes AT: \<open>A \<subseteq> topspace T\<close>
@@ -2289,6 +2240,64 @@ proof -
     by (simp add: tendsto_complex_iff)
   then show ?thesis
     by auto
+qed
+
+lemma compact_closed_subset:
+  assumes \<open>compact s\<close>
+  assumes \<open>closed t\<close>
+  assumes \<open>t \<subseteq> s\<close>
+  shows \<open>compact t\<close>
+  by (metis assms(1) assms(2) assms(3) compact_Int_closed inf.absorb_iff2)
+
+(* TODO move *)
+definition separable where \<open>separable S \<longleftrightarrow> (\<exists>B. countable B \<and> S \<subseteq> closure B)\<close>
+
+(* TODO move *)
+lemma compact_imp_separable: \<open>separable S\<close> if \<open>compact S\<close> for S :: \<open>'a::metric_space set\<close>
+proof -
+  from that
+  obtain K where \<open>finite (K n)\<close> and K_cover_S: \<open>S \<subseteq> (\<Union>k\<in>K n. ball k (1 / of_nat (n+1)))\<close> for n :: nat
+  proof (atomize_elim, intro choice2 allI)
+    fix n
+    have \<open>S \<subseteq> (\<Union>k\<in>UNIV. ball k (1 / of_nat (n+1)))\<close>
+      apply (auto intro!: simp: )
+      by (smt (verit, del_insts) dist_eq_0_iff linordered_field_class.divide_pos_pos of_nat_less_0_iff)
+    then show \<open>\<exists>K. finite K \<and> S \<subseteq> (\<Union>k\<in>K. ball k (1 / real (n + 1)))\<close>
+      apply (simp add: compact_eq_Heine_Borel)
+      by (meson Elementary_Metric_Spaces.open_ball compactE_image \<open>compact S\<close>)
+  qed
+  define B where \<open>B = (\<Union>n. K n)\<close>
+  have \<open>countable B\<close>
+    using B_def \<open>finite (K _)\<close> uncountable_infinite by blast
+  have \<open>S \<subseteq> closure B\<close>
+  proof (intro subsetI closure_approachable[THEN iffD2, rule_format])
+    fix x assume \<open>x \<in> S\<close>
+    fix e :: real assume \<open>e > 0\<close>
+    define n :: nat where \<open>n = nat (ceiling (1/e))\<close>
+    with \<open>e > 0\<close> have ne: \<open>1 / real (n+1) \<le> e\<close>
+    proof -
+      have \<open>1 / real (n+1) \<le> 1 / ceiling (1/e)\<close>
+        by (simp add: \<open>0 < e\<close> linordered_field_class.frac_le n_def)
+      also have \<open>\<dots> \<le> 1 / (1/e)\<close>
+        by (smt (verit, del_insts) \<open>0 < e\<close> le_of_int_ceiling linordered_field_class.divide_pos_pos linordered_field_class.frac_le)
+      also have \<open>\<dots> = e\<close>
+        by simp
+      finally show ?thesis
+        by -
+    qed
+    have \<open>S \<subseteq> (\<Union>k\<in>K n. ball k (1 / of_nat (n+1)))\<close>
+      using K_cover_S by presburger
+    then obtain k where \<open>k \<in> K n\<close> and x_ball: \<open>x \<in> ball k (1 / of_nat (n+1))\<close>
+      using \<open>x \<in> S\<close> by auto
+    from \<open>k \<in> K n\<close> have \<open>k \<in> B\<close>
+      using B_def by blast
+    moreover from x_ball have \<open>dist k x < e\<close>
+      by (smt (verit) ne mem_ball)
+    ultimately show \<open>\<exists>k\<in>B. dist k x < e\<close>
+      by fast
+  qed
+  show \<open>separable S\<close>
+    using \<open>S \<subseteq> closure B\<close> \<open>countable B\<close> separable_def by blast
 qed
 
 

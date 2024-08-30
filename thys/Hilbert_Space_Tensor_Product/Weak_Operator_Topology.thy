@@ -378,7 +378,7 @@ proof -
     by (simp add: limitin_cweak_operator_topology)
 qed
 
-lemma hausdorff_cweak_operator_topology[simp]: \<open>hausdorff cweak_operator_topology\<close>
+lemma hausdorff_cweak_operator_topology[simp]: \<open>Hausdorff_space cweak_operator_topology\<close>
 proof (rule hausdorffI)
   fix A B :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> assume \<open>A \<noteq> B\<close>
   then obtain y where \<open>A *\<^sub>V y \<noteq> B *\<^sub>V y\<close>
@@ -408,8 +408,8 @@ lemma hermitian_limit_hermitian_wot:
   assumes herm: \<open>\<And>i. (a i)* = a i\<close>
   assumes lim: \<open>limitin cweak_operator_topology a A F\<close>
   shows \<open>A* = A\<close>
-  using hausdorff_cweak_operator_topology \<open>F \<noteq> bot\<close>
-  apply (rule limitin_unique[of cweak_operator_topology])
+  using _ _ \<open>F \<noteq> bot\<close> hausdorff_cweak_operator_topology
+  apply (rule limitin_Hausdorff_unique)
   using lim apply (rule limitin_adj_wot)
   unfolding herm by (fact lim)
 

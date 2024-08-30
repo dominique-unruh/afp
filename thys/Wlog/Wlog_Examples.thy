@@ -71,4 +71,6 @@ proof -
   oops
     \<comment> \<open>Aborting the proof here because we cannot prove \<^term>\<open>A \<and> B\<close> anymore since we dropped assumption \<open>a\<close> for demonstration purposes.\<close>
 
+(* TODO: Additional potential example: Hilbert_Space_Tensor_Product.trace_tensor *)
+
 end

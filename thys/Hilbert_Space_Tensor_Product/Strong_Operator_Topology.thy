@@ -138,7 +138,7 @@ qed *)
 lemma filterlim_cstrong_operator_topology: \<open>filterlim f (nhdsin cstrong_operator_topology l) = limitin cstrong_operator_topology f l\<close>
   by (auto simp: cstrong_operator_topology_topspace simp flip: filterlim_nhdsin_iff_limitin)
 
-lemma hausdorff_sot[simp]: \<open>hausdorff cstrong_operator_topology\<close>
+lemma hausdorff_sot[simp]: \<open>Hausdorff_space cstrong_operator_topology\<close>
 proof (rule hausdorffI)
   fix a b :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
   assume \<open>a \<noteq> b\<close>
@@ -164,7 +164,7 @@ proof intro_classes
   fix a b :: \<open>('a,'b) cblinfun_sot\<close>
   show \<open>a \<noteq> b \<Longrightarrow> \<exists>U V. open U \<and> open V \<and> a \<in> U \<and> b \<in> V \<and> U \<inter> V = {}\<close>
     apply transfer using hausdorff_sot
-    by (metis UNIV_I cstrong_operator_topology_topspace hausdorff_def)
+    by (metis UNIV_I cstrong_operator_topology_topspace Hausdorff_space_def disjnt_def)
 qed
 
 lemma Domainp_cr_cblinfun_sot[simp]: \<open>Domainp cr_cblinfun_sot = (\<lambda>_. True)\<close>

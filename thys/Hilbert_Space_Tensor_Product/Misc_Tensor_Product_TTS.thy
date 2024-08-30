@@ -338,9 +338,9 @@ lemma class_t2_space_ud[unoverload_def]: \<open>class.t2_space = t2_space_ow UNI
   by (auto intro!: ext simp: class.t2_space_def class.t2_space_axioms_def t2_space_ow_def
       t2_space_ow_axioms_def class_topological_space_ud)
 
-lemma t2_space_ow_from_topology[simp, iff]: \<open>t2_space_ow (topspace T) (openin T)\<close> if \<open>hausdorff T\<close>
+lemma t2_space_ow_from_topology[simp, iff]: \<open>t2_space_ow (topspace T) (openin T)\<close> if \<open>Hausdorff_space T\<close>
   using that
-  apply (auto intro!: t2_space_ow.intro simp: t2_space_ow_axioms_def hausdorff_def)
+  apply (auto intro!: t2_space_ow.intro simp: t2_space_ow_axioms_def Hausdorff_space_def disjnt_def)
   by (metis openin_subset)
 
 subsubsection \<open>\<^const>\<open>continuous_on\<close>\<close>
@@ -1110,7 +1110,7 @@ subsection \<open>Transferring theorems\<close>
 
 lemma closure_of_eqI:
   fixes f g :: \<open>'a \<Rightarrow> 'b\<close> and T :: \<open>'a topology\<close> and U :: \<open>'b topology\<close>
-  assumes hausdorff: \<open>hausdorff U\<close>
+  assumes hausdorff: \<open>Hausdorff_space U\<close>
   assumes f_eq_g: \<open>\<And>x. x \<in> S \<Longrightarrow> f x = g x\<close>
   assumes x: \<open>x \<in> T closure_of S\<close>
   assumes f: \<open>continuous_map T U f\<close> and g: \<open>continuous_map T U g\<close>

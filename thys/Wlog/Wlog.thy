@@ -2,7 +2,7 @@ section \<open>\<open>Wlog\<close> – Setting up the command\<close>
 
 theory Wlog
 imports Main
-keywords "wlog" :: prf_goal % "proof" (* and "goal" :: prf_decl % "proof" *)
+keywords "wlog" :: prf_goal % "proof"
   and "generalizing" and "keeping" and "goal"
 begin
 

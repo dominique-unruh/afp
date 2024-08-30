@@ -1,7 +1,7 @@
 section \<open>\<open>Hilbert_Space_Tensor_Product\<close> -- Tensor product of Hilbert Spaces\<close>
 
 theory Hilbert_Space_Tensor_Product
-  imports Complex_Bounded_Operators.Complex_L2 (* Registers.Misc *) Misc_Tensor_Product
+  imports Complex_Bounded_Operators.Complex_L2 Misc_Tensor_Product
     Strong_Operator_Topology Polynomial_Interpolation.Ring_Hom
 
     (* TODO: Consider moving things that depend on these elsewhere? *)
@@ -9,9 +9,6 @@ theory Hilbert_Space_Tensor_Product
 begin
 
 unbundle cblinfun_notation
-(* no_notation Group.m_inv ("inv\<index> _" [81] 80) *)
-(* no_notation Congruence.eq_closure_of ("closure'_of\<index>") *)
-(* no_notation Order.bottom ("\<bottom>\<index>") *)
 
 subsection \<open>Tensor product on \<^typ>\<open>_ ell2\<close>\<close>
 
@@ -85,7 +82,7 @@ proof (transfer, hypsubst_thin)
     by -
 qed
 
-lemma tensor_ell2_norm: \<open>norm (a \<otimes>\<^sub>s b) = norm a * norm b\<close>
+lemma norm_tensor_ell2: \<open>norm (a \<otimes>\<^sub>s b) = norm a * norm b\<close>
   by (simp add: norm_eq_sqrt_cinner[where 'a=\<open>(_::type) ell2\<close>] norm_mult real_sqrt_mult)
 
 lemma clinear_tensor_ell21: "clinear (\<lambda>b. a \<otimes>\<^sub>s b)"
@@ -95,7 +92,7 @@ lemma clinear_tensor_ell21: "clinear (\<lambda>b. a \<otimes>\<^sub>s b)"
 
 lemma bounded_clinear_tensor_ell21: "bounded_clinear (\<lambda>b. a \<otimes>\<^sub>s b)"
   apply (auto intro!: bounded_clinear.intro clinear_tensor_ell21
-      simp: bounded_clinear_axioms_def tensor_ell2_norm)
+      simp: bounded_clinear_axioms_def norm_tensor_ell2)
   using mult.commute order_eq_refl by blast
 
 lemma clinear_tensor_ell22: "clinear (\<lambda>a. a \<otimes>\<^sub>s b)"
@@ -105,7 +102,7 @@ lemma clinear_tensor_ell22: "clinear (\<lambda>a. a \<otimes>\<^sub>s b)"
 
 lemma bounded_clinear_tensor_ell22: "bounded_clinear (\<lambda>a. tensor_ell2 a b)"
   by (auto intro!: bounded_clinear.intro clinear_tensor_ell22
-      simp: bounded_clinear_axioms_def tensor_ell2_norm)
+      simp: bounded_clinear_axioms_def norm_tensor_ell2)
 
 lemma tensor_ell2_ket: "tensor_ell2 (ket i) (ket j) = ket (i,j)"
   apply transfer by auto
@@ -123,40 +120,6 @@ lemma tensor_ell2_sum_left: \<open>(\<Sum>x\<in>X. a x) \<otimes>\<^sub>s b = (\
 lemma tensor_ell2_sum_right: \<open>a \<otimes>\<^sub>s (\<Sum>x\<in>X. b x) = (\<Sum>x\<in>X. a \<otimes>\<^sub>s b x)\<close>
   apply (induction X rule:infinite_finite_induct)
   by (auto simp: tensor_ell2_add2)
-
-(* TODO: duplicated *) thm tensor_ell2_norm (* Use name norm_tensor_ell2 *)
-lemma norm_tensor_ell2: \<open>norm (a \<otimes>\<^sub>s b) = norm a * norm b\<close>
-proof transfer
-  fix a :: \<open>'a \<Rightarrow> complex\<close> and b :: \<open>'b \<Rightarrow> complex\<close>
-  assume \<open>has_ell2_norm a\<close> \<open>has_ell2_norm b\<close>
-  have 1: \<open>(\<lambda>j. (a i * b j)\<^sup>2) abs_summable_on UNIV\<close> for i
-    using \<open>has_ell2_norm b\<close>
-    by (auto simp add: power_mult_distrib norm_mult has_ell2_norm_def
-        intro!: summable_on_cmult_right)
-  have 2: \<open>(\<lambda>i. cmod (\<Sum>\<^sub>\<infinity>j. cmod ((a i * b j)\<^sup>2))) summable_on UNIV\<close>
-    using \<open>has_ell2_norm a\<close>
-    by (auto simp add: power_mult_distrib norm_mult has_ell2_norm_def infsum_cmult_right'
-        intro!: summable_on_cmult_left)
-  have 3: \<open>(\<lambda>p. (a (fst p) * b (snd p))\<^sup>2) abs_summable_on UNIV \<times> UNIV\<close>
-    using 1 2 by (auto intro!: abs_summable_on_Sigma_iff[THEN iffD2] simp flip: UNIV_Times_UNIV)
-
-  have \<open>(ell2_norm (\<lambda>(i, j). a i * b j))\<^sup>2 = (\<Sum>\<^sub>\<infinity>(i,j). (cmod (a i * b j))\<^sup>2)\<close>
-    by (simp add: ell2_norm_def case_prod_unfold infsum_nonneg)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(i,j). cmod ((a i * b j)\<^sup>2))\<close>
-    by (simp add: norm_power)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>i. \<Sum>\<^sub>\<infinity>j. cmod ((a i * b j)\<^sup>2))\<close>
-    using 3 by (simp add: infsum_Sigma'_banach case_prod_unfold)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>i. \<Sum>\<^sub>\<infinity>j. (cmod (a i))\<^sup>2 * (cmod (b j))\<^sup>2)\<close>
-    by (simp add: norm_power power_mult_distrib norm_mult)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>i. (cmod (a i))\<^sup>2 * (\<Sum>\<^sub>\<infinity>j. (cmod (b j))\<^sup>2))\<close>
-    by (simp add: infsum_cmult_right')
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>i. (cmod (a i))\<^sup>2) * (\<Sum>\<^sub>\<infinity>j. (cmod (b j))\<^sup>2)\<close>
-    by (simp add: infsum_cmult_left')
-  also have \<open>\<dots> = (ell2_norm a)\<^sup>2 * (ell2_norm b)\<^sup>2\<close>
-    by (metis (mono_tags, lifting) ell2_norm_def ell2_norm_geq0 real_sqrt_ge_0_iff real_sqrt_pow2_iff)
-  finally show \<open>ell2_norm (\<lambda>(i, j). a i * b j) = ell2_norm a * ell2_norm b\<close>
-    by (metis ell2_norm_geq0 mult_nonneg_nonneg power2_eq_imp_eq power_mult_distrib)
-qed
 
 lemma tensor_ell2_dense:
   fixes S :: \<open>'a ell2 set\<close> and T :: \<open>'b ell2 set\<close>
@@ -458,8 +421,8 @@ definition tensor_op :: \<open>('a ell2, 'b ell2) cblinfun \<Rightarrow> ('c ell
       \<Rightarrow> (('a\<times>'c) ell2, ('b\<times>'d) ell2) cblinfun\<close> (infixr "\<otimes>\<^sub>o" 70) where
   \<open>tensor_op M N = cblinfun_extension (range ket) (\<lambda>k. case (inv ket k) of (x,y) \<Rightarrow> tensor_ell2 (M *\<^sub>V ket x) (N *\<^sub>V ket y))\<close>
 
-(* Vaguely following Takesaki, Section IV.1 *) (* TODO bibtex *)
 lemma  
+  \<comment> \<open>Loosely following \<^cite>\<open>\<open>Section IV.1\<close> in takesaki\<close>\<close>
   fixes a :: \<open>'a\<close> and b :: \<open>'b\<close> and c :: \<open>'c\<close> and d :: \<open>'d\<close> and M :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> and N :: \<open>'c ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd ell2\<close>
   shows tensor_op_ell2: \<open>(M \<otimes>\<^sub>o N) *\<^sub>V (\<psi> \<otimes>\<^sub>s \<phi>) = (M *\<^sub>V \<psi>) \<otimes>\<^sub>s (N *\<^sub>V \<phi>)\<close>
   and tensor_op_norm: \<open>norm (M \<otimes>\<^sub>o N) = norm M * norm N\<close>
@@ -840,10 +803,8 @@ proof -
 qed
 
 
-(* TODO: make proper comment. With bibtex
-Takesaki, p.185, (10) basically is this, I think.
-*)
 lemma tensor_op_dense: \<open>cstrong_operator_topology closure_of (cspan {a \<otimes>\<^sub>o b | a b. True}) = UNIV\<close>
+  \<comment> \<open>\<^cite>\<open>\<open>p.185 (10)\<close> in takesaki\<close>, but we prove it directly.\<close>
 proof (intro order.antisym subset_UNIV subsetI)
   fix c :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('c \<times> 'd) ell2\<close>
   define c' where \<open>c' i j = (tensor_ell2_right (ket i))* o\<^sub>C\<^sub>L c o\<^sub>C\<^sub>L tensor_ell2_right (ket j)\<close> for i j
@@ -905,15 +866,7 @@ proof (intro order.antisym subset_UNIV subsetI)
     using AB2 by auto
 qed
 
-(* TODO this one, too? *)
-(* lemma tensor_op_dense:
-  fixes S :: \<open>('a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'c ell2) set\<close> and T :: \<open>('b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'd ell2) set\<close>
-  assumes \<open>cstrong_operator_topology closure_of (cspan S) = UNIV\<close> and \<open>cstrong_operator_topology closure_of (cspan T) = UNIV\<close>
-  shows \<open>cstrong_operator_topology closure_of (cspan {a \<otimes>\<^sub>o b | a b. a\<in>S \<and> b\<in>T}) = UNIV\<close> *)
 
-
-(* TODO analog lemma, infinite.
-(Works for SOT-continuous linear F,G. Any alternative (simpler?) useful characterization?) *)
 lemma tensor_extensionality_finite:
   fixes F G :: \<open>((('a::finite \<times> 'b::finite) ell2) \<Rightarrow>\<^sub>C\<^sub>L (('c::finite \<times> 'd::finite) ell2)) \<Rightarrow> 'e::complex_vector\<close>
   assumes [simp]: "clinear F" "clinear G"
@@ -942,8 +895,6 @@ lemma tensor_butterfly[simp]: "tensor_op (butterfly \<psi> \<psi>') (butterfly \
 definition tensor_lift :: \<open>(('a1::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a2::finite ell2) \<Rightarrow> ('b1::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b2::finite ell2) \<Rightarrow> 'c)
                         \<Rightarrow> ((('a1\<times>'b1) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a2\<times>'b2) ell2) \<Rightarrow> 'c::complex_normed_vector)\<close> where
   "tensor_lift F2 = (SOME G. clinear G \<and> (\<forall>a b. G (tensor_op a b) = F2 a b))"
-(* TODO use cblinfun_extension? *)
-(* TODO the same for tensor_ell2 *)
 
 lemma 
   fixes F2 :: "'a::finite ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b::finite ell2
@@ -1403,9 +1354,9 @@ proof -
 qed
 
 
-(* TODO cite [register paper], Lemma 17 *)
 lemma tensor_op_pos: \<open>a \<otimes>\<^sub>o b \<ge> 0\<close> if [simp]: \<open>a \<ge> 0\<close> \<open>b \<ge> 0\<close>
   for a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+    \<comment> \<open>\<^cite>\<open>"Lemma 18" in "references-v3"\<close>\<close>
 proof -
   have \<open>(sqrt_op a \<otimes>\<^sub>o sqrt_op b)* o\<^sub>C\<^sub>L (sqrt_op a \<otimes>\<^sub>o sqrt_op b) = a \<otimes>\<^sub>o b\<close>
     by (simp add: tensor_op_adjoint comp_tensor_op positive_hermitianI)
@@ -1413,8 +1364,8 @@ proof -
     by (metis positive_cblinfun_squareI)
 qed
 
-(* TODO cite [register paper], Lemma 17 *)
 lemma abs_op_tensor: \<open>abs_op (a \<otimes>\<^sub>o b) = abs_op a \<otimes>\<^sub>o abs_op b\<close>
+  \<comment> \<open>\<^cite>\<open>"Lemma 18" in "references-v3"\<close>\<close>
 proof -
   have \<open>(abs_op a \<otimes>\<^sub>o abs_op b)* o\<^sub>C\<^sub>L (abs_op a \<otimes>\<^sub>o abs_op b) = (a \<otimes>\<^sub>o b)* o\<^sub>C\<^sub>L (a \<otimes>\<^sub>o b)\<close>
     by (simp add: tensor_op_adjoint comp_tensor_op abs_op_def positive_cblinfun_squareI positive_hermitianI)
@@ -1422,8 +1373,8 @@ proof -
     by (metis abs_opI abs_op_pos tensor_op_pos)
 qed
 
-(* TODO cite [register paper], Lemma 31 *)
 lemma trace_class_tensor: \<open>trace_class (a \<otimes>\<^sub>o b)\<close> if \<open>trace_class a\<close> and \<open>trace_class b\<close>
+    \<comment> \<open>\<^cite>\<open>"Lemma 32" in "references-v3"\<close>\<close>
 proof -
   from \<open>trace_class a\<close>
   have a: \<open>(\<lambda>x. ket x \<bullet>\<^sub>C (abs_op a *\<^sub>V ket x)) abs_summable_on UNIV\<close>
@@ -1531,9 +1482,8 @@ proof (intro iffI)
 qed
 
 
-(* TODO cite [register paper], Lemma 31 *)
 lemma trace_tensor: \<open>trace (a \<otimes>\<^sub>o b) = trace a * trace b\<close>
-(* TODO nice candidate for wlog demo *)
+  \<comment> \<open>\<^cite>\<open>"Lemma 32" in "references-v3"\<close>\<close>
 proof -
   consider (tc) \<open>trace_class a\<close> \<open>trace_class b\<close> | (zero) \<open>a = 0 \<or> b = 0\<close> | (nota) \<open>a \<noteq> 0\<close> \<open>b \<noteq> 0\<close> \<open>\<not> trace_class a\<close> | (notb) \<open>a \<noteq> 0\<close> \<open>b \<noteq> 0\<close> \<open>\<not> trace_class b\<close>
     by blast

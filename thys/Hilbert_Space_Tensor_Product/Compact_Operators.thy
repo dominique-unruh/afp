@@ -7,14 +7,6 @@ begin
 
 unbundle cblinfun_notation
 
-(* TODO move to BO *)
-lemma rank1_scaleR[simp]: \<open>rank1 (c *\<^sub>R a)\<close> if \<open>rank1 a\<close> and \<open>c \<noteq> 0\<close>
-  by (simp add: rank1_scaleC scaleR_scaleC that(1) that(2))
-
-lemma rank1_butterfly[simp]: \<open>rank1 (butterfly x y)\<close>
-  apply (cases \<open>y = 0\<close>)
-  by (auto intro: exI[of _ 0] simp: rank1_def butterfly_is_rank1)
-  
 subsection \<open>Finite rank operators\<close>
 
 (* TODO: Actually should be defined as "finite_dimensional (range A)" *)
@@ -125,60 +117,6 @@ lemma rank1_Proj_singleton[iff]: \<open>rank1 (Proj (ccspan {x}))\<close>
 lemma finite_rank_Proj_singleton[iff]: \<open>finite_rank (Proj (ccspan {x}))\<close>
   by (simp add: rank1_finite_rank)
 
-(* TODO move *)
-definition \<open>cfinite_dim S \<longleftrightarrow> (\<exists>B. finite B \<and> S \<subseteq> cspan B)\<close>
-
-(* TODO move *)
-lemma cfinite_dim_subspace_has_basis:
-  assumes \<open>cfinite_dim S\<close> and \<open>csubspace S\<close>
-  shows \<open>\<exists>B. finite B \<and> cindependent B \<and> cspan B = S\<close>
-proof -
-  from \<open>csubspace S\<close>
-  obtain B where \<open>cindependent B\<close> and \<open>cspan B = S\<close>
-    apply (rule_tac complex_vector.maximal_independent_subset[where V=S])
-    using complex_vector.span_subspace by blast
-  from \<open>cfinite_dim S\<close>
-  obtain C where \<open>finite C\<close> and \<open>S \<subseteq> cspan C\<close>
-    using cfinite_dim_def by auto
-  from \<open>cspan B = S\<close> and \<open>S \<subseteq> cspan C\<close>
-  have \<open>B \<subseteq> cspan C\<close>
-    using complex_vector.span_superset by force
-  from \<open>finite C\<close> \<open>cindependent B\<close> this
-  have \<open>finite B\<close>
-    by (rule complex_vector.independent_span_bound[THEN conjunct1])
-  from this and \<open>cindependent B\<close> and \<open>cspan B = S\<close>
-  show ?thesis
-    by auto
-qed
-
-(* TODO move *)
-lemma cfinite_dim_subspace_has_onb:
-  assumes \<open>cfinite_dim S\<close> and \<open>csubspace S\<close>
-  shows \<open>\<exists>B. finite B \<and> is_ortho_set B \<and> cspan B = S \<and> (\<forall>x\<in>B. norm x = 1)\<close>
-proof -
-  from assms
-  obtain C where \<open>finite C\<close> and \<open>cindependent C\<close> and \<open>cspan C = S\<close>
-    using cfinite_dim_subspace_has_basis by blast
-  obtain B where \<open>finite B\<close> and \<open>is_ortho_set B\<close> and \<open>cspan B = cspan C\<close>
-    and norm: \<open>x \<in> B \<Longrightarrow> norm x = 1\<close> for x
-    using orthonormal_basis_of_cspan[OF \<open>finite C\<close>]
-    by blast
-  with \<open>cspan C = S\<close> have \<open>cspan B = S\<close>
-    by simp
-  with \<open>finite B\<close> and \<open>is_ortho_set B\<close> and norm
-  show ?thesis
-    by blast
-qed
-
-lemma cspan_finite_dim[intro]: \<open>cfinite_dim (cspan B)\<close> if \<open>finite B\<close>
-  using cfinite_dim_def that by auto
-
-(* TODO move *)
-lift_definition finite_dim_ccsubspace :: \<open>'a::complex_normed_vector ccsubspace \<Rightarrow> bool\<close> is cfinite_dim.
-
-lemma ccspan_finite_dim[intro]: \<open>finite_dim_ccsubspace (ccspan B)\<close> if \<open>finite B\<close>
-  using ccspan_finite finite_dim_ccsubspace.rep_eq that by fastforce
-
 lemma finite_rank_Proj_finite_dim:
   fixes S :: \<open>'a::chilbert_space ccsubspace\<close>
   assumes \<open>finite_dim_ccsubspace S\<close>
@@ -247,7 +185,6 @@ proof -
     by simp
 qed
 
-(* TODO move *)
 lemma finite_rank_cfinite_dim[simp]: \<open>finite_rank (a :: 'a :: {cfinite_dim,chilbert_space} \<Rightarrow>\<^sub>C\<^sub>L 'b :: complex_normed_vector)\<close>
 proof -
   obtain B :: \<open>'a set\<close> where \<open>is_onb B\<close>
@@ -329,13 +266,6 @@ lemma compact_op_def2: \<open>compact_op a \<longleftrightarrow> compact (closur
   apply transfer
   using bounded_clinear.clinear compact_map_def by blast
 
-(* TODO move *)
-lemma compact_scaleC:
-  fixes s :: "'a::complex_normed_vector set"
-  assumes "compact s"
-  shows "compact (scaleC c ` s)"
-  by (auto intro!: compact_continuous_image assms continuous_at_imp_continuous_on)
-
 lemma compact_op_0[simp]: \<open>compact_op 0\<close>
   by (simp add: compact_op_def2 image_constant[where x=0] mem_cball_leI[where x=0])
 
@@ -360,14 +290,6 @@ lemma compact_op_scaleR[simp]: \<open>compact_op (c *\<^sub>R a)\<close> if \<op
 
 lemma compact_op_uminus[simp]: \<open>compact_op (-a) = compact_op a\<close>
   by (metis compact_op_scaleC scaleC_minus1_left verit_minus_simplify(4))
-
-(* TODO move *)
-lemma compact_closed_subset:
-  assumes \<open>compact s\<close>
-  assumes \<open>closed t\<close>
-  assumes \<open>t \<subseteq> s\<close>
-  shows \<open>compact t\<close>
-  by (metis assms(1) assms(2) assms(3) compact_Int_closed inf.absorb_iff2)
 
 lemma compact_op_plus[simp]: \<open>compact_op (a + b)\<close> if \<open>compact_op a\<close> and \<open>compact_op b\<close>
 proof -
@@ -593,57 +515,6 @@ proof -
     by (auto intro!: compact_op_plus compact_op_scaleC intro: rank1_compact_op)
 qed
 
-(* TODO move *)
-definition separable where \<open>separable S \<longleftrightarrow> (\<exists>B. countable B \<and> S \<subseteq> closure B)\<close>
-
-(* TODO move *)
-lemma compact_imp_separable: \<open>separable S\<close> if \<open>compact S\<close> for S :: \<open>'a::metric_space set\<close>
-proof -
-  from that
-  obtain K where \<open>finite (K n)\<close> and K_cover_S: \<open>S \<subseteq> (\<Union>k\<in>K n. ball k (1 / of_nat (n+1)))\<close> for n :: nat
-  proof (atomize_elim, intro choice2 allI)
-    fix n
-    have \<open>S \<subseteq> (\<Union>k\<in>UNIV. ball k (1 / of_nat (n+1)))\<close>
-      apply (auto intro!: simp: )
-      by (smt (verit, del_insts) dist_eq_0_iff linordered_field_class.divide_pos_pos of_nat_less_0_iff)
-    then show \<open>\<exists>K. finite K \<and> S \<subseteq> (\<Union>k\<in>K. ball k (1 / real (n + 1)))\<close>
-      apply (simp add: compact_eq_Heine_Borel)
-      by (meson Elementary_Metric_Spaces.open_ball compactE_image \<open>compact S\<close>)
-  qed
-  define B where \<open>B = (\<Union>n. K n)\<close>
-  have \<open>countable B\<close>
-    using B_def \<open>finite (K _)\<close> uncountable_infinite by blast
-  have \<open>S \<subseteq> closure B\<close>
-  proof (intro subsetI closure_approachable[THEN iffD2, rule_format])
-    fix x assume \<open>x \<in> S\<close>
-    fix e :: real assume \<open>e > 0\<close>
-    define n :: nat where \<open>n = nat (ceiling (1/e))\<close>
-    with \<open>e > 0\<close> have ne: \<open>1 / real (n+1) \<le> e\<close>
-    proof -
-      have \<open>1 / real (n+1) \<le> 1 / ceiling (1/e)\<close>
-        by (simp add: \<open>0 < e\<close> linordered_field_class.frac_le n_def)
-      also have \<open>\<dots> \<le> 1 / (1/e)\<close>
-        by (smt (verit, del_insts) \<open>0 < e\<close> le_of_int_ceiling linordered_field_class.divide_pos_pos linordered_field_class.frac_le)
-      also have \<open>\<dots> = e\<close>
-        by simp
-      finally show ?thesis
-        by -
-    qed
-    have \<open>S \<subseteq> (\<Union>k\<in>K n. ball k (1 / of_nat (n+1)))\<close>
-      using K_cover_S by presburger
-    then obtain k where \<open>k \<in> K n\<close> and x_ball: \<open>x \<in> ball k (1 / of_nat (n+1))\<close>
-      using \<open>x \<in> S\<close> by auto
-    from \<open>k \<in> K n\<close> have \<open>k \<in> B\<close>
-      using B_def by blast
-    moreover from x_ball have \<open>dist k x < e\<close>
-      by (smt (verit) ne mem_ball)
-    ultimately show \<open>\<exists>k\<in>B. dist k x < e\<close>
-      by fast
-  qed
-  show \<open>separable S\<close>
-    using \<open>S \<subseteq> closure B\<close> \<open>countable B\<close> separable_def by blast
-qed
-
 lemma norm_cblinfun_bound_unit:
   assumes \<open>b \<ge> 0\<close>
   assumes \<open>\<And>\<psi>. norm \<psi> = 1 \<Longrightarrow> norm (a *\<^sub>V \<psi>) \<le> b\<close>
@@ -772,19 +643,6 @@ proof -
         using \<open>\<epsilon> > 0\<close> by (simp add: \<delta>_def)
     qed
   qed
-qed
-
-(* TODO move *)
-lemma Proj_nearest:
-  assumes \<open>x \<in> space_as_set S\<close>
-  shows \<open>dist (Proj S m) m \<le> dist x m\<close>
-proof -
-  have \<open>is_projection_on (Proj S) (space_as_set S)\<close>
-    by (simp add: Proj.rep_eq)
-  then have \<open>is_arg_min (\<lambda>x. dist x m) (\<lambda>x. x \<in> space_as_set S) (Proj S m)\<close>
-    by (simp add: is_projection_on_def)
-  with assms show ?thesis
-    by (auto simp: is_arg_min_def)
 qed
 
 lemma compact_op_finite_rank: 
@@ -1090,8 +948,7 @@ lemma tendsto_finite_subsets_at_top_image:
   by (simp add: filterlim_def assms o_def
       flip: filtermap_image_finite_subsets_at_top filtermap_compose)
 
-
-(* TODO move *)
+(* TODO Should be in Complex_Bounded_Linear_Functions but uses HS2Ell2 *)
 lemma Proj_onb_limit:
   shows \<open>is_onb A \<Longrightarrow> ((\<lambda>S. Proj (ccspan S) \<psi>) \<longlongrightarrow> \<psi>) (finite_subsets_at_top A)\<close>
 proof -
@@ -1161,6 +1018,7 @@ proof -
       by simp
   qed
 qed
+
 
 lemma finite_rank_dense_compact:
   fixes A :: \<open>'a::chilbert_space set\<close> and B :: \<open>'b::chilbert_space set\<close>
