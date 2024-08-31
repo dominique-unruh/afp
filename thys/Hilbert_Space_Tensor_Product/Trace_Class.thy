@@ -1915,70 +1915,76 @@ proof -
 qed
 
 lemma norm_leq_trace_norm: \<open>norm t \<le> trace_norm t\<close> if \<open>trace_class t\<close> 
-  for t :: \<open>'a::{chilbert_space,not_singleton} \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close> 
-    (* TODO get rid of "not_singleton" *)
-proof (rule field_le_epsilon)
-  fix \<epsilon> :: real assume \<open>\<epsilon> > 0\<close>
+  for t :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close> 
+proof -
+  wlog not_singleton: \<open>class.not_singleton TYPE('a)\<close>
+    using not_not_singleton_cblinfun_zero[of t] negation by simp
+  note cblinfun_norm_approx_witness' = cblinfun_norm_approx_witness[internalize_sort' 'a, OF complex_normed_vector_axioms not_singleton]
 
-  define \<delta> :: real where 
-    \<open>\<delta> = min (sqrt (\<epsilon> / 2)) (\<epsilon> / (4 * (norm (sqrt_op (abs_op t)) + 1)))\<close>
-  have \<open>\<delta> > 0\<close>
-    using \<open>\<epsilon> > 0\<close> apply (auto simp add: \<delta>_def)
-    by (smt (verit) norm_not_less_zero zero_less_divide_iff)
-  have \<delta>_small: \<open>\<delta>\<^sup>2 + 2 * norm (sqrt_op (abs_op t)) * \<delta> \<le> \<epsilon>\<close>
-  proof -
-    define n where \<open>n = norm (sqrt_op (abs_op t))\<close>
-    then have \<open>n \<ge> 0\<close>
-      by simp
-    have \<delta>: \<open>\<delta> = min (sqrt (\<epsilon> / 2)) (\<epsilon> / (4 * (n + 1)))\<close>
-      by (simp add: \<delta>_def n_def)
+  show ?thesis
+  proof (rule field_le_epsilon)
+    fix \<epsilon> :: real assume \<open>\<epsilon> > 0\<close>
 
-    have \<open>\<delta>\<^sup>2 + 2 * n * \<delta> \<le> \<epsilon> / 2 + 2 * n * \<delta>\<close>
-      apply (rule add_right_mono)
-      apply (subst \<delta>) apply (subst min_power_distrib_left)
-      using \<open>\<epsilon> > 0\<close> \<open>n \<ge> 0\<close> by auto
-    also have \<open>\<dots> \<le> \<epsilon> / 2 + 2 * n * (\<epsilon> / (4 * (n + 1)))\<close>
-      apply (intro add_left_mono mult_left_mono)
-      by (simp_all add: \<delta> \<open>n \<ge> 0\<close>)
-    also have \<open>\<dots> = \<epsilon> / 2 + 2 * (n / (n+1)) * (\<epsilon> / 4)\<close>
+    define \<delta> :: real where 
+      \<open>\<delta> = min (sqrt (\<epsilon> / 2)) (\<epsilon> / (4 * (norm (sqrt_op (abs_op t)) + 1)))\<close>
+    have \<open>\<delta> > 0\<close>
+      using \<open>\<epsilon> > 0\<close> apply (auto simp add: \<delta>_def)
+      by (smt (verit) norm_not_less_zero zero_less_divide_iff)
+    have \<delta>_small: \<open>\<delta>\<^sup>2 + 2 * norm (sqrt_op (abs_op t)) * \<delta> \<le> \<epsilon>\<close>
+    proof -
+      define n where \<open>n = norm (sqrt_op (abs_op t))\<close>
+      then have \<open>n \<ge> 0\<close>
+        by simp
+      have \<delta>: \<open>\<delta> = min (sqrt (\<epsilon> / 2)) (\<epsilon> / (4 * (n + 1)))\<close>
+        by (simp add: \<delta>_def n_def)
+
+      have \<open>\<delta>\<^sup>2 + 2 * n * \<delta> \<le> \<epsilon> / 2 + 2 * n * \<delta>\<close>
+        apply (rule add_right_mono)
+        apply (subst \<delta>) apply (subst min_power_distrib_left)
+        using \<open>\<epsilon> > 0\<close> \<open>n \<ge> 0\<close> by auto
+      also have \<open>\<dots> \<le> \<epsilon> / 2 + 2 * n * (\<epsilon> / (4 * (n + 1)))\<close>
+        apply (intro add_left_mono mult_left_mono)
+        by (simp_all add: \<delta> \<open>n \<ge> 0\<close>)
+      also have \<open>\<dots> = \<epsilon> / 2 + 2 * (n / (n+1)) * (\<epsilon> / 4)\<close>
+        by simp
+      also have \<open>\<dots> \<le> \<epsilon> / 2 + 2 * 1 * (\<epsilon> / 4)\<close>
+        apply (intro add_left_mono mult_left_mono mult_right_mono)
+        using \<open>n \<ge> 0\<close> \<open>\<epsilon> > 0\<close> by auto
+      also have \<open>\<dots> = \<epsilon>\<close>
+        by simp
+      finally show \<open>\<delta>\<^sup>2 + 2 * n * \<delta> \<le> \<epsilon>\<close>
+        by -
+    qed
+
+    from \<open>\<delta> > 0\<close> obtain \<psi> where \<psi>\<epsilon>: \<open>norm (sqrt_op (abs_op t)) - \<delta> \<le> norm (sqrt_op (abs_op t) *\<^sub>V \<psi>)\<close> and \<open>norm \<psi> = 1\<close>
+      apply atomize_elim by (rule cblinfun_norm_approx_witness')
+
+    have aux1: \<open>2 * complex_of_real x = complex_of_real (2 * x)\<close> for x
       by simp
-    also have \<open>\<dots> \<le> \<epsilon> / 2 + 2 * 1 * (\<epsilon> / 4)\<close>
-      apply (intro add_left_mono mult_left_mono mult_right_mono)
-      using \<open>n \<ge> 0\<close> \<open>\<epsilon> > 0\<close> by auto
-    also have \<open>\<dots> = \<epsilon>\<close>
+
+    have \<open>complex_of_real (norm t) = norm (abs_op t)\<close>
       by simp
-    finally show \<open>\<delta>\<^sup>2 + 2 * n * \<delta> \<le> \<epsilon>\<close>
-      by -
+    also have \<open>\<dots> = (norm (sqrt_op (abs_op t)))\<^sup>2\<close>
+      by (simp add: positive_hermitianI flip: norm_AadjA)
+    also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>) + \<delta>)\<^sup>2\<close>
+      by (smt (verit) \<psi>\<epsilon> complex_of_real_mono norm_triangle_ineq4 norm_triangle_sub pos2 power_strict_mono)
+    also have \<open>\<dots> = (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>))\<^sup>2 + \<delta>\<^sup>2 + 2 * norm (sqrt_op (abs_op t) *\<^sub>V \<psi>) * \<delta>\<close>
+      by (simp add: power2_sum)
+    also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>))\<^sup>2 + \<delta>\<^sup>2 + 2 * norm (sqrt_op (abs_op t)) * \<delta>\<close>
+      apply (rule complex_of_real_mono_iff[THEN iffD2])
+      by (smt (z3) \<open>0 < \<delta>\<close> \<open>norm \<psi> = 1\<close> more_arith_simps(11) mult_less_cancel_right_disj norm_cblinfun one_power2 power2_eq_square)
+    also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>))\<^sup>2 + \<epsilon>\<close>
+      apply (rule complex_of_real_mono_iff[THEN iffD2])
+      using \<delta>_small by auto
+    also have \<open>\<dots> = ((sqrt_op (abs_op t) *\<^sub>V \<psi>) \<bullet>\<^sub>C (sqrt_op (abs_op t) *\<^sub>V \<psi>)) + \<epsilon>\<close>
+      by (simp add: cdot_square_norm)
+    also have \<open>\<dots> = (\<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>)) + \<epsilon>\<close>
+      by (simp add: positive_hermitianI flip: cinner_adj_right cblinfun_apply_cblinfun_compose)
+    also have \<open>\<dots> \<le> trace_norm t + \<epsilon>\<close>
+      using \<open>norm \<psi> = 1\<close> \<open>trace_class t\<close> by (auto simp add: trace_norm_geq_cinner_abs_op)
+    finally show \<open>norm t \<le> trace_norm t + \<epsilon>\<close>
+      using complex_of_real_mono_iff by blast
   qed
-
-  from \<open>\<delta> > 0\<close> obtain \<psi> where \<psi>\<epsilon>: \<open>norm (sqrt_op (abs_op t)) - \<delta> \<le> norm (sqrt_op (abs_op t) *\<^sub>V \<psi>)\<close> and \<open>norm \<psi> = 1\<close>
-    apply atomize_elim by (rule cblinfun_norm_approx_witness)
-
-  have aux1: \<open>2 * complex_of_real x = complex_of_real (2 * x)\<close> for x
-    by simp
-
-  have \<open>complex_of_real (norm t) = norm (abs_op t)\<close>
-    by simp
-  also have \<open>\<dots> = (norm (sqrt_op (abs_op t)))\<^sup>2\<close>
-    by (simp add: positive_hermitianI flip: norm_AadjA)
-  also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>) + \<delta>)\<^sup>2\<close>
-    by (smt (verit) \<psi>\<epsilon> complex_of_real_mono norm_triangle_ineq4 norm_triangle_sub pos2 power_strict_mono)
-  also have \<open>\<dots> = (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>))\<^sup>2 + \<delta>\<^sup>2 + 2 * norm (sqrt_op (abs_op t) *\<^sub>V \<psi>) * \<delta>\<close>
-    by (simp add: power2_sum)
-  also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>))\<^sup>2 + \<delta>\<^sup>2 + 2 * norm (sqrt_op (abs_op t)) * \<delta>\<close>
-    apply (rule complex_of_real_mono_iff[THEN iffD2])
-    by (smt (z3) \<open>0 < \<delta>\<close> \<open>norm \<psi> = 1\<close> more_arith_simps(11) mult_less_cancel_right_disj norm_cblinfun one_power2 power2_eq_square)
-  also have \<open>\<dots> \<le> (norm (sqrt_op (abs_op t) *\<^sub>V \<psi>))\<^sup>2 + \<epsilon>\<close>
-    apply (rule complex_of_real_mono_iff[THEN iffD2])
-    using \<delta>_small by auto
-  also have \<open>\<dots> = ((sqrt_op (abs_op t) *\<^sub>V \<psi>) \<bullet>\<^sub>C (sqrt_op (abs_op t) *\<^sub>V \<psi>)) + \<epsilon>\<close>
-    by (simp add: cdot_square_norm)
-  also have \<open>\<dots> = (\<psi> \<bullet>\<^sub>C (abs_op t *\<^sub>V \<psi>)) + \<epsilon>\<close>
-    by (simp add: positive_hermitianI flip: cinner_adj_right cblinfun_apply_cblinfun_compose)
-  also have \<open>\<dots> \<le> trace_norm t + \<epsilon>\<close>
-    using \<open>norm \<psi> = 1\<close> \<open>trace_class t\<close> by (auto simp add: trace_norm_geq_cinner_abs_op)
-  finally show \<open>norm t \<le> trace_norm t + \<epsilon>\<close>
-    using complex_of_real_mono_iff by blast
 qed
 
 instantiation trace_class :: (chilbert_space, chilbert_space) order begin
@@ -2053,31 +2059,6 @@ lemma trace_class_sandwich: \<open>trace_class b \<Longrightarrow> trace_class (
   by (simp add: sandwich_apply trace_class_comp_right trace_class_comp_left)
 
 definition \<open>sandwich_tc e t = compose_tcl (compose_tcr e t) (e*)\<close>
-
-(* lift_definition sandwich_tc :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) \<Rightarrow> ('a::chilbert_space,'a) trace_class \<Rightarrow>\<^sub>C\<^sub>L ('b::chilbert_space,'b) trace_class\<close> is
-  \<open>\<lambda>e t. sandwich e t\<close>
-proof (intro relcomppI conjI)
-  include lifting_syntax
-  fix e :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
-  have *: \<open>trace_class (sandwich e *\<^sub>V from_trace_class t)\<close> for t
-    using trace_class_from_trace_class trace_class_sandwich by blast
-  define S where \<open>S e t = Abs_trace_class (sandwich e (from_trace_class t))\<close> for e :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> and t :: \<open>('a,'a) trace_class\<close>
-  show 1: \<open>(cr_trace_class ===> cr_trace_class) (( *\<^sub>V) (sandwich e)) (S e)\<close>
-    by (auto intro!: rel_funI simp add: cr_trace_class_def S_def Abs_trace_class_inverse * )
-  show \<open>bounded_clinear (S e)\<close>
-    apply (rule bounded_clinearI[where K=\<open>(norm e)^2\<close>])
-    apply (simp_all add: S_def
-        plus_trace_class.rep_eq scaleC_trace_class.rep_eq 
-        cblinfun.add_right cblinfun.scaleC_right
-        plus_trace_class.abs_eq scaleC_trace_class.abs_eq norm_trace_class.abs_eq
-        eq_onp_def * )
-    using trace_norm_sandwich[where e=e, OF trace_class_from_trace_class]
-    by (simp add: norm_trace_class.rep_eq ordered_field_class.sign_simps(33))
-  show \<open>S e = S e\<close>
-    by simp
-  show \<open>(cr_trace_class ===> cr_trace_class)\<inverse>\<inverse> (S e) (( *\<^sub>V) (sandwich e))\<close>
-    by (intro conversepI 1)
-qed *)
 
 lemma sandwich_tc_transfer[transfer_rule]:
   includes lifting_syntax

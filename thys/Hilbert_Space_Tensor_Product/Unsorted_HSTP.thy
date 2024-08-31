@@ -7,6 +7,8 @@ theory Unsorted_HSTP
     Partial_Trace
 begin
 
+(* TODO move everything *)
+
 unbundle cblinfun_notation Finite_Cartesian_Product.no_vec_syntax jnf_notation
 hide_const (open) Finite_Cartesian_Product.vec
 hide_const (open) Finite_Cartesian_Product.mat
@@ -1911,14 +1913,6 @@ proof -
     by (rule of_real_hom.injectivity)
 qed
 
-(* (* TODO move *)
-lemma complex_polar_decomp: \<open>\<exists>\<gamma>. cmod \<gamma> = 1 \<and> z = \<gamma> * cmod z\<close>
-  apply (cases \<open>z = 0\<close>)
-   apply (auto intro!: exI[of _ 1])[1]
-  using complex_norm_eq_1_exp_eq[of \<open>sgn z\<close>, THEN iffD1]
-apply (auto intro!: simp: )
-
-  by - *)
 
 lemma from_trace_class_sum:
   shows \<open>from_trace_class (\<Sum>x\<in>M. f x) = (\<Sum>x\<in>M. from_trace_class (f x))\<close>
