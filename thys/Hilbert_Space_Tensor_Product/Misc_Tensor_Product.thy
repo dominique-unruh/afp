@@ -41,10 +41,6 @@ lemma Rangep_conversep[simp]: \<open>Rangep (R\<inverse>\<inverse>) = Domainp R\
 lemma Domainp_conversep[simp]: \<open>Domainp (R\<inverse>\<inverse>) = Rangep R\<close>
   by blast
 
-(* TODO remove! *)
-(* lemma rel_fun_conversep_eq[simp]: \<open>rel_fun (R\<inverse>\<inverse>) (=) = (rel_fun R (=))\<inverse>\<inverse>\<close>
-  by (auto intro!: ext simp: rel_fun_def) *)
-
 lemma conversep_rel_fun:
   includes lifting_syntax
   shows \<open>(T ===> U)\<inverse>\<inverse> = (T\<inverse>\<inverse>) ===> (U\<inverse>\<inverse>)\<close>
@@ -383,8 +379,6 @@ lemma infsum_in_cong:
 lemma limitin_cong: "limitin T f c F \<longleftrightarrow> limitin T g c F" if "eventually (\<lambda>x. f x = g x) F"
   by (smt (verit, best) eventually_elim2 limitin_transform_eventually that)
 
-
-(* TODO: show has_sum_reindex as a corollary of this *)
 lemma has_sum_in_reindex:
   assumes \<open>inj_on h A\<close>
   shows \<open>has_sum_in T g (h ` A) x \<longleftrightarrow> has_sum_in T (g \<circ> h) A x\<close>
@@ -437,7 +431,6 @@ lemma infsum_euclidean_eq: \<open>infsum_in euclidean f A = infsum f A\<close>
   by (auto simp add: infsum_def infsum_in_def' summable_on_euclidean_eq
       has_sum_euclidean_iff[abs_def] has_sum_def t2_space_class.Lim_def)
 
-(* TODO: prove infsum_reindex_bij_betw from this *)
 lemma infsum_in_reindex_bij_betw:
   assumes "bij_betw g A B"
   shows   "infsum_in T (\<lambda>x. f (g x)) A = infsum_in T f B"
@@ -1385,24 +1378,17 @@ lemma bounded_linear_case_prod_plus[simp]: \<open>bounded_linear (case_prod plus
 lemma pullback_topology_twice:
   assumes \<open>(f -` B) \<inter> A = C\<close>
   shows \<open>pullback_topology A f (pullback_topology B g T) = pullback_topology C (g o f) T\<close>
-(* TODO pretty proof *)
 proof -
   have aux: \<open>S = A \<longleftrightarrow> S = B\<close> if \<open>A = B\<close> for A B S :: 'z
     using that by simp
   have *: \<open>(\<exists>V. (openin T U \<and> V = g -` U \<inter> B) \<and> S = f -` V \<inter> A) = (openin T U \<and> S = (g \<circ> f) -` U \<inter> C)\<close> for S U
     apply (cases \<open>openin T U\<close>)
-     apply (simp_all add: vimage_comp)
-    apply (rule aux)
-    apply auto
     using assms
-    apply auto
-    by -
+    by (auto intro!: aux simp: vimage_comp)
   then have *: \<open>(\<exists>V. (\<exists>U. openin T U \<and> V = g -` U \<inter> B) \<and> S = f -` V \<inter> A) = (\<exists>U. openin T U \<and> S = (g \<circ> f) -` U \<inter> C)\<close> for S
     by metis
   show ?thesis
-  apply (simp add: topology_eq openin_pullback_topology)
-    apply (intro allI)
-    by (rule *)
+    by (auto intro!: * simp: topology_eq openin_pullback_topology)
 qed
 
 lemma pullback_topology_homeo_cong:
@@ -2031,7 +2017,6 @@ lemma has_Sup_bdd_above: \<open>has_Sup X \<Longrightarrow> bdd_above X\<close>
 lemma is_Sup_has_Sup: \<open>is_Sup X s \<Longrightarrow> has_Sup X\<close>
   using has_Sup_def by blast
 
-(* TODO move *)
 class Sup_order = order + Sup + sup +
   assumes is_Sup_Sup: \<open>has_Sup X \<Longrightarrow> is_Sup X (Sup X)\<close>
   assumes is_Sup_sup: \<open>has_Sup {x,y} \<Longrightarrow> is_Sup {x,y} (sup x y)\<close>
@@ -2136,6 +2121,7 @@ lemma t3_space_euclidean_regular[iff]: \<open>regular_space (euclidean :: 'a::t3
   by fast
 
 definition increasing_filter :: \<open>'a::order filter \<Rightarrow> bool\<close> where
+  \<comment> \<open>Definition suggested by \<^cite>\<open>"increasing-filters"\<close>\<close>
   \<open>increasing_filter F \<longleftrightarrow> (\<forall>\<^sub>F x in F. \<forall>\<^sub>F y in F. y \<ge> x)\<close>
 
 lemma increasing_filtermap:
@@ -2165,13 +2151,12 @@ proof -
     by (simp add: increasing_filter_def eventually_filtermap)
 qed
 
-(* TODO: reference: https://math.stackexchange.com/a/4749216/403528 *)
 lemma increasing_finite_subsets_at_top[simp]: \<open>increasing_filter (finite_subsets_at_top X)\<close>
   apply (simp add: increasing_filter_def eventually_finite_subsets_at_top)
   by force
 
-(* TODO: reference: https://math.stackexchange.com/a/4749216/403528 *)
 lemma monotone_convergence:
+  \<comment> \<open>Following \<^cite>\<open>"increasing-filters"\<close>\<close>
   fixes f :: \<open>'b \<Rightarrow> 'a::{order_topology, conditionally_complete_linorder}\<close>
   assumes bounded: \<open>\<forall>\<^sub>F x in F. f x \<le> B\<close>
   assumes increasing: \<open>increasing_filter (filtermap f F)\<close>
@@ -2249,10 +2234,8 @@ lemma compact_closed_subset:
   shows \<open>compact t\<close>
   by (metis assms(1) assms(2) assms(3) compact_Int_closed inf.absorb_iff2)
 
-(* TODO move *)
 definition separable where \<open>separable S \<longleftrightarrow> (\<exists>B. countable B \<and> S \<subseteq> closure B)\<close>
 
-(* TODO move *)
 lemma compact_imp_separable: \<open>separable S\<close> if \<open>compact S\<close> for S :: \<open>'a::metric_space set\<close>
 proof -
   from that

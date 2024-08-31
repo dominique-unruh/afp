@@ -1353,7 +1353,7 @@ lemma has_sum_in_comm_additive:
 
 section \<open>Stuff relying on the above lifting\<close>
 
-(* TODO: Let some_chilbert_basis abbreviate some_chilbert_basis_of UNIV *)
+(* TODO: Change "some_chilbert_basis" to to abbreviate "some_chilbert_basis_of UNIV" *)
 definition \<open>some_chilbert_basis_of X = (SOME B. is_ortho_set B \<and> (\<forall>b\<in>B. norm b = 1) \<and> ccspan B = X)\<close>
 
 lemma

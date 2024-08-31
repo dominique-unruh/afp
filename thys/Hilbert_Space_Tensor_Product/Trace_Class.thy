@@ -14,72 +14,28 @@ unbundle cblinfun_notation
 
 subsection \<open>Auxiliary lemmas\<close>
 
-lemma parseval_infsum_aux1: 
-  fixes h :: \<open>'a ell2\<close>
-  assumes \<open>is_onb E\<close>
-  shows \<open>(\<Sum>\<^sub>\<infinity>e\<in>E. (cmod (h \<bullet>\<^sub>C e))\<^sup>2) = (norm h)\<^sup>2\<close>
-proof -
-  define U h' where \<open>U = unitary_between (range ket) E\<close> and \<open>h' = U* *\<^sub>V h\<close>
-  have [simp]: \<open>unitary U\<close>
-    using U_def assms is_onb_ket unitary_between_unitary by blast
-  have \<open>(\<Sum>\<^sub>\<infinity>e\<in>E. (cmod (h \<bullet>\<^sub>C e))\<^sup>2) = (\<Sum>\<^sub>\<infinity>k\<in>range ket. (cmod (h \<bullet>\<^sub>C bij_between_bases (range ket) E k))\<^sup>2)\<close>
-    apply (rule infsum_reindex_bij_betw[symmetric])
-    using assms bij_between_bases_bij is_onb_ket by blast
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>i. (cmod (h \<bullet>\<^sub>C bij_between_bases (range ket) E (ket i)))\<^sup>2)\<close>
-    apply (subst infsum_reindex)
-    by (auto simp: o_def)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>i. (cmod (h \<bullet>\<^sub>C U (ket i)))\<^sup>2)\<close>
-    by (simp add: U_def assms unitary_between_apply)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>i. (cmod (h' \<bullet>\<^sub>C ket i))\<^sup>2)\<close>
-    by (simp add: cinner_adj_left h'_def)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>i. (cmod (Rep_ell2 h' i))\<^sup>2)\<close>
-    by (simp add: cinner_ket_right)
-  also have \<open>\<dots> = (norm h')\<^sup>2\<close>
-    by (simp add: ell2_norm_square norm_ell2.rep_eq)
-  also have \<open>\<dots> = (norm h)\<^sup>2\<close>
-    by (simp add: h'_def isometry_preserves_norm)
-  finally show ?thesis
-    by -
-qed
-
-
-lemma
-  fixes h :: \<open>'b::{chilbert_space,not_singleton}\<close>
-  assumes \<open>is_onb E\<close>
-  shows parseval_infsum_aux2: \<open>(\<Sum>\<^sub>\<infinity>e\<in>E. (cmod (h \<bullet>\<^sub>C e))\<^sup>2) = (norm h)\<^sup>2\<close>
-  using c2l2l2[where 'a = 'b, transfer_rule] apply fail?
-  using assms apply transfer
-  by (rule parseval_infsum_aux1)
-
-lemma 
-  fixes h :: \<open>'b::{chilbert_space, CARD_1}\<close>
-  assumes \<open>is_onb E\<close>
-  shows parseval_infsum_aux3: \<open>(\<Sum>\<^sub>\<infinity>e\<in>E. (cmod (h \<bullet>\<^sub>C e))\<^sup>2) = (norm h)\<^sup>2\<close>
-  apply (subst everything_the_same[where y=0])
-  by simp
-
 (* TODO: parseval_identity covers this *) thm parseval_identity
-lemma 
+(* lemma 
   fixes h :: \<open>'a::{chilbert_space}\<close>
   assumes \<open>is_onb E\<close>
   shows parseval_infsum: \<open>(\<Sum>\<^sub>\<infinity>e\<in>E. (cmod (h \<bullet>\<^sub>C e))\<^sup>2) = (norm h)\<^sup>2\<close>
-  apply (cases \<open>class.not_singleton TYPE('a)\<close>)
-   apply (rule parseval_infsum_aux2[internalize_sort \<open>'b :: {chilbert_space,not_singleton}\<close>])
-     apply (auto intro!: assms chilbert_space_axioms)[3]
-   apply (rule parseval_infsum_aux3[internalize_sort \<open>'b :: {chilbert_space,CARD_1}\<close>])
-  by (auto intro!: assms chilbert_space_axioms not_singleton_vs_CARD_1)
+  apply (subst cinner_commute)
+  apply (subst complex_mod_cnj)
+  apply (subst parseval_identity)
+  using assms by (simp_all add: is_onb_def)
+ *)
 
 lemma 
   fixes h :: \<open>'a::{chilbert_space}\<close>
   assumes \<open>is_onb E\<close>
-  shows parseval_abs_summable: \<open>(\<lambda>e. (cmod (h \<bullet>\<^sub>C e))\<^sup>2) abs_summable_on E\<close>
+  shows parseval_abs_summable: \<open>(\<lambda>e. (cmod (e \<bullet>\<^sub>C h))\<^sup>2) abs_summable_on E\<close>
 proof (cases \<open>h = 0\<close>)
   case True
   then show ?thesis by simp
 next
   case False
-  then have \<open>(\<Sum>\<^sub>\<infinity>e\<in>E. (cmod (h \<bullet>\<^sub>C e))\<^sup>2) \<noteq> 0\<close>
-    by (simp add: assms parseval_infsum)
+  then have \<open>(\<Sum>\<^sub>\<infinity>e\<in>E. (cmod (e \<bullet>\<^sub>C h))\<^sup>2) \<noteq> 0\<close>
+    using assms by (simp add: parseval_identity is_onb_def)
   then show ?thesis
     using infsum_not_exists by auto
 qed
@@ -88,72 +44,77 @@ qed
 lemma TODO_name1:
   fixes E :: \<open>'a::complex_inner set\<close> and F :: \<open>'b::chilbert_space set\<close>
   assumes \<open>is_onb E\<close> and \<open>is_onb F\<close>
-  shows \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E \<longleftrightarrow> ((\<lambda>(e,f). (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) has_sum t) (E\<times>F)\<close>
+  shows \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E \<longleftrightarrow> ((\<lambda>(e,f). (cmod (f \<bullet>\<^sub>C (A *\<^sub>V e)))\<^sup>2) has_sum t) (E\<times>F)\<close>
 proof
   assume asm: \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E\<close>
   have sum1: \<open>t = (\<Sum>\<^sub>\<infinity>e\<in>E. (norm (A *\<^sub>V e))\<^sup>2)\<close>
     using asm infsumI by blast
   have abs1: \<open>(\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) abs_summable_on E\<close>
     using asm summable_on_def by auto
-  have sum2: \<open>t = (\<Sum>\<^sub>\<infinity>e\<in>E. \<Sum>\<^sub>\<infinity>f\<in>F. (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2)\<close>
+  have sum2: \<open>t = (\<Sum>\<^sub>\<infinity>e\<in>E. \<Sum>\<^sub>\<infinity>f\<in>F. (cmod (f \<bullet>\<^sub>C (A *\<^sub>V e)))\<^sup>2)\<close>
     apply (subst sum1)
     apply (rule infsum_cong)
-    using assms(2) by (rule parseval_infsum[symmetric])
-  have abs2: \<open>(\<lambda>e. \<Sum>\<^sub>\<infinity>f\<in>F. (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) abs_summable_on E\<close>
+    using assms(2)
+    by (simp add: is_onb_def flip: parseval_identity)
+  have abs2: \<open>(\<lambda>e. \<Sum>\<^sub>\<infinity>f\<in>F. (cmod (f \<bullet>\<^sub>C (A *\<^sub>V e)))\<^sup>2) abs_summable_on E\<close>
     using _ abs1 apply (rule summable_on_cong[THEN iffD2])
-    apply (subst parseval_infsum)
-    using assms(2) by auto
-  have abs3: \<open>(\<lambda>(x, y). (cmod ((A *\<^sub>V x) \<bullet>\<^sub>C y))\<^sup>2) abs_summable_on E \<times> F\<close>
+    apply (subst parseval_identity)
+    using assms(2) by (auto simp: is_onb_def)
+  have abs3: \<open>(\<lambda>(x, y). (cmod (y \<bullet>\<^sub>C (A *\<^sub>V x)))\<^sup>2) abs_summable_on E \<times> F\<close>
     thm abs_summable_on_Sigma_iff
     apply (rule abs_summable_on_Sigma_iff[THEN iffD2], rule conjI)
     using abs2 apply (auto simp del: real_norm_def)
     using assms(2) parseval_abs_summable apply blast
     by auto
-  have sum3: \<open>t = (\<Sum>\<^sub>\<infinity>(e,f)\<in>E\<times>F. (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2)\<close>
+  have sum3: \<open>t = (\<Sum>\<^sub>\<infinity>(e,f)\<in>E\<times>F. (cmod (f \<bullet>\<^sub>C (A *\<^sub>V e)))\<^sup>2)\<close>
     apply (subst sum2)
     apply (subst infsum_Sigma'_banach[symmetric])
     using abs3 abs_summable_summable apply blast
     by auto
-  then show \<open>((\<lambda>(e,f). (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) has_sum t) (E\<times>F)\<close>
+  then show \<open>((\<lambda>(e,f). (cmod (f \<bullet>\<^sub>C (A *\<^sub>V e)))\<^sup>2) has_sum t) (E\<times>F)\<close>
     using abs3 abs_summable_summable has_sum_infsum by blast
 next
-  assume asm: \<open>((\<lambda>(e,f). (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) has_sum t) (E\<times>F)\<close>
-  have abs3: \<open>(\<lambda>(x, y). (cmod ((A *\<^sub>V x) \<bullet>\<^sub>C y))\<^sup>2) abs_summable_on E \<times> F\<close>
-    using asm summable_on_def summable_on_iff_abs_summable_on_real by blast
-  have sum3: \<open>t = (\<Sum>\<^sub>\<infinity>(e,f)\<in>E\<times>F. (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2)\<close>
+  assume asm: \<open>((\<lambda>(e,f). (cmod (f \<bullet>\<^sub>C (A *\<^sub>V e)))\<^sup>2) has_sum t) (E\<times>F)\<close>
+  have abs3: \<open>(\<lambda>(x, y). (cmod (y \<bullet>\<^sub>C (A *\<^sub>V x)))\<^sup>2) abs_summable_on E \<times> F\<close>
+    using asm summable_on_def summable_on_iff_abs_summable_on_real
+    by blast
+  have sum3: \<open>t = (\<Sum>\<^sub>\<infinity>(e,f)\<in>E\<times>F. (cmod (f \<bullet>\<^sub>C (A *\<^sub>V e)))\<^sup>2)\<close>
     using asm infsumI by blast
-  have sum2: \<open>t = (\<Sum>\<^sub>\<infinity>e\<in>E. \<Sum>\<^sub>\<infinity>f\<in>F. (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2)\<close>
+  have sum2: \<open>t = (\<Sum>\<^sub>\<infinity>e\<in>E. \<Sum>\<^sub>\<infinity>f\<in>F. (cmod (f \<bullet>\<^sub>C (A *\<^sub>V e)))\<^sup>2)\<close>
     by (metis (mono_tags, lifting) asm infsum_Sigma'_banach infsum_cong sum3 summable_iff_has_sum_infsum)
-  have abs2: \<open>(\<lambda>e. \<Sum>\<^sub>\<infinity>f\<in>F. (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) abs_summable_on E\<close>
+  have abs2: \<open>(\<lambda>e. \<Sum>\<^sub>\<infinity>f\<in>F. (cmod (f \<bullet>\<^sub>C (A *\<^sub>V e)))\<^sup>2) abs_summable_on E\<close>
     by (smt (verit, del_insts) abs3 summable_on_Sigma_banach summable_on_cong summable_on_iff_abs_summable_on_real)
   have sum1: \<open>t = (\<Sum>\<^sub>\<infinity>e\<in>E. (norm (A *\<^sub>V e))\<^sup>2)\<close>
     apply (subst sum2)
     apply (rule infsum_cong)
-    using assms(2) parseval_infsum by blast
+    using assms(2) parseval_identity is_onb_def
+    by fastforce
   have abs1: \<open>(\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) abs_summable_on E\<close>
-    using abs2 assms(2) parseval_infsum by fastforce
+    using abs2 assms(2) parseval_identity is_onb_def by fastforce
   show \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E\<close>
     using abs1 sum1 by auto
 qed
 
-(* TODO: @{cite conway00operator}, op, 18.1 Proposition (2nd part) *)
+(* TODO: \<^cite>\<open>conway00operator\<close>, op, 18.1 Proposition (2nd part) *)
 lemma TODO_name2:
   fixes E :: \<open>'a::chilbert_space set\<close> and F :: \<open>'b::chilbert_space set\<close>
   assumes \<open>is_onb E\<close> and \<open>is_onb F\<close>
   shows \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E \<longleftrightarrow> ((\<lambda>f. (norm (A* *\<^sub>V f))\<^sup>2) has_sum t) F\<close>
 proof -
-  have \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E \<longleftrightarrow> ((\<lambda>(e,f). (cmod ((A *\<^sub>V e) \<bullet>\<^sub>C f))\<^sup>2) has_sum t) (E\<times>F)\<close>
+  have \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E \<longleftrightarrow> ((\<lambda>(e,f). (cmod (f \<bullet>\<^sub>C (A *\<^sub>V e)))\<^sup>2) has_sum t) (E\<times>F)\<close>
     using TODO_name1 assms by blast
   also have \<open>\<dots> \<longleftrightarrow> ((\<lambda>(e,f). (cmod ((A* *\<^sub>V f) \<bullet>\<^sub>C e))\<^sup>2) has_sum t) (E\<times>F)\<close>
-    apply (subst cinner_adj_left) apply (subst cinner_commute)
-    apply (subst complex_mod_cnj) by rule
+    apply (subst cinner_adj_left)
+    by (rule refl)
   also have \<open>\<dots> \<longleftrightarrow> ((\<lambda>(f,e). (cmod ((A* *\<^sub>V f) \<bullet>\<^sub>C e))\<^sup>2) has_sum t) (F\<times>E)\<close>
     apply (subst asm_rl[of \<open>F\<times>E = prod.swap ` (E\<times>F)\<close>])
      apply force
     apply (subst has_sum_reindex)
     by (auto simp: o_def)
   also have \<open>\<dots> \<longleftrightarrow> ((\<lambda>f. (norm (A* *\<^sub>V f))\<^sup>2) has_sum t) F\<close>
-    using TODO_name1 assms by blast
+    apply (subst cinner_commute, subst complex_mod_cnj)
+    using TODO_name1 assms
+    by blast
   finally show ?thesis
     by -
 qed
@@ -406,7 +367,7 @@ lemma hilbert_schmidt_norm_pos[simp]: \<open>hilbert_schmidt_norm a \<ge> 0\<clo
   by (auto simp: hilbert_schmidt_norm_def)
 
 lemma has_sum_hilbert_schmidt_norm_square:
-  \<comment> \<open>@{cite conway00operator}, Proposition 18.6 (a)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 18.6 (a)\<close>
   assumes \<open>is_onb B\<close> and \<open>hilbert_schmidt a\<close>
   shows \<open>((\<lambda>x. (norm (a *\<^sub>V x))\<^sup>2) has_sum (hilbert_schmidt_norm a)\<^sup>2) B\<close>
 proof -
@@ -420,7 +381,7 @@ proof -
 qed
 
 lemma summable_hilbert_schmidt_norm_square:
-  \<comment> \<open>@{cite conway00operator}, Proposition 18.6 (a)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 18.6 (a)\<close>
   assumes \<open>is_onb B\<close> and \<open>hilbert_schmidt a\<close>
   shows \<open>(\<lambda>x. (norm (a *\<^sub>V x))\<^sup>2) summable_on B\<close>
   using assms(1) assms(2) has_sum_hilbert_schmidt_norm_square summable_on_def by blast
@@ -440,34 +401,14 @@ proof -
 qed
 
 lemma infsum_hilbert_schmidt_norm_square:
-  \<comment> \<open>@{cite conway00operator}, Proposition 18.6 (a)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 18.6 (a)\<close>
   assumes \<open>is_onb B\<close> and \<open>hilbert_schmidt a\<close>
   shows \<open>(\<Sum>\<^sub>\<infinity>x\<in>B. (norm (a *\<^sub>V x))\<^sup>2) = ((hilbert_schmidt_norm a)\<^sup>2)\<close>
     using assms has_sum_hilbert_schmidt_norm_square infsumI by blast
-(* 
-(* TODO: can get rid of HS assumption but only once we have shown trace_class_iff_sqrt_hs.
-Or show relevant part of it first?  *)
-proof (cases \<open>hilbert_schmidt a\<close>)
-  case True
-  then show ?thesis
-    using assms has_sum_hilbert_schmidt_norm_square infsumI by blast
-next
-  case False
-  then have \<open>\<not> (\<lambda>x. (norm (a *\<^sub>V x))\<^sup>2) summable_on B\<close>
-  using assms summable_hilbert_schmidt_norm_square_converse by blast
-  then have 1: \<open>(\<Sum>\<^sub>\<infinity>x\<in>B. (norm (a *\<^sub>V x))\<^sup>2) = 0\<close>
-    using infsum_not_exists by blast
-  from False have \<open>\<not> trace_class (a* o\<^sub>C\<^sub>L a)\<close>
-    by -
-  then have 2: \<open>hilbert_schmidt_norm a = 0\<close>
-    by (auto simp: hilbert_schmidt_norm_def trace_norm_def)
-   show ?thesis
-    by simp
-qed *)
 
 
 lemma 
-  \<comment> \<open>@{cite conway00operator}, Proposition 18.6 (d)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 18.6 (d)\<close>
   assumes  \<open>hilbert_schmidt b\<close>
   shows hilbert_schmidt_comp_right: \<open>hilbert_schmidt (a o\<^sub>C\<^sub>L b)\<close>
     and hilbert_schmidt_norm_comp_right: \<open>hilbert_schmidt_norm (a o\<^sub>C\<^sub>L b) \<le> norm a * hilbert_schmidt_norm b\<close>
@@ -510,7 +451,7 @@ qed
 
 
 lemma hilbert_schmidt_adj[simp]:
-  \<comment> \<open>Implicit in @{cite conway00operator}, Proposition 18.6 (b)\<close>
+  \<comment> \<open>Implicit in \<^cite>\<open>conway00operator\<close>, Proposition 18.6 (b)\<close>
   assumes \<open>hilbert_schmidt a\<close>
   shows \<open>hilbert_schmidt (a*)\<close>
 proof -
@@ -524,7 +465,7 @@ proof -
 qed
 
 lemma hilbert_schmidt_norm_adj[simp]:
-  \<comment> \<open>@{cite conway00operator}, Proposition 18.6 (b)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 18.6 (b)\<close>
   shows \<open>hilbert_schmidt_norm (a*) = hilbert_schmidt_norm a\<close>
 proof (cases \<open>hilbert_schmidt a\<close>)
   case True
@@ -551,7 +492,7 @@ next
 qed
 
 lemma 
-  \<comment> \<open>@{cite conway00operator}, Proposition 18.6 (d)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 18.6 (d)\<close>
   fixes a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close> and b
   assumes  \<open>hilbert_schmidt a\<close>
   shows hilbert_schmidt_comp_left: \<open>hilbert_schmidt (a o\<^sub>C\<^sub>L b)\<close>
@@ -559,7 +500,7 @@ lemma
   by (auto intro!: assms hilbert_schmidt_comp_right hilbert_schmidt_adj simp del: adj_cblinfun_compose)
 
 lemma 
-  \<comment> \<open>@{cite conway00operator}, Proposition 18.6 (d)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 18.6 (d)\<close>
   fixes a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close> and b
   assumes  \<open>hilbert_schmidt a\<close>
   shows hilbert_schmidt_norm_comp_left: \<open>hilbert_schmidt_norm (a o\<^sub>C\<^sub>L b) \<le> norm b * hilbert_schmidt_norm a\<close>
@@ -578,7 +519,7 @@ lemma hilbert_schmidt_uminus: \<open>hilbert_schmidt (- a)\<close> if \<open>hil
 
 lemma hilbert_schmidt_plus: \<open>hilbert_schmidt (t + u)\<close> if \<open>hilbert_schmidt t\<close> and \<open>hilbert_schmidt u\<close>
   for t u :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
-  \<comment> \<open>@{cite conway00operator}, Proposition 18.6 (e).
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 18.6 (e).
      We use a different proof than Conway: Our proof of \<open>trace_class_plus\<close> below was easy to adapt to Hilbert-Schmidt operators,
      so we adapted that one. However, Conway's proof would most likely work as well, and possible additionally
      allow us to weaken the sort of \<^typ>\<open>'b\<close> to \<^class>\<open>complex_inner\<close>.\<close>
@@ -692,7 +633,7 @@ lift_definition hs_compose :: \<open>('b::chilbert_space,'c::complex_inner) hilb
   by (simp add: hilbert_schmidt_comp_right)
 
 lemma
-  \<comment> \<open>@{cite conway00operator}, 18.8 Proposition\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, 18.8 Proposition\<close>
   fixes A :: \<open>'a :: chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b :: chilbert_space\<close>
   shows trace_class_iff_sqrt_hs: \<open>trace_class A \<longleftrightarrow> hilbert_schmidt (sqrt_op (abs_op A))\<close> (is ?thesis1)
     and trace_class_iff_hs_times_hs: \<open>trace_class A \<longleftrightarrow> (\<exists>B (C::'a\<Rightarrow>\<^sub>C\<^sub>L'a). hilbert_schmidt B \<and> hilbert_schmidt C \<and> A = B o\<^sub>C\<^sub>L C)\<close> (is ?thesis2)
@@ -777,7 +718,7 @@ qed
 
 
 lemma trace_exists:
-  \<comment> \<open>@{cite conway00operator}, Proposition 18.9\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 18.9\<close>
   assumes \<open>is_onb B\<close> and \<open>trace_class A\<close>
   shows \<open>(\<lambda>e. e \<bullet>\<^sub>C (A *\<^sub>V e)) summable_on B\<close>
 proof -
@@ -966,7 +907,7 @@ qed
 end
 
 lemma hilbert_schmidt_norm_triangle_ineq:
-  \<comment> \<open>@{cite conway00operator}, Proposition 18.6 (e). We do not use their proof but get it as a
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 18.6 (e). We do not use their proof but get it as a
   simple corollary of the instantiation of \<open>hilbert_schmidt\<close> as a inner product space.
   The proof by Conway would probably allow us to weaken the sort of \<^typ>\<open>'b\<close> to \<^class>\<open>complex_inner\<close>.\<close>
   fixes a b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
@@ -1004,7 +945,7 @@ lemma norm_adj_hs[simp]: \<open>norm (adj_hs x) = norm x\<close>
 subsection \<open>Trace-norm and trace-class, continued\<close>
 
 lemma trace_class_comp_left: \<open>trace_class (a o\<^sub>C\<^sub>L b)\<close> if \<open>trace_class a\<close> for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
-  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (a)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 18.11 (a)\<close>
 proof -
   from \<open>trace_class a\<close>
   obtain C :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> and B where \<open>hilbert_schmidt C\<close> and \<open>hilbert_schmidt B\<close> and aCB: \<open>a = C o\<^sub>C\<^sub>L B\<close>
@@ -1018,7 +959,7 @@ proof -
 qed
 
 lemma trace_class_comp_right: \<open>trace_class (a o\<^sub>C\<^sub>L b)\<close> if \<open>trace_class b\<close> for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
-  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (a)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 18.11 (a)\<close>
 proof -
   from \<open>trace_class b\<close>
   obtain C :: \<open>'c \<Rightarrow>\<^sub>C\<^sub>L 'a\<close> and B where \<open>hilbert_schmidt C\<close> and \<open>hilbert_schmidt B\<close> and aCB: \<open>b = C o\<^sub>C\<^sub>L B\<close>
@@ -1034,7 +975,7 @@ qed
 lemma 
   fixes B :: \<open>'a::chilbert_space set\<close> and A :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a\<close> and b :: \<open>'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'c::chilbert_space\<close> and c :: \<open>'c \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> 
   shows trace_alt_def:
-    \<comment> \<open>@{cite conway00operator}, Proposition 18.9\<close>
+    \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 18.9\<close>
     \<open>is_onb B \<Longrightarrow> trace A = (if trace_class A then (\<Sum>\<^sub>\<infinity>e\<in>B. e \<bullet>\<^sub>C (A *\<^sub>V e)) else 0)\<close>
     and trace_hs_times_hs: \<open>hilbert_schmidt c \<Longrightarrow> hilbert_schmidt b \<Longrightarrow> trace (c o\<^sub>C\<^sub>L b) = 
           ((of_real (hilbert_schmidt_norm ((c*) + b)))\<^sup>2 - (of_real (hilbert_schmidt_norm ((c*) - b)))\<^sup>2 -
@@ -1186,9 +1127,9 @@ next
 qed
 
 lemma circularity_of_trace:
-  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (e)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 18.11 (e)\<close>
   fixes a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close> and b :: \<open>'b \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
-    \<comment> \<open>The proof from @{cite conway00operator} only work for square operators, we generalize it\<close>
+    \<comment> \<open>The proof from \<^cite>\<open>conway00operator\<close> only work for square operators, we generalize it\<close>
   assumes \<open>trace_class a\<close>
     \<comment> \<open>Actually, \<^term>\<open>trace_class (a o\<^sub>C\<^sub>L b) \<and> trace_class (b o\<^sub>C\<^sub>L a)\<close> is sufficient here,
         see @{cite "mathoverflow-circ-trace2"} but the proof is more involved.
@@ -1290,7 +1231,7 @@ lemma trace_butterfly_comp': \<open>trace (a o\<^sub>C\<^sub>L butterfly x y) = 
 
 
 lemma trace_norm_adj[simp]: \<open>trace_norm (a*) = trace_norm a\<close>
-  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (f)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 18.11 (f)\<close>
 proof -
   have \<open>of_real (trace_norm (a*)) = trace (sandwich (polar_decomposition a) *\<^sub>V abs_op a)\<close>
     by (metis abs_op_adj trace_abs_op)
@@ -1336,7 +1277,7 @@ lemma trace_class_plus[simp]:
   fixes t u :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
   assumes \<open>trace_class t\<close> and \<open>trace_class u\<close>
   shows \<open>trace_class (t + u)\<close>
-  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (a).
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 18.11 (a).
       However, we use a completely different proof that does not need the fact that trace class operators can be diagonalized with countably many diagonal elements.\<close>
 proof -
   define II :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L ('a\<times>'a)\<close> where \<open>II = cblinfun_left + cblinfun_right\<close>
@@ -1426,7 +1367,7 @@ lemma
 
 lemma cmod_trace_times: \<open>cmod (trace (a o\<^sub>C\<^sub>L b)) \<le> norm a * trace_norm b\<close> if \<open>trace_class b\<close> 
   for b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
-  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (e)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 18.11 (e)\<close>
 proof -
   define W where \<open>W = polar_decomposition b\<close>
 
@@ -1521,7 +1462,7 @@ lemma trace_norm_triangle:
   fixes a b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
   assumes [simp]: \<open>trace_class a\<close> \<open>trace_class b\<close>
   shows \<open>trace_norm (a + b) \<le> trace_norm a + trace_norm b\<close>
-  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (a)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 18.11 (a)\<close>
 proof -
   define w where \<open>w = polar_decomposition (a+b)\<close>
   have \<open>norm (w*) \<le> 1\<close>
@@ -1618,7 +1559,7 @@ lemma trace_norm_comp_right:
   fixes a :: \<open>'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'c::chilbert_space\<close> and b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
   assumes \<open>trace_class b\<close>
   shows \<open>trace_norm (a o\<^sub>C\<^sub>L b) \<le> norm a * trace_norm b\<close>
-  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (g)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 18.11 (g)\<close>
 proof -
   define w w1 s where \<open>w = polar_decomposition b\<close> and \<open>w1 = polar_decomposition (a o\<^sub>C\<^sub>L b)\<close>
     and \<open>s = w1* o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L w\<close>
@@ -1648,7 +1589,7 @@ proof -
 qed
 
 lemma trace_norm_comp_left:
-  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (g)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 18.11 (g)\<close>
   fixes a :: \<open>'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'c::chilbert_space\<close> and b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
   assumes [simp]: \<open>trace_class a\<close>
   shows \<open>trace_norm (a o\<^sub>C\<^sub>L b) \<le> trace_norm a * norm b\<close>
@@ -1677,7 +1618,7 @@ lemma trace_adj: \<open>trace (a*) = cnj (trace a)\<close>
 hide_fact trace_adj_prelim
 
 lemma cmod_trace_times': \<open>cmod (trace (a o\<^sub>C\<^sub>L b)) \<le> norm b * trace_norm a\<close> if \<open>trace_class a\<close>
-  \<comment> \<open>@{cite conway00operator}, Theorem 18.11 (e)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 18.11 (e)\<close>
   apply (subst asm_rl[of \<open>a o\<^sub>C\<^sub>L b = (b* o\<^sub>C\<^sub>L a*)*\<close>], simp)
   apply (subst trace_adj)
   using cmod_trace_times[of \<open>a*\<close> \<open>b*\<close>]
@@ -1713,7 +1654,7 @@ lemma iso_trace_class_compact_op_dual'_scaleC: \<open>iso_trace_class_compact_op
 
 (* TODO We might avoid reuse if we prove this after iso_trace_class_compact_op_dual'_isometric *)
 lemma iso_trace_class_compact_op_dual'_bounded_clinear[bounded_clinear, simp]:
-  \<comment> \<open>@{cite conway00operator}, Theorem 19.1\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 19.1\<close>
     \<open>bounded_clinear (iso_trace_class_compact_op_dual' :: ('a::chilbert_space,'b::chilbert_space) trace_class \<Rightarrow> _)\<close>
 proof -
   let ?iso = \<open>iso_trace_class_compact_op_dual' :: ('a,'b) trace_class \<Rightarrow> _\<close>
@@ -1842,7 +1783,7 @@ proof -
 qed
 
 lemma iso_trace_class_compact_op_dual'_isometric[simp]:
-  \<comment> \<open>@{cite conway00operator}, Theorem 19.1\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 19.1\<close>
   \<open>norm (iso_trace_class_compact_op_dual' t) = norm t\<close> for t :: \<open>('a::chilbert_space, 'b::chilbert_space) trace_class\<close>
 proof -
   let ?iso = \<open>iso_trace_class_compact_op_dual' :: ('a,'b) trace_class \<Rightarrow> _\<close>
@@ -1917,11 +1858,6 @@ the subset of trace-class operators \<^term>\<open>A\<close> constructed in that
     using nle_le by blast
 qed
 
-(* (* TODO: Not used. Remove and rename iso_trace_class_compact_op_dual' \<rightarrow> iso_trace_class_compact_op_dual *)
-lift_definition iso_trace_class_compact_op_dual :: \<open>('a::chilbert_space,'b::chilbert_space) trace_class \<Rightarrow>\<^sub>C\<^sub>L (('b,'a) compact_op \<Rightarrow>\<^sub>C\<^sub>L complex)\<close> is
-  iso_trace_class_compact_op_dual' 
-  by simp *)
-
 
 instance trace_class :: (chilbert_space, chilbert_space) cbanach
 proof
@@ -1979,7 +1915,8 @@ proof -
 qed
 
 lemma norm_leq_trace_norm: \<open>norm t \<le> trace_norm t\<close> if \<open>trace_class t\<close> 
-  for t :: \<open>'a::{chilbert_space,not_singleton} \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close> (* TODO get rid of "not_singleton" *)
+  for t :: \<open>'a::{chilbert_space,not_singleton} \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close> 
+    (* TODO get rid of "not_singleton" *)
 proof (rule field_le_epsilon)
   fix \<epsilon> :: real assume \<open>\<epsilon> > 0\<close>
 
@@ -2151,11 +2088,6 @@ lemma from_trace_class_sandwich_tc:
   \<open>from_trace_class (sandwich_tc e t) = sandwich e (from_trace_class t)\<close>
   apply transfer
   by (rule sandwich_apply)
-
-(* lemma sandwich_tc_apply:
-  \<open>sandwich_tc e t = Abs_trace_class (sandwich e (from_trace_class t))\<close>
-  using from_trace_class_sandwich_tc[of e t]
-  by (metis from_trace_class_inverse) *)
 
 lemma norm_sandwich_tc: \<open>norm (sandwich_tc e t) \<le> (norm e)^2 * norm t\<close>
   by (simp add: norm_trace_class.rep_eq from_trace_class_sandwich_tc trace_norm_sandwich)

@@ -512,8 +512,8 @@ proof -
 qed
 
 
-(* TODO: From @{cite wecken35linearer} *)
 lemma wecken35hilfssatz:
+  \<comment> \<open>Auxiliary lemma from \<^cite>\<open>wecken35linearer\<close>\<close>
   \<open>\<exists>P. is_Proj P \<and> (\<forall>F. F o\<^sub>C\<^sub>L (W - T) = (W - T) o\<^sub>C\<^sub>L F \<longrightarrow> F o\<^sub>C\<^sub>L P = P o\<^sub>C\<^sub>L F)
      \<and> (\<forall>f. W f = 0 \<longrightarrow> P f = f)
      \<and> (W = (2 *\<^sub>C P - id_cblinfun) o\<^sub>C\<^sub>L T)\<close>
@@ -589,9 +589,8 @@ proof (rule exI, intro conjI allI impI)
   qed
 qed
 
-(* Proof follows https://link.springer.com/article/10.1007%2FBF01448052,
-      @{cite wecken35linearer} *)
 lemma TODO_name:
+  \<comment> \<open>Proof follows \<^cite>\<open>wecken35linearer\<close>\<close>
   assumes Aherm: \<open>A = A*\<close>
   shows \<open>\<exists>E. is_Proj E \<and> (\<forall>F. A o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L A \<longrightarrow> A o\<^sub>C\<^sub>L E = E o\<^sub>C\<^sub>L A) 
       \<and> A o\<^sub>C\<^sub>L E \<ge> 0 \<and> A o\<^sub>C\<^sub>L (id_cblinfun - E) \<le> 0 
@@ -661,8 +660,8 @@ proof -
     by -
 qed
 
-(* Also in @{cite wecken35linearer} *)
 lemma sqrt_op_unique:
+  \<comment> \<open>Proof follows \<^cite>\<open>wecken35linearer\<close>\<close>
   assumes \<open>b \<ge> 0\<close> and \<open>b* o\<^sub>C\<^sub>L b = a\<close>
   shows \<open>b = sqrt_op a\<close>
 proof -
@@ -840,13 +839,13 @@ proof (rule ccsubspace_eqI)
 qed
 
 definition polar_decomposition where
-  \<comment> \<open>@{cite conway00operator}, 3.9 Polar Decomposition\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, 3.9 Polar Decomposition\<close>
   \<open>polar_decomposition A = cblinfun_extension (range (abs_op A)) (\<lambda>\<psi>. A *\<^sub>V inv (abs_op A) \<psi>) o\<^sub>C\<^sub>L Proj (abs_op A *\<^sub>S top)\<close>
     for A :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner\<close>
 
 lemma 
   fixes A :: \<open>'a :: chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b :: chilbert_space\<close>
-  \<comment> \<open>@{cite conway00operator}, 3.9 Polar Decomposition\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, 3.9 Polar Decomposition\<close>
   shows polar_decomposition_correct: \<open>polar_decomposition A o\<^sub>C\<^sub>L abs_op A = A\<close>
     and polar_decomposition_final_space: \<open>polar_decomposition A *\<^sub>S top = A *\<^sub>S top\<close> (* Should be more precise: range (polar_decomposition A) = closure (range A) *)
     and polar_decomposition_initial_space[simp]: \<open>kernel (polar_decomposition A) = kernel A\<close>
@@ -1069,8 +1068,8 @@ proof -
 qed
 
 
-(* TODO move to partial_isometry-theory *)
-(* TODO might replace partial_isometry_square_proj by this *) thm partial_isometry_square_proj
+(* TODO Potentially move to Complex_Bounded_Linear_Functions and replace partial_isometry_square_proj by this.
+        But the proof uses facts from this theory. *)
 lemma partial_isometry_iff_square_proj:
   \<comment> \<open>@{cite conway2013course}, Exercise VIII.3.15\<close>
   fixes A :: \<open>'a :: chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b :: chilbert_space\<close>
@@ -1107,7 +1106,6 @@ qed
 lemma abs_op_square: \<open>(abs_op A)* o\<^sub>C\<^sub>L abs_op A = A* o\<^sub>C\<^sub>L A\<close>
   by (simp add: abs_op_def positive_cblinfun_squareI positive_hermitianI)
 
-(* TODO move to polar_decomposition-definition theory *)
 lemma polar_decomposition_0[simp]: \<open>polar_decomposition 0 = (0 :: 'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space)\<close>
 proof -
   have \<open>polar_decomposition (0 :: 'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) *\<^sub>S \<top> = 0 *\<^sub>S \<top>\<close>
@@ -1116,7 +1114,6 @@ proof -
     by simp
 qed
 
-(* TODO move to polar_decomposition-definition theory *)
 lemma polar_decomposition_unique:
   fixes A :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
   assumes ker: \<open>kernel X = kernel A\<close>
