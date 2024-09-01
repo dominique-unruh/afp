@@ -1919,12 +1919,6 @@ lemma from_trace_class_sum:
   apply (induction M rule:infinite_finite_induct)
   by (simp_all add: plus_trace_class.rep_eq)
 
-(* TODO move *)
-lemma ex_norm1_not_singleton:
-  shows \<open>\<exists>x::'a::{real_normed_vector, not_singleton}. norm x = 1\<close>
-  apply (rule ex_norm1)
-  by simp
-
 
 lemma cblinfun_norm_is_Sup_cinner:
   \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.2.13\<close>
@@ -2945,7 +2939,7 @@ lemma cblinfun_cinner_eq0I:
   using assms by simp
 
 lemma normal_op_iff_adj_same_norms:
-(* TODO conway, func, Prop II.2.16 *)
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.2.16\<close>
   fixes a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
   shows \<open>normal_op a \<longleftrightarrow> (\<forall>h. norm (a h) = norm ((a*) h))\<close>
 proof -
@@ -2975,7 +2969,7 @@ qed
 
 
 lemma normal_op_same_eigenspace_as_adj:
-(* TODO inside proof: conway, func, Prop II.5.6 *)
+  \<comment> \<open>Shown inside the proof of \<^cite>\<open>"Proposition II.5.6" in conway2013course\<close>\<close>
   assumes \<open>normal_op a\<close>
   shows \<open>eigenspace l a = eigenspace (cnj l) (a* )\<close>
 proof -
@@ -3022,7 +3016,7 @@ qed
 
 
 lemma invariant_subspace_iff_PAP:
-(* TODO conway, func, prop II.3.7 (b) *)
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.3.7 (b)\<close>
   \<open>invariant_subspace S A \<longleftrightarrow> Proj S o\<^sub>C\<^sub>L A o\<^sub>C\<^sub>L Proj S = A o\<^sub>C\<^sub>L Proj S\<close>
 proof -
   define S' where \<open>S' = space_as_set S\<close>
@@ -3042,7 +3036,7 @@ proof -
 qed
 
 lemma reducing_iff_PA:
-(* TODO conway, func, prop II.3.7 (e) *)
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.3.7 (e)\<close>
   \<open>reducing_subspace S A \<longleftrightarrow> Proj S o\<^sub>C\<^sub>L A = A o\<^sub>C\<^sub>L Proj S\<close>
 proof (rule iffI)
   assume red: \<open>reducing_subspace S A\<close>
@@ -3077,7 +3071,7 @@ next
 qed
 
 lemma reducing_iff_also_adj_invariant:
-  (* TODO conway, func, prop II.3.7 (g)*)
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.3.7 (g)\<close>
   shows \<open>reducing_subspace S A \<longleftrightarrow> invariant_subspace S A \<and> invariant_subspace S (A*)\<close>
 proof (intro iffI conjI; (erule conjE)?)
   assume \<open>invariant_subspace S A\<close> and \<open>invariant_subspace S (A*)\<close>
@@ -3110,7 +3104,7 @@ next
 qed
 
 lemma eigenspace_is_reducing:
-  (* TODO conway, func, Prop II.5.6 *)
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.5.6\<close>
   assumes \<open>normal_op a\<close>
   shows \<open>reducing_subspace (eigenspace l a) a\<close>
 proof (unfold reducing_iff_also_adj_invariant invariant_subspace_def,
@@ -3234,7 +3228,7 @@ lemma selfadjoint_imp_normal: \<open>normal_op a\<close> if \<open>selfadjoint a
   using that by (simp add: selfadjoint_def normal_op_def)
 
 lemma eigenspaces_orthogonal:
-(* TODO conway, func, prop II.5.7 *)
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.5.7\<close>
   assumes \<open>e \<noteq> f\<close>
   assumes \<open>normal_op a\<close>
   shows \<open>orthogonal_spaces (eigenspace e a) (eigenspace f a)\<close>
@@ -3265,7 +3259,7 @@ definition largest_eigenvalue :: \<open>('a::complex_normed_vector \<Rightarrow>
 
 
 lemma eigenvalue_in_the_limit_compact_op:
-(* TODO Conway, Functional, Proposition II.4.14 *)
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.4.14\<close>
   assumes \<open>compact_op T\<close>
   assumes \<open>l \<noteq> 0\<close>
   assumes normh: \<open>\<And>n. norm (h n) = 1\<close>
@@ -3309,9 +3303,6 @@ proof -
     then show \<open>f \<noteq> 0\<close>
       by force
   qed
-(*  then have \<open>norm (inverse l *\<^sub>C f) = 1\<close>  (* TODO used? *)
-by -
- *)
   from lim_hn have \<open>(\<lambda>k. T (h (n k))) \<longlonglongrightarrow> T (inverse l *\<^sub>C f)\<close>
     apply (rule isCont_tendsto_compose[rotated])
     by force
@@ -3325,7 +3316,7 @@ qed
 
 
 lemma norm_is_eigenvalue:
-  (* TODO Cite: Conway, Functional, Lemma II.5.9 *)
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.5.9\<close>
   fixes a :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a::{not_singleton, chilbert_space}\<close>
   assumes \<open>compact_op a\<close>
   assumes \<open>selfadjoint a\<close>
@@ -3855,7 +3846,7 @@ lemma finite_rank_hilbert_schmidt: \<open>hilbert_schmidt a\<close> if \<open>fi
   using finite_rank_comp_right finite_rank_trace_class hilbert_schmidtI that by blast
 
 lemma hilbert_schmidt_norm_geq_norm:
-(* TODO cite conway operators, Prop 18.6(c) *)
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 18.6 (c)\<close>
   assumes \<open>hilbert_schmidt a\<close>
   shows \<open>norm a \<le> hilbert_schmidt_norm a\<close>
 proof -
@@ -3882,8 +3873,8 @@ qed
 
 lemma hilbert_schmidt_compact: \<open>compact_op a\<close> if \<open>hilbert_schmidt a\<close>
   for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
-  \<comment> \<open>(* TODO cite: conway operators *), Corollary 18.7.
-      (Only the second part. The first part is stated inside the proof though.)\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Corollary 18.7.
+      (Only the second part. The first part is stated inside this proof though.)\<close>
 proof -
   have \<open>\<exists>b. finite_rank b \<and> hilbert_schmidt_norm (b - a) < \<epsilon>\<close> if \<open>\<epsilon> > 0\<close> for \<epsilon>
   proof -
@@ -4198,7 +4189,7 @@ proof -
 qed
 
 lemma spectral_dec_val_eigenvalue_aux:
-(* TODO conway, functional, Thm II.5.1 *)
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Theorem II.5.1\<close>
   fixes a :: \<open>'a::{chilbert_space, not_singleton} \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
   assumes \<open>compact_op a\<close>
   assumes \<open>selfadjoint a\<close>
@@ -4226,7 +4217,7 @@ proof -
 qed
 
 lemma spectral_dec_val_eigenvalue:
-(* TODO conway, functional, Thm II.5.1 *)
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Theorem II.5.1\<close>
   fixes a :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a)\<close>
   assumes \<open>compact_op a\<close>
   assumes \<open>selfadjoint a\<close>
@@ -4894,8 +4885,6 @@ proof (intro rel_funI rel_setI)
   assume \<open>rel_set cr_trace_class B C\<close>
   then have BC: \<open>B = from_trace_class ` C\<close>
     by (auto intro!: simp: cr_trace_class_def image_iff rel_set_def)
-      (*     then have tc_B: \<open>B \<subseteq> Collect trace_class\<close> (* TODO used? *)
-      by auto *)
 
   show \<open>\<exists>t\<in>cspan C. cr_trace_class a t\<close> if \<open>a \<in> cspan B\<close> for a
   proof -

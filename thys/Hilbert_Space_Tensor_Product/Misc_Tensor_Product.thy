@@ -2283,5 +2283,10 @@ proof -
     using \<open>S \<subseteq> closure B\<close> \<open>countable B\<close> separable_def by blast
 qed
 
+lemma ex_norm1_not_singleton:
+  shows \<open>\<exists>x::'a::{real_normed_vector, not_singleton}. norm x = 1\<close>
+  apply (rule ex_norm1)
+  by simp
+
 
 end

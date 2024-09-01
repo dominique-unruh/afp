@@ -1,7 +1,7 @@
 section \<open>\<open>Weak_Operator_Topology\<close> -- Weak operator topology on complex bounded operators\<close>
 
 theory Weak_Operator_Topology
-  imports Misc_Tensor_Product Strong_Operator_Topology Positive_Operators
+  imports Misc_Tensor_Product Strong_Operator_Topology Positive_Operators Wlog.Wlog
 begin
 
 unbundle cblinfun_notation
@@ -55,8 +55,7 @@ lemma cweak_operator_topology_weaker_than_euclidean:
   by (metis (mono_tags, lifting) continuous_map_compose continuous_map_eq cstrong_operator_topology_weaker_than_euclidean wot_weaker_than_sot o_def)
 
 
-(* TODO rename *)
-lemma cweak_operator_topology_continuous_evaluation:
+lemma cweak_operator_topology_cinner_continuous:
   "continuous_map cweak_operator_topology euclidean (\<lambda>f. cinner x (f *\<^sub>V y))"
 proof -
   have "continuous_map cweak_operator_topology euclidean ((\<lambda>f. f (x,y)) o (\<lambda>a (x,y). cinner x (a *\<^sub>V y)))"
@@ -71,7 +70,7 @@ lemma continuous_on_cweak_operator_topo_iff_coordinatewise:
 proof (auto)
   fix x::'c and y::'b
   assume "continuous_map T cweak_operator_topology f"
-  with continuous_map_compose[OF this cweak_operator_topology_continuous_evaluation]
+  with continuous_map_compose[OF this cweak_operator_topology_cinner_continuous]
   have "continuous_map T euclidean ((\<lambda>f. cinner x (f *\<^sub>V y)) o f)"
     by simp
   then show "continuous_map T euclidean (\<lambda>z.  cinner x (f z *\<^sub>V y))"
@@ -207,7 +206,7 @@ proof intro_classes
   have *: \<open>continuous_map cweak_operator_topology cweak_operator_topology uminus\<close>
     apply (subst continuous_on_cweak_operator_topo_iff_coordinatewise)
     apply (rewrite at \<open>(\<lambda>z. x \<bullet>\<^sub>C (- z *\<^sub>V y))\<close> in \<open>\<forall>x y. \<hole>\<close> to \<open>(\<lambda>z. - x \<bullet>\<^sub>C (z *\<^sub>V y))\<close> DEADID.rel_mono_strong)
-    by (auto simp: cweak_operator_topology_continuous_evaluation cblinfun.minus_left cblinfun.minus_right)
+    by (auto simp: cweak_operator_topology_cinner_continuous cblinfun.minus_left cblinfun.minus_right)
   show \<open>(uminus \<longlongrightarrow> - a) (nhds a)\<close> for a :: \<open>('a,'b) cblinfun_wot\<close>
     apply (subst tendsto_at_iff_tendsto_nhds[symmetric])
     apply (subst isCont_def[symmetric])
@@ -536,24 +535,73 @@ proof
     by simp
 qed
 
-(* TODO: Conway, operator, 43.1(i,ii), but translated to filters *)
+
+lemma limitin_wot_add:
+  assumes \<open>limitin cweak_operator_topology f a F\<close>
+  assumes \<open>limitin cweak_operator_topology g b F\<close>
+  shows \<open>limitin cweak_operator_topology (\<lambda>x. f x + g x) (a + b) F\<close>
+proof -
+  have \<open>LIM x F. (f x, g x) :> nhdsin cweak_operator_topology a \<times>\<^sub>F nhdsin cweak_operator_topology b\<close>
+    apply (rule filterlim_Pair)
+    using assms by (simp_all add: filterlim_cweak_operator_topology)
+  then have \<open>LIM x F. case (f x, g x) of (x, y) \<Rightarrow> x + y :> nhdsin cweak_operator_topology (a + b)\<close>
+    apply (rule filterlim_compose[rotated])
+    by (rule cweak_operator_topology_plus_cont)
+  then show ?thesis
+    by (simp add: filterlim_cweak_operator_topology)
+qed
+
 lemma monotone_convergence_wot:
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 43.1 (i),(ii), but translated to filters.\<close>
   fixes f :: \<open>'b \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'a::chilbert_space)\<close>
   assumes bounded: \<open>\<forall>\<^sub>F x in F. f x \<le> B\<close>
-  assumes pos: \<open>\<forall>\<^sub>F x in F. f x \<ge> 0\<close> (* TODO can be removed wlog *)
   assumes increasing: \<open>increasing_filter (filtermap f F)\<close>
   shows \<open>\<exists>L. limitin cweak_operator_topology f L F\<close>
-proof (cases \<open>F = \<bottom>\<close>)
-  case True
-  then show ?thesis
-    by (auto intro!: exI limitin_trivial)
-next
-  case False
+proof -
+  wlog nontrivial: \<open>F \<noteq> \<bottom>\<close>
+    using negation by (auto intro!: limitin_trivial)
+  wlog pos: \<open>\<forall>\<^sub>F x in F. f x \<ge> 0\<close> generalizing f B keeping bounded increasing nontrivial
+  proof -
+    from increasing
+    have \<open>\<forall>\<^sub>F y in F. \<exists>L. limitin cweak_operator_topology f L F\<close>
+      unfolding increasing_filter_def eventually_filtermap
+    proof (rule eventually_mono)
+      fix x0
+      assume f_lower: \<open>\<forall>\<^sub>F x in F. f x0 \<le> f x\<close>
+      define g where \<open>g x = f x - f x0\<close> for x
+      from bounded
+      have bounded_g: \<open>\<forall>\<^sub>F x in F. g x \<le> B - f x0\<close>
+        apply (rule eventually_mono)
+        by (simp add: g_def)
+      from f_lower
+      have pos_g: \<open>\<forall>\<^sub>F x in F. g x \<ge> 0\<close>
+        apply (rule eventually_mono)
+        by (simp add: g_def)
+      from increasing
+      have increasing_g: \<open>increasing_filter (filtermap g F)\<close>
+        unfolding increasing_filter_def eventually_filtermap
+        apply (rule eventually_mono)
+        apply (erule eventually_mono)
+        by (simp add: g_def[abs_def])
+      obtain L where \<open>limitin cweak_operator_topology g L F\<close>
+        apply atomize_elim
+        using pos_g bounded_g increasing_g nontrivial by (rule hypothesis)
+      then have \<open>limitin cweak_operator_topology (\<lambda>x. g x + f x0) (L + f x0) F\<close>
+        apply (rule limitin_wot_add)
+        by simp
+      then have \<open>limitin cweak_operator_topology f (L + f x0) F\<close>
+        by (auto intro!: simp: g_def[abs_def])
+      then show \<open>\<exists>L. limitin cweak_operator_topology f L F\<close>
+        by auto
+    qed
+    then show ?thesis
+      by (simp add: nontrivial eventually_const)
+  qed
+
   define surround where \<open>surround \<psi> a = \<psi> \<bullet>\<^sub>C (a *\<^sub>V \<psi>)\<close> for \<psi> :: 'a and a
   have mono_surround: \<open>mono (surround \<psi>)\<close> for \<psi>
     by (auto intro!: monoI simp: surround_def less_eq_cblinfun_def)
-  obtain l' where  tendsto_l': \<open>((\<lambda>x. surround \<psi> (f x)) \<longlongrightarrow> l' \<psi>) F\<close>
-    (* and l'_bound: \<open>norm (l' \<psi>) \<le> norm B * (norm \<psi>)\<^sup>2\<close> *) for \<psi>
+  obtain l' where  tendsto_l': \<open>((\<lambda>x. surround \<psi> (f x)) \<longlongrightarrow> l' \<psi>) F\<close> for \<psi>
   proof (atomize_elim, intro choice allI)
     fix \<psi> :: 'a
     from bounded
@@ -568,45 +616,10 @@ next
       apply atomize_elim
       by (auto intro!: monotone_convergence_complex increasing mono_surround
           simp: eventually_filtermap)
-(*     then have \<open>l' \<le> surround \<psi> B\<close>
-      using surround_bound False by (rule tendsto_upperbound_complex)
-    then have \<open>norm l' \<le> norm (surround \<psi> B)\<close>
-      by -
-    also have \<open>\<dots> \<le> norm B * (norm \<psi>)\<^sup>2\<close>
-      using Cauchy_Schwarz_ineq2
-      apply (auto intro!: simp: surround_def )
-      by -
-    finally have \<open>norm l' \<le> norm B * (norm \<psi>)\<^sup>2\<close>
-      by simp
-    with tendsto *)
     then show \<open>\<exists>l'. ((\<lambda>x. surround \<psi> (f x)) \<longlongrightarrow> l') F\<close>
       by auto
   qed
   define l where \<open>l \<phi> \<psi> = (l' (\<phi>+\<psi>) - l' (\<phi>-\<psi>) - \<i> * l' (\<phi> + \<i> *\<^sub>C \<psi>) + \<i> * l' (\<phi> - \<i> *\<^sub>C \<psi>)) / 4\<close> for \<phi> \<psi> :: 'a
-(*   have \<open>norm (l \<phi> \<psi>) \<le> xxxx\<close> for \<phi> \<psi>
-  proof -
-    from l'_bound[of \<open>\<phi> + \<psi>\<close>]
-    have \<open>norm (l' (\<phi> + \<psi>)) \<le> norm B * (norm \<phi> + norm \<psi>)\<^sup>2\<close>
-      by (smt (verit, ccfv_SIG) mult_left_mono norm_ge_zero norm_triangle_ineq norm_zero power2_diff real_inner_class.parallelogram_law sum_squares_bound)
-    moreover from l'_bound[of \<open>\<phi> - \<psi>\<close>]
-    have \<open>norm (l' (\<phi> - \<psi>)) \<le> norm B * (norm \<phi> + norm \<psi>)\<^sup>2\<close>
-      by (smt (verit, ccfv_SIG) mult_left_mono norm_ge_zero norm_triangle_ineq4 norm_zero power2_diff real_inner_class.parallelogram_law sum_squares_bound)
-    moreover from l'_bound[of \<open>\<phi> + \<i> *\<^sub>C \<psi>\<close>]
-    have \<open>norm (l' (\<phi> + \<i> *\<^sub>C \<psi>)) \<le> norm B * (norm \<phi> + norm \<psi>)\<^sup>2\<close>
-      by -
-    moreover from l'_bound[of \<open>\<phi> - \<i> *\<^sub>C \<psi>\<close>]
-    have \<open>norm (l' (\<phi> - \<i> *\<^sub>C \<psi>)) \<le> norm B * (norm \<phi> + norm \<psi>)\<^sup>2\<close>
-      by -
-    ultimately have \<open>norm (l \<phi> \<psi>) \<le> norm B * (norm \<phi> + norm \<psi>)\<^sup>2\<close>
-      apply (auto intro!: simp: l_def)
-      by -
-    also have \<open>\<dots> \<le> norm B * norm \<phi> * norm \<psi>\<close>
-      (* ? ? ? *)
-      apply (auto intro!: simp: l_def)
-      by x
-    show ?thesis
-      by x
-  qed *)
   have polar: \<open>\<phi> \<bullet>\<^sub>C a \<psi> = (surround (\<phi>+\<psi>) a - surround (\<phi>-\<psi>) a - \<i> * surround (\<phi> + \<i> *\<^sub>C \<psi>) a + \<i> * surround (\<phi> - \<i> *\<^sub>C \<psi>) a) / 4\<close> for a :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a\<close> and \<phi> \<psi>
     by (simp add: surround_def cblinfun.add_right cinner_add cblinfun.diff_right 
         cinner_diff cblinfun.scaleC_right ring_distribs)
@@ -635,7 +648,7 @@ next
     have \<open>((\<lambda>x. norm (\<phi> \<bullet>\<^sub>C f x \<psi>)) \<longlongrightarrow> norm (l \<phi> \<psi>)) F\<close> for \<phi> \<psi>
       using tendsto_norm by blast
     ultimately show ?thesis
-      using False tendsto_upperbound by blast
+      using nontrivial tendsto_upperbound by blast
   qed
   have \<open>bounded_sesquilinear l\<close>
   proof (rule bounded_sesquilinear.intro)
@@ -645,25 +658,25 @@ next
     moreover from tendsto_l have \<open>((\<lambda>x. \<phi> \<bullet>\<^sub>C f x \<psi> + \<phi> \<bullet>\<^sub>C f x \<psi>') \<longlongrightarrow> l \<phi> (\<psi> + \<psi>')) F\<close>
       by (simp flip: cinner_add_right cblinfun.add_right)
     ultimately show \<open>l \<phi> (\<psi> + \<psi>') = l \<phi> \<psi> + l \<phi> \<psi>'\<close>
-      by (rule tendsto_unique[OF False, rotated])
+      by (rule tendsto_unique[OF nontrivial, rotated])
     from tendsto_l have \<open>((\<lambda>x. \<phi> \<bullet>\<^sub>C f x \<psi> + \<phi>' \<bullet>\<^sub>C f x \<psi>) \<longlongrightarrow> l \<phi> \<psi> + l \<phi>' \<psi>) F\<close>
       by (simp add: tendsto_add)
     moreover from tendsto_l have \<open>((\<lambda>x. \<phi> \<bullet>\<^sub>C f x \<psi> + \<phi>' \<bullet>\<^sub>C f x \<psi>) \<longlongrightarrow> l (\<phi> + \<phi>') \<psi>) F\<close>
       by (simp flip: cinner_add_left cblinfun.add_left)
     ultimately show \<open>l (\<phi> + \<phi>') \<psi> = l \<phi> \<psi> + l \<phi>' \<psi>\<close>
-      by (rule tendsto_unique[OF False, rotated])
+      by (rule tendsto_unique[OF nontrivial, rotated])
     from tendsto_l have \<open>((\<lambda>x. r *\<^sub>C (\<phi> \<bullet>\<^sub>C f x \<psi>)) \<longlongrightarrow> r *\<^sub>C l \<phi> \<psi>) F\<close>
       using tendsto_scaleC by blast
     moreover from tendsto_l have \<open>((\<lambda>x. r *\<^sub>C (\<phi> \<bullet>\<^sub>C f x \<psi>)) \<longlongrightarrow> l \<phi> (r *\<^sub>C \<psi>)) F\<close>
       by (simp flip: cinner_scaleC_right cblinfun.scaleC_right)
     ultimately show \<open>l \<phi> (r *\<^sub>C \<psi>) = r *\<^sub>C l \<phi> \<psi>\<close>
-      by (rule tendsto_unique[OF False, rotated])
+      by (rule tendsto_unique[OF nontrivial, rotated])
     from tendsto_l have \<open>((\<lambda>x. cnj r *\<^sub>C (\<phi> \<bullet>\<^sub>C f x \<psi>)) \<longlongrightarrow> cnj r *\<^sub>C l \<phi> \<psi>) F\<close>
       using tendsto_scaleC by blast
     moreover from tendsto_l have \<open>((\<lambda>x. cnj r *\<^sub>C (\<phi> \<bullet>\<^sub>C f x \<psi>)) \<longlongrightarrow> l (r *\<^sub>C \<phi>) \<psi>) F\<close>
       by (simp flip: cinner_scaleC_left cblinfun.scaleC_left)
     ultimately show \<open>l (r *\<^sub>C \<phi>) \<psi> = cnj r *\<^sub>C l \<phi> \<psi>\<close>
-      by (rule tendsto_unique[OF False, rotated])
+      by (rule tendsto_unique[OF nontrivial, rotated])
     show \<open>\<exists>K. \<forall>a b. cmod (l a b) \<le> norm a * norm b * K\<close>
       using l_bound by (auto intro!: exI[of _ \<open>norm B\<close>] simp: mult_ac)
   qed
@@ -847,7 +860,5 @@ qed
 
 lift_definition compose_wot :: \<open>('b::complex_inner,'c::complex_inner) cblinfun_wot \<Rightarrow> ('a::complex_normed_vector,'b) cblinfun_wot \<Rightarrow> ('a,'c) cblinfun_wot\<close> is
   cblinfun_compose.
-
-
 
 end
