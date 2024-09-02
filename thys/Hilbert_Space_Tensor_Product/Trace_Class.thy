@@ -163,7 +163,10 @@ lemma trace_class_0[simp]: \<open>trace_class 0\<close>
   using polar_decomposition_correct[of a] polar_decomposition_correct'[of a]
   by (simp add: cblinfun_compose_assoc) *)
 
-lemma trace_class_uminus[simp]: \<open>trace_class t \<Longrightarrow> trace_class (-t)\<close>
+lemma trace_class_uminus: \<open>trace_class t \<Longrightarrow> trace_class (-t)\<close>
+  by (auto simp add: trace_class_def)
+
+lemma trace_class_uminus_iff[simp]: \<open>trace_class (-a) = trace_class a\<close>
   by (auto simp add: trace_class_def)
 
 definition trace_norm where \<open>trace_norm A = (if trace_class A then (\<Sum>\<^sub>\<infinity>e\<in>some_chilbert_basis. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) else 0)\<close>
@@ -1475,7 +1478,7 @@ instantiation trace_class :: (chilbert_space, chilbert_space) "{complex_vector}"
 (* Lifted definitions *)
 lift_definition zero_trace_class :: \<open>('a,'b) trace_class\<close> is 0 by auto
 lift_definition minus_trace_class :: \<open>('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class\<close> is minus by auto
-lift_definition uminus_trace_class :: \<open>('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class\<close> is uminus by auto
+lift_definition uminus_trace_class :: \<open>('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class\<close> is uminus by simp
 lift_definition plus_trace_class :: \<open>('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class\<close> is plus by auto
 lift_definition scaleC_trace_class :: \<open>complex \<Rightarrow> ('a,'b) trace_class \<Rightarrow> ('a,'b) trace_class\<close> is scaleC
   by (metis (no_types, opaque_lifting) cblinfun_compose_id_right cblinfun_compose_scaleC_right mem_Collect_eq trace_class_comp_left)

@@ -361,8 +361,6 @@ next
       by simp_all
     have cont: \<open>continuous_map cstrong_operator_topology cstrong_operator_topology (\<lambda>b. a o\<^sub>C\<^sub>L b - b o\<^sub>C\<^sub>L a)\<close>
       by (intro continuous_intros continuous_map_left_comp_sot continuous_map_right_comp_sot)
-      (* TODO: Put continuous_map_left_comp_sot continuous_map_right_comp_sot into [continuous_intros]
-              (suitably rewritten) *)
     show ?thesis
       using closedin_vimage[OF closed_0 cont]
       by (simp add: comm_a)
@@ -2287,27 +2285,6 @@ instance trace_class :: (chilbert_space, chilbert_space) ordered_complex_vector
 lemma Abs_trace_class_geq0I: \<open>0 \<le> Abs_trace_class t\<close> if \<open>trace_class t\<close> and \<open>t \<ge> 0\<close>
   using that by (simp add: zero_trace_class.abs_eq less_eq_trace_class.abs_eq eq_onp_def)
 
-(* TODO replace original *) thm norm_leq_trace_norm
-lemma norm_leq_trace_norm: \<open>norm t \<le> trace_norm t\<close> if \<open>trace_class t\<close> 
-  for t :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
-proof (cases \<open>class.not_singleton TYPE('a)\<close>)
-  case True
-  show ?thesis
-    apply (rule norm_leq_trace_norm[internalize_sort' 'a, where t=t])
-    using that chilbert_space_axioms True by auto
-next
-  case False
-  then have x0: \<open>x = 0\<close> for x :: 'a
-    by (simp add: class.not_singleton_def)
-  have \<open>t = 0\<close>
-    apply (rule cblinfun_eqI)
-    apply (subst x0)
-    by simp
-  then show ?thesis 
-    by simp
-qed
-
-(* TODO move to Trace_Class *)
 lift_definition tc_compose :: \<open>('b::chilbert_space, 'c::chilbert_space) trace_class 
                                \<Rightarrow> ('a::chilbert_space, 'b) trace_class \<Rightarrow> ('a,'c) trace_class\<close> is
     cblinfun_compose
@@ -2431,9 +2408,6 @@ lemma abs_op_geq_neq: \<open>abs_op a \<ge> - a\<close> if \<open>selfadjoint a\
 lemma trace_norm_uminus[simp]: \<open>trace_norm (-a) = trace_norm a\<close>
   by (metis abs_op_uminus of_real_eq_iff trace_abs_op)
 
-(* TODO: remove [simp] from trace_class_uminus *)
-lemma trace_class_uminus_iff[simp]: \<open>trace_class (-a) =  trace_class a\<close>
-  by (auto simp add: trace_class_def)
 lemma trace_norm_triangle_minus: 
   fixes a b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
   assumes [simp]: \<open>trace_class a\<close> \<open>trace_class b\<close>
@@ -2605,7 +2579,6 @@ lemma sandwich_tc_scaleC_left: \<open>sandwich_tc (c *\<^sub>C e) t = (cmod c)^2
 lemma sandwich_tc_scaleR_left: \<open>sandwich_tc (r *\<^sub>R e) t = r^2 *\<^sub>R sandwich_tc e t\<close>
   by (simp add: scaleR_scaleC sandwich_tc_scaleC_left flip: of_real_power)
 
-(* TODO move *)
 lift_definition tc_tensor :: \<open>('a ell2, 'b ell2) trace_class \<Rightarrow> ('c ell2, 'd ell2) trace_class \<Rightarrow> 
       (('a \<times> 'c) ell2, ('b \<times> 'd) ell2) trace_class\<close> is
   tensor_op
@@ -2627,13 +2600,11 @@ lemma infsum_product':
   using assms
   by (simp add: abs_summable_times infsum_cmult_right infsum_cmult_left abs_summable_summable flip: infsum_Sigma'_banach)
 
-(* TODO move *)
 lemma trace_norm_tensor: \<open>trace_norm (a \<otimes>\<^sub>o b) = trace_norm a * trace_norm b\<close>
   apply (rule of_real_hom.injectivity[where 'a=complex])
   by (simp add: abs_op_tensor trace_tensor flip: trace_abs_op)
 
 
-(* TODO move *)
 lemma bounded_cbilinear_tc_tensor: \<open>bounded_cbilinear tc_tensor\<close>
   unfolding bounded_cbilinear_def
   apply transfer
@@ -2643,16 +2614,14 @@ lemmas bounded_clinear_tc_tensor_left[bounded_clinear] = bounded_cbilinear.bound
 lemmas bounded_clinear_tc_tensor_right[bounded_clinear] = bounded_cbilinear.bounded_clinear_right[OF bounded_cbilinear_tc_tensor]
 
 
-(* TODO move *)
 lemma bounded_cbilinear_tc_compose: \<open>bounded_cbilinear tc_compose\<close>
   unfolding bounded_cbilinear_def
   apply transfer
   apply (auto intro!: exI[of _ 1] simp: cblinfun_compose_add_left cblinfun_compose_add_right)
-  by (meson Unsorted_HSTP.norm_leq_trace_norm dual_order.trans mult_right_mono trace_norm_comp_right trace_norm_nneg)
+  by (meson norm_leq_trace_norm dual_order.trans mult_right_mono trace_norm_comp_right trace_norm_nneg)
 lemmas bounded_clinear_tc_compose_left[bounded_clinear] = bounded_cbilinear.bounded_clinear_left[OF bounded_cbilinear_tc_compose]
 lemmas bounded_clinear_tc_compose_right[bounded_clinear] = bounded_cbilinear.bounded_clinear_right[OF bounded_cbilinear_tc_compose]
 
-(* TODO move *)
 lemma tc_tensor_scaleC_left: \<open>tc_tensor (c *\<^sub>C a) b = c *\<^sub>C tc_tensor a b\<close>
   apply transfer'
   by (simp add: tensor_op_scaleC_left)
@@ -2660,22 +2629,18 @@ lemma tc_tensor_scaleC_right: \<open>tc_tensor a (c *\<^sub>C b) = c *\<^sub>C t
   apply transfer'
   by (simp add: tensor_op_scaleC_right)
   
-(* TODO move *)
 lemma comp_tc_tensor: \<open>tc_compose (tc_tensor a b) (tc_tensor c d) = tc_tensor (tc_compose a c) (tc_compose b d)\<close>
   apply transfer'
   by (rule comp_tensor_op)
 
-(* TODO move *)
 lift_definition tc_butterfly :: \<open>'a::chilbert_space \<Rightarrow> 'b::chilbert_space \<Rightarrow> ('b,'a) trace_class\<close>
   is butterfly
   by simp
 
-(* TODO move *)
 lemma norm_tc_butterfly: \<open>norm (tc_butterfly \<psi> \<phi>) = norm \<psi> * norm \<phi>\<close>
   apply (transfer fixing: \<psi> \<phi>)
   by (simp add: trace_norm_butterfly)
 
-(* TODO move *)
 lemma norm_tc_tensor: \<open>norm (tc_tensor a b) = norm a * norm b\<close>
   apply transfer'
   apply (rule of_real_hom.injectivity[where 'a=complex])
@@ -2695,7 +2660,6 @@ lemma infsum_single:
 
 
 
-(* TODO move *)
 lemma summable_on_diff:
   fixes f g :: "'a \<Rightarrow> 'b::real_normed_vector"  (* Can probably be shown for a much wider type class. *)
   assumes \<open>f summable_on A\<close>
@@ -2709,7 +2673,6 @@ lemma tc_tensor_pos: \<open>tc_tensor a b \<ge> 0\<close> if \<open>a \<ge> 0\<c
   using that apply transfer'
   by (rule tensor_op_pos)
 
-(* TODO move *)
 lemma tc_butterfly_pos[simp]: \<open>0 \<le> tc_butterfly \<psi> \<psi>\<close>
   apply transfer
   by simp
@@ -2752,7 +2715,6 @@ lemma eigenvalues_0[simp]: \<open>eigenvalues (0 :: 'a::{not_singleton,complex_n
   apply (auto intro!: simp: eigenvalues_def eigenspace_def)
   by (metis id_cblinfun_eq_1 kernel_id kernel_scaleC of_complex_def scaleC_minus1_left zero_ccsubspace_def zero_neq_neg_one)
 
-(* TODO move *)
 lemma nonzero_ccsubspace_contains_unit_vector:
   assumes \<open>S \<noteq> 0\<close>
   shows \<open>\<exists>\<psi>. \<psi> \<in> space_as_set S \<and> norm \<psi> = 1\<close>
@@ -2823,7 +2785,6 @@ proof -
     by -
 qed
 
-(* TODO move *)
 lemma is_Sup_imp_ex_tendsto:
   fixes X :: \<open>'a::{linorder_topology,first_countable_topology} set\<close>
   assumes sup: \<open>is_Sup X l\<close>
@@ -2894,7 +2855,6 @@ proof -
     by (simp add: eigenvalues_def)
 qed
 
-(* TODO move *)
 lemma tendsto_diff_const_left_rewrite:
   fixes c d :: \<open>'a::{topological_group_add, ab_group_add}\<close>
   assumes \<open>((\<lambda>x. f x) \<longlongrightarrow> c - d) F\<close>
@@ -2918,7 +2878,6 @@ proof auto
     by simp
 qed
 
-(* TODO move *)
 lemma csubspace_has_basis:
   assumes \<open>csubspace S\<close>
   shows \<open>\<exists>B. cindependent B \<and> cspan B = S\<close>
@@ -4523,7 +4482,6 @@ next
 qed
 
 
-(* TODO move *)
 lemma sequential_tendsto_reorder:
   assumes \<open>inj g\<close>
   assumes \<open>f \<longlonglongrightarrow> l\<close>
@@ -5512,7 +5470,6 @@ proof -
     by -
 qed
 
-(* TODO move *)
 lemma partial_trace_plus: \<open>partial_trace (t + u) = partial_trace t + partial_trace u\<close>
 proof -
   from partial_trace_has_sum[of t] and partial_trace_has_sum[of u]
