@@ -368,7 +368,6 @@ lemma limitin_cstrong_operator_topology:
   by (simp add: cstrong_operator_topology_def limitin_pullback_topology 
       tendsto_coordinatewise)
 
-(* TODO: can be generalized for more pullback topologies, I think *)
 lemma cstrong_operator_topology_in_closureI:
   assumes \<open>\<And>M \<epsilon>. \<epsilon> > 0 \<Longrightarrow> finite M \<Longrightarrow> \<exists>a\<in>A. \<forall>v\<in>M. norm ((b-a) *\<^sub>V v) \<le> \<epsilon>\<close>
   shows \<open>b \<in> cstrong_operator_topology closure_of A\<close>
@@ -572,6 +571,23 @@ lemma transfer_summable_on_sot[transfer_rule]:
   shows \<open>((R ===> cr_cblinfun_sot) ===> rel_set R ===> (\<longleftrightarrow>)) (summable_on_in cstrong_operator_topology) (summable_on)\<close>
   apply (simp add: summable_on_euclidean_eq[abs_def, symmetric])
   by transfer_prover
+
+
+lemma sandwich_sot_cont[continuous_intros]:
+  assumes \<open>continuous_map T cstrong_operator_topology f\<close>
+  shows \<open>continuous_map T cstrong_operator_topology (\<lambda>x. sandwich A (f x))\<close>
+  apply (simp add: sandwich_apply)
+  by (intro continuous_intros assms)
+
+lemma closed_map_sot_unitary_sandwich:
+  fixes U :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  assumes \<open>unitary U\<close> (* Probably holds under weaker assumptions. *)
+  shows \<open>closed_map cstrong_operator_topology cstrong_operator_topology (\<lambda>x. sandwich U x)\<close>
+  apply (rule closed_eq_continuous_inverse_map[where g=\<open>sandwich (U*)\<close>, THEN iffD2])
+  using assms 
+  by (auto intro!: continuous_intros
+      simp flip: sandwich_compose cblinfun_apply_cblinfun_compose)
+
 
 unbundle no_cblinfun_notation
 

@@ -589,48 +589,6 @@ proof (rule exI, intro conjI allI impI)
   qed
 qed
 
-lemma TODO_name:
-  \<comment> \<open>Proof follows \<^cite>\<open>wecken35linearer\<close>\<close>
-  assumes Aherm: \<open>A = A*\<close>
-  shows \<open>\<exists>E. is_Proj E \<and> (\<forall>F. A o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L A \<longrightarrow> A o\<^sub>C\<^sub>L E = E o\<^sub>C\<^sub>L A) 
-      \<and> A o\<^sub>C\<^sub>L E \<ge> 0 \<and> A o\<^sub>C\<^sub>L (id_cblinfun - E) \<le> 0 
-      \<and> (\<forall>f. A *\<^sub>V f = 0 \<longrightarrow> E *\<^sub>V f = f)\<close>
-proof -
-  obtain B where \<open>B \<ge> 0\<close> and B2A2: \<open>B o\<^sub>C\<^sub>L B = A* o\<^sub>C\<^sub>L A\<close> and AAF: \<open>A* o\<^sub>C\<^sub>L A o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L (A* o\<^sub>C\<^sub>L A) \<Longrightarrow> B o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L B\<close> for F
-    using sqrt_op_existence
-    by (meson positive_cblinfun_squareI sqrt_op_existence)
-  from \<open>B \<ge> 0\<close> have \<open>B = B*\<close>
-    by (simp add: comparable_hermitean[unfolded selfadjoint_def])
-  from AAF have \<open>B o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L B\<close> if \<open>A o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L A\<close> for F
-    by (metis assms cblinfun_assoc_left(1) that)
-  then have \<open>B o\<^sub>C\<^sub>L A = A o\<^sub>C\<^sub>L B\<close>
-    by blast
-  then obtain E where \<open>is_Proj E\<close>
-    and 1: \<open>A o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L A \<Longrightarrow> A o\<^sub>C\<^sub>L E = E o\<^sub>C\<^sub>L A\<close> 
-    and 3: \<open>A *\<^sub>V f = 0 \<Longrightarrow> E *\<^sub>V f = f\<close>
-    and A2EB: \<open>A = (2 *\<^sub>C E - id_cblinfun) o\<^sub>C\<^sub>L B\<close>
-  for F f
-    apply atomize_elim
-    using wecken35hilfssatz[where W=A and T=B]
-    by (metis B2A2 \<open>B = B*\<close> assms cblinfun_compose_minus_left cblinfun_compose_minus_right)
-  then have AE_BE: \<open>A o\<^sub>C\<^sub>L E = B o\<^sub>C\<^sub>L E\<close>
-    by (smt (verit, ccfv_SIG) \<open>B = B*\<close> \<open>is_Proj E\<close> add_right_imp_eq adj_cblinfun_compose adj_plus assms cblinfun_compose_add_left cblinfun_compose_assoc cblinfun_compose_id_right diff_add_cancel id_cblinfun_adjoint is_Proj_algebraic scaleC_2)
-  then have AmE_BmE: \<open>- A o\<^sub>C\<^sub>L (id_cblinfun - E) = B o\<^sub>C\<^sub>L (id_cblinfun - E)\<close>
-    apply (simp add: cblinfun_compose_minus_right)
-    by (smt (z3) A2EB \<open>B = B*\<close> \<open>is_Proj E\<close> add_diff_cancel_left' adj_cblinfun_compose adj_plus adj_uminus arith_special(3) assms cblinfun_compose_id_right cblinfun_compose_minus_right complex_vector.vector_space_assms(4) diff_0 diff_add_cancel diff_diff_eq2 id_cblinfun_adjoint is_Proj_algebraic pth_2 scaleC_left.add)
-  from AE_BE have Apos: \<open>A o\<^sub>C\<^sub>L E \<ge> 0\<close>
-    by (smt (verit, ccfv_threshold) 1 \<open>0 \<le> B\<close> \<open>is_Proj E\<close> cblinfun.zero_left cblinfun_apply_cblinfun_compose cinner_adj_right cinner_zero_right is_Proj_algebraic less_eq_cblinfun_def)
-  have "1'": \<open>- A o\<^sub>C\<^sub>L F = F o\<^sub>C\<^sub>L - A \<Longrightarrow> - A o\<^sub>C\<^sub>L (id_cblinfun - E) = (id_cblinfun - E) o\<^sub>C\<^sub>L - A\<close> and \<open>is_Proj (id_cblinfun - E)\<close> for F
-    apply (metis (no_types, opaque_lifting) "1" cblinfun_compose_id_left cblinfun_compose_id_right cblinfun_compose_minus_left cblinfun_compose_minus_right cblinfun_compose_scaleC_left cblinfun_compose_scaleC_right scaleC_minus1_left)
-    using \<open>is_Proj E\<close> is_Proj_complement by blast
-  from AmE_BmE have \<open>- A o\<^sub>C\<^sub>L (id_cblinfun - E) \<ge> 0\<close>
-    by (smt (verit, ccfv_threshold) "1'" \<open>0 \<le> B\<close> \<open>is_Proj (id_cblinfun - E)\<close> cblinfun.zero_left cblinfun_apply_cblinfun_compose cinner_adj_right cinner_zero_right is_Proj_algebraic less_eq_cblinfun_def)
-  then have Aneg: \<open>A o\<^sub>C\<^sub>L (id_cblinfun - E) \<le> 0\<close>
-    by (metis cblinfun_compose_scaleC_left neg_0_le_iff_le scaleC_minus1_left)
-  from Apos Aneg 1 3 \<open>is_Proj E\<close> show ?thesis
-    by auto
-qed
-
 lemma sqrt_op_pos[simp]: \<open>sqrt_op a \<ge> 0\<close>
 proof (cases \<open>a \<ge> 0\<close>)
   case True

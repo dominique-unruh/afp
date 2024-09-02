@@ -7,10 +7,8 @@ hide_fact (open) Infinite_Set_Sum.abs_summable_on_comparison_test
 hide_const (open) Determinants.trace
 hide_fact (open) Determinants.trace_def
 
-(* TODO: use compose_tcl/compose_tcr *)
 definition partial_trace :: \<open>(('a \<times> 'c) ell2, ('b \<times> 'c) ell2) trace_class \<Rightarrow> ('a ell2, 'b ell2) trace_class\<close> where
   \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. compose_tcl (compose_tcr ((tensor_ell2_right (ket j))*) t) (tensor_ell2_right (ket j)))\<close>
-  (* \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. Abs_trace_class ((tensor_ell2_right (ket j))* o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (tensor_ell2_right (ket j))))\<close> *)
 
 lemma partial_trace_def': \<open>partial_trace t = (\<Sum>\<^sub>\<infinity>j. sandwich_tc ((tensor_ell2_right (ket j))*) t)\<close>
 \<comment> \<open>We cannot use this as the definition of \<^const>\<open>partial_trace\<close> because this definition

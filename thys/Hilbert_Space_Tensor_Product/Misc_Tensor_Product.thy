@@ -11,8 +11,11 @@ begin
 
 unbundle lattice_syntax
 
-(* TODO explain *)
 lemma local_defE: "(\<And>x. x=y \<Longrightarrow> P) \<Longrightarrow> P" by metis
+    \<comment> \<open>A helper lemma to introduce a local ``definition`` in the current goal when backwards reasoning.
+        \<open>apply (rule local_defE[where x=\<open>stuff\<close>])\<close> will insert \<^term>\<open>x=stuff\<close> as a premise.
+        This can be useful before using \<open>apply transfer\<close> because it will introduce some 
+        additional knowledge about the properties of \<^term>\<open>x\<close> into the transferred goal.\<close>
 
 lemma inv_prod_swap[simp]: \<open>inv prod.swap = prod.swap\<close>
   by (simp add: inv_unique_comp)
