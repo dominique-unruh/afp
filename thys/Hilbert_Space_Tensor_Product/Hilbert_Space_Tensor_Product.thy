@@ -421,6 +421,191 @@ lemma tensor_ell2_extensionality3:
   apply (rule equal_ket, case_tac x, hypsubst_thin)
   by (simp add: assms flip: tensor_ell2_ket)
 
+lemma cblinfun_cinner_tensor_eqI:
+  assumes \<open>\<And>\<psi> \<phi>. (\<psi> \<otimes>\<^sub>s \<phi>) \<bullet>\<^sub>C (A *\<^sub>V (\<psi> \<otimes>\<^sub>s \<phi>)) = (\<psi> \<otimes>\<^sub>s \<phi>) \<bullet>\<^sub>C (B *\<^sub>V (\<psi> \<otimes>\<^sub>s \<phi>))\<close>
+  shows \<open>A = B\<close>
+proof -
+  define C where \<open>C = A - B\<close>
+  from assms have assmC: \<open>(\<psi> \<otimes>\<^sub>s \<phi>) \<bullet>\<^sub>C (C *\<^sub>V (\<psi> \<otimes>\<^sub>s \<phi>)) = 0\<close> for \<psi> \<phi>
+    by (simp add: C_def cblinfun.diff_left cinner_simps(3))
+
+  have \<open>(x \<otimes>\<^sub>s y) \<bullet>\<^sub>C (C *\<^sub>V (z \<otimes>\<^sub>s w)) = 0\<close> for x y z w
+  proof -
+    define d e f g h j k l m n p q
+      where defs: \<open>d = (x \<otimes>\<^sub>s y) \<bullet>\<^sub>C (C *\<^sub>V z \<otimes>\<^sub>s w)\<close>
+        \<open>e = (z \<otimes>\<^sub>s y) \<bullet>\<^sub>C (C *\<^sub>V x \<otimes>\<^sub>s y)\<close>
+        \<open>f = (x \<otimes>\<^sub>s w) \<bullet>\<^sub>C (C *\<^sub>V x \<otimes>\<^sub>s y)\<close>
+        \<open>g = (z \<otimes>\<^sub>s w) \<bullet>\<^sub>C (C *\<^sub>V x \<otimes>\<^sub>s y)\<close>
+        \<open>h = (x \<otimes>\<^sub>s y) \<bullet>\<^sub>C (C *\<^sub>V z \<otimes>\<^sub>s y)\<close>
+        \<open>j = (x \<otimes>\<^sub>s w) \<bullet>\<^sub>C (C *\<^sub>V z \<otimes>\<^sub>s y)\<close>
+        \<open>k = (z \<otimes>\<^sub>s w) \<bullet>\<^sub>C (C *\<^sub>V z \<otimes>\<^sub>s y)\<close>
+        \<open>l = (z \<otimes>\<^sub>s w) \<bullet>\<^sub>C (C *\<^sub>V x \<otimes>\<^sub>s w)\<close>
+        \<open>m = (x \<otimes>\<^sub>s y) \<bullet>\<^sub>C (C *\<^sub>V x \<otimes>\<^sub>s w)\<close>
+        \<open>n = (z \<otimes>\<^sub>s y) \<bullet>\<^sub>C (C *\<^sub>V x \<otimes>\<^sub>s w)\<close>
+        \<open>p = (z \<otimes>\<^sub>s y) \<bullet>\<^sub>C (C *\<^sub>V z \<otimes>\<^sub>s w)\<close>
+        \<open>q = (x \<otimes>\<^sub>s w) \<bullet>\<^sub>C (C *\<^sub>V z \<otimes>\<^sub>s w)\<close>
+
+    have constraint: \<open>cnj \<alpha> * e + cnj \<beta> * f + cnj \<beta> * cnj \<alpha> * g + \<alpha> * h + \<alpha> * cnj \<beta> * j +
+          \<alpha> * cnj \<beta> * cnj \<alpha> * k + \<beta> * m + \<beta> * cnj \<alpha> * n + \<beta> * cnj \<beta> * cnj \<alpha> * l +
+          \<beta> * \<alpha> * d + \<beta> * \<alpha> * cnj \<alpha> * p + \<beta> * \<alpha> * cnj \<beta> * q = 0\<close>
+      (is \<open>?lhs = _\<close>) for \<alpha> \<beta>
+    proof -
+      from assms 
+      have \<open>0 = ((x + \<alpha> *\<^sub>C z) \<otimes>\<^sub>s (y + \<beta> *\<^sub>C w)) \<bullet>\<^sub>C (C *\<^sub>V ((x + \<alpha> *\<^sub>C z) \<otimes>\<^sub>s (y + \<beta> *\<^sub>C w)))\<close>
+        by (simp add: assmC)
+      also have \<open>\<dots> = ?lhs\<close>
+        apply (simp add: tensor_ell2_add1 tensor_ell2_add2 cinner_add_right cinner_add_left
+            cblinfun.add_right tensor_ell2_scaleC1 tensor_ell2_scaleC2 semiring_class.distrib_left
+            cblinfun.scaleC_right
+            flip: add.assoc mult.assoc)
+        apply (simp add: assmC)
+        by (simp flip: defs)
+      finally show ?thesis
+        by simp
+    qed
+
+    have aux1: \<open>a = 0 \<Longrightarrow> b = 0 \<Longrightarrow> a + b = 0\<close> for a b :: complex
+      by auto
+    have aux2: \<open>a = 0 \<Longrightarrow> b = 0 \<Longrightarrow> a - b = 0\<close> for a b :: complex
+      by auto
+    have aux3: \<open>- (x * k) - x * j = x * (- k - j)\<close> for x k :: complex
+      by (simp add: right_diff_distrib')
+    have aux4: \<open>2 * a = 0 \<longleftrightarrow> a = 0\<close> for a :: complex
+      by auto
+    have aux5: \<open>8 = 2 * 2 * (2::complex)\<close>
+      by simp
+
+    from constraint[of 1 0]
+    have 1: \<open>e + h = 0\<close>
+      by simp
+    from constraint[of \<i> 0]
+    have 2: \<open>h = e\<close>
+      by simp
+    from 1 2
+    have [simp]: \<open>e = 0\<close> \<open>h = 0\<close>
+      by auto
+    from constraint[of 0 1]
+    have 3: \<open>f + m = 0\<close>
+      by simp
+    from constraint[of 0 \<i>]
+    have 4: \<open>m = f\<close>
+      by simp
+    from 3 4
+    have [simp]: \<open>m = 0\<close> \<open>f = 0\<close>
+      by auto
+    from constraint[of 1 1]
+    have 5: \<open>g + j + k + n + l + d + p + q = 0\<close>
+      by simp
+    from constraint[of 1 \<open>-1\<close>]
+    have 6: \<open>- g - j - k - n + l - d - p + q = 0\<close>
+      by simp
+    from aux1[OF 5 6]
+    have 7: \<open>l + q = 0\<close>
+      apply simp
+      by (metis distrib_left_numeral mult_eq_0_iff zero_neq_numeral)
+    from aux2[OF 5 7]
+    have 8: \<open>g + j + k + n + d + p = 0\<close>
+      by (simp add: algebra_simps)
+    from constraint[of 1 \<i>]
+    have 9: \<open>- (\<i> * g) - \<i> * j - \<i> * k + \<i> * n + l + \<i> * d + \<i> * p + q = 0\<close>
+      by simp
+    from constraint[of 1 \<open>-\<i>\<close>]
+    have 10: \<open>\<i> * g + \<i> * j + \<i> * k - \<i> * n + l - \<i> * d - \<i> * p + q = 0\<close>
+      by simp
+    from aux2[OF 9 10]
+    have 11: \<open>n + d + p - k - j - g = 0\<close>
+      apply (simp add: aux3 flip: right_diff_distrib semiring_class.distrib_left distrib_left_numeral 
+          del: mult_minus_right right_diff_distrib_numeral)
+      by (simp add: algebra_simps)
+    from aux2[OF 8 11]
+    have 12: \<open>g + j + k = 0\<close>
+      apply (simp add: aux3 flip: right_diff_distrib semiring_class.distrib_left distrib_left_numeral 
+          del: mult_minus_right right_diff_distrib_numeral)
+      by (simp add: algebra_simps)
+    from aux1[OF 8 11]
+    have 13: \<open>n + d + p = 0\<close>
+      apply simp
+      using 12 8 by fastforce
+    from constraint[of \<i> 1]
+    have 14: \<open>\<i> * j - \<i> * g + k - \<i> * n - \<i> * l + \<i> * d + p + \<i> * q = 0\<close>
+      by simp
+    from constraint[of \<i> \<open>-1\<close>]
+    have 15: \<open>\<i> * g - \<i> * j - k + \<i> * n - \<i> * l - \<i> * d - p + \<i> * q = 0\<close>
+      by simp
+    from aux1[OF 14 15]
+    have [simp]: \<open>q = l\<close>
+      by simp
+    from 7
+    have [simp]: \<open>q = 0\<close> \<open>l = 0\<close>
+      by auto
+    from 14
+    have 16: \<open>\<i> * j - \<i> * g + k - \<i> * n + \<i> * d + p = 0\<close>
+      by simp
+    from constraint[of \<open>-\<i>\<close> 1]
+    have 17: \<open>\<i> * g - \<i> * j + k + \<i> * n - \<i> * d + p = 0\<close>
+      by simp
+    from aux1[OF 16 17]
+    have [simp]: \<open>k = - p\<close>
+      apply simp
+      by (metis add_eq_0_iff2 add_scale_eq_noteq is_num_normalize(8) mult_2 zero_neq_numeral)
+    from aux2[OF 16 17]
+    have 18: \<open>j + d - n - g = 0\<close>
+      apply (simp add: aux3 flip: right_diff_distrib semiring_class.distrib_left distrib_left_numeral 
+          del: mult_minus_right right_diff_distrib_numeral)
+      by (simp add: algebra_simps)
+    from constraint[of \<open>-\<i>\<close> 1]
+    have 19: \<open>\<i> * g - \<i> * j + \<i> * n - \<i> * d = 0\<close>
+      by (simp add: algebra_simps)
+    from constraint[of \<open>-\<i>\<close> \<open>-1\<close>]
+    have 20: \<open>\<i> * j - \<i> * g - \<i> * n + \<i> * d = 0\<close>
+      by (simp add: algebra_simps)
+    from constraint[of \<i> \<i>]
+    have 21: \<open>j - g + n - d + 2 * \<i> * p = 0\<close>
+      by (simp add: algebra_simps)
+    from constraint[of \<i> \<open>-\<i>\<close>]
+    have 22: \<open>g - j - n + d - 2 * \<i> * p = 0\<close>
+      by (simp add: algebra_simps)
+    from constraint[of 2 1]
+    have 23: \<open>g + j + n + d = 0\<close>
+      apply simp
+      by (metis "12" "13" \<open>k = - p\<close> add_eq_0_iff2 is_num_normalize(1))
+    from aux2[OF 23 18]
+    have [simp]: \<open>g = - n\<close>
+      apply simp
+      by (simp only: aux4 add_eq_0_iff2 flip: distrib_left)
+    from 23
+    have [simp]: \<open>j = - d\<close>
+      by (simp add: add_eq_0_iff2)
+    from constraint[of 2 \<i>]
+    have 24: \<open>2 * p + d + n = 0\<close>
+      apply simp
+      apply (simp only: aux5 aux4 add_eq_0_iff2 flip: distrib_left)
+      by (smt (z3) "13" add.commute add_cancel_right_left add_eq_0_iff2 complex_i_not_zero eq_num_simps(6) more_arith_simps(8) mult_2 mult_right_cancel no_zero_divisors num.distinct(1) numeral_Bit0 numeral_eq_iff)
+    from aux2[OF 24 13]
+    have [simp]: \<open>p = 0\<close>
+      by simp
+    then have [simp]: \<open>k = 0\<close>
+      by auto
+    from 12
+    have \<open>g = - j\<close>
+      by simp
+    from 21
+    have \<open>d = - g\<close>
+      by auto
+
+    show \<open>d = 0\<close>
+      using refl[of d]
+      apply (subst (asm) \<open>d = - g\<close>)
+      apply (subst (asm) \<open>g = - j\<close>)
+      apply (subst (asm) \<open>j = - d\<close>)
+      by simp
+  qed
+  then show ?thesis
+    by (auto intro!: equal_ket cinner_ket_eqI
+        simp: C_def cblinfun.diff_left cinner_diff_right
+        simp flip: tensor_ell2_ket)
+qed
+
 
 subsection \<open>Tensor product of operators on \<^typ>\<open>_ ell2\<close>\<close>
 

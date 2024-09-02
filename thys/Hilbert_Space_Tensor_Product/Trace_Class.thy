@@ -1546,6 +1546,11 @@ proof standard
 qed
 end
 
+
+
+
+
+
 lemma trace_norm_comp_right:
   fixes a :: \<open>'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'c::chilbert_space\<close> and b :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
   assumes \<open>trace_class b\<close>
@@ -1977,6 +1982,27 @@ proof -
   qed
 qed
 
+lemma clinear_from_trace_class[iff]: \<open>clinear from_trace_class\<close>
+  apply (rule clinearI; transfer)
+  by auto
+
+lemma bounded_clinear_from_trace_class[bounded_clinear]:
+  \<open>bounded_clinear (from_trace_class :: ('a::chilbert_space,'b::chilbert_space) trace_class \<Rightarrow> _)\<close>
+proof (cases \<open>class.not_singleton TYPE('a)\<close>)
+  case True
+  show ?thesis
+    apply (rule bounded_clinearI[where K=1]; transfer)
+    by (auto intro!: norm_leq_trace_norm[internalize_sort' 'a] chilbert_space_axioms True)
+next
+  case False
+  then have zero: \<open>A = 0\<close> for A :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
+    by (rule not_not_singleton_cblinfun_zero)
+  show ?thesis
+    apply (rule bounded_clinearI[where K=1])
+    by (subst zero, simp)+
+qed
+
+
 instantiation trace_class :: (chilbert_space, chilbert_space) order begin
 lift_definition less_eq_trace_class :: \<open>('a, 'b) trace_class \<Rightarrow> ('a, 'b) trace_class \<Rightarrow> bool\<close> is
   less_eq.
@@ -2066,5 +2092,82 @@ lemma norm_sandwich_tc: \<open>norm (sandwich_tc e t) \<le> (norm e)^2 * norm t\
 lemma sandwich_tc_pos: \<open>sandwich_tc e t \<ge> 0\<close> if \<open>t \<ge> 0\<close>
   using that apply (transfer fixing: e)
   by (simp add: sandwich_pos)
+
+lemma trace_norm_bounded:
+  fixes A B :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
+  assumes \<open>A \<ge> 0\<close> and \<open>trace_class B\<close>
+  assumes \<open>A \<le> B\<close>
+  shows \<open>trace_class A\<close>
+proof -
+  have \<open>(\<lambda>x. x \<bullet>\<^sub>C (B *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
+    by (metis assms(2) is_onb_some_chilbert_basis summable_on_iff_abs_summable_on_complex trace_exists)
+  then have \<open>(\<lambda>x. x \<bullet>\<^sub>C (A *\<^sub>V x)) abs_summable_on some_chilbert_basis\<close>
+    apply (rule abs_summable_on_comparison_test)
+    using \<open>A \<ge> 0\<close> \<open>A \<le> B\<close>
+    by (auto intro!: cmod_mono cinner_pos_if_pos simp: abs_op_id_on_pos less_eq_cblinfun_def)
+  then show ?thesis
+    by (auto intro!: trace_classI[OF is_onb_some_chilbert_basis] simp: abs_op_id_on_pos \<open>A \<ge> 0\<close>)
+qed
+
+lemma trace_norm_cblinfun_mono:
+  fixes A B :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
+  assumes \<open>A \<ge> 0\<close> and \<open>trace_class B\<close>
+  assumes \<open>A \<le> B\<close>
+  shows \<open>trace_norm A \<le> trace_norm B\<close>
+proof -
+  from assms have \<open>trace_class A\<close>
+    by (rule trace_norm_bounded)
+  from \<open>A \<le> B\<close> and \<open>A \<ge> 0\<close>
+  have \<open>B \<ge> 0\<close>
+    by simp
+  have \<open>cmod (x \<bullet>\<^sub>C (abs_op A *\<^sub>V x)) \<le> cmod (x \<bullet>\<^sub>C (abs_op B *\<^sub>V x))\<close> for x
+    using \<open>A \<le> B\<close>
+    unfolding less_eq_cblinfun_def
+    using \<open>A \<ge> 0\<close> \<open>B \<ge> 0\<close> 
+    by (auto intro!: cmod_mono cinner_pos_if_pos simp: abs_op_id_on_pos)
+  then show \<open>trace_norm A \<le> trace_norm B\<close>
+    using \<open>trace_class A\<close> \<open>trace_class B\<close>
+    by (auto intro!: infsum_mono 
+        simp add: trace_norm_def trace_class_iff_summable[OF is_onb_some_chilbert_basis])
+qed
+
+
+
+lemma norm_cblinfun_mono_trace_class:
+  fixes A B :: \<open>('a::chilbert_space, 'a) trace_class\<close>
+  assumes \<open>A \<ge> 0\<close>
+  assumes \<open>A \<le> B\<close>
+  shows \<open>norm A \<le> norm B\<close>
+  using assms
+  apply transfer
+  apply (rule trace_norm_cblinfun_mono)
+  by auto
+
+lemma trace_norm_butterfly: \<open>trace_norm (butterfly a b) = (norm a) * (norm b)\<close>
+  for a b :: \<open>_ :: chilbert_space\<close>
+proof -
+  have \<open>trace_norm (butterfly a b) = trace (abs_op (butterfly a b))\<close>
+    by (simp flip: trace_abs_op)
+  also have \<open>\<dots> = (norm a / norm b) * trace (selfbutter b)\<close>
+    by (simp add: abs_op_butterfly scaleR_scaleC trace_scaleC del: trace_abs_op)
+  also have \<open>\<dots> = (norm a / norm b) * trace ((vector_to_cblinfun b :: complex \<Rightarrow>\<^sub>C\<^sub>L _)* o\<^sub>C\<^sub>L vector_to_cblinfun b)\<close>
+    apply (subst butterfly_def)
+    apply (subst circularity_of_trace)
+    by simp_all
+  also have \<open>\<dots> = (norm a / norm b) * (b \<bullet>\<^sub>C b)\<close>
+    by simp
+  also have \<open>\<dots> = (norm a) * (norm b)\<close>
+    by (simp add: cdot_square_norm power2_eq_square)
+  finally show ?thesis
+    using of_real_eq_iff by blast
+qed
+
+
+lemma from_trace_class_sum:
+  shows \<open>from_trace_class (\<Sum>x\<in>M. f x) = (\<Sum>x\<in>M. from_trace_class (f x))\<close>
+  apply (induction M rule:infinite_finite_induct)
+  by (simp_all add: plus_trace_class.rep_eq)
+
+
 
 end

@@ -422,6 +422,12 @@ proof -
     by -
 qed
 
+lemma commutant_cspan: \<open>commutant (cspan A) = commutant A\<close>
+  by (meson basic_trans_rules(24) commutant_antimono complex_vector.span_superset cspan_in_double_commutant dual_order.trans)
+
+lemma double_commutant_grows': \<open>x \<in> X \<Longrightarrow> x \<in> commutant (commutant X)\<close>
+  using double_commutant_grows by blast
+
 
 
 subsection \<open>Double commutant theorem\<close>
@@ -1009,6 +1015,25 @@ qed
 
 hide_fact double_commutant_theorem_aux double_commutant_theorem_aux2
 
+lemma double_commutant_theorem_span:
+  fixes A :: \<open>('a::{chilbert_space} \<Rightarrow>\<^sub>C\<^sub>L 'a) set\<close>
+  assumes mult: \<open>\<And>a a'. a \<in> A \<Longrightarrow> a' \<in> A \<Longrightarrow> a o\<^sub>C\<^sub>L a' \<in> A\<close>
+  assumes id: \<open>id_cblinfun \<in> A\<close>
+  assumes adj: \<open>\<And>a. a \<in> A \<Longrightarrow> a* \<in> A\<close>
+  shows \<open>commutant (commutant A) = cstrong_operator_topology closure_of (cspan A)\<close>
+proof -
+  have \<open>commutant (commutant A) = commutant (commutant (cspan A))\<close>
+    by (simp add: commutant_cspan)
+  also have \<open>\<dots> = cstrong_operator_topology closure_of (cspan A)\<close>
+    apply (rule double_commutant_theorem)
+    using assms
+    apply (auto simp: cspan_compose_closed cspan_adj_closed)
+    using complex_vector.span_clauses(1) by blast
+  finally show ?thesis
+    by -
+qed
+
+
 subsection \<open>Von Neumann Algebras\<close>
 
 definition one_algebra :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'a::chilbert_space) set\<close> where
@@ -1263,6 +1288,58 @@ qed
 lemma double_commutant_in_vn_algI: \<open>commutant (commutant X) \<subseteq> Y\<close>
   if \<open>von_neumann_algebra Y\<close> and \<open>X \<subseteq> Y\<close>
   by (metis commutant_antimono that(1) that(2) von_neumann_algebra_def)
+
+lemma von_neumann_algebra_compose:
+  assumes \<open>von_neumann_algebra M\<close>
+  assumes \<open>x \<in> M\<close> and \<open>y \<in> M\<close>
+  shows \<open>x o\<^sub>C\<^sub>L y \<in> M\<close>
+  using assms apply (auto simp: von_neumann_algebra_def commutant_def)
+  by (metis (no_types, lifting) assms(1) commutant_mult von_neumann_algebra_def)
+
+lemma von_neumann_algebra_id:
+  assumes \<open>von_neumann_algebra M\<close>
+  shows \<open>id_cblinfun \<in> M\<close>
+  using assms by (auto simp: von_neumann_algebra_def)
+
+lemma tensor_vn_UNIV[simp]: \<open>UNIV \<otimes>\<^sub>v\<^sub>N UNIV = (UNIV :: (('a\<times>'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L _) set)\<close>
+proof -
+  have \<open>(UNIV \<otimes>\<^sub>v\<^sub>N UNIV :: (('a\<times>'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L _) set) = 
+        commutant (commutant (range (\<lambda>a. a \<otimes>\<^sub>o id_cblinfun) \<union> range (\<lambda>a. id_cblinfun \<otimes>\<^sub>o a)))\<close> (is \<open>_ = ?rhs\<close>)
+    by (simp add: tensor_vn_def commutant_cspan)
+  also have \<open>\<dots> \<supseteq> commutant (commutant {a \<otimes>\<^sub>o b |a b. True})\<close> (is \<open>_ \<supseteq> \<dots>\<close>)
+  proof (rule double_commutant_in_vn_algI)
+    show vn: \<open>von_neumann_algebra ?rhs\<close>
+      by (metis calculation von_neumann_algebra_UNIV von_neumann_algebra_tensor_vn)
+    show \<open>{a \<otimes>\<^sub>o b |(a :: 'a ell2 \<Rightarrow>\<^sub>C\<^sub>L _) (b :: 'b ell2 \<Rightarrow>\<^sub>C\<^sub>L _). True} \<subseteq> ?rhs\<close>
+    proof (rule subsetI)
+      fix x :: \<open>('a \<times> 'b) ell2 \<Rightarrow>\<^sub>C\<^sub>L ('a \<times> 'b) ell2\<close>
+      assume \<open>x \<in> {a \<otimes>\<^sub>o b |a b. True}\<close>
+      then obtain a b where \<open>x = a \<otimes>\<^sub>o b\<close>
+        by auto
+      then have \<open>x = (a \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o b)\<close>
+        by (simp add: comp_tensor_op)
+      also have \<open>\<dots> \<in> ?rhs\<close>
+      proof -
+        have \<open>a \<otimes>\<^sub>o id_cblinfun \<in> ?rhs\<close>
+          by (auto intro!: double_commutant_grows')
+        moreover have \<open>id_cblinfun \<otimes>\<^sub>o b \<in> ?rhs\<close>
+          by (auto intro!: double_commutant_grows')
+        ultimately show ?thesis
+          using commutant_mult by blast
+      qed
+      finally show \<open>x \<in> ?rhs\<close>
+        by -
+    qed
+  qed
+  also have \<open>\<dots> = cstrong_operator_topology closure_of (cspan {a \<otimes>\<^sub>o b |a b. True})\<close>
+    apply (rule double_commutant_theorem_span)
+      apply (auto simp: comp_tensor_op tensor_op_adjoint)
+    using tensor_id[symmetric] by blast+
+  also have \<open>\<dots> = UNIV\<close>
+    using tensor_op_dense by blast
+  finally show ?thesis
+    by auto
+qed
 
 
 

@@ -514,33 +514,6 @@ proof -
     by (auto intro!: compact_op_plus compact_op_scaleC intro: rank1_compact_op)
 qed
 
-lemma norm_cblinfun_bound_unit:
-  assumes \<open>b \<ge> 0\<close>
-  assumes \<open>\<And>\<psi>. norm \<psi> = 1 \<Longrightarrow> norm (a *\<^sub>V \<psi>) \<le> b\<close>
-  shows \<open>norm a \<le> b\<close>
-proof (rule norm_cblinfun_bound)
-  from assms show \<open>b \<ge> 0\<close> by simp
-  fix x
-  show \<open>norm (a *\<^sub>V x) \<le> b * norm x\<close>
-  proof (cases \<open>x = 0\<close>)
-    case True
-    then show ?thesis by simp
-  next
-    case False
-    have \<open>norm (a *\<^sub>V x) = norm (a *\<^sub>V (norm x *\<^sub>C sgn x))\<close>
-      by simp
-    also have \<open>\<dots> = norm (a *\<^sub>V sgn x) * norm x\<close>
-      by (simp add: cblinfun.scaleC_right del: norm_scaleC_sgn)
-    also have \<open>\<dots> \<le> (b * norm (sgn x)) * norm x\<close>
-      by (simp add: assms(2) norm_sgn)
-    also have \<open>\<dots> = b * norm x\<close>
-      by (simp add: norm_sgn)
-    finally show ?thesis 
-      by -
-  qed
-qed
-
-
 lemma bounded_products_sot_lim_imp_lim:
   \<comment> \<open>Implicit in the proof of \<^cite>\<open>conway2013course\<close>, Proposition II.4.4 (c)\<close>
   fixes A :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
@@ -643,6 +616,7 @@ proof -
     qed
   qed
 qed
+
 
 lemma compact_op_finite_rank: 
   fixes A :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
@@ -1181,6 +1155,7 @@ proof (rule Set.equalityI)
       by -
   qed
 qed
+
 
 subsection \<open>Spectral decomposition\<close>
 

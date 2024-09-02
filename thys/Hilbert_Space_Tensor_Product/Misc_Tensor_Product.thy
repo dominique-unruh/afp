@@ -2291,5 +2291,23 @@ lemma ex_norm1_not_singleton:
   apply (rule ex_norm1)
   by simp
 
+lemma is_Sup_approx_below:
+  fixes b :: \<open>'a::linordered_ab_group_add\<close>
+  assumes \<open>is_Sup A b\<close>
+  assumes \<open>\<epsilon> > 0\<close>
+  shows \<open>\<exists>x\<in>A. b - \<epsilon> \<le> x\<close>
+proof (rule ccontr)
+  assume \<open>\<not> (\<exists>x\<in>A. b - \<epsilon> \<le> x)\<close>
+  then have \<open>b - \<epsilon> \<ge> x\<close> if \<open>x \<in> A\<close> for x
+    using that by auto
+  with assms
+  have \<open>b \<le> b - \<epsilon>\<close>
+    by (simp add: is_Sup_def)
+  with \<open>\<epsilon> > 0\<close>
+  show False
+    by simp
+qed
+
+
 
 end

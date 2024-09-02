@@ -1140,5 +1140,8 @@ proof -
     by force
 qed
 
+lemma sandwich_mono: \<open>sandwich A B \<le> sandwich A C\<close> if \<open>B \<le> C\<close>
+  by (metis cblinfun.real.diff_right diff_ge_0_iff_ge sandwich_pos that)
+
 
 end
