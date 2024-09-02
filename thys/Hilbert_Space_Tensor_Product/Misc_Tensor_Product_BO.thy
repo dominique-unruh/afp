@@ -232,5 +232,50 @@ next
     using \<open>\<epsilon> > 0\<close> by simp
 qed
 
+lemma has_sum_mono_neutral_cblinfun:
+  fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
+  assumes \<open>(f has_sum a) A\<close> and "(g has_sum b) B"
+  assumes \<open>\<And>x. x \<in> A\<inter>B \<Longrightarrow> f x \<le> g x\<close>
+  assumes \<open>\<And>x. x \<in> A-B \<Longrightarrow> f x \<le> 0\<close>
+  assumes \<open>\<And>x. x \<in> B-A \<Longrightarrow> g x \<ge> 0\<close>
+  shows "a \<le> b"
+proof -
+  from assms 
+  have sum_hfh: \<open>((\<lambda>x. h \<bullet>\<^sub>C f x h) has_sum h \<bullet>\<^sub>C a h) A\<close> for h
+    by (intro has_sum_cinner_left has_sum_cblinfun_apply_left)
+  from assms
+  have sum_hgh: \<open>((\<lambda>x. h \<bullet>\<^sub>C g x h) has_sum h \<bullet>\<^sub>C b h) B\<close> for h
+    by (intro has_sum_cinner_left has_sum_cblinfun_apply_left)
+  from sum_hfh sum_hgh
+  have \<open>h \<bullet>\<^sub>C a h \<le> h \<bullet>\<^sub>C b h\<close> for h
+    apply (rule has_sum_mono_neutral_complex)
+    using assms
+    by (auto intro!: simp: less_eq_cblinfun_def)
+  then show \<open>a \<le> b\<close>
+    by (simp add: less_eq_cblinfun_def)
+qed
+
+lemma sums_mono_cblinfun:
+  fixes f :: "nat \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
+  assumes \<open>f sums a\<close> and "g sums b"
+  assumes \<open>\<And>n. f n \<le> g n\<close>
+  shows "a \<le> b"
+proof (rule cblinfun_leI)
+  fix h
+  from \<open>f sums a\<close>
+  have sum1: \<open>(\<lambda>n. h \<bullet>\<^sub>C (f n *\<^sub>V h)) sums (h \<bullet>\<^sub>C (a *\<^sub>V h))\<close>
+    apply (rule bounded_linear.sums[rotated])
+    using bounded_clinear.bounded_linear bounded_clinear_cinner_right bounded_linear_compose cblinfun.real.bounded_linear_left by blast 
+  from \<open>g sums b\<close>
+  have sum2: \<open>(\<lambda>n. h \<bullet>\<^sub>C (g n *\<^sub>V h)) sums (h \<bullet>\<^sub>C (b *\<^sub>V h))\<close>
+    apply (rule bounded_linear.sums[rotated])
+    by (metis bounded_linear_compose cblinfun.real.bounded_linear_left cblinfun.real.bounded_linear_right cblinfun_cinner_right.rep_eq) 
+  have \<open>h \<bullet>\<^sub>C (f n *\<^sub>V h) \<le> h \<bullet>\<^sub>C (g n *\<^sub>V h)\<close> for n
+    using assms(3) less_eq_cblinfun_def by auto 
+  with sum1 sum2
+  show \<open>h \<bullet>\<^sub>C (a *\<^sub>V h) \<le> h \<bullet>\<^sub>C (b *\<^sub>V h)\<close>
+    by (rule sums_le_complex[rotated])
+qed
+
 
 end

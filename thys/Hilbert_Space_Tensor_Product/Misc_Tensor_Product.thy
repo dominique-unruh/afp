@@ -2308,6 +2308,33 @@ proof (rule ccontr)
     by simp
 qed
 
+lemma sums_le_complex: 
+  fixes f g :: "nat \<Rightarrow> complex"
+  assumes \<open>\<And>n. f n \<le> g n\<close>
+  assumes \<open>f sums s\<close>
+  assumes \<open>g sums t\<close>
+  shows \<open>s \<le> t\<close>
+proof -
+  have \<open>Re (f n) \<le> Re (g n)\<close> for n
+    by (simp add: Re_mono assms(1)) 
+  moreover have \<open>(\<lambda>n. Re (f n)) sums Re s\<close>
+    using assms(2) sums_Re by auto 
+  moreover have \<open>(\<lambda>n. Re (g n)) sums Re t\<close>
+    using assms(3) sums_Re by auto 
+  ultimately have re: \<open>Re s \<le> Re t\<close>
+    by (rule sums_le)
+  have \<open>Im (f n) = Im (g n)\<close> for n
+    by (simp add: assms(1) comp_Im_same) 
+  moreover have \<open>(\<lambda>n. Im (f n)) sums Im s\<close>
+    using assms(2) sums_Im by auto 
+  moreover have \<open>(\<lambda>n. Im (g n)) sums Im t\<close>
+    using assms(3) sums_Im by auto 
+  ultimately have im: \<open>Im s = Im t\<close>
+    using sums_unique2 by auto 
+  from re im show \<open>s \<le> t\<close>
+    using less_eq_complexI by auto 
+qed
+
 
 
 end

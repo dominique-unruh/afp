@@ -1143,5 +1143,51 @@ qed
 lemma sandwich_mono: \<open>sandwich A B \<le> sandwich A C\<close> if \<open>B \<le> C\<close>
   by (metis cblinfun.real.diff_right diff_ge_0_iff_ge sandwich_pos that)
 
+lemma sums_pos_cblinfun:
+  fixes f :: "nat \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
+  assumes \<open>f sums a\<close>
+  assumes \<open>\<And>n. f n \<ge> 0\<close>
+  shows "a \<ge> 0"
+  apply (rule sums_mono_cblinfun[where f=\<open>\<lambda>_. 0\<close> and g=f])
+  using assms by auto
+
+lemma has_sum_mono_cblinfun:
+  fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
+  assumes "(f has_sum x) A" and "(g has_sum y) A"
+  assumes \<open>\<And>x. x \<in> A \<Longrightarrow> f x \<le> g x\<close>
+  shows "x \<le> y"
+  using assms has_sum_mono_neutral_cblinfun by force
+
+lemma infsum_mono_cblinfun:
+  fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
+  assumes "f summable_on A" and "g summable_on A"
+  assumes \<open>\<And>x. x \<in> A \<Longrightarrow> f x \<le> g x\<close>
+  shows "infsum f A \<le> infsum g A"
+  by (meson assms has_sum_infsum has_sum_mono_cblinfun)
+
+lemma suminf_mono_cblinfun:
+  fixes f :: "nat \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
+  assumes "summable f" and "summable g"
+  assumes \<open>\<And>x. f x \<le> g x\<close>
+  shows "suminf f \<le> suminf g"
+  using assms sums_mono_cblinfun by blast 
+
+lemma suminf_pos_cblinfun:
+  fixes f :: "nat \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
+  assumes \<open>summable f\<close>
+  assumes \<open>\<And>x. f x \<ge> 0\<close>
+  shows "suminf f \<ge> 0"
+  using assms sums_mono_cblinfun by blast 
+
+
+lemma infsum_mono_neutral_cblinfun:
+  fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
+  assumes "f summable_on A" and "g summable_on B"
+  assumes \<open>\<And>x. x \<in> A\<inter>B \<Longrightarrow> f x \<le> g x\<close>
+  assumes \<open>\<And>x. x \<in> A-B \<Longrightarrow> f x \<le> 0\<close>
+  assumes \<open>\<And>x. x \<in> B-A \<Longrightarrow> g x \<ge> 0\<close>
+  shows "infsum f A \<le> infsum g B"
+  by (smt (verit, del_insts) assms(1) assms(2) assms(3) assms(4) assms(5) has_sum_infsum has_sum_mono_neutral_cblinfun)
+
 
 end

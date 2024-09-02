@@ -2169,5 +2169,52 @@ lemma from_trace_class_sum:
   by (simp_all add: plus_trace_class.rep_eq)
 
 
+lemma has_sum_mono_neutral_traceclass:
+  fixes f :: "'a \<Rightarrow> ('b::chilbert_space, 'b) trace_class"
+  assumes \<open>(f has_sum a) A\<close> and "(g has_sum b) B"
+  assumes \<open>\<And>x. x \<in> A\<inter>B \<Longrightarrow> f x \<le> g x\<close>
+  assumes \<open>\<And>x. x \<in> A-B \<Longrightarrow> f x \<le> 0\<close>
+  assumes \<open>\<And>x. x \<in> B-A \<Longrightarrow> g x \<ge> 0\<close>
+  shows "a \<le> b"
+proof -
+  from assms(1)
+  have \<open>((\<lambda>x. from_trace_class (f x)) has_sum from_trace_class a) A\<close>
+    apply (rule Infinite_Sum.has_sum_bounded_linear[rotated])
+    by (intro bounded_clinear_from_trace_class bounded_clinear.bounded_linear)
+  moreover
+  from assms(2)
+  have \<open>((\<lambda>x. from_trace_class (g x)) has_sum from_trace_class b) B\<close>
+    apply (rule Infinite_Sum.has_sum_bounded_linear[rotated])
+    by (intro bounded_clinear_from_trace_class bounded_clinear.bounded_linear)
+  ultimately have \<open>from_trace_class a \<le> from_trace_class b\<close>
+    apply (rule has_sum_mono_neutral_cblinfun)
+    using assms by (auto simp: less_eq_trace_class.rep_eq)
+  then show ?thesis
+    by (auto simp: less_eq_trace_class.rep_eq)
+qed
+
+lemma has_sum_mono_traceclass:
+  fixes f :: "'a \<Rightarrow> ('b::chilbert_space, 'b) trace_class"
+  assumes "(f has_sum x) A" and "(g has_sum y) A"
+  assumes \<open>\<And>x. x \<in> A \<Longrightarrow> f x \<le> g x\<close>
+  shows "x \<le> y"
+  using assms has_sum_mono_neutral_traceclass by force
+
+lemma infsum_mono_traceclass:
+  fixes f :: "'a \<Rightarrow> ('b::chilbert_space, 'b) trace_class"
+  assumes "f summable_on A" and "g summable_on A"
+  assumes \<open>\<And>x. x \<in> A \<Longrightarrow> f x \<le> g x\<close>
+  shows "infsum f A \<le> infsum g A"
+  by (meson assms has_sum_infsum has_sum_mono_traceclass)
+
+lemma infsum_mono_neutral_traceclass:
+  fixes f :: "'a \<Rightarrow> ('b::chilbert_space, 'b) trace_class"
+  assumes "f summable_on A" and "g summable_on B"
+  assumes \<open>\<And>x. x \<in> A\<inter>B \<Longrightarrow> f x \<le> g x\<close>
+  assumes \<open>\<And>x. x \<in> A-B \<Longrightarrow> f x \<le> 0\<close>
+  assumes \<open>\<And>x. x \<in> B-A \<Longrightarrow> g x \<ge> 0\<close>
+  shows "infsum f A \<le> infsum g B"
+  using assms(1) assms(2) assms(3) assms(4) assms(5) has_sum_mono_neutral_traceclass summable_iff_has_sum_infsum by blast
+
 
 end

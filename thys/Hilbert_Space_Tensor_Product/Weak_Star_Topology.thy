@@ -771,6 +771,14 @@ qed
 
 
 
+lemma infsum_mono_wot:
+  fixes f :: "'a \<Rightarrow> ('b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b)"
+  assumes "summable_on_in cweak_operator_topology f A" and "summable_on_in cweak_operator_topology g A"
+  assumes \<open>\<And>x. x \<in> A \<Longrightarrow> f x \<le> g x\<close>
+  shows "infsum_in cweak_operator_topology f A \<le> infsum_in cweak_operator_topology g A"
+  by (meson assms has_sum_in_infsum_in has_sum_mono_wot hausdorff_cweak_operator_topology)
+
+
 
 unbundle no_cblinfun_notation
 
