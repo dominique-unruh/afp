@@ -29,12 +29,12 @@ next
     using infsum_not_exists by auto
 qed
 
-(* TODO: conway, op, 18.1 Proposition (part) *)
-lemma TODO_name1:
+lemma basis_image_square_has_sum1:
+  \<comment> \<open>Half of \<^cite>\<open>\<open>Proposition 18.1\<close> in conway00operator\<close>, other half in \<open>basis_image_square_has_sum1\<close>.\<close>
   fixes E :: \<open>'a::complex_inner set\<close> and F :: \<open>'b::chilbert_space set\<close>
   assumes \<open>is_onb E\<close> and \<open>is_onb F\<close>
   shows \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E \<longleftrightarrow> ((\<lambda>(e,f). (cmod (f \<bullet>\<^sub>C (A *\<^sub>V e)))\<^sup>2) has_sum t) (E\<times>F)\<close>
-proof
+proof (rule iffI)
   assume asm: \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E\<close>
   have sum1: \<open>t = (\<Sum>\<^sub>\<infinity>e\<in>E. (norm (A *\<^sub>V e))\<^sup>2)\<close>
     using asm infsumI by blast
@@ -84,14 +84,14 @@ next
     using abs1 sum1 by auto
 qed
 
-(* TODO: \<^cite>\<open>conway00operator\<close>, op, 18.1 Proposition (2nd part) *)
-lemma TODO_name2:
+lemma basis_image_square_has_sum2:
+  \<comment> \<open>Half of \<^cite>\<open>\<open>Proposition 18.1\<close> in conway00operator\<close>, other half in @{thm [source] basis_image_square_has_sum1}.\<close>
   fixes E :: \<open>'a::chilbert_space set\<close> and F :: \<open>'b::chilbert_space set\<close>
   assumes \<open>is_onb E\<close> and \<open>is_onb F\<close>
   shows \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E \<longleftrightarrow> ((\<lambda>f. (norm (A* *\<^sub>V f))\<^sup>2) has_sum t) F\<close>
 proof -
   have \<open>((\<lambda>e. (norm (A *\<^sub>V e))\<^sup>2) has_sum t) E \<longleftrightarrow> ((\<lambda>(e,f). (cmod (f \<bullet>\<^sub>C (A *\<^sub>V e)))\<^sup>2) has_sum t) (E\<times>F)\<close>
-    using TODO_name1 assms by blast
+    using basis_image_square_has_sum1 assms by blast
   also have \<open>\<dots> \<longleftrightarrow> ((\<lambda>(e,f). (cmod ((A* *\<^sub>V f) \<bullet>\<^sub>C e))\<^sup>2) has_sum t) (E\<times>F)\<close>
     apply (subst cinner_adj_left)
     by (rule refl)
@@ -102,7 +102,7 @@ proof -
     by (auto simp: o_def)
   also have \<open>\<dots> \<longleftrightarrow> ((\<lambda>f. (norm (A* *\<^sub>V f))\<^sup>2) has_sum t) F\<close>
     apply (subst cinner_commute, subst complex_mod_cnj)
-    using TODO_name1 assms
+    using basis_image_square_has_sum1 assms
     by blast
   finally show ?thesis
     by -
@@ -129,10 +129,10 @@ proof -
   have \<open>((\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) has_sum t) E \<longleftrightarrow> ((\<lambda>e. (norm (B *\<^sub>V e))\<^sup>2) has_sum t) E\<close>
     by (simp add: *)
   also have \<open>\<dots> = ((\<lambda>f. (norm (B* *\<^sub>V f))\<^sup>2) has_sum t) F\<close>
-    apply (subst TODO_name2[where F=F])
+    apply (subst basis_image_square_has_sum2[where F=F])
     by (simp_all add: assms)
   also have \<open>\<dots> = ((\<lambda>f. (norm (B *\<^sub>V f))\<^sup>2) has_sum t) F\<close>
-    using TODO_name2 assms(2) by blast
+    using basis_image_square_has_sum2 assms(2) by blast
   also have \<open>\<dots> = ((\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) has_sum t) F\<close>
     by (simp add: *)
   finally show ?thesis
@@ -147,10 +147,9 @@ lemma trace_classI:
   shows \<open>trace_class A\<close>
   using assms(1) assms(2) trace_class_def by blast
 
-(* TODO: Duplication: There is a cmod, and we have abs_summability. That's a double norm *)
 lemma trace_class_iff_summable:
   assumes \<open>is_onb E\<close>
-  shows \<open>trace_class A \<longleftrightarrow> (\<lambda>e. cmod (e \<bullet>\<^sub>C (abs_op A *\<^sub>V e))) abs_summable_on E\<close>
+  shows \<open>trace_class A \<longleftrightarrow> (\<lambda>e. e \<bullet>\<^sub>C (abs_op A *\<^sub>V e)) abs_summable_on E\<close>
   apply (auto intro!: trace_classI assms simp: trace_class_def)
   using assms summable_on_def trace_norm_basis_invariance by blast
 
@@ -451,7 +450,7 @@ proof -
   have \<open>(\<lambda>e. (norm (a *\<^sub>V e))\<^sup>2) summable_on some_chilbert_basis\<close>
     using is_onb_some_chilbert_basis summable_hilbert_schmidt_norm_square by blast
   then have \<open>(\<lambda>e. (norm (a* *\<^sub>V e))\<^sup>2) summable_on some_chilbert_basis\<close>
-    by (metis TODO_name2 is_onb_some_chilbert_basis summable_on_def)
+    by (metis basis_image_square_has_sum2 is_onb_some_chilbert_basis summable_on_def)
   then show ?thesis
     using is_onb_some_chilbert_basis summable_hilbert_schmidt_norm_square_converse by blast
 qed
@@ -464,7 +463,7 @@ proof (cases \<open>hilbert_schmidt a\<close>)
   then have \<open>((\<lambda>x. (norm (a *\<^sub>V x))\<^sup>2) has_sum (hilbert_schmidt_norm a)\<^sup>2) some_chilbert_basis\<close>
     by (simp add: has_sum_hilbert_schmidt_norm_square)
   then have 1: \<open>((\<lambda>x. (norm (a* *\<^sub>V x))\<^sup>2) has_sum (hilbert_schmidt_norm a)\<^sup>2) some_chilbert_basis\<close>
-    by (metis TODO_name2 is_onb_some_chilbert_basis)
+    by (metis basis_image_square_has_sum2 is_onb_some_chilbert_basis)
 
   from True
   have \<open>hilbert_schmidt (a*)\<close>
@@ -1644,7 +1643,6 @@ lemma iso_trace_class_compact_op_dual'_scaleC: \<open>iso_trace_class_compact_op
   apply transfer
   by (simp add: trace_scaleC)
 
-(* TODO We might avoid reuse if we prove this after iso_trace_class_compact_op_dual'_isometric *)
 lemma iso_trace_class_compact_op_dual'_bounded_clinear[bounded_clinear, simp]:
   \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 19.1\<close>
     \<open>bounded_clinear (iso_trace_class_compact_op_dual' :: ('a::chilbert_space,'b::chilbert_space) trace_class \<Rightarrow> _)\<close>
