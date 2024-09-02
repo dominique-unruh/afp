@@ -9,7 +9,6 @@ unbundle cblinfun_notation
 
 subsection \<open>Finite rank operators\<close>
 
-(* TODO: Actually should be defined as "finite_dimensional (range A)" *)
 definition finite_rank where \<open>finite_rank A \<longleftrightarrow> A \<in> cspan (Collect rank1)\<close>
 
 lemma finite_rank_0[simp]: \<open>finite_rank 0\<close>
@@ -948,7 +947,7 @@ lemma tendsto_finite_subsets_at_top_image:
   by (simp add: filterlim_def assms o_def
       flip: filtermap_image_finite_subsets_at_top filtermap_compose)
 
-(* TODO Should be in Complex_Bounded_Linear_Functions but uses HS2Ell2 *)
+(* Should be in Complex_Bounded_Linear_Functions but uses HS2Ell2 *)
 lemma Proj_onb_limit:
   shows \<open>is_onb A \<Longrightarrow> ((\<lambda>S. Proj (ccspan S) \<psi>) \<longlongrightarrow> \<psi>) (finite_subsets_at_top A)\<close>
 proof -

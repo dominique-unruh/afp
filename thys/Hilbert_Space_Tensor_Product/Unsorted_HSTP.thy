@@ -5202,7 +5202,7 @@ lemma sandwich_tc_tensor: \<open>sandwich_tc (E \<otimes>\<^sub>o F) (tc_tensor 
 
 
 lemma tensor_tc_butterfly: "tc_tensor (tc_butterfly \<psi> \<psi>') (tc_butterfly \<phi> \<phi>') = tc_butterfly (tensor_ell2 \<psi> \<phi>) (tensor_ell2 \<psi>' \<phi>')"
-  apply (transfer fixing: \<phi> \<phi>' \<psi> \<psi>') by simp
+  apply (transfer fixing: \<phi> \<phi>' \<psi> \<psi>') by (simp add: tensor_butterfly)
 
 
 definition separating_set :: \<open>(('a \<Rightarrow> 'b) \<Rightarrow> bool) \<Rightarrow> 'a set \<Rightarrow> bool\<close> where

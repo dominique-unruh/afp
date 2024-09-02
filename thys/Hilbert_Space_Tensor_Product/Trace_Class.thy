@@ -14,17 +14,6 @@ unbundle cblinfun_notation
 
 subsection \<open>Auxiliary lemmas\<close>
 
-(* TODO: parseval_identity covers this *) thm parseval_identity
-(* lemma 
-  fixes h :: \<open>'a::{chilbert_space}\<close>
-  assumes \<open>is_onb E\<close>
-  shows parseval_infsum: \<open>(\<Sum>\<^sub>\<infinity>e\<in>E. (cmod (h \<bullet>\<^sub>C e))\<^sup>2) = (norm h)\<^sup>2\<close>
-  apply (subst cinner_commute)
-  apply (subst complex_mod_cnj)
-  apply (subst parseval_identity)
-  using assms by (simp_all add: is_onb_def)
- *)
-
 lemma 
   fixes h :: \<open>'a::{chilbert_space}\<close>
   assumes \<open>is_onb E\<close>

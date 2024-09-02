@@ -3,8 +3,6 @@ section \<open>\<open>Hilbert_Space_Tensor_Product\<close> -- Tensor product of 
 theory Hilbert_Space_Tensor_Product
   imports Complex_Bounded_Operators.Complex_L2 Misc_Tensor_Product
     Strong_Operator_Topology Polynomial_Interpolation.Ring_Hom
-
-    (* TODO: Consider moving things that depend on these elsewhere? *)
     Positive_Operators Trace_Class Weak_Star_Topology
 begin
 
@@ -887,7 +885,7 @@ lemma tensor_id[simp]: \<open>tensor_op id_cblinfun id_cblinfun = id_cblinfun\<c
   by (simp flip: tensor_ell2_ket add: tensor_op_ell2)
 
 (* TODO remove [simp] *)
-lemma tensor_butterfly[simp]: "tensor_op (butterfly \<psi> \<psi>') (butterfly \<phi> \<phi>') = butterfly (tensor_ell2 \<psi> \<phi>) (tensor_ell2 \<psi>' \<phi>')"
+lemma tensor_butterfly: "tensor_op (butterfly \<psi> \<psi>') (butterfly \<phi> \<phi>') = butterfly (tensor_ell2 \<psi> \<phi>) (tensor_ell2 \<psi>' \<phi>')"
   apply (rule equal_ket, rename_tac x, case_tac x)
   by (simp flip: tensor_ell2_ket add: tensor_op_ell2 butterfly_def
       cblinfun_apply_cblinfun_compose tensor_ell2_scaleC1 tensor_ell2_scaleC2)

@@ -215,7 +215,6 @@ proof (rule continuous_map_pullback_both)
     by (metis continuous_map_product_projection mem_Collect_eq trace_class_butterfly)
 qed
 
-(* TODO: Analogous lemmas for the other _weaker_ theorems *)
 lemma wot_weaker_than_weak_star':
   \<open>openin cweak_operator_topology U \<Longrightarrow> openin weak_star_topology U\<close>
   using wot_weaker_than_weak_star[where 'a='a and 'b='b]

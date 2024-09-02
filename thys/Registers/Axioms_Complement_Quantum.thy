@@ -229,7 +229,7 @@ proof -
       by (smt (verit, best) surjD)
 
     then have \<open>a \<noteq> 0\<close>
-      apply (auto simp: tensor_ell2_ket)
+      apply (auto simp: tensor_ell2_ket tensor_butterfly)
       by (metis butterfly_apply cblinfun.zero_left complex_vector.scale_eq_0_iff ket_nonzero orthogonal_ket)
 
     obtain \<gamma> where \<gamma>: \<open>?ida = \<gamma> *\<^sub>C butterfly (ket undefined) (ket undefined)\<close>
@@ -248,7 +248,7 @@ proof -
       apply (subst bounded_clinear_CBlinfun_apply)
       by (auto intro!: bounded_clinear_tensor_ell22)
     have \<open>sandwich T (butterfly (ket i) (ket j)) = butterfly (ket i) (ket j) \<otimes>\<^sub>o id_cblinfun\<close> for i j
-      by (simp add: T sandwich_apply cblinfun_comp_butterfly butterfly_comp_cblinfun \<gamma> \<open>\<gamma> = 1\<close>)
+      by (simp add: T sandwich_apply cblinfun_comp_butterfly butterfly_comp_cblinfun \<gamma> \<open>\<gamma> = 1\<close> tensor_butterfly)
     then have sandwich_T: \<open>sandwich T a = a \<otimes>\<^sub>o ?ida\<close> for a
       apply (rule_tac fun_cong[where x=a])
       apply (rule weak_star_clinear_eq_butterfly_ketI[where T=weak_star_topology])
@@ -257,7 +257,7 @@ proof -
     have \<open>F (butterfly x y) = V o\<^sub>C\<^sub>L (butterfly x y \<otimes>\<^sub>o ?ida) o\<^sub>C\<^sub>L V*\<close> for x y
       by (simp add: sandwich_apply FV)
     also have \<open>\<dots> x y = V o\<^sub>C\<^sub>L (butterfly (T x) (T y)) o\<^sub>C\<^sub>L V*\<close> for x y
-      by (simp add: T \<gamma> \<open>\<gamma> = 1\<close>)
+      by (simp add: T \<gamma> \<open>\<gamma> = 1\<close> tensor_butterfly)
     also have \<open>\<dots> x y = U o\<^sub>C\<^sub>L (butterfly x y) o\<^sub>C\<^sub>L U*\<close> for x y
       by (simp add: U_def butterfly_comp_cblinfun cblinfun_comp_butterfly)
     finally have F_rep:  \<open>F a = U o\<^sub>C\<^sub>L a o\<^sub>C\<^sub>L U*\<close> for a

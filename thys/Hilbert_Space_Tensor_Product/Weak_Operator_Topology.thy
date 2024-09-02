@@ -552,7 +552,7 @@ proof -
 qed
 
 lemma monotone_convergence_wot:
-  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 43.1 (i),(ii), but translated to filters.\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 43.1 (i), (ii), but translated to filters.\<close>
   fixes f :: \<open>'b \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'a::chilbert_space)\<close>
   assumes bounded: \<open>\<forall>\<^sub>F x in F. f x \<le> B\<close>
   assumes increasing: \<open>increasing_filter (filtermap f F)\<close>
@@ -697,14 +697,11 @@ lemma summable_wot_boundedI:
   assumes pos: \<open>\<And>x. x \<in> X \<Longrightarrow> f x \<ge> 0\<close>
   shows \<open>summable_on_in cweak_operator_topology f X\<close>
 proof -
-  have pos': \<open>(\<Sum>x\<in>F. f x) \<ge> 0\<close> if \<open>finite F\<close> and \<open>F \<subseteq> X\<close> for F
-    using that pos
-    by (simp add: basic_trans_rules(31) sum_nonneg)
   from pos have incr: \<open>increasing_filter (filtermap (sum f) (finite_subsets_at_top X))\<close>
     by (auto intro!: increasing_filtermap[where X=\<open>{F. finite F \<and> F \<subseteq> X}\<close>] mono_onI sum_mono2)
   show ?thesis
     apply (simp add: summable_on_in_def has_sum_in_def) 
-    by (safe intro!: bounded pos' incr monotone_convergence_wot[where B=B] eventually_finite_subsets_at_top_weakI)
+    by (safe intro!: bounded incr monotone_convergence_wot[where B=B] eventually_finite_subsets_at_top_weakI)
 qed
 
 

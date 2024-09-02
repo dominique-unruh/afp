@@ -127,7 +127,7 @@ lemma compatible_selfbutter_join:
   assumes [register]: "compatible R S"
   shows "R (selfbutter \<psi>) o\<^sub>C\<^sub>L S (selfbutter \<phi>) = (R; S) (selfbutter (\<psi> \<otimes>\<^sub>s \<phi>))"
   apply (subst register_pair_apply[symmetric, where F=R and G=S])
-  using assms by auto
+  using assms by (auto simp: tensor_butterfly)
 
 lemma register_mult':
   assumes \<open>register F\<close>
