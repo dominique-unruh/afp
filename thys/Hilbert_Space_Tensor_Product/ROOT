@@ -3,5 +3,6 @@ session Tensor_Product = Complex_Bounded_Operators +
            document_variants="document:outline=/proof,/ML"]
   sessions Ordinary_Differential_Equations With_Type Wlog
   theories Hilbert_Space_Tensor_Product Weak_Star_Topology Partial_Trace
+    Unsorted_HSTP
   document_files
     "root.tex" "root.bib"

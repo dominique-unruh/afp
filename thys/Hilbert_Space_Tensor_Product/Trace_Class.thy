@@ -932,6 +932,31 @@ lemma norm_adj_hs[simp]: \<open>norm (adj_hs x) = norm x\<close>
   apply transfer
   by simp
 
+lemma hilbert_schmidt_norm_geq_norm:
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Proposition 18.6 (c)\<close>
+  assumes \<open>hilbert_schmidt a\<close>
+  shows \<open>norm a \<le> hilbert_schmidt_norm a\<close>
+proof -
+  have \<open>norm (a x) \<le> hilbert_schmidt_norm a\<close> if \<open>norm x = 1\<close> for x
+  proof -
+    obtain B where \<open>x \<in> B\<close> and \<open>is_onb B\<close>
+      using orthonormal_basis_exists[of \<open>{x}\<close>] \<open>norm x = 1\<close>
+      by force
+    have \<open>(norm (a x))\<^sup>2 = (\<Sum>\<^sub>\<infinity>x\<in>{x}. (norm (a x))\<^sup>2)\<close>
+      by simp
+    also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>x\<in>B. (norm (a x))\<^sup>2)\<close>
+      apply (rule infsum_mono_neutral)
+      by (auto intro!: summable_hilbert_schmidt_norm_square \<open>is_onb B\<close> assms \<open>x \<in> B\<close>)
+    also have \<open>\<dots> = (hilbert_schmidt_norm a)\<^sup>2\<close>
+      using infsum_hilbert_schmidt_norm_square[OF \<open>is_onb B\<close> assms]
+      by -
+    finally show ?thesis
+      by force
+  qed
+  then show ?thesis
+    by (auto intro!: norm_cblinfun_bound_unit)
+qed
+
 
 subsection \<open>Trace-norm and trace-class, continued\<close>
 
@@ -2508,10 +2533,6 @@ proof -
     by (auto intro!: trace_class_plus trace_class_scaleC intro: rank1_trace_class)
 qed
 
-lemma finite_rank_hilbert_schmidt: \<open>hilbert_schmidt a\<close> if \<open>finite_rank a\<close>
-  for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
-  using finite_rank_comp_right finite_rank_trace_class hilbert_schmidtI that by blast
-
 lemma trace_minus: 
   assumes \<open>trace_class a\<close> \<open>trace_class b\<close>
   shows \<open>trace (a - b) = trace a - trace b\<close>
@@ -2618,6 +2639,158 @@ lemma tc_butterfly_scaleC_right[simp]: "tc_butterfly \<psi> (c *\<^sub>C \<phi>)
 lemma bounded_sesquilinear_tc_butterfly[iff]: \<open>bounded_sesquilinear (\<lambda>a b. tc_butterfly b a)\<close>
   by (auto intro!: bounded_sesquilinear.intro exI[of _ 1]
       simp: tc_butterfly_add_left tc_butterfly_add_right norm_tc_butterfly)
+
+
+lemma trace_norm_plus_orthogonal:
+  assumes \<open>trace_class a\<close> and \<open>trace_class b\<close>
+  assumes \<open>a* o\<^sub>C\<^sub>L b = 0\<close> and \<open>a o\<^sub>C\<^sub>L b* = 0\<close>
+  shows \<open>trace_norm (a + b) = trace_norm a + trace_norm b\<close>
+proof -
+  have \<open>trace_norm (a + b) = trace (abs_op (a + b))\<close>
+    by simp
+  also have \<open>\<dots> = trace (abs_op a + abs_op b)\<close>
+   by (simp add: abs_op_plus_orthogonal assms)
+  also have \<open>\<dots> = trace (abs_op a) + trace (abs_op b)\<close>
+    by (simp add: assms trace_plus)
+  also have \<open>\<dots> = trace_norm a + trace_norm b\<close>
+    by simp
+  finally show ?thesis
+    using of_real_eq_iff by blast
+qed
+
+lemma norm_tc_plus_orthogonal:
+  assumes \<open>tc_compose (adj_tc a) b = 0\<close> and \<open>tc_compose a (adj_tc b) = 0\<close>
+  shows \<open>norm (a + b) = norm a + norm b\<close>
+  using assms apply transfer
+  by (auto intro!: trace_norm_plus_orthogonal)
+
+
+lemma trace_norm_sum_exchange:
+  fixes t :: \<open>_ \<Rightarrow> (_::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L _::chilbert_space)\<close>
+  assumes \<open>\<And>i. i \<in> F \<Longrightarrow> trace_class (t i)\<close>
+  assumes \<open>\<And>i j. i \<in> F \<Longrightarrow> j \<in> F \<Longrightarrow> i \<noteq> j \<Longrightarrow> (t i)* o\<^sub>C\<^sub>L t j = 0\<close>
+  assumes \<open>\<And>i j. i \<in> F \<Longrightarrow> j \<in> F \<Longrightarrow> i \<noteq> j \<Longrightarrow> t i o\<^sub>C\<^sub>L (t j)* = 0\<close>
+  shows \<open>trace_norm (\<Sum>i\<in>F. t i) = (\<Sum>i\<in>F. trace_norm (t i))\<close>
+proof (insert assms, induction F rule:infinite_finite_induct)
+  case (infinite A)
+  then show ?case
+    by simp
+next
+  case empty
+  show ?case
+    by simp
+next
+  case (insert x F)
+  have \<open>trace_norm (\<Sum>i\<in>insert x F. t i) = trace_norm (t x + (\<Sum>x\<in>F. t x))\<close>
+    by (simp add: insert)
+  also have \<open>\<dots> = trace_norm (t x) + trace_norm (\<Sum>x\<in>F. t x)\<close>
+  proof (rule trace_norm_plus_orthogonal)
+    show \<open>trace_class (t x)\<close>
+      by (simp add: insert.prems)
+    show \<open>trace_class (\<Sum>x\<in>F. t x)\<close>
+      by (simp add: trace_class_sum insert.prems)
+    show \<open>t x* o\<^sub>C\<^sub>L (\<Sum>x\<in>F. t x) = 0\<close>
+      by (auto intro!: sum.neutral insert.prems simp: cblinfun_compose_sum_right sum_adj insert.hyps)
+    show \<open>t x o\<^sub>C\<^sub>L (\<Sum>x\<in>F. t x)* = 0\<close>
+      by (auto intro!: sum.neutral insert.prems simp: cblinfun_compose_sum_right sum_adj insert.hyps)
+  qed
+  also have \<open>\<dots> = trace_norm (t x) + (\<Sum>x\<in>F. trace_norm (t x))\<close>
+    apply (subst insert.IH)
+    by (simp_all add: insert.prems)
+  also have \<open>\<dots> = (\<Sum>i\<in>insert x F. trace_norm (t i))\<close>
+    by (simp add: insert)
+  finally show ?case
+    by -
+qed
+
+lemma norm_tc_sum_exchange:
+  assumes \<open>\<And>i j. i \<in> F \<Longrightarrow> j \<in> F \<Longrightarrow> i \<noteq> j \<Longrightarrow> tc_compose (adj_tc (t i)) (t j) = 0\<close>
+  assumes \<open>\<And>i j. i \<in> F \<Longrightarrow> j \<in> F \<Longrightarrow> i \<noteq> j \<Longrightarrow> tc_compose (t i) (adj_tc (t j)) = 0\<close>
+  shows \<open>norm (\<Sum>i\<in>F. t i) = (\<Sum>i\<in>F. norm (t i))\<close>
+  using assms apply transfer
+  by (auto intro!: trace_norm_sum_exchange)
+
+
+subsection \<open>More Hilbert-Schmidt\<close>
+
+lemma trace_class_hilbert_schmidt: \<open>hilbert_schmidt a\<close> if \<open>trace_class a\<close>
+  for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  by (auto intro!: trace_class_comp_right that simp: hilbert_schmidt_def)
+
+lemma finite_rank_hilbert_schmidt: \<open>hilbert_schmidt a\<close> if \<open>finite_rank a\<close>
+  for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  using finite_rank_comp_right finite_rank_trace_class hilbert_schmidtI that by blast
+
+lemma hilbert_schmidt_compact: \<open>compact_op a\<close> if \<open>hilbert_schmidt a\<close>
+  for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Corollary 18.7.
+      (Only the second part. The first part is stated inside this proof though.)\<close>
+proof -
+  have \<open>\<exists>b. finite_rank b \<and> hilbert_schmidt_norm (b - a) < \<epsilon>\<close> if \<open>\<epsilon> > 0\<close> for \<epsilon>
+  proof -
+    have \<open>\<epsilon>\<^sup>2 > 0\<close>
+      using that by force
+    obtain B :: \<open>'a set\<close> where \<open>is_onb B\<close>
+      using is_onb_some_chilbert_basis by blast
+    with \<open>hilbert_schmidt a\<close> have a_sum_B: \<open>(\<lambda>x. (norm (a *\<^sub>V x))\<^sup>2) summable_on B\<close>
+      by (auto intro!: summable_hilbert_schmidt_norm_square)
+    then have \<open>((\<lambda>x. (norm (a *\<^sub>V x))\<^sup>2) has_sum (\<Sum>\<^sub>\<infinity>x\<in>B. (norm (a *\<^sub>V x))\<^sup>2)) B\<close>
+      using has_sum_infsum by blast
+    from tendsto_iff[THEN iffD1, rule_format, OF this[unfolded has_sum_def] \<open>\<epsilon>\<^sup>2 > 0\<close>]
+    obtain F where [simp]: \<open>finite F\<close> and \<open>F \<subseteq> B\<close>
+      and Fbound: \<open>dist (\<Sum>x\<in>F. (norm (a *\<^sub>V x))\<^sup>2) (\<Sum>\<^sub>\<infinity>x\<in>B. (norm (a *\<^sub>V x))\<^sup>2) < \<epsilon>\<^sup>2\<close>
+      apply atomize_elim
+      by (auto intro!: simp: eventually_finite_subsets_at_top)
+    define p b where \<open>p = (\<Sum>x\<in>F. selfbutter x)\<close> and \<open>b = a o\<^sub>C\<^sub>L p\<close>
+    have [simp]: \<open>p x = x\<close> if \<open>x \<in> F\<close> for x
+      apply (simp add: p_def cblinfun.sum_left)
+      apply (subst sum_single[where i=x])
+      using \<open>F \<subseteq> B\<close> that \<open>is_onb B\<close>
+      by (auto intro!: simp:  cnorm_eq_1 is_onb_def is_ortho_set_def)
+    have [simp]: \<open>p x = 0\<close> if \<open>x \<in> B - F\<close> for x
+      using \<open>F \<subseteq> B\<close> that \<open>is_onb B\<close>
+      apply (auto intro!: sum.neutral simp add: p_def cblinfun.sum_left is_onb_def is_ortho_set_def)
+      by auto
+    have \<open>finite_rank p\<close>
+      by (simp add: finite_rank_sum p_def)
+    then have \<open>finite_rank b\<close>
+      by (simp add: b_def finite_rank_comp_right)
+    with \<open>hilbert_schmidt a\<close> have \<open>hilbert_schmidt (b - a)\<close>
+      by (auto intro!: hilbert_schmidt_minus intro: finite_rank_hilbert_schmidt)
+    then have \<open>(hilbert_schmidt_norm (b - a))\<^sup>2 = (\<Sum>\<^sub>\<infinity>x\<in>B. (norm ((b - a) *\<^sub>V x))\<^sup>2)\<close>
+      by (simp add: infsum_hilbert_schmidt_norm_square \<open>is_onb B\<close>)
+    also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>x\<in>B-F. (norm (a *\<^sub>V x))\<^sup>2)\<close>
+      by (auto intro!: infsum_cong_neutral
+          simp: b_def cblinfun.diff_left)
+    also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>x\<in>B. (norm (a *\<^sub>V x))\<^sup>2) - (\<Sum>x\<in>F. (norm (a *\<^sub>V x))\<^sup>2)\<close>
+      apply (subst infsum_Diff)
+      using \<open>F \<subseteq> B\<close> a_sum_B by auto
+    also have \<open>\<dots> < \<epsilon>\<^sup>2\<close>
+      using Fbound
+      by (simp add: dist_norm)
+    finally show ?thesis
+      using \<open>finite_rank b\<close>
+      using power_less_imp_less_base that by fastforce
+  qed
+  then have \<open>\<exists>b. finite_rank b \<and> dist b a < \<epsilon>\<close> if \<open>\<epsilon> > 0\<close> for \<epsilon>
+    apply (rule ex_mono[rule_format, rotated])
+     apply (auto intro!: that simp: dist_norm)
+    using hilbert_schmidt_minus \<open>hilbert_schmidt a\<close> finite_rank_hilbert_schmidt hilbert_schmidt_norm_geq_norm
+    by fastforce
+  then show ?thesis
+    by (simp add: compact_op_finite_rank closure_approachable)
+qed
+
+lemma trace_class_compact: \<open>compact_op a\<close> if \<open>trace_class a\<close> 
+  for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+  by (simp add: hilbert_schmidt_compact that trace_class_hilbert_schmidt)
+
+
+
+subsection \<open>Spectral Theorem\<close>
+
+(* text \<open>The spectral theorem for trace class operators.
+A corollary of the one for compact operators (\<^theory>\<open>Spectral_Theorem\<close>) but not an immediate one.\<close> *)
 
 
 end

@@ -1,5 +1,5 @@
 theory Unsorted2
-  imports Spectral_Theorem
+  imports Spectral_Theorem Trace_Class
 begin
 
 subsection \<open>Spectral decomposition, trace class\<close>

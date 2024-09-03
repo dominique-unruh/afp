@@ -9,6 +9,8 @@ theory Hilbert_Space_Tensor_Product
 begin
 
 unbundle cblinfun_notation
+hide_const (open) Determinants.trace
+hide_fact (open) Determinants.trace_def
 
 subsection \<open>Tensor product on \<^typ>\<open>_ ell2\<close>\<close>
 
