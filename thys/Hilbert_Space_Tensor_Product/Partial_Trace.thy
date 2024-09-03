@@ -308,5 +308,60 @@ proof -
     by (auto simp: o_def)
 qed
 
+
+lemma partial_trace_plus: \<open>partial_trace (t + u) = partial_trace t + partial_trace u\<close>
+proof -
+  from partial_trace_has_sum[of t] and partial_trace_has_sum[of u]
+  have \<open>((\<lambda>j. compose_tcl (compose_tcr ((tensor_ell2_right (ket j))*) t) (tensor_ell2_right (ket j))
+            + compose_tcl (compose_tcr ((tensor_ell2_right (ket j))*) u) (tensor_ell2_right (ket j))) has_sum
+           partial_trace t + partial_trace u) UNIV\<close> (is \<open>(?f has_sum _) _\<close>)
+    by (rule has_sum_add)
+  moreover have \<open>?f j = compose_tcl (compose_tcr ((tensor_ell2_right (ket j))*) (t + u)) (tensor_ell2_right (ket j))\<close> (is \<open>?f j = ?g j\<close>) for j
+    by (simp add: compose_tcl.add_left compose_tcr.add_right)
+  ultimately have \<open>(?g has_sum partial_trace t + partial_trace u) UNIV\<close>
+    by simp
+  moreover have \<open>(?g has_sum partial_trace (t + u)) UNIV\<close>
+    by (simp add: partial_trace_has_sum)
+  ultimately show ?thesis
+    using has_sum_unique by blast
+qed
+
+lemma partial_trace_scaleC: \<open>partial_trace (c *\<^sub>C t) = c *\<^sub>C partial_trace t\<close>
+  by (simp add: partial_trace_def infsum_scaleC_right compose_tcr.scaleC_right compose_tcl.scaleC_left)
+
+lemma partial_trace_tensor: \<open>partial_trace (tc_tensor t u) = trace_tc u *\<^sub>C t\<close>
+proof -
+  define t' u' where \<open>t' = from_trace_class t\<close> and \<open>u' = from_trace_class u\<close>
+  have 1: \<open>(\<lambda>j. ket j \<bullet>\<^sub>C (from_trace_class u *\<^sub>V ket j)) summable_on UNIV\<close>
+    using  trace_exists[where B=\<open>range ket\<close> and A=\<open>from_trace_class u\<close>]
+    by (simp add: summable_on_reindex o_def)
+  have \<open>partial_trace (tc_tensor t u) =
+      (\<Sum>\<^sub>\<infinity>j. compose_tcl (compose_tcr (tensor_ell2_right (ket j)*) (tc_tensor t u)) (tensor_ell2_right (ket j)))\<close>
+    by (simp add: partial_trace_def)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>j. (ket j \<bullet>\<^sub>C (from_trace_class u *\<^sub>V ket j)) *\<^sub>C t)\<close>
+  proof -
+    have *: \<open>tensor_ell2_right (ket j)* o\<^sub>C\<^sub>L t' \<otimes>\<^sub>o u' o\<^sub>C\<^sub>L tensor_ell2_right (ket j) =
+         (ket j \<bullet>\<^sub>C (u' *\<^sub>V ket j)) *\<^sub>C t'\<close> for j
+      by (auto intro!: cblinfun_eqI simp: tensor_op_ell2)
+    show ?thesis
+    apply (rule infsum_cong)
+      by (auto intro!: from_trace_class_inject[THEN iffD1] simp flip: t'_def u'_def
+        simp: * compose_tcl.rep_eq compose_tcr.rep_eq tc_tensor.rep_eq scaleC_trace_class.rep_eq)
+  qed
+  also have \<open>\<dots> = trace_tc u *\<^sub>C t\<close>
+    by (auto intro!: infsum_scaleC_left simp: trace_tc_def trace_alt_def[OF is_onb_ket] infsum_reindex o_def 1)
+  finally show ?thesis
+    by -
+qed
+
+
+
+
+lemma bounded_clinear_partial_trace[bounded_clinear, iff]: \<open>bounded_clinear partial_trace\<close>
+  apply (rule bounded_clinearI[where K=1])
+  by (auto simp add: partial_trace_plus partial_trace_scaleC partial_trace_norm_reducing)
+
+
+
 end
 

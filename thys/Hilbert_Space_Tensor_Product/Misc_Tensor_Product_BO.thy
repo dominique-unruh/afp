@@ -326,6 +326,163 @@ lemma orthogonal_spaces_SUP_right:
 lemma orthogonal_bot_left[simp]: \<open>orthogonal_spaces bot S\<close>
   by (simp add: orthogonal_spaces_def)
 
+lemma infsum_bounded_linear_invertible:
+  assumes \<open>bounded_linear h\<close>
+  assumes \<open>bounded_linear h'\<close>
+  assumes \<open>h' o h = id\<close>
+  shows \<open>infsum (\<lambda>x. h (f x)) A = h (infsum f A)\<close>
+proof (cases \<open>f summable_on A\<close>)
+  case True
+  then show ?thesis
+    using assms(1) infsum_bounded_linear by blast
+next
+  case False
+  have \<open>\<not> (\<lambda>x. h (f x)) summable_on A\<close>
+  proof (rule ccontr)
+    assume \<open>\<not> \<not> (\<lambda>x. h (f x)) summable_on A\<close>
+    with \<open>bounded_linear h'\<close> have \<open>h' o h o f summable_on A\<close>
+      by (auto intro: summable_on_bounded_linear simp: o_def)
+    then have \<open>f summable_on A\<close>
+      by (simp add: assms(3))
+    with False show False
+      by blast
+  qed
+  then show ?thesis
+    by (simp add: False assms(1) infsum_not_exists linear_simps(3))
+qed
+
+lemma cblinfun_eq_from_separatingI:
+  fixes a b :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
+  assumes \<open>separating_set (bounded_clinear :: ('a \<Rightarrow> 'b) \<Rightarrow> bool) S\<close>
+  assumes \<open>\<And>x. x \<in> S \<Longrightarrow> a x = b x\<close>
+  shows \<open>a = b\<close>
+  apply (rule cblinfun_eqI, rule fun_cong[where f=\<open>cblinfun_apply _\<close>])
+  using assms(1) apply (rule eq_from_separatingI)
+  using assms(2) by (auto intro!: bounded_cbilinear_apply_bounded_clinear cblinfun.bounded_cbilinear_axioms simp: )
+
+lemma cblinfun_eq_from_separatingI2:
+  fixes a b :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
+  assumes \<open>separating_set (bounded_clinear :: ('a \<Rightarrow> 'b) \<Rightarrow> bool) ((\<lambda>(x,y). h x y) ` (S\<times>T))\<close>
+  assumes \<open>\<And>x y. x \<in> S \<Longrightarrow> y \<in> T \<Longrightarrow> a (h x y) = b (h x y)\<close>
+  shows \<open>a = b\<close>
+  apply (rule cblinfun_eqI, rule fun_cong[where f=\<open>cblinfun_apply _\<close>])
+  using assms(1) apply (rule eq_from_separatingI2)
+  using assms(2) by (auto intro!: bounded_cbilinear_apply_bounded_clinear cblinfun.bounded_cbilinear_axioms simp: )
+
+lemma separating_set_bounded_clinear_dense:
+  assumes \<open>ccspan S = \<top>\<close>
+  shows \<open>separating_set bounded_clinear S\<close>
+  using assms
+  apply (auto intro!: ext simp: separating_set_def)
+  apply (rule bounded_clinear_eq_on_closure[where G=S])
+  apply auto
+  using ccspan.rep_eq by force
+
+
+lemma separating_set_ket: \<open>separating_set bounded_clinear (range ket)\<close>
+  by (simp add: bounded_clinear_equal_ket separating_setI)
+
+lemma separating_set_bounded_cbilinear_nested:
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector) \<Rightarrow> _) ((\<lambda>(x, y). h x y) ` (UNIV \<times> UNIV))\<close>
+  assumes \<open>bounded_cbilinear h\<close>
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) A\<close>
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) B\<close>
+  shows \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) ((\<lambda>(x,y). h x y) ` (A \<times> B))\<close>
+proof (rule separating_setI)
+  fix f g :: \<open>'a \<Rightarrow> 'e\<close>
+  assume [simp]: \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  have [simp]: \<open>bounded_clinear (\<lambda>x. f (h x y))\<close> for y
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear f\<close>])
+    using assms(2) by (rule bounded_cbilinear.bounded_clinear_left)
+  have [simp]: \<open>bounded_clinear (\<lambda>x. g (h x y))\<close> for y
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear g\<close>])
+    using assms(2) by (rule bounded_cbilinear.bounded_clinear_left)
+  have [simp]: \<open>bounded_clinear (\<lambda>y. f (h x y))\<close> for x
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear f\<close>])
+    using assms(2) by (rule bounded_cbilinear.bounded_clinear_right)
+  have [simp]: \<open>bounded_clinear (\<lambda>y. g (h x y))\<close> for x
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear g\<close>])
+    using assms(2) by (rule bounded_cbilinear.bounded_clinear_right)
+
+  assume \<open>z \<in> (\<lambda>(x, y). h x y) ` (A \<times> B) \<Longrightarrow> f z = g z\<close> for z
+  then have \<open>f (h x y) = g (h x y)\<close> if \<open>x \<in> A\<close> and \<open>y \<in> B\<close> for x y
+    using that by auto
+  then have \<open>(\<lambda>x. f (h x y)) = (\<lambda>x. g (h x y))\<close> if \<open>y \<in> B\<close> for y
+    apply (rule_tac eq_from_separatingI[OF assms(3)])
+    using that by auto
+  then have \<open>(\<lambda>y. f (h x y)) = (\<lambda>y. g (h x y))\<close> for x
+    apply (rule_tac eq_from_separatingI[OF assms(4)])
+    apply auto by meson
+  then have \<open>f (h x y) = g (h x y)\<close> for x y
+    by meson
+  with \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  show \<open>f = g\<close>
+    apply (rule eq_from_separatingI2[where f=f and g=g and P=bounded_clinear and S=UNIV and T=UNIV, rotated 1])
+    using assms(1) by -
+qed
+
+
+lemma separating_set_bounded_clinear_antilinear:
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector conjugate_space) \<Rightarrow> _) A\<close>
+  shows \<open>separating_set (bounded_antilinear :: (_ => 'e) \<Rightarrow> _) A\<close>
+proof (rule separating_setI)
+  fix f g :: \<open>'a \<Rightarrow> 'e\<close>
+  assume \<open>bounded_antilinear f\<close>
+  then have lin_f: \<open>bounded_clinear (to_conjugate_space o f)\<close>
+    by (simp add: bounded_antilinear_o_bounded_antilinear')
+  assume \<open>bounded_antilinear g\<close>
+  then have lin_g: \<open>bounded_clinear (to_conjugate_space o g)\<close>
+    by (simp add: bounded_antilinear_o_bounded_antilinear')
+  assume \<open>f x = g x\<close> if \<open>x \<in> A\<close> for x
+  then have \<open>(to_conjugate_space o f) x = (to_conjugate_space o g) x\<close> if \<open>x \<in> A\<close> for x
+    by (simp add: that)
+  with lin_f lin_g
+  have \<open>to_conjugate_space o f = to_conjugate_space o g\<close>
+    by (rule eq_from_separatingI[OF assms])
+  then show \<open>f = g\<close>
+    by (metis UNIV_I fun.inj_map_strong to_conjugate_space_inverse)
+qed
+
+lemma separating_set_bounded_sesquilinear_nested:
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector) \<Rightarrow> _) ((\<lambda>(x, y). h x y) ` (UNIV \<times> UNIV))\<close>
+  assumes \<open>bounded_sesquilinear h\<close>
+  assumes sep_A: \<open>separating_set (bounded_clinear :: (_ => 'e conjugate_space) \<Rightarrow> _) A\<close>
+  assumes sep_B: \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) B\<close>
+  shows \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) ((\<lambda>(x,y). h x y) ` (A \<times> B))\<close>
+proof (rule separating_setI)
+  fix f g :: \<open>'a \<Rightarrow> 'e\<close>
+  assume [simp]: \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  have [simp]: \<open>bounded_antilinear (\<lambda>x. f (h x y))\<close> for y
+    apply (rule bounded_clinear_o_bounded_antilinear[OF \<open>bounded_clinear f\<close>])
+    using assms(2) by (rule bounded_sesquilinear.bounded_antilinear_left)
+  have [simp]: \<open>bounded_antilinear (\<lambda>x. g (h x y))\<close> for y
+    apply (rule bounded_clinear_o_bounded_antilinear[OF \<open>bounded_clinear g\<close>])
+    using assms(2) by (rule bounded_sesquilinear.bounded_antilinear_left)
+  have [simp]: \<open>bounded_clinear (\<lambda>y. f (h x y))\<close> for x
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear f\<close>])
+    using assms(2) by (rule bounded_sesquilinear.bounded_clinear_right)
+  have [simp]: \<open>bounded_clinear (\<lambda>y. g (h x y))\<close> for x
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear g\<close>])
+    using assms(2) by (rule bounded_sesquilinear.bounded_clinear_right)
+
+  from sep_A have sep_A': \<open>separating_set (bounded_antilinear :: (_ => 'e) \<Rightarrow> _) A\<close>
+    by (rule separating_set_bounded_clinear_antilinear)
+  assume \<open>z \<in> (\<lambda>(x, y). h x y) ` (A \<times> B) \<Longrightarrow> f z = g z\<close> for z
+  then have \<open>f (h x y) = g (h x y)\<close> if \<open>x \<in> A\<close> and \<open>y \<in> B\<close> for x y
+    using that by auto
+  then have \<open>(\<lambda>x. f (h x y)) = (\<lambda>x. g (h x y))\<close> if \<open>y \<in> B\<close> for y
+    apply (rule_tac eq_from_separatingI[OF sep_A'])
+    using that by auto
+  then have \<open>(\<lambda>y. f (h x y)) = (\<lambda>y. g (h x y))\<close> for x
+    apply (rule_tac eq_from_separatingI[OF sep_B])
+    apply auto by meson
+  then have \<open>f (h x y) = g (h x y)\<close> for x y
+    by meson
+  with \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  show \<open>f = g\<close>
+    apply (rule eq_from_separatingI2[where f=f and g=g and P=bounded_clinear and S=UNIV and T=UNIV, rotated 1])
+    using assms(1) by -
+qed
 
 
 end

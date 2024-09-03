@@ -25,34 +25,6 @@ proof -
     by (auto simp add: sqrt_op_def)
 qed
 
-(* lemma nonneg_quadratic_function_discriminant:
-  fixes a b c :: real
-  assumes \<open>a > 0\<close>
-  assumes \<open>\<And>x. a * x\<^sup>2 + b * x + c \<ge> 0\<close>
-  shows \<open>b\<^sup>2 - 4 * a * c \<le> 0\<close>
-proof (rule ccontr)
-  define D where \<open>D = b\<^sup>2 - 4 * a * c\<close>
-  assume \<open>\<not> D \<le> 0\<close>
-  then have \<open>D > 0\<close> by auto
-  define x\<^sub>1 x\<^sub>2 x where "x\<^sub>1 = (-b + sqrt D) / (2 * a)" and "x\<^sub>2 = (-b - sqrt D) / (2 * a)"
-    and \<open>x = (x\<^sub>1 + x\<^sub>2) / 2\<close>
-  have \<open>x\<^sub>1 \<noteq> x\<^sub>2\<close>
-    unfolding x\<^sub>1_def x\<^sub>2_def using \<open>a > 0\<close> \<open>D > 0\<close> by auto
-  have \<open>a * x\<^sup>2 + b * x + c = a * (x - x\<^sub>1) * (x - x\<^sub>2)\<close>
-    using D_def _ x\<^sub>1_def x\<^sub>2_def apply (rule quadratic_eq_factoring[where D=D])
-    using \<open>a > 0\<close> \<open>D > 0\<close> by auto
-  then have \<open>a * (x - x\<^sub>1) * (x - x\<^sub>2) \<ge> 0\<close>
-    by (metis assms(2))
-  then have \<open>(x - x\<^sub>1) * (x - x\<^sub>2) \<ge> 0\<close>
-    by (metis assms(1) linorder_not_less ordered_field_class.sign_simps(33) ordered_field_class.sign_simps(6) zero_le_mult_iff)
-  moreover from \<open>x\<^sub>1 \<noteq> x\<^sub>2\<close>
-  have \<open>(x - x\<^sub>1) * (x - x\<^sub>2) < 0\<close>
-    unfolding x_def
-    using diff_gt_0_iff_gt mult_2 mult_less_0_iff by fastforce
-  ultimately show False
-    by simp
-qed *)
-
 lemma generalized_Cauchy_Schwarz:
   fixes inner A
   assumes Apos: \<open>A \<ge> 0\<close>

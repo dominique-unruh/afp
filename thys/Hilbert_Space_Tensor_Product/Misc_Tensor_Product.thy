@@ -2363,5 +2363,35 @@ lemma suminf_If_finite_set:
   shows \<open>(\<Sum>x\<in>F. f x) = (\<Sum>x. if x\<in>F then f x else 0)\<close>
   by (auto intro!: suminf_eqI[symmetric] sums_If_finite_set simp: assms)
 
+definition separating_set :: \<open>(('a \<Rightarrow> 'b) \<Rightarrow> bool) \<Rightarrow> 'a set \<Rightarrow> bool\<close> where
+  \<open>separating_set P S \<longleftrightarrow> (\<forall>f g. P f \<longrightarrow> P g \<longrightarrow> (\<forall>x\<in>S. f x = g x) \<longrightarrow> f = g)\<close>
+
+lemma separating_set_mono: \<open>S \<subseteq> T \<Longrightarrow> separating_set P S \<Longrightarrow> separating_set P T\<close>
+  unfolding separating_set_def by fast
+
+lemma separating_set_UNIV[simp]: \<open>separating_set P UNIV\<close>
+  by (auto intro!: ext simp: separating_set_def)
+
+lemma eq_from_separatingI:
+  assumes \<open>separating_set P S\<close>
+  assumes \<open>P f\<close> and \<open>P g\<close>
+  assumes \<open>\<And>x. x \<in> S \<Longrightarrow> f x = g x\<close>
+  shows \<open>f = g\<close>
+  using assms by (simp add: separating_set_def)
+
+lemma eq_from_separatingI2:
+  assumes \<open>separating_set P ((\<lambda>(x,y). h x y) ` (S\<times>T))\<close>
+  assumes \<open>P f\<close> and \<open>P g\<close>
+  assumes \<open>\<And>x y. x \<in> S \<Longrightarrow> y \<in> T \<Longrightarrow> f (h x y) = g (h x y)\<close>
+  shows \<open>f = g\<close>
+  apply (rule eq_from_separatingI[OF assms(1)])
+  using assms(2-4) by auto
+
+lemma separating_setI:
+  assumes \<open>\<And>f g. P f \<Longrightarrow> P g \<Longrightarrow> (\<And>x. x\<in>S \<Longrightarrow> f x = g x) \<Longrightarrow> f = g\<close>
+  shows \<open>separating_set P S\<close>
+  by (simp add: assms separating_set_def)
+
+
 
 end

@@ -2545,4 +2545,79 @@ lemma trace_tc_mono:
 lemma trace_tc_0[simp]: \<open>trace_tc 0 = 0\<close>
   apply transfer' by simp
 
+lemma cspan_tc_transfer[transfer_rule]: 
+  includes lifting_syntax
+  shows \<open>(rel_set cr_trace_class ===> rel_set cr_trace_class) cspan cspan\<close>
+proof (intro rel_funI rel_setI)
+  fix B :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close> and C
+  assume \<open>rel_set cr_trace_class B C\<close>
+  then have BC: \<open>B = from_trace_class ` C\<close>
+    by (auto intro!: simp: cr_trace_class_def image_iff rel_set_def)
+
+  show \<open>\<exists>t\<in>cspan C. cr_trace_class a t\<close> if \<open>a \<in> cspan B\<close> for a
+  proof -
+    from that obtain F f where \<open>finite F\<close> and \<open>F \<subseteq> B\<close> and a_sum: \<open>a = (\<Sum>x\<in>F. f x *\<^sub>C x)\<close>
+      by (auto simp: complex_vector.span_explicit)
+    from \<open>F \<subseteq> B\<close>
+    obtain F' where \<open>F' \<subseteq> C\<close> and FF': \<open>F = from_trace_class ` F'\<close>
+      by (auto elim!: subset_imageE simp: BC)
+    define t where \<open>t = (\<Sum>x\<in>F'. f (from_trace_class x) *\<^sub>C x)\<close>
+    have \<open>a = from_trace_class t\<close>
+      by (simp add: a_sum t_def from_trace_class_sum scaleC_trace_class.rep_eq FF'
+          sum.reindex o_def from_trace_class_inject inj_on_def)
+    moreover have \<open>t \<in> cspan C\<close>
+      by (metis (no_types, lifting) \<open>F' \<subseteq> C\<close> complex_vector.span_clauses(4) complex_vector.span_sum complex_vector.span_superset subsetD t_def)
+    ultimately show \<open>\<exists>t\<in>cspan C. cr_trace_class a t\<close>
+      by (auto simp: cr_trace_class_def)
+  qed
+
+  show \<open>\<exists>a\<in>cspan B. cr_trace_class a t\<close> if \<open>t \<in> cspan C\<close> for t
+  proof -
+    from that obtain F f where \<open>finite F\<close> and \<open>F \<subseteq> C\<close> and t_sum: \<open>t = (\<Sum>x\<in>F. f x *\<^sub>C x)\<close>
+      by (auto simp: complex_vector.span_explicit)
+    define a where \<open>a = (\<Sum>x\<in>F. f x *\<^sub>C from_trace_class x)\<close>
+    then have \<open>a = from_trace_class t\<close>
+      by (simp add: t_sum a_def from_trace_class_sum scaleC_trace_class.rep_eq)
+    moreover have \<open>a \<in> cspan B\<close>
+      using BC \<open>F \<subseteq> C\<close> 
+      by (auto intro!: complex_vector.span_base complex_vector.span_sum complex_vector.span_scale simp: a_def)
+    ultimately show ?thesis
+      by (auto simp: cr_trace_class_def)
+  qed
+qed
+
+lemma finite_rank_tc_def': \<open>finite_rank_tc A \<longleftrightarrow> A \<in> cspan (Collect rank1_tc)\<close>
+  apply transfer'
+  apply (auto simp: finite_rank_def)
+  apply (metis (no_types, lifting) Collect_cong rank1_trace_class)
+  by (metis (no_types, lifting) Collect_cong rank1_trace_class)
+
+
+lemma tc_butterfly_add_left: \<open>tc_butterfly (a + a') b = tc_butterfly a b + tc_butterfly a' b\<close>
+  apply transfer
+  by (rule butterfly_add_left)
+
+lemma tc_butterfly_add_right: \<open>tc_butterfly a (b + b') = tc_butterfly a b + tc_butterfly a b'\<close>
+  apply transfer
+  by (rule butterfly_add_right)
+
+lemma tc_butterfly_sum_left: \<open>tc_butterfly (\<Sum>i\<in>M. \<psi> i) \<phi> = (\<Sum>i\<in>M. tc_butterfly (\<psi> i) \<phi>)\<close>
+  apply transfer
+  by (rule butterfly_sum_left)
+
+lemma tc_butterfly_sum_right: \<open>tc_butterfly \<psi> (\<Sum>i\<in>M. \<phi> i) = (\<Sum>i\<in>M. tc_butterfly \<psi> (\<phi> i))\<close>
+  apply transfer
+  by (rule butterfly_sum_right)
+
+lemma tc_butterfly_scaleC_left[simp]: "tc_butterfly (c *\<^sub>C \<psi>) \<phi> = c *\<^sub>C tc_butterfly \<psi> \<phi>"
+  apply transfer by simp
+
+lemma tc_butterfly_scaleC_right[simp]: "tc_butterfly \<psi> (c *\<^sub>C \<phi>) = cnj c *\<^sub>C tc_butterfly \<psi> \<phi>"
+  apply transfer by simp
+
+lemma bounded_sesquilinear_tc_butterfly[iff]: \<open>bounded_sesquilinear (\<lambda>a b. tc_butterfly b a)\<close>
+  by (auto intro!: bounded_sesquilinear.intro exI[of _ 1]
+      simp: tc_butterfly_add_left tc_butterfly_add_right norm_tc_butterfly)
+
+
 end

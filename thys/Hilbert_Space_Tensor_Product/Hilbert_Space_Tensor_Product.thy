@@ -4,6 +4,8 @@ theory Hilbert_Space_Tensor_Product
   imports Complex_Bounded_Operators.Complex_L2 Misc_Tensor_Product
     Strong_Operator_Topology Polynomial_Interpolation.Ring_Hom
     Positive_Operators Trace_Class Weak_Star_Topology
+
+    Unsorted1 Unsorted2
 begin
 
 unbundle cblinfun_notation
@@ -1835,6 +1837,90 @@ lemma tc_tensor_pos: \<open>tc_tensor a b \<ge> 0\<close> if \<open>a \<ge> 0\<c
   for a :: \<open>('a ell2,'a ell2) trace_class\<close> and b :: \<open>('b ell2,'b ell2) trace_class\<close>
   using that apply transfer'
   by (rule tensor_op_pos)
+
+interpretation tensor_op_cbilinear: bounded_cbilinear tensor_op
+  by simp
+
+lemma tensor_op_mono_left:
+  fixes a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and c :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+  assumes \<open>a \<le> b\<close> and \<open>c \<ge> 0\<close>
+  shows \<open>a \<otimes>\<^sub>o c \<le> b \<otimes>\<^sub>o c\<close>
+proof -
+  have \<open>b - a \<ge> 0\<close>
+    by (simp add: assms(1))
+  with \<open>c \<ge> 0\<close> have \<open>(b - a) \<otimes>\<^sub>o c \<ge> 0\<close>
+    by (intro tensor_op_pos)
+  then have \<open>b \<otimes>\<^sub>o c - a \<otimes>\<^sub>o c \<ge> 0\<close>
+    by (simp add: tensor_op_cbilinear.diff_left)
+  then show ?thesis
+    by simp
+qed
+
+lemma tensor_op_mono_right:
+  fixes a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+  assumes \<open>b \<le> c\<close> and \<open>a \<ge> 0\<close>
+  shows \<open>a \<otimes>\<^sub>o b \<le> a \<otimes>\<^sub>o c\<close>
+proof -
+  have \<open>c - b \<ge> 0\<close>
+    by (simp add: assms(1))
+  with \<open>a \<ge> 0\<close> have \<open>a \<otimes>\<^sub>o (c - b) \<ge> 0\<close>
+    by (intro tensor_op_pos)
+  then have \<open>a \<otimes>\<^sub>o c - a \<otimes>\<^sub>o b \<ge> 0\<close>
+    by (simp add: tensor_op_cbilinear.diff_right)
+  then show ?thesis
+    by simp
+qed
+
+
+lemma tensor_op_mono:
+  fixes a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and c :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close>
+  assumes \<open>a \<le> b\<close> and \<open>c \<le> d\<close> and \<open>b \<ge> 0\<close> and \<open>c \<ge> 0\<close>
+  shows \<open>a \<otimes>\<^sub>o c \<le> b \<otimes>\<^sub>o d\<close>
+proof -
+  have \<open>a \<otimes>\<^sub>o c \<le> b \<otimes>\<^sub>o c\<close>
+    using \<open>a \<le> b\<close> and \<open>c \<ge> 0\<close>
+    by (rule tensor_op_mono_left)
+  also have \<open>\<dots> \<le> b \<otimes>\<^sub>o d\<close>
+    using \<open>c \<le> d\<close> and \<open>b \<ge> 0\<close>
+    by (rule tensor_op_mono_right)
+  finally show ?thesis
+    by -
+qed
+
+
+
+lemma sandwich_tc_tensor: \<open>sandwich_tc (E \<otimes>\<^sub>o F) (tc_tensor t u) = tc_tensor (sandwich_tc E t) (sandwich_tc F u)\<close>
+  apply (transfer fixing: E F)
+  by (simp add: sandwich_tensor_op)
+
+
+lemma tensor_tc_butterfly: "tc_tensor (tc_butterfly \<psi> \<psi>') (tc_butterfly \<phi> \<phi>') = tc_butterfly (tensor_ell2 \<psi> \<phi>) (tensor_ell2 \<psi>' \<phi>')"
+  apply (transfer fixing: \<phi> \<phi>' \<psi> \<psi>') by (simp add: tensor_butterfly)
+
+
+lemma separating_set_bounded_clinear_tc_tensor:
+  shows \<open>separating_set bounded_clinear ((\<lambda>(\<rho>,\<sigma>). tc_tensor \<rho> \<sigma>) ` (UNIV \<times> UNIV))\<close>
+proof -
+  have \<open>\<top> = ccspan ((\<lambda>(x, y). tc_butterfly x y) ` (range ket \<times> range ket))\<close>
+    by (simp add: onb_butterflies_span_trace_class)
+  also have \<open>\<dots> = ccspan ((\<lambda>(x, y, z, w). tc_butterfly (x \<otimes>\<^sub>s y) (z \<otimes>\<^sub>s w)) ` (range ket \<times> range ket \<times> range ket \<times> range ket))\<close>
+    by (auto intro!: arg_cong[where f=ccspan] image_eqI simp: tensor_ell2_ket)
+  also have \<open>\<dots> = ccspan ((\<lambda>(x, y, z, w). tc_tensor (tc_butterfly x z) (tc_butterfly y w)) ` (range ket \<times> range ket \<times> range ket \<times> range ket))\<close>
+    by (simp add: tensor_tc_butterfly)
+  also have \<open>\<dots> \<le> ccspan ((\<lambda>(\<rho>, \<sigma>). tc_tensor \<rho> \<sigma>) ` (UNIV \<times> UNIV))\<close>
+    by (auto intro!: ccspan_mono)
+  finally show ?thesis
+    apply (rule_tac separating_set_bounded_clinear_dense)
+    using top_le by blast
+qed
+
+
+lemma separating_set_bounded_clinear_tc_tensor_nested:
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector) \<Rightarrow> _) A\<close>
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector) \<Rightarrow> _) B\<close>
+  shows \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector) \<Rightarrow> _) ((\<lambda>(\<rho>,\<sigma>). tc_tensor \<rho> \<sigma>) ` (A \<times> B))\<close>
+  using separating_set_bounded_clinear_tc_tensor bounded_cbilinear_tc_tensor assms
+  by (rule separating_set_bounded_cbilinear_nested)
 
 
 subsection \<open>Tensor product of subspaces\<close>
