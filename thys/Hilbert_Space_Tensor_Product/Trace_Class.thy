@@ -3,6 +3,7 @@ section \<open>\<open>Trace_Class\<close> -- Trace-class operators\<close>
 theory Trace_Class
   imports Complex_Bounded_Operators.Complex_L2 HS2Ell2
     Weak_Operator_Topology Positive_Operators Compact_Operators
+    Spectral_Theorem
 begin
 
 hide_fact (open) Infinite_Set_Sum.abs_summable_on_Sigma_iff
@@ -2789,8 +2790,214 @@ lemma trace_class_compact: \<open>compact_op a\<close> if \<open>trace_class a\<
 
 subsection \<open>Spectral Theorem\<close>
 
-(* text \<open>The spectral theorem for trace class operators.
-A corollary of the one for compact operators (\<^theory>\<open>Spectral_Theorem\<close>) but not an immediate one.\<close> *)
+text \<open>The spectral theorem for trace class operators.
+A corollary of the one for compact operators (\<^theory>\<open>Tensor_Product.Spectral_Theorem\<close>) but not an immediate one.\<close>
+
+lift_definition spectral_dec_proj_tc :: \<open>('a::chilbert_space, 'a) trace_class \<Rightarrow> nat \<Rightarrow> ('a, 'a) trace_class\<close> is
+  spectral_dec_proj
+  using finite_rank_trace_class spectral_dec_proj_finite_rank trace_class_compact by blast
+
+lift_definition spectral_dec_val_tc :: \<open>('a::chilbert_space, 'a) trace_class \<Rightarrow> nat \<Rightarrow> complex\<close> is
+  spectral_dec_val.
+
+lemma spectral_dec_proj_tc_finite_rank: 
+  assumes \<open>adj_tc a = a\<close>
+  shows \<open>finite_rank_tc (spectral_dec_proj_tc a n)\<close>
+  using assms apply transfer
+  by (simp add: spectral_dec_proj_finite_rank trace_class_compact)
+
+lemma spectral_dec_summable_tc:
+  assumes \<open>selfadjoint_tc a\<close>
+  shows \<open>(\<lambda>n. spectral_dec_val_tc a n *\<^sub>C spectral_dec_proj_tc a n)  abs_summable_on  UNIV\<close>
+proof (intro nonneg_bounded_partial_sums_imp_summable_on norm_ge_zero eventually_finite_subsets_at_top_weakI)
+  define a' where \<open>a' = from_trace_class a\<close>
+  then have [transfer_rule]: \<open>cr_trace_class a' a\<close>
+    by (simp add: cr_trace_class_def)
+
+  have \<open>compact_op a'\<close>
+    by (auto intro!: trace_class_compact simp: a'_def)
+  have \<open>selfadjoint a'\<close>
+    using a'_def assms selfadjoint_tc.rep_eq by blast 
+  fix F :: \<open>nat set\<close> assume \<open>finite F\<close>
+  define R where \<open>R = (\<Squnion>n\<in>F. spectral_dec_space a' n)\<close>
+  have \<open>(\<Sum>x\<in>F. norm (spectral_dec_val_tc a x *\<^sub>C spectral_dec_proj_tc a x))
+        = norm (\<Sum>x\<in>F. spectral_dec_val_tc a x *\<^sub>C spectral_dec_proj_tc a x)\<close>
+  proof (rule norm_tc_sum_exchange[symmetric]; transfer; rename_tac n m F)
+    fix n m :: nat assume (* \<open>n \<in> F\<close> and \<open>m \<in> F\<close> and *) \<open>n \<noteq> m\<close>
+    then have *: \<open>Proj (spectral_dec_space a' n) o\<^sub>C\<^sub>L Proj (spectral_dec_space a' m) = 0\<close> if \<open>spectral_dec_val a' n \<noteq> 0\<close> and \<open>spectral_dec_val a' m \<noteq> 0\<close>
+      by (auto intro!: orthogonal_projectors_orthogonal_spaces[THEN iffD1] spectral_dec_space_orthogonal \<open>compact_op a'\<close> \<open>selfadjoint a'\<close>simp: )
+    show \<open>(spectral_dec_val a' n *\<^sub>C spectral_dec_proj a' n)* o\<^sub>C\<^sub>L spectral_dec_val a' m *\<^sub>C spectral_dec_proj a' m = 0\<close>
+      by (auto intro!: * simp: spectral_dec_proj_def adj_Proj)
+    show \<open>spectral_dec_val a' n *\<^sub>C spectral_dec_proj a' n o\<^sub>C\<^sub>L (spectral_dec_val a' m *\<^sub>C spectral_dec_proj a' m)* = 0\<close>
+      by (auto intro!: * simp: spectral_dec_proj_def adj_Proj)
+  qed
+  also have \<open>\<dots> = trace_norm (\<Sum>x\<in>F. spectral_dec_val a' x *\<^sub>C spectral_dec_proj a' x)\<close>
+    by (metis (no_types, lifting) a'_def spectral_dec_proj_tc.rep_eq spectral_dec_val_tc.rep_eq from_trace_class_sum norm_trace_class.rep_eq scaleC_trace_class.rep_eq sum.cong) 
+  also have \<open>\<dots> = trace_norm (\<Sum>x. if x\<in>F then spectral_dec_val a' x *\<^sub>C spectral_dec_proj a' x else 0)\<close>
+    by (simp add: \<open>finite F\<close> suminf_If_finite_set) 
+  also have \<open>\<dots> = trace_norm (\<Sum>x. (spectral_dec_val a' x *\<^sub>C spectral_dec_proj a' x) o\<^sub>C\<^sub>L Proj R)\<close>
+  proof -
+    have \<open>spectral_dec_proj a' n = spectral_dec_proj a' n o\<^sub>C\<^sub>L Proj R\<close> if \<open>n \<in> F\<close> for n
+      by (auto intro!: Proj_o_Proj_subspace_left[symmetric] SUP_upper that simp: spectral_dec_proj_def R_def)
+    moreover have \<open>spectral_dec_proj a' n o\<^sub>C\<^sub>L Proj R = 0\<close> if \<open>n \<notin> F\<close> for n
+      using that
+      by (auto intro!: orthogonal_spaces_SUP_right spectral_dec_space_orthogonal \<open>compact_op a'\<close> \<open>selfadjoint a'\<close>
+          simp: spectral_dec_proj_def R_def
+          simp flip: orthogonal_projectors_orthogonal_spaces)
+    ultimately show ?thesis
+      by (auto intro!: arg_cong[where f=trace_norm] suminf_cong)
+  qed
+  also have \<open>\<dots> = trace_norm ((\<Sum>x. spectral_dec_val a' x *\<^sub>C spectral_dec_proj a' x) o\<^sub>C\<^sub>L Proj R)\<close>
+    apply (intro arg_cong[where f=trace_norm] bounded_linear.suminf[symmetric] 
+        bounded_clinear.bounded_linear bounded_clinear_cblinfun_compose_left sums_summable)
+    using \<open>compact_op a'\<close> \<open>selfadjoint a'\<close> spectral_dec_sums by blast
+  also have \<open>\<dots> = trace_norm (a' o\<^sub>C\<^sub>L Proj R)\<close>
+    using spectral_dec_sums[OF \<open>compact_op a'\<close> \<open>selfadjoint a'\<close>] sums_unique by fastforce 
+  also have \<open>\<dots> \<le> trace_norm a' * norm (Proj R)\<close>
+    by (auto intro!: trace_norm_comp_left simp: a'_def)
+  also have \<open>\<dots> \<le> trace_norm a'\<close>
+    by (simp add: mult_left_le norm_Proj_leq1) 
+  finally show \<open>(\<Sum>x\<in>F. norm (spectral_dec_val_tc a x *\<^sub>C spectral_dec_proj_tc a x)) \<le> trace_norm a'\<close>
+    by -
+qed
+
+
+lemma spectral_dec_has_sum_tc:
+  assumes \<open>selfadjoint_tc a\<close>
+  shows \<open>((\<lambda>n. spectral_dec_val_tc a n *\<^sub>C spectral_dec_proj_tc a n)  has_sum  a) UNIV\<close>
+proof -
+  define a' b b' where \<open>a' = from_trace_class a\<close>
+    and \<open>b = (\<Sum>\<^sub>\<infinity>n. spectral_dec_val_tc a n *\<^sub>C spectral_dec_proj_tc a n)\<close> and \<open>b' = from_trace_class b\<close>
+  have [simp]: \<open>compact_op a'\<close>
+    by (auto intro!: trace_class_compact simp: a'_def)
+  have [simp]: \<open>selfadjoint a'\<close>
+    using a'_def assms selfadjoint_tc.rep_eq by blast 
+  have [simp]: \<open>trace_class b'\<close>
+    by (simp add: b'_def) 
+  from spectral_dec_summable_tc[OF assms]
+  have has_sum_b: \<open>((\<lambda>n. spectral_dec_val_tc a n *\<^sub>C spectral_dec_proj_tc a n)  has_sum  b) UNIV\<close>
+    by (metis abs_summable_summable b_def summable_iff_has_sum_infsum) 
+  then have \<open>((\<lambda>F. \<Sum>n\<in>F. spectral_dec_val_tc a n *\<^sub>C spectral_dec_proj_tc a n) \<longlongrightarrow> b) (finite_subsets_at_top UNIV)\<close>
+    by (simp add: has_sum_def)
+  then have \<open>((\<lambda>F. norm ((\<Sum>n\<in>F. spectral_dec_val_tc a n *\<^sub>C spectral_dec_proj_tc a n) - b)) \<longlongrightarrow> 0) (finite_subsets_at_top UNIV)\<close>
+    using LIM_zero tendsto_norm_zero by blast 
+  then have \<open>((\<lambda>F. norm ((\<Sum>n\<in>F. spectral_dec_val_tc a n *\<^sub>C spectral_dec_proj_tc a n) - b)) \<longlongrightarrow> 0) (filtermap (\<lambda>n. {..<n}) sequentially)\<close>
+    by (meson filterlim_compose filterlim_filtermap filterlim_lessThan_at_top) 
+  then have \<open>((\<lambda>m. norm ((\<Sum>n\<in>{..<m}. spectral_dec_val_tc a n *\<^sub>C spectral_dec_proj_tc a n) - b)) \<longlongrightarrow> 0) sequentially\<close>
+    by (simp add: filterlim_filtermap) 
+  then have \<open>((\<lambda>m. trace_norm ((\<Sum>n\<in>{..<m}. spectral_dec_val a' n *\<^sub>C spectral_dec_proj a' n) - b')) \<longlongrightarrow> 0) sequentially\<close>
+    unfolding a'_def b'_def
+    by transfer
+  then have \<open>((\<lambda>m. norm ((\<Sum>n\<in>{..<m}. spectral_dec_val a' n *\<^sub>C spectral_dec_proj a' n) - b')) \<longlongrightarrow> 0) sequentially\<close>
+    apply (rule tendsto_0_le[where K=1])
+    by (auto intro!: eventually_sequentiallyI norm_leq_trace_norm trace_class_minus
+        trace_class_sum trace_class_scaleC spectral_dec_proj_finite_rank
+        intro: finite_rank_trace_class)
+  then have \<open>(\<lambda>n. spectral_dec_val a' n *\<^sub>C spectral_dec_proj a' n) sums b'\<close>
+    using LIM_zero_cancel sums_def tendsto_norm_zero_iff by blast 
+  moreover have \<open>(\<lambda>n. spectral_dec_val a' n *\<^sub>C spectral_dec_proj a' n) sums a'\<close>
+    using \<open>compact_op a'\<close> \<open>selfadjoint a'\<close> by (rule spectral_dec_sums)
+  ultimately have \<open>a = b\<close>
+    using a'_def b'_def from_trace_class_inject sums_unique2 by blast
+  with has_sum_b show ?thesis
+    by simp
+qed
+
+
+lemma spectral_dec_sums_tc:
+  assumes \<open>selfadjoint_tc a\<close>
+  shows \<open>(\<lambda>n. spectral_dec_val_tc a n *\<^sub>C spectral_dec_proj_tc a n)  sums  a\<close>
+  using assms has_sum_imp_sums spectral_dec_has_sum_tc by blast 
+
+
+subsection \<open>Misc\<close>
+
+
+lemma finite_rank_tc_dense_aux: \<open>closure (Collect finite_rank_tc :: ('a::chilbert_space, 'a) trace_class set) = UNIV\<close>
+proof (intro order_top_class.top_le subsetI)
+  fix a :: \<open>('a,'a) trace_class\<close>
+  wlog selfadj: \<open>selfadjoint_tc a\<close> goal \<open>a \<in> closure (Collect finite_rank_tc)\<close> generalizing a
+  proof -
+    define b c where \<open>b = a + adj_tc a\<close> and \<open>c = \<i> *\<^sub>C (a - adj_tc a)\<close>
+    have \<open>adj_tc b = b\<close>
+      unfolding b_def
+      apply transfer
+      by (simp add: adj_plus)
+    have \<open>adj_tc c = c\<close>
+      unfolding c_def
+      apply transfer
+      apply (simp add: adj_minus)
+      by (metis minus_diff_eq scaleC_right.minus)
+    have abc: \<open>a = (1/2) *\<^sub>C b + (-\<i>/2) *\<^sub>C c\<close>
+      apply (simp add: b_def c_def)
+      by (metis (no_types, lifting) cross3_simps(8) diff_add_cancel group_cancel.add2 scaleC_add_right scaleC_half_double)
+    have \<open>b \<in> closure (Collect finite_rank_tc)\<close> and \<open>c \<in> closure (Collect finite_rank_tc)\<close>
+      using \<open>adj_tc b = b\<close> \<open>adj_tc c = c\<close> hypothesis selfadjoint_tc_def' by auto
+    with abc have \<open>a \<in> cspan (closure (Collect finite_rank_tc))\<close>
+      by (metis complex_vector.span_add complex_vector.span_clauses(1) complex_vector.span_clauses(4))
+    also have \<open>\<dots> \<subseteq> closure (cspan (Collect finite_rank_tc))\<close>
+      by (simp add: closure_mono complex_vector.span_minimal complex_vector.span_superset)
+    also have \<open>\<dots> = closure (Collect finite_rank_tc)\<close>
+      by (metis Set.basic_monos(1) complex_vector.span_minimal complex_vector.span_superset csubspace_finite_rank_tc subset_antisym)
+    finally show ?thesis
+      by -
+  qed
+  then have \<open>(\<lambda>n. spectral_dec_val_tc a n *\<^sub>C spectral_dec_proj_tc a n)  sums  a\<close>
+    by (simp add: spectral_dec_sums_tc)
+  moreover from selfadj 
+  have \<open>finite_rank_tc (\<Sum>i<n. spectral_dec_val_tc a i *\<^sub>C spectral_dec_proj_tc a i)\<close> for n
+    apply (induction n)
+     by (auto intro!: finite_rank_tc_plus spectral_dec_proj_tc_finite_rank finite_rank_tc_scale
+        simp: selfadjoint_tc_def')
+  ultimately show \<open>a \<in> closure (Collect finite_rank_tc)\<close>
+    unfolding sums_def closure_sequential
+    apply (auto intro!: simp: sums_def closure_sequential)
+    by meson
+qed
+
+
+lemma finite_rank_tc_dense: \<open>closure (Collect finite_rank_tc :: ('a::chilbert_space, 'b::chilbert_space) trace_class set) = UNIV\<close>
+proof -
+  have \<open>UNIV = closure (Collect finite_rank_tc :: ('a\<times>'b, 'a\<times>'b) trace_class set)\<close>
+    by (rule finite_rank_tc_dense_aux[symmetric])
+  define l r and corner :: \<open>('a\<times>'b, 'a\<times>'b) trace_class \<Rightarrow> _\<close> where
+    \<open>l = cblinfun_left\<close> and \<open>r = cblinfun_right\<close> and
+    \<open>corner t = compose_tcl (compose_tcr (r*) t) l\<close> for t
+  have [iff]: \<open>bounded_clinear corner\<close>
+    by (auto intro: bounded_clinear_compose compose_tcl.bounded_clinear_left compose_tcr.bounded_clinear_right 
+        simp: corner_def[abs_def])
+  have \<open>UNIV = corner ` UNIV\<close>
+  proof (intro UNIV_eq_I range_eqI)
+    fix t
+    have \<open>from_trace_class (corner (compose_tcl (compose_tcr r t) (l*)))
+         = (r* o\<^sub>C\<^sub>L r) o\<^sub>C\<^sub>L from_trace_class t o\<^sub>C\<^sub>L (l* o\<^sub>C\<^sub>L l)\<close>
+      by (simp add: corner_def compose_tcl.rep_eq compose_tcr.rep_eq cblinfun_compose_assoc)
+    also have \<open>\<dots> = from_trace_class t\<close>
+      by (simp add: l_def r_def)
+    finally show \<open>t = corner (compose_tcl (compose_tcr r t) (l*))\<close>
+      by (metis from_trace_class_inject)
+  qed
+  also have \<open>\<dots> = corner ` closure (Collect finite_rank_tc)\<close>
+    by (simp add: finite_rank_tc_dense_aux)
+  also have \<open>\<dots> \<subseteq> closure (corner ` Collect finite_rank_tc)\<close>
+    by (auto intro!: bounded_clinear.bounded_linear closure_bounded_linear_image_subset)
+  also have \<open>\<dots> \<subseteq> closure (Collect finite_rank_tc)\<close>
+  proof (intro closure_mono subsetI CollectI)
+    fix t assume \<open>t \<in> corner ` Collect finite_rank_tc\<close>
+    then obtain u where \<open>finite_rank_tc u\<close> and tu: \<open>t = corner u\<close>
+      by blast
+    show \<open>finite_rank_tc t\<close>
+      using \<open>finite_rank_tc u\<close>
+      by (auto intro!: finite_rank_compose_right[of _ l] finite_rank_compose_left[of _ \<open>r*\<close>]
+          simp add: corner_def tu finite_rank_tc.rep_eq compose_tcl.rep_eq compose_tcr.rep_eq)
+  qed
+  finally show ?thesis
+    by blast
+qed
+
+
+hide_fact finite_rank_tc_dense_aux
+
 
 
 end
