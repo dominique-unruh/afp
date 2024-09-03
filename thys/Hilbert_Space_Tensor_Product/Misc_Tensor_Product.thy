@@ -1226,6 +1226,15 @@ lemma summable_on_uminus[intro!]:
    apply simp
   using assms by (rule summable_on_scaleR_right)
 
+lemma summable_on_diff:
+  fixes f g :: "'a \<Rightarrow> 'b::real_normed_vector"  (* Can probably be shown for a much wider type class. *)
+  assumes \<open>f summable_on A\<close>
+  assumes \<open>g summable_on A\<close>
+  shows \<open>(\<lambda>x. f x - g x) summable_on A\<close>
+  using summable_on_add[where f=f and g=\<open>\<lambda>x. - g x\<close>] summable_on_uminus[where f=g]
+  using assms by auto
+
+
 lemma gbinomial_1: \<open>(1 gchoose n) = of_bool (n\<le>1)\<close>
 proof -
   consider (0) \<open>n=0\<close> | (1) \<open>n=1\<close> | (bigger) m where \<open>n=Suc (Suc m)\<close>
@@ -2335,6 +2344,24 @@ proof -
     using less_eq_complexI by auto 
 qed
 
+lemma infsum_single: 
+  assumes "\<And>j. j \<noteq> i \<Longrightarrow> j\<in>A \<Longrightarrow> f j = 0"
+  shows "infsum f A = (if i\<in>A then f i else 0)"
+  apply (subst infsum_cong_neutral[where T=\<open>A \<inter> {i}\<close> and g=f])
+  using assms by auto
+
+lemma suminf_eqI:
+  fixes x :: \<open>_::{comm_monoid_add,t2_space}\<close>
+  assumes \<open>f sums x\<close>
+  shows \<open>suminf f = x\<close>
+  using assms
+  by (auto intro!: simp: sums_iff)
+
+lemma suminf_If_finite_set:
+  fixes f :: \<open>_ \<Rightarrow> _::{comm_monoid_add,t2_space}\<close>
+  assumes \<open>finite F\<close>
+  shows \<open>(\<Sum>x\<in>F. f x) = (\<Sum>x. if x\<in>F then f x else 0)\<close>
+  by (auto intro!: suminf_eqI[symmetric] sums_If_finite_set simp: assms)
 
 
 end

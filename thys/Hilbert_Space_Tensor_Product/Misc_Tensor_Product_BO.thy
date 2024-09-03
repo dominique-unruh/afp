@@ -277,5 +277,55 @@ proof (rule cblinfun_leI)
     by (rule sums_le_complex[rotated])
 qed
 
+lemma scaleC_scaleR_commute: \<open>a *\<^sub>C b *\<^sub>R x = b *\<^sub>R a *\<^sub>C x\<close> for x :: \<open>_::complex_normed_vector\<close>
+  by (simp add: scaleR_scaleC scaleC_left_commute)
+
+
+lemma sandwich_scaleC_left: \<open>sandwich (c *\<^sub>C e) = (cmod c)^2 *\<^sub>C sandwich e\<close>
+  by (auto intro!: cblinfun_eqI simp: sandwich_apply cnj_x_x abs_complex_def)
+
+lemma sandwich_scaleR_left: \<open>sandwich (r *\<^sub>R e) = r^2 *\<^sub>R sandwich e\<close>
+  by (simp add: scaleR_scaleC sandwich_scaleC_left flip: of_real_power)
+
+lemma infsum_product:
+  fixes f :: \<open>'a \<Rightarrow> 'c :: {topological_semigroup_mult,division_ring,banach}\<close>
+  assumes \<open>(\<lambda>(x, y). f x * g y) summable_on X \<times> Y\<close>
+  shows \<open>(\<Sum>\<^sub>\<infinity>x\<in>X. f x) * (\<Sum>\<^sub>\<infinity>y\<in>Y. g y) = (\<Sum>\<^sub>\<infinity>(x,y)\<in>X\<times>Y. f x * g y)\<close>
+  using assms
+  by (simp add: infsum_cmult_right' infsum_cmult_left' flip: infsum_Sigma'_banach)
+
+lemma infsum_product':
+  fixes f :: \<open>'a \<Rightarrow> 'c :: {banach,times,real_normed_algebra}\<close> and g :: \<open>'b \<Rightarrow> 'c\<close>
+  assumes \<open>f abs_summable_on X\<close>
+  assumes \<open>g abs_summable_on Y\<close>
+  shows \<open>(\<Sum>\<^sub>\<infinity>x\<in>X. f x) * (\<Sum>\<^sub>\<infinity>y\<in>Y. g y) = (\<Sum>\<^sub>\<infinity>(x,y)\<in>X\<times>Y. f x * g y)\<close>
+  using assms
+  by (simp add: abs_summable_times infsum_cmult_right infsum_cmult_left abs_summable_summable flip: infsum_Sigma'_banach)
+
+lemma Proj_o_Proj_subspace_right:
+  assumes \<open>A \<ge> B\<close>
+  shows \<open>Proj A o\<^sub>C\<^sub>L Proj B = Proj B\<close>
+  by (simp add: Proj_compose_cancelI assms) 
+
+lemma Proj_o_Proj_subspace_left:
+  assumes \<open>A \<le> B\<close>
+  shows \<open>Proj A o\<^sub>C\<^sub>L Proj B = Proj A\<close>
+  by (metis Proj_o_Proj_subspace_right adj_Proj adj_cblinfun_compose assms) 
+
+lemma orthogonal_spaces_SUP_left:
+  assumes \<open>\<And>x. x \<in> X \<Longrightarrow> orthogonal_spaces (A x) B\<close>
+  shows \<open>orthogonal_spaces (\<Squnion>x\<in>X. A x) B\<close>
+  by (meson SUP_least assms orthogonal_spaces_leq_compl) 
+
+lemma orthogonal_spaces_SUP_right:
+  assumes \<open>\<And>x. x \<in> X \<Longrightarrow> orthogonal_spaces A (B x)\<close>
+  shows \<open>orthogonal_spaces A (\<Squnion>x\<in>X. B x)\<close>
+  by (meson assms orthogonal_spaces_SUP_left orthogonal_spaces_sym) 
+
+(* Should be put next to orthogonal_bot *)
+lemma orthogonal_bot_left[simp]: \<open>orthogonal_spaces bot S\<close>
+  by (simp add: orthogonal_spaces_def)
+
+
 
 end

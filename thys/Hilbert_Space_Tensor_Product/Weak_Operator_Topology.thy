@@ -858,4 +858,7 @@ qed
 lift_definition compose_wot :: \<open>('b::complex_inner,'c::complex_inner) cblinfun_wot \<Rightarrow> ('a::complex_normed_vector,'b) cblinfun_wot \<Rightarrow> ('a,'c) cblinfun_wot\<close> is
   cblinfun_compose.
 
+lift_definition adj_wot :: \<open>('a::chilbert_space, 'b::complex_inner) cblinfun_wot \<Rightarrow> ('b, 'a) cblinfun_wot\<close> is adj.
+
+
 end

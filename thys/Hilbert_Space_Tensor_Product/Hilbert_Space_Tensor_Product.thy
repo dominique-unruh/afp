@@ -1795,6 +1795,47 @@ lemma tensor_ell2_right_butterfly: \<open>tensor_ell2_right \<psi> o\<^sub>C\<^s
 lemma tensor_ell2_left_butterfly: \<open>tensor_ell2_left \<psi> o\<^sub>C\<^sub>L tensor_ell2_left \<phi>* = butterfly \<psi> \<phi> \<otimes>\<^sub>o id_cblinfun\<close>
   by (auto intro!: equal_ket cinner_ket_eqI simp: tensor_op_ell2 simp flip: tensor_ell2_ket)
 
+lift_definition tc_tensor :: \<open>('a ell2, 'b ell2) trace_class \<Rightarrow> ('c ell2, 'd ell2) trace_class \<Rightarrow> 
+      (('a \<times> 'c) ell2, ('b \<times> 'd) ell2) trace_class\<close> is
+  tensor_op
+  by (auto intro!: trace_class_tensor)
+
+lemma trace_norm_tensor: \<open>trace_norm (a \<otimes>\<^sub>o b) = trace_norm a * trace_norm b\<close>
+  apply (rule of_real_hom.injectivity[where 'a=complex])
+  by (simp add: abs_op_tensor trace_tensor flip: trace_abs_op)
+
+
+lemma bounded_cbilinear_tc_tensor: \<open>bounded_cbilinear tc_tensor\<close>
+  unfolding bounded_cbilinear_def
+  apply transfer
+  by (auto intro!: exI[of _ 1]
+      simp: trace_norm_tensor tensor_op_left_add tensor_op_right_add tensor_op_scaleC_left tensor_op_scaleC_right)
+lemmas bounded_clinear_tc_tensor_left[bounded_clinear] = bounded_cbilinear.bounded_clinear_left[OF bounded_cbilinear_tc_tensor]
+lemmas bounded_clinear_tc_tensor_right[bounded_clinear] = bounded_cbilinear.bounded_clinear_right[OF bounded_cbilinear_tc_tensor]
+
+
+lemma tc_tensor_scaleC_left: \<open>tc_tensor (c *\<^sub>C a) b = c *\<^sub>C tc_tensor a b\<close>
+  apply transfer'
+  by (simp add: tensor_op_scaleC_left)
+lemma tc_tensor_scaleC_right: \<open>tc_tensor a (c *\<^sub>C b) = c *\<^sub>C tc_tensor a b\<close>
+  apply transfer'
+  by (simp add: tensor_op_scaleC_right)
+  
+lemma comp_tc_tensor: \<open>tc_compose (tc_tensor a b) (tc_tensor c d) = tc_tensor (tc_compose a c) (tc_compose b d)\<close>
+  apply transfer'
+  by (rule comp_tensor_op)
+
+lemma norm_tc_tensor: \<open>norm (tc_tensor a b) = norm a * norm b\<close>
+  apply transfer'
+  apply (rule of_real_hom.injectivity[where 'a=complex])
+  by (simp add: abs_op_tensor trace_tensor flip: trace_abs_op)
+
+
+lemma tc_tensor_pos: \<open>tc_tensor a b \<ge> 0\<close> if \<open>a \<ge> 0\<close> and \<open>b \<ge> 0\<close>
+  for a :: \<open>('a ell2,'a ell2) trace_class\<close> and b :: \<open>('b ell2,'b ell2) trace_class\<close>
+  using that apply transfer'
+  by (rule tensor_op_pos)
+
 
 subsection \<open>Tensor product of subspaces\<close>
 

@@ -220,6 +220,62 @@ proof -
     by simp
 qed
 
+lemma finite_rank_cspan_butterflies:
+  \<open>finite_rank a \<longleftrightarrow> a \<in> cspan (range (case_prod butterfly))\<close>
+  for a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
+proof -
+  have \<open>(Collect finite_rank :: ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set) = cspan (Collect rank1)\<close>
+    using finite_rank_def by fastforce
+  also have \<open>\<dots> = cspan (insert 0 (Collect rank1))\<close>
+    by force
+  also have \<open>\<dots> = cspan (range (case_prod butterfly))\<close>
+    apply (rule arg_cong[where f=cspan])
+    apply (auto intro!: simp: rank1_iff_butterfly case_prod_beta image_def)
+    apply auto
+    by (metis butterfly_0_left)
+  finally show ?thesis
+    by auto
+qed
+
+
+lemma finite_rank_comp_left: \<open>finite_rank (a o\<^sub>C\<^sub>L b)\<close> if \<open>finite_rank a\<close>
+  for a b :: \<open>_::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L _::chilbert_space\<close>
+proof -
+  from that
+  have \<open>a \<in> cspan (range (case_prod butterfly))\<close>
+    by (simp add: finite_rank_cspan_butterflies)
+  then have \<open>a o\<^sub>C\<^sub>L b \<in> (\<lambda>a. a o\<^sub>C\<^sub>L b) ` cspan (range (case_prod butterfly))\<close>
+    by fast
+  also have \<open>\<dots> = cspan ((\<lambda>a. a o\<^sub>C\<^sub>L b) ` range (case_prod butterfly))\<close>
+    by (simp add: clinear_cblinfun_compose_left complex_vector.linear_span_image)
+  also have \<open>\<dots> \<subseteq> cspan (range (case_prod butterfly))\<close>
+    apply (auto intro!: complex_vector.span_mono
+        simp add: image_image case_prod_unfold butterfly_comp_cblinfun image_def)
+    by fast
+  finally show ?thesis
+    using finite_rank_cspan_butterflies by blast
+qed
+
+
+lemma finite_rank_comp_right: \<open>finite_rank (a o\<^sub>C\<^sub>L b)\<close> if \<open>finite_rank b\<close>
+  for a b :: \<open>_::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L _::chilbert_space\<close>
+proof -
+  from that
+  have \<open>b \<in> cspan (range (case_prod butterfly))\<close>
+    by (simp add: finite_rank_cspan_butterflies)
+  then have \<open>a o\<^sub>C\<^sub>L b \<in> ((o\<^sub>C\<^sub>L) a) ` cspan (range (case_prod butterfly))\<close>
+    by fast
+  also have \<open>\<dots> = cspan (((o\<^sub>C\<^sub>L) a) ` range (case_prod butterfly))\<close>
+    by (simp add: clinear_cblinfun_compose_right complex_vector.linear_span_image)
+  also have \<open>\<dots> \<subseteq> cspan (range (case_prod butterfly))\<close>
+    apply (auto intro!: complex_vector.span_mono
+        simp add: image_image case_prod_unfold cblinfun_comp_butterfly image_def)
+    by fast
+  finally show ?thesis
+    using finite_rank_cspan_butterflies by blast
+qed
+
+
 
 subsection \<open>Compact operators\<close>
 
@@ -1154,6 +1210,21 @@ proof (rule Set.equalityI)
     finally show ?thesis
       by -
   qed
+qed
+
+lemma compact_op_comp_left: \<open>compact_op (a o\<^sub>C\<^sub>L b)\<close> if \<open>compact_op a\<close>
+  for a b :: \<open>_::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L _::chilbert_space\<close>
+proof -
+  from that have \<open>a \<in> closure (Collect finite_rank)\<close>
+  using compact_op_finite_rank by blast
+  then have \<open>a o\<^sub>C\<^sub>L b \<in> (\<lambda>a. a o\<^sub>C\<^sub>L b) ` closure (Collect finite_rank)\<close>
+    by blast
+  also have \<open>\<dots> \<subseteq> closure ((\<lambda>a. a o\<^sub>C\<^sub>L b) ` Collect finite_rank)\<close>
+    by (auto intro!: closure_bounded_linear_image_subset bounded_clinear.bounded_linear bounded_clinear_cblinfun_compose_left)
+  also have \<open>\<dots> \<subseteq> closure (Collect finite_rank)\<close>
+    by (auto intro!: closure_mono finite_rank_comp_left)
+  finally show \<open>compact_op (a o\<^sub>C\<^sub>L b)\<close>
+    using compact_op_finite_rank by blast
 qed
 
 

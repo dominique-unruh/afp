@@ -1189,5 +1189,188 @@ lemma infsum_mono_neutral_cblinfun:
   shows "infsum f A \<le> infsum g B"
   by (smt (verit, del_insts) assms(1) assms(2) assms(3) assms(4) assms(5) has_sum_infsum has_sum_mono_neutral_cblinfun)
 
+lemma abs_op_geq: \<open>abs_op a \<ge> a\<close> if \<open>selfadjoint a\<close>
+proof -
+  define A P where \<open>A = abs_op a\<close> and \<open>P = Proj (kernel (A + a))\<close>
+  from that have [simp]: \<open>a* = a\<close>
+    by (simp add: selfadjoint_def)
+  have [simp]: \<open>A \<ge> 0\<close>
+    by (simp add: A_def)
+  then have [simp]: \<open>A* = A\<close>
+    using positive_hermitianI by fastforce
+  have aa_AA: \<open>a o\<^sub>C\<^sub>L a = A o\<^sub>C\<^sub>L A\<close>
+    by (metis A_def \<open>A* = A\<close> abs_op_square that selfadjoint_def)
+  have [simp]: \<open>P* = P\<close>
+    by (simp add: P_def adj_Proj)
+  have Aa_aA: \<open>A o\<^sub>C\<^sub>L a = a o\<^sub>C\<^sub>L A\<close>
+    by (metis (full_types) A_def lift_cblinfun_comp(2) abs_op_def positive_cblinfun_squareI sqrt_op_commute that selfadjoint_def)
+
+  have \<open>(A-a) \<psi> \<bullet>\<^sub>C (A+a) \<phi> = 0\<close> for \<phi> \<psi>
+    by (simp add: adj_minus that \<open>A* = A\<close> aa_AA Aa_aA cblinfun_compose_add_right cblinfun_compose_minus_left
+        flip: cinner_adj_right cblinfun_apply_cblinfun_compose)
+  then have \<open>(A-a) \<psi> \<in> space_as_set (kernel (A+a))\<close> for \<psi>
+    by (metis \<open>A* = A\<close> adj_plus call_zero_iff cinner_adj_left kernel_memberI that selfadjoint_def)
+  then have P_fix: \<open>P o\<^sub>C\<^sub>L (A-a) = (A-a)\<close>
+    by (simp add: P_def Proj_fixes_image cblinfun_eqI)
+  then have \<open>P o\<^sub>C\<^sub>L (A-a) o\<^sub>C\<^sub>L P = (A-a) o\<^sub>C\<^sub>L P\<close>
+    by simp
+  also have \<open>\<dots> = (P o\<^sub>C\<^sub>L (A-a))*\<close>
+    by (simp add: adj_minus \<open>A* = A\<close> that \<open>P* = P\<close>)
+  also have \<open>\<dots> = (A-a)*\<close>
+    by (simp add: P_fix)
+  also have \<open>\<dots> = A-a\<close>
+    by (simp add: \<open>A* = A\<close> that adj_minus)
+  finally have 1: \<open>P o\<^sub>C\<^sub>L (A - a) o\<^sub>C\<^sub>L P = A - a\<close>
+    by -
+  have 2: \<open>P o\<^sub>C\<^sub>L (A + a) o\<^sub>C\<^sub>L P = 0\<close>
+    by (simp add: P_def cblinfun_compose_assoc)
+  have \<open>A - a = P o\<^sub>C\<^sub>L (A - a) o\<^sub>C\<^sub>L P + P o\<^sub>C\<^sub>L (A + a) o\<^sub>C\<^sub>L P\<close>
+    by (simp add: 1 2)
+  also have \<open>\<dots> = sandwich P (2 *\<^sub>C A)\<close>
+    by (simp add: sandwich_apply cblinfun_compose_minus_left cblinfun_compose_minus_right
+        cblinfun_compose_add_left cblinfun_compose_add_right scaleC_2 \<open>P* = P\<close>) 
+  also have \<open>\<dots> \<ge> 0\<close>
+    by (auto intro!: sandwich_pos scaleC_nonneg_nonneg simp: less_eq_complex_def)
+  finally show \<open>A \<ge> a\<close>
+    by auto
+qed
+
+lemma abs_op_geq_neq: \<open>abs_op a \<ge> - a\<close> if \<open>selfadjoint a\<close>
+  by (metis abs_op_geq abs_op_uminus adj_uminus that selfadjoint_def)
+
+lemma infsum_nonneg_cblinfun:
+  fixes f :: "'a \<Rightarrow> 'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b"
+  assumes "\<And>x. x \<in> M \<Longrightarrow> 0 \<le> f x"
+  shows "infsum f M \<ge> 0"
+  apply (cases \<open>f summable_on M\<close>)
+   apply (subst infsum_0_simp[symmetric])
+   apply (rule infsum_mono_cblinfun)
+  using assms by (auto simp: infsum_not_exists)
+
+lemma adj_abs_op[simp]: \<open>(abs_op a)* = abs_op a\<close>
+  by (simp add: positive_hermitianI) 
+
+lemma cblinfun_image_less_eqI:
+  fixes A :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
+  assumes \<open>\<And>h. h \<in> space_as_set S \<Longrightarrow> A h \<in> space_as_set T\<close>
+  shows \<open>A *\<^sub>S S \<le> T\<close>
+proof -
+  from assms have \<open>A ` space_as_set S \<subseteq> space_as_set T\<close>
+    by blast
+  then have \<open>closure (A ` space_as_set S) \<subseteq> closure (space_as_set T)\<close>
+    by (rule closure_mono)
+  also have \<open>\<dots> = space_as_set T\<close>
+    by force
+  finally show ?thesis
+    apply (transfer fixing: A)
+    by (simp add: cblinfun_image.rep_eq ccsubspace_leI)
+qed
+
+
+
+lemma abs_op_plus_orthogonal:
+  assumes \<open>a* o\<^sub>C\<^sub>L b = 0\<close> and \<open>a o\<^sub>C\<^sub>L b* = 0\<close>
+  shows \<open>abs_op (a + b) = abs_op a + abs_op b\<close>
+proof (rule abs_opI[symmetric])
+  have ba: \<open>b* o\<^sub>C\<^sub>L a = 0\<close>
+    apply (rule cblinfun_eqI, rule cinner_extensionality)
+    apply (simp add: cinner_adj_right flip: cinner_adj_left)
+    by (simp add: assms simp_a_oCL_b') 
+  have abs_ab: \<open>abs_op a o\<^sub>C\<^sub>L abs_op b = 0\<close>
+  proof -
+    have \<open>abs_op b *\<^sub>S \<top> = - kernel (abs_op b)\<close>
+      by (simp add: kernel_compl_adj_range positive_hermitianI) 
+    also have \<open>\<dots> = - kernel b\<close>
+      by simp
+    also have \<open>\<dots> = (b*) *\<^sub>S \<top>\<close>
+      by (simp add: kernel_compl_adj_range) 
+    also have \<open>\<dots> \<le> kernel a\<close>
+      apply (auto intro!: cblinfun_image_less_eqI kernel_memberI simp: )
+      by (simp add: assms flip: cblinfun_apply_cblinfun_compose)
+    also have \<open>\<dots> = kernel (abs_op a)\<close>
+      by simp 
+    finally show \<open>abs_op a o\<^sub>C\<^sub>L abs_op b = 0\<close>
+      by (metis Proj_compose_cancelI cblinfun_compose_Proj_kernel cblinfun_compose_assoc cblinfun_compose_zero_left) 
+  qed
+  then have abs_ba: \<open>abs_op b o\<^sub>C\<^sub>L abs_op a = 0\<close>
+    by (metis abs_op_pos adj_0 adj_cblinfun_compose positive_hermitianI) 
+  have \<open>(a + b)* o\<^sub>C\<^sub>L (a + b) = (a*) o\<^sub>C\<^sub>L a + (b*) o\<^sub>C\<^sub>L b\<close>
+    by (simp add: cblinfun_compose_add_left cblinfun_compose_add_right adj_plus assms ba)
+  also have \<open>\<dots> = (abs_op a + abs_op b)* o\<^sub>C\<^sub>L (abs_op a + abs_op b)\<close>
+    by (simp add: cblinfun_compose_add_left cblinfun_compose_add_right adj_plus abs_ab abs_ba flip: abs_op_square)
+  finally show \<open>(abs_op a + abs_op b)* o\<^sub>C\<^sub>L (abs_op a + abs_op b) = (a + b)* o\<^sub>C\<^sub>L (a + b)\<close>
+    by simp
+  show \<open>0 \<le> abs_op a + abs_op b\<close>
+    by simp 
+qed
+
+
+definition pos_op :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a \<Rightarrow> 'a \<Rightarrow>\<^sub>C\<^sub>L 'a\<close> where
+  \<open>pos_op a = (abs_op a + a) /\<^sub>R 2\<close>
+
+definition neg_op :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a \<Rightarrow> 'a \<Rightarrow>\<^sub>C\<^sub>L 'a\<close> where
+  \<open>neg_op a = (abs_op a - a) /\<^sub>R 2\<close>
+
+lemma pos_op_pos: 
+  assumes \<open>selfadjoint a\<close>
+  shows \<open>pos_op a \<ge> 0\<close>
+  using abs_op_geq_neq[OF assms]
+  apply (simp add: pos_op_def)
+  by (smt (verit, best) add_le_cancel_right more_arith_simps(3) scaleR_nonneg_nonneg zero_le_divide_iff) 
+
+lemma neg_op_pos:
+  assumes \<open>selfadjoint a\<close>
+  shows \<open>neg_op a \<ge> 0\<close>
+  using abs_op_geq[OF assms]
+  by (simp add: neg_op_def scaleR_nonneg_nonneg)
+
+lemma pos_op_neg_op_ortho:
+  assumes \<open>selfadjoint a\<close>
+  shows \<open>pos_op a o\<^sub>C\<^sub>L neg_op a = 0\<close>
+  apply (auto intro!: simp: pos_op_def neg_op_def cblinfun_compose_add_left cblinfun_compose_minus_right)
+  by (metis (no_types, opaque_lifting) Groups.add_ac(2) abs_op_def abs_op_pos abs_op_square assms cblinfun_assoc_left(1) positive_cblinfun_squareI positive_hermitianI selfadjoint_def sqrt_op_commute) 
+
+
+lemma pos_op_plus_neg_op: \<open>pos_op a + neg_op a = abs_op a\<close>
+  by (simp add: pos_op_def neg_op_def scaleR_diff_right scaleR_add_right pth_8)
+
+lemma pos_op_minus_neg_op: \<open>pos_op a - neg_op a = a\<close>
+  by (simp add: pos_op_def neg_op_def scaleR_diff_right scaleR_add_right pth_8)
+
+lemma pos_op_neg_op_unique:
+  assumes bca: \<open>b - c = a\<close>
+  assumes \<open>b \<ge> 0\<close> and \<open>c \<ge> 0\<close>
+  assumes bc: \<open>b o\<^sub>C\<^sub>L c = 0\<close>
+  shows \<open>b = pos_op a\<close> and \<open>c = neg_op a\<close>
+proof -
+  from bc have cb: \<open>c o\<^sub>C\<^sub>L b = 0\<close>
+    by (metis adj_0 adj_cblinfun_compose assms(2) assms(3) positive_hermitianI) 
+  from \<open>b \<ge> 0\<close> have [simp]: \<open>b* = b\<close>
+    by (simp add: positive_hermitianI) 
+  from \<open>c \<ge> 0\<close> have [simp]: \<open>c* = c\<close>
+    by (simp add: positive_hermitianI) 
+  have bc_abs: \<open>b + c = abs_op a\<close>
+  proof -
+    have \<open>(b + c)* o\<^sub>C\<^sub>L (b + c) = b o\<^sub>C\<^sub>L b + c o\<^sub>C\<^sub>L c\<close>
+      by (simp add: cblinfun_compose_add_left cblinfun_compose_add_right bc cb adj_plus)
+    also have \<open>\<dots> = (b - c)* o\<^sub>C\<^sub>L (b - c)\<close>
+      by (simp add: cblinfun_compose_minus_left cblinfun_compose_minus_right bc cb adj_minus)
+    also from bca have \<open>\<dots> = a* o\<^sub>C\<^sub>L a\<close>
+      by blast
+    finally show ?thesis
+      apply (rule abs_opI)
+      by (simp add: \<open>b \<ge> 0\<close> \<open>c \<ge> 0\<close>) 
+  qed
+  from arg_cong2[OF bca bc_abs, of plus]
+    arg_cong2[OF pos_op_minus_neg_op[of a] pos_op_plus_neg_op[of a], of plus, symmetric]
+  show \<open>b = pos_op a\<close>
+    by (simp flip: scaleR_2)
+  from arg_cong2[OF bc_abs bca, of minus]
+    arg_cong2[OF pos_op_plus_neg_op[of a] pos_op_minus_neg_op[of a], of minus, symmetric]
+  show \<open>c = neg_op a\<close>
+    by (simp flip: scaleR_2)
+qed
+
+
 
 end
