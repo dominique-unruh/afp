@@ -246,8 +246,8 @@ proof -
   also have \<open>\<dots> = ((swap \<otimes>\<^sub>r id) o assoc' o (id \<otimes>\<^sub>r swap)) (selfbutter (ket default) \<otimes>\<^sub>o c \<otimes>\<^sub>o selfbutter (ket default))\<close>
     unfolding * by simp
   also have \<open>\<dots> = selfbutter (ket default) \<otimes>\<^sub>o c\<close>
-    apply (simp del: tensor_butterfly)
-    by (simp add: default_prod_def tensor_ell2_ket)
+    apply simp
+    by (simp add: default_prod_def tensor_butterfly tensor_ell2_ket)
   finally have \<open>t1 = selfbutter (ket default) \<otimes>\<^sub>o c\<close>
     by -
 
@@ -403,13 +403,13 @@ qed
 
 lemma Fst_regular[simp]: \<open>regular_register Fst\<close>
   apply (rule regular_registerI[where a=\<open>selfbutter (ket default)\<close> and G=Snd])
-  by (auto simp: pair_Fst_Snd default_prod_def tensor_ell2_ket)
+  by (auto simp: pair_Fst_Snd default_prod_def tensor_ell2_ket tensor_butterfly)
 
 lemma Snd_regular[simp]: \<open>regular_register Snd\<close>
   apply (rule regular_registerI[where a=\<open>selfbutter (ket default)\<close> and G=Fst])
     apply auto[2]
   apply (auto simp only: default_prod_def swap_apply simp flip: swap_def tensor_ell2_ket)
-  by auto
+  by (auto simp: tensor_butterfly)
 
 lemma id_regular[simp]: \<open>regular_register id\<close>
   apply (rule regular_registerI[where G=unit_register and a=id_cblinfun])

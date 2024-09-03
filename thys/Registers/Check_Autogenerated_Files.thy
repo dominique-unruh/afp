@@ -20,11 +20,11 @@ let
     end
 in
   check "Source" "Axioms_Classical.thy" "72388b1ddd9b0570c9f0761063a13e5e777551e3";
-  check "Source" "Axioms_Quantum.thy" "398abf6ce864dcede338a521a08b437612c43791";
+  check "Source" "Axioms_Quantum.thy" "bbda829760d62bcf7289d253dd2000800d279f7a";
   check "Source" "Laws.thy" "1db2088f827e04309e9ba20810c3a274cebeabab";
-  check "Source" "Laws_Complement.thy" "5ba70f38590214499d1dbf91e09c92b45d18365a";
+  check "Source" "Laws_Complement.thy" "91721de3c65892ae6f11f37c3740414cc147070e";
   check "Generated" "Laws_Classical.thy" "3d37a81779a1277e9ca5bb387eab03c3d401e691";
-  check "Generated" "Laws_Complement_Quantum.thy" "50c6edbbd9d6cd1b7e55dd8a2e233d4874962575";
+  check "Generated" "Laws_Complement_Quantum.thy" "0b686903f139d414a6f5cc754fa1397780784563";
   check "Generated" "Laws_Quantum.thy" "f135807fac134b786da7c8b9c479147c4d2d9780"
 end
 \<close>

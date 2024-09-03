@@ -2,7 +2,6 @@ section \<open>Axioms of complements\<close>
 
 theory Axioms_Complement
   imports Laws With_Type.With_Type
-(* With_Type.With_Type_Inst_HOL *)
 begin
 
 typedecl ('a, 'b) complement_domain
@@ -15,9 +14,10 @@ With_Type.add_with_type_info_global {
   class = \<^class>\<open>domain\<close>,
   rep_class = \<^const_name>\<open>WITH_TYPE_CLASS_type\<close>,
   rep_rel = \<^const_name>\<open>WITH_TYPE_REL_type\<close>,
-  with_type_compat_rel = @{thm with_type_compat_rel_type},
-  (* rep_class_data_thm = NONE, *)
-  transfer = NONE
+  with_type_wellformed = @{thm with_type_wellformed_type},
+  param_names = [],
+  transfer = NONE,
+  rep_rel_itself = NONE
 }\<close>
 
 class domain_with_simple_complement = domain
@@ -32,7 +32,7 @@ axiomatization where
 
 (* Short for "complement domain carrier" *)
 axiomatization cdc :: \<open>('a::domain update \<Rightarrow> 'b::domain update) \<Rightarrow> ('a,'b) complement_domain set\<close> where 
-  complement_exists: \<open>register F \<Longrightarrow> \<forall>\<^sub>\<tau> 'c::domain = cdc F.
+  complement_exists: \<open>register F \<Longrightarrow> let 'c::domain = cdc F in
                       \<exists>G :: 'c update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
     for F :: \<open>'a::domain update \<Rightarrow> 'b::domain update\<close>
 

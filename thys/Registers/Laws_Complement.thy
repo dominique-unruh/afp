@@ -15,7 +15,7 @@ lemma complementsI: \<open>compatible F G \<Longrightarrow> iso_register (F;G) \
 lemma complement_exists: 
   fixes F :: \<open>'a::domain update \<Rightarrow> 'b::domain update\<close>
   assumes \<open>register F\<close>
-  shows \<open>\<forall>\<^sub>\<tau> 'c::domain = cdc F.
+  shows \<open>let 'c::domain = cdc F in
           \<exists>G :: 'c update \<Rightarrow> 'b update. complements F G\<close>
   by (simp add: assms complement_exists complements_def)
 
@@ -119,7 +119,7 @@ lemma compatible_complement_right[simp]: \<open>register X \<Longrightarrow> com
 lemma unit_register_pair[simp]: \<open>equivalent_registers X (U; X)\<close> if [simp]: \<open>is_unit_register U\<close> \<open>register X\<close>
 proof -
   from complement_exists[OF \<open>register X\<close>]
-  have \<open>\<forall>\<^sub>\<tau> 'x::domain = cdc X. equivalent_registers X (U; X)\<close>
+  have \<open>let 'x::domain = cdc X in equivalent_registers X (U; X)\<close>
   proof with_type_mp
     note [[simproc del: compatibility_warn]]
     (* assume \<open>\<exists>G :: 'x update \<Rightarrow> 'b update. complements X G\<close> *)
@@ -157,7 +157,7 @@ lemma unit_register_compose_left:
   shows \<open>is_unit_register (A o U)\<close>
 proof -
   from complement_exists[OF \<open>register A\<close>]
-  have \<open>\<forall>\<^sub>\<tau> 'x::domain = cdc A. is_unit_register (A o U)\<close>
+  have \<open>let 'x::domain = cdc A in is_unit_register (A o U)\<close>
   proof with_type_mp
     note [[simproc del: compatibility_warn]]
     with_type_case 
@@ -254,7 +254,7 @@ proof -
   let ?U = \<open>unit_register :: unit_register_domain update \<Rightarrow> 'a::domain update\<close>
   let ?U1 = \<open>complement id :: unit_register_domain update \<Rightarrow> some_domain update\<close>
   from complement_exists[OF register_id[where 'a='a]]
-  have \<open>\<forall>\<^sub>\<tau> 'x::domain = cdc (id::'a update \<Rightarrow> _). is_unit_register ?U\<close>
+  have \<open>let 'x::domain = cdc (id::'a update \<Rightarrow> _) in is_unit_register ?U\<close>
   proof with_type_mp
     with_type_case
     then obtain U2 :: \<open>'x update \<Rightarrow> 'a update\<close> where comp1: \<open>complements id U2\<close>
@@ -284,7 +284,8 @@ lemma unit_register_domain_tensor_unit:
   (* Can we show that I = (\<lambda>x. tensor_update id_update x) ? It would be nice but I do not see how to prove it. *)
 proof -
   from complement_exists[OF register_id[where 'a='b]]
-  have \<open>\<forall>\<^sub>\<tau> 'x::domain = cdc (id :: 'b update \<Rightarrow> _). \<exists>I :: 'b::domain update \<Rightarrow> ('a*'b) update. iso_register I\<close>
+  have \<open>let 'x::domain = cdc (id :: 'b update \<Rightarrow> _) in
+        \<exists>I :: 'b::domain update \<Rightarrow> ('a*'b) update. iso_register I\<close>
   proof with_type_mp
     note [[simproc del: compatibility_warn]]
     with_type_case

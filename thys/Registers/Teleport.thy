@@ -5,6 +5,7 @@ theory Teleport
     Real_Impl.Real_Impl
     "HOL-Library.Code_Target_Numeral"
     "HOL-Library.Word"
+    Tensor_Product.Tensor_Product_Code
     QHoare
 begin
 
