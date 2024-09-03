@@ -32,9 +32,9 @@ theory Axioms_Quantum
           Tensor_Product.Hilbert_Space_Tensor_Product
           Tensor_Product.Weak_Star_Topology
           Tensor_Product.Partial_Trace
+          Tensor_Product.Von_Neumann_Algebras
           With_Type.With_Type
           Misc
-          Tensor_Product.Unsorted_HSTP
 begin
 
 

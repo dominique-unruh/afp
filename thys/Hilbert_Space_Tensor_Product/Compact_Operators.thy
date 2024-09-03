@@ -4,6 +4,7 @@ theory Compact_Operators
     "HOL-Analysis.Abstract_Metric_Spaces"
     Strong_Operator_Topology
     Misc_Tensor_Product_TTS
+    Eigenvalues
 begin
 
 unbundle cblinfun_notation
@@ -1302,5 +1303,242 @@ proof -
   with span_BS show ?thesis
     using S_def cspan_finite_dim finite_dim_ccsubspace.rep_eq by fastforce
 qed
+
+lemma eigenvalue_in_the_limit_compact_op:
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.4.14\<close>
+  assumes \<open>compact_op T\<close>
+  assumes \<open>l \<noteq> 0\<close>
+  assumes normh: \<open>\<And>n. norm (h n) = 1\<close>
+  assumes Tl_lim: \<open>(\<lambda>n. (T - l *\<^sub>C id_cblinfun) (h n)) \<longlonglongrightarrow> 0\<close>
+  shows \<open>l \<in> eigenvalues T\<close>
+proof -
+  from assms(1)
+  have compact_Tball: \<open>compact (closure (T ` cball 0 1))\<close>
+    using compact_op_def2 by blast
+  have \<open>T (h n) \<in> closure (T ` cball 0 1)\<close> for n
+    by (smt (z3) assms(3) closure_subset image_subset_iff mem_cball_0)
+  then obtain n f where lim_Thn: \<open>(\<lambda>k. T (h (n k))) \<longlonglongrightarrow> f\<close> and \<open>strict_mono n\<close>
+    using compact_Tball[unfolded compact_def, rule_format, where f=\<open>T o h\<close>, unfolded o_def]
+    by fast
+  have lThk_lim: \<open>(\<lambda>k. (l *\<^sub>C id_cblinfun - T) (h (n k))) \<longlonglongrightarrow> 0\<close>
+  proof -
+    have \<open>(\<lambda>n. (l *\<^sub>C id_cblinfun - T) (h n)) \<longlonglongrightarrow> 0\<close>
+      using Tl_lim[THEN tendsto_minus]
+      by (simp add: cblinfun.diff_left)
+    with \<open>strict_mono n\<close> show ?thesis
+      by (rule LIMSEQ_subseq_LIMSEQ[unfolded o_def, rotated])
+  qed
+  have \<open>h (n k) = inverse l *\<^sub>C ((l *\<^sub>C id_cblinfun - T) (h (n k)) + T (h (n k)))\<close> for k
+    by (metis assms(2) cblinfun.real.add_left cblinfun.scaleC_left diff_add_cancel divideC_field_splits_simps_1(5) id_cblinfun.rep_eq scaleC_zero_right)
+  moreover have \<open>\<dots> \<longlonglongrightarrow> inverse l *\<^sub>C f\<close>
+    apply (rule tendsto_scaleC, simp)
+    apply (subst add_0_left[symmetric, of f])
+    using lThk_lim lim_Thn by (rule tendsto_add)
+  ultimately have lim_hn: \<open>(\<lambda>k. h (n k)) \<longlonglongrightarrow> inverse l *\<^sub>C f\<close>
+    by simp
+  have \<open>f \<noteq> 0\<close>
+  proof -
+    from lim_hn have \<open>(\<lambda>k. norm (h (n k))) \<longlonglongrightarrow> norm (inverse l *\<^sub>C f)\<close>
+      apply (rule isCont_tendsto_compose[unfolded o_def, rotated])
+      by fastforce
+    moreover have \<open>(\<lambda>_. 1) \<longlonglongrightarrow> 1\<close>
+      by simp
+    ultimately have \<open>norm (inverse l *\<^sub>C f) = 1\<close>
+      unfolding normh
+      using LIMSEQ_unique by blast
+    then show \<open>f \<noteq> 0\<close>
+      by force
+  qed
+  from lim_hn have \<open>(\<lambda>k. T (h (n k))) \<longlonglongrightarrow> T (inverse l *\<^sub>C f)\<close>
+    apply (rule isCont_tendsto_compose[rotated])
+    by force
+  with lim_Thn have \<open>f = T (inverse l *\<^sub>C f)\<close>
+    using LIMSEQ_unique by blast
+  with \<open>l \<noteq> 0\<close> have \<open>l *\<^sub>C f = T f\<close>
+    by (metis cblinfun.scaleC_right divideC_field_simps(2))
+  with \<open>f \<noteq> 0\<close> show \<open>l \<in> eigenvalues T\<close>
+    by (auto intro!: eigenvaluesI[where h=f])
+qed
+
+
+lemma norm_is_eigenvalue:
+  \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.5.9\<close>
+  fixes a :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a::{not_singleton, chilbert_space}\<close>
+  assumes \<open>compact_op a\<close>
+  assumes \<open>selfadjoint a\<close>
+  shows \<open>norm a \<in> eigenvalues a \<or> - norm a \<in> eigenvalues a\<close>
+proof -
+  wlog \<open>a \<noteq> 0\<close>
+    using negation by auto
+  obtain h e where h_lim: \<open>(\<lambda>i. h i \<bullet>\<^sub>C a (h i)) \<longlonglongrightarrow> e\<close> and normh: \<open>norm (h i) = 1\<close> 
+    and norme: \<open>cmod e = norm a\<close> for i
+  proof atomize_elim
+    have sgn_cmod: \<open>sgn x * cmod x = x\<close> for x
+      by (simp add: complex_of_real_cmod sgn_mult_abs)
+    from cblinfun_norm_is_Sup_cinner[OF \<open>selfadjoint a\<close>]
+    obtain f where range_f: \<open>range f \<subseteq> ((\<lambda>\<psi>. cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<psi>))) ` {\<psi>. norm \<psi> = 1})\<close>
+      and f_lim: \<open>f \<longlonglongrightarrow> norm a\<close>
+      apply atomize_elim
+      apply (rule is_Sup_imp_ex_tendsto)
+      by (auto simp: ex_norm1_not_singleton)
+    obtain h0 where normh0: \<open>norm (h0 i) = 1\<close> and f_h0: \<open>f i = cmod (h0 i \<bullet>\<^sub>C a (h0 i))\<close> for i
+      apply (atomize_elim, rule choice2)
+      using range_f by auto
+    from f_h0 f_lim have h0lim_cmod: \<open>(\<lambda>i. cmod (h0 i \<bullet>\<^sub>C a (h0 i))) \<longlonglongrightarrow> norm a\<close>
+      by presburger
+    have sgn_sphere: \<open>sgn (h0 i \<bullet>\<^sub>C a (h0 i)) \<in> insert 0 (sphere 0 1)\<close> for i
+      using normh0 by (auto intro!: left_inverse simp: sgn_div_norm)
+    have compact: \<open>compact (insert 0 (sphere (0::complex) 1))\<close>
+      by simp
+    obtain r l where \<open>strict_mono r\<close> and l_sphere: \<open>l \<in> insert 0 (sphere 0 1)\<close>
+      and h0lim_sgn: \<open>((\<lambda>i. sgn (h0 i \<bullet>\<^sub>C a (h0 i))) \<circ> r) \<longlonglongrightarrow> l\<close>
+      using compact[unfolded compact_def, rule_format, OF sgn_sphere]
+      by fast
+    define h and e where \<open>h i = h0 (r i)\<close> and \<open>e = l * norm a\<close> for i
+    have hlim_cmod: \<open>(\<lambda>i. cmod (h i \<bullet>\<^sub>C a (h i))) \<longlonglongrightarrow> norm a\<close>
+      using LIMSEQ_subseq_LIMSEQ[OF h0lim_cmod \<open>strict_mono r\<close>]  
+      unfolding h_def o_def by auto
+    with h0lim_sgn have \<open>(\<lambda>i. sgn (h i \<bullet>\<^sub>C a (h i)) * cmod (h i \<bullet>\<^sub>C a (h i))) \<longlonglongrightarrow> e\<close>
+      by (auto intro!: tendsto_mult tendsto_of_real simp: o_def h_def e_def)
+    then have hlim: \<open>(\<lambda>i. h i \<bullet>\<^sub>C a (h i)) \<longlonglongrightarrow> e\<close>
+      by (simp add: sgn_cmod)
+    have \<open>e \<noteq> 0\<close>
+    proof (rule ccontr, simp)
+      assume \<open>e = 0\<close>
+      from hlim have \<open>(\<lambda>i. cmod (h i \<bullet>\<^sub>C a (h i))) \<longlonglongrightarrow> cmod e\<close>
+        apply (rule tendsto_compose[where g=cmod, rotated])
+        by (smt (verit, del_insts) \<open>e = 0\<close> diff_zero dist_norm metric_LIM_imp_LIM norm_ge_zero norm_zero real_norm_def tendsto_ident_at)
+      with \<open>e = 0\<close> hlim_cmod have \<open>norm a = 0\<close>
+        using LIMSEQ_unique by fastforce
+      with \<open>a \<noteq> 0\<close> show False
+        by simp
+    qed
+    then have norme: \<open>norm e = norm a\<close>
+      using l_sphere by (simp add: e_def norm_mult)
+    show \<open>\<exists>h e. (\<lambda>i. h i \<bullet>\<^sub>C (a *\<^sub>V h i)) \<longlonglongrightarrow> e \<and> (\<forall>i. norm (h i) = 1) \<and> cmod e = norm a\<close>
+      using norme normh0 hlim
+      by (auto intro!: exI[of _ h] exI[of _ e] simp: h_def)
+  qed
+  have \<open>e \<in> \<real>\<close>
+  proof -
+    from h_lim[THEN tendsto_Im]
+    have *: \<open>(\<lambda>i. Im (h i \<bullet>\<^sub>C a (h i))) \<longlonglongrightarrow> Im e\<close>
+      by -
+    have **: \<open>Im (h i \<bullet>\<^sub>C a (h i)) = 0\<close> for i
+      using assms(2) selfadjoint_def cinner_hermitian_real complex_is_Real_iff by auto
+    have \<open>Im e = 0\<close>
+      using _ * apply (rule tendsto_unique)
+      using ** by auto
+    then show ?thesis
+      using complex_is_Real_iff by presburger
+  qed
+  define e' where \<open>e' = Re e\<close>
+  with \<open>e \<in> \<real>\<close> have ee': \<open>e = of_real e'\<close>
+    by (simp add: of_real_Re)
+  have \<open>e' \<in> eigenvalues a\<close>
+  proof -
+    have [trans]: \<open>f \<longlonglongrightarrow> 0\<close> if \<open>\<And>x. f x \<le> g x\<close> and \<open>g \<longlonglongrightarrow> 0\<close> and \<open>\<And>x. f x \<ge> 0\<close> for f g :: \<open>nat \<Rightarrow> real\<close>
+      apply (rule real_tendsto_sandwich[where h=g and f=\<open>\<lambda>_. 0\<close>])
+      using that by auto
+    have \<open>(norm ((a - e' *\<^sub>R id_cblinfun) (h n)))\<^sup>2 = (norm (a (h n)))\<^sup>2 - 2 * e' * Re (h n \<bullet>\<^sub>C a (h n)) + e'\<^sup>2\<close> for n
+      apply (simp add: power2_norm_eq_cinner' cblinfun.diff_left cinner_diff_left
+        cinner_diff_right cinner_scaleR_left cblinfun.scaleR_left)
+      apply (subst cinner_commute[of _ \<open>h n\<close>])
+      by (simp add: normh algebra_simps power2_eq_square 
+          del: cinner_commute' flip: power2_norm_eq_cinner')
+    also have \<open>\<dots>n \<le> e'\<^sup>2 - 2 * e' * Re (h n \<bullet>\<^sub>C a (h n)) + e'\<^sup>2\<close> for n
+    proof -
+      from norme have \<open>e'\<^sup>2 = (norm a)\<^sup>2\<close>
+        apply (simp add: ee')
+        by (smt (verit) power2_minus)
+      then have \<open>(norm (a *\<^sub>V h n))\<^sup>2 \<le> e'\<^sup>2\<close>
+        apply simp
+        by (metis mult_cancel_left2 norm_cblinfun normh)
+      then show ?thesis
+        by auto
+    qed
+    also have \<open>\<dots> \<longlonglongrightarrow> 0\<close>
+      apply (subst asm_rl[of \<open>(\<lambda>n. e'\<^sup>2 - 2 * e' * Re (h n \<bullet>\<^sub>C a (h n)) + e'\<^sup>2) = (\<lambda>n. 2 * e' * (e' - Re (h n \<bullet>\<^sub>C (a *\<^sub>V h n))))\<close>])
+       apply (auto intro!: ext simp: right_diff_distrib power2_eq_square)[1]
+      using h_lim[THEN tendsto_Re]
+      by (auto intro!: tendsto_mult_right_zero tendsto_diff_const_left_rewrite simp: ee')
+    finally have \<open>(\<lambda>n. (a - e' *\<^sub>R id_cblinfun) (h n)) \<longlonglongrightarrow> 0\<close>
+      by (simp add: tendsto_norm_zero_iff)
+    then show \<open>e' \<in> eigenvalues a\<close>
+      unfolding scaleR_scaleC
+      apply (rule eigenvalue_in_the_limit_compact_op[rotated -1])
+      using \<open>a \<noteq> 0\<close> norme by (auto intro!: normh simp: assms ee')
+  qed
+  from \<open>e \<in> \<real>\<close> norme
+  have \<open>e = norm a \<or> e = - norm a\<close>
+    by (smt (verit, best) in_Reals_norm of_real_Re)
+  with \<open>e' \<in> eigenvalues a\<close> show ?thesis
+    using ee' by presburger
+qed
+
+lemma
+  fixes a :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a::{not_singleton, chilbert_space}\<close>
+  assumes \<open>compact_op a\<close>
+  assumes \<open>selfadjoint a\<close>
+  shows largest_eigenvalue_norm_aux: \<open>largest_eigenvalue a \<in> {norm a, - norm a}\<close>
+    and largest_eigenvalue_ex: \<open>largest_eigenvalue a \<in> eigenvalues a\<close>
+proof -
+  define l where \<open>l = (SOME x. x \<in> eigenvalues a \<and> (\<forall>y \<in> eigenvalues a. cmod x \<ge> cmod y))\<close>
+  from norm_is_eigenvalue[OF assms]
+  obtain e where \<open>e \<in> {of_real (norm a), - of_real (norm a)}\<close> and \<open>e \<in> eigenvalues a\<close>
+    by auto
+  then have norme: \<open>norm e = norm a\<close>
+    by auto
+  have \<open>e \<in> eigenvalues a \<and> (\<forall>y\<in>eigenvalues a. cmod y \<le> cmod e)\<close> (is \<open>?P e\<close>)
+    by (auto intro!: \<open>e \<in> eigenvalues a\<close> simp: eigenvalue_norm_bound norme)
+  then have *: \<open>l \<in> eigenvalues a \<and> (\<forall>y\<in>eigenvalues a. cmod y \<le> cmod l)\<close>
+    unfolding l_def largest_eigenvalue_def by (rule someI)
+  then have l_def': \<open>l = largest_eigenvalue a\<close>
+    by (metis (mono_tags, lifting) l_def largest_eigenvalue_def) 
+  from * have \<open>l \<in> eigenvalues a\<close>
+    by (simp add: l_def)
+  then show \<open>largest_eigenvalue a \<in> eigenvalues a\<close>
+    by (simp add: l_def')
+  have \<open>norm l \<ge> norm a\<close>
+    using * norme \<open>e \<in> eigenvalues a\<close> by auto
+  moreover have \<open>norm l \<le> norm a\<close>
+    using "*" eigenvalue_norm_bound by blast
+  ultimately have \<open>norm l = norm a\<close>
+    by linarith
+  moreover have \<open>l \<in> \<real>\<close>
+    using \<open>l \<in> eigenvalues a\<close> assms(2) eigenvalue_selfadj_real by blast
+  ultimately have \<open>l \<in> {norm a, - norm a}\<close>
+    by (smt (verit, ccfv_SIG) in_Reals_norm insertCI l_def of_real_Re)
+  then show \<open>largest_eigenvalue a \<in> {norm a, - norm a}\<close>
+    by (simp add: l_def')
+qed
+
+lemma largest_eigenvalue_norm:
+  fixes a :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a::chilbert_space\<close>
+  assumes \<open>compact_op a\<close>
+  assumes \<open>selfadjoint a\<close>
+  shows \<open>largest_eigenvalue a \<in> {norm a, - norm a}\<close>
+proof (cases \<open>class.not_singleton TYPE('a)\<close>)
+  case True
+  show ?thesis
+    using chilbert_space_class.chilbert_space_axioms True assms 
+    by (rule largest_eigenvalue_norm_aux[internalize_sort' 'a])
+next
+  case False
+  then have \<open>a = 0\<close>
+    by (rule not_not_singleton_cblinfun_zero)
+  then show ?thesis
+    by simp
+qed
+
+hide_fact largest_eigenvalue_norm_aux
+
+lemma cmod_largest_eigenvalue:
+  fixes a :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a::chilbert_space\<close>
+  assumes \<open>compact_op a\<close>
+  assumes \<open>selfadjoint a\<close>
+  shows \<open>cmod (largest_eigenvalue a) = norm a\<close>
+  using largest_eigenvalue_norm[OF assms] by auto
+
 
 end

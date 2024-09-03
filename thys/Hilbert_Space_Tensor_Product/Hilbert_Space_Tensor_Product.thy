@@ -3,9 +3,7 @@ section \<open>\<open>Hilbert_Space_Tensor_Product\<close> -- Tensor product of 
 theory Hilbert_Space_Tensor_Product
   imports Complex_Bounded_Operators.Complex_L2 Misc_Tensor_Product
     Strong_Operator_Topology Polynomial_Interpolation.Ring_Hom
-    Positive_Operators Trace_Class Weak_Star_Topology
-
-    Unsorted1 Unsorted2
+    Positive_Operators Weak_Star_Topology Spectral_Theorem Trace_Class
 begin
 
 unbundle cblinfun_notation

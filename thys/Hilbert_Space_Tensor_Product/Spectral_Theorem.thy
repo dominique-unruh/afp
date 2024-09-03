@@ -1,6 +1,5 @@
 theory Spectral_Theorem
-  imports Compact_Operators Positive_Operators
-Unsorted1
+  imports Compact_Operators Positive_Operators Eigenvalues
 begin
 
 subsection \<open>Spectral decomp, compact op\<close>
