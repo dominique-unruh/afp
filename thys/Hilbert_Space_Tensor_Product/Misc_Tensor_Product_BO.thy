@@ -510,5 +510,25 @@ lemma eq_on_ccsubspaces_sup:
   by fastforce
 
 
+lemma ccsubspace_contains_unit:
+  assumes \<open>E \<noteq> \<bottom>\<close>
+  shows \<open>\<exists>h\<in>space_as_set E. norm h = 1\<close>
+proof -
+  from assms have \<open>space_as_set E \<noteq> {0}\<close>
+    by (metis bot_ccsubspace.rep_eq space_as_set_inject)
+  then obtain h\<^sub>0 where \<open>h\<^sub>0 \<in> space_as_set E\<close> and \<open>h\<^sub>0 \<noteq> 0\<close>
+    by auto
+  then have \<open>sgn h\<^sub>0 \<in> space_as_set E\<close>
+    using csubspace_space_as_set
+    by (auto intro!: complex_vector.subspace_scale
+        simp add: sgn_div_norm scaleR_scaleC)
+  moreover from \<open>h\<^sub>0 \<noteq> 0\<close> have \<open>norm (sgn h\<^sub>0) = 1\<close>
+    by (simp add: norm_sgn)
+  ultimately show ?thesis
+    by auto
+qed
+
+
+
 
 end

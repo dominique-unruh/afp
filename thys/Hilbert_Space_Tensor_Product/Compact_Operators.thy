@@ -1,8 +1,9 @@
 theory Compact_Operators
-  imports Tensor_Product.Misc_Tensor_Product_BO HS2Ell2
+  imports Misc_Tensor_Product_BO HS2Ell2
     Sqrt_Babylonian.Sqrt_Babylonian_Auxiliary Wlog.Wlog
     "HOL-Analysis.Abstract_Metric_Spaces"
     Strong_Operator_Topology
+    Misc_Tensor_Product_TTS
 begin
 
 unbundle cblinfun_notation
@@ -1228,8 +1229,78 @@ proof -
 qed
 
 
-subsection \<open>Spectral decomposition\<close>
-
-(* TODO. Currently in Unsorted_HSTP.thy *)
+lemma compact_op_eigenspace_finite_dim:
+  fixes a :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a::chilbert_space\<close>
+  assumes \<open>compact_op a\<close>
+  assumes \<open>e \<noteq> 0\<close>
+  shows \<open>finite_dim_ccsubspace (eigenspace e a)\<close>
+proof -
+  define S where \<open>S = space_as_set (eigenspace e a)\<close>
+  obtain B where \<open>ccspan B = eigenspace e a\<close> and \<open>is_ortho_set B\<close>
+    and norm_B: \<open>x \<in> B \<Longrightarrow> norm x = 1\<close> for x
+    using orthonormal_subspace_basis_exists[where S=\<open>{}\<close> and V=\<open>eigenspace e a\<close>]
+    by (auto simp: S_def)
+  then have span_BS: \<open>closure (cspan B) = S\<close>
+    by (metis S_def ccspan.rep_eq)
+  have \<open>finite B\<close>
+  proof (rule ccontr)
+    assume \<open>infinite B\<close>
+    then obtain b :: \<open>nat \<Rightarrow> 'a\<close> where range_b: \<open>range b \<subseteq> B\<close> and \<open>inj b\<close>
+      by (meson infinite_countable_subset)
+    define f where \<open>f n = a (b n)\<close> for n
+    have range_f: \<open>range f \<subseteq> closure (a ` cball 0 1)\<close>
+      using norm_B range_b
+      by (auto intro!: closure_subset[THEN subsetD] imageI simp: f_def)
+    from \<open>compact_op a\<close> have compact: \<open>compact (closure (a ` cball 0 1))\<close>
+      using compact_op_def2 by blast
+    obtain l r where \<open>strict_mono r\<close> and fr_lim: \<open>(f o r) \<longlonglongrightarrow> l\<close>
+      apply atomize_elim
+      using range_f compact[unfolded compact_def, rule_format, of f]
+      by fast
+    define d :: real where \<open>d = cmod e * sqrt 2\<close>
+    from \<open>e \<noteq> 0\<close> have \<open>d > 0\<close>
+      by (auto intro!: Rings.linordered_semiring_strict_class.mult_pos_pos simp: d_def)
+    have aux: \<open>\<exists>n\<ge>N. P n\<close> if \<open>P (Suc N)\<close> for P N
+      using Suc_n_not_le_n nat_le_linear that by blast
+    have \<open>dist (f (r n)) (f (r (Suc n))) = d\<close> for n
+    proof -
+      have ortho: \<open>is_orthogonal (b (r n)) (b (r (Suc n)))\<close>
+      proof -
+        have \<open>b (r n) \<noteq> b (r (Suc n))\<close>
+          by (metis Suc_n_not_n \<open>inj b\<close> \<open>strict_mono r\<close> injD strict_mono_eq)
+        moreover from range_b have \<open>b (r n) \<in> B\<close> and \<open>b (r (Suc n)) \<in> B\<close>
+          by fast+
+        ultimately show ?thesis
+          using \<open>is_ortho_set B\<close> 
+          by (auto intro!: simp: is_ortho_set_def)
+      qed
+      have normb: \<open>norm (b n) = 1\<close> for n
+        by (metis \<open>inj b\<close> image_subset_iff inj_image_mem_iff norm_B range_b range_eqI)
+      have \<open>f (r n) = e *\<^sub>C b (r n)\<close> for n
+      proof -
+        from range_b span_BS
+        have \<open>b (r n) \<in> S\<close>
+          using complex_vector.span_superset closure_subset
+          apply (auto dest!: range_subsetD[where i=\<open>b n\<close>])
+          by fast
+        then show ?thesis
+          by (auto intro!: dest!: eigenspace_memberD simp: S_def f_def)
+      qed
+      then have \<open>(dist (f (r n)) (f (r (Suc n))))\<^sup>2 = (cmod e * dist (b (r n)) (b (r (Suc n))))\<^sup>2\<close>
+        by (simp add: dist_norm flip: scaleC_diff_right)
+      also from ortho have \<open>\<dots> = (cmod e * sqrt 2)\<^sup>2\<close>
+        by (simp add: dist_norm polar_identity_minus power_mult_distrib normb)
+      finally show ?thesis
+        by (simp add: d_def)
+    qed
+    with \<open>d > 0\<close> have \<open>\<not> Cauchy (f o r)\<close>
+      by (auto intro!: exI[of _ \<open>d/2\<close>] aux
+          simp: Cauchy_altdef2 dist_commute simp del: less_divide_eq_numeral1)
+    with fr_lim show False
+      using LIMSEQ_imp_Cauchy by blast
+  qed
+  with span_BS show ?thesis
+    using S_def cspan_finite_dim finite_dim_ccsubspace.rep_eq by fastforce
+qed
 
 end
