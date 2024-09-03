@@ -539,8 +539,7 @@ next
 qed
 
 lemma spectral_dec_proj_pos: \<open>spectral_dec_proj a n \<ge> 0\<close>
-  apply (auto intro!: simp: spectral_dec_proj_def)
-  by (metis Proj_bot Proj_mono bot.extremum) 
+  by (auto intro!: simp: spectral_dec_proj_def)
 
 lemma
   assumes \<open>compact_op a\<close>
@@ -650,6 +649,78 @@ proof -
   then show ?thesis
     by (simp add: pos_op_plus_neg_op) 
 qed
+
+definition spectral_dec_vecs :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow> 'a::chilbert_space set\<close> where
+  \<open>spectral_dec_vecs a = (\<Union>n. scaleC (csqrt (spectral_dec_val a n)) ` some_onb_of (spectral_dec_space a n))\<close>
+
+lemma spectral_dec_vecs_ortho:
+  assumes \<open>selfadjoint a\<close> and \<open>compact_op a\<close>
+  shows \<open>is_ortho_set (spectral_dec_vecs a)\<close>
+proof (unfold is_ortho_set_def, intro conjI ballI impI)
+  show \<open>0 \<notin> spectral_dec_vecs a\<close>
+  proof (rule notI)
+    assume \<open>0 \<in> spectral_dec_vecs a\<close>
+    then obtain n v where v0: \<open>0 = csqrt (spectral_dec_val a n) *\<^sub>C v\<close> and v_in: \<open>v \<in> some_onb_of (spectral_dec_space a n)\<close>
+      by (auto simp: spectral_dec_vecs_def)
+    from v_in have \<open>v \<noteq> 0\<close>
+      using some_onb_of_norm1 by fastforce
+    from v_in have \<open>spectral_dec_space a n \<noteq> 0\<close>
+      using some_onb_of_0 by force
+    then have \<open>spectral_dec_val a n \<noteq> 0\<close>
+      by (meson spectral_dec_space.elims)
+    with v0 \<open>v \<noteq> 0\<close> show False
+      by force
+  qed
+  fix g h assume g: \<open>g \<in> spectral_dec_vecs a\<close> and h: \<open>h \<in> spectral_dec_vecs a\<close> and \<open>g \<noteq> h\<close>
+  from g obtain ng g' where gg': \<open>g = csqrt (spectral_dec_val a ng) *\<^sub>C g'\<close> and g'_in: \<open>g' \<in> some_onb_of (spectral_dec_space a ng)\<close>
+    by (auto simp: spectral_dec_vecs_def)
+  from h obtain nh h' where hh': \<open>h = csqrt (spectral_dec_val a nh) *\<^sub>C h'\<close> and h'_in: \<open>h' \<in> some_onb_of (spectral_dec_space a nh)\<close>
+    by (auto simp: spectral_dec_vecs_def)
+  have \<open>is_orthogonal g' h'\<close>
+  proof (cases \<open>ng = nh\<close>)
+    case True
+    with h'_in have \<open>h' \<in> some_onb_of (spectral_dec_space a nh)\<close>
+      by simp
+    with g'_in True \<open>g \<noteq> h\<close> gg' hh'
+    show ?thesis
+      using  is_ortho_set_def by fastforce
+  next
+    case False
+    then have \<open>orthogonal_spaces (spectral_dec_space a ng) (spectral_dec_space a nh)\<close>
+      by (auto intro!: spectral_dec_space_orthogonal assms simp: )
+    with h'_in g'_in show \<open>is_orthogonal g' h'\<close>
+      using orthogonal_spaces_ccspan by force
+  qed
+  then show \<open>is_orthogonal g h\<close>
+    by (simp add: gg' hh')
+qed
+
+lemma spectral_dec_val_nonneg:
+  assumes \<open>a \<ge> 0\<close>
+  assumes \<open>compact_op a\<close>
+  shows \<open>spectral_dec_val a n \<ge> 0\<close>
+proof -
+  define v where \<open>v = spectral_dec_val a n\<close>
+  wlog non0: \<open>spectral_dec_val a n \<noteq> 0\<close> generalizing v keeping v_def
+    using negation by force
+  have [simp]: \<open>selfadjoint a\<close>
+    using adj_0 assms(1) comparable_hermitean selfadjoint_def by blast
+  have \<open>v \<in> eigenvalues a\<close>
+    by (auto intro!: non0 spectral_dec_val_eigenvalue assms simp: v_def)
+  then show \<open>spectral_dec_val a n \<ge> 0\<close>
+    using assms(1) eigenvalues_nonneg v_def by blast
+qed
+
+lemma spectral_dec_space_finite_dim[intro]:
+  assumes \<open>compact_op a\<close>
+  shows \<open>finite_dim_ccsubspace (spectral_dec_space a n)\<close>
+  by (auto intro!: compact_op_eigenspace_finite_dim spectral_dec_op_compact assms simp: spectral_dec_space_def)
+
+
+lemma spectral_dec_space_0:
+  assumes \<open>spectral_dec_val a n = 0\<close>
+  shows \<open>spectral_dec_space a n = 0\<close>
+  by (simp add: assms spectral_dec_space_def)
 
 
 end

@@ -1354,46 +1354,46 @@ lemma has_sum_in_comm_additive:
 section \<open>Stuff relying on the above lifting\<close>
 
 (* TODO: Migrate this into Bounded_Operators session,
-   and change "some_chilbert_basis" there to to abbreviate "some_chilbert_basis_of UNIV" *)
-definition \<open>some_chilbert_basis_of X = (SOME B. is_ortho_set B \<and> (\<forall>b\<in>B. norm b = 1) \<and> ccspan B = X)\<close>
+   and change "some_chilbert_basis" there to to abbreviate "some_onb_of UNIV" *)
+definition \<open>some_onb_of X = (SOME B. is_ortho_set B \<and> (\<forall>b\<in>B. norm b = 1) \<and> ccspan B = X)\<close>
 
 lemma
   fixes X :: \<open>'a::chilbert_space ccsubspace\<close>
-  shows some_chilbert_basis_of_is_ortho_set[simp]: \<open>is_ortho_set (some_chilbert_basis_of X)\<close>
-    and some_chilbert_basis_of_norm1: \<open>b \<in> some_chilbert_basis_of X \<Longrightarrow> norm b = 1\<close>
-    and some_chilbert_basis_of_ccspan[simp]: \<open>ccspan (some_chilbert_basis_of X) = X\<close>
+  shows some_onb_of_is_ortho_set[iff]: \<open>is_ortho_set (some_onb_of X)\<close>
+    and some_onb_of_norm1: \<open>b \<in> some_onb_of X \<Longrightarrow> norm b = 1\<close>
+    and some_onb_of_ccspan[simp]: \<open>ccspan (some_onb_of X) = X\<close>
 proof -
   let ?P = \<open>\<lambda>B. is_ortho_set B \<and> (\<forall>b\<in>B. norm b = 1) \<and> ccspan B = X\<close>
   have \<open>Ex ?P\<close>
     using orthonormal_subspace_basis_exists[where S=\<open>{}\<close> and V=X]
     by auto
-  then have \<open>?P (some_chilbert_basis_of X)\<close>
-    by (simp add: some_chilbert_basis_of_def verit_sko_ex)
-  then show is_ortho_set_some_chilbert_basis_of: \<open>is_ortho_set (some_chilbert_basis_of X)\<close>
-    and \<open>b \<in> some_chilbert_basis_of X \<Longrightarrow> norm b = 1\<close>
-    and \<open>ccspan (some_chilbert_basis_of X) = X\<close>
+  then have \<open>?P (some_onb_of X)\<close>
+    by (simp add: some_onb_of_def verit_sko_ex)
+  then show is_ortho_set_some_onb_of: \<open>is_ortho_set (some_onb_of X)\<close>
+    and \<open>b \<in> some_onb_of X \<Longrightarrow> norm b = 1\<close>
+    and \<open>ccspan (some_onb_of X) = X\<close>
     by auto
 qed
 
 lemma ccsubspace_as_whole_type:
   fixes X :: \<open>'a::chilbert_space ccsubspace\<close>
   assumes \<open>X \<noteq> 0\<close>
-  shows \<open>let 'b::type = some_chilbert_basis_of X in
+  shows \<open>let 'b::type = some_onb_of X in
          \<exists>U::'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a. isometry U \<and> U *\<^sub>S \<top> = X\<close>
 proof with_type_intro
-  show \<open>some_chilbert_basis_of X \<noteq> {}\<close>
-    using some_chilbert_basis_of_ccspan[of X] assms
-    by (auto simp del: some_chilbert_basis_of_ccspan)
+  show \<open>some_onb_of X \<noteq> {}\<close>
+    using some_onb_of_ccspan[of X] assms
+    by (auto simp del: some_onb_of_ccspan)
   fix Rep :: \<open>'b \<Rightarrow> 'a\<close> and Abs
-  assume \<open>bij_betw Rep UNIV (some_chilbert_basis_of X)\<close>
-  then interpret type_definition Rep \<open>inv Rep\<close> \<open>some_chilbert_basis_of X\<close>
+  assume \<open>bij_betw Rep UNIV (some_onb_of X)\<close>
+  then interpret type_definition Rep \<open>inv Rep\<close> \<open>some_onb_of X\<close>
     by (simp add: type_definition_bij_betw_iff)
   define U where \<open>U = cblinfun_extension (range ket) (Rep o inv ket)\<close>
   have [simp]: \<open>Rep i \<bullet>\<^sub>C Rep j = 0\<close> if \<open>i \<noteq> j\<close> for i j
-    using Rep some_chilbert_basis_of_is_ortho_set[unfolded is_ortho_set_def] that
+    using Rep some_onb_of_is_ortho_set[unfolded is_ortho_set_def] that
     by (smt (verit) Rep_inverse)
   moreover have [simp]: \<open>norm (Rep i) = 1\<close> for i
-    using Rep[of i] some_chilbert_basis_of_norm1
+    using Rep[of i] some_onb_of_norm1
     by auto
   ultimately have \<open>cblinfun_extension_exists (range ket) (Rep o inv ket)\<close>
     apply (rule_tac cblinfun_extension_exists_ortho)
@@ -1409,5 +1409,144 @@ proof with_type_intro
   ultimately show \<open>\<exists>U :: 'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a. isometry U \<and> U *\<^sub>S \<top> = X\<close>
     by auto
 qed
+
+lemma some_onb_of_0[simp]: \<open>some_onb_of (0 :: 'a::chilbert_space ccsubspace) = {}\<close>
+proof -
+  have no0: \<open>0 \<notin> some_onb_of (0 :: 'a ccsubspace)\<close>
+    using some_onb_of_norm1
+    by fastforce
+  have \<open>ccspan (some_onb_of 0) = (0 :: 'a ccsubspace)\<close>
+    by simp
+  then have \<open>some_onb_of 0 \<subseteq> space_as_set (0 :: 'a ccsubspace)\<close>
+    by (metis ccspan_superset)
+  also have \<open>\<dots> = {0}\<close>
+    by simp
+  finally show ?thesis
+    using no0
+    by blast
+qed
+
+lemma some_onb_of_finite_dim:
+  fixes S :: \<open>'a::chilbert_space ccsubspace\<close>
+  assumes \<open>finite_dim_ccsubspace S\<close>
+  shows \<open>finite (some_onb_of S)\<close>
+proof -
+  from assms obtain C where CS: \<open>cspan C = space_as_set S\<close> and \<open>finite C\<close>
+    by (meson cfinite_dim_subspace_has_basis csubspace_space_as_set finite_dim_ccsubspace.rep_eq)
+  then show \<open>finite (some_onb_of S)\<close>
+    using ccspan_superset complex_vector.independent_span_bound is_ortho_set_cindependent by fastforce
+qed
+
+lemma some_onb_of_in_space[iff]:
+  fixes S :: \<open>'a::chilbert_space ccsubspace\<close>
+  shows \<open>some_onb_of S \<subseteq> space_as_set S\<close>
+  using ccspan_superset by fastforce
+
+
+
+lemma sum_some_onb_of_butterfly:
+  fixes S :: \<open>'a::chilbert_space ccsubspace\<close>
+  assumes \<open>finite_dim_ccsubspace S\<close>
+  shows \<open>(\<Sum>x\<in>some_onb_of S. butterfly x x) = Proj S\<close>
+proof -
+  obtain B where onb_S_in_B: \<open>some_onb_of S \<subseteq> B\<close> and \<open>is_onb B\<close>
+    apply atomize_elim
+    apply (rule orthonormal_basis_exists)
+    by (simp_all add: some_onb_of_norm1)
+  have S_ccspan: \<open>S = ccspan (some_onb_of S)\<close>
+    by simp
+
+  show ?thesis
+  proof (rule cblinfun_eq_gen_eqI[where G=B])
+    show \<open>ccspan B = \<top>\<close>
+      using \<open>is_onb B\<close> is_onb_def by blast
+    fix b assume \<open>b \<in> B\<close>
+    show \<open>(\<Sum>x\<in>some_onb_of S. selfbutter x) *\<^sub>V b = Proj S *\<^sub>V b\<close>
+    proof (cases \<open>b \<in> some_onb_of S\<close>)
+      case True
+      have \<open>(\<Sum>x\<in>some_onb_of S. selfbutter x) *\<^sub>V b = (\<Sum>x\<in>some_onb_of S. selfbutter x *\<^sub>V b)\<close>
+        using cblinfun.sum_left by blast
+      also have \<open>\<dots> = b\<close>
+        apply (subst sum_single[where i=b])
+        using True apply (auto intro!: simp add: assms some_onb_of_finite_dim) 
+        using is_ortho_set_def apply fastforce
+        using cnorm_eq_1 some_onb_of_norm1 by force
+      also have \<open>\<dots> = Proj S *\<^sub>V b\<close>
+        apply (rule Proj_fixes_image[symmetric])
+        using True some_onb_of_in_space by blast
+      finally show ?thesis
+        by -
+    next
+      case False
+      have *: \<open>is_orthogonal x b\<close> if \<open>x \<in> some_onb_of S\<close> and \<open>x \<noteq> 0\<close> for x
+      proof -
+        have \<open>x \<in> B\<close>
+          using onb_S_in_B that(1) by fastforce
+        moreover note \<open>b \<in> B\<close>
+        moreover have \<open>x \<noteq> b\<close>
+          using False that(1) by blast
+        moreover note \<open>is_onb B\<close>
+        ultimately show \<open>is_orthogonal x b\<close>
+          by (simp add: is_onb_def is_ortho_set_def)
+      qed
+      have \<open>(\<Sum>x\<in>some_onb_of S. selfbutter x) *\<^sub>V b = (\<Sum>x\<in>some_onb_of S. selfbutter x *\<^sub>V b)\<close>
+        using cblinfun.sum_left by blast
+      also have \<open>\<dots> = 0\<close>
+        by (auto intro!: sum.neutral simp: * )
+      also have \<open>\<dots> = Proj S *\<^sub>V b\<close>
+        apply (rule Proj_0_compl[symmetric])
+        apply (subst S_ccspan)
+        apply (rule mem_ortho_ccspanI)
+        using "*" cinner_zero_right is_orthogonal_sym by blast
+      finally show ?thesis 
+        by -
+    qed
+  qed
+qed
+
+
+lemma cdim_infinite_0:
+  assumes \<open>\<not> cfinite_dim S\<close>
+  shows \<open>cdim S = 0\<close>
+proof -
+  from assms have not_fin_cspan: \<open>\<not> cfinite_dim (cspan S)\<close>
+    using cfinite_dim_def cfinite_dim_subspace_has_basis complex_vector.span_superset by fastforce
+  obtain B where \<open>cindependent B\<close> and \<open>cspan S = cspan B\<close>
+    using csubspace_has_basis by blast
+  with not_fin_cspan have \<open>infinite B\<close>
+    by auto
+  then have \<open>card B = 0\<close>
+    by force
+  have \<open>cdim (cspan S) = 0\<close> 
+    apply (rule complex_vector.dim_unique[of B])
+       apply (auto intro!: simp add: \<open>cspan S = cspan B\<close> complex_vector.span_superset)
+    using \<open>cindependent B\<close> \<open>card B = 0\<close> by auto
+  then show ?thesis
+    by simp
+qed
+
+
+
+lemma some_onb_of_card:
+  fixes S :: \<open>'a::chilbert_space ccsubspace\<close>
+  shows \<open>card (some_onb_of S) = cdim (space_as_set S)\<close>
+proof (cases \<open>finite_dim_ccsubspace S\<close>)
+  case True
+  show ?thesis
+    apply (rule complex_vector.dim_eq_card[symmetric])
+     apply (auto simp: is_ortho_set_cindependent)
+     apply (metis True ccspan_finite some_onb_of_ccspan complex_vector.span_clauses(1) some_onb_of_finite_dim)
+    by (metis True ccspan_finite some_onb_of_ccspan complex_vector.span_eq_iff csubspace_space_as_set some_onb_of_finite_dim)
+next
+  case False
+  then have \<open>cdim (space_as_set S) = 0\<close>
+    by (simp add: cdim_infinite_0 finite_dim_ccsubspace.rep_eq)
+  moreover from False have \<open>infinite (some_onb_of S)\<close>
+    using ccspan_finite_dim by fastforce
+  ultimately show ?thesis 
+    by simp
+qed
+
+
 
 end

@@ -608,6 +608,30 @@ proof -
         simp flip: tensor_ell2_ket)
 qed
 
+lemma unitary_tensor_ell2_right_CARD_1:
+  fixes \<psi> :: \<open>'a :: {CARD_1,enum} ell2\<close>
+  assumes \<open>norm \<psi> = 1\<close>
+  shows \<open>unitary (tensor_ell2_right \<psi>)\<close>
+proof (rule unitaryI)
+  show \<open>tensor_ell2_right \<psi>* o\<^sub>C\<^sub>L tensor_ell2_right \<psi> = id_cblinfun\<close>
+    by (simp add: assms isometry_tensor_ell2_right)
+  have *: \<open>(\<psi> \<bullet>\<^sub>C \<phi>) * (\<phi> \<bullet>\<^sub>C \<psi>) = \<phi> \<bullet>\<^sub>C \<phi>\<close> for \<phi>
+  proof -
+    define \<psi>' \<phi>' where \<open>\<psi>' = 1 \<bullet>\<^sub>C \<psi>\<close> and \<open>\<phi>' = 1 \<bullet>\<^sub>C \<phi>\<close>
+    have \<psi>: \<open>\<psi> = \<psi>' *\<^sub>C 1\<close>
+      by (metis \<psi>'_def one_cinner_a_scaleC_one)
+  have \<phi>: \<open>\<phi> = \<phi>' *\<^sub>C 1\<close>
+      by (metis \<phi>'_def one_cinner_a_scaleC_one)
+    show ?thesis
+      apply (simp add: \<psi> \<phi>)
+      by (metis (no_types, lifting) Groups.mult_ac(1) \<psi> assms cinner_simps(5) cinner_simps(6) norm_one of_complex_def of_complex_inner_1 power2_norm_eq_cinner)
+  qed
+  show \<open>tensor_ell2_right \<psi> o\<^sub>C\<^sub>L tensor_ell2_right \<psi>* = id_cblinfun\<close>
+    apply (rule cblinfun_cinner_tensor_eqI)
+    by (simp add: * )
+qed
+
+
 
 subsection \<open>Tensor product of operators on \<^typ>\<open>_ ell2\<close>\<close>
 
@@ -2301,7 +2325,7 @@ proof (cases \<open>T=0\<close>)
 next
   case False
   from ccsubspace_as_whole_type[OF False]
-  have \<open>let 't::type = some_chilbert_basis_of T in
+  have \<open>let 't::type = some_onb_of T in
         (INF x\<in>X. S x) \<otimes>\<^sub>S T = (INF x\<in>X. S x \<otimes>\<^sub>S T)\<close>
   proof with_type_mp
     with_type_case
@@ -2411,10 +2435,10 @@ lemma tensor_ccsubspace_element_as_infsum:
        \<and> ((\<lambda>n. \<phi> n \<otimes>\<^sub>s \<delta> n) has_sum \<psi>) UNIV\<close>
 proof -
   obtain A' where spanA': \<open>ccspan A' = A\<close> and orthoA': \<open>is_ortho_set A'\<close> and normA': \<open>a \<in> A' \<Longrightarrow> norm a = 1\<close> for a
-    using some_chilbert_basis_of_ccspan some_chilbert_basis_of_is_ortho_set some_chilbert_basis_of_norm1
+    using some_onb_of_ccspan some_onb_of_is_ortho_set some_onb_of_norm1
     by blast
   obtain B' where spanB': \<open>ccspan B' = B\<close> and orthoB': \<open>is_ortho_set B'\<close> and normB': \<open>b \<in> B' \<Longrightarrow> norm b = 1\<close> for b
-    using some_chilbert_basis_of_ccspan some_chilbert_basis_of_is_ortho_set some_chilbert_basis_of_norm1
+    using some_onb_of_ccspan some_onb_of_is_ortho_set some_onb_of_norm1
     by blast
   define AB' where \<open>AB' = {a \<otimes>\<^sub>s b | a b. a \<in> A' \<and> b \<in> B'}\<close>
   define ABnon0 where \<open>ABnon0 = {ab \<in> AB'. (ab \<bullet>\<^sub>C \<psi>) *\<^sub>C ab \<noteq> 0}\<close>

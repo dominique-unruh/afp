@@ -285,6 +285,15 @@ qed
 
 definition \<open>has_sum_in T f A x \<longleftrightarrow> limitin T (sum f) x (finite_subsets_at_top A)\<close>
 
+
+lemma has_sum_in_finite:
+  assumes "finite F"
+  assumes \<open>sum f F \<in> topspace T\<close>
+  shows "has_sum_in T f F (sum f F)"
+  using assms
+  by (simp add: finite_subsets_at_top_finite has_sum_in_def limitin_def eventually_principal)
+
+
 definition \<open>summable_on_in T f A \<longleftrightarrow> (\<exists>x. has_sum_in T f A x)\<close>
 
 definition \<open>infsum_in T f A = (let L = Collect (has_sum_in T f A) in if card L = 1 then the_elem L else 0)\<close>
@@ -1262,9 +1271,18 @@ lemma gbinomial_a_Suc_n:
   \<open>(a gchoose Suc n) = (a gchoose n) * (a-n) / Suc n\<close>
   by (simp add: gbinomial_prod_rev)
 
-lemma has_sum_in_0[simp]: \<open>has_sum_in T (\<lambda>_. 0) A 0\<close> if [simp]: \<open>0 \<in> topspace T\<close>
-  by (simp add: has_sum_in_def sum.neutral_const[abs_def])
-
+lemma has_sum_in_0[simp]:
+  assumes \<open>0 \<in> topspace T\<close>
+  assumes \<open>\<And>x. x\<in>A \<Longrightarrow> f x = 0\<close>
+  shows \<open>has_sum_in T f A 0\<close>
+proof -
+  have \<open>has_sum_in T (\<lambda>_. 0) A 0\<close>
+    using assms
+    by (simp add: has_sum_in_def sum.neutral_const[abs_def])
+  then show ?thesis
+    apply (rule has_sum_in_cong[THEN iffD2, rotated])
+    using assms by simp
+qed
 
 lemma has_sum_diff:
   fixes f g :: "'a \<Rightarrow> 'b::{topological_ab_group_add}"
@@ -2392,6 +2410,50 @@ lemma separating_setI:
   shows \<open>separating_set P S\<close>
   by (simp add: assms separating_set_def)
 
+
+lemma tendsto_le_complex:
+  fixes x y :: complex
+  assumes F: "\<not> trivial_limit F"
+    and x: "(f \<longlongrightarrow> x) F"
+    and y: "(g \<longlongrightarrow> y) F"
+    and ev: "eventually (\<lambda>x. g x \<le> f x) F"
+  shows "y \<le> x"
+proof (rule less_eq_complexI)
+  note F
+  moreover have \<open>((\<lambda>x. Re (f x)) \<longlongrightarrow> Re x) F\<close>
+    by (simp add: assms tendsto_Re)
+  moreover have \<open>((\<lambda>x. Re (g x)) \<longlongrightarrow> Re y) F\<close>
+    by (simp add: assms tendsto_Re)
+  moreover from ev have "eventually (\<lambda>x. Re (g x) \<le> Re (f x)) F"
+    apply (rule eventually_mono)
+    by (simp add: less_eq_complex_def)
+  ultimately show \<open>Re y \<le> Re x\<close>
+    by (rule tendsto_le)
+next
+  note F
+  moreover have \<open>((\<lambda>x. Im (g x)) \<longlongrightarrow> Im y) F\<close>
+    by (simp add: assms tendsto_Im)
+  moreover 
+  have \<open>((\<lambda>x. Im (g x)) \<longlongrightarrow> Im x) F\<close>
+  proof -
+    have \<open>((\<lambda>x. Im (f x)) \<longlongrightarrow> Im x) F\<close>
+      by (simp add: assms tendsto_Im)
+    moreover from ev have \<open>\<forall>\<^sub>F x in F. Im (f x) = Im (g x)\<close>
+      apply (rule eventually_mono)
+      by (simp add: less_eq_complex_def)
+    ultimately show ?thesis
+      by (rule Lim_transform_eventually)
+  qed
+  ultimately show \<open>Im y = Im x\<close>
+    by (rule tendsto_unique)
+qed
+
+lemma bdd_above_mono2:
+  assumes \<open>bdd_above (g ` B)\<close>
+  assumes \<open>A \<subseteq> B\<close>
+  assumes \<open>\<And>x. x \<in> A \<Longrightarrow> f x \<le> g x\<close>
+  shows \<open>bdd_above (f ` A)\<close>
+  by (smt (verit, del_insts) Set.basic_monos(7) assms(1) assms(2) assms(3) basic_trans_rules(23) bdd_above.I2 bdd_above.unfold imageI)
 
 
 end

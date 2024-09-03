@@ -203,18 +203,6 @@ proof auto
     by simp
 qed
 
-lemma csubspace_has_basis:
-  assumes \<open>csubspace S\<close>
-  shows \<open>\<exists>B. cindependent B \<and> cspan B = S\<close>
-proof -
-  from \<open>csubspace S\<close>
-  obtain B where \<open>cindependent B\<close> and \<open>cspan B = S\<close>
-    apply (rule_tac complex_vector.maximal_independent_subset[where V=S])
-    using complex_vector.span_subspace by blast
-  then show ?thesis
-    by auto
-qed
-
 lemma cblinfun_cinner_eq0I:
   fixes a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
   assumes \<open>\<And>h. h \<bullet>\<^sub>C a h = 0\<close>
@@ -559,6 +547,22 @@ qed
 
 hide_fact largest_eigenvalue_0_aux
 
+
+lemma eigenvalues_nonneg:
+  assumes \<open>a \<ge> 0\<close> and \<open>v \<in> eigenvalues a\<close>
+  shows \<open>v \<ge> 0\<close>
+proof -
+  from assms obtain h where \<open>norm h = 1\<close> and ahvh: \<open>a *\<^sub>V h = v *\<^sub>C h\<close>
+    using unit_eigenvector_ex by blast
+  have \<open>0 \<le> h \<bullet>\<^sub>C a h\<close>
+    by (simp add: assms(1) cinner_pos_if_pos)
+  also have \<open>\<dots> = v * (h \<bullet>\<^sub>C h)\<close>
+    by (simp add: ahvh)
+  also have \<open>\<dots> = v\<close>
+    using \<open>norm h = 1\<close> cnorm_eq_1 by auto
+  finally show \<open>v \<ge> 0\<close>
+    by blast
+qed
 
 
 

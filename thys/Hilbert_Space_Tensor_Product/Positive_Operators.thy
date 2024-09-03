@@ -1344,5 +1344,70 @@ proof -
 qed
 
 
+lemma pos_imp_selfadjoint: \<open>a \<ge> 0 \<Longrightarrow> selfadjoint a\<close>
+  using positive_hermitianI selfadjoint_def by blast
+
+lemma abs_op_one_dim: \<open>abs_op x = one_dim_iso (abs (one_dim_iso x :: complex))\<close>
+  by (metis (mono_tags, lifting) abs_opI abs_op_scaleC of_complex_def one_cblinfun_adj one_comp_one_cblinfun one_dim_iso_is_of_complex one_dim_iso_of_one one_dim_iso_of_zero one_dim_loewner_order one_dim_scaleC_1 zero_less_one_class.zero_le_one)
+
+
+lemma pos_selfadjoint: \<open>selfadjoint a\<close> if \<open>a \<ge> 0\<close>
+  using adj_0 comparable_hermitean selfadjoint_def that by blast
+
+lemma one_dim_loewner_order_strict: \<open>A > B \<longleftrightarrow> one_dim_iso A > (one_dim_iso B :: complex)\<close> for A B :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a::{chilbert_space, one_dim}\<close>
+  by (auto simp: less_cblinfun_def one_dim_loewner_order)
+
+lemma one_dim_cblinfun_zero_le_one: \<open>0 < (1 :: 'a::one_dim \<Rightarrow>\<^sub>C\<^sub>L 'a)\<close>
+  by (simp add: one_dim_loewner_order_strict)
+lemma one_dim_cblinfun_one_pos: \<open>0 \<le> (1 :: 'a::one_dim \<Rightarrow>\<^sub>C\<^sub>L 'a)\<close>
+  by (simp add: one_dim_loewner_order)
+
+lemma Proj_pos[iff]: \<open>Proj S \<ge> 0\<close>
+  apply (rule positive_cblinfun_squareI[where B=\<open>Proj S\<close>])
+  by (simp add: adj_Proj)
+
+lemma abs_op_Proj[simp]: \<open>abs_op (Proj S) = Proj S\<close>
+  by (simp add: abs_op_id_on_pos)
+
+
+
+lemma diagonal_operator_pos:
+  assumes \<open>\<And>x. f x \<ge> 0\<close>
+  shows \<open>diagonal_operator f \<ge> 0\<close>
+proof (cases \<open>bdd_above (range (\<lambda>x. cmod (f x)))\<close>)
+  case True
+  have [simp]: \<open>csqrt (f x) = sqrt (cmod (f x))\<close> for x
+    by (simp add: Extra_Ordered_Fields.complex_of_real_cmod assms abs_pos of_real_sqrt)
+  have bdd: \<open>bdd_above (range (\<lambda>x. sqrt (cmod (f x))))\<close>
+  proof -
+    from True obtain B where \<open>cmod (f x) \<le> B\<close> for x
+      by (auto simp: bdd_above_def)
+    then show ?thesis
+      by (auto intro!: bdd_aboveI[where M=\<open>sqrt B\<close>] simp: )
+  qed
+  show ?thesis
+    apply (rule positive_cblinfun_squareI[where B=\<open>diagonal_operator (\<lambda>x. csqrt (f x))\<close>])
+    by (simp add: assms diagonal_operator_adj diagonal_operator_comp bdd complex_of_real_cmod abs_pos
+        flip: of_real_mult)
+next
+  case False
+  then show ?thesis
+    by (simp add: diagonal_operator_invalid)
+qed
+
+lemma abs_op_diagonal_operator: 
+  \<open>abs_op (diagonal_operator f) = diagonal_operator (\<lambda>x. abs (f x))\<close>
+proof (cases \<open>bdd_above (range (\<lambda>x. cmod (f x)))\<close>)
+  case True
+  show ?thesis
+    apply (rule abs_opI[symmetric])
+    by (auto intro!: diagonal_operator_pos abs_nn simp: True diagonal_operator_adj diagonal_operator_comp cnj_x_x)
+next
+  case False
+  then show ?thesis
+    by (simp add: diagonal_operator_invalid)
+qed
+
+
 
 end

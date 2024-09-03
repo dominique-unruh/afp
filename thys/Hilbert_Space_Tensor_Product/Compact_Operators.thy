@@ -945,9 +945,6 @@ proof -
     by (auto intro!: ext simp: FG_def[abs_def])
 qed
 
-lemma Proj_0_compl: \<open>Proj S x = 0\<close> if \<open>x \<in> space_as_set (-S)\<close>
-  by (simp add: kernel_memberD that)
-
 lemma trunc_ell2_as_Proj: \<open>trunc_ell2 S \<psi> = Proj (ccspan (ket ` S)) \<psi>\<close>
 proof (rule cinner_ket_eqI)
   fix x

@@ -2,6 +2,8 @@ theory CStar_Algebras
 imports Positive_Operators
 begin
 
+(* TODO: Discard this file? *)
+
 
 definition cstar_algebra where \<open>cstar_algebra A \<longleftrightarrow> csubspace A \<and> (\<forall>x\<in>A. \<forall>y\<in>A. x o\<^sub>C\<^sub>L y \<in> A) \<and> (\<forall>x\<in>A. x* \<in> A) \<and> closed A\<close>
 
