@@ -988,5 +988,45 @@ lemma infsum_in_wot_compose_right:
       has_sum_in_wot_compose_right summable_on_in_wot_compose_right)
 
 
+lemma infsum_wot_boundedI:
+  fixes f :: \<open>'b \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'a::chilbert_space)\<close>
+  assumes bounded: \<open>\<And>F. finite F \<Longrightarrow> F \<subseteq> X \<Longrightarrow> sum f F \<le> B\<close>
+  assumes pos: \<open>\<And>x. x \<in> X \<Longrightarrow> f x \<ge> 0\<close>
+  shows \<open>infsum_in cweak_operator_topology f X \<le> B\<close>
+proof (rule less_eq_cblinfunI)
+  fix h
+  have summ: \<open>summable_on_in cweak_operator_topology f X\<close>
+    using assms by (rule summable_wot_boundedI)
+  then have \<open>h \<bullet>\<^sub>C (infsum_in cweak_operator_topology f X *\<^sub>V h) = (\<Sum>\<^sub>\<infinity>x\<in>X. h \<bullet>\<^sub>C (f x *\<^sub>V h))\<close>
+    by (rule infsum_in_cweak_operator_topology_pointwise)
+  also have \<open>\<dots> \<le> h \<bullet>\<^sub>C B h\<close>
+  proof (rule less_eq_complexI)
+    from summ have summ': \<open>(\<lambda>x. h \<bullet>\<^sub>C (f x *\<^sub>V h)) summable_on X\<close>
+      by (auto intro!: summable_on_in_cweak_operator_topology_pointwise)
+    have *: \<open>(\<Sum>x\<in>F. h \<bullet>\<^sub>C (f x *\<^sub>V h)) \<le> h \<bullet>\<^sub>C B h\<close> if \<open>finite F\<close> and \<open>F \<subseteq> X\<close> for F
+      using that bounded
+      by (simp add: less_eq_cblinfun_def flip: cinner_sum_right cblinfun.sum_left)
+    show \<open>Im (\<Sum>\<^sub>\<infinity>x\<in>X. h \<bullet>\<^sub>C (f x *\<^sub>V h)) = Im (h \<bullet>\<^sub>C (B *\<^sub>V h))\<close>
+    proof -
+      from *[of \<open>{}\<close>] have \<open>h \<bullet>\<^sub>C B h \<ge> 0\<close>
+        by simp
+      then have \<open>Im (h \<bullet>\<^sub>C B h) = 0\<close>
+        using comp_Im_same zero_complex.sel(2) by presburger
+      moreover then have \<open>Im (h \<bullet>\<^sub>C (f x *\<^sub>V h)) = 0\<close> if \<open>x \<in> X\<close> for x
+        using *[of \<open>{x}\<close>] that 
+        by (simp add: less_eq_complex_def)
+      ultimately show \<open>Im (\<Sum>\<^sub>\<infinity>x\<in>X. h \<bullet>\<^sub>C (f x *\<^sub>V h)) = Im (h \<bullet>\<^sub>C (B *\<^sub>V h))\<close>
+        by (auto intro!: infsum_0 simp: summ' simp flip: infsum_Im)
+    qed
+    show \<open>Re (\<Sum>\<^sub>\<infinity>x\<in>X. h \<bullet>\<^sub>C (f x *\<^sub>V h)) \<le> Re (h \<bullet>\<^sub>C (B *\<^sub>V h))\<close>
+      apply (auto intro!: summable_on_Re infsum_le_finite_sums simp: summ' simp flip: infsum_Re)
+      using summ'
+      by (metis "*" Re_sum less_eq_complex_def)
+  qed
+  finally show \<open>h \<bullet>\<^sub>C (infsum_in cweak_operator_topology f X *\<^sub>V h) \<le> h \<bullet>\<^sub>C (B *\<^sub>V h)\<close>
+    by -
+qed
+
+
 
 end

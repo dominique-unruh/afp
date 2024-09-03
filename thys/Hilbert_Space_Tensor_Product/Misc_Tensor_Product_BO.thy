@@ -670,6 +670,19 @@ proof -
     by (simp add: bdd_above_mono2)
 qed
 
+lemma separating_set_clinear_cspan:
+  assumes \<open>cspan S = UNIV\<close>
+  shows \<open>separating_set clinear S\<close>
+  using assms
+  by (auto intro: complex_vector.linear_eq_on simp: separating_set_def)
+
+lemma less_eq_cblinfunI:
+  fixes a b :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a::chilbert_space\<close>
+  assumes \<open>\<And>h. h \<bullet>\<^sub>C a h \<le> h \<bullet>\<^sub>C b h\<close>
+  shows \<open>a \<le> b\<close>
+  using assms
+  by (simp add: less_eq_cblinfun_def)
+
 
 
 end

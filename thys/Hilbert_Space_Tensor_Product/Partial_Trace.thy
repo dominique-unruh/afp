@@ -354,12 +354,34 @@ proof -
     by -
 qed
 
-
-
-
 lemma bounded_clinear_partial_trace[bounded_clinear, iff]: \<open>bounded_clinear partial_trace\<close>
   apply (rule bounded_clinearI[where K=1])
   by (auto simp add: partial_trace_plus partial_trace_scaleC partial_trace_norm_reducing)
+
+lemma vector_sandwich_partial_trace_has_sum:
+  \<open>((\<lambda>z. ((x \<otimes>\<^sub>s ket z) \<bullet>\<^sub>C (from_trace_class \<rho> *\<^sub>V (y \<otimes>\<^sub>s ket z))))
+      has_sum x \<bullet>\<^sub>C (from_trace_class (partial_trace \<rho>) *\<^sub>V y)) UNIV\<close>
+proof -
+  define x\<rho>y where \<open>x\<rho>y = x \<bullet>\<^sub>C (from_trace_class (partial_trace \<rho>) *\<^sub>V y)\<close>
+  have \<open>((\<lambda>j. compose_tcl (compose_tcr ((tensor_ell2_right (ket j))*) \<rho>) (tensor_ell2_right (ket j))) 
+        has_sum partial_trace \<rho>) UNIV\<close>
+    using partial_trace_has_sum by force
+  then have \<open>((\<lambda>j. x \<bullet>\<^sub>C (from_trace_class (compose_tcl (compose_tcr ((tensor_ell2_right (ket j))*) \<rho>) (tensor_ell2_right (ket j))) *\<^sub>V y))
+        has_sum x\<rho>y) UNIV\<close>
+    unfolding x\<rho>y_def
+    apply (rule Infinite_Sum.has_sum_bounded_linear[rotated])
+    by (intro bounded_clinear.bounded_linear bounded_linear_intros)
+  then have \<open>((\<lambda>j. x \<bullet>\<^sub>C (tensor_ell2_right (ket j)* *\<^sub>V from_trace_class \<rho> *\<^sub>V y \<otimes>\<^sub>s ket j)) has_sum
+     x\<rho>y) UNIV\<close>
+    by (simp add: compose_tcl.rep_eq compose_tcr.rep_eq)
+  then show ?thesis
+    by (metis (no_types, lifting) cinner_adj_right has_sum_cong tensor_ell2_right_apply x\<rho>y_def)
+qed
+
+lemma vector_sandwich_partial_trace:
+  \<open>x \<bullet>\<^sub>C (from_trace_class (partial_trace \<rho>) *\<^sub>V y) =
+      (\<Sum>\<^sub>\<infinity>z. ((x \<otimes>\<^sub>s ket z) \<bullet>\<^sub>C (from_trace_class \<rho> *\<^sub>V (y \<otimes>\<^sub>s ket z))))\<close>
+  by (metis (mono_tags, lifting) infsumI vector_sandwich_partial_trace_has_sum)
 
 
 

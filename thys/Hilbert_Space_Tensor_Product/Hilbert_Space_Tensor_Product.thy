@@ -1946,6 +1946,11 @@ lemma separating_set_bounded_clinear_tc_tensor_nested:
   using separating_set_bounded_clinear_tc_tensor bounded_cbilinear_tc_tensor assms
   by (rule separating_set_bounded_cbilinear_nested)
 
+lemma tc_tensor_0_left[simp]: \<open>tc_tensor 0 x = 0\<close>
+  apply transfer' by simp
+lemma tc_tensor_0_right[simp]: \<open>tc_tensor x 0 = 0\<close>
+  apply transfer' by simp
+
 
 subsection \<open>Tensor product of subspaces\<close>
 

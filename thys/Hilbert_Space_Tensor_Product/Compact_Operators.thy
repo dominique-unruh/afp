@@ -1537,5 +1537,20 @@ lemma cmod_largest_eigenvalue:
   shows \<open>cmod (largest_eigenvalue a) = norm a\<close>
   using largest_eigenvalue_norm[OF assms] by auto
 
+lemma compact_op_comp_right: \<open>compact_op (a o\<^sub>C\<^sub>L b)\<close> if \<open>compact_op b\<close>
+  for a b :: \<open>_::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L _::chilbert_space\<close>
+proof -
+  from that have \<open>b \<in> closure (Collect finite_rank)\<close>
+  using compact_op_finite_rank by blast
+  then have \<open>a o\<^sub>C\<^sub>L b \<in> cblinfun_compose a ` closure (Collect finite_rank)\<close>
+    by blast
+  also have \<open>\<dots> \<subseteq> closure (cblinfun_compose a ` Collect finite_rank)\<close>
+    by (auto intro!: closure_bounded_linear_image_subset bounded_clinear.bounded_linear bounded_clinear_cblinfun_compose_right)
+  also have \<open>\<dots> \<subseteq> closure (Collect finite_rank)\<close>
+    by (auto intro!: closure_mono finite_rank_comp_right)
+  finally show \<open>compact_op (a o\<^sub>C\<^sub>L b)\<close>
+    using compact_op_finite_rank by blast
+qed
+
 
 end
