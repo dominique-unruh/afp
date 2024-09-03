@@ -1,8 +1,10 @@
 section \<open>\<open>Positive_Operators\<close> -- Positive bounded operators\<close>
 
 theory Positive_Operators
-  imports Tensor_Product.Misc_Tensor_Product_BO Tensor_Product.Strong_Operator_Topology
+  imports
     Ordinary_Differential_Equations.Cones
+    Misc_Tensor_Product_BO
+    Strong_Operator_Topology
 begin
 
 no_notation Infinite_Set_Sum.abs_summable_on (infix "abs'_summable'_on" 50)

@@ -1,5 +1,7 @@
 theory Eigenvalues
-  imports Weak_Operator_Topology Tensor_Product.Misc_Tensor_Product_TTS
+  imports
+    Weak_Operator_Topology
+    Misc_Tensor_Product_TTS
 begin
 
 definition normal_op :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a) \<Rightarrow> bool\<close> where

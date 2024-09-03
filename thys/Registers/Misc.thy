@@ -8,7 +8,7 @@ theory Misc
     Complex_Bounded_Operators.Cblinfun_Code
     "HOL-Library.Z2"
     Jordan_Normal_Form.Matrix
-    Tensor_Product.Weak_Star_Topology
+    Hilbert_Space_Tensor_Product.Weak_Star_Topology
 begin
 
 \<comment> \<open>Remove notation that collides with the notation we use\<close>

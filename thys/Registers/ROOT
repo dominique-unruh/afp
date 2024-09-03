@@ -1,6 +1,6 @@
 chapter AFP
 
-session Registers = Tensor_Product +
+session Registers = Hilbert_Space_Tensor_Product +
   options [timeout = 1200]
   sessions With_Type
   theories

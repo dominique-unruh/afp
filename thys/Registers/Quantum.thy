@@ -3,7 +3,7 @@ section \<open>Quantum mechanics basics\<close>
 theory Quantum
   imports
     Misc
-    Tensor_Product.Hilbert_Space_Tensor_Product
+    Hilbert_Space_Tensor_Product.Hilbert_Space_Tensor_Product
     "HOL-Library.Z2"
     Jordan_Normal_Form.Matrix_Impl 
     Real_Impl.Real_Impl

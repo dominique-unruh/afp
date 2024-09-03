@@ -1,6 +1,6 @@
 chapter AFP
 
-session Tensor_Product = Complex_Bounded_Operators +
+session Hilbert_Space_Tensor_Product = Complex_Bounded_Operators +
   options [document_variants="document:outline=/proof,/ML", timeout = 600]
   sessions Ordinary_Differential_Equations With_Type Wlog
   theories

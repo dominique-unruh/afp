@@ -484,7 +484,7 @@ qed
 
 
 lemma sot_is_norm_topology_fin_dim[simp]: 
-  \<comment> \<open>Logically belongs in \<^theory>\<open>Tensor_Product.Strong_Operator_Topology\<close> but the proof uses
+  \<comment> \<open>Logically belongs in \<^theory>\<open>Hilbert_Space_Tensor_Product.Strong_Operator_Topology\<close> but the proof uses
       lemmas from here..\<close>
   \<open>(cstrong_operator_topology :: ('a::{cfinite_dim,chilbert_space} \<Rightarrow>\<^sub>C\<^sub>L 'b::{cfinite_dim,chilbert_space}) topology) = euclidean\<close>
 proof -

@@ -29,10 +29,10 @@ section \<open>Quantum instantiation of registers\<close>
 theory Axioms_Quantum
   imports Jordan_Normal_Form.Matrix_Impl "HOL-Library.Rewrite"
           Complex_Bounded_Operators.Complex_L2
-          Tensor_Product.Hilbert_Space_Tensor_Product
-          Tensor_Product.Weak_Star_Topology
-          Tensor_Product.Partial_Trace
-          Tensor_Product.Von_Neumann_Algebras
+          Hilbert_Space_Tensor_Product.Hilbert_Space_Tensor_Product
+          Hilbert_Space_Tensor_Product.Weak_Star_Topology
+          Hilbert_Space_Tensor_Product.Partial_Trace
+          Hilbert_Space_Tensor_Product.Von_Neumann_Algebras
           With_Type.With_Type
           Misc
 begin

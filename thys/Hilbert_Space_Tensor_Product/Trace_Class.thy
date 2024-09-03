@@ -3476,7 +3476,7 @@ lemma trace_class_compact: \<open>compact_op a\<close> if \<open>trace_class a\<
 subsection \<open>Spectral Theorem\<close>
 
 text \<open>The spectral theorem for trace class operators.
-A corollary of the one for compact operators (\<^theory>\<open>Tensor_Product.Spectral_Theorem\<close>) but not an immediate one.\<close>
+A corollary of the one for compact operators (\<^theory>\<open>Hilbert_Space_Tensor_Product.Spectral_Theorem\<close>) but not an immediate one.\<close>
 
 lift_definition spectral_dec_proj_tc :: \<open>('a::chilbert_space, 'a) trace_class \<Rightarrow> nat \<Rightarrow> ('a, 'a) trace_class\<close> is
   spectral_dec_proj
