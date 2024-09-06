@@ -78,6 +78,15 @@ host = [
 
 [amani.homepages]
 
+[amjad]
+name = "Rayhana Amjad"
+orcid = "0000-0002-3086-1720"
+
+[amjad.emails]
+
+[amjad.homepages]
+amjad_homepage = "https://rayhana.dev/"
+
 [ammer]
 name = "Thomas Ammer"
 
@@ -519,6 +528,24 @@ name = "Julian Biendarra"
 
 [biendarra.homepages]
 
+[binder]
+name = "Sage Binder"
+orcid = "0009-0004-4776-2018"
+
+[binder.emails]
+
+[binder.emails.binder_email]
+user = [
+  "sage-binder",
+]
+host = [
+  "uiowa",
+  "edu",
+]
+
+[binder.homepages]
+binder_homepage = "https://homepage.cs.uiowa.edu/~sbinder1/"
+
 [bisping]
 name = "Benjamin Bisping"
 orcid = "0000-0002-0637-0171"
@@ -838,6 +865,13 @@ name = "Felix Brandt"
 [brandt.homepages]
 brandt_homepage = "http://dss.in.tum.de/staff/brandt.html"
 
+[brecknell]
+name = "Matthew Brecknell"
+
+[brecknell.emails]
+
+[brecknell.homepages]
+
 [breitner]
 name = "Joachim Breitner"
 
@@ -987,6 +1021,24 @@ host = [
 
 [brunner.homepages]
 brunner_homepage = "http://www21.in.tum.de/~brunnerj/"
+
+[buday]
+name = "Gergely Buday"
+
+[buday.emails]
+
+[buday.emails.buday_email]
+user = [
+  "g",
+  "buday",
+]
+host = [
+  "sheffield",
+  "ac",
+  "uk",
+]
+
+[buday.homepages]
 
 [bulwahn]
 name = "Lukas Bulwahn"
@@ -1267,6 +1319,24 @@ host = [
 
 [cohen.homepages]
 
+[connor]
+name = "Liam O'Connor"
+orcid = "0000-0003-2765-4269"
+
+[connor.emails]
+
+[connor.emails.connor_email]
+user = [
+  "me",
+]
+host = [
+  "liamoc",
+  "net",
+]
+
+[connor.homepages]
+connor_homepage = "https://liamoc.net"
+
 [cordwell]
 name = "Katherine Kosaian"
 
@@ -1274,16 +1344,15 @@ name = "Katherine Kosaian"
 
 [cordwell.emails.cordwell_email]
 user = [
-  "kcordwel",
+  "kkosaian",
 ]
 host = [
-  "cs",
-  "cmu",
+  "iastate",
   "edu",
 ]
 
 [cordwell.homepages]
-cordwell_homepage = "https://www.cs.cmu.edu/~kcordwel/"
+cordwell_homepage = "https://sites.google.com/view/katherinekosaian"
 
 [cousin]
 name = "Marie Cousin"
@@ -2298,6 +2367,13 @@ host = [
 
 [grechuk.homepages]
 
+[greenaway]
+name = "David Greenaway"
+
+[greenaway.emails]
+
+[greenaway.homepages]
+
 [grewe]
 name = "Sylvia Grewe"
 
@@ -2331,6 +2407,24 @@ host = [
 ]
 
 [griebel.homepages]
+
+[griffin]
+name = "Matthew Griffin"
+
+[griffin.emails]
+
+[griffin.emails.griffin_email]
+user = [
+  "matthew",
+  "griffin",
+]
+host = [
+  "imperial",
+  "ac",
+  "uk",
+]
+
+[griffin.homepages]
 
 [grov]
 name = "Gudmund Grov"
@@ -3567,6 +3661,22 @@ host = [
 [kreuzer.homepages]
 kreuzer_homepage = "https://www21.in.tum.de/team/kreuzer/"
 
+[krofta]
+name = "Niklas Krofta"
+
+[krofta.emails]
+
+[krofta.emails.krofta_email]
+user = [
+  "nkrofta",
+]
+host = [
+  "outlook",
+  "com",
+]
+
+[krofta.homepages]
+
 [kuncak]
 name = "Viktor Kuncak"
 
@@ -3864,6 +3974,23 @@ orcid = "0000-0003-1701-0435"
 [lima.emails]
 
 [lima.homepages]
+
+[limat]
+name = "Thaynara Arielly de Lima"
+orcid = "0000-0002-0852-9086"
+
+[limat.emails]
+
+[limat.emails.limat_email]
+user = [
+  "thaynaradelima",
+]
+host = [
+  "ufg",
+  "br",
+]
+
+[limat.homepages]
 
 [lindenberg]
 name = "Christina Lindenberg"
@@ -4343,6 +4470,24 @@ host = [
 
 [meis.homepages]
 
+[meric]
+name = "Nicolas Méric"
+orcid = "0000-0002-0756-7072"
+
+[meric.emails]
+
+[meric.emails.meric_email]
+user = [
+  "nicolas",
+  "meric",
+]
+host = [
+  "universite-paris-saclay",
+  "fr",
+]
+
+[meric.homepages]
+
 [merz]
 name = "Stephan Merz"
 
@@ -4440,6 +4585,14 @@ host = [
 [michaelis.homepages]
 michaelis_homepage = "http://liftm.de/"
 
+[middeldorp]
+name = "Aart Middeldorp"
+
+[middeldorp.emails]
+
+[middeldorp.homepages]
+middeldorp_homepage = "http://cl-informatik.uibk.ac.at/~ami/"
+
 [milehins]
 name = "Mihails Milehins"
 
@@ -4498,6 +4651,13 @@ host = [
 ]
 
 [mitsch.homepages]
+
+[mitterwallner]
+name = "Fabian Mitterwallner"
+
+[mitterwallner.emails]
+
+[mitterwallner.homepages]
 
 [moedersheim]
 name = "Sebastian Mödersheim"
@@ -4886,6 +5046,13 @@ host = [
 ]
 
 [nordhoff.homepages]
+
+[norrish]
+name = "Michael Norrish"
+
+[norrish.emails]
+
+[norrish.homepages]
 
 [noschinski]
 name = "Lars Noschinski"
@@ -5655,6 +5822,23 @@ name = "Tom Ridge"
 
 [ridge.homepages]
 
+[rincon]
+name = "Mauricio Ayala-Rincón"
+orcid = "0000-0003-0089-3905"
+
+[rincon.emails]
+
+[rincon.emails.rincon_email]
+user = [
+  "ayala",
+]
+host = [
+  "unb",
+  "br",
+]
+
+[rincon.homepages]
+
 [rizaldi]
 name = "Albert Rizaldi"
 
@@ -5901,6 +6085,15 @@ host = [
   "de",
 ]
 
+[schirmer.emails.schirmer_email1]
+user = [
+  "nschirmer",
+]
+host = [
+  "apple",
+  "com",
+]
+
 [schirmer.homepages]
 
 [schleicher]
@@ -6117,6 +6310,24 @@ host = [
 
 [seidler.homepages]
 
+[seidlh]
+name = "Helmut Seidl"
+orcid = "0000-0002-2135-1593"
+
+[seidlh.emails]
+
+[seidlh.emails.seidlh_email]
+user = [
+  "helmut",
+  "seidl",
+]
+host = [
+  "tum",
+  "de",
+]
+
+[seidlh.homepages]
+
 [sewell]
 name = "Thomas Sewell"
 
@@ -6233,6 +6444,23 @@ name = "Dániel Somogyi"
 [somogyi.emails]
 
 [somogyi.homepages]
+
+[song]
+name = "Shuhao Song"
+orcid = "0009-0003-8167-3994"
+
+[song.emails]
+
+[song.emails.song_email]
+user = [
+  "znssong_meow",
+]
+host = [
+  "sina",
+  "com",
+]
+
+[song.homepages]
 
 [spasic]
 name = "Mirko Spasić"
@@ -6356,6 +6584,24 @@ host = [
 ]
 
 [staats.homepages]
+
+[stade]
+name = "Yannick Stade"
+orcid = "0000-0001-5785-2528"
+
+[stade.emails]
+
+[stade.emails.stade_email]
+user = [
+  "yannick",
+  "stade",
+]
+host = [
+  "tum",
+  "de",
+]
+
+[stade.homepages]
 
 [stannett]
 name = "Mike Stannett"
@@ -6638,6 +6884,24 @@ name = "Daniel Stüwe"
 
 [stuewe.homepages]
 
+[suarez]
+name = "Fabián Fernando Serran Suárez"
+orcid = "0000-0002-9817-4855"
+
+[suarez.emails]
+
+[suarez.emails.suarez_email]
+user = [
+  "ffserranos",
+]
+host = [
+  "unal",
+  "edu",
+  "co",
+]
+
+[suarez.homepages]
+
 [sudbrock]
 name = "Henning Sudbrock"
 
@@ -6900,6 +7164,24 @@ host = [
 
 [thomson.homepages]
 
+[tilscher]
+name = "Sarah Tilscher"
+orcid = "0009-0009-9644-7475"
+
+[tilscher.emails]
+
+[tilscher.emails.tilscher_email]
+user = [
+  "sarah",
+  "tilscher",
+]
+host = [
+  "tum",
+  "de",
+]
+
+[tilscher.homepages]
+
 [tiu]
 name = "Alwen Tiu"
 
@@ -7020,6 +7302,16 @@ host = [
   "net",
 ]
 
+[trelat.emails.trelat_email1]
+user = [
+  "vincent",
+  "trelat",
+]
+host = [
+  "inria",
+  "fr",
+]
+
 [trelat.homepages]
 
 [treml]
@@ -7038,6 +7330,13 @@ host = [
 ]
 
 [treml.homepages]
+
+[tuch]
+name = "Harvey Tuch"
+
+[tuch.emails]
+
+[tuch.homepages]
 
 [tuerk]
 name = "Thomas Tuerk"
@@ -7482,6 +7781,23 @@ host = [
 [wolff.homepages]
 wolff_homepage = "https://www.lri.fr/~wolff/"
 
+[wright]
+name = "Jamie Wright"
+
+[wright.emails]
+
+[wright.emails.wright_email]
+user = [
+  "jwright8",
+]
+host = [
+  "sheffield",
+  "ac",
+  "uk",
+]
+
+[wright.homepages]
+
 [wu]
 name = "Chunhan Wu"
 
@@ -7564,6 +7880,24 @@ host = [
 ]
 
 [yang.homepages]
+
+[yao]
+name = "Bowen Yao"
+orcid = "0000-0002-6218-0874"
+
+[yao.emails]
+
+[yao.emails.yao_email]
+user = [
+  "byao",
+]
+host = [
+  "buct",
+  "edu",
+  "cn",
+]
+
+[yao.homepages]
 
 [ye]
 name = "Lina Ye"

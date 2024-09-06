@@ -11,8 +11,36 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     
-      <lastBuildDate>Wed, 16 Oct 2019 00:00:00 +0000</lastBuildDate>
+      <lastBuildDate>Wed, 14 Aug 2024 00:00:00 +0000</lastBuildDate>
       <atom:link href="/authors/wimmer/index.xml" rel="self" type="application/rss+xml" />
+        <item>
+          <title>Difference Bound Matrices</title>
+          <link>/entries/Difference_Bound_Matrices.html</link>
+          <pubDate>Wed, 14 Aug 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Difference_Bound_Matrices.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Worklist Algorithms</title>
+          <link>/entries/Worklist_Algorithms.html</link>
+          <pubDate>Fri, 09 Aug 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Worklist_Algorithms.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>LL(1) Parser Generator</title>
+          <link>/entries/LL1_Parser.html</link>
+          <pubDate>Thu, 02 May 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/LL1_Parser.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>AutoCorres2</title>
+          <link>/entries/AutoCorres2.html</link>
+          <pubDate>Wed, 17 Apr 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/AutoCorres2.html</guid>
+          <description></description>
+        </item>
         <item>
           <title>VerifyThis 2019 -- Polished Isabelle Solutions</title>
           <link>/entries/VerifyThis2019.html</link>

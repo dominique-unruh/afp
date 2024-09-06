@@ -11,8 +11,246 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     
-      <lastBuildDate>Tue, 16 Apr 2024 00:00:00 +0000</lastBuildDate>
+      <lastBuildDate>Mon, 02 Sep 2024 00:00:00 +0000</lastBuildDate>
       <atom:link href="/entries/index.xml" rel="self" type="application/rss+xml" />
+        <item>
+          <title>An Exponential Improvement for Diagonal Ramsey</title>
+          <link>/entries/Diagonal_Ramsey.html</link>
+          <pubDate>Mon, 02 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Diagonal_Ramsey.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Extension of Stateful Intransitive Noninterference with Inputs, Outputs, and Nondeterminism in Language IMP</title>
+          <link>/entries/IMP_Noninterference_Extension.html</link>
+          <pubDate>Mon, 02 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/IMP_Noninterference_Extension.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Ramsey Number Bounds</title>
+          <link>/entries/Ramsey_Bounds.html</link>
+          <pubDate>Thu, 22 Aug 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Ramsey_Bounds.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Compactness Theorem for Propositional Logic and Combinatorial Applications</title>
+          <link>/entries/Prop_Compactness.html</link>
+          <pubDate>Mon, 19 Aug 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Prop_Compactness.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Topological Groups</title>
+          <link>/entries/Topological_Groups.html</link>
+          <pubDate>Mon, 19 Aug 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Topological_Groups.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>A formalized programming language with speculative execution</title>
+          <link>/entries/IMP_With_Speculation.html</link>
+          <pubDate>Fri, 16 Aug 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/IMP_With_Speculation.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Difference Bound Matrices</title>
+          <link>/entries/Difference_Bound_Matrices.html</link>
+          <pubDate>Wed, 14 Aug 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Difference_Bound_Matrices.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Definitive Set Semantics for LTL3</title>
+          <link>/entries/LTL3_Semantics.html</link>
+          <pubDate>Mon, 12 Aug 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/LTL3_Semantics.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Worklist Algorithms</title>
+          <link>/entries/Worklist_Algorithms.html</link>
+          <pubDate>Fri, 09 Aug 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Worklist_Algorithms.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Lie Groups and Algebras</title>
+          <link>/entries/Lie_Groups.html</link>
+          <pubDate>Wed, 31 Jul 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Lie_Groups.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Enriched Category Basics</title>
+          <link>/entries/EnrichedCategoryBasics.html</link>
+          <pubDate>Sun, 16 Jun 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/EnrichedCategoryBasics.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Residuated Transition Systems II: Categorical Properties</title>
+          <link>/entries/ResiduatedTransitionSystem2.html</link>
+          <pubDate>Sun, 16 Jun 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/ResiduatedTransitionSystem2.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>A Preprocessor for Linear Diophantine Equalities and Inequalities</title>
+          <link>/entries/Linear_Diophantine_Preprocessor.html</link>
+          <pubDate>Thu, 13 Jun 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Linear_Diophantine_Preprocessor.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Alpha-Beta Pruning</title>
+          <link>/entries/Alpha_Beta_Pruning.html</link>
+          <pubDate>Thu, 13 Jun 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Alpha_Beta_Pruning.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Formalizing Coppersmith&#39;s Method</title>
+          <link>/entries/Coppersmith_Method.html</link>
+          <pubDate>Mon, 10 Jun 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Coppersmith_Method.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Coproduct Measure</title>
+          <link>/entries/Coproduct_Measure.html</link>
+          <pubDate>Tue, 04 Jun 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Coproduct_Measure.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>The Lévy-Prokhorov Metric</title>
+          <link>/entries/Levy_Prokhorov_Metric.html</link>
+          <pubDate>Tue, 04 Jun 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Levy_Prokhorov_Metric.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>The Riesz Representation Theorem</title>
+          <link>/entries/Riesz_Representation.html</link>
+          <pubDate>Tue, 04 Jun 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Riesz_Representation.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Sorted Terms</title>
+          <link>/entries/Sorted_Terms.html</link>
+          <pubDate>Mon, 27 May 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Sorted_Terms.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>The Stone-Cech Compactification</title>
+          <link>/entries/Stone_Cech.html</link>
+          <pubDate>Mon, 27 May 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Stone_Cech.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Verifying a Decision Procedure for Pattern Completeness</title>
+          <link>/entries/Pattern_Completeness.html</link>
+          <pubDate>Mon, 27 May 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Pattern_Completeness.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Countable Sums and Discrete (Sub)Distributions</title>
+          <link>/entries/Countable_Sums_and_Discrete_Distributions.html</link>
+          <pubDate>Sat, 25 May 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Countable_Sums_and_Discrete_Distributions.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>More Operations on Lazy Lists</title>
+          <link>/entries/More_LazyLists.html</link>
+          <pubDate>Fri, 24 May 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/More_LazyLists.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Relative Security</title>
+          <link>/entries/Relative_Security.html</link>
+          <pubDate>Fri, 24 May 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Relative_Security.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Secret-Directed Unwinding</title>
+          <link>/entries/Secret_Directed_Unwinding.html</link>
+          <pubDate>Fri, 24 May 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Secret_Directed_Unwinding.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Schönhage-Strassen Multiplication</title>
+          <link>/entries/Schoenhage_Strassen.html</link>
+          <pubDate>Fri, 10 May 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Schoenhage_Strassen.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Partial Correctness of the Top-Down Solver</title>
+          <link>/entries/Top_Down_Solver.html</link>
+          <pubDate>Thu, 09 May 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Top_Down_Solver.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Prime Number Theorem with Remainder Term</title>
+          <link>/entries/PNT_with_Remainder.html</link>
+          <pubDate>Sun, 05 May 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/PNT_with_Remainder.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>LL(1) Parser Generator</title>
+          <link>/entries/LL1_Parser.html</link>
+          <pubDate>Thu, 02 May 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/LL1_Parser.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Isabelle/DOF</title>
+          <link>/entries/Isabelle_DOF.html</link>
+          <pubDate>Fri, 26 Apr 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Isabelle_DOF.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Pick&#39;s Theorem</title>
+          <link>/entries/Picks_Theorem.html</link>
+          <pubDate>Fri, 26 Apr 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Picks_Theorem.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Substitutions for Lambda-Free Higher-Order Terms</title>
+          <link>/entries/Substitutions_Lambda_Free.html</link>
+          <pubDate>Thu, 25 Apr 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Substitutions_Lambda_Free.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Undecidability Results on Orienting Single Rewrite Rules</title>
+          <link>/entries/Orient_Rewrite_Rule_Undecidable.html</link>
+          <pubDate>Thu, 25 Apr 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Orient_Rewrite_Rule_Undecidable.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>AutoCorres2</title>
+          <link>/entries/AutoCorres2.html</link>
+          <pubDate>Wed, 17 Apr 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/AutoCorres2.html</guid>
+          <description></description>
+        </item>
         <item>
           <title>A Verified Proof Checker for Metric First-Order Temporal Logic</title>
           <link>/entries/MFOTL_Checker.html</link>
@@ -46,6 +284,13 @@
           <link>/entries/Uncertainty_Principle.html</link>
           <pubDate>Tue, 26 Mar 2024 00:00:00 +0000</pubDate>
           <guid>/entries/Uncertainty_Principle.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Derandomization with Conditional Expectations</title>
+          <link>/entries/Derandomization_Conditional_Expectations.html</link>
+          <pubDate>Sun, 24 Mar 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Derandomization_Conditional_Expectations.html</guid>
           <description></description>
         </item>
         <item>
