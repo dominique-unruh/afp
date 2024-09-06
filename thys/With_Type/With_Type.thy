@@ -109,11 +109,11 @@ proof -
   have [simp]: \<open>bi_unique r\<close> \<open>right_total r\<close>
     using r_def td typedef_bi_unique apply blast
     by (simp add: r_def right_totalI)
+  have aux1: \<open>(\<And>x. rep x \<in> S) \<Longrightarrow> x \<in> S \<Longrightarrow> x = rep (abs x)\<close> for x b
+    using td type_definition.Abs_inverse by fastforce
   have Sr: \<open>S = Collect (Domainp r)\<close>
-    using type_definition.Rep[OF td] 
-    apply (auto simp: r_def intro!: DomainPI)
-    apply (subst type_definition.Abs_inverse[OF td])
-    by auto
+    using type_definition.Rep[OF td]
+    by (auto simp: r_def intro!: DomainPI aux1)
   from wt have nice: \<open>with_type_wellformed C S R\<close> and \<open>C S p\<close>
     by (simp_all add: with_type_def case_prod_beta)
   from nice[unfolded with_type_wellformed_def, rule_format, OF \<open>bi_unique r\<close> \<open>right_total r\<close> Sr \<open>C S p\<close>]
@@ -150,8 +150,7 @@ proof -
 
   from td
   have rS: \<open>Collect (Domainp r) = S\<close>
-    apply (auto simp: r_def Domainp_iff type_definition.Rep)
-    by (meson type_definition.Rep_cases)
+    by (auto simp: r_def Domainp_iff type_definition.Rep  elim!: type_definition.Rep_cases[where P=\<open>Ex _\<close>])
 
   from wt have sg: \<open>C S p\<close>
     by (simp_all add: with_type_def case_prod_beta)
@@ -198,8 +197,7 @@ proof -
 
   from td
   have rS: \<open>Collect (Domainp r) = S\<close>
-    apply (auto simp: r_def Domainp_iff type_definition.Rep)
-    by (meson type_definition.Rep_cases)
+    by (auto simp: r_def Domainp_iff type_definition.Rep elim!: type_definition.Rep_cases[where P=\<open>Ex _\<close>])
 
   note trans = trans[OF bi_unique_r, OF right_total_r, unfolded rS, transfer_rule]
 
@@ -247,7 +245,7 @@ parse_translation \<open>[
 typed_print_translation \<open>[ (\<^const_syntax>\<open>with_type\<close>, With_Type.with_type_print_translation) ]\<close>
 
 
-(* Example of input syntax. *)
+text \<open>Example of input syntax:\<close>
 term \<open>let 't::type = N in rep_t = rep_t\<close>
 
 

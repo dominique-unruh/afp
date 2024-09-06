@@ -34,12 +34,14 @@ proof -
   have inj: \<open>inj f\<close>
     using \<open>bi_unique r\<close>
     by (auto intro!: injI simp: bi_unique_def rf)
+  have aux1: \<open>\<forall>ya yb. x (f ya) (f yb) = f (y ya yb) \<Longrightarrow>
+       \<forall>a. (\<exists>y. a = f y) \<longrightarrow> (\<forall>b. (\<exists>y. b = f y) \<longrightarrow> (\<forall>c. (\<exists>y. c = f y) \<longrightarrow> x (x a b) c = x a (x b c))) \<Longrightarrow> 
+       y (y a b) c = y a (y b c)\<close> for x y a b c
+    by (metis inj injD)
   show ?thesis
     unfolding WITH_TYPE_REL_semigroup_add_def rel_fun_def
-    unfolding WITH_TYPE_CLASS_semigroup_add_def
-    unfolding Domainp_iff rf
-    apply (auto intro!: simp: class.semigroup_add_def)
-    by (metis inj injD)
+    unfolding WITH_TYPE_CLASS_semigroup_add_def Domainp_iff rf
+    by (auto intro!: simp: class.semigroup_add_def aux1)
 qed
 
 setup \<open>
@@ -89,16 +91,18 @@ proof (with_type_intro)
   proof (intro rel_funI)
     fix x y
     assume xy[transfer_rule]: \<open>(r ===> r ===> r) x y\<close>
+    have aux1: \<open>\<forall>a. Domainp r a \<longrightarrow> (\<forall>b. Domainp r b \<longrightarrow> (\<forall>c. Domainp r c \<longrightarrow> x (x a b) c = x a (x b c))) \<Longrightarrow>
+       r a b \<Longrightarrow> r ba bb \<Longrightarrow> r c bc \<Longrightarrow> x (x a ba) c = x a (x ba c)\<close> for a b ba bb c bc
+      by blast
+    have aux2: \<open>r a b \<Longrightarrow> r ba bb \<Longrightarrow> Domainp r (x a ba)\<close> for a b ba bb
+      by (metis DomainPI rel_funD xy)
     show \<open>WITH_TYPE_CLASS_semigroup_add (Collect (Domainp r)) x \<longleftrightarrow> class.semigroup_add y\<close>
       unfolding class.semigroup_add_def
       apply transfer
-      apply (auto intro!: simp: WITH_TYPE_CLASS_semigroup_add_def)
-       apply blast
-      by (metis DomainPI rel_funD xy)
+      by (auto intro!: aux1 aux2 simp: WITH_TYPE_CLASS_semigroup_add_def)
   qed
   have dom_r: \<open>Collect (Domainp r) = carrier\<close>
-    apply (auto intro!: simp: Rep r_def Domainp_iff)
-    by (meson Rep_cases)
+    by (auto elim!: Rep_cases simp: Rep r_def Domainp_iff)
   interpret semigroup_add plus_t
     apply transfer
     using carrier_semigroup dom_r by auto
@@ -243,8 +247,7 @@ proof with_type_intro
     unfolding plus_def
     by transfer_prover
   have dom_r: \<open>Collect (Domainp r) = carrier\<close>
-    apply (auto intro!: simp: Rep r_def Domainp_iff)
-    by (meson Rep_cases)
+    by (auto elim!: Rep_cases simp: Rep r_def Domainp_iff)
   
   from with_type_transfer_ab_group_add[OF \<open>bi_unique r\<close> \<open>right_total r\<close>]
   have [transfer_rule]: \<open>((r ===> r ===> r) ===> r ===> (r ===> r ===> r) ===> (r ===> r) ===> (\<longleftrightarrow>))

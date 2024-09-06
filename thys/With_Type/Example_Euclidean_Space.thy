@@ -103,10 +103,8 @@ instantiation vs_over :: (finite) real_inner begin
 lift_definition inner_vs_over :: \<open>'a vs_over \<Rightarrow> 'a vs_over \<Rightarrow> real\<close> is \<open>\<lambda>x y. \<Sum>a\<in>UNIV. x a * y a\<close>.
 instance
   apply (intro_classes; transfer)
-       apply (auto intro!: sum_nonneg simp: mult.commute sum_nonneg_eq_0_iff L2_set_def
-      power2_eq_square sum_distrib_left simp flip: sum.distrib)
-   apply (metis distrib_right inner_commute inner_real_def)
-  by (metis (no_types, lifting) mult.commute vector_space_over_itself.scale_scale)
+  by (auto intro!: sum_nonneg sum.cong simp: mult.commute sum_nonneg_eq_0_iff L2_set_def
+      power2_eq_square sum_distrib_left mult_ac distrib_left simp flip: sum.distrib)
 end
 
 instantiation vs_over :: (finite) euclidean_space begin
@@ -115,8 +113,7 @@ lift_definition basis_vec :: \<open>'a \<Rightarrow> 'a vs_over\<close> is \<ope
 definition Basis_vs_over :: \<open>'a vs_over set\<close> where \<open>Basis = range basis_vec\<close>
 instance
   apply (intro_classes; unfold Basis_vs_over_def; transfer)
-     apply (auto intro!: simp: )
-  by (metis indicator_simps(2) singletonD)
+  by (auto intro!: simp: indicator_def)
 end
 
 
@@ -192,24 +189,24 @@ next
     qed
     have \<open>norm (f x) = norm x\<close> for x
     proof -
+      have aux1: \<open>(a, b) \<notin> range (\<lambda>t. (t, t)) \<Longrightarrow> rep_t a \<bullet> rep_t b \<noteq> 0 \<Longrightarrow> Rep_vs_over x b = 0\<close> for a b
+        by (metis (mono_tags, lifting) of_bool_eq(1) onb range_eqI type_definition_t.Rep type_definition_t.Rep_inverse)
       have rep_inner: \<open>inner (rep_t t) (rep_t u) = of_bool (t=u)\<close> for t u
         by (simp add: onb type_definition_t.Rep type_definition_t.Rep_inject)
       have \<open>(norm (f x))\<^sup>2 = inner (f x) (f x)\<close>
-      by (simp add: dot_square_norm)
-    also have \<open>\<dots> = (\<Sum>(t,t')\<in>UNIV. (Rep_vs_over x t * Rep_vs_over x t') * inner (rep_t t) (rep_t t'))\<close>
-      apply (auto intro!: simp: f_def inner_sum_right inner_sum_left sum_distrib_left sum.cartesian_product
-          case_prod_beta)
-      by (metis (no_types, lifting) inner_commute vector_space_over_itself.scale_scale)
-    also have \<open>\<dots> = (\<Sum>(t,t')\<in>(\<lambda>t. (t,t))`UNIV. (Rep_vs_over x t * Rep_vs_over x t') * inner (rep_t t) (rep_t t'))\<close>
-      apply (auto intro!: sum.mono_neutral_cong_right simp: )
-      by (metis (mono_tags, lifting) of_bool_eq(1) onb rangeI type_definition_t.Rep type_definition_t.Rep_inverse)
-    also have \<open>\<dots> = (\<Sum>t\<in>UNIV. (Rep_vs_over x t)\<^sup>2)\<close>
-      apply (subst sum.reindex)
-      by (auto intro!: injI simp: rep_inner power2_eq_square)
-    also have \<open>\<dots> = (norm x)\<^sup>2\<close>
-      by (simp add: norm_vs_over_def L2_set_def sum_nonneg)
-    finally show ?thesis
-      by simp
+        by (simp add: dot_square_norm)
+      also have \<open>\<dots> = (\<Sum>(t,t')\<in>UNIV. (Rep_vs_over x t * Rep_vs_over x t') * inner (rep_t t) (rep_t t'))\<close>
+        by (auto intro!: simp: f_def inner_sum_right inner_sum_left sum_distrib_left sum.cartesian_product
+            case_prod_beta inner_commute mult_ac)
+      also have \<open>\<dots> = (\<Sum>(t,t')\<in>(\<lambda>t. (t,t))`UNIV. (Rep_vs_over x t * Rep_vs_over x t') * inner (rep_t t) (rep_t t'))\<close>
+        by (auto intro!: sum.mono_neutral_cong_right simp: aux1)
+      also have \<open>\<dots> = (\<Sum>t\<in>UNIV. (Rep_vs_over x t)\<^sup>2)\<close>
+        apply (subst sum.reindex)
+        by (auto intro!: injI simp: rep_inner power2_eq_square)
+      also have \<open>\<dots> = (norm x)\<^sup>2\<close>
+        by (simp add: norm_vs_over_def L2_set_def sum_nonneg)
+      finally show ?thesis
+        by simp
     qed
     then have \<open>f ` sphere 0 r = sphere 0 r\<close>
       using \<open>surj f\<close>
