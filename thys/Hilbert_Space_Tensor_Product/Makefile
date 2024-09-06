@@ -1,4 +1,4 @@
-ISABELLE=/opt/Isabelle2021-1/bin/isabelle
+ISABELLE=/opt/Isabelle/bin/isabelle
 
 doc: output/document.pdf output/outline.pdf
 
@@ -10,3 +10,10 @@ output/document.pdf output/outline.pdf: ROOT $(wildcard *.thy) $(wildcard *.ML) 
 
 build:
 	$(ISABELLE) build -b Tensor_Product
+
+Hilbert_Space_Tensor_Product.zip: ROOT $(wildcard *.thy) document/root.tex document/root.bib
+	rm -rf tmp
+	mkdir -p tmp/Hilbert_Space_Tensor_Product/
+	cp --parents $^ tmp/Hilbert_Space_Tensor_Product/
+	ls -lh tmp/Hilbert_Space_Tensor_Product/
+	cd tmp && zip -r ../$@ Hilbert_Space_Tensor_Product/
