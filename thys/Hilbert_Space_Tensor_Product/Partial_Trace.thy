@@ -1,3 +1,5 @@
+section \<open>\<open>Partial_Trace\<close> -- The partial trace\<close>
+
 theory Partial_Trace
   imports Trace_Class Hilbert_Space_Tensor_Product
 begin

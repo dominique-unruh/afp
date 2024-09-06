@@ -1,3 +1,5 @@
+section \<open>\<open>Eigenvalues\<close> -- Material related to eigenvalues and eigenspaces\<close>
+
 theory Eigenvalues
   imports
     Weak_Operator_Topology

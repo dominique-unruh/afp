@@ -1,3 +1,5 @@
+section \<open>\<open>Compact_Operators\<close> -- Finite rank and compact operators\<close>
+
 theory Compact_Operators
   imports Misc_Tensor_Product_BO HS2Ell2
     Sqrt_Babylonian.Sqrt_Babylonian_Auxiliary Wlog.Wlog

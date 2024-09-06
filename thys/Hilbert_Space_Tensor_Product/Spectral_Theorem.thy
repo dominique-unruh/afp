@@ -1,3 +1,5 @@
+section \<open>\<open>Spectral_Theorem\<close> -- The spectral theorem for compact operators\<close>
+
 theory Spectral_Theorem
   imports Compact_Operators Positive_Operators Eigenvalues
 begin

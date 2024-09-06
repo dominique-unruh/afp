@@ -1,3 +1,5 @@
+section \<open>\<open>Von_Neumann_Algebras\<close> -- Von Neumann algebras and the double commutant theorem\<close>
+
 theory Von_Neumann_Algebras
   imports Hilbert_Space_Tensor_Product
 begin

@@ -1,3 +1,7 @@
+section \<open>\<open>Misc_Tensor_Product_TTS\<close> -- Miscelleanous results missing from \<^session>\<open>Complex_Bounded_Operators\<close>\<close>
+
+text \<open>Here specifically results obtained from lifting existing results using the types to sets mechanism (\<^cite>\<open>"types-to-sets"\<close>).\<close>
+
 theory Misc_Tensor_Product_TTS
   imports
     Complex_Bounded_Operators.Complex_Bounded_Linear_Function

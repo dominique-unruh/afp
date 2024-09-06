@@ -1,7 +1,14 @@
+section \<open>\<open>Tensor_Product_Code\<close> -- Support for code generation\<close>
+
 theory Tensor_Product_Code
   imports Hilbert_Space_Tensor_Product
     Complex_Bounded_Operators.Cblinfun_Code
 begin
+
+text \<open>Automatic evaluation of formulas involving finite dimensional tensor products.
+Builds upon \<^theory>\<open>Complex_Bounded_Operators.Cblinfun_Code\<close> and reduces computations
+to the existing procedures from \<^session>\<open>Jordan_Normal_Form\<close>.\<close>
+
 
 unbundle cblinfun_notation Finite_Cartesian_Product.no_vec_syntax jnf_notation
 hide_const (open) Finite_Cartesian_Product.vec
