@@ -148,6 +148,7 @@ definition "valid_getter_setter g s \<longleftrightarrow>
   (\<forall>b. b = s (g b) b) \<and> (\<forall>a b. g (s a b) = a) \<and> (\<forall>a a' b. s a (s a' b) = s a b)"
 
 definition \<open>register_from_getter_setter g s a m = (case a (g m) of None \<Rightarrow> None | Some x \<Rightarrow> Some (s x m))\<close>
+  (* TODO for g :: \<open>'a \<Rightarrow> 'b\<close> and s :: \<open>'b \<Rightarrow> 'a \<Rightarrow> 'a\<close> *)
 definition \<open>register_apply F a = the o F (Some o a)\<close>
 definition \<open>setter F a m = register_apply F (\<lambda>_. a) m\<close> for F :: \<open>'a update \<Rightarrow> 'b update\<close>
 definition \<open>getter F m = (THE x. setter F x m = m)\<close> for F :: \<open>'a update \<Rightarrow> 'b update\<close>
