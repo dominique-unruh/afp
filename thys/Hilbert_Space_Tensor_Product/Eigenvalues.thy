@@ -194,7 +194,7 @@ lemma not_not_singleton_no_eigenvalues:
   fixes a :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
   assumes \<open>\<not> class.not_singleton TYPE('a)\<close>
   shows \<open>eigenvalues a = {}\<close>
-proof auto
+proof (rule equals0I)
   fix e assume \<open>e \<in> eigenvalues a\<close>
   then have \<open>eigenspace e a \<noteq> \<bottom>\<close>
     by (simp add: eigenvalues_def) 

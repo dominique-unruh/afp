@@ -848,7 +848,7 @@ instance
 proof intro_classes
   fix x y z :: \<open>('a,'b) hilbert_schmidt\<close>
   show \<open>x \<bullet>\<^sub>C y = cnj (y \<bullet>\<^sub>C x)\<close>
-  proof (transfer; simp)
+  proof (transfer; unfold mem_Collect_eq)
     fix x y :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
     assume hs_xy: \<open>hilbert_schmidt x\<close> \<open>hilbert_schmidt y\<close>
     then have tc: \<open>trace_class ((y* o\<^sub>C\<^sub>L x)*)\<close> \<open>trace_class (y* o\<^sub>C\<^sub>L x)\<close>
@@ -861,7 +861,7 @@ proof intro_classes
       by -
   qed
   show \<open>(x + y) \<bullet>\<^sub>C z = x \<bullet>\<^sub>C z + y \<bullet>\<^sub>C z\<close>
-  proof (transfer; simp) 
+  proof (transfer; unfold mem_Collect_eq) 
     fix x y z :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
     assume [simp]: \<open>hilbert_schmidt x\<close> \<open>hilbert_schmidt y\<close> \<open>hilbert_schmidt z\<close>
     have [simp]: \<open>trace_class ((x + y)* o\<^sub>C\<^sub>L z)\<close> \<open>trace_class (x* o\<^sub>C\<^sub>L z)\<close> \<open>trace_class (y* o\<^sub>C\<^sub>L z)\<close>
@@ -878,7 +878,7 @@ proof intro_classes
     apply transfer
     by (simp add: positive_cblinfun_squareI trace_pos)
   show \<open>(x \<bullet>\<^sub>C x = 0) = (x = 0)\<close>
-  proof (transfer; simp)
+  proof (transfer; unfold mem_Collect_eq)
     fix x :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
     assume [simp]: \<open>hilbert_schmidt x\<close>
     have \<open>trace (x* o\<^sub>C\<^sub>L x) = 0 \<longleftrightarrow> trace (abs_op (x* o\<^sub>C\<^sub>L x)) = 0\<close>

@@ -128,13 +128,14 @@ lemma sqrt_op_existence:
 proof -
   define k S where \<open>k = norm A\<close> and \<open>S = A /\<^sub>R k - id_cblinfun\<close>
   have \<open>S \<le> 0\<close>
-  proof (rule cblinfun_leI, simp)
+  proof (rule cblinfun_leI)
     fix x :: 'a assume [simp]: \<open>norm x = 1\<close>
-    show \<open>x \<bullet>\<^sub>C (S *\<^sub>V x) \<le> 0\<close>
-      apply (auto simp: S_def cinner_diff_right cblinfun.diff_left scaleR_scaleC cdot_square_norm k_def complex_of_real_mono_iff[where y=1, simplified]
+    with assms have aux1: \<open>complex_of_real (inverse (norm A)) * (x \<bullet>\<^sub>C (A *\<^sub>V x)) \<le> 1\<close>
+      by (smt (verit, del_insts) Reals_cnj_iff cinner_adj_left cinner_commute cinner_scaleR_left cinner_scaleR_right cmod_Re complex_inner_class.Cauchy_Schwarz_ineq2 left_inverse less_eq_complex_def linordered_field_class.inverse_nonnegative_iff_nonnegative mult_cancel_left2 mult_left_mono norm_cblinfun norm_ge_zero norm_mult norm_of_real norm_one positive_hermitianI reals_zero_comparable zero_less_one_class.zero_le_one)
+    show \<open>x \<bullet>\<^sub>C (S *\<^sub>V x) \<le> x \<bullet>\<^sub>C (0 *\<^sub>V x)\<close>
+      by (auto simp: S_def cinner_diff_right cblinfun.diff_left scaleR_scaleC cdot_square_norm k_def complex_of_real_mono_iff[where y=1, simplified]
           simp flip: assms of_real_inverse of_real_power of_real_mult power_mult_distrib power_inverse
-          intro!: power_le_one)
-      by (smt (verit, del_insts) Reals_cnj_iff \<open>norm x = 1\<close> assms cinner_adj_left cinner_commute cinner_scaleR_left cinner_scaleR_right cmod_Re complex_inner_class.Cauchy_Schwarz_ineq2 left_inverse less_eq_complex_def linordered_field_class.inverse_nonnegative_iff_nonnegative mult_cancel_left2 mult_left_mono norm_cblinfun norm_ge_zero norm_mult norm_of_real norm_one positive_hermitianI reals_zero_comparable zero_less_one_class.zero_le_one)
+          intro!: power_le_one aux1)
   qed
   have [simp]: \<open>S* = S\<close>
     using \<open>S \<le> 0\<close> adj_0 comparable_hermitean' selfadjoint_def by blast

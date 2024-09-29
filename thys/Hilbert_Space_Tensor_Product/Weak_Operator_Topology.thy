@@ -67,7 +67,7 @@ qed
 lemma continuous_on_cweak_operator_topo_iff_coordinatewise:
   "continuous_map T cweak_operator_topology f
     \<longleftrightarrow> (\<forall>x y. continuous_map T euclidean (\<lambda>z.  cinner x (f z *\<^sub>V y)))"
-proof (auto)
+proof (intro iffI allI)
   fix x::'c and y::'b
   assume "continuous_map T cweak_operator_topology f"
   with continuous_map_compose[OF this cweak_operator_topology_cinner_continuous]

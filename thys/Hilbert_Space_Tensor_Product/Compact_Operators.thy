@@ -1402,7 +1402,7 @@ proof -
     then have hlim: \<open>(\<lambda>i. h i \<bullet>\<^sub>C a (h i)) \<longlonglongrightarrow> e\<close>
       by (simp add: sgn_cmod)
     have \<open>e \<noteq> 0\<close>
-    proof (rule ccontr, simp)
+    proof (rule ccontr, unfold not_not)
       assume \<open>e = 0\<close>
       from hlim have \<open>(\<lambda>i. cmod (h i \<bullet>\<^sub>C a (h i))) \<longlonglongrightarrow> cmod e\<close>
         apply (rule tendsto_compose[where g=cmod, rotated])

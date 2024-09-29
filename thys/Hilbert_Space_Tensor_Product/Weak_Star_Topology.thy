@@ -238,7 +238,7 @@ lemma continuous_on_weak_star_topo_iff_coordinatewise:
   fixes f :: \<open>'a \<Rightarrow> 'b::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'c::chilbert_space\<close>
   shows "continuous_map T weak_star_topology f
     \<longleftrightarrow> (\<forall>t. trace_class t \<longrightarrow> continuous_map T euclidean (\<lambda>x. trace (t o\<^sub>C\<^sub>L f x)))"
-proof auto
+proof (intro iffI allI impI)
   fix t :: \<open>'c \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
   assume \<open>trace_class t\<close>
   assume "continuous_map T weak_star_topology f"

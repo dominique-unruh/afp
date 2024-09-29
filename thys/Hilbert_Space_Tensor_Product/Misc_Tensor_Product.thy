@@ -1207,7 +1207,7 @@ lemma has_sum_singleton[simp]: \<open>(f has_sum y) {x} \<longleftrightarrow> f 
 lemma has_sum_sums: \<open>f sums s\<close> if \<open>(f has_sum s) UNIV\<close>
 proof -
   have \<open>(\<lambda>n. sum f {..<n}) \<longlonglongrightarrow> s\<close>
-  proof (simp add: tendsto_def, intro allI impI)
+  proof (unfold tendsto_def, intro allI impI)
     fix S assume \<open>open S\<close> and \<open>s \<in> S\<close>
     with \<open>(f has_sum s) UNIV\<close>
     have \<open>\<forall>\<^sub>F F in finite_subsets_at_top UNIV. sum f F \<in> S\<close>
@@ -1321,23 +1321,28 @@ lemma abs_summable_product:
   assumes x2_sum: "(\<lambda>i. (x i)\<^sup>2) abs_summable_on A"
     and y2_sum: "(\<lambda>i. (y i)\<^sup>2) abs_summable_on A"
   shows "(\<lambda>i. x i * y i) abs_summable_on A"
-proof (rule nonneg_bdd_above_summable_on, simp, rule bdd_aboveI2, rename_tac F)
-  fix F assume \<open>F \<in> {F. F \<subseteq> A \<and> finite F}\<close>
-  then have "finite F" and "F \<subseteq> A"
-    by auto
-
-  have "norm (x i * y i) \<le> norm (x i * x i) + norm (y i * y i)" for i
-    unfolding norm_mult
-    by (smt mult_left_mono mult_nonneg_nonneg mult_right_mono norm_ge_zero)
-  hence "(\<Sum>i\<in>F. norm (x i * y i)) \<le> (\<Sum>i\<in>F. norm ((x i)\<^sup>2) + norm ((y i)\<^sup>2))"
-    using [[simp_trace]]
-    by (simp add: power2_eq_square sum_mono del: (* VS_Connect.class_semiring.add.finprod_multf *))
-  also have "\<dots> = (\<Sum>i\<in>F. norm ((x i)\<^sup>2)) + (\<Sum>i\<in>F. norm ((y i)\<^sup>2))"
-    by (simp add: sum.distrib)
-  also have "\<dots> \<le> (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((x i)\<^sup>2)) + (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((y i)\<^sup>2))"
-    using x2_sum y2_sum \<open>finite F\<close> \<open>F \<subseteq> A\<close> by (auto intro!: finite_sum_le_infsum add_mono)
-  finally show \<open>(\<Sum>xa\<in>F. norm (x xa * y xa)) \<le> (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((x i)\<^sup>2)) + (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((y i)\<^sup>2))\<close>
+proof (rule nonneg_bdd_above_summable_on)
+  show \<open>0 \<le> norm (x i * y i)\<close> for i
     by simp
+  show \<open>bdd_above (sum (\<lambda>i. norm (x i * y i)) ` {F. F \<subseteq> A \<and> finite F})\<close>
+  proof (rule bdd_aboveI2, rename_tac F)
+    fix F assume \<open>F \<in> {F. F \<subseteq> A \<and> finite F}\<close>
+    then have "finite F" and "F \<subseteq> A"
+      by auto
+
+    have "norm (x i * y i) \<le> norm (x i * x i) + norm (y i * y i)" for i
+      unfolding norm_mult
+      by (smt mult_left_mono mult_nonneg_nonneg mult_right_mono norm_ge_zero)
+    hence "(\<Sum>i\<in>F. norm (x i * y i)) \<le> (\<Sum>i\<in>F. norm ((x i)\<^sup>2) + norm ((y i)\<^sup>2))"
+      using [[simp_trace]]
+      by (simp add: power2_eq_square sum_mono)
+    also have "\<dots> = (\<Sum>i\<in>F. norm ((x i)\<^sup>2)) + (\<Sum>i\<in>F. norm ((y i)\<^sup>2))"
+      by (simp add: sum.distrib)
+    also have "\<dots> \<le> (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((x i)\<^sup>2)) + (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((y i)\<^sup>2))"
+      using x2_sum y2_sum \<open>finite F\<close> \<open>F \<subseteq> A\<close> by (auto intro!: finite_sum_le_infsum add_mono)
+    finally show \<open>(\<Sum>xa\<in>F. norm (x xa * y xa)) \<le> (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((x i)\<^sup>2)) + (\<Sum>\<^sub>\<infinity>i\<in>A. norm ((y i)\<^sup>2))\<close>
+      by simp
+  qed
 qed
 
 lemma Cauchy_Schwarz_ineq_infsum:
