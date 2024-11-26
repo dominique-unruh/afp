@@ -11,8 +11,99 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     
-      <lastBuildDate>Mon, 16 Sep 2024 00:00:00 +0000</lastBuildDate>
+      <lastBuildDate>Fri, 22 Nov 2024 00:00:00 +0000</lastBuildDate>
       <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+        <item>
+          <title>Impossibility of the Dissection of a Cube</title>
+          <link>/entries/Cube_Dissection.html</link>
+          <pubDate>Fri, 22 Nov 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Cube_Dissection.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Two Theorems on Hermitian Matrices</title>
+          <link>/entries/Two_Hermitian_Results.html</link>
+          <pubDate>Sat, 16 Nov 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Two_Hermitian_Results.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>SCL Simulates Nonredundant Ground Resolution</title>
+          <link>/entries/SCL_Simulates_Ground_Resolution.html</link>
+          <pubDate>Thu, 31 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/SCL_Simulates_Ground_Resolution.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>A Modular Formalization of Superposition</title>
+          <link>/entries/Superposition_Calculus.html</link>
+          <pubDate>Thu, 24 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Superposition_Calculus.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Minimal, Maximal, Least, and Greatest Elements w.r.t. Restricted Ordering</title>
+          <link>/entries/Min_Max_Least_Greatest.html</link>
+          <pubDate>Thu, 24 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Min_Max_Least_Greatest.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>The Boustrophedon Transform, the Entringer Numbers, and Related Sequences</title>
+          <link>/entries/Boustrophedon_Transform.html</link>
+          <pubDate>Thu, 24 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Boustrophedon_Transform.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>The Elementary Theory of the Category of Sets</title>
+          <link>/entries/Category_Set.html</link>
+          <pubDate>Thu, 10 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Category_Set.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Wooley&#39;s Discrete Inequality</title>
+          <link>/entries/Wooley_Elementary_Discrete_Inequality.html</link>
+          <pubDate>Wed, 02 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Wooley_Elementary_Discrete_Inequality.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Babai&#39;s Nearest Plane Algorithm</title>
+          <link>/entries/Babai_Nearest_Plane.html</link>
+          <pubDate>Thu, 26 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Babai_Nearest_Plane.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Formally Verified Suffix Array Construction</title>
+          <link>/entries/SuffixArray.html</link>
+          <pubDate>Wed, 25 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/SuffixArray.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>The Karatsuba Square Root Algorithm</title>
+          <link>/entries/Karatsuba_Sqrt.html</link>
+          <pubDate>Wed, 18 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Karatsuba_Sqrt.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Parallel Shear Sort</title>
+          <link>/entries/Parallel_Shear_Sort.html</link>
+          <pubDate>Tue, 17 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Parallel_Shear_Sort.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Abstract Substitution</title>
+          <link>/entries/Abstract_Substitution.html</link>
+          <pubDate>Mon, 16 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Abstract_Substitution.html</guid>
+          <description></description>
+        </item>
         <item>
           <title>NREST: Nondeterministc RESult monad with Time</title>
           <link>/entries/NREST.html</link>
@@ -6020,6 +6111,13 @@
           <description></description>
         </item>
         <item>
+          <title>Abstract_Substitution</title>
+          <link>/sessions/abstract_substitution/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/abstract_substitution/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Abstract-Hoare-Logics</title>
           <link>/sessions/abstract-hoare-logics/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -6293,6 +6391,13 @@
           <description></description>
         </item>
         <item>
+          <title>Babai_Nearest_Plane</title>
+          <link>/sessions/babai_nearest_plane/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/babai_nearest_plane/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Balog_Szemeredi_Gowers</title>
           <link>/sessions/balog_szemeredi_gowers/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -6475,6 +6580,13 @@
           <description></description>
         </item>
         <item>
+          <title>Boustrophedon_Transform</title>
+          <link>/sessions/boustrophedon_transform/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/boustrophedon_transform/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Broadcast_Psi</title>
           <link>/sessions/broadcast_psi/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -6612,6 +6724,13 @@
           <link>/sessions/category/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/category/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Category_Set</title>
+          <link>/sessions/category_set/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/category_set/</guid>
           <description></description>
         </item>
         <item>
@@ -7179,6 +7298,13 @@
           <link>/sessions/csp_reftk/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/csp_reftk/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Cube_Dissection</title>
+          <link>/sessions/cube_dissection/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/cube_dissection/</guid>
           <description></description>
         </item>
         <item>
@@ -8890,6 +9016,13 @@
           <description></description>
         </item>
         <item>
+          <title>Karatsuba_Sqrt</title>
+          <link>/sessions/karatsuba_sqrt/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/karatsuba_sqrt/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>KAT_and_DRA</title>
           <link>/sessions/kat_and_dra/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -9576,6 +9709,13 @@
           <description></description>
         </item>
         <item>
+          <title>Min_Max_Least_Greatest</title>
+          <link>/sessions/min_max_least_greatest/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/min_max_least_greatest/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Minimal_SSA</title>
           <link>/sessions/minimal_ssa/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -10056,6 +10196,13 @@
           <link>/sessions/paraconsistency/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/paraconsistency/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Parallel_Shear_Sort</title>
+          <link>/sessions/parallel_shear_sort/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/parallel_shear_sort/</guid>
           <description></description>
         </item>
         <item>
@@ -11053,6 +11200,13 @@
           <description></description>
         </item>
         <item>
+          <title>SCL_Simulates_Ground_Resolution</title>
+          <link>/sessions/scl_simulates_ground_resolution/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/scl_simulates_ground_resolution/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>SDS_Impossibility</title>
           <link>/sessions/sds_impossibility/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -11557,6 +11711,13 @@
           <description></description>
         </item>
         <item>
+          <title>SuffixArray</title>
+          <link>/sessions/suffixarray/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/suffixarray/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Sumcheck_Protocol</title>
           <link>/sessions/sumcheck_protocol/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -11582,6 +11743,13 @@
           <link>/sessions/supercalc/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/supercalc/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Superposition_Calculus</title>
+          <link>/sessions/superposition_calculus/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/superposition_calculus/</guid>
           <description></description>
         </item>
         <item>
@@ -11844,6 +12012,13 @@
           <description></description>
         </item>
         <item>
+          <title>Two_Hermitian_Results</title>
+          <link>/sessions/two_hermitian_results/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/two_hermitian_results/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Tycon</title>
           <link>/sessions/tycon/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -12093,6 +12268,13 @@
           <link>/sessions/wlog/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/wlog/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Wooley_Elementary_Discrete_Inequality</title>
+          <link>/sessions/wooley_elementary_discrete_inequality/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/wooley_elementary_discrete_inequality/</guid>
           <description></description>
         </item>
         <item>

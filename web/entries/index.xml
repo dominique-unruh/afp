@@ -11,8 +11,99 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     
-      <lastBuildDate>Mon, 16 Sep 2024 00:00:00 +0000</lastBuildDate>
+      <lastBuildDate>Fri, 22 Nov 2024 00:00:00 +0000</lastBuildDate>
       <atom:link href="/entries/index.xml" rel="self" type="application/rss+xml" />
+        <item>
+          <title>Impossibility of the Dissection of a Cube</title>
+          <link>/entries/Cube_Dissection.html</link>
+          <pubDate>Fri, 22 Nov 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Cube_Dissection.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Two Theorems on Hermitian Matrices</title>
+          <link>/entries/Two_Hermitian_Results.html</link>
+          <pubDate>Sat, 16 Nov 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Two_Hermitian_Results.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>SCL Simulates Nonredundant Ground Resolution</title>
+          <link>/entries/SCL_Simulates_Ground_Resolution.html</link>
+          <pubDate>Thu, 31 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/SCL_Simulates_Ground_Resolution.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>A Modular Formalization of Superposition</title>
+          <link>/entries/Superposition_Calculus.html</link>
+          <pubDate>Thu, 24 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Superposition_Calculus.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Minimal, Maximal, Least, and Greatest Elements w.r.t. Restricted Ordering</title>
+          <link>/entries/Min_Max_Least_Greatest.html</link>
+          <pubDate>Thu, 24 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Min_Max_Least_Greatest.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>The Boustrophedon Transform, the Entringer Numbers, and Related Sequences</title>
+          <link>/entries/Boustrophedon_Transform.html</link>
+          <pubDate>Thu, 24 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Boustrophedon_Transform.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>The Elementary Theory of the Category of Sets</title>
+          <link>/entries/Category_Set.html</link>
+          <pubDate>Thu, 10 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Category_Set.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Wooley&#39;s Discrete Inequality</title>
+          <link>/entries/Wooley_Elementary_Discrete_Inequality.html</link>
+          <pubDate>Wed, 02 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Wooley_Elementary_Discrete_Inequality.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Babai&#39;s Nearest Plane Algorithm</title>
+          <link>/entries/Babai_Nearest_Plane.html</link>
+          <pubDate>Thu, 26 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Babai_Nearest_Plane.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Formally Verified Suffix Array Construction</title>
+          <link>/entries/SuffixArray.html</link>
+          <pubDate>Wed, 25 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/SuffixArray.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>The Karatsuba Square Root Algorithm</title>
+          <link>/entries/Karatsuba_Sqrt.html</link>
+          <pubDate>Wed, 18 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Karatsuba_Sqrt.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Parallel Shear Sort</title>
+          <link>/entries/Parallel_Shear_Sort.html</link>
+          <pubDate>Tue, 17 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Parallel_Shear_Sort.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Abstract Substitution</title>
+          <link>/entries/Abstract_Substitution.html</link>
+          <pubDate>Mon, 16 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Abstract_Substitution.html</guid>
+          <description></description>
+        </item>
         <item>
           <title>NREST: Nondeterministc RESult monad with Time</title>
           <link>/entries/NREST.html</link>

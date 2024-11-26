@@ -11,20 +11,111 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     
-      <lastBuildDate>Mon, 16 Sep 2024 00:00:00 +0000</lastBuildDate>
+      <lastBuildDate>Fri, 22 Nov 2024 00:00:00 +0000</lastBuildDate>
       <atom:link href="/authors/index.xml" rel="self" type="application/rss+xml" />
         <item>
-          <title>haslbeckm</title>
-          <link>/authors/haslbeckm/</link>
-          <pubDate>Mon, 16 Sep 2024 00:00:00 +0000</pubDate>
-          <guid>/authors/haslbeckm/</guid>
+          <title>surlykke</title>
+          <link>/authors/surlykke/</link>
+          <pubDate>Fri, 22 Nov 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/surlykke/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>binder</title>
+          <link>/authors/binder/</link>
+          <pubDate>Sat, 16 Nov 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/binder/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>jiangz</title>
+          <link>/authors/jiangz/</link>
+          <pubDate>Sat, 16 Nov 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/jiangz/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>desharnais</title>
+          <link>/authors/desharnais/</link>
+          <pubDate>Thu, 31 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/desharnais/</guid>
           <description></description>
         </item>
         <item>
           <title>eberl</title>
           <link>/authors/eberl/</link>
-          <pubDate>Fri, 13 Sep 2024 00:00:00 +0000</pubDate>
+          <pubDate>Thu, 24 Oct 2024 00:00:00 +0000</pubDate>
           <guid>/authors/eberl/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>toth</title>
+          <link>/authors/toth/</link>
+          <pubDate>Thu, 24 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/toth/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>baxter</title>
+          <link>/authors/baxter/</link>
+          <pubDate>Thu, 10 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/baxter/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>bryant</title>
+          <link>/authors/bryant/</link>
+          <pubDate>Thu, 10 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/bryant/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>argyraki</title>
+          <link>/authors/argyraki/</link>
+          <pubDate>Wed, 02 Oct 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/argyraki/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>cordwell</title>
+          <link>/authors/cordwell/</link>
+          <pubDate>Thu, 26 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/cordwell/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>ren</title>
+          <link>/authors/ren/</link>
+          <pubDate>Thu, 26 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/ren/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>cheung</title>
+          <link>/authors/cheung/</link>
+          <pubDate>Wed, 25 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/cheung/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>rizkallah</title>
+          <link>/authors/rizkallah/</link>
+          <pubDate>Wed, 25 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/rizkallah/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>lammich</title>
+          <link>/authors/lammich/</link>
+          <pubDate>Tue, 17 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/lammich/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>haslbeckm</title>
+          <link>/authors/haslbeckm/</link>
+          <pubDate>Mon, 16 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/authors/haslbeckm/</guid>
           <description></description>
         </item>
         <item>
@@ -105,13 +196,6 @@
           <description></description>
         </item>
         <item>
-          <title>lammich</title>
-          <link>/authors/lammich/</link>
-          <pubDate>Wed, 14 Aug 2024 00:00:00 +0000</pubDate>
-          <guid>/authors/lammich/</guid>
-          <description></description>
-        </item>
-        <item>
           <title>wimmer</title>
           <link>/authors/wimmer/</link>
           <pubDate>Wed, 14 Aug 2024 00:00:00 +0000</pubDate>
@@ -172,13 +256,6 @@
           <link>/authors/thiemann/</link>
           <pubDate>Thu, 13 Jun 2024 00:00:00 +0000</pubDate>
           <guid>/authors/thiemann/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>cordwell</title>
-          <link>/authors/cordwell/</link>
-          <pubDate>Mon, 10 Jun 2024 00:00:00 +0000</pubDate>
-          <guid>/authors/cordwell/</guid>
           <description></description>
         </item>
         <item>
@@ -270,13 +347,6 @@
           <link>/authors/yao/</link>
           <pubDate>Sun, 05 May 2024 00:00:00 +0000</pubDate>
           <guid>/authors/yao/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>binder</title>
-          <link>/authors/binder/</link>
-          <pubDate>Fri, 26 Apr 2024 00:00:00 +0000</pubDate>
-          <guid>/authors/binder/</guid>
           <description></description>
         </item>
         <item>
@@ -700,13 +770,6 @@
           <description></description>
         </item>
         <item>
-          <title>argyraki</title>
-          <link>/authors/argyraki/</link>
-          <pubDate>Thu, 10 Aug 2023 00:00:00 +0000</pubDate>
-          <guid>/authors/argyraki/</guid>
-          <description></description>
-        </item>
-        <item>
           <title>leek</title>
           <link>/authors/leek/</link>
           <pubDate>Thu, 10 Aug 2023 00:00:00 +0000</pubDate>
@@ -816,13 +879,6 @@
           <link>/authors/kim/</link>
           <pubDate>Thu, 27 Apr 2023 00:00:00 +0000</pubDate>
           <guid>/authors/kim/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>desharnais</title>
-          <link>/authors/desharnais/</link>
-          <pubDate>Thu, 20 Apr 2023 00:00:00 +0000</pubDate>
-          <guid>/authors/desharnais/</guid>
           <description></description>
         </item>
         <item>
@@ -1152,13 +1208,6 @@
           <link>/authors/marmsoler/</link>
           <pubDate>Mon, 18 Jul 2022 00:00:00 +0000</pubDate>
           <guid>/authors/marmsoler/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>toth</title>
-          <link>/authors/toth/</link>
-          <pubDate>Thu, 23 Jun 2022 00:00:00 +0000</pubDate>
-          <guid>/authors/toth/</guid>
           <description></description>
         </item>
         <item>
@@ -2524,13 +2573,6 @@
           <link>/authors/lewis/</link>
           <pubDate>Tue, 29 Nov 2016 00:00:00 +0000</pubDate>
           <guid>/authors/lewis/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>rizkallah</title>
-          <link>/authors/rizkallah/</link>
-          <pubDate>Tue, 29 Nov 2016 00:00:00 +0000</pubDate>
-          <guid>/authors/rizkallah/</guid>
           <description></description>
         </item>
         <item>
