@@ -221,19 +221,22 @@ proof -
       and FV: \<open>F \<theta> = sandwich V (\<theta> \<otimes>\<^sub>o ?ida)\<close> for \<theta>
       by auto
 
+    have inj_V: \<open>inj ((*\<^sub>V) (sandwich V))\<close>
+      by (meson \<open>unitary V\<close> register_inj unitary_sandwich_register)
     have \<open>surj F\<close>
       by (meson assms iso_register_inv_comp2 surj_iff)
     have surj_tensor: \<open>surj (\<lambda>a::'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2. a \<otimes>\<^sub>o ?ida)\<close>
       apply (rule surj_from_comp[where g=\<open>sandwich V\<close>])
-      using \<open>surj F\<close> apply (auto simp: FV)
-      by (meson \<open>unitary V\<close> register_inj unitary_sandwich_register)
+      using \<open>surj F\<close> inj_V by (auto simp: FV)
     then obtain a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> 
       where a: \<open>a \<otimes>\<^sub>o ?ida = butterfly (ket undefined) (ket undefined) \<otimes>\<^sub>o butterfly (ket undefined) (ket undefined)\<close>
       by (smt (verit, best) surjD)
 
-    then have \<open>a \<noteq> 0\<close>
-      apply (auto simp: tensor_ell2_ket tensor_butterfly)
+    have \<open>selfbutter (ket (undefined, undefined)) \<noteq> 0\<close>
       by (metis butterfly_apply cblinfun.zero_left complex_vector.scale_eq_0_iff ket_nonzero orthogonal_ket)
+    with a have \<open>a \<noteq> 0\<close>
+      by (auto simp: tensor_ell2_ket tensor_butterfly)
+
 
     obtain \<gamma> where \<gamma>: \<open>?ida = \<gamma> *\<^sub>C butterfly (ket undefined) (ket undefined)\<close>
       apply atomize_elim
@@ -330,11 +333,13 @@ proof (use register_decomposition[OF \<open>register F\<close>] in \<open>rule w
   have \<open>F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close> for a b
   proof -
     have \<open>F a o\<^sub>C\<^sub>L G b = sandwich U (a \<otimes>\<^sub>o b)\<close>
-      apply (auto simp: F G_def sandwich_apply)
-      by (metis (no_types, lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) comp_tensor_op cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
+      by (auto simp: F G_def sandwich_apply cblinfun_assoc_right
+          \<open>unitary U\<close> lift_cblinfun_comp[OF unitaryD1]
+          lift_cblinfun_comp[OF comp_tensor_op])
     moreover have \<open>G b o\<^sub>C\<^sub>L F a = sandwich U (a \<otimes>\<^sub>o b)\<close>
-      apply (auto simp: F G_def sandwich_apply)
-      by (metis (no_types, lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) comp_tensor_op cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
+      by (auto simp: F G_def sandwich_apply cblinfun_assoc_right
+          \<open>unitary U\<close> lift_cblinfun_comp[OF unitaryD1]
+          lift_cblinfun_comp[OF comp_tensor_op])
     ultimately show ?thesis by simp
   qed
   then have [simp]: \<open>compatible F G\<close>
@@ -342,8 +347,9 @@ proof (use register_decomposition[OF \<open>register F\<close>] in \<open>rule w
   moreover have \<open>iso_register (F;G)\<close>
   proof -
     have \<open>(F;G) (a \<otimes>\<^sub>o b) = sandwich U (a \<otimes>\<^sub>o b)\<close> for a b
-      apply (auto simp: register_pair_apply F G_def sandwich_apply)
-      by (metis (no_types, lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) comp_tensor_op cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
+      by (auto simp: register_pair_apply F G_def sandwich_apply cblinfun_assoc_right
+          \<open>unitary U\<close> lift_cblinfun_comp[OF unitaryD1]
+          lift_cblinfun_comp[OF comp_tensor_op])
     then have FG: \<open>(F;G) = sandwich U\<close>
       apply (rule tensor_extensionality[rotated -1])
       by (simp_all add: unitary_sandwich_register)
@@ -351,9 +357,9 @@ proof (use register_decomposition[OF \<open>register F\<close>] in \<open>rule w
     have [simp]: \<open>register I\<close>
       by (simp add: I_def unitary_sandwich_register)
     have \<open>I o (F;G) = id\<close> and FGI: \<open>(F;G) o I = id\<close>
-       apply (auto intro!:ext simp: I_def[abs_def] FG sandwich_apply)
-       apply (metis (no_types, opaque_lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
-      by (metis (no_types, lifting) \<open>unitary U\<close> cblinfun_assoc_left(1) cblinfun_compose_id_left cblinfun_compose_id_right unitaryD2)
+      by (auto intro!:ext simp: I_def[abs_def] FG sandwich_apply cblinfun_assoc_right
+          \<open>unitary U\<close> lift_cblinfun_comp[OF unitaryD1] lift_cblinfun_comp[OF unitaryD2]
+          lift_cblinfun_comp[OF comp_tensor_op])
     then show \<open>iso_register (F;G)\<close>
       by (auto intro!: iso_registerI)
   qed
@@ -553,6 +559,8 @@ proof -
     by (metis card_image)
 qed
 
+
+
 lemma register_decomposition_finite_aux:
   fixes \<Phi> :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
   assumes [simp]: \<open>register \<Phi>\<close>
@@ -670,7 +678,7 @@ proof -
   from orthoBiBj orthoB
   have Bdisj: \<open>B i \<inter> B j = {}\<close> if \<open>i \<noteq> j\<close> for i j
     unfolding is_ortho_set_def
-    apply auto by (metis cinner_eq_zero_iff that)
+    using that by fastforce
 
   have cardBsame: \<open>card (B i) = card (B j)\<close> for i j
   proof -
@@ -693,8 +701,7 @@ proof -
       using S2S S2S2S by (auto intro!: funcsetI)
     have \<open>cdim (space_as_set (S i)) = cdim (space_as_set (S j))\<close>
       using lin apply (rule isomorphic_equal_cdim[where f=\<open>Si_to_Sj i j\<close>])
-      using bij apply (auto simp: bij_betw_def)
-      by (metis complex_vector.span_span cspanB)
+      using bij by (auto simp: bij_betw_def)
     then show ?thesis
       by (metis complex_vector.dim_span_eq_card_independent cspanB indepB)
   qed
@@ -753,9 +760,15 @@ proof -
        apply (metis bij_betw_imp_surj_on bij_f complex_vector.span_base cspanB rangeI)
       by simp
     also have \<open>\<dots> = eqa \<xi>' \<xi> * eqc \<alpha> \<alpha>'\<close>
-      using bij_f orthoB normalB unfolding is_ortho_set_def eqc_def apply auto
-       apply (metis bij_betw_imp_surj_on cnorm_eq_1 rangeI)
-      by (smt (z3) bij_betw_iff_bijections iso_tuple_UNIV_I)
+    proof -
+      from normalB bij_f
+      have aux1: \<open>f \<alpha>' \<bullet>\<^sub>C f \<alpha>' \<noteq> 1 \<Longrightarrow> eqa \<xi>' \<xi> = 0\<close>
+        by (metis bij_betw_imp_surj_on cnorm_eq_1 rangeI)
+      from orthoB bij_f have aux2: \<open>\<alpha> \<noteq> \<alpha>' \<Longrightarrow> f \<alpha> \<bullet>\<^sub>C f \<alpha>' \<noteq> 0 \<Longrightarrow> eqa \<xi>' \<xi> = 0\<close>
+        by (smt (z3) bij_betw_iff_bijections iso_tuple_UNIV_I is_ortho_set_def)
+      from aux1 aux2 show ?thesis
+        unfolding  eqc_def by auto
+    qed
     finally show ?thesis
       by (simp add: eqa_def eqac_def eqc_def \<xi>'\<alpha>' \<xi>\<alpha>)
   qed
@@ -819,10 +832,9 @@ proof -
       apply (subst complex_vector.linear_sum, simp)
       by (rule cblinfun_sum_image_distr)
     ultimately have \<open>\<Phi> id_cblinfun *\<^sub>S \<top> \<le> U *\<^sub>S \<top>\<close>
-      apply auto by (meson SUP_le_iff order.trans)
+      by (metis (no_types, lifting) Proj_range Proj_top SUP_le_iff assms register_of_id top_le)
     then have \<open>U *\<^sub>S \<top> = \<top>\<close>
-      apply auto
-      using top.extremum_unique by blast
+      using top.extremum_unique by auto
     with \<open>isometry U\<close> show \<open>unitary U\<close>
       by (rule surj_isometry_is_unitary)
   qed
@@ -897,11 +909,11 @@ proof -
   have \<open>F a o\<^sub>C\<^sub>L G b = G b o\<^sub>C\<^sub>L F a\<close> for a b
   proof -
     have \<open>F a o\<^sub>C\<^sub>L G b = sandwich U (a \<otimes>\<^sub>o b)\<close>
-      apply (auto simp: F G_def sandwich_apply)
-      by (metis (no_types, lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) comp_tensor_op cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
+      by (auto simp: F G_def sandwich_apply cblinfun_assoc_left lift_cblinfun_comp[OF unitaryD1] 
+          lift_cblinfun_comp[OF comp_tensor_op] \<open>unitary U\<close>)
     moreover have \<open>G b o\<^sub>C\<^sub>L F a = sandwich U (a \<otimes>\<^sub>o b)\<close>
-      apply (auto simp: F G_def sandwich_apply)
-      by (metis (no_types, lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) comp_tensor_op cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
+      by (auto simp: F G_def sandwich_apply cblinfun_assoc_left lift_cblinfun_comp[OF unitaryD1] 
+          lift_cblinfun_comp[OF comp_tensor_op] \<open>unitary U\<close>)
     ultimately show ?thesis by simp
   qed
   then have [simp]: \<open>compatible F G\<close>
@@ -909,8 +921,8 @@ proof -
   moreover have \<open>iso_register (F;G)\<close>
   proof -
     have \<open>(F;G) (a \<otimes>\<^sub>o b) = sandwich U (a \<otimes>\<^sub>o b)\<close> for a b
-      apply (auto simp: register_pair_apply F G_def sandwich_apply)
-      by (metis (no_types, lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) comp_tensor_op cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
+      by (auto simp: register_pair_apply F G_def sandwich_apply cblinfun_assoc_left lift_cblinfun_comp[OF unitaryD1] 
+          lift_cblinfun_comp[OF comp_tensor_op] \<open>unitary U\<close>)
     then have FG: \<open>(F;G) = sandwich U\<close>
       apply (rule tensor_extensionality[rotated -1])
       by (simp_all add: bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose bounded_cbilinear.add_right clinearI unitary_sandwich_register)
@@ -918,11 +930,13 @@ proof -
     define I where \<open>I = sandwich (U*)\<close> for x
     have [simp]: \<open>register I\<close>
       by (simp add: I_def unitary_sandwich_register)
-    have \<open>I o (F;G) = id\<close> and FGI: \<open>(F;G) o I = id\<close>
-       apply (auto intro!:ext simp: I_def[abs_def] FG sandwich_apply)
-       apply (metis (no_types, opaque_lifting) \<open>unitary U\<close> isometryD cblinfun_assoc_left(1) cblinfun_compose_id_right cblinfun_compose_id_left unitary_isometry)
-      by (metis (no_types, lifting) \<open>unitary U\<close> cblinfun_assoc_left(1) cblinfun_compose_id_left cblinfun_compose_id_right unitaryD2)
-    then show \<open>iso_register (F;G)\<close>
+    have IFG: \<open>I o (F;G) = id\<close>
+      by (auto intro!:ext simp: I_def[abs_def] FG sandwich_apply lift_cblinfun_comp[OF unitaryD1]
+          \<open>unitary U\<close> cblinfun_assoc_left)
+    have FGI: \<open>(F;G) o I = id\<close>
+      by (auto intro!:ext simp: I_def[abs_def] FG sandwich_apply cblinfun_assoc_left
+          lift_cblinfun_comp[OF unitaryD1] lift_cblinfun_comp[OF unitaryD2] \<open>unitary U\<close>)
+    from IFG FGI show \<open>iso_register (F;G)\<close>
       by (auto intro!: iso_registerI)
   qed
   ultimately show ?thesis

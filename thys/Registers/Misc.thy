@@ -150,6 +150,17 @@ lemma Ex_iffI:
   shows \<open>Ex P \<longleftrightarrow> Ex Q\<close>
   using assms(1) assms(2) by auto
 
+(* TODO move to Bounded_Operators *)
+lemma cspan_space_as_set[simp]: \<open>cspan (space_as_set X) = space_as_set X\<close>
+  by auto
 
+(* TODO integrate into lift_cblinfun_comp *)
+(* TODO In doc of lift_cblinfun_comp, mention that it works specifically after cblinfun_assoc_left *)
+thm lift_cblinfun_comp
+lemma lift_cblinfun_comp2: 
+  assumes \<open>a o\<^sub>C\<^sub>L b = c\<close>
+  shows \<open>(d o\<^sub>C\<^sub>L a) o\<^sub>C\<^sub>L b = d o\<^sub>C\<^sub>L c\<close>
+  by (simp add: assms cblinfun_assoc_right)
+lemmas lift_cblinfun_comp = lift_cblinfun_comp lift_cblinfun_comp2
 
 end
