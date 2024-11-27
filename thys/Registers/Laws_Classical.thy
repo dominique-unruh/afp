@@ -471,7 +471,8 @@ proof -
     apply (rule tensor_extensionality)
     by auto
   have \<open>\<Phi> c d (a \<otimes>\<^sub>u b) = (F' \<otimes>\<^sub>r G') (c \<otimes>\<^sub>u d) *\<^sub>u (F \<otimes>\<^sub>r G) (a \<otimes>\<^sub>u b)\<close> for a b c d
-    unfolding \<Phi>_def using assms by (auto simp: register_pair_apply tensor_update_mult compatible_def)
+    using assms 
+    unfolding \<Phi>_def compatible_def by (auto simp: register_pair_apply tensor_update_mult)
   then have \<Phi>2: \<open>\<Phi> c d \<sigma> = (F' \<otimes>\<^sub>r G') (c \<otimes>\<^sub>u d) *\<^sub>u (F \<otimes>\<^sub>r G) \<sigma>\<close> for c d \<sigma>
     apply (rule_tac fun_cong[of _ _ \<sigma>])
     apply (rule tensor_extensionality)
@@ -600,6 +601,7 @@ proof -
     by (metis \<open>F \<circ> F' = id\<close> \<open>G \<circ> G' = id\<close> fcomp_assoc fcomp_comp id_fcomp)
   have 2: \<open>G' \<circ> F' \<circ> (F \<circ> G) = id\<close>
     by (metis (no_types, lifting) \<open>F \<circ> F' = id\<close> \<open>F' \<circ> F = id\<close> \<open>G' \<circ> G = id\<close> fun.map_comp inj_iff inv_unique_comp o_inv_o_cancel)
+
   show ?thesis
     apply (rule iso_registerI[where G=\<open>G' o F'\<close>])
     using 1 2 by (auto simp: register_tensor_is_register iso_register_is_register register_tensor_distrib)
