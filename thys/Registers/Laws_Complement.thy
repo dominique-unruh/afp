@@ -70,6 +70,9 @@ lemma complements_register_tensor:
   assumes [simp]: \<open>register F\<close> \<open>register G\<close>
   shows \<open>complements (F \<otimes>\<^sub>r G) (complement F \<otimes>\<^sub>r complement G)\<close>
 proof (rule complementsI)
+  have [iff]: \<open>iso_register (F;complement F)\<close>   \<open>iso_register (G;complement G)\<close>
+    using complements_def by fastforce+
+
   have sep4: \<open>separating TYPE('z::domain) {(a \<otimes>\<^sub>u b) \<otimes>\<^sub>u (c \<otimes>\<^sub>u d) |a b c d. True}\<close>
     apply (rule separating_tensor'[where A=\<open>{(a \<otimes>\<^sub>u b) |a b. True}\<close> and B=\<open>{(c \<otimes>\<^sub>u d) |c d. True}\<close>])
       apply (rule separating_tensor'[where A=UNIV and B=UNIV]) apply auto[3]
@@ -92,8 +95,8 @@ proof (rule complementsI)
     by (auto intro!: register_preregister register_comp register_tensor_is_register pair_is_register
         simp: compat register_pair_apply tensor_update_mult)
   moreover have \<open>iso_register \<dots>\<close>
-    apply (auto intro!: iso_register_comp iso_register_tensor_is_iso_register)
-    using assms complement_is_complement complements_def by blast+
+    using assms complement_is_complement complements_def 
+    by (auto intro!: iso_register_comp iso_register_tensor_is_iso_register)
   ultimately show \<open>iso_register (F \<otimes>\<^sub>r G;complement F \<otimes>\<^sub>r complement G)\<close>
     by simp
 qed
@@ -128,13 +131,14 @@ proof -
       by blast
     then have [simp]: \<open>register compX\<close> \<open>compatible X compX\<close>
       by (auto simp add: compatible_def complements_def)
+    have [iff]: \<open>iso_register (X;compX)\<close>
+      using compX complements_def by blast
 
     have \<open>equivalent_registers id (U; id)\<close>
       using complements_def is_unit_register_def iso_register_equivalent_id that(1) by blast
     also have \<open>equivalent_registers \<dots> (U; (X; compX))\<close>
       apply (rule equivalent_registers_pair_right)
-       apply (auto intro!: unit_register_compatible)
-      using compX complements_def by blast
+      by (auto intro!: unit_register_compatible)
     also have \<open>equivalent_registers \<dots> ((U; X); compX)\<close>
       apply (rule equivalent_registers_assoc)
       by auto
@@ -165,18 +169,23 @@ proof -
       by blast
     then have [simp]: \<open>register compA\<close> \<open>compatible A compA\<close>
       by (auto simp add: compatible_def complements_def)
+    have [iff]: \<open>iso_register (A;compA)\<close>
+      using compX complements_def by blast
 
-    have compat'[simp]: \<open>compatible (A o U) (A; compA)\<close>
-      apply (auto intro!: compatible3')
+    have \<open>compatible (A \<circ> U) A\<close>
       by (metis assms(1) assms(2) comp_id compatible_comp_inner complements_def is_unit_register_def)
+    then have compat'[simp]: \<open>compatible (A o U) (A; compA)\<close>
+      by (auto intro!: compatible3')
     moreover have \<open>equivalent_registers (A; compA) id\<close>
       using compX complements_def equivalent_registers_sym iso_register_equivalent_id by blast
     ultimately have compat[simp]: \<open>compatible (A o U) id\<close>
       using equivalent_registers_compatible2 by blast
 
+    have aux: \<open>equivalent_registers (U;id) id\<close>
+      using assms(1) equivalent_registers_sym register_id unit_register_pair by blast
+
     have \<open>equivalent_registers (A o U; id) (A o U; (A; compA))\<close>
-      apply (auto intro!: equivalent_registers_pair_right)
-      using compX complements_def by auto
+      by (auto intro!: equivalent_registers_pair_right)
     also have \<open>equivalent_registers \<dots> (A o U; (A o id; compA))\<close>
       by (auto intro!: equivalent_registers_refl pair_is_register)
     also have \<open>equivalent_registers \<dots> ((A o U; A o id); compA)\<close>
@@ -186,8 +195,7 @@ proof -
       by (metis (no_types, opaque_lifting) assms(1) assms(2) calculation complements_def equivalent_registers_sym equivalent_registers_trans is_unit_register_def register_comp_pair)
     also have \<open>equivalent_registers \<dots> (A o id; compA)\<close>
       apply (intro equivalent_registers_pair_left equivalent_registers_comp)
-        apply (auto simp: assms)
-      using assms(1) equivalent_registers_sym register_id unit_register_pair by blast
+      using aux by (auto simp: assms)
     also have \<open>equivalent_registers \<dots> id\<close>
       by (simp add: \<open>equivalent_registers (A;compA) id\<close>)
     finally show \<open>is_unit_register (A o U)\<close>
@@ -263,7 +271,7 @@ proof -
       by (auto simp add: compatible_def complements_def)
 
     have \<open>is_unit_register ?U1\<close> \<open>is_unit_register U2\<close>
-       apply auto by (simp add: comp1 complements_sym is_unit_register_def)
+       by (auto simp: comp1 complements_sym is_unit_register_def)
 
     then obtain I :: \<open>unit_register_domain update \<Rightarrow> 'x update\<close> where \<open>iso_register I\<close>
       apply atomize_elim by (rule unit_register_domains_isomorphic)

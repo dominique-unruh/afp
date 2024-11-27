@@ -471,8 +471,7 @@ proof -
     apply (rule tensor_extensionality)
     by auto
   have \<open>\<Phi> c d (a \<otimes>\<^sub>u b) = (F' \<otimes>\<^sub>r G') (c \<otimes>\<^sub>u d) *\<^sub>u (F \<otimes>\<^sub>r G) (a \<otimes>\<^sub>u b)\<close> for a b c d
-    unfolding \<Phi>_def apply (auto simp: register_pair_apply)
-    by (metis assms(1) assms(2) compatible_def tensor_update_mult)
+    unfolding \<Phi>_def using assms by (auto simp: register_pair_apply tensor_update_mult compatible_def)
   then have \<Phi>2: \<open>\<Phi> c d \<sigma> = (F' \<otimes>\<^sub>r G') (c \<otimes>\<^sub>u d) *\<^sub>u (F \<otimes>\<^sub>r G) \<sigma>\<close> for c d \<sigma>
     apply (rule_tac fun_cong[of _ _ \<sigma>])
     apply (rule tensor_extensionality)
@@ -558,10 +557,10 @@ lemma inv_assoc[simp]: \<open>inv assoc = assoc'\<close>
 lemma inv_assoc'[simp]: \<open>inv assoc' = assoc\<close>
   by (simp add: inv_equality)
 
-lemma [simp]: \<open>bij assoc\<close>
+lemma bij_assoc[simp]: \<open>bij assoc\<close>
   using assoc'_o_assoc assoc_o_assoc' o_bij by blast
 
-lemma [simp]: \<open>bij assoc'\<close>
+lemma bij_assoc'[simp]: \<open>bij assoc'\<close>
   using assoc'_o_assoc assoc_o_assoc' o_bij by blast
 
 subsection \<open>Iso-registers\<close>
@@ -597,11 +596,13 @@ proof -
   from assms obtain F' G' where [simp]: \<open>register F'\<close> \<open>register G'\<close> \<open>F o F' = id\<close> \<open>F' o F = id\<close>
     \<open>G o G' = id\<close> \<open>G' o G = id\<close>
     by (meson iso_register_def)
+  have 1: \<open>F \<circ> G \<circ> (G' \<circ> F') = id\<close>
+    by (metis \<open>F \<circ> F' = id\<close> \<open>G \<circ> G' = id\<close> fcomp_assoc fcomp_comp id_fcomp)
+  have 2: \<open>G' \<circ> F' \<circ> (F \<circ> G) = id\<close>
+    by (metis (no_types, lifting) \<open>F \<circ> F' = id\<close> \<open>F' \<circ> F = id\<close> \<open>G' \<circ> G = id\<close> fun.map_comp inj_iff inv_unique_comp o_inv_o_cancel)
   show ?thesis
     apply (rule iso_registerI[where G=\<open>G' o F'\<close>])
-       apply (auto simp: register_tensor_is_register iso_register_is_register register_tensor_distrib)
-     apply (metis \<open>F \<circ> F' = id\<close> \<open>G \<circ> G' = id\<close> fcomp_assoc fcomp_comp id_fcomp)
-    by (metis (no_types, lifting) \<open>F \<circ> F' = id\<close> \<open>F' \<circ> F = id\<close> \<open>G' \<circ> G = id\<close> fun.map_comp inj_iff inv_unique_comp o_inv_o_cancel)
+    using 1 2 by (auto simp: register_tensor_is_register iso_register_is_register register_tensor_distrib)
 qed
 
 
