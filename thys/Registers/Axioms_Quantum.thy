@@ -84,7 +84,8 @@ lemma register_preregister: "register F \<Longrightarrow> preregister F"
   unfolding register_def preregister_def by auto
 
 lemma register_comp: "register F \<Longrightarrow> register G \<Longrightarrow> register (G \<circ> F)"
-  using bounded_clinear_compose continuous_map_compose apply (auto simp: o_def register_def)
+  using bounded_clinear_compose continuous_map_compose
+  apply (simp add: o_def register_def)
   by blast
 
 lemma register_mult: "register F \<Longrightarrow> cblinfun_compose (F a) (F b) = F (cblinfun_compose a b)"
@@ -92,8 +93,8 @@ lemma register_mult: "register F \<Longrightarrow> cblinfun_compose (F a) (F b) 
   by auto
 
 lemma register_tensor_left: \<open>register (\<lambda>a. tensor_op a id_cblinfun)\<close>
-  apply (auto simp add: comp_tensor_op register_def tensor_op_cbilinear tensor_op_adjoint)
-  by (metis eq_onp_def right_amplification.rsp)
+  by (auto simp add: comp_tensor_op register_def tensor_op_cbilinear tensor_op_adjoint
+      intro!: tensor_op_cbilinear.bounded_clinear_left)
 
 lemma register_tensor_right: \<open>register (\<lambda>a. tensor_op id_cblinfun a)\<close>
   by (auto simp add: comp_tensor_op register_def tensor_op_cbilinear tensor_op_adjoint
@@ -158,11 +159,8 @@ proof with_type_intro
     have \<open>has_sum_in weak_star_topology (\<Phi> o (\<lambda>x. butterfly (ket x) (ket x))) UNIV (\<Phi> id_cblinfun)\<close>
       apply (rule has_sum_in_comm_additive[rotated -1])
       using assms 
-         apply simp_all
-       apply (auto simp: complex_vector.linear_add register_def Modules.additive_def 
+      by (auto simp: complex_vector.linear_add register_def Modules.additive_def 
           intro!: continuous_map_is_continuous_at_point complex_vector.linear_0 \<open>clinear \<Phi>\<close>)
-      using assms preregister_def register_preregister by blast
-
     then show ?thesis
       by (simp add: P'_def P_def o_def register_of_id)
   qed
@@ -211,9 +209,16 @@ proof with_type_intro
   have B\<xi>0: \<open>B \<xi>0 = register_decomposition_basis \<Phi>\<close>
     using B_def by force
   have orthoB: \<open>is_ortho_set (B i)\<close> for i
-    apply (auto simp add: B_def is_ortho_set_def)
-    apply (metis (no_types, lifting) register_decomposition_basis_\<Phi> UNIV_I cblinfun_apply_cblinfun_compose cblinfun_fixes_range cinner_adj_left id_cblinfun_adjoint is_ortho_set_def top_ccsubspace.rep_eq uni_S_iso unitaryD1 unitary_id unitary_range)
-    by (metis register_decomposition_basis_\<Phi> cinner_ket_same cinner_zero_left cnorm_eq_1 isometry_preserves_norm orthogonal_ket uni_S_iso unitary_isometry)
+  proof -
+    have 1: \<open>x \<in> register_decomposition_basis \<Phi> \<Longrightarrow>
+           y \<in> register_decomposition_basis \<Phi> \<Longrightarrow>
+           S_iso \<xi>0 i *\<^sub>V x \<noteq> S_iso \<xi>0 i *\<^sub>V y \<Longrightarrow> is_orthogonal (S_iso \<xi>0 i *\<^sub>V x) (S_iso \<xi>0 i *\<^sub>V y)\<close> for x y
+      by (metis (no_types, lifting) register_decomposition_basis_\<Phi> UNIV_I cblinfun_apply_cblinfun_compose cblinfun_fixes_range cinner_adj_left id_cblinfun_adjoint is_ortho_set_def top_ccsubspace.rep_eq uni_S_iso unitaryD1 unitary_id unitary_range)
+    have 2: \<open>x \<in> register_decomposition_basis \<Phi> \<Longrightarrow> S_iso \<xi>0 i *\<^sub>V x \<noteq> 0\<close> for x
+      by (metis register_decomposition_basis_\<Phi> cinner_ket_same cinner_zero_left cnorm_eq_1 isometry_preserves_norm orthogonal_ket uni_S_iso unitary_isometry)
+    from 1 2 show ?thesis
+      by (auto simp add: B_def is_ortho_set_def)
+  qed
   have normalB: \<open>\<And>b. b \<in> B i \<Longrightarrow> norm b = 1\<close> for i
     by (metis (no_types, lifting) register_decomposition_basis_\<Phi> B_def imageE isometry_preserves_norm uni_S_iso unitary_twosided_isometry)
   have cspanB: \<open>ccspan (B i) = S i\<close> for i
@@ -241,8 +246,8 @@ proof with_type_intro
     using proj_P' Proj_on_own_range'[symmetric] is_Proj_algebraic by blast
 
   show \<open>register_decomposition_basis \<Phi> \<noteq> {}\<close>
-  proof (rule ccontr, simp)
-    assume \<open>register_decomposition_basis \<Phi> = {}\<close>
+  proof (rule ccontr)
+    assume \<open>\<not> register_decomposition_basis \<Phi> \<noteq> {}\<close>
     then have \<open>B i = {}\<close> for i
       by (simp add: B_def)
     then have \<open>S i = 0\<close> for i
@@ -266,7 +271,8 @@ proof with_type_intro
   from orthoBiBj orthoB
   have Bdisj: \<open>B i \<inter> B j = {}\<close> if \<open>i \<noteq> j\<close> for i j
     unfolding is_ortho_set_def
-    apply auto by (metis cinner_eq_zero_iff that)
+    using cinner_eq_zero_iff that
+    by fastforce
 
   fix rep_c :: \<open>'c \<Rightarrow> 'b ell2\<close>
   assume bij_rep_c: \<open>bij_betw rep_c UNIV (register_decomposition_basis \<Phi>)\<close>
@@ -308,10 +314,14 @@ proof with_type_intro
   qed
   define U where \<open>U = cblinfun_extension (range ket) (u o inv ket)\<close>
   have Uapply: \<open>U *\<^sub>V ket \<xi>\<alpha> = u \<xi>\<alpha>\<close> for \<xi>\<alpha>
-    unfolding U_def
-    apply (subst cblinfun_extension_apply)
-    using cinner_u apply (auto intro!: cblinfun_extension_exists_ortho[where B=1])
-    by (metis (full_types) cinner_u cnorm_eq_1 of_bool_eq_1_iff order_refl)
+  proof -
+    have aux: \<open>(\<And>a b aa ba. u (a, b) \<bullet>\<^sub>C u (aa, ba) = of_bool (a = aa \<and> b = ba)) \<Longrightarrow> norm (u (a, b)) \<le> 1\<close> for a b
+      by (metis (full_types) cinner_u cnorm_eq_1 of_bool_eq_1_iff order_refl)
+    then show ?thesis
+      unfolding U_def
+      apply (subst cblinfun_extension_apply)
+      using cinner_u by (auto intro!: cblinfun_extension_exists_ortho[where B=1])
+  qed
   have \<open>isometry U\<close>
     apply (rule_tac orthogonal_on_basis_is_isometry[where B=\<open>range ket\<close>])
     by (auto simp: Uapply cinner_u)
@@ -344,7 +354,8 @@ proof with_type_intro
 
     have cont1: \<open>continuous_map weak_star_topology weak_star_topology (\<lambda>a. U* o\<^sub>C\<^sub>L \<Phi> a o\<^sub>C\<^sub>L U)\<close>
       apply (subst asm_rl[of \<open>(\<lambda>a. U* o\<^sub>C\<^sub>L \<Phi> a o\<^sub>C\<^sub>L U) = (\<lambda>x. x o\<^sub>C\<^sub>L U) o (\<lambda>x. U* o\<^sub>C\<^sub>L x) o \<Phi>\<close>])
-      apply (auto intro!: continuous_map_compose[where X'=weak_star_topology])
+       apply force
+      apply (intro continuous_map_compose[where X'=weak_star_topology])
       using assms register_def continuous_map_left_comp_weak_star continuous_map_right_comp_weak_star by blast+
 
     have *: \<open>U* o\<^sub>C\<^sub>L \<Phi> \<theta> o\<^sub>C\<^sub>L U = \<theta> \<otimes>\<^sub>o id_cblinfun\<close> if \<open>\<theta> \<in> cspan (range (\<lambda>(\<xi>, \<eta>). butterfly (ket \<xi>) (ket \<eta>)))\<close> for \<theta>
@@ -396,15 +407,15 @@ proof with_type_intro
         using sumP'id2
         by (auto simp add: continuous_map_left_comp_weak_star P'_def P_def cblinfun_compose_add_right Modules.additive_def)
       moreover have \<open>Q o\<^sub>C\<^sub>L \<Phi> (butterfly (ket \<xi>) (ket \<xi>)) = 0\<close> for \<xi>
-        apply (auto intro!: equal_ket simp: Q_def Proj_ortho_compl cblinfun.diff_left)
+        apply (rule equal_ket)
+        apply (simp add: Q_def Proj_ortho_compl cblinfun.diff_left)
         apply (subst Proj_fixes_image)
         by (auto intro!: ccspan_superset[THEN set_mp])
       ultimately have \<open>Q = 0\<close>
         apply (rule_tac has_sum_in_unique)
         by auto
       then show ?thesis
-        apply (auto simp: Q_def)
-        by (smt (verit, del_insts) Proj_ortho_compl Proj_range cblinfun_image_id right_minus_eq)
+        by (smt (verit, del_insts) Q_def Proj_ortho_compl Proj_range cblinfun_image_id right_minus_eq)
     qed
     ultimately have \<open>U *\<^sub>S \<top> = \<top>\<close>
       by (simp add: top.extremum_unique)
@@ -550,9 +561,9 @@ proof -
 qed
 
 lemma unitary_sandwich_register: \<open>unitary a \<Longrightarrow> register (sandwich a)\<close>
-  apply (auto simp: sandwich_apply register_def cblinfun.bounded_clinear_right)
-   apply (metis (no_types, lifting) cblinfun_assoc_left(1) cblinfun_compose_id_right unitaryD1)
-  by (simp add: lift_cblinfun_comp(2))
+  by (auto simp: sandwich_apply register_def cblinfun.bounded_clinear_right
+      lift_cblinfun_comp[OF unitaryD1] lift_cblinfun_comp[OF unitaryD2]
+      cblinfun_assoc_left)
 
 lemma register_adj: \<open>register F \<Longrightarrow> F (a*) = (F a)*\<close>
   using register_def by blast
@@ -677,8 +688,7 @@ proof -
                 simp flip: complex_vector.linear_add[of G'] complex_vector.linear_scale[of G']
                 register_norm[of \<iota>])
           show \<open>G\<^sub>1 id_cblinfun = id_cblinfun\<close>
-            apply (auto intro!: \<iota>_inj simp add: G\<^sub>1_def \<iota>_cancel)
-            by (simp add: register_of_id)
+            by (auto intro!: \<iota>_inj register_of_id[of G'] simp add: G\<^sub>1_def \<iota>_cancel register_of_id[of \<iota>])
           show adj_G\<^sub>1: \<open>G\<^sub>1 (a*) = (G\<^sub>1 a)*\<close> for a
             using range_G' 
             by (auto intro!: \<iota>_inj 
