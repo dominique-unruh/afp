@@ -28,8 +28,9 @@ proof -
     by (meson cblinfun_eq_0_on_UNIV_span complex_vector.span_UNIV)
   have ex: \<open>\<exists>\<psi>. norm \<psi> = 1 \<and> \<psi> \<in> range ((*\<^sub>V) (F (selfbutter \<eta>\<^sub>F)))\<close>
     apply (rule exI[of _ \<open>(F (selfbutter \<eta>\<^sub>F) *\<^sub>V \<psi>') /\<^sub>C norm (F (selfbutter \<eta>\<^sub>F) *\<^sub>V \<psi>')\<close>])
-    using \<psi>' apply (auto simp add: norm_inverse)
-    by (metis cblinfun.scaleC_right rangeI)
+    using \<psi>' 
+    apply (simp add: norm_inverse cblinfun.scaleC_right)
+    by (simp flip: cblinfun.scaleC_right)
   then show ?range
     by (metis (mono_tags, lifting) pure_state_target_vector_def verit_sko_ex')
   show ?norm
@@ -136,7 +137,7 @@ lemma regular_register_pair:
 proof -
   have [simp]: \<open>bij (F;complement F)\<close> \<open>bij (G;complement G)\<close>
     using assms(1) compatible_def complement_is_complement complements_def iso_register_bij by blast+
-  have [simp]: \<open>bij ((F;G);complement (F;G))\<close>
+  have bij_FGcFG[simp]: \<open>bij ((F;G);complement (F;G))\<close>
     using assms(1) complement_is_complement complements_def iso_register_bij pair_is_register by blast
   have [simp]: \<open>register F\<close> \<open>register G\<close>
     using assms(1) unfolding compatible_def by auto
@@ -169,7 +170,7 @@ proof -
     apply (subst o_inv_distrib[symmetric]) 
     by (auto simp: pair_o_tensor)
   also have \<open>\<dots> = (selfbutter (ket default) \<otimes>\<^sub>o inv I aF)\<close>
-    apply auto
+    apply simp
     by (metis \<open>iso_register I\<close> id_def iso_register_def iso_register_inv register_id register_tensor_apply)
   finally have t2': \<open>t2 = selfbutter (ket default) \<otimes>\<^sub>o inv I aF\<close>
     by simp
@@ -195,7 +196,7 @@ proof -
     apply (subst o_inv_distrib[symmetric]) 
     by (auto simp: pair_o_tensor)
   also have \<open>\<dots> = (selfbutter (ket default) \<otimes>\<^sub>o inv J aG)\<close>
-    apply auto
+    apply simp
     by (metis \<open>iso_register J\<close> id_def iso_register_def iso_register_inv register_id register_tensor_apply)
   finally have t3': \<open>t3 = selfbutter (ket default) \<otimes>\<^sub>o inv J aG\<close>
     by simp
@@ -209,9 +210,9 @@ proof -
 
   have *: \<open>((F;G); complement (F;G)) o (swap \<otimes>\<^sub>r id) o assoc' = (G; (F; complement (F;G)))\<close>
     apply (rule tensor_extensionality3)
-      apply (auto intro!: register_comp register_tensor_is_register pair_is_register complements_complement_pair
-        simp: register_pair_apply compatible_complement_pair1)
-    by (metis assms(1) cblinfun_assoc_left(1) swap_registers_left)
+    by (auto intro!: register_comp register_tensor_is_register pair_is_register complements_complement_pair
+        simp: register_pair_apply compatible_complement_pair1 
+        lift_cblinfun_comp[OF swap_registers_left, of F G] cblinfun_assoc_left)
   have t3_t1: \<open>t3 = assoc ((swap \<otimes>\<^sub>r id) t1)\<close>
     unfolding t1_def t3_def *[symmetric] apply (subst o_inv_distrib)
     by (auto intro!: bij_comp simp: iso_register_bij o_inv_distrib)
@@ -252,8 +253,8 @@ proof -
     by -
 
   then show ?thesis
-    apply (auto intro!: exI[of _ c] simp: regular_register_def t1_def)
-    by (metis \<open>bij ((F;G);complement (F;G))\<close> bij_inv_eq_iff)
+    by (auto intro!: exI[of _ c] simp: regular_register_def t1_def 
+        simp flip: bij_inv_eq_iff[OF bij_FGcFG])
 qed
 
 lemma regular_register_comp: \<open>regular_register (F o G)\<close> if \<open>regular_register F\<close> \<open>regular_register G\<close>
@@ -363,7 +364,7 @@ proof -
     using assms by auto
   have 1: \<open>pure_state_target_vector H (ket default) = ket default\<close>
     apply (rule pure_state_target_vector_ket_default)
-    apply auto
+    apply simp
     by (metis (no_types, lifting) cinner_ket_same rangeI scaleC_one)
 
   have \<open>butterfly (pure_state H h) (ket default) = butterfly (H (butterfly h (ket default)) *\<^sub>V ket default) (ket default)\<close>
@@ -408,7 +409,7 @@ lemma Fst_regular[simp]: \<open>regular_register Fst\<close>
 lemma Snd_regular[simp]: \<open>regular_register Snd\<close>
   apply (rule regular_registerI[where a=\<open>selfbutter (ket default)\<close> and G=Fst])
     apply auto[2]
-  apply (auto simp only: default_prod_def swap_apply simp flip: swap_def tensor_ell2_ket)
+  apply (simp only: default_prod_def swap_apply flip: swap_def tensor_ell2_ket)
   by (auto simp: tensor_butterfly)
 
 lemma id_regular[simp]: \<open>regular_register id\<close>

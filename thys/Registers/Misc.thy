@@ -48,10 +48,18 @@ definition "enum_bit = [0::bit,1]"
 definition "enum_all_bit P \<longleftrightarrow> P (0::bit) \<and> P 1"
 definition "enum_ex_bit P \<longleftrightarrow> P (0::bit) \<or> P 1"
 instance
-  apply intro_classes
-     apply (auto simp: enum_bit_def enum_all_bit_def enum_ex_bit_def)
-   apply (metis bit_not_one_iff)
-  by (metis bit_not_zero_iff)
+proof intro_classes
+  show \<open>(UNIV :: bit set) = set enum_class.enum\<close>
+    by (auto simp: enum_bit_def)
+  show \<open>distinct (enum_class.enum :: bit list)\<close>
+    by (auto simp: enum_bit_def)
+  show \<open>enum_class.enum_all P = Ball UNIV P\<close> for P :: \<open>bit \<Rightarrow> bool\<close>
+    apply (simp add: enum_bit_def enum_all_bit_def enum_ex_bit_def)
+    by (metis bit.exhaust)
+  show \<open>enum_class.enum_ex P = Bex UNIV P\<close> for P :: \<open>bit \<Rightarrow> bool\<close>
+    apply (simp add: enum_bit_def enum_all_bit_def enum_ex_bit_def)
+    by (metis bit.exhaust)
+qed
 end
 
 lemma card_bit[simp]: "CARD(bit) = 2"
@@ -117,9 +125,9 @@ translations "_each f (_args x xs)" => "f x \<and> _each f xs"
 
 
 
-lemma [simp]: "dim_col (mat_adjoint m) = dim_row m"
+lemma dim_col_mat_adjoint[simp]: "dim_col (mat_adjoint m) = dim_row m"
   unfolding mat_adjoint_def by simp
-lemma [simp]: "dim_row (mat_adjoint m) = dim_col m"
+lemma dim_row_mat_adjoint[simp]: "dim_row (mat_adjoint m) = dim_col m"
   unfolding mat_adjoint_def by simp
 
 lemma invI: 
