@@ -41,10 +41,8 @@ subsubsection \<open>Pauli X\<close>
 
 definition "matrix_pauliX = mat_of_rows_list 2 [ [0::complex, 1], [1, 0] ]"
 definition pauliX :: \<open>(bit, bit) matrix\<close> where [code del]: "pauliX = cblinfun_of_mat matrix_pauliX"
-lemma [simp, code]: "mat_of_cblinfun pauliX = matrix_pauliX"
-  apply (auto simp add: pauliX_def matrix_pauliX_def)
-  apply (subst cblinfun_of_mat_inverse)
-  by (auto)
+lemma mat_of_cblinfun_pauliX[simp, code]: "mat_of_cblinfun pauliX = matrix_pauliX"
+  by (auto simp add: pauliX_def matrix_pauliX_def cblinfun_of_mat_inverse)
 
 derive (eq) ceq bit
 
@@ -65,10 +63,8 @@ subsubsection \<open>Pauli Z\<close>
 
 definition "matrix_pauliZ = mat_of_rows_list 2 [ [1::complex, 0], [0, -1] ]"
 definition pauliZ :: \<open>(bit, bit) matrix\<close> where [code del]: "pauliZ = cblinfun_of_mat matrix_pauliZ"
-lemma [simp, code]: "mat_of_cblinfun pauliZ = matrix_pauliZ"
-  apply (auto simp add: pauliZ_def matrix_pauliZ_def)
-  apply (subst cblinfun_of_mat_inverse)
-  by (auto)
+lemma mat_of_cblinfun_pauliZ[simp, code]: "mat_of_cblinfun pauliZ = matrix_pauliZ"
+  by (auto simp add: pauliZ_def matrix_pauliZ_def cblinfun_of_mat_inverse)
 lemma pauliZ_adjoint[simp]: "pauliZ* = pauliZ"
   by eval
 lemma pauliZZ[simp]: "pauliZ o\<^sub>C\<^sub>L pauliZ = id_cblinfun"
@@ -80,11 +76,8 @@ subsubsection Hadamard
 definition "matrix_hadamard = mat_of_rows_list 2 [ [1/sqrt 2::complex, 1/sqrt 2], [1/sqrt 2, -1/sqrt 2] ]"
 definition hadamard :: \<open>(bit,bit) matrix\<close> where [code del]: "hadamard = cblinfun_of_mat matrix_hadamard"
 
-(* TODO add name *)
-lemma [simp, code]: "mat_of_cblinfun hadamard = matrix_hadamard"
-  apply (auto simp add: hadamard_def matrix_hadamard_def)
-  apply (subst cblinfun_of_mat_inverse)
-  by (auto)
+lemma mat_of_cblinfun_hadamard[simp, code]: "mat_of_cblinfun hadamard = matrix_hadamard"
+  by (auto simp add: hadamard_def matrix_hadamard_def cblinfun_of_mat_inverse)
 
 lemma hada_adj[simp]: "hadamard* = hadamard"
   by eval
@@ -95,14 +88,10 @@ subsubsection CNOT
 definition "matrix_CNOT = mat_of_rows_list 4 [ [1::complex,0,0,0], [0,1,0,0], [0,0,0,1], [0,0,1,0] ]"
 definition CNOT :: \<open>(bit*bit, bit*bit) matrix\<close> where [code del]: "CNOT = cblinfun_of_mat matrix_CNOT"
 
-(* TODO add name *)
-lemma [simp, code]: "mat_of_cblinfun CNOT = matrix_CNOT"
-  apply (auto simp add: CNOT_def matrix_CNOT_def)
-  apply (subst cblinfun_of_mat_inverse)
-  by (auto)
+lemma mat_of_cblinfun_CNOT[simp, code]: "mat_of_cblinfun CNOT = matrix_CNOT"
+  by (auto simp add: CNOT_def matrix_CNOT_def cblinfun_of_mat_inverse)
 
-(* TODO add name *)
-lemma [simp]: "CNOT* = CNOT"
+lemma CNOT_adj[simp]: "CNOT* = CNOT"
   by eval
 
 lemma cnot_apply[simp]: \<open>CNOT *\<^sub>V ket (i,j) = ket (i,j+i)\<close>
@@ -117,9 +106,7 @@ definition Uswap :: \<open>(bit\<times>bit, bit\<times>bit) matrix\<close> where
   [code del]: \<open>Uswap = cblinfun_of_mat matrix_Uswap\<close>
 
 lemma mat_of_cblinfun_Uswap[simp, code]: "mat_of_cblinfun Uswap = matrix_Uswap"
-  apply (auto simp add: Uswap_def matrix_Uswap_def)
-  apply (subst cblinfun_of_mat_inverse)
-  by (auto)
+  by (auto simp add: Uswap_def matrix_Uswap_def cblinfun_of_mat_inverse)
 
 lemma dim_col_Uswap[simp]: "dim_col matrix_Uswap = 4"
   unfolding matrix_Uswap_def by simp

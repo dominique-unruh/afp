@@ -46,18 +46,23 @@ lemma hoare_skip: "C \<le> D \<Longrightarrow> hoare C [] D"
 lemma hoare_apply: 
   assumes "R U *\<^sub>S pre \<le> post"
   shows "hoare pre [apply U R] post"
-  using assms 
-  apply (auto simp: hoare_def program_def apply_def)
-  by (metis (no_types, lifting) cblinfun_image.rep_eq closure_subset imageI less_eq_ccsubspace.rep_eq subsetD)
+proof -
+  from assms have \<open>\<psi> \<in> space_as_set pre \<Longrightarrow> R U *\<^sub>V \<psi> \<in> space_as_set post\<close> for \<psi>
+    by (metis (no_types, lifting) cblinfun_image.rep_eq closure_subset imageI less_eq_ccsubspace.rep_eq subsetD)
+  then show ?thesis
+    by (auto simp: hoare_def program_def apply_def)
+qed
 
 lemma hoare_ifthen: 
   fixes R :: \<open>'a update \<Rightarrow> 'mem update\<close>
   assumes "R (selfbutter (ket x)) *\<^sub>S pre \<le> post"
   shows "hoare pre [ifthen R x] post"
-  using assms 
-  apply (auto simp: hoare_def program_def ifthen_def butterfly_def)
-  by (metis (no_types, lifting) cblinfun_image.rep_eq closure_subset imageI less_eq_ccsubspace.rep_eq subsetD)
-
+proof -
+  from assms have \<open>\<psi> \<in> space_as_set pre \<Longrightarrow> R (vector_to_cblinfun (ket x) o\<^sub>C\<^sub>L bra x) *\<^sub>V \<psi> \<in> space_as_set post\<close> for \<psi>
+    by (metis butterfly_def_one_dim cblinfun_apply_in_image' less_eq_ccsubspace.rep_eq subsetD)
+  then show ?thesis
+    by (auto simp: hoare_def program_def ifthen_def butterfly_def)
+qed
 end
 
 end
