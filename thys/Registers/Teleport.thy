@@ -223,6 +223,7 @@ interpretation teleport_concrete:
                  concrete_teleport_vars.B_def[abs_def]
            intro!: compatible3' compatible3)
 
+(* Observe the resulting theorems: *)
 thm teleport
 thm teleport_def
 
