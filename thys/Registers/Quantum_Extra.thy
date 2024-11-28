@@ -46,7 +46,7 @@ proof (rule antisym)
   have "is_Proj (S b)"
     using assms(1) assms(3) compatible_register2 register_projector by blast
   show \<open>(R a *\<^sub>S \<top>) \<sqinter> (S b *\<^sub>S \<top>) \<le> (R a o\<^sub>C\<^sub>L S b) *\<^sub>S \<top>\<close>
-  proof (unfold less_eq_ccsubspace.rep_eq, rule)
+  proof (unfold less_eq_ccsubspace.rep_eq, rule subsetI)
     fix \<psi>
     assume asm: \<open>\<psi> \<in> space_as_set ((R a *\<^sub>S \<top>) \<sqinter> (S b *\<^sub>S \<top>))\<close>
     then have \<open>\<psi> \<in> space_as_set (R a *\<^sub>S \<top>)\<close>
@@ -69,11 +69,15 @@ qed
 lemma compatible_proj_mult:
   assumes "compatible R S" and "is_Proj a" and "is_Proj b"
   shows "is_Proj (R a o\<^sub>C\<^sub>L S b)"
-  using [[simproc del: Laws_Quantum.compatibility_warn]]
-  using assms unfolding is_Proj_algebraic compatible_def
-  apply auto
-   apply (metis (no_types, lifting) cblinfun_compose_assoc register_mult)
-  by (simp add: assms(2) assms(3) is_proj_selfadj register_projector)
+proof -
+  have aux: \<open>\<forall>a b. R a o\<^sub>C\<^sub>L S b = S b o\<^sub>C\<^sub>L R a \<Longrightarrow> S b o\<^sub>C\<^sub>L R a o\<^sub>C\<^sub>L (S b o\<^sub>C\<^sub>L R a) = S b o\<^sub>C\<^sub>L R a\<close>
+    using assms
+    by (metis (no_types, lifting) cblinfun_compose_assoc register_mult is_Proj_algebraic compatible_def)
+  show ?thesis
+    using [[simproc del: Laws_Quantum.compatibility_warn]]
+    using assms unfolding is_Proj_algebraic compatible_def
+    by (auto simp add: assms is_proj_selfadj register_projector aux)
+qed
 
 lemma sandwich_tensor: 
   fixes a :: \<open>'a ell2 \<Rightarrow>\<^sub>C\<^sub>L 'a ell2\<close> and b :: \<open>'b ell2 \<Rightarrow>\<^sub>C\<^sub>L 'b ell2\<close> 

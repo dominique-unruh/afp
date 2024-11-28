@@ -159,9 +159,8 @@ proof -
     by normalization
 
   have [simp]: "unitary XZ"
-    unfolding unitary_def unfolding XZ_def apply auto
-     apply (metis cblinfun_assoc_left(1) pauliXX pauliZZ cblinfun_compose_id_left)
-    by (metis cblinfun_assoc_left(1) pauliXX pauliZZ cblinfun_compose_id_left)
+    unfolding unitary_def unfolding XZ_def 
+    by (auto simp: cblinfun_assoc_left lift_cblinfun_comp[OF pauliZZ] lift_cblinfun_comp[OF pauliXX])
 
   have O7': "O7 = (1/2) *\<^sub>C X\<Phi>2 Uswap o\<^sub>C\<^sub>L \<Phi> (butterfly (ket a \<otimes>\<^sub>s ket b) \<beta>00)"
     unfolding O7 O5'
