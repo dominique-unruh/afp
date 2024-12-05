@@ -27,24 +27,20 @@ lemma tensor_unpack_inj:
 
 lemma tensor_unpack_bound1[simp]: "i < A * B \<Longrightarrow> fst (tensor_unpack A B i) < A"
   unfolding tensor_unpack_def
-  apply auto
-  using less_mult_imp_div_less by blast
+  by (auto intro!: less_mult_imp_div_less)
 lemma tensor_unpack_bound2[simp]: "i < A * B \<Longrightarrow> snd (tensor_unpack A B i) < B"
   unfolding tensor_unpack_def
-  apply auto
-  by (metis mod_less_divisor mult.commute mult_zero_left nat_neq_iff not_less0)
+  by (auto intro!: mod_less_divisor Nat.gr0I)
 
 lemma tensor_unpack_fstfst: \<open>fst (tensor_unpack A B (fst (tensor_unpack (A * B) C i)))
      = fst (tensor_unpack A (B * C) i)\<close>
-  unfolding tensor_unpack_def apply auto
-  by (metis div_mult2_eq mult.commute)
+  unfolding tensor_unpack_def by (auto simp flip: div_mult2_eq simp: mult.commute)
 lemma tensor_unpack_sndsnd: \<open>snd (tensor_unpack B C (snd (tensor_unpack A (B * C) i)))
      = snd (tensor_unpack (A * B) C i)\<close>
-  unfolding tensor_unpack_def apply auto
-  by (meson dvd_triv_right mod_mod_cancel)
+  unfolding tensor_unpack_def by (auto simp: mod_mod_cancel)
 lemma tensor_unpack_fstsnd: \<open>fst (tensor_unpack B C (snd (tensor_unpack A (B * C) i)))
      = snd (tensor_unpack A B (fst (tensor_unpack (A * B) C i)))\<close>
-  unfolding tensor_unpack_def apply auto
+  unfolding tensor_unpack_def
   by (cases \<open>C = 0\<close>) (simp_all add: mult.commute [of B C] mod_mult2_eq [of i C B])
 
 definition "tensor_state_jnf \<psi> \<phi> = (let d1 = dim_vec \<psi> in let d2 = dim_vec \<phi> in

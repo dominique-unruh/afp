@@ -43,24 +43,22 @@ proof -
 
     have aux1: \<open>tensor_ell2_right (ket x)* *\<^sub>V u *\<^sub>V a = 0\<close> if \<open>x \<notin> F\<close> for x a
     proof -
-      have \<open>u* o\<^sub>C\<^sub>L tensor_ell2_right (ket x) = 0\<close>
+      have *: \<open>u* o\<^sub>C\<^sub>L tensor_ell2_right (ket x) = 0\<close>
         by (auto intro!: equal_ket simp: u_def sum_adj tensor_op_adjoint tensor_ell2_right_apply
             cblinfun.sum_left tensor_op_ell2 cinner_ket sum_single[where i=x] \<open>x \<notin> F\<close>)
-      then have \<open>tensor_ell2_right (ket x)* o\<^sub>C\<^sub>L u = 0\<close>
-        apply (rule_tac adj_inject[THEN iffD1])
-        by simp 
+      have \<open>tensor_ell2_right (ket x)* o\<^sub>C\<^sub>L u = 0\<close>
+        by (rule adj_inject[THEN iffD1]) (use * in simp)
       then show ?thesis
         by (simp flip: cblinfun_apply_cblinfun_compose)
     qed
 
     have aux2: \<open>uk x *\<^sub>V tensor_ell2_right (ket x)* *\<^sub>V a = tensor_ell2_right (ket x)* *\<^sub>V u *\<^sub>V a\<close> if \<open>x \<in> F\<close> for x a
     proof - 
-      have \<open>tensor_ell2_right (ket x) o\<^sub>C\<^sub>L (uk x)* = u* o\<^sub>C\<^sub>L tensor_ell2_right (ket x)\<close>
+      have *: \<open>tensor_ell2_right (ket x) o\<^sub>C\<^sub>L (uk x)* = u* o\<^sub>C\<^sub>L tensor_ell2_right (ket x)\<close>
         by (auto intro!: equal_ket simp: u_def sum_adj tensor_op_adjoint tensor_ell2_right_apply
             cblinfun.sum_left tensor_op_ell2 \<open>x \<in> F\<close> cinner_ket sum_single[where i=x])
-      then have \<open>uk x o\<^sub>C\<^sub>L tensor_ell2_right (ket x)* = tensor_ell2_right (ket x)* o\<^sub>C\<^sub>L u\<close>
-        apply (rule_tac adj_inject[THEN iffD1])
-        by simp 
+      have \<open>uk x o\<^sub>C\<^sub>L tensor_ell2_right (ket x)* = tensor_ell2_right (ket x)* o\<^sub>C\<^sub>L u\<close>
+        by (rule adj_inject[THEN iffD1]) (use * in simp)
       then show ?thesis
         by (simp flip: cblinfun_apply_cblinfun_compose)
     qed
@@ -73,10 +71,9 @@ proof -
         using is_onb_ket trace_exists by blast
       then have \<open>(\<lambda>yx. ket yx \<bullet>\<^sub>C ((u o\<^sub>C\<^sub>L t') *\<^sub>V ket yx)) summable_on UNIV\<close>
         apply (subst summable_on_reindex_bij_betw[where g=ket and A=UNIV and B=\<open>range ket\<close>])
-         apply auto using bij_betw_def inj_ket by blast
+         using bij_betw_def inj_ket by blast
       then show ?thesis
-        apply (subst summable_on_reindex_bij_betw[where g=prod.swap and A=UNIV, symmetric])
-        by auto
+        by (subst summable_on_reindex_bij_betw[where g=prod.swap and A=UNIV, symmetric]) auto
     qed
 
     have norm_u: \<open>norm u \<le> 1\<close>

@@ -2428,6 +2428,13 @@
           <description></description>
         </item>
         <item>
+          <title>Hilbert_Space_Tensor_Product</title>
+          <link>/sessions/hilbert_space_tensor_product/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/hilbert_space_tensor_product/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Hoare_Time</title>
           <link>/sessions/hoare_time/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -2586,6 +2593,13 @@
           <link>/sessions/ifc_tracking/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/ifc_tracking/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>ILL</title>
+          <link>/sessions/ill/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/ill/</guid>
           <description></description>
         </item>
         <item>
@@ -4472,6 +4486,20 @@
           <description></description>
         </item>
         <item>
+          <title>ProcessComposition</title>
+          <link>/sessions/processcomposition/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/processcomposition/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>ProcessComposition_ILL</title>
+          <link>/sessions/processcomposition_ill/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/processcomposition_ill/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Program-Conflict-Analysis</title>
           <link>/sessions/program-conflict-analysis/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -5645,6 +5673,13 @@
           <link>/sessions/suffixarray/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/suffixarray/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Sum_Of_Squares_Count</title>
+          <link>/sessions/sum_of_squares_count/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/sum_of_squares_count/</guid>
           <description></description>
         </item>
         <item>

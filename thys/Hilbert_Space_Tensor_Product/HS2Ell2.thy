@@ -14,28 +14,41 @@ definition ell2_to_hilbert where \<open>ell2_to_hilbert = cblinfun_extension (ra
 lemma ell2_to_hilbert_ket: \<open>ell2_to_hilbert *\<^sub>V ket x = Rep_chilbert2ell2 x\<close>
 proof -
   have \<open>cblinfun_extension_exists (range ket) (Rep_chilbert2ell2 o inv ket)\<close>
-    apply (rule cblinfun_extension_exists_ortho[where B=1])
-       apply auto
-    apply (metis Rep_chilbert2ell2 Rep_chilbert2ell2_inject is_ortho_set_def is_ortho_set_some_chilbert_basis)
-    by (simp add: Rep_chilbert2ell2 is_normal_some_chilbert_basis)
-  then show ?thesis
-    apply (simp add: ell2_to_hilbert_def)
-    apply (subst cblinfun_extension_apply)
-    by simp_all
+  proof (rule cblinfun_extension_exists_ortho[where B=1])
+    fix x y :: "'b chilbert2ell2 ell2"
+    assume "x \<in> range ket" "y \<in> range ket" "x \<noteq> y"
+    then obtain x' y' where x'_y': "x = ket x'" "y = ket y'" "x' \<noteq> y'"
+      by auto
+    have "is_orthogonal (Rep_chilbert2ell2 x') (Rep_chilbert2ell2 y')"
+      by (meson Rep_chilbert2ell2 Rep_chilbert2ell2_inject \<open>x' \<noteq> y'\<close> is_ortho_set_def is_ortho_set_some_chilbert_basis)
+    thus "is_orthogonal ((Rep_chilbert2ell2 \<circ> inv ket) x) ((Rep_chilbert2ell2 \<circ> inv ket) y)"
+      using x'_y' by auto
+  qed (auto simp: Rep_chilbert2ell2 is_normal_some_chilbert_basis)
+  from cblinfun_extension_apply[OF this]
+  have "cblinfun_extension (range ket) (Rep_chilbert2ell2 \<circ> inv ket) *\<^sub>V (ket x) = 
+          (Rep_chilbert2ell2 \<circ> inv ket) (ket x)"
+    by blast
+  thus ?thesis
+    by (simp add: ell2_to_hilbert_def)
 qed
 
 lemma norm_ell2_to_hilbert: \<open>norm ell2_to_hilbert = 1\<close>
 proof (rule order.antisym)
   show \<open>norm ell2_to_hilbert \<le> 1\<close>
     unfolding ell2_to_hilbert_def
-    apply (rule cblinfun_extension_exists_ortho_norm[where B=1])
-       apply auto
-    apply (metis Rep_chilbert2ell2 Rep_chilbert2ell2_inject is_ortho_set_def is_ortho_set_some_chilbert_basis)
-    by (simp add: Rep_chilbert2ell2 is_normal_some_chilbert_basis)
+  proof (rule cblinfun_extension_exists_ortho_norm[where B=1])
+    fix x y :: "'b chilbert2ell2 ell2"
+    assume "x \<in> range ket" "y \<in> range ket" "x \<noteq> y"
+    then obtain x' y' where x'_y': "x = ket x'" "y = ket y'" "x' \<noteq> y'"
+      by auto
+    have "is_orthogonal (Rep_chilbert2ell2 x') (Rep_chilbert2ell2 y')"
+      by (meson Rep_chilbert2ell2 Rep_chilbert2ell2_inject \<open>x' \<noteq> y'\<close> is_ortho_set_def is_ortho_set_some_chilbert_basis)
+    thus "is_orthogonal ((Rep_chilbert2ell2 \<circ> inv ket) x) ((Rep_chilbert2ell2 \<circ> inv ket) y)"
+      using x'_y' by auto
+  qed (auto simp: Rep_chilbert2ell2 is_normal_some_chilbert_basis)
   show \<open>norm ell2_to_hilbert \<ge> 1\<close>
-    apply (rule cblinfun_norm_geqI[where x=\<open>ket undefined\<close>])
-    apply (auto simp: ell2_to_hilbert_ket)
-    by (simp add: Rep_chilbert2ell2 is_normal_some_chilbert_basis)
+    by (rule cblinfun_norm_geqI[where x=\<open>ket undefined\<close>])
+       (auto simp: ell2_to_hilbert_ket Rep_chilbert2ell2 is_normal_some_chilbert_basis)
 qed
 
 lemma unitary_ell2_to_hilbert[simp]: \<open>unitary ell2_to_hilbert\<close>
@@ -51,14 +64,16 @@ proof (rule surj_isometry_is_unitary)
     show \<open>(ell2_to_hilbert *\<^sub>V x) \<bullet>\<^sub>C (ell2_to_hilbert *\<^sub>V y) = x \<bullet>\<^sub>C y\<close>
     proof (cases \<open>x'=y'\<close>)
       case True
-      then show ?thesis
-        apply (auto simp: ell2_to_hilbert_ket)
+      hence "Rep_chilbert2ell2 y' \<bullet>\<^sub>C Rep_chilbert2ell2 y' = 1 "
         using Rep_chilbert2ell2 cnorm_eq_1 is_normal_some_chilbert_basis by blast
+      then show ?thesis using True
+        by (auto simp: ell2_to_hilbert_ket)
     next
       case False
-      then show ?thesis
-        apply (auto simp: ell2_to_hilbert_ket cinner_ket)
+      hence "is_orthogonal (Rep_chilbert2ell2 x') (Rep_chilbert2ell2 y') "
         by (metis Rep_chilbert2ell2 Rep_chilbert2ell2_inject is_ortho_set_def is_ortho_set_some_chilbert_basis)
+      then show ?thesis
+        using False by (auto simp: ell2_to_hilbert_ket cinner_ket)
     qed
   qed
   have \<open>cblinfun_apply ell2_to_hilbert ` range ket \<supseteq> some_chilbert_basis\<close>
@@ -151,8 +166,8 @@ proof (rule rel_funI, rename_tac A B)
   then have \<open>B = ell2_to_hilbert ` A\<close>
     by (metis (no_types, lifting) bi_unique_cr_chilbert2ell2_ell2 bi_unique_rel_set_lemma cr_chilbert2ell2_ell2_def image_cong)
   then have \<open>space_as_set (ccspan B) = ell2_to_hilbert ` space_as_set (ccspan A)\<close>
-    apply (subst space_as_set_image_commute[where V=\<open>ell2_to_hilbert*\<close>])
-    by (auto intro: unitaryD2 simp: cblinfun_image_ccspan unitary_ell2_to_hilbert)
+    by (subst space_as_set_image_commute[where V=\<open>ell2_to_hilbert*\<close>])
+       (auto intro: unitaryD2 simp: cblinfun_image_ccspan)
   then have \<open>rel_set cr_chilbert2ell2_ell2 (space_as_set (ccspan A)) (space_as_set (ccspan B))\<close>
     by (smt (verit, best) cr_chilbert2ell2_ell2_def image_iff rel_setI)
   then show \<open>rel_ccsubspace cr_chilbert2ell2_ell2 (ccspan A) (ccspan B)\<close>
@@ -160,20 +175,29 @@ proof (rule rel_funI, rename_tac A B)
 qed
 
 
-lemma bi_total_rel_ccsubspace_cr_chilbert2ell2_ell2[transfer_rule]:
-  shows \<open>bi_total (rel_ccsubspace cr_chilbert2ell2_ell2)\<close>
-  apply (rule bi_totalI)
-   apply (rule left_total_rel_ccsubspace[where U=ell2_to_hilbert and V=\<open>ell2_to_hilbert*\<close>])
-     apply (auto simp: unitary_ell2_to_hilbert cr_chilbert2ell2_ell2_def)[3]
-   apply (rule right_total_rel_ccsubspace[where U=\<open>ell2_to_hilbert*\<close> and V=\<open>ell2_to_hilbert\<close>])
-     apply (auto simp: unitary_ell2_to_hilbert cr_chilbert2ell2_ell2_def)[3]
-  by (metis cblinfun_apply_cblinfun_compose cblinfun_id_cblinfun_apply unitary_def unitary_ell2_to_hilbert)+
+lemma ell2_to_hilbert_adj_ell2_to_hilbert [simp]: "ell2_to_hilbert* *\<^sub>V ell2_to_hilbert *\<^sub>V x = x"
+  using unitary_ell2_to_hilbert unfolding unitary_def
+  by (metis cblinfun_apply_cblinfun_compose cblinfun_id_cblinfun_apply)
 
+lemma ell2_to_hilbert_ell2_to_hilbert_adj [simp]: "ell2_to_hilbert *\<^sub>V ell2_to_hilbert* *\<^sub>V x = x"
+  using unitary_ell2_to_hilbert unfolding unitary_def
+  by (metis cblinfun_apply_cblinfun_compose cblinfun_id_cblinfun_apply)
+
+lemma bi_total_rel_ccsubspace_cr_chilbert2ell2_ell2[transfer_rule]:
+  \<open>bi_total (rel_ccsubspace cr_chilbert2ell2_ell2)\<close>
+  apply (rule bi_totalI)
+  subgoal
+   by (rule left_total_rel_ccsubspace[where U=ell2_to_hilbert and V=\<open>ell2_to_hilbert*\<close>])
+      (auto simp: cr_chilbert2ell2_ell2_def)[3]
+  subgoal
+   by (rule right_total_rel_ccsubspace[where U=\<open>ell2_to_hilbert*\<close> and V=\<open>ell2_to_hilbert\<close>])
+      (auto simp: cr_chilbert2ell2_ell2_def)
+  done
 
 lemma c2l2l2_top[c2l2l2]:
   includes lifting_syntax
   shows \<open>(rel_ccsubspace cr_chilbert2ell2_ell2) top top\<close>
-  unfolding rel_ccsubspace_def apply auto
+  unfolding rel_ccsubspace_def
   by (simp add: UNIV_transfer bi_total_cr_chilbert2ell2_ell2)
 
 lemma c2l2l2_is_onb[c2l2l2]: 

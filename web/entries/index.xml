@@ -11,8 +11,29 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     
-      <lastBuildDate>Fri, 22 Nov 2024 00:00:00 +0000</lastBuildDate>
+      <lastBuildDate>Tue, 26 Nov 2024 00:00:00 +0000</lastBuildDate>
       <atom:link href="/entries/index.xml" rel="self" type="application/rss+xml" />
+        <item>
+          <title>The Sum-of-Squares Function and Jacobi&#39;s Two-Square Theorem</title>
+          <link>/entries/Sum_Of_Squares_Count.html</link>
+          <pubDate>Tue, 26 Nov 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Sum_Of_Squares_Count.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Deep Embedding of Intuitionistic Linear Logic</title>
+          <link>/entries/ILL.html</link>
+          <pubDate>Mon, 25 Nov 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/ILL.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Linear Resources and Process Compositions</title>
+          <link>/entries/ProcessComposition.html</link>
+          <pubDate>Mon, 25 Nov 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/ProcessComposition.html</guid>
+          <description></description>
+        </item>
         <item>
           <title>Impossibility of the Dissection of a Cube</title>
           <link>/entries/Cube_Dissection.html</link>
@@ -123,6 +144,13 @@
           <link>/entries/Chebyshev_Prime_Bounds.html</link>
           <pubDate>Fri, 13 Sep 2024 00:00:00 +0000</pubDate>
           <guid>/entries/Chebyshev_Prime_Bounds.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>The Tensor Product on Hilbert Spaces</title>
+          <link>/entries/Hilbert_Space_Tensor_Product.html</link>
+          <pubDate>Tue, 10 Sep 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Hilbert_Space_Tensor_Product.html</guid>
           <description></description>
         </item>
         <item>

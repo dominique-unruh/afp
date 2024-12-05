@@ -1530,7 +1530,6 @@ proof -
 qed
 
 
-
 lemma some_onb_of_card:
   fixes S :: \<open>'a::chilbert_space ccsubspace\<close>
   shows \<open>card (some_onb_of S) = cdim (space_as_set S)\<close>
@@ -1550,7 +1549,5 @@ next
   ultimately show ?thesis 
     by simp
 qed
-
-
 
 end

@@ -337,6 +337,7 @@ Hermite
 Hermite_Lindemann
 Hidden_Markov_Models
 Higher_Order_Terms
+Hilbert_Space_Tensor_Product
 HoareForDivergence
 Hoare_Time
 Hood_Melville_Queue
@@ -352,6 +353,7 @@ Hypergraph_Basics
 Hypergraph_Colourings
 IEEE_Floating_Point
 IFC_Tracking
+ILL
 IMAP-CRDT
 IMO2019
 IMP2
@@ -606,6 +608,7 @@ Prime_Number_Theorem
 Priority_Queue_Braun
 Priority_Search_Trees
 Probabilistic_Noninterference
+ProcessComposition
 Probabilistic_Prime_Tests
 Probabilistic_System_Zoo
 Probabilistic_Timed_Automata
@@ -774,6 +777,7 @@ Substitutions_Lambda_Free
 SuffixArray
 Sumcheck_Protocol
 SumSquares
+Sum_Of_Squares_Count
 Sunflowers
 SuperCalc
 Superposition_Calculus

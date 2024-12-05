@@ -40,8 +40,7 @@ next
   from Suc have \<open>normal_op T\<close>
     by (auto intro!: selfadjoint_imp_normal simp: T_def)
   then have \<open>reducing_subspace E T\<close>
-    apply (auto intro!: eigenspace_is_reducing simp: spectral_dec_space_def E_def T_def)
-    by -
+    by (auto intro!: eigenspace_is_reducing simp: spectral_dec_space_def E_def T_def)
   then have \<open>reducing_subspace (- E) T\<close>
     by simp
   then have *: \<open>Proj (- E) o\<^sub>C\<^sub>L T o\<^sub>C\<^sub>L Proj (- E) = T o\<^sub>C\<^sub>L Proj (- E)\<close>
@@ -108,9 +107,7 @@ proof -
   qed
   define k where \<open>k = n - m\<close>
   from * have \<open>eigenspace e (spectral_dec_op a (m + k)) \<le> eigenspace e (spectral_dec_op a m)\<close>
-    apply (induction k)
-     apply (auto intro!: simp: simp del: spectral_dec_op.simps simp flip: )
-    using order_trans_rules(23) by blast 
+    by (induction k) (auto simp del: spectral_dec_op.simps intro: order.trans)
   then show ?thesis
     using \<open>n \<ge> m\<close> by (simp add: k_def)
 qed
@@ -365,9 +362,8 @@ next
   have aEe: \<open>a (e n) = E n *\<^sub>C e n\<close> for n
     by (simp add: e_E eigenspace_memberD)
   obtain \<alpha> where E_lim: \<open>(\<lambda>n. norm (E n)) \<longlonglongrightarrow> \<alpha>\<close>
-    apply (rule_tac decseq_convergent[where X=\<open>\<lambda>n. cmod (E n)\<close> and B=0])
-    using spectral_dec_val_decreasing[OF assms]
-    by (auto intro!: simp: decseq_def E_def)
+    by (rule decseq_convergent[where X=\<open>\<lambda>n. cmod (E n)\<close> and B=0])
+       (use spectral_dec_val_decreasing[OF assms] in \<open>auto intro!: simp: decseq_def E_def\<close>)
   then have \<open>\<alpha> \<ge> 0\<close>
     apply (rule LIMSEQ_le_const)
     by simp
@@ -600,9 +596,8 @@ proof -
   then have sum_aS: \<open>(\<lambda>n. - min (spectral_dec_val a n) 0 *\<^sub>C spectral_dec_proj a n)  sums  aS\<close>
     using sums_minus by fastforce 
   from sum_aS have \<open>aS \<ge> 0\<close>
-    apply (rule sums_pos_cblinfun)
-    apply (auto intro!: simp: max_def)
-    by (auto intro!: spectral_dec_proj_pos scaleC_nonpos_nonneg simp: min_def)
+    by (rule sums_pos_cblinfun)
+       (auto intro!: spectral_dec_proj_pos scaleC_nonpos_nonneg simp: max_def min_def)
   from sum_aR sum_aS'
   have \<open>(\<lambda>n. max 0 (spectral_dec_val a n) *\<^sub>C spectral_dec_proj a n
            + min (spectral_dec_val a n) 0 *\<^sub>C spectral_dec_proj a n) sums (aR - aS)\<close>

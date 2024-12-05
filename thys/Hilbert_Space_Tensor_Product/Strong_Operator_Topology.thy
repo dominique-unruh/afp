@@ -147,16 +147,15 @@ proof (rule hausdorffI)
   then obtain U' V' where \<open>open U'\<close> \<open>open V'\<close> \<open>a *\<^sub>V \<psi> \<in> U'\<close> \<open>b *\<^sub>V \<psi> \<in> V'\<close> \<open>U' \<inter> V' = {}\<close>
     by (meson hausdorff)
   define U V where \<open>U = {f. \<forall>i\<in>{()}. f *\<^sub>V \<psi> \<in> U'}\<close> and \<open>V = {f. \<forall>i\<in>{()}. f *\<^sub>V \<psi> \<in> V'}\<close>
-  have \<open>openin cstrong_operator_topology U\<close>
+  have 1: \<open>openin cstrong_operator_topology U\<close>
     unfolding U_def apply (rule cstrong_operator_topology_basis)
     using \<open>open U'\<close> by auto
-  moreover have \<open>openin cstrong_operator_topology V\<close>
+  have 2: \<open>openin cstrong_operator_topology V\<close>
     unfolding V_def apply (rule cstrong_operator_topology_basis)
     using \<open>open V'\<close> by auto
-  ultimately show \<open>\<exists>U V. openin cstrong_operator_topology U \<and> openin cstrong_operator_topology V \<and> a \<in> U \<and> b \<in> V \<and> U \<inter> V = {}\<close>
-    apply (rule_tac exI[of _ U])
-    apply (rule_tac exI[of _ V])
-    using  \<open>a *\<^sub>V \<psi> \<in> U'\<close> \<open>b *\<^sub>V \<psi> \<in> V'\<close> \<open>U' \<inter> V' = {}\<close> by (auto simp: U_def V_def)
+  show \<open>\<exists>U V. openin cstrong_operator_topology U \<and> openin cstrong_operator_topology V \<and> a \<in> U \<and> b \<in> V \<and> U \<inter> V = {}\<close>
+    by (rule exI[of _ U], rule exI[of _ V])
+       (use 1 2 \<open>a *\<^sub>V \<psi> \<in> U'\<close> \<open>b *\<^sub>V \<psi> \<in> V'\<close> \<open>U' \<inter> V' = {}\<close> in \<open>auto simp: U_def V_def\<close>)
 qed
 
 instance cblinfun_sot :: (complex_normed_vector, complex_normed_vector) t2_space
@@ -182,13 +181,8 @@ lemma transfer_euclidean_cstrong_operator_topology[transfer_rule]:
   shows \<open>(rel_topology cr_cblinfun_sot) cstrong_operator_topology euclidean\<close> 
 proof (unfold rel_topology_def, intro conjI allI impI)
   show \<open>(rel_set cr_cblinfun_sot ===> (=)) (openin cstrong_operator_topology) (openin euclidean)\<close>
-    apply (auto simp: rel_topology_def cr_cblinfun_sot_def rel_set_def intro!: rel_funI)
-     apply transfer
-     apply auto
-     apply (meson openin_subopen subsetI)
-    apply transfer
-    apply auto
-    by (meson openin_subopen subsetI)
+    unfolding rel_fun_def rel_set_def open_openin [symmetric] cr_cblinfun_sot_def
+    by (transfer, intro allI impI arg_cong[of _ _ "openin x" for x]) blast
 next
   fix U :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close>
   assume \<open>openin cstrong_operator_topology U\<close>
@@ -206,12 +200,9 @@ lemma openin_cstrong_operator_topology: \<open>openin cstrong_operator_topology 
 
 lemma cstrong_operator_topology_plus_cont: \<open>LIM (x,y) nhdsin cstrong_operator_topology a \<times>\<^sub>F nhdsin cstrong_operator_topology b.
             x + y :> nhdsin cstrong_operator_topology (a + b)\<close>
-proof -
-  show ?thesis
-    unfolding cstrong_operator_topology_def
-    apply (rule_tac pullback_topology_bi_cont[where f'=plus])
-    by (auto simp: case_prod_unfold tendsto_add_Pair cblinfun.add_left)
-qed
+  unfolding cstrong_operator_topology_def
+  by (rule pullback_topology_bi_cont[where f'=plus])
+     (auto simp: case_prod_unfold tendsto_add_Pair cblinfun.add_left)
 
 instance cblinfun_sot :: (complex_normed_vector, complex_normed_vector) topological_group_add
 proof intro_classes
@@ -257,10 +248,13 @@ proof -
               (\<lambda>x :: 'd \<Rightarrow>\<^sub>C\<^sub>L 'b. b o\<^sub>C\<^sub>L x)\<close> 
     unfolding cstrong_operator_topology_def
     apply (rule continuous_map_pullback')
-     apply (subst asm_rl[of \<open>(*\<^sub>V) \<circ> (o\<^sub>C\<^sub>L) b = (\<lambda>a x. b *\<^sub>V (a x)) \<circ> (*\<^sub>V)\<close>])
-      apply (auto intro!: ext)[1]
-     apply (rule continuous_map_pullback)
-    using * by auto
+    subgoal
+      apply (subst asm_rl[of \<open>(*\<^sub>V) \<circ> (o\<^sub>C\<^sub>L) b = (\<lambda>a x. b *\<^sub>V (a x)) \<circ> (*\<^sub>V)\<close>])
+      subgoal by force
+      subgoal by (rule continuous_map_pullback) (use * in auto)
+      done
+    subgoal using * by auto
+    done
   from continuous_map_compose[OF assms this, unfolded o_def]
   show ?thesis
     by -
@@ -357,10 +351,15 @@ proof (rule complex_vector.subspaceI)
       using nt FF_plus by (rule limit_in_closure)
   qed
   show \<open>c *\<^sub>C x \<in> closure A\<close> if \<open>x \<in> closure A\<close> for x c
-    using  that
-    using image_closure_subset[where S=A and T=\<open>closure A\<close> and f=\<open>scaleC c\<close>, OF continuous_scaleC_sot]
-    apply auto
-    by (metis 0 assms closure_subset csubspace_scaleC_invariant imageI in_mono scaleC_eq_0_iff)
+  proof (cases "c = 0")
+    case False
+    have "(*\<^sub>C) c ` A \<subseteq> closure A"
+      using csubspace_scaleC_invariant[of c A] assms False closure_subset[of A] by auto
+    hence "(*\<^sub>C) c ` closure A \<subseteq> closure A"
+      by (intro image_closure_subset) (auto intro!: continuous_intros)
+    thus ?thesis
+      using that by blast
+  qed (use 0 in auto)
 qed
 
 lemma limitin_cstrong_operator_topology:
@@ -379,8 +378,7 @@ proof -
     using assms
     by (metis cblinfun.diff_left norm_minus_commute)
   have F_props: \<open>\<forall>\<^sub>F (M,\<epsilon>) in F. finite M \<and> \<epsilon> > 0\<close>
-    apply (auto intro!: eventually_prodI simp: F_def case_prod_unfold)
-    by (simp add: eventually_at_right_less)
+    by (auto intro!: eventually_prodI simp: F_def case_prod_unfold eventually_at_right_less)
   then have inA: \<open>\<forall>\<^sub>F (M,\<epsilon>) in F. f M \<epsilon> \<in> A\<close>
     apply (rule eventually_rev_mp)
     using fA by (auto intro!: always_eventually)

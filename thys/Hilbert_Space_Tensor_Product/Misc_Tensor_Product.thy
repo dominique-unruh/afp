@@ -34,9 +34,8 @@ definition rel_topology :: \<open>('a \<Rightarrow> 'b \<Rightarrow> bool) \<Rig
  \<and> (\<forall>U. openin S U \<longrightarrow> Domainp (rel_set R) U) \<and> (\<forall>U. openin T U \<longrightarrow> Rangep (rel_set R) U)\<close>
 
 lemma rel_topology_eq[relator_eq]: \<open>rel_topology (=) = (=)\<close>
-  unfolding rel_topology_def
-  apply (auto intro!: ext simp: rel_fun_eq rel_set_eq)
-  by (metis openin_inject)
+  unfolding rel_topology_def using openin_inject
+  by (auto simp: rel_fun_eq rel_set_eq fun_eq_iff)
 
 lemma Rangep_conversep[simp]: \<open>Rangep (R\<inverse>\<inverse>) = Domainp R\<close>
   by blast
@@ -119,12 +118,18 @@ qed
 lemma closure_nhds_principal: \<open>a \<in> closure A \<longleftrightarrow> inf (nhds a) (principal A) \<noteq> bot\<close>
 proof (rule iffI)
   show \<open>inf (nhds a) (principal A) \<noteq> bot\<close> if \<open>a \<in> closure A\<close>
-    apply (cases \<open>a \<in> A\<close>)
-     apply (auto simp: filter_eq_iff eventually_inf eventually_principal eventually_nhds) apply blast
-    apply (subgoal_tac \<open>a islimpt A\<close>)
-     apply ( simp add: filter_eq_iff eventually_inf eventually_principal eventually_nhds islimpt_def)
-     apply meson
-    by (simp add: islimpt_in_closure that)
+  proof (cases \<open>a \<in> A\<close>)
+    case True
+    thus ?thesis
+      unfolding filter_eq_iff eventually_inf eventually_principal eventually_nhds by force
+  next
+    case False
+    have "at a within A \<noteq> bot"
+      using False that by (subst at_within_eq_bot_iff) auto
+    also have "at a within A = inf (nhds a) (principal A)"
+      using False by (simp add: at_within_def)
+    finally show ?thesis .
+  qed
   show \<open>a \<in> closure A\<close> if \<open>inf (nhds a) (principal A) \<noteq> bot\<close>
     by (metis Diff_empty Diff_insert0 at_within_def closure_subset not_in_closure_trivial_limitI subsetD that)
 qed
@@ -135,21 +140,36 @@ lemma limit_in_closure:
   assumes nt: \<open>F \<noteq> bot\<close>
   assumes inA: \<open>\<forall>\<^sub>F x in F. f x \<in> A\<close>
   shows \<open>x \<in> closure A\<close>
-  apply (cases \<open>x \<in> A\<close>)
-   apply (meson closure_subset in_mono)
-  apply (auto simp: closure_def filterlim_def islimpt_def le_filter_def eventually_filtermap
-      eventually_nhds image_def)
-  by (smt (verit, ccfv_threshold) assms(1) assms(3) eventually_elim2 nt tendsto_def trivial_limit_eq)
+proof (rule Lim_in_closed_set[of _ _ F])
+  show "\<forall>\<^sub>F x in F. f x \<in> closure A"
+    using inA by eventually_elim (use closure_subset in blast)
+qed (use assms in auto)
 
+(* TODO Move *)
 lemma filterlim_nhdsin_iff_limitin:
   \<open>l \<in> topspace T \<and> filterlim f (nhdsin T l) F \<longleftrightarrow> limitin T f l F\<close>
-  unfolding limitin_def filterlim_def eventually_filtermap le_filter_def eventually_nhdsin 
-  apply safe
-    apply simp
-   apply meson
-  by (metis (mono_tags, lifting) eventually_mono)
-
-
+  unfolding limitin_def
+proof safe
+  fix U assume *: "l \<in> topspace T" "filterlim f (nhdsin T l) F" "openin T U" "l \<in> U"
+  hence "eventually (\<lambda>y. y \<in> U) (nhdsin T l)"
+    unfolding eventually_nhdsin by blast
+  thus "eventually (\<lambda>x. f x \<in> U) F"
+    using *(2) eventually_compose_filterlim by blast
+next
+  assume *: "l \<in> topspace T" "\<forall>U. openin T U \<and> l \<in> U \<longrightarrow> (\<forall>\<^sub>F x in F. f x \<in> U)"
+  show "filterlim f (nhdsin T l) F"
+    unfolding filterlim_def le_filter_def eventually_filtermap
+  proof safe
+    fix P :: "'a \<Rightarrow> bool"
+    assume "eventually P (nhdsin T l)"
+    then obtain U where U: "openin T U" "l \<in> U" "\<forall>x\<in>U. P x"
+      using *(1) unfolding eventually_nhdsin by blast
+    with * have "eventually (\<lambda>x. f x \<in> U) F"
+      by blast
+    thus "eventually (\<lambda>x. P (f x)) F"
+      by eventually_elim (use U in blast)
+  qed
+qed
 
 lemma pullback_topology_bi_cont: 
   fixes g :: \<open>'a \<Rightarrow> ('b \<Rightarrow> 'c::topological_space)\<close>
@@ -230,21 +250,18 @@ proof -
 
     have \<open>open Ua''\<close>
       using finiteD Ua'_UNIV
-      apply (auto simp add: open_fun_def Ua''_def PiE_UNIV_domain
-          openin_product_topology_alt D_def intro!: exI[where x=\<open>Ua'\<close>])
-      by (meson Collect_mono rev_finite_subset)
+      by (auto simp add: open_fun_def Ua''_def PiE_UNIV_domain
+            openin_product_topology_alt D_def intro!: exI[where x=\<open>Ua'\<close>] intro: rev_finite_subset)
     have \<open>open Ub''\<close>
       using finiteD Ub'_UNIV
-      apply (auto simp add: open_fun_def Ub''_def PiE_UNIV_domain
-          openin_product_topology_alt D_def intro!: exI[where x=\<open>Ub'\<close>])
-      by (meson Collect_mono rev_finite_subset)
+      by (auto simp add: open_fun_def Ub''_def PiE_UNIV_domain
+            openin_product_topology_alt D_def intro!: exI[where x=\<open>Ub'\<close>] intro: rev_finite_subset)
     have a_Ua'': \<open>g a \<in> Ua''\<close>
       by (simp add: Ua''_def a_Ua')
     have b_Ub'': \<open>g b \<in> Ub''\<close>
       by (simp add: Ub''_def b_Ub')
     have UaUb''_plus: \<open>a' \<in> Ua'' \<Longrightarrow> b' \<in> Ub'' \<Longrightarrow> f' (a' i) (b' i) \<in> U i\<close> for i a' b'
-      using UaUb'_plus apply (auto simp add: Ua''_def  Ub''_def)
-      by blast
+      using UaUb'_plus by (force simp add: Ua''_def  Ub''_def)
 
     define Ua''' where \<open>Ua''' = g -` Ua''\<close>
     define Ub''' where \<open>Ub''' = g -` Ub''\<close>
@@ -275,8 +292,9 @@ proof -
     show \<open>\<forall>\<^sub>F x in nhdsin T a \<times>\<^sub>F nhdsin T b. (g \<circ> case_prod f) x \<in> S\<close>
       using Pa'_nhd Pb'_nhd Pa'Pb'_plus
       unfolding eventually_prod_filter
-      apply (rule_tac exI[of _ Pa'])
-      apply (rule_tac exI[of _ Pb'])
+      apply -
+      apply (rule exI[of _ Pa'])
+      apply (rule exI[of _ Pb'])
       by simp
   qed
   then show ?thesis
@@ -333,9 +351,8 @@ lemma infsum_in_def':
   shows \<open>infsum_in T f A = (if summable_on_in T f A then (THE s. has_sum_in T f A s) else 0)\<close>
 proof (cases \<open>Collect (has_sum_in T f A) = {}\<close>)
   case True
-  then show ?thesis 
-    apply (auto simp: infsum_in_def summable_on_in_def Let_def)
-    by (metis (no_types, lifting) One_nat_def True card.empty zero_neq_one)
+  then show ?thesis using True
+    by (auto simp: infsum_in_def summable_on_in_def Let_def card_1_singleton_iff)
 next
   case False
   then have \<open>summable_on_in T f A\<close>
@@ -481,7 +498,7 @@ proof (intro rel_funI, rename_tac T T' f f' l l' F F')
     have \<open>\<forall>\<^sub>F x in F'. f' x \<in> V\<close>
       by auto
     then show \<open>\<forall>\<^sub>F x in F. f x \<in> U\<close>
-      apply transfer by simp
+      by transfer simp
   qed
 
   have open2: \<open>\<forall>\<^sub>F x in F'. f' x \<in> V\<close>
@@ -490,15 +507,14 @@ proof (intro rel_funI, rename_tac T T' f f' l l' F F')
   proof -
     from \<open>rel_topology S T T'\<close> \<open>openin T' V\<close>
     obtain U where \<open>openin T U\<close> and [transfer_rule]: \<open>rel_set S U V\<close>
-      apply (auto simp: rel_topology_def)
-      by (metis (mono_tags, lifting) RangepE rel_fun_def)
+      by (auto simp: rel_topology_def rel_fun_def)
     with \<open>S l l'\<close> have \<open>l \<in> U\<close>
       by (metis (full_types) assms bi_unique_def rel_setD2 that(2))
     with lhs \<open>openin T U\<close>
     have \<open>\<forall>\<^sub>F x in F. f x \<in> U\<close>
       by auto
     then show \<open>\<forall>\<^sub>F x in F'. f' x \<in> V\<close>
-      apply transfer by simp
+      by transfer simp
   qed
 
   from topspace open1 open2
@@ -521,8 +537,11 @@ proof (intro rel_funI)
 
   have RfX: \<open>rel_set R X (f ` X)\<close> if \<open>X \<subseteq> A\<close> for X
     apply (rule rel_setI)
-    apply (metis (no_types, lifting) Rf \<open>inj_on f A\<close> in_mono inj_on_image_mem_iff that)
-    by (metis (no_types, lifting) Rf imageE subsetD that)
+    subgoal
+      by (metis (no_types, lifting) Rf \<open>inj_on f A\<close> in_mono inj_on_image_mem_iff that)
+    subgoal
+      by (metis (no_types, lifting) Rf imageE subsetD that)
+    done
 
   have Piff: \<open>(\<exists>X. finite X \<and> X \<subseteq> A \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> A \<longrightarrow> P (f ` Y))) \<longleftrightarrow>
               (\<exists>X. finite X \<and> X \<subseteq> B \<and> (\<forall>Y. finite Y \<and> X \<subseteq> Y \<and> Y \<subseteq> B \<longrightarrow> P Y))\<close> for P
@@ -584,13 +603,19 @@ proof (intro rel_funI)
   moreover have \<open>map_filter_on {(x, y). rel_set R x y} fst Z = finite_subsets_at_top A\<close>
     apply (rule filter_eq_iff[THEN iffD2])
     apply (subst eventually_map_filter_on)
-     apply (auto intro!: eventually_finite_subsets_at_top_weakI simp add: Z_def eventually_filtermap RfX)[1]
-    by (auto simp add: Z_def eventually_filtermap eventually_finite_subsets_at_top RfX)
+    subgoal
+      by (auto intro!: eventually_finite_subsets_at_top_weakI simp add: Z_def eventually_filtermap RfX)[1]
+    subgoal
+      by (auto simp add: Z_def eventually_filtermap eventually_finite_subsets_at_top RfX)
+    done
   moreover have \<open>map_filter_on {(x, y). rel_set R x y} snd Z = finite_subsets_at_top B\<close>
     apply (rule filter_eq_iff[THEN iffD2])
     apply (subst eventually_map_filter_on)
-     apply (auto intro!: eventually_finite_subsets_at_top_weakI simp add: Z_def eventually_filtermap RfX)[1]
-    by (simp add: Z_def eventually_filtermap eventually_finite_subsets_at_top RfX Piff)
+    subgoal
+      by (auto intro!: eventually_finite_subsets_at_top_weakI simp add: Z_def eventually_filtermap RfX)[1]
+    subgoal
+      by (simp add: Z_def eventually_filtermap eventually_finite_subsets_at_top RfX Piff)
+    done
   ultimately show \<open>rel_filter (rel_set R) (finite_subsets_at_top A) (finite_subsets_at_top B)\<close>
     by (rule rel_filter.intros[where Z=Z])
 qed
@@ -613,22 +638,28 @@ proof (intro rel_funI)
 
   define A_copy where \<open>A_copy = A\<close>
 
-  have \<open>S (f x + sum f F) (g (p x) + sum g (p ` F))\<close>
+  have *: \<open>S (f x + sum f F) (g (p x) + sum g (p ` F))\<close>
     if [transfer_rule]: \<open>S (sum f F) (sum g (p ` F))\<close> and [simp]: \<open>x \<in> A\<close> for x F
     by (metis (no_types, opaque_lifting) Rf \<open>(R ===> S) f g\<close> assms(2) rel_fun_def that(1) that(2))
-  then have ind_step: \<open>S (sum f (insert x F)) (sum g (p ` insert x F))\<close> 
-    if [simp]: \<open>S (sum f F) (sum g (p ` F))\<close> \<open>x \<in> A\<close> \<open>x \<notin> F\<close> \<open>finite F\<close> \<open>F \<subseteq> A\<close> for x F
-    apply auto
-    apply (subst sum.insert)
-      apply (auto simp: that)
-    by (metis (no_types, lifting) \<open>inj_on p A\<close> in_mono inj_onD that(2) that(3) that(5))
+  have ind_step: \<open>S (sum f (insert x F)) (sum g (p ` insert x F))\<close> 
+    if \<open>S (sum f F) (sum g (p ` F))\<close> \<open>x \<in> A\<close> \<open>x \<notin> F\<close> \<open>finite F\<close> \<open>F \<subseteq> A\<close> for x F
+  proof -
+    have "sum g (p ` insert x F) = g (p x) + sum g (p ` F)"
+      unfolding image_insert using that
+      by (subst sum.insert) (use inj_onD[OF \<open>inj_on p A\<close>, of x] in \<open>auto\<close>)
+    thus ?thesis
+      using that * by simp
+  qed
 
-  have \<open>S (\<Sum>x\<in>A. f x) (\<Sum>x\<in>p ` A. g x)\<close>
-    apply (subgoal_tac \<open>A \<subseteq> A_copy\<close>)
-     apply (induction A rule:infinite_finite_induct)
+  have \<open>S (\<Sum>x\<in>A. f x) (\<Sum>x\<in>p ` A. g x)\<close> if \<open>A \<subseteq> A_copy\<close>
+    using that
+   apply (induction A rule:infinite_finite_induct)
     unfolding A_copy_def
-       apply (metis (no_types, lifting) \<open>inj_on p A\<close> assms(3) finite_image_iff subset_inj_on sum.infinite)
-    using \<open>S 0 0\<close> ind_step by (auto simp: sum.insert)
+    subgoal
+      by (metis (no_types, lifting) \<open>inj_on p A\<close> assms(3) finite_image_iff subset_inj_on sum.infinite)
+    using \<open>S 0 0\<close> ind_step by auto
+  hence \<open>S (\<Sum>x\<in>A. f x) (\<Sum>x\<in>p ` A. g x)\<close>
+    by (simp add: A_copy_def)
   also have \<open>\<dots> = (\<Sum>x\<in>B. g x)\<close>
     by (metis (full_types) \<open>B = p ` A\<close>)
   finally show \<open>S (\<Sum>x\<in>A. f x) (\<Sum>x\<in>B. g x)\<close>
@@ -650,14 +681,6 @@ proof -
     unfolding has_sum_in_def
     by transfer_prover
 qed
-
-(* lemma has_sum_in_transfer[transfer_rule]: 
-  includes lifting_syntax
-  fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
-  assumes [transfer_rule]: \<open>bi_unique R\<close>
-  shows \<open>((=) ===> (R ===> (=)) ===> (rel_set R) ===> (=)) has_sum_in has_sum_in\<close>
-  by transfer_prover
- *)
 
 lemma has_sum_in_topspace: \<open>has_sum_in T f A s \<Longrightarrow> s \<in> topspace T\<close>
   by (metis has_sum_in_def limitin_def)
@@ -750,15 +773,6 @@ proof (intro rel_funI)
     by auto
 qed
 
-(* lemma infsum_in_parametric_same_topo[transfer_rule]: 
-  includes lifting_syntax
-  fixes R :: \<open>'a \<Rightarrow> 'b \<Rightarrow> bool\<close>
-  assumes [transfer_rule]: \<open>bi_unique R\<close>
-  shows \<open>((=) ===> (R ===> (=)) ===> (rel_set R) ===> (=)) infsum_in infsum_in\<close>
-  using infsum_in_parametric[where S=\<open>(=)\<close>]
-  apply simp
-  by - *)
-
 lemma infsum_parametric[transfer_rule]: 
   includes lifting_syntax
   assumes [transfer_rule]: \<open>bi_unique R\<close>
@@ -849,11 +863,11 @@ proof -
                * of_bool (a'>0) * ((-1) ^ (a'-1) * (a-1 gchoose (a'-1)))
                + (\<Sum>k<a'. abs (a gchoose k))\<close>
     apply (cases \<open>a' = 0\<close>)
-    apply simp
-    apply (subst asm_rl[of \<open>{..<a'} = {..a'-1}\<close>])
-    apply auto
-    apply (subst gbinomial_sum_lower_neg)
-    by simp
+    subgoal
+      by simp
+    subgoal
+      by (subst asm_rl[of \<open>{..<a'} = {..a'-1}\<close>]) (auto simp: gbinomial_sum_lower_neg)
+    done
   finally show ?thesis
     by -
 qed
@@ -873,14 +887,17 @@ proof -
   also have \<open>\<dots> = (\<Prod>i=0..<b. abs (a - of_nat i)) / fact b\<close>
     apply (subst abs_prod) by simp
   also have \<open>\<dots> \<le> (\<Prod>i=0..<b. of_nat (Suc i)) / fact b\<close>
-    apply (rule divide_right_mono[rotated])
-     apply simp
-    apply (rule prod_mono)
-    using * apply (auto simp: abs_if)
-    using order_trans by fastforce
+  proof (intro divide_right_mono prod_mono conjI)
+    fix i assume "i \<in> {0..<b}"
+    have "\<bar>a - of_nat i\<bar> \<le> \<bar>a\<bar> + \<bar>of_nat i\<bar>"
+      by linarith
+    also have "\<bar>a\<bar> \<le> 1"
+      by fact
+    finally show "\<bar>a - of_nat i\<bar> \<le> of_nat (Suc i)"
+      by simp
+  qed auto
   also have \<open>\<dots> = fact b / fact b\<close>
-    apply (subst (2) fact_prod_Suc)
-    by auto
+    by (subst (2) fact_prod_Suc) auto
   also have \<open>\<dots> = 1\<close>
     by simp
   finally show ?thesis
@@ -900,20 +917,14 @@ proof -
   have \<open>(\<Sum>i\<le>n. \<bar>a gchoose i\<bar>) = (- 1) ^ a' * ((- 1) ^ n * (a - 1 gchoose n)) -
     (- 1) ^ a' * of_bool (0 < a') * ((- 1) ^ (a' - 1) * (a - 1 gchoose (a' - 1))) +
     (\<Sum>k<a'. \<bar>a gchoose k\<bar>)\<close> for n
-    unfolding a'_def 
-    apply (rule gbinomial_sum_lower_abs)
-    using assms by fastforce
+    unfolding a'_def  by (rule gbinomial_sum_lower_abs) (use assms in auto)
   also have \<open>\<dots>n \<le> 1 + 1 + 1\<close> for n
-    apply (rule aux1)
-    using a' by (auto simp add: abs_mult abs_gbinomial_leq1 assms)
+    by (rule aux1) (use a' in \<open>auto simp add: abs_mult abs_gbinomial_leq1 assms\<close>)
   also have \<open>\<dots> = 3\<close>
     by simp
   finally show ?thesis
     by (meson abs_ge_zero bounded_imp_summable)
 qed
-
-(* lemma harmonic_series_diverges: \<open>\<not> summable (\<lambda>n. c / n)\<close> if \<open>c \<noteq> 0\<close>
-  by - *)
 
 lemma summable_tendsto_times_n:
   fixes f :: \<open>nat \<Rightarrow> real\<close>
@@ -927,7 +938,7 @@ proof (rule ccontr)
     apply (rule decseq_convergent[where B=0, OF dec])
     using pos that by auto
   then have lim_B: \<open>(\<lambda>n. n * f n) \<longlonglongrightarrow> B\<close>
-    by (rule_tac LIMSEQ_offset)
+    by - (rule LIMSEQ_offset)
   have \<open>B \<ge> 0\<close>
     apply (subgoal_tac \<open>\<And>n. n * f n \<ge> 0\<close>)
     using Lim_bounded2 lim_B apply blast
@@ -937,14 +948,11 @@ proof (rule ccontr)
   ultimately have \<open>B > 0\<close>
     by linarith
 
-  have \<open>f n \<ge> B / n\<close> if \<open>n \<ge> M\<close> for n
-    using nfB'[of \<open>n-M\<close>] that 
-    apply auto
-    by (smt (verit, best) \<open>0 \<le> B\<close> \<open>B \<noteq> 0\<close> divide_right_mono mult_nonpos_nonneg nonzero_mult_div_cancel_left pos)
+  have ge: \<open>f n \<ge> B / n\<close> if \<open>n \<ge> M\<close> for n
+    using nfB'[of \<open>n-M\<close>] that \<open>B > 0\<close>  by (auto simp: divide_simps mult_ac)
 
-  with sum \<open>B > 0\<close> have \<open>summable (\<lambda>n. B / n)\<close>
-    apply (rule_tac summable_comparison_test'[where N=M])
-    by auto
+  have \<open>summable (\<lambda>n. B / n)\<close>
+    by (rule summable_comparison_test'[where N=M]) (use sum \<open>B > 0\<close> ge in auto)
 
   moreover have \<open>\<not> summable (\<lambda>n. B / n)\<close>
   proof (rule ccontr)
@@ -955,8 +963,7 @@ proof (rule ccontr)
     then have \<open>summable (\<lambda>n. 1 / real n)\<close>
       using \<open>B \<noteq> 0\<close> by auto
     then have \<open>(\<Sum>n=1..m. 1 / real n) \<le> C\<close> for m
-      unfolding C_def apply (rule sum_le_suminf)
-      by auto
+      unfolding C_def by (rule sum_le_suminf) auto
     then have \<open>harm m \<le> C\<close> for m
       by (simp add: harm_def inverse_eq_divide)
     then have \<open>harm (nat (ceiling (exp C))) \<le> C\<close>
@@ -994,8 +1001,7 @@ proof -
     next
       case (Suc m)
       have 1: \<open>(\<lambda>n. (a-1 gchoose n)) \<longlonglongrightarrow> 0\<close>
-        apply (rule Suc.IH)
-        using Suc.prems by auto
+        by (rule Suc.IH) (use Suc.prems in auto)
       then have \<open>(\<lambda>n. (a-1 gchoose Suc n)) \<longlonglongrightarrow> 0\<close>
         using filterlim_sequentially_Suc by blast
       with 1 have \<open>(\<lambda>n. (a-1 gchoose n) + (a-1 gchoose Suc n)) \<longlonglongrightarrow> 0\<close>
@@ -1081,12 +1087,10 @@ proof -
     by -
   moreover have \<open>(\<lambda>n. 2 - (- 1) ^ n * (a - 1 gchoose n)) \<longlonglongrightarrow> 2\<close>
   proof -
-    from lim have \<open>(\<lambda>n. ((-1) ^ n * (a-1 gchoose n))) \<longlonglongrightarrow> 0\<close>
-      apply (rule_tac tendsto_rabs_zero_cancel)
-      by (simp add: abs_mult tendsto_rabs_zero_iff)
+    have \<open>(\<lambda>n. ((-1) ^ n * (a-1 gchoose n))) \<longlonglongrightarrow> 0\<close>
+      by (rule tendsto_rabs_zero_cancel) (use lim in \<open>simp add: abs_mult tendsto_rabs_zero_iff\<close>)
     then have \<open>(\<lambda>n. 2 - (- 1) ^ n * (a - 1 gchoose n)) \<longlonglongrightarrow> 2 - 0\<close>
-      apply (rule tendsto_diff[rotated])
-      by simp
+      by (rule tendsto_diff[rotated]) simp
     then show ?thesis
       by simp
   qed
@@ -1136,12 +1140,9 @@ proof (rule has_sumI_metric)
     also have \<open>\<dots> \<le> e' + (\<Sum>i\<in>Y-{..<N}. norm (f i))\<close>
       apply (rule add_left_mono)
       by (simp add: sum_nonneg)
-    also have \<open>\<dots> = e' + (\<Sum>i|i+N\<in>Y. norm (f (i + N)))\<close>
-      apply (rule arg_cong[where f=\<open>\<lambda>x. e' + x\<close>])
-      apply (rule sum.reindex_cong[where l=\<open>\<lambda>i. i + N\<close>])
-      apply auto
-      by (smt (verit, best) add.commute image_iff le_iff_add linorder_not_le mem_Collect_eq)
-    also have \<open>\<dots> \<le> e' + (\<Sum>i. norm (f (i + N)))\<close>
+    also have "(\<Sum>i\<in>Y-{..<N}. norm (f i)) = (\<Sum>i|i+N\<in>Y. norm (f (i + N)))"
+      by (rule sum.reindex_bij_witness[of _ "\<lambda>i. i + N" "\<lambda>i. i - N"]) auto
+    also have \<open>e' + \<dots> \<le> e' + (\<Sum>i. norm (f (i + N)))\<close>
       by (auto intro!: add_left_mono sum_le_suminf summable_iff_shift[THEN iffD2] abs_sum finite_inverse_image \<open>finite Y\<close>)
     also have \<open>\<dots> \<le> e' + e'\<close>
       using N by simp
@@ -1199,9 +1200,7 @@ lemma gbinomial_abs_summable_1:
   using assms by (auto intro!: has_sum_imp_summable gbinomial_abs_has_sum_1)
 
 lemma has_sum_singleton[simp]: \<open>(f has_sum y) {x} \<longleftrightarrow> f x = y\<close> for y :: \<open>'a :: {comm_monoid_add, t2_space}\<close>
-  using has_sum_finite[of \<open>{x}\<close>]
-  apply auto
-  by (metis infsumI)
+  using has_sum_finite[of \<open>{x}\<close>] infsumI[of f "{x}" y] by auto
 
 
 lemma has_sum_sums: \<open>f sums s\<close> if \<open>(f has_sum s) UNIV\<close>
@@ -1506,8 +1505,7 @@ proof -
     apply (rule abs_summable_on_comparison_test)
     using a1 a2 by (simp_all add: norm_mult_ineq infsum_mono infsum_nonneg)
   from a2 b1 show ?thesis
-    apply (rule_tac abs_summable_on_Sigma_iff[THEN iffD2])
-    by auto
+    by (intro abs_summable_on_Sigma_iff[THEN iffD2]) auto
 qed
 
 
@@ -1558,18 +1556,15 @@ proof (intro rel_funI, rename_tac def def' S S')
     define theS theS' where [no_atp]: \<open>theS = (THE x. x \<in> S)\<close> and [no_atp]: \<open>theS' = (THE x. x \<in> S')\<close>
     from True have cardS': \<open>card S' = 1\<close>
       by (simp add: card_eq)
-    from True have \<open>theS \<in> S\<close>
+    have \<open>theS \<in> S\<close>
       unfolding theS_def
-      apply (rule_tac theI')
-      by (simp add: card_eq_Suc_0_ex1)
-    moreover from cardS' have \<open>theS' \<in> S'\<close>
+      by (rule theI') (use True in \<open>simp add: card_eq_Suc_0_ex1\<close>)
+    moreover have \<open>theS' \<in> S'\<close>
       unfolding theS'_def
-      apply (rule_tac theI')
-      by (simp add: card_eq_Suc_0_ex1)
+      by (rule theI') (use cardS' in \<open>simp add: card_eq_Suc_0_ex1\<close>)
     ultimately have \<open>T theS theS'\<close>
       using \<open>rel_set T S S'\<close> True cardS'
-      apply (auto simp: rel_set_def)
-      by (metis card_eq_Suc_0_ex1)
+      by (auto simp: rel_set_def card_1_singleton_iff)
     then show ?thesis
       by (simp add: True cardS' the_default_def theS_def theS'_def)
   next
@@ -1649,11 +1644,14 @@ proof (intro rel_funI, rename_tac f f' z z' A A')
   qed
 
   show \<open>rel_pred U (fold_graph f z A) (fold_graph f' z' A')\<close>
-    apply (auto simp: rel_pred_def rel_set_def)
-     apply (rule one_direction[of f z A _ U z' T f'])
-         apply auto[5]
-    apply (rule one_direction[of f' z' A' _ \<open>U\<inverse>\<inverse>\<close> z \<open>T\<inverse>\<inverse>\<close> f, simplified])
-    by (auto simp flip: conversep_rel_fun)
+    unfolding rel_pred_def rel_set_def bex_simps
+    apply safe
+    subgoal
+      by (rule one_direction[of f z A _ U z' T f']) auto
+    subgoal
+      by (rule one_direction[of f' z' A' _ \<open>U\<inverse>\<inverse>\<close> z \<open>T\<inverse>\<inverse>\<close> f, simplified])
+         (auto simp flip: conversep_rel_fun)
+    done
 qed
 
 lemma Domainp_rel_filter:
@@ -1667,9 +1665,9 @@ proof (intro iffI, elim Domainp.cases, hypsubst)
     and "map_filter_on {(x, y). r x y} snd Z = G"
     using rel_filter.simps by blast
   show \<open>F \<le> principal (Collect S)\<close>
-    using rZ apply (auto simp flip: ZF assms intro!: filter_leI 
-        simp: eventually_principal eventually_map_filter_on)
-    by (smt (verit, best) DomainPI case_prod_beta eventually_elim2)
+    using rZ 
+    by (auto simp flip: ZF assms intro!: filter_leI  elim!: eventually_mono
+             simp: eventually_principal eventually_map_filter_on case_prod_unfold DomainPI)
 next
   assume asm: \<open>F \<le> principal (Collect S)\<close>
   define Z where \<open>Z = inf (filtercomap fst F) (principal {(x, y). r x y})\<close>

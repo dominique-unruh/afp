@@ -28,10 +28,9 @@ lemma cfinite_dim_subspace_has_basis:
   assumes \<open>cfinite_dim S\<close> and \<open>csubspace S\<close>
   shows \<open>\<exists>B. finite B \<and> cindependent B \<and> cspan B = S\<close>
 proof -
-  from \<open>csubspace S\<close>
   obtain B where \<open>cindependent B\<close> and \<open>cspan B = S\<close>
-    apply (rule_tac complex_vector.maximal_independent_subset[where V=S])
-    using complex_vector.span_subspace by blast
+    by (rule complex_vector.maximal_independent_subset[where V=S])
+       (use \<open>csubspace S\<close> complex_vector.span_subspace in blast)
   from \<open>cfinite_dim S\<close>
   obtain C where \<open>finite C\<close> and \<open>S \<subseteq> cspan C\<close>
     using cfinite_dim_def by auto
@@ -167,25 +166,26 @@ next
       apply (simp only: cinner_scaleC_left cinner_scaleC_right cblinfun.scaleC_right)
       using c_upper[of \<open>sgn \<psi>\<close>]
       by (simp add: norm_mult norm_sgn power2_eq_square)
-    from Aselfadj have 1: \<open>(h + g) \<bullet>\<^sub>C A (h + g) = h \<bullet>\<^sub>C A h + 2 * Re (g \<bullet>\<^sub>C A h) + g \<bullet>\<^sub>C A g\<close>
-      apply (auto intro!: simp: cinner_add_right cinner_add_left cblinfun.add_right selfadjoint_def)
-      apply (subst cinner_commute[of h])
-      by (metis cinner_adj_right complex_add_cnj mult_2 of_real_add)
+    from Aselfadj have Aselfadj': "x \<bullet>\<^sub>C (A *\<^sub>V y) = (A *\<^sub>V x) \<bullet>\<^sub>C y" for x y
+      using cinner_adj_right[of x A y] by (auto simp: selfadjoint_def)
+    from Aselfadj have Aselfadj'': "(A *\<^sub>V x) \<bullet>\<^sub>C y = cnj ((A *\<^sub>V y) \<bullet>\<^sub>C x)" for x y
+      by (subst cinner_commute, subst Aselfadj') auto
+
+    have 1: \<open>(h + g) \<bullet>\<^sub>C A (h + g) = h \<bullet>\<^sub>C A h + 2 * Re (g \<bullet>\<^sub>C A h) + g \<bullet>\<^sub>C A g\<close>
+      by (simp add: cblinfun.cbilinear_simps algebra_simps
+            Aselfadj' Aselfadj''[of h g] complex_add_cnj del: cinner_commute')
     from Aselfadj have 2: \<open>(h - g) \<bullet>\<^sub>C A (h - g) = h \<bullet>\<^sub>C A h - 2 * Re (g \<bullet>\<^sub>C A h) + g \<bullet>\<^sub>C A g\<close>
-      apply (auto intro!: simp: cinner_diff_right cinner_diff_left cblinfun.diff_right selfadjoint_def)
-      apply (subst cinner_commute[of h])
-      by (metis cinner_adj_right complex_add_cnj minus_add_distrib mult_2 of_real_add uminus_add_conv_diff)
+      by (simp add: cblinfun.cbilinear_simps algebra_simps Aselfadj' 
+            Aselfadj''[of h g] complex_add_cnj del: cinner_commute')
     have \<open>4 * Re (g \<bullet>\<^sub>C A h) = Re ((h + g) \<bullet>\<^sub>C A (h + g)) - Re ((h - g) \<bullet>\<^sub>C A (h - g))\<close>
       by (smt (verit, ccfv_SIG) "1" "2" Re_complex_of_real minus_complex.simps(1) plus_complex.sel(1))
-    also
-    have \<open>\<dots> \<le> c * (norm (h + g))\<^sup>2 - Re ((h - g) \<bullet>\<^sub>C A (h - g))\<close>
+    also have \<open>\<dots> \<le> c * (norm (h + g))\<^sup>2 - Re ((h - g) \<bullet>\<^sub>C A (h - g))\<close>
       using c_upper'[of \<open>h + g\<close>]
       by (smt (verit, best) complex_Re_le_cmod)
     also have \<open>\<dots> \<le> c * (norm (h + g))\<^sup>2 + c * (norm (h - g))\<^sup>2\<close>
       unfolding diff_conv_add_uminus
-      apply (rule add_left_mono)
-      using c_upper'[of \<open>h - g\<close>]
-      by (smt (verit) abs_Re_le_cmod add_uminus_conv_diff)
+      by (rule add_left_mono)
+         (use c_upper'[of \<open>h - g\<close>] in \<open>smt (verit) abs_Re_le_cmod add_uminus_conv_diff\<close>)
     also have \<open>\<dots> = 2 * c * ((norm h)\<^sup>2 + (norm g)\<^sup>2)\<close>
       by (auto intro!: simp: polar_identity polar_identity_minus ring_distribs)
     also have \<open>\<dots> \<le> 4 * c\<close>
@@ -212,9 +212,8 @@ next
       by -
   qed
   have \<open>norm (A h) \<le> c\<close> if \<open>norm h = 1\<close> for h
-    apply (cases \<open>A h = 0\<close>, simp add: \<open>0 \<le> c\<close>)
-    using *[OF _ that, of \<open>sgn (A h)\<close>]
-    by (simp add: norm_sgn)
+    by (cases \<open>A h = 0\<close>)
+       (use *[OF _ that, of \<open>sgn (A h)\<close>] in \<open>simp_all add: norm_sgn \<open>0 \<le> c\<close>\<close>)
   then show \<open>norm A \<le> c\<close>
     using \<open>c \<ge> 0\<close> by (auto intro!: norm_cblinfun_bound_unit)
 qed
@@ -389,12 +388,9 @@ lemma cblinfun_eq_from_separatingI2:
 lemma separating_set_bounded_clinear_dense:
   assumes \<open>ccspan S = \<top>\<close>
   shows \<open>separating_set bounded_clinear S\<close>
-  using assms
-  apply (auto intro!: ext simp: separating_set_def)
-  apply (rule bounded_clinear_eq_on_closure[where G=S])
-  apply auto
-  using ccspan.rep_eq by force
-
+  unfolding separating_set_def
+  by (intro allI impI ext, rule bounded_clinear_eq_on_closure[where G=S])
+     (use assms ccspan.rep_eq in force)+
 
 lemma separating_set_ket: \<open>separating_set bounded_clinear (range ket)\<close>
   by (simp add: bounded_clinear_equal_ket separating_setI)
@@ -425,17 +421,19 @@ proof (rule separating_setI)
   then have \<open>f (h x y) = g (h x y)\<close> if \<open>x \<in> A\<close> and \<open>y \<in> B\<close> for x y
     using that by auto
   then have \<open>(\<lambda>x. f (h x y)) = (\<lambda>x. g (h x y))\<close> if \<open>y \<in> B\<close> for y
-    apply (rule_tac eq_from_separatingI[OF assms(3)])
-    using that by auto
+    by (intro eq_from_separatingI[OF assms(3)]) (use that in auto)
   then have \<open>(\<lambda>y. f (h x y)) = (\<lambda>y. g (h x y))\<close> for x
-    apply (rule_tac eq_from_separatingI[OF assms(4)])
-    apply auto by meson
+    apply (intro eq_from_separatingI[OF assms(4)])
+    subgoal by simp
+    subgoal by simp
+    subgoal by meson
+    done
   then have \<open>f (h x y) = g (h x y)\<close> for x y
     by meson
   with \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
   show \<open>f = g\<close>
-    apply (rule eq_from_separatingI2[where f=f and g=g and P=bounded_clinear and S=UNIV and T=UNIV, rotated 1])
-    using assms(1) by -
+    by (rule eq_from_separatingI2[where f=f and g=g and P=bounded_clinear and S=UNIV and T=UNIV, rotated 1])
+       (fact assms(1))
 qed
 
 
@@ -488,17 +486,19 @@ proof (rule separating_setI)
   then have \<open>f (h x y) = g (h x y)\<close> if \<open>x \<in> A\<close> and \<open>y \<in> B\<close> for x y
     using that by auto
   then have \<open>(\<lambda>x. f (h x y)) = (\<lambda>x. g (h x y))\<close> if \<open>y \<in> B\<close> for y
-    apply (rule_tac eq_from_separatingI[OF sep_A'])
-    using that by auto
+    by (intro eq_from_separatingI[OF sep_A']) (use that in auto)
   then have \<open>(\<lambda>y. f (h x y)) = (\<lambda>y. g (h x y))\<close> for x
-    apply (rule_tac eq_from_separatingI[OF sep_B])
-    apply auto by meson
+    apply (intro eq_from_separatingI[OF sep_B])
+    subgoal by simp
+    subgoal by simp
+    subgoal by meson
+    done
   then have \<open>f (h x y) = g (h x y)\<close> for x y
     by meson
   with \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
   show \<open>f = g\<close>
-    apply (rule eq_from_separatingI2[where f=f and g=g and P=bounded_clinear and S=UNIV and T=UNIV, rotated 1])
-    using assms(1) by -
+    by (rule eq_from_separatingI2[where f=f and g=g and P=bounded_clinear and S=UNIV and T=UNIV, rotated 1])
+       (fact assms(1))
 qed
 
 lemma eq_on_ccsubspaces_Sup:
@@ -554,10 +554,9 @@ lemma csubspace_has_basis:
   assumes \<open>csubspace S\<close>
   shows \<open>\<exists>B. cindependent B \<and> cspan B = S\<close>
 proof -
-  from \<open>csubspace S\<close>
   obtain B where \<open>cindependent B\<close> and \<open>cspan B = S\<close>
-    apply (rule_tac complex_vector.maximal_independent_subset[where V=S])
-    using complex_vector.span_subspace by blast
+    by (rule complex_vector.maximal_independent_subset[where V=S])
+       (use assms complex_vector.span_subspace in blast)
   then show ?thesis
     by auto
 qed
@@ -596,16 +595,14 @@ proof -
     also have \<open>\<dots> \<le> (\<Sum>b\<in>T. (cmod (\<psi> b * f b))\<^sup>2)\<close>
       by (simp add: sum_mono2)
     also have \<open>\<dots> \<le> (\<Sum>b\<in>T. B\<^sup>2 * (cmod (\<psi> b))\<^sup>2)\<close>
-      apply (rule sum_mono)
-      apply (auto intro!: simp: norm_mult power_mult_distrib)
-      apply (subst mult.commute)
-      by (simp add: B mult_right_mono power_mono)
+      by (rule sum_mono)
+         (auto intro!: mult_left_mono  power_mono B
+               simp: norm_mult power_mult_distrib mult.commute[of "B ^ 2"])
     also have \<open>\<dots> = B\<^sup>2 * (\<Sum>b\<in>T. (cmod (\<psi> b))\<^sup>2)\<close>
       by (simp add: vector_space_over_itself.scale_sum_right)
     finally
     show \<open>(\<Sum>b\<in>S. (cmod (\<Sum>a\<in>T. \<psi> a *\<^sub>C (of_bool (b = a) * f b)))\<^sup>2)
-       \<le> B\<^sup>2 * (\<Sum>a\<in>T. (cmod (\<psi> a))\<^sup>2)\<close>
-      by -
+       \<le> B\<^sup>2 * (\<Sum>a\<in>T. (cmod (\<psi> a))\<^sup>2)\<close> .
   qed
 qed
 
@@ -617,8 +614,8 @@ proof -
   have [simp]: \<open>has_ell2_norm (\<lambda>b. of_bool (b = x) * f b)\<close>
     by (auto intro!: finite_nonzero_values_imp_summable_on simp: has_ell2_norm_def)
   have \<open>Abs_ell2 (\<lambda>b. of_bool (b = x) * f b) = f x *\<^sub>C ket x\<close>
-    apply (rule Rep_ell2_inject[THEN iffD1])
-    by (auto simp: Abs_ell2_inverse scaleC_ell2.rep_eq ket.rep_eq)
+    by (rule Rep_ell2_inject[THEN iffD1])
+       (auto simp: Abs_ell2_inverse scaleC_ell2.rep_eq ket.rep_eq)
   then show ?thesis
     by (auto intro!: simp: diagonal_operator_def assms explicit_cblinfun_ket diagonal_operator_exists)
 qed
@@ -630,9 +627,9 @@ lemma diagonal_operator_invalid:
 
 
 lemma diagonal_operator_adj: \<open>diagonal_operator f* = diagonal_operator (\<lambda>x. cnj (f x))\<close>
-  apply (cases \<open>bdd_above (range (\<lambda>x. cmod (f x)))\<close>)
-  by (auto intro!: equal_ket cinner_ket_eqI 
-      simp: diagonal_operator_ket cinner_adj_right diagonal_operator_invalid)
+  by (cases \<open>bdd_above (range (\<lambda>x. cmod (f x)))\<close>)
+     (auto intro!: equal_ket cinner_ket_eqI 
+           simp: diagonal_operator_ket cinner_adj_right diagonal_operator_invalid)
 
 lemma diagonal_operator_comp:
   assumes \<open>bdd_above (range (\<lambda>x. cmod (f x)))\<close>
@@ -662,8 +659,7 @@ proof -
   then have \<open>bdd_above (sum (\<lambda>x. norm (f x)) ` {F. F \<subseteq> M \<and> finite F})\<close>
     unfolding abs_summable_iff_bdd_above by simp
   then have \<open>bdd_above (sum (\<lambda>x. norm (f x)) ` (\<lambda>x. {x}) ` M)\<close>
-    apply (rule bdd_above_mono)
-    by auto
+    by (rule bdd_above_mono) auto
   then have \<open>bdd_above ((\<lambda>x. norm (f x)) ` M)\<close>
     by (simp add: image_image)
   then show ?thesis
@@ -682,7 +678,5 @@ lemma less_eq_cblinfunI:
   shows \<open>a \<le> b\<close>
   using assms
   by (simp add: less_eq_cblinfun_def)
-
-
 
 end

@@ -34,8 +34,8 @@ lemma finite_rank_minus[simp]: \<open>finite_rank (a - b)\<close> if \<open>fini
   using complex_vector.span_diff finite_rank_def that(1) that(2) by blast
 
 lemma finite_rank_butterfly[simp]: \<open>finite_rank (butterfly x y)\<close>
-  apply (cases \<open>x \<noteq> 0 \<and> y \<noteq> 0\<close>)
-  by (auto intro: complex_vector.span_base complex_vector.span_zero simp add: finite_rank_def rank1_butterfly)
+  by (cases \<open>x \<noteq> 0 \<and> y \<noteq> 0\<close>)
+     (auto intro: complex_vector.span_base complex_vector.span_zero simp add: finite_rank_def)
 
 lemma finite_rank_sum_butterfly:
   fixes a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close>
@@ -66,8 +66,7 @@ proof -
 qed    
 
 lemma finite_rank_sum: \<open>finite_rank (\<Sum>x\<in>F. f x)\<close> if \<open>\<And>x. x\<in>F \<Longrightarrow> finite_rank (f x)\<close>
-  using that apply (induction F rule:infinite_finite_induct)
-  by (auto intro!: finite_rank_plus)
+  using that by (induction F rule:infinite_finite_induct) (auto intro!: finite_rank_plus)
 
 lemma rank1_finite_rank: \<open>finite_rank a\<close> if \<open>rank1 a\<close>
   by (simp add: complex_vector.span_base finite_rank_def that)
@@ -84,9 +83,8 @@ proof -
   then have \<open>A o\<^sub>C\<^sub>L B = (\<Sum>x\<in>F. t x *\<^sub>C (A o\<^sub>C\<^sub>L x))\<close>
     by (metis (mono_tags, lifting) cblinfun_compose_scaleC_right cblinfun_compose_sum_right sum.cong)
   also have \<open>\<dots> \<in> cspan (Collect finite_rank)\<close>
-    apply (intro complex_vector.span_sum complex_vector.span_scale)
-    using F_rank1
-    by (auto intro!: complex_vector.span_base rank1_finite_rank rank1_compose_left simp: )
+    by (intro complex_vector.span_sum complex_vector.span_scale)
+       (use F_rank1 in \<open>auto intro!: complex_vector.span_base rank1_finite_rank rank1_compose_left\<close>)
   also have \<open>\<dots> = Collect finite_rank\<close>
     by (metis (no_types, lifting) complex_vector.span_superset cspan_eqI finite_rank_def mem_Collect_eq subset_antisym subset_iff)
   finally show ?thesis
@@ -105,9 +103,8 @@ proof -
   then have \<open>A o\<^sub>C\<^sub>L B = (\<Sum>x\<in>F. t x *\<^sub>C (x o\<^sub>C\<^sub>L B))\<close>
     by (metis (mono_tags, lifting) cblinfun_compose_scaleC_left cblinfun_compose_sum_left sum.cong)
   also have \<open>\<dots> \<in> cspan (Collect finite_rank)\<close>
-    apply (intro complex_vector.span_sum complex_vector.span_scale)
-    using F_rank1
-    by (auto intro!: complex_vector.span_base rank1_finite_rank rank1_compose_right simp: )
+    by (intro complex_vector.span_sum complex_vector.span_scale)
+       (use F_rank1 in \<open>auto intro!: complex_vector.span_base rank1_finite_rank rank1_compose_right\<close>)
   also have \<open>\<dots> = Collect finite_rank\<close>
     by (metis (no_types, lifting) complex_vector.span_superset cspan_eqI finite_rank_def mem_Collect_eq subset_antisym subset_iff)
   finally show ?thesis
@@ -142,12 +139,11 @@ proof -
     then have \<open>is_ortho_set F\<close>
       by (meson is_ortho_set_antimono subset_insertI)
     have \<open>Proj (ccspan (insert x F)) = proj x + Proj (ccspan F)\<close>
-      apply (subst Proj_orthog_ccspan_insert)
-      using insert apply (simp_all add: is_onb_def is_ortho_set_def)
-      by fast
+      by (subst Proj_orthog_ccspan_insert)
+         (use insert in \<open>auto simp: is_onb_def is_ortho_set_def\<close>)
     moreover have \<open>finite_rank \<dots>\<close>
-      apply (rule finite_rank_plus)
-      by (auto intro!: finite_rank_Proj_singleton \<open>is_ortho_set F\<close> insert)
+      by (rule finite_rank_plus)
+         (auto intro!: \<open>is_ortho_set F\<close> insert)
     ultimately show ?case 
       by simp
   qed
@@ -175,12 +171,10 @@ proof -
     then have \<open>is_ortho_set F\<close>
       by (meson is_ortho_set_antimono subset_insertI)
     have \<open>Proj (ccspan (insert x F)) = proj x + Proj (ccspan F)\<close>
-      apply (subst Proj_orthog_ccspan_insert)
-      using insert apply (simp_all add: is_onb_def is_ortho_set_def)
-      by fast
+      by (subst Proj_orthog_ccspan_insert)
+         (use insert in \<open>auto simp: is_onb_def is_ortho_set_def\<close>)
     moreover have \<open>finite_rank \<dots>\<close>
-      apply (rule finite_rank_plus)
-      by (auto intro!: finite_rank_Proj_singleton \<open>is_ortho_set F\<close> insert)
+      by (rule finite_rank_plus) (auto intro!: \<open>is_ortho_set F\<close> insert)
     ultimately show ?case 
       by simp
   qed
@@ -209,14 +203,12 @@ proof -
     with \<open>is_onb B\<close> have \<open>norm s = 1\<close>
       by (simp add: is_onb_def)
     have 1: \<open>j \<noteq> s \<Longrightarrow> j \<in> B \<Longrightarrow> (a o\<^sub>C\<^sub>L selfbutter j) *\<^sub>V s = 0\<close> for j
-      apply auto
-      by (metis \<open>is_onb B\<close> \<open>s \<in> B\<close> cblinfun.scaleC_right is_onb_def is_ortho_set_def scaleC_eq_0_iff)
+      using \<open>is_onb B\<close> \<open>s \<in> B\<close> cblinfun.scaleC_right is_onb_def is_ortho_set_def scaleC_eq_0_iff
+      by fastforce
     have 2: \<open>a *\<^sub>V s = (if s \<in> B then (a o\<^sub>C\<^sub>L selfbutter s) *\<^sub>V s else 0)\<close>
       using \<open>norm s = 1\<close> \<open>s \<in> B\<close> by (simp add: cnorm_eq_1)
     show \<open>a *\<^sub>V s = (\<Sum>b\<in>B. a o\<^sub>C\<^sub>L selfbutter b) *\<^sub>V s\<close>
-      apply (subst cblinfun.sum_left)
-      apply (subst sum_single[where i=s])
-      using 1 2 by auto
+      by (subst cblinfun.sum_left, subst sum_single[where i=s]) (use 1 2 in auto)
   qed
   have \<open>finite_rank (\<Sum>b\<in>B. a o\<^sub>C\<^sub>L selfbutter b)\<close>
     by (auto intro!: finite_rank_sum simp: cblinfun_comp_butterfly)
@@ -233,10 +225,8 @@ proof -
   also have \<open>\<dots> = cspan (insert 0 (Collect rank1))\<close>
     by force
   also have \<open>\<dots> = cspan (range (case_prod butterfly))\<close>
-    apply (rule arg_cong[where f=cspan])
-    apply (auto intro!: simp: rank1_iff_butterfly case_prod_beta image_def)
-    apply auto
-    by (metis butterfly_0_left)
+    by (rule arg_cong[where f=cspan])
+       (use butterfly_0_left in \<open>force simp: image_iff rank1_iff_butterfly simp del: butterfly_0_left\<close>)+
   finally show ?thesis
     by auto
 qed
@@ -253,9 +243,8 @@ proof -
   also have \<open>\<dots> = cspan ((\<lambda>a. a o\<^sub>C\<^sub>L b) ` range (case_prod butterfly))\<close>
     by (simp add: clinear_cblinfun_compose_left complex_vector.linear_span_image)
   also have \<open>\<dots> \<subseteq> cspan (range (case_prod butterfly))\<close>
-    apply (auto intro!: complex_vector.span_mono
-        simp add: image_image case_prod_unfold butterfly_comp_cblinfun image_def)
-    by fast
+    by (force intro!: complex_vector.span_mono
+              simp add: image_image case_prod_unfold butterfly_comp_cblinfun image_def)
   finally show ?thesis
     using finite_rank_cspan_butterflies by blast
 qed
@@ -272,9 +261,8 @@ proof -
   also have \<open>\<dots> = cspan (((o\<^sub>C\<^sub>L) a) ` range (case_prod butterfly))\<close>
     by (simp add: clinear_cblinfun_compose_right complex_vector.linear_span_image)
   also have \<open>\<dots> \<subseteq> cspan (range (case_prod butterfly))\<close>
-    apply (auto intro!: complex_vector.span_mono
-        simp add: image_image case_prod_unfold cblinfun_comp_butterfly image_def)
-    by fast
+    by (force intro!: complex_vector.span_mono
+              simp add: image_image case_prod_unfold cblinfun_comp_butterfly image_def)
   finally show ?thesis
     using finite_rank_cspan_butterflies by blast
 qed
@@ -296,9 +284,7 @@ proof (unfold bounded_clinear_def bounded_clinear_axioms_def, intro conjI)
   then have \<open>bounded (f ` cball 0 1)\<close>
     by (meson bounded_subset closure_subset compact_imp_bounded)
   then obtain K where *: \<open>norm (f x) \<le> K\<close> if \<open>norm x \<le> 1\<close> for x
-    apply atomize_elim
-    apply (simp add: bounded_iff dist_norm ball_def)
-    by force
+    by (force simp: bounded_iff dist_norm ball_def)
   have \<open>norm (f x) \<le> norm x * K\<close> for x
   proof (cases \<open>x = 0\<close>)
     case True
@@ -322,8 +308,7 @@ qed
 lift_definition compact_op :: \<open>('a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector) \<Rightarrow> bool\<close> is compact_map.
 
 lemma compact_op_def2: \<open>compact_op a \<longleftrightarrow> compact (closure (a ` cball 0 1))\<close>
-  apply transfer
-  using bounded_clinear.clinear compact_map_def by blast
+  by transfer (use bounded_clinear.clinear compact_map_def in blast)
 
 lemma compact_op_0[simp]: \<open>compact_op 0\<close>
   by (simp add: compact_op_def2 image_constant[where x=0] mem_cball_leI[where x=0])
@@ -370,8 +355,7 @@ proof -
       using compact_sum
       by (auto intro!: closure_closed compact_imp_closed)
     finally show ?thesis
-      apply (rule compact_closed_subset[rotated 2])
-      using compact_sum by auto
+      by (rule compact_closed_subset[rotated 2]) (use compact_sum in auto)
   qed
   then show ?thesis
     using compact_op_def2 by blast
@@ -401,45 +385,6 @@ next
     by auto
 qed
 
-
-(* lemma compact_eq_totally_bounded':
-  fixes s :: \<open>'a::metric_space set\<close>
-  shows "compact s \<longleftrightarrow> complete s \<and> totally_bounded s"
-  by (simp add: compact_eq_totally_bounded totally_bounded_metric ball_def) *)
-
-(* lemma mtotally_bounded_totally_bounded:
-  \<open>Met_TC.mtotally_bounded = (totally_bounded :: 'a::metric_space set \<Rightarrow> _)\<close>
-proof (intro ext iffI)
-  fix S :: \<open>'a set\<close>
-  assume \<open>Met_TC.mtotally_bounded S\<close>
-  then show \<open>totally_bounded S\<close>
-    by (auto simp: Met_TC.mtotally_bounded_def totally_bounded_metric ball_def)
-next
-  fix S :: \<open>'a set\<close>
-  assume asm: \<open>totally_bounded S\<close>
-  show \<open>Met_TC.mtotally_bounded S\<close>
-  proof (unfold Met_TC.mtotally_bounded_def, intro allI impI)
-    fix \<epsilon> :: real assume \<open>\<epsilon> > 0\<close>
-    from totally_bounded_metric[THEN iffD1, rule_format, OF asm this]
-    obtain K where \<open>finite K\<close> and \<open>S \<subseteq> (\<Union>x\<in>K. {y. dist x y < \<epsilon>})\<close>
-      by blast
-
-    show \<open>\<exists>K. finite K \<and> K \<subseteq> S \<and> S \<subseteq> (\<Union>x\<in>K. Met_TC.mball x \<epsilon>)\<close>
-      apply simp
-
-    apply (simp add: Met_TC.mtotally_bounded_def totally_bounded_metric ball_def)
-
-try0
-sledgehammer [dont_slice]
-by - *)
-
-(* lemma totally_bounded_closure:
-  fixes S :: \<open>'a::metric_space set\<close>
-  assumes "totally_bounded S"
-  shows "totally_bounded (closure S)"
-  using Met_TC.mtotally_bounded_closure_of[of S] assms
-  by (simp add: mtotally_bounded_totally_bounded) *)
-
 lemma closed_compact_op: 
   shows \<open>closed (Collect (compact_op :: ('a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) \<Rightarrow> bool))\<close>
   \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.4.2 (b)\<close>
@@ -454,16 +399,15 @@ proof (intro closed_sequential_limits[THEN iffD2] allI impI conjI)
       using \<open>\<epsilon> > 0\<close> by simp
     from asm[unfolded LIMSEQ_def, THEN conjunct2, rule_format, OF \<open>\<delta> > 0\<close>]
     obtain n where dist_TA: \<open>dist (T n) A < \<delta>\<close>
-      apply atomize_elim by auto
+      by auto
     from asm have \<open>compact_op (T n)\<close>
       by simp
     then have \<open>Met_TC.mtotally_bounded (T n ` cball 0 1)\<close>
-      apply (subst Met_TC.mtotally_bounded_eq_compact_closure_of)
-      by (auto intro!: simp: compact_op_def2 Met_TC.mtotally_bounded_eq_compact_closure_of)
+      by (subst Met_TC.mtotally_bounded_eq_compact_closure_of)
+         (auto intro!: simp: compact_op_def2 Met_TC.mtotally_bounded_eq_compact_closure_of)
     then obtain K where \<open>finite K\<close> and K_T: \<open>K \<subseteq> T n ` cball 0 1\<close> and 
       TK: \<open>T n ` cball 0 1 \<subseteq> (\<Union>k\<in>K. Met_TC.mball k \<delta>)\<close> 
-      apply atomize_elim unfolding Met_TC.mtotally_bounded_def using \<open>\<delta> > 0\<close>
-      by blast
+      unfolding Met_TC.mtotally_bounded_def using \<open>\<delta> > 0\<close> by meson
     from \<open>finite K\<close> and K_T obtain H where \<open>finite H\<close> and \<open>H \<subseteq> cball 0 1\<close>
       and KTH: \<open>K = T n ` H\<close>
       by (meson finite_subset_image)
@@ -486,17 +430,30 @@ proof (intro closed_sequential_limits[THEN iffD2] allI impI conjI)
           using \<open>H \<subseteq> cball 0 1\<close> \<open>h \<in> H\<close> mem_cball_0 by blast
         have norm_l: \<open>norm l \<le> 1\<close>
           using \<open>l \<in> cball 0 1\<close> by auto
-        from dist_TA norm_h have \<open>dist (A h) (T n h) < \<delta>\<close>
-          apply (subst dist_commute)
-          using norm_cblinfun[of \<open>T n - A\<close> h]
-          apply (simp add: dist_norm flip: cblinfun.diff_left)
-          by (smt (verit, del_insts) mult.commute mult_left_le_one_le norm_ge_zero)
+        have \<open>dist (A h) (T n h) < \<delta>\<close>
+        proof -
+          have \<open>dist (T n *\<^sub>V h) (A *\<^sub>V h) \<le> norm h * dist (T n) A\<close>
+            using norm_cblinfun[of "T n - A" h] by (simp add: dist_norm cblinfun.diff_left mult_ac)
+          also have \<open>\<dots> \<le> 1 * dist (T n) A\<close>
+            by (rule mult_right_mono) (use norm_h in auto)
+          also have \<open>dist (T n) A < \<delta>\<close>
+            by fact
+          finally show ?thesis
+            by (simp add: dist_commute)
+        qed
         moreover have \<open>dist (T n h) (T n l) < \<delta>\<close>
           using dist_Tlh by (metis dist_commute)
         moreover from dist_TA norm_l have \<open>dist (T n l) (A l) < \<delta>\<close>
-          using norm_cblinfun[of \<open>T n - A\<close> l]
-          apply (simp add: dist_norm flip: cblinfun.diff_left)
-          by (smt (verit, del_insts) mult.commute mult_left_le_one_le norm_ge_zero)
+        proof -
+          have \<open>dist (T n *\<^sub>V l) (A *\<^sub>V l) \<le> norm l * dist (T n) A\<close>
+            using norm_cblinfun[of "T n - A" l] by (simp add: dist_norm cblinfun.diff_left mult_ac)
+          also have \<open>\<dots> \<le> 1 * dist (T n) A\<close>
+            by (rule mult_right_mono) (use norm_l in auto)
+          also have \<open>dist (T n) A < \<delta>\<close>
+            by fact
+          finally show ?thesis
+            by (simp add: dist_commute)
+        qed
         ultimately show ?thesis
           unfolding \<delta>_def
           by (rule dist_triangle_third)
@@ -507,8 +464,7 @@ proof (intro closed_sequential_limits[THEN iffD2] allI impI conjI)
     then show \<open>\<exists>K. finite K \<and> K \<subseteq> (*\<^sub>V) A ` cball 0 1 \<and> 
               (*\<^sub>V) A ` cball 0 1 \<subseteq> (\<Union>x\<in>K. Met_TC.mball x \<epsilon>)\<close>
       using \<open>H \<subseteq> cball 0 1\<close>
-      apply (auto intro!: exI[of _ \<open>A ` H\<close>] \<open>finite H\<close> simp: ball_def)
-      by fastforce
+      by (force intro!: exI[of _ \<open>A ` H\<close>] \<open>finite H\<close> simp: ball_def)
   qed
   then have \<open>Met_TC.mtotally_bounded (closure (A ` cball 0 1))\<close>
     using Met_TC.mtotally_bounded_closure_of by auto
@@ -551,7 +507,7 @@ proof -
     also have \<open>\<dots> \<le> norm a * norm \<gamma>\<close>
       using \<open>\<phi> = a *\<^sub>V \<gamma>\<close> complex_of_real_mono norm_cblinfun by blast
     also have \<open>\<dots> \<le> norm a\<close>
-      by (metis \<open>norm \<gamma> \<le> 1\<close> complex_of_real_mono mult.commute mult_left_le_one_le norm_ge_zero)
+      by (metis \<open>norm \<gamma> \<le> 1\<close> mult.commute mult_left_le_one_le norm_ge_zero)
     finally have \<open>cmod d \<le> c\<close>
       by (smt (verit, ccfv_threshold) \<open>\<psi> \<noteq> 0\<close> c_def linordered_field_class.pos_divide_le_eq nonzero_eq_divide_eq norm_le_zero_iff)
     then show \<open>\<phi> \<in> (\<lambda>x. x *\<^sub>C \<psi>) ` cball 0 c\<close>
@@ -570,8 +526,8 @@ proof -
     and a_decomp: \<open>a = (\<Sum>x\<in>t. r x *\<^sub>C x)\<close>
     by (auto simp: finite_rank_def complex_vector.span_explicit)
   from \<open>finite t\<close> \<open>t \<subseteq> Collect rank1\<close> show \<open>compact_op a\<close>
-    apply (unfold a_decomp, induction)
-    by (auto intro!: compact_op_plus compact_op_scaleC intro: rank1_compact_op)
+    by (unfold a_decomp, induction)
+       (auto intro!: compact_op_plus compact_op_scaleC intro: rank1_compact_op)
 qed
 
 lemma bounded_products_sot_lim_imp_lim:
@@ -589,15 +545,15 @@ proof -
     from negation assms have P0: \<open>P x = 0\<close> for x
       by auto
     from lim_PA have \<open>((\<lambda>x. 0) \<longlongrightarrow> Abs_cblinfun_sot A) F\<close>
-      apply (simp add: flip: limitin_canonical_iff)
-      apply (transfer fixing: P F)
-      using P0 by simp
+      unfolding limitin_canonical_iff [symmetric]
+      by (transfer fixing: P F) (use P0 in simp)
     moreover have \<open>((\<lambda>x. 0) \<longlongrightarrow> 0) F\<close>
       by simp
     ultimately have \<open>Abs_cblinfun_sot A = 0\<close>
       using \<open>F \<noteq> \<bottom>\<close> tendsto_unique by blast
     then have \<open>A = 0\<close>
-      by (metis Abs_cblinfun_sot_inverse cstrong_operator_topology_topspace lim_PA limitin_def zero_cblinfun_sot.rep_eq)
+      by (metis Abs_cblinfun_sot_inverse cstrong_operator_topology_topspace lim_PA
+                limitin_def zero_cblinfun_sot.rep_eq)
     with P0 show ?thesis
       by simp
   qed
@@ -619,12 +575,11 @@ proof -
     then have \<open>\<gamma> > 0\<close>
       using \<open>B > 0\<close> by (simp add: \<gamma>_def)
     from \<open>compact_op A\<close> have \<open>Met_TC.mtotally_bounded (A ` cball 0 1)\<close>
-      apply (subst Met_TC.mtotally_bounded_eq_compact_closure_of)
-      by (auto intro!: simp: compact_op_def2 Met_TC.mtotally_bounded_eq_compact_closure_of)
+      by (subst Met_TC.mtotally_bounded_eq_compact_closure_of)
+         (auto intro!: simp: compact_op_def2 Met_TC.mtotally_bounded_eq_compact_closure_of)
     then obtain K where \<open>finite K\<close> and K_T: \<open>K \<subseteq> A ` cball 0 1\<close> and 
       AK: \<open>A ` cball 0 1 \<subseteq> (\<Union>k\<in>K. Met_TC.mball k \<gamma>)\<close> 
-      apply atomize_elim unfolding Met_TC.mtotally_bounded_def using \<open>\<gamma> > 0\<close>
-      by blast
+      unfolding Met_TC.mtotally_bounded_def using \<open>\<gamma> > 0\<close> by meson
     from \<open>finite K\<close> and K_T obtain H where \<open>finite H\<close> and \<open>H \<subseteq> cball 0 1\<close>
       and KAH: \<open>K = A ` H\<close>
       by (meson finite_subset_image)
@@ -653,7 +608,8 @@ proof -
         moreover have \<open>dist (T x h) (T x l) < \<delta>\<close>
         proof -
           have \<open>dist (T x h) (T x l) \<le> norm (P x) * dist (A h) (A l)\<close>
-            by (metis T_def cblinfun.real.diff_right cblinfun_apply_cblinfun_compose dist_norm norm_cblinfun)
+            by (metis T_def cblinfun.real.diff_right cblinfun_apply_cblinfun_compose
+                      dist_norm norm_cblinfun)
           also from Al\<gamma> P_leq_B have \<open>\<dots> < B * \<gamma>\<close>
             by (smt (verit, ccfv_SIG) \<open>B \<noteq> 0\<close> linordered_semiring_strict_class.mult_le_less_imp_less linordered_semiring_strict_class.mult_strict_mono' mem_ball norm_ge_zero zero_le_dist)
           also have \<open>\<dots> \<le> B * (\<delta> / B)\<close>
@@ -667,12 +623,10 @@ proof -
           by (smt (verit) dist_commute dist_triangle2)
       qed
       then have \<open>dist (T x) A \<le> 3 * \<delta>\<close>
-        unfolding dist_norm
-        apply (auto intro!: norm_cblinfun_bound_unit simp: cblinfun.diff_left)
-        using \<open>0 < \<delta>\<close> by linarith
+        unfolding dist_norm using \<open>\<delta> > 0\<close>
+        by (auto intro!: norm_cblinfun_bound_unit simp: cblinfun.diff_left)
       then show \<open>dist (T x) A < \<epsilon>\<close>
-        apply (rule order.strict_trans1)
-        using \<open>\<epsilon> > 0\<close> by (simp add: \<delta>_def)
+        by (rule order.strict_trans1) (use \<open>\<epsilon> > 0\<close> in \<open>simp add: \<delta>_def\<close>)
     qed
   qed
 qed
@@ -710,10 +664,11 @@ next
       have \<open>UNIV = (\<Union>n::nat. scaleR n ` cball (0::'a) 1)\<close>
       proof (intro antisym subsetI UNIV_I)
         fix x :: 'a
-        have \<open>x \<in> scaleR (nat (ceiling (norm x)) + 1) ` cball (0::'a) 1\<close>
-          apply (rule image_eqI[where x=\<open>x /\<^sub>R (nat (ceiling (norm x)) + 1)\<close>])
-           apply (metis add_is_0 divideR_right of_nat_eq_0_iff zero_neq_one)
-          by (smt (verit, del_insts) add_is_0 le_add_same_cancel1 left_inverse linordered_field_class.inverse_nonnegative_iff_nonnegative mem_cball_0 mult_left_mono nat_ceiling_le_eq norm_scaleR of_nat_0_le_iff of_nat_eq_0_iff zero_less_one_class.zero_le_one zero_neq_one)
+        have "norm x < 1 + real_of_int \<lceil>norm x\<rceil>" "1 + real_of_int \<lceil>norm x\<rceil> > 0"
+          using norm_ge_zero[of x] by linarith+
+        hence \<open>x \<in> scaleR (nat (ceiling (norm x)) + 1) ` cball (0::'a) 1\<close>
+          by (intro image_eqI[where x=\<open>x /\<^sub>R (nat (ceiling (norm x)) + 1)\<close>])
+             (auto simp: divide_simps)
         then show \<open>x \<in> (\<Union>x::nat. (*\<^sub>R) (real x) ` cball 0 1)\<close>
           by blast
       qed
@@ -721,7 +676,7 @@ next
         by fastforce
     qed
     also have \<open>\<dots> = (\<Union>n::nat. scaleR n ` A ` cball 0 1)\<close>
-      by (auto intro!: ext simp: cblinfun.scaleR_right image_comp)
+      by (auto simp: cblinfun.scaleR_right image_comp fun_eq_iff)
     also have \<open>\<dots> \<subseteq> (\<Union>n::nat. scaleR n ` closure B0)\<close>
       using A_B0 by fastforce
     also have \<open>\<dots> \<subseteq> closure (\<Union>n::nat. scaleR n ` B0)\<close>
@@ -744,10 +699,10 @@ next
     fix h and \<epsilon> :: real assume \<open>\<epsilon> > 0\<close>
     define Ah where \<open>Ah = A h\<close>
     have \<open>Ah \<in> closure (range B)\<close>
-      by (metis L_def Ah_def \<open>L \<subseteq> closure (range B)\<close> cblinfun_apply_in_image cblinfun_image.rep_eq subsetD top_ccsubspace.rep_eq)
+      by (metis L_def Ah_def \<open>L \<subseteq> closure (range B)\<close> cblinfun_apply_in_image
+                cblinfun_image.rep_eq subsetD top_ccsubspace.rep_eq)
     then obtain x where \<open>x \<in> range B\<close> and \<open>dist x Ah < \<epsilon>\<close>
-      apply atomize_elim
-      using \<open>\<epsilon> > 0\<close> by (simp add: closure_approachable)
+      using \<open>\<epsilon> > 0\<close> unfolding closure_approachable by blast
     then obtain n0 where x_n0: \<open>x = B n0\<close>
       by blast
     have \<open>dist (P n *\<^sub>V Ah) Ah < \<epsilon>\<close> if \<open>n \<ge> n0\<close> for n
@@ -774,7 +729,8 @@ next
     using closure_sequential by force
 qed
 
-typedef (overloaded) ('a::chilbert_space,'b::complex_normed_vector) compact_op = \<open>Collect compact_op :: ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close>
+typedef (overloaded) ('a::chilbert_space,'b::complex_normed_vector) compact_op =
+    \<open>Collect compact_op :: ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close>
   morphisms from_compact_op Abs_compact_op
   by (auto intro!: exI[of _ 0])
 setup_lifting type_definition_compact_op
@@ -796,54 +752,52 @@ definition open_compact_op :: "('a, 'b) compact_op set \<Rightarrow> bool"
 instance
 proof
   show "((*\<^sub>R) r :: ('a, 'b) compact_op \<Rightarrow> _) = (*\<^sub>C) (complex_of_real r)" for r
-    apply (rule ext) apply transfer 
-    by (simp add: scaleR_scaleC)
+    by (rule ext, transfer) (simp add: scaleR_scaleC)
   show "a + b + c = a + (b + c)"
     for a b c :: "('a, 'b) compact_op"
-    apply transfer by simp
+    by transfer simp
   show "a + b = b + a"
     for a b :: "('a, 'b) compact_op"
-    apply transfer by simp
+    by transfer simp
   show "0 + a = a"
     for a :: "('a, 'b) compact_op"
-    apply transfer by simp
+    by transfer simp
   show "- (a::('a, 'b) compact_op) + a = 0"
     for a :: "('a, 'b) compact_op"
-    apply transfer by simp
+    by transfer simp
   show "a - b = a + - b"
     for a b :: "('a, 'b) compact_op"
-    apply transfer by simp
+    by transfer simp
   show "a *\<^sub>C (x + y) = a *\<^sub>C x + a *\<^sub>C y"
     for a :: complex and x y :: "('a, 'b) compact_op"
-    apply transfer by (simp add: scaleC_add_right)
+    by transfer (simp add: scaleC_add_right)
   show "(a + b) *\<^sub>C x = a *\<^sub>C x + b *\<^sub>C x"
     for a b :: complex and x :: "('a, 'b) compact_op"
-    apply transfer by (simp add: scaleC_left.add)
+    by transfer (simp add: scaleC_left.add)
   show "a *\<^sub>C b *\<^sub>C x = (a * b) *\<^sub>C x"
     for a b :: complex and x :: "('a, 'b) compact_op"
-    apply transfer by simp
+    by transfer simp
   show "1 *\<^sub>C x = x"
     for x :: "('a, 'b) compact_op"
-    apply transfer by simp
+    by transfer simp
   show "dist x y = norm (x - y)"
     for x y :: "('a, 'b) compact_op"
-    apply transfer using dist_norm by auto
+    by transfer (simp add: dist_norm)
   show "a *\<^sub>R (x + y) = a *\<^sub>R x + a *\<^sub>R y"
     for a :: real and x y :: "('a, 'b) compact_op"
-    apply transfer
-    by (simp add: scaleR_right_distrib)
+    by transfer (simp add: scaleR_right_distrib)
   show "(a + b) *\<^sub>R x = a *\<^sub>R x + b *\<^sub>R x"
     for a b :: real and x :: "('a, 'b) compact_op"
-    apply transfer by (simp add: scaleR_left.add)
+    by transfer (simp add: scaleR_left.add)
   show "a *\<^sub>R b *\<^sub>R x = (a * b) *\<^sub>R x"
     for a b :: real and x :: "('a, 'b) compact_op"
-    apply transfer by simp
+    by transfer simp
   show "1 *\<^sub>R x = x"
     for x :: "('a, 'b) compact_op"
-    apply transfer by simp
+    by transfer simp
   show "sgn x = inverse (norm x) *\<^sub>R x"
     for x :: "('a, 'b) compact_op"
-    apply transfer by (simp add: sgn_div_norm)
+    by transfer (simp add: sgn_div_norm)
   show "uniformity = (INF e\<in>{0<..}. principal {(x, y). dist (x::('a, 'b) compact_op) y < e})"
     using uniformity_compact_op_def by blast
   show "open U = (\<forall>x\<in>U. \<forall>\<^sub>F (x', y) in uniformity. x' = x \<longrightarrow> y \<in> U)"
@@ -851,28 +805,28 @@ proof
     by (simp add: open_compact_op_def)
   show "(norm x = 0) \<longleftrightarrow> (x = 0)"
     for x :: "('a, 'b) compact_op"
-    apply transfer by simp
+    by transfer simp
   show "norm (x + y) \<le> norm x + norm y"
     for x y :: "('a, 'b) compact_op"
-    apply transfer using norm_triangle_ineq by blast
+    by transfer (use norm_triangle_ineq in blast)
   show "norm (a *\<^sub>R x) = \<bar>a\<bar> * norm x"
     for a :: real and x :: "('a, 'b) compact_op"
-    apply transfer by simp
+    by transfer simp
   show "norm (a *\<^sub>C x) = cmod a * norm x"
     for a :: complex and x :: "('a, 'b) compact_op"
-    apply transfer by simp
+    by transfer simp
 qed
 end (* instantiation compact_op :: complex_normed_vector *)
 
 
 lemma from_compact_op_plus: \<open>from_compact_op (a + b) = from_compact_op a + from_compact_op b\<close>
-  apply transfer by simp
+  by transfer simp
 
 lemma from_compact_op_scaleC: \<open>from_compact_op (c *\<^sub>C a) = c *\<^sub>C from_compact_op a\<close>
-  apply transfer by simp
+  by transfer simp
 
 lemma from_compact_op_norm[simp]: \<open>norm (from_compact_op a) = norm a\<close>
-  apply transfer by simp
+  by transfer simp
 
 lemma compact_op_butterfly[simp]: \<open>compact_op (butterfly x y)\<close>
   by (simp add: finite_rank_compact_op)
@@ -881,22 +835,22 @@ lift_definition butterfly_co :: \<open>'a::complex_normed_vector \<Rightarrow> '
   by simp
 
 lemma butterfly_co_add_left: \<open>butterfly_co (a + a') b = butterfly_co a b + butterfly_co a' b\<close>
-  apply transfer by (rule butterfly_add_left)
+  by transfer (rule butterfly_add_left)
 
 lemma butterfly_co_add_right: \<open>butterfly_co a (b + b') = butterfly_co a b + butterfly_co a b'\<close>
-  apply transfer by (rule butterfly_add_right)
+  by transfer (rule butterfly_add_right)
 
 lemma butterfly_co_scaleR_left[simp]: "butterfly_co (r *\<^sub>R \<psi>) \<phi> = r *\<^sub>C butterfly_co \<psi> \<phi>"
-  apply transfer by (rule butterfly_scaleR_left)
+  by transfer (rule butterfly_scaleR_left)
 
 lemma butterfly_co_scaleR_right[simp]: "butterfly_co \<psi> (r *\<^sub>R \<phi>) = r *\<^sub>C butterfly_co \<psi> \<phi>"
-  apply transfer by (rule butterfly_scaleR_right)
+  by transfer (rule butterfly_scaleR_right)
 
 lemma butterfly_co_scaleC_left[simp]: "butterfly_co (r *\<^sub>C \<psi>) \<phi> = r *\<^sub>C butterfly_co \<psi> \<phi>"
-  apply transfer by (rule butterfly_scaleC_left)
+  by transfer (rule butterfly_scaleC_left)
 
 lemma butterfly_co_scaleC_right[simp]: "butterfly_co \<psi> (r *\<^sub>C \<phi>) = cnj r *\<^sub>C butterfly_co \<psi> \<phi>"
-  apply transfer by (rule butterfly_scaleC_right)
+  by transfer (rule butterfly_scaleC_right)
 
 lemma finite_rank_separating_on_compact_op:
   fixes F G :: \<open>('a::chilbert_space,'b::chilbert_space) compact_op \<Rightarrow> 'c::complex_normed_vector\<close>
@@ -922,7 +876,7 @@ proof -
     have \<open>continuous_on UNIV FG\<close>
       using contFG' continuous_map_iff_continuous2 by blast
     then have \<open>\<exists>d>0. \<forall>x'. dist x' (Abs_compact_op a) < d \<longrightarrow> dist (FG x') (FG (Abs_compact_op a)) \<le> e\<close>
-      using \<open>e > 0\<close> apply (auto simp: continuous_on_iff) by (meson less_eq_real_def)
+      using \<open>e > 0\<close> by (force simp: continuous_on_iff)
     then have \<open>\<exists>d>0. \<forall>x'. compact_op x' \<longrightarrow> dist (Abs_compact_op x') (Abs_compact_op a) < d \<longrightarrow> 
                   dist (FG (Abs_compact_op x')) (FG (Abs_compact_op a)) \<le> e\<close>
       by blast
@@ -937,14 +891,13 @@ proof -
 
   have \<open>(FG o Abs_compact_op) a = 0\<close> if \<open>compact_op a\<close> for a
     using contFG FG0
-    apply (rule continuous_constant_on_closure)
-    using that by (auto simp: compact_op_finite_rank)
+    by (rule continuous_constant_on_closure) (use that in \<open>auto simp: compact_op_finite_rank\<close>)
 
   then have \<open>FG a = 0\<close> for a
     by (metis Abs_compact_op_cases comp_apply mem_Collect_eq)
 
   then show \<open>F = G\<close>
-    by (auto intro!: ext simp: FG_def[abs_def])
+    by (auto simp: FG_def[abs_def] fun_eq_iff)
 qed
 
 lemma trunc_ell2_as_Proj: \<open>trunc_ell2 S \<psi> = Proj (ccspan (ket ` S)) \<psi>\<close>
@@ -955,13 +908,10 @@ proof (rule cinner_ket_eqI)
   have \<open>ket x \<bullet>\<^sub>C trunc_ell2 S \<psi> = of_bool (x\<in>S) * (ket x \<bullet>\<^sub>C \<psi>)\<close>
     by (simp add: cinner_ket_left trunc_ell2.rep_eq)
   also have \<open>\<dots> = Proj (ccspan (ket ` S)) (ket x) \<bullet>\<^sub>C \<psi>\<close>
-    apply (cases \<open>x \<in> S\<close>)
-     apply (subst Proj_fixes_image)
-    by (auto simp add: * ccspan_superset')
+    by (cases \<open>x \<in> S\<close>) (auto simp add: * ccspan_superset' Proj_fixes_image)
   also have \<open>\<dots> = ket x \<bullet>\<^sub>C (Proj (ccspan (ket ` S)) *\<^sub>V \<psi>)\<close>
     by (simp add: adj_Proj flip: cinner_adj_left)
-  finally show \<open>ket x \<bullet>\<^sub>C trunc_ell2 S \<psi> = ket x \<bullet>\<^sub>C (Proj (ccspan (ket ` S)) *\<^sub>V \<psi>)\<close>
-    by -
+  finally show \<open>ket x \<bullet>\<^sub>C trunc_ell2 S \<psi> = ket x \<bullet>\<^sub>C (Proj (ccspan (ket ` S)) *\<^sub>V \<psi>)\<close> .
 qed
 
 
@@ -969,8 +919,8 @@ lemma unitary_between_bij_betw:
   assumes \<open>is_onb A\<close> \<open>is_onb B\<close>
   shows \<open>bij_betw ((*\<^sub>V) (unitary_between A B)) A B\<close>
   using bij_between_bases_bij[OF assms]
-  apply (rule bij_betw_cong[THEN iffD1, rotated])
-  by (simp add: assms(1) assms(2) unitary_between_apply)
+  by (rule bij_betw_cong[THEN iffD1, rotated])
+     (simp add: assms(1) assms(2) unitary_between_apply)
 
 lemma tendsto_finite_subsets_at_top_image:
   assumes \<open>inj_on g X\<close>
@@ -991,9 +941,7 @@ proof -
     have lim1: \<open>((\<lambda>S. trunc_ell2 S (U *\<^sub>V ell2_to_hilbert* *\<^sub>V \<psi>)) \<longlongrightarrow> U *\<^sub>V ell2_to_hilbert* *\<^sub>V \<psi>) (finite_subsets_at_top UNIV)\<close>
       by (rule trunc_ell2_lim_at_UNIV)
     have lim2: \<open>((\<lambda>S. ell2_to_hilbert *\<^sub>V U* *\<^sub>V trunc_ell2 S (U *\<^sub>V ell2_to_hilbert* *\<^sub>V \<psi>)) \<longlongrightarrow> ell2_to_hilbert *\<^sub>V U* *\<^sub>V U *\<^sub>V ell2_to_hilbert* *\<^sub>V \<psi>) (finite_subsets_at_top UNIV)\<close>
-      apply (rule_tac cblinfun.tendsto, simp)
-      apply (rule_tac cblinfun.tendsto, simp)
-      by (fact lim1)
+      by (intro cblinfun.tendsto lim1) auto
     have *: \<open>ell2_to_hilbert *\<^sub>V U* *\<^sub>V trunc_ell2 S (U *\<^sub>V ell2_to_hilbert* *\<^sub>V \<psi>) 
             = Proj (ccspan ((ell2_to_hilbert o U* o ket) ` S)) \<psi>\<close> (is \<open>?lhs = ?rhs\<close>) for S
     proof -
@@ -1018,7 +966,7 @@ proof -
         by (metis \<open>unitary U\<close> bij_betw_imp_surj_on inj_imp_bij_betw_inv unitary_adj_inv unitary_inj)
       have \<open>?lhs = ell2_to_hilbert ` U* ` range ket\<close>
         by (simp add: image_comp)
-      also with bijUadj have \<open>\<dots> = ell2_to_hilbert ` (ell2_to_hilbert* ` A)\<close>
+      also from this and bijUadj have \<open>\<dots> = ell2_to_hilbert ` (ell2_to_hilbert* ` A)\<close>
         by (metis bij_betw_imp_surj_on)
       also have \<open>\<dots> = A\<close>
         by (metis image_inv_f_f unitary_adj unitary_adj_inv unitary_ell2_to_hilbert unitary_inj)
@@ -1028,8 +976,8 @@ proof -
     from lim2 have lim3: \<open>((\<lambda>S. Proj (ccspan ((ell2_to_hilbert o U* o ket) ` S)) \<psi>) \<longlongrightarrow> \<psi>) (finite_subsets_at_top UNIV)\<close>
       unfolding * ** by -
     then have lim4: \<open>((\<lambda>S. Proj (ccspan S) \<psi>) \<longlongrightarrow> \<psi>) (finite_subsets_at_top (range (ell2_to_hilbert o U* o ket)))\<close>
-      apply (rule tendsto_finite_subsets_at_top_image[THEN iffD2, rotated])
-      by (intro inj_compose unitary_inj unitary_ell2_to_hilbert unitary_adj[THEN iffD2] \<open>unitary U\<close> inj_ket)
+      by (rule tendsto_finite_subsets_at_top_image[THEN iffD2, rotated])
+         (intro inj_compose unitary_inj unitary_ell2_to_hilbert unitary_adj[THEN iffD2] \<open>unitary U\<close> inj_ket)
     then show ?thesis
       unfolding *** by -
   qed
@@ -1049,6 +997,10 @@ proof -
   qed
 qed
 
+lemma is_ortho_setD:
+  assumes "is_ortho_set S" "x \<in> S" "y \<in> S" "x \<noteq> y"
+  shows   "x \<bullet>\<^sub>C y = 0"
+  using assms unfolding is_ortho_set_def by blast
 
 lemma finite_rank_dense_compact:
   fixes A :: \<open>'a::chilbert_space set\<close> and B :: \<open>'b::chilbert_space set\<close>
@@ -1058,8 +1010,11 @@ proof (rule Set.equalityI)
   show \<open>closure (cspan ((\<lambda>(\<xi>,\<eta>). butterfly \<xi> \<eta>) ` (A \<times> B))) \<subseteq> Collect compact_op\<close>
   proof -
     have \<open>closure (cspan ((\<lambda>(\<xi>,\<eta>). butterfly \<xi> \<eta>) ` (A \<times> B))) \<subseteq> closure (Collect finite_rank)\<close>
-      apply (auto intro!: closure_mono simp: case_prod_beta)
-      by (metis (mono_tags, lifting) complex_vector.span_minimal complex_vector.subspace_span finite_rank_butterfly finite_rank_def image_iff subset_iff)
+    proof (rule closure_mono; safe)
+      fix x assume "x \<in> cspan ((\<lambda>(\<xi>, \<eta>). butterfly \<xi> \<eta>) ` (A \<times> B))"
+      thus "finite_rank x"
+        by (induction rule: complex_vector.span_induct_alt) auto
+    qed
     also have \<open>\<dots> = Collect compact_op\<close>
       by (simp add: Set.set_eqI compact_op_finite_rank)
     finally show ?thesis
@@ -1080,27 +1035,30 @@ proof (rule Set.equalityI)
         fix e :: real assume \<open>e > 0\<close>
         define d where \<open>d = (if norm a = 0 \<and> norm b = 0 then 1 
                                   else e / (max (norm a) (norm b)) / 4)\<close>
+        have [simp]: "d > 0"
+          unfolding d_def using \<open>e > 0\<close>
+          by (auto intro!: divide_pos_pos simp: less_max_iff_disj)
         have d: \<open>norm a * d + norm a * d + norm b * d < e\<close>
         proof -
-          have \<open>norm a * d \<le> e/4\<close>
-            using \<open>e > 0\<close> apply (auto simp: d_def)
-             apply (simp add: divide_le_eq)
-            by (smt (z3) Extra_Ordered_Fields.mult_sign_intros(3) \<open>0 < e\<close> antisym_conv divide_le_eq less_imp_le linordered_field_class.mult_imp_div_pos_le mult_left_mono nice_ordered_field_class.dense_le nice_ordered_field_class.divide_nonneg_neg nice_ordered_field_class.divide_nonpos_pos nle_le nonzero_mult_div_cancel_left norm_imp_pos_and_ge ordered_field_class.sign_simps(5) split_mult_pos_le)
-          moreover have \<open>norm b * d \<le> e/4\<close>
-            using \<open>e > 0\<close> apply (auto simp: d_def)
-             apply (simp add: divide_le_eq)
-            by (smt (verit) linordered_field_class.mult_imp_div_pos_le mult_left_mono norm_le_zero_iff ordered_field_class.sign_simps(5))
-          ultimately have \<open>norm a * d + norm a * d + norm b * d \<le> 3 * e / 4\<close>
+          have \<open>x * d \<le> e / 4\<close> if x: "x \<in> {norm a, norm b}" for x
+          proof (cases "x = 0")
+            case False
+            have d: "d = e / (max (norm a) (norm b)) / 4"
+              using False x by (auto simp: d_def)
+            have "d \<le> e / x / 4"
+              unfolding d by (intro divide_left_mono divide_right_mono)
+                             (use x \<open>d > 0\<close> \<open>e > 0\<close> False in \<open>auto simp: less_max_iff_disj\<close>)
+            thus ?thesis
+              using False x by (auto simp: field_simps)
+          qed (use \<open>e > 0\<close> in auto)
+          hence "norm a * d \<le> e / 4" "norm b * d \<le> e / 4"
+            by blast+
+          hence \<open>norm a * d + norm a * d + norm b * d \<le> 3 * e / 4\<close>
             by linarith
           also have \<open>\<dots> < e\<close>
             by (simp add: \<open>0 < e\<close>)
-          finally show ?thesis
-            by -
+          finally show ?thesis .
         qed
-        have [simp]: \<open>d > 0\<close>
-          using \<open>e > 0\<close> apply (auto simp: d_def)
-           apply (smt (verit, best) nice_ordered_field_class.divide_pos_pos norm_eq_zero norm_not_less_zero)
-          by (smt (verit) linordered_field_class.divide_pos_pos zero_less_norm_iff)
         from Proj_onb_limit[where \<psi>=a, OF assms(1)]
         have \<open>\<forall>\<^sub>F F in finite_subsets_at_top A. norm (Proj (ccspan F) a - a) < d\<close>
           by (metis Lim_null \<open>0 < d\<close> order_tendstoD(2) tendsto_norm_zero_iff)
@@ -1115,16 +1073,32 @@ proof (rule Set.equalityI)
           if \<open>norm (Proj (ccspan F) a - a) < d\<close> and \<open>norm (Proj (ccspan G) b - b) < d\<close>
             and \<open>F \<subseteq> A\<close> and \<open>G \<subseteq> B\<close> for F G
         proof -
-          have a_split: \<open>a = Proj (ccspan F) a + Proj (ccspan (A-F)) a\<close>
-            using assms apply (simp add: is_onb_def is_ortho_set_def that Proj_orthog_ccspan_union flip: cblinfun.add_left)
-            apply (subst Proj_orthog_ccspan_union[symmetric])
-             apply (metis DiffD1 DiffD2 in_mono that(3))
-            using \<open>F \<subseteq> A\<close> by (auto intro!: simp: Un_absorb1)
-          have b_split: \<open>b = Proj (ccspan G) b + Proj (ccspan (B-G)) b\<close>
-                      using assms apply (simp add: is_onb_def is_ortho_set_def that Proj_orthog_ccspan_union flip: cblinfun.add_left)
-            apply (subst Proj_orthog_ccspan_union[symmetric])
-             apply (metis DiffD1 DiffD2 in_mono that(4))
-            using \<open>G \<subseteq> B\<close> by (auto intro!: simp: Un_absorb1)
+          have a_split: \<open>a = Proj (ccspan F) *\<^sub>V a + Proj (ccspan (A-F)) *\<^sub>V a\<close>
+          proof -
+            have A: "is_ortho_set A" "ccspan A = \<top>"
+              using assms unfolding is_onb_def by auto
+            have "Proj (ccspan (F \<union> A)) = Proj (ccspan F) + Proj (ccspan (A-F))"
+              by (subst Proj_orthog_ccspan_union [symmetric])
+                 (use that in \<open>auto intro!: is_ortho_setD[OF A(1)]\<close>)
+            also have "F \<union> A = A"
+              using that by blast
+            finally show ?thesis
+              using A(2) by (simp flip: cblinfun.add_left)
+          qed
+
+          have b_split: \<open>b = Proj (ccspan G) *\<^sub>V b + Proj (ccspan (B-G)) *\<^sub>V b\<close>
+          proof -
+            have B: "is_ortho_set B" "ccspan B = \<top>"
+              using assms unfolding is_onb_def by auto
+            have "Proj (ccspan (G \<union> B)) = Proj (ccspan G) + Proj (ccspan (B-G))"
+              by (subst Proj_orthog_ccspan_union [symmetric])
+                 (use that in \<open>auto intro!: is_ortho_setD[OF B(1)]\<close>)
+            also have "G \<union> B = B"
+              using that by blast
+            finally show ?thesis
+              using B(2) by (simp flip: cblinfun.add_left)
+          qed
+
           have n1: \<open>norm (f F (B-G)) \<le> norm a * d\<close> for F
           proof -
             have \<open>norm (f F (B-G)) \<le> norm a * norm (Proj (ccspan (B-G)) b)\<close>
@@ -1149,8 +1123,8 @@ proof (rule Set.equalityI)
           qed
           have \<open>norm (f F G - x) = norm (- f F (B-G) - f (A-F) (B-G) - f (A-F) G)\<close>
             unfolding xab
-            apply (subst a_split, subst b_split)
-            by (simp add: f_def butterfly_add_right butterfly_add_left)
+            by (subst a_split, subst b_split)
+               (simp add: f_def butterfly_add_right butterfly_add_left)
           also have \<open>\<dots> \<le> norm (f F (B-G)) + norm (f (A-F) (B-G)) + norm (f (A-F) G)\<close>
             by (smt (verit, best) norm_minus_cancel norm_triangle_ineq4)
           also have \<open>\<dots> \<le> norm a * d + norm a * d + norm b * d\<close>
@@ -1161,12 +1135,12 @@ proof (rule Set.equalityI)
           finally show ?thesis
             by -
         qed
-        show \<open>\<forall>\<^sub>F FG in finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B. norm (case_prod f FG - x) < e\<close>
-          apply (rule eventually_elim2)
-            apply (rule eventually_prodI[where P=\<open>\<lambda>F. finite F \<and> F \<subseteq> A\<close> and Q=\<open>\<lambda>G. finite G \<and> G \<subseteq> B\<close>])
-             apply auto[2]
-           apply (rule FG_close)
-          using fFG_dist by fastforce
+        have "\<forall>\<^sub>F (F, G) in finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B.
+                (finite F \<and> F \<subseteq> A) \<and> finite G \<and> G \<subseteq> B"
+          unfolding case_prod_unfold by (intro eventually_prodI) auto
+        thus \<open>\<forall>\<^sub>F FG in finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B. 
+                norm ((case FG of (F, G) \<Rightarrow> f F G) - x) < e\<close>
+          using FG_close by eventually_elim (use fFG_dist in auto)
       qed
       have nontriv: \<open>finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B \<noteq> \<bottom>\<close>
         by (simp add: prod_filter_eq_bot)
@@ -1180,28 +1154,25 @@ proof (rule Set.equalityI)
           have \<open>Proj (ccspan F) a \<in> cspan F\<close>
             by (metis Proj_range cblinfun_apply_in_image ccspan_finite that(1))
           then obtain r where ProjFsum: \<open>Proj (ccspan F) a = (\<Sum>x\<in>F. r x *\<^sub>C x)\<close>
-            apply atomize_elim
-            using complex_vector.span_finite[OF \<open>finite F\<close>]
-            by auto
+            using complex_vector.span_finite[OF \<open>finite F\<close>] by auto
           have \<open>Proj (ccspan G) b \<in> cspan G\<close>
             by (metis Proj_range cblinfun_apply_in_image ccspan_finite that(2))
           then obtain s where ProjGsum: \<open>Proj (ccspan G) b = (\<Sum>x\<in>G. s x *\<^sub>C x)\<close>
-            apply atomize_elim
-            using complex_vector.span_finite[OF \<open>finite G\<close>]
-            by auto
+            using complex_vector.span_finite[OF \<open>finite G\<close>] by auto
           have \<open>butterfly \<xi> \<eta> \<in> (\<lambda>(\<xi>, \<eta>). butterfly \<xi> \<eta>) ` (A \<times> B)\<close>
             if \<open>\<eta> \<in> G\<close> and \<open>\<xi> \<in> F\<close> for \<eta> \<xi>
-            using \<open>F \<subseteq> A\<close> \<open>G \<subseteq> B\<close> that by (auto intro!: pair_imageI)
+            using \<open>F \<subseteq> A\<close> \<open>G \<subseteq> B\<close> that by auto
           then show ?thesis
             by (auto intro!: complex_vector.span_sum complex_vector.span_scale
                 complex_vector.span_base[where a=\<open>butterfly _ _\<close>]
                 simp add: f_def ProjFsum ProjGsum butterfly_sum_left butterfly_sum_right)
         qed
-        show \<open>\<forall>\<^sub>F x in finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B.
+        have "\<forall>\<^sub>F (F, G) in finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B.
+                (finite F \<and> F \<subseteq> A) \<and> finite G \<and> G \<subseteq> B"
+          unfolding case_prod_unfold by (intro eventually_prodI) auto
+        thus \<open>\<forall>\<^sub>F x in finite_subsets_at_top A \<times>\<^sub>F finite_subsets_at_top B.
                       (case x of (F, G) \<Rightarrow> finite F \<and> finite G) \<longrightarrow> (case x of (F, G) \<Rightarrow> f F G) \<in> cspan ((\<lambda>(\<xi>, \<eta>). butterfly \<xi> \<eta>) ` (A \<times> B))\<close>
-          apply (rule eventually_mono)
-           apply (rule eventually_prodI[where P=\<open>\<lambda>F. finite F \<and> F \<subseteq> A\<close> and Q=\<open>\<lambda>G. finite G \<and> G \<subseteq> B\<close>])
-          by (auto intro!: f_in_span)
+          by eventually_elim (auto intro!: f_in_span)
       qed
       show \<open>x \<in> closure (cspan ((\<lambda>(\<xi>, \<eta>). butterfly \<xi> \<eta>) ` (A \<times> B)))\<close>
         using lim nontriv inside by (rule limit_in_closure)
@@ -1254,7 +1225,6 @@ proof -
     from \<open>compact_op a\<close> have compact: \<open>compact (closure (a ` cball 0 1))\<close>
       using compact_op_def2 by blast
     obtain l r where \<open>strict_mono r\<close> and fr_lim: \<open>(f o r) \<longlonglongrightarrow> l\<close>
-      apply atomize_elim
       using range_f compact[unfolded compact_def, rule_format, of f]
       by fast
     define d :: real where \<open>d = cmod e * sqrt 2\<close>
@@ -1281,8 +1251,7 @@ proof -
         from range_b span_BS
         have \<open>b (r n) \<in> S\<close>
           using complex_vector.span_superset closure_subset
-          apply (auto dest!: range_subsetD[where i=\<open>b n\<close>])
-          by fast
+          by (blast dest: range_subsetD[where i = \<open>b n\<close>])
         then show ?thesis
           by (auto intro!: dest!: eigenspace_memberD simp: S_def f_def)
       qed
@@ -1329,17 +1298,14 @@ proof -
   qed
   have \<open>h (n k) = inverse l *\<^sub>C ((l *\<^sub>C id_cblinfun - T) (h (n k)) + T (h (n k)))\<close> for k
     by (metis assms(2) cblinfun.real.add_left cblinfun.scaleC_left diff_add_cancel divideC_field_splits_simps_1(5) id_cblinfun.rep_eq scaleC_zero_right)
-  moreover have \<open>\<dots> \<longlonglongrightarrow> inverse l *\<^sub>C f\<close>
-    apply (rule tendsto_scaleC, simp)
-    apply (subst add_0_left[symmetric, of f])
-    using lThk_lim lim_Thn by (rule tendsto_add)
+  moreover have \<open>\<dots> \<longlonglongrightarrow> inverse l *\<^sub>C (0 + f)\<close>
+    by (intro tendsto_intros lThk_lim lim_Thn)
   ultimately have lim_hn: \<open>(\<lambda>k. h (n k)) \<longlonglongrightarrow> inverse l *\<^sub>C f\<close>
     by simp
   have \<open>f \<noteq> 0\<close>
   proof -
     from lim_hn have \<open>(\<lambda>k. norm (h (n k))) \<longlonglongrightarrow> norm (inverse l *\<^sub>C f)\<close>
-      apply (rule isCont_tendsto_compose[unfolded o_def, rotated])
-      by fastforce
+      by (rule isCont_tendsto_compose[unfolded o_def, rotated]) fastforce
     moreover have \<open>(\<lambda>_. 1) \<longlonglongrightarrow> 1\<close>
       by simp
     ultimately have \<open>norm (inverse l *\<^sub>C f) = 1\<close>
@@ -1349,8 +1315,7 @@ proof -
       by force
   qed
   from lim_hn have \<open>(\<lambda>k. T (h (n k))) \<longlonglongrightarrow> T (inverse l *\<^sub>C f)\<close>
-    apply (rule isCont_tendsto_compose[rotated])
-    by force
+    by (rule isCont_tendsto_compose[rotated]) force
   with lim_Thn have \<open>f = T (inverse l *\<^sub>C f)\<close>
     using LIMSEQ_unique by blast
   with \<open>l \<noteq> 0\<close> have \<open>l *\<^sub>C f = T f\<close>
@@ -1377,12 +1342,9 @@ proof -
     from cblinfun_norm_is_Sup_cinner[OF \<open>selfadjoint a\<close>]
     obtain f where range_f: \<open>range f \<subseteq> ((\<lambda>\<psi>. cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<psi>))) ` {\<psi>. norm \<psi> = 1})\<close>
       and f_lim: \<open>f \<longlonglongrightarrow> norm a\<close>
-      apply atomize_elim
-      apply (rule is_Sup_imp_ex_tendsto)
-      by (auto simp: ex_norm1_not_singleton)
+      by (atomize_elim, rule is_Sup_imp_ex_tendsto) (auto simp: ex_norm1_not_singleton)
     obtain h0 where normh0: \<open>norm (h0 i) = 1\<close> and f_h0: \<open>f i = cmod (h0 i \<bullet>\<^sub>C a (h0 i))\<close> for i
-      apply (atomize_elim, rule choice2)
-      using range_f by auto
+      by (atomize_elim, rule choice2) (use range_f in auto)
     from f_h0 f_lim have h0lim_cmod: \<open>(\<lambda>i. cmod (h0 i \<bullet>\<^sub>C a (h0 i))) \<longlonglongrightarrow> norm a\<close>
       by presburger
     have sgn_sphere: \<open>sgn (h0 i \<bullet>\<^sub>C a (h0 i)) \<in> insert 0 (sphere 0 1)\<close> for i
@@ -1405,8 +1367,9 @@ proof -
     proof (rule ccontr, unfold not_not)
       assume \<open>e = 0\<close>
       from hlim have \<open>(\<lambda>i. cmod (h i \<bullet>\<^sub>C a (h i))) \<longlonglongrightarrow> cmod e\<close>
-        apply (rule tendsto_compose[where g=cmod, rotated])
-        by (smt (verit, del_insts) \<open>e = 0\<close> diff_zero dist_norm metric_LIM_imp_LIM norm_ge_zero norm_zero real_norm_def tendsto_ident_at)
+        by (rule tendsto_compose[where g=cmod, rotated])
+           (smt (verit, del_insts) \<open>e = 0\<close> diff_zero dist_norm metric_LIM_imp_LIM 
+              norm_ge_zero norm_zero real_norm_def tendsto_ident_at)
       with \<open>e = 0\<close> hlim_cmod have \<open>norm a = 0\<close>
         using LIMSEQ_unique by fastforce
       with \<open>a \<noteq> 0\<close> show False
@@ -1426,47 +1389,47 @@ proof -
     have **: \<open>Im (h i \<bullet>\<^sub>C a (h i)) = 0\<close> for i
       using assms(2) selfadjoint_def cinner_hermitian_real complex_is_Real_iff by auto
     have \<open>Im e = 0\<close>
-      using _ * apply (rule tendsto_unique)
-      using ** by auto
+      using _ * by (rule tendsto_unique) (use ** in auto)
     then show ?thesis
       using complex_is_Real_iff by presburger
   qed
   define e' where \<open>e' = Re e\<close>
   with \<open>e \<in> \<real>\<close> have ee': \<open>e = of_real e'\<close>
-    by (simp add: of_real_Re)
+    by simp
   have \<open>e' \<in> eigenvalues a\<close>
   proof -
     have [trans]: \<open>f \<longlonglongrightarrow> 0\<close> if \<open>\<And>x. f x \<le> g x\<close> and \<open>g \<longlonglongrightarrow> 0\<close> and \<open>\<And>x. f x \<ge> 0\<close> for f g :: \<open>nat \<Rightarrow> real\<close>
-      apply (rule real_tendsto_sandwich[where h=g and f=\<open>\<lambda>_. 0\<close>])
-      using that by auto
+      by (rule real_tendsto_sandwich[where h=g and f=\<open>\<lambda>_. 0\<close>]) (use that in auto)
+    have [simp]: "a* = a"
+      using assms(2) by (simp add: selfadjoint_def)
+    have [simp]: "Re (h x \<bullet>\<^sub>C h x) = 1" for x
+      using normh[of x] by (simp flip: power2_norm_eq_cinner')
     have \<open>(norm ((a - e' *\<^sub>R id_cblinfun) (h n)))\<^sup>2 = (norm (a (h n)))\<^sup>2 - 2 * e' * Re (h n \<bullet>\<^sub>C a (h n)) + e'\<^sup>2\<close> for n
-      apply (simp add: power2_norm_eq_cinner' cblinfun.diff_left cinner_diff_left
-        cinner_diff_right cinner_scaleR_left cblinfun.scaleR_left)
-      apply (subst cinner_commute[of _ \<open>h n\<close>])
-      by (simp add: normh algebra_simps power2_eq_square 
-          del: cinner_commute' flip: power2_norm_eq_cinner')
+      by (simp add: power2_norm_eq_cinner' algebra_simps cblinfun.cbilinear_simps 
+                    cblinfun.scaleR_left power2_eq_square[of e'] flip: cinner_adj_right)
     also have \<open>\<dots>n \<le> e'\<^sup>2 - 2 * e' * Re (h n \<bullet>\<^sub>C a (h n)) + e'\<^sup>2\<close> for n
     proof -
       from norme have \<open>e'\<^sup>2 = (norm a)\<^sup>2\<close>
-        apply (simp add: ee')
-        by (smt (verit) power2_minus)
+        by (auto simp: ee' power2_eq_iff abs_if split: if_splits)
       then have \<open>(norm (a *\<^sub>V h n))\<^sup>2 \<le> e'\<^sup>2\<close>
-        apply simp
-        by (metis mult_cancel_left2 norm_cblinfun normh)
+        using norm_cblinfun[of a "h n"] by (simp add: normh)
       then show ?thesis
         by auto
     qed
     also have \<open>\<dots> \<longlonglongrightarrow> 0\<close>
       apply (subst asm_rl[of \<open>(\<lambda>n. e'\<^sup>2 - 2 * e' * Re (h n \<bullet>\<^sub>C a (h n)) + e'\<^sup>2) = (\<lambda>n. 2 * e' * (e' - Re (h n \<bullet>\<^sub>C (a *\<^sub>V h n))))\<close>])
-       apply (auto intro!: ext simp: right_diff_distrib power2_eq_square)[1]
-      using h_lim[THEN tendsto_Re]
-      by (auto intro!: tendsto_mult_right_zero tendsto_diff_const_left_rewrite simp: ee')
+      subgoal
+        by (auto simp: fun_eq_iff right_diff_distrib power2_eq_square)[1]
+      subgoal
+        using h_lim[THEN tendsto_Re]
+        by (auto intro!: tendsto_mult_right_zero tendsto_diff_const_left_rewrite simp: ee')
+      done
     finally have \<open>(\<lambda>n. (a - e' *\<^sub>R id_cblinfun) (h n)) \<longlonglongrightarrow> 0\<close>
       by (simp add: tendsto_norm_zero_iff)
     then show \<open>e' \<in> eigenvalues a\<close>
       unfolding scaleR_scaleC
-      apply (rule eigenvalue_in_the_limit_compact_op[rotated -1])
-      using \<open>a \<noteq> 0\<close> norme by (auto intro!: normh simp: assms ee')
+      by (rule eigenvalue_in_the_limit_compact_op[rotated -1])
+         (use \<open>a \<noteq> 0\<close> norme in \<open>auto intro!: normh simp: assms ee'\<close>)
   qed
   from \<open>e \<in> \<real>\<close> norme
   have \<open>e = norm a \<or> e = - norm a\<close>

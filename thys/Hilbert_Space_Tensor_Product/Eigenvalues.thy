@@ -26,7 +26,7 @@ lemma reducing_subspaceI: \<open>A *\<^sub>S S \<le> S \<Longrightarrow> A *\<^s
 
 lemma reducing_subspace_ortho[simp]: \<open>reducing_subspace (-S) A \<longleftrightarrow> reducing_subspace S A\<close>
   for S :: \<open>'a::chilbert_space ccsubspace\<close>
-  by (auto intro!: simp: reducing_subspace_def ortho_involution)
+  by (auto simp: reducing_subspace_def)
 
 lemma invariant_subspace_bot[simp]: \<open>invariant_subspace \<bottom> A\<close>
   by (simp add: invariant_subspaceI) 
@@ -40,22 +40,29 @@ lemma reducing_subspace_bot[simp]: \<open>reducing_subspace \<bottom> A\<close>
 lemma reducing_subspace_top[simp]: \<open>reducing_subspace \<top> A\<close>
   by (simp add: reducing_subspace_def)
 
+lemma kernel_uminus[simp]: "kernel (-A) = kernel A"
+  for a :: complex and A :: "(_,_) cblinfun"
+  by transfer auto
+
+lemma kernel_scaleC': "kernel (a *\<^sub>C A) = (if a = 0 then \<top> else kernel A)"
+  for a :: complex and A :: "(_,_) cblinfun"
+  by (cases "a = 0") auto
+
 lemma eigenvalues_0[simp]: \<open>eigenvalues (0 :: 'a::{not_singleton,complex_normed_vector} \<Rightarrow>\<^sub>C\<^sub>L 'a) = {0}\<close>
-  apply (auto intro!: simp: eigenvalues_def eigenspace_def)
-  by (metis id_cblinfun_eq_1 kernel_id kernel_scaleC of_complex_def scaleC_minus1_left zero_ccsubspace_def zero_neq_neg_one)
+  by (auto simp: eigenvalues_def eigenspace_def kernel_scaleC')
 
 lemma nonzero_ccsubspace_contains_unit_vector:
   assumes \<open>S \<noteq> 0\<close>
   shows \<open>\<exists>\<psi>. \<psi> \<in> space_as_set S \<and> norm \<psi> = 1\<close>
 proof -
   from assms 
-  obtain \<psi> where \<open>\<psi> \<in> space_as_set S\<close> and \<open>\<psi> \<noteq> 0\<close>
-    apply transfer
-    by (auto simp: complex_vector.subspace_0)
-  then have \<open>sgn \<psi> \<in> space_as_set S\<close> and \<open>norm (sgn \<psi>) = 1\<close>
-     apply (simp add: complex_vector.subspace_scale scaleR_scaleC sgn_div_norm)
+  obtain \<psi> where \<psi>: \<open>\<psi> \<in> space_as_set S\<close> \<open>\<psi> \<noteq> 0\<close>
+    by transfer (auto simp: complex_vector.subspace_0)
+  have \<open>sgn \<psi> \<in> space_as_set S\<close>
+    using \<psi> by (simp add: complex_vector.subspace_scale scaleR_scaleC sgn_div_norm)
+  moreover have \<open>norm (sgn \<psi>) = 1\<close>
     by (simp add: \<open>\<psi> \<noteq> 0\<close> norm_sgn)
-  then show ?thesis
+  ultimately show ?thesis
     by auto
 qed
 
@@ -74,8 +81,7 @@ proof -
     by (simp add: h_def sgn_in_spaceI)
   then have \<open>a *\<^sub>V h = x *\<^sub>C h\<close>
     unfolding eigenspace_def
-    apply (transfer' fixing: x)
-    by simp
+    by (transfer' fixing: x) simp
   with \<open>norm h = 1\<close> show ?thesis
     by auto    
 qed
@@ -123,8 +129,7 @@ proof (cases \<open>\<exists>x. x < l\<close>)
   case True
   obtain A :: \<open>nat \<Rightarrow> 'a set\<close> where openA: \<open>open (A n)\<close> and lA: \<open>l \<in> A n\<close>
     and fl: \<open>(\<And>n. f n \<in> A n) \<Longrightarrow> f \<longlonglongrightarrow> l\<close> for n f
-    apply (rule Topological_Spaces.countable_basis[of l])
-    by blast
+    by (rule Topological_Spaces.countable_basis[of l]) blast
   obtain f where fAX: \<open>f n \<in> A n \<inter> X\<close> for n
   proof (atomize_elim, intro choice allI)
     fix n :: nat
@@ -177,7 +182,7 @@ proof -
   from assms have \<open>h \<in> space_as_set (eigenspace e A)\<close>
     by (simp add: eigenspace_def kernel.rep_eq cblinfun.diff_left)
   moreover from \<open>h \<noteq> 0\<close> have \<open>h \<notin> space_as_set \<bottom>\<close>
-    apply transfer by simp
+    by transfer simp
   ultimately have \<open>eigenspace e A \<noteq> \<bottom>\<close>
     by fastforce
   then show ?thesis
@@ -211,8 +216,7 @@ lemma cblinfun_cinner_eq0I:
   fixes a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
   assumes \<open>\<And>h. h \<bullet>\<^sub>C a h = 0\<close>
   shows \<open>a = 0\<close>
-  apply (rule cblinfun_cinner_eqI)
-  using assms by simp
+  by (rule cblinfun_cinner_eqI) (use assms in simp)
 
 lemma normal_op_iff_adj_same_norms:
   \<comment> \<open>\<^cite>\<open>conway2013course\<close>, Proposition II.2.16\<close>
@@ -280,9 +284,20 @@ lemma invariant_subspace_iff_PAP:
 proof -
   define S' where \<open>S' = space_as_set S\<close>
   have \<open>invariant_subspace S A \<longleftrightarrow> (\<forall>h\<in>S'. A h \<in> S')\<close>
-    apply (auto simp: S'_def invariant_subspace_def less_eq_ccsubspace_def
-        Set.basic_monos(7) cblinfun_apply_in_image')
-    by (meson cblinfun_image_less_eqI less_eq_ccsubspace.rep_eq subsetD)
+  proof safe
+    fix h assume A: "invariant_subspace S A" and h: "h \<in> S'"
+    from h have "A *\<^sub>V h \<in> space_as_set (A *\<^sub>S S)"
+      using cblinfun_apply_in_image'[of h S A] unfolding S'_def by auto
+    also have "space_as_set (A *\<^sub>S S) \<subseteq> S'"
+      using A unfolding S'_def invariant_subspace_def less_eq_ccsubspace_def by auto
+    finally show "A *\<^sub>V h \<in> S'" .
+  next
+    assume *: "\<forall>h\<in>S'. A *\<^sub>V h \<in> S'"
+    hence "A *\<^sub>S S \<le> S"
+      unfolding S'_def using cblinfun_image_less_eqI by blast
+    thus "invariant_subspace S A"
+      unfolding invariant_subspace_def less_eq_ccsubspace_def map_fun_def o_def id_def .
+  qed
   also have \<open>\<dots> \<longleftrightarrow> (\<forall>h. A *\<^sub>V Proj S *\<^sub>V h \<in> S')\<close>
     by (metis (no_types, lifting) Proj_fixes_image Proj_range S'_def cblinfun_apply_in_image)
   also have \<open>\<dots> \<longleftrightarrow> (\<forall>h. Proj S *\<^sub>V A *\<^sub>V Proj S *\<^sub>V h = A *\<^sub>V Proj S *\<^sub>V h)\<close>
@@ -394,8 +409,7 @@ proof (rule invariant_subspaceI)
   have \<open>a *\<^sub>S \<Sqinter> M \<le> (\<Sqinter>S\<in>M. a *\<^sub>S S)\<close>
     using cblinfun_image_INF_leq[where U=a and V=id and X=M] by simp
   also have \<open>\<dots> \<le> (\<Sqinter>S\<in>M. S)\<close>
-    apply (rule INF_superset_mono, simp)
-    using assms by (auto simp: invariant_subspace_def)
+    by (rule INF_superset_mono, simp) (use assms in \<open>auto simp: invariant_subspace_def\<close>)
   also have \<open>\<dots> = \<Sqinter>M\<close>
     by simp
   finally show \<open>a *\<^sub>S \<Sqinter> M \<le> \<Sqinter> M\<close> .
@@ -438,8 +452,8 @@ proof -
   have \<open>space_as_set (a *\<^sub>S \<Squnion>M) = closure (a ` closure (cspan (\<Squnion>S\<in>M. space_as_set S)))\<close>
     by (metis Sup_ccsubspace.rep_eq cblinfun_image.rep_eq)
   also have \<open>\<dots> = closure (a ` cspan (\<Squnion>S\<in>M. space_as_set S))\<close>
-    apply (rule closure_bounded_linear_image_subset_eq)
-    by (simp add: cblinfun.real.bounded_linear_right)
+    by (rule closure_bounded_linear_image_subset_eq)
+       (simp add: cblinfun.real.bounded_linear_right)
   also from * have \<open>\<dots> \<subseteq> closure (space_as_set (\<Squnion>M))\<close>
     by (meson closure_mono)
   also have \<open>\<dots> = space_as_set (\<Squnion>M)\<close>

@@ -8,13 +8,6 @@ definition weak_star_topology :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>
   where \<open>weak_star_topology = pullback_topology UNIV (\<lambda>x. \<lambda>t\<in>Collect trace_class. trace (t o\<^sub>C\<^sub>L x))
                               (product_topology (\<lambda>_. euclidean)  (Collect trace_class))\<close>
 
-(* lemma open_map_basisI:
-  assumes \<open>\<And>U. openin\<close>
-  shows \<open>open_map f T U\<close> *)
-
-(* lift_definition map_topology :: \<open>('a \<Rightarrow> 'b) \<Rightarrow> ('a topology \<Rightarrow> 'b topology)\<close> is undefined . *)
-
-
 lemma open_map_product_topology_reindex:
   fixes \<pi> :: \<open>'b \<Rightarrow> 'a\<close>
   assumes bij_\<pi>: \<open>bij_betw \<pi> B A\<close> and ST: \<open>\<And>x. x\<in>B \<Longrightarrow> S x = T (\<pi> x)\<close>
@@ -24,11 +17,19 @@ proof -
   define \<pi>' g' where \<open>\<pi>' = inv_into B \<pi>\<close> and \<open>g' f = restrict (f \<circ> \<pi>') A\<close> for f :: \<open>'b \<Rightarrow> 'c\<close>
   have bij_g: \<open>bij_betw g (Pi\<^sub>E A V) (Pi\<^sub>E B (V \<circ> \<pi>))\<close> for V
     apply (rule bij_betw_byWitness[where f'=g'])
-       apply (auto simp: g'_def g_def \<pi>'_def)
-       apply (smt (verit, best) PiE_restrict bij_\<pi> bij_betw_imp_surj_on bij_betw_inv_into_right comp_eq_dest_lhs inv_into_into restrict_def restrict_ext)
-      apply (smt (verit, ccfv_SIG) PiE_restrict bij_\<pi> bij_betwE bij_betw_inv_into_left comp_apply restrict_apply restrict_ext)
-     apply (meson PiE_E bij_\<pi> bij_betw_apply)
-    by (smt (verit, best) PiE_mem bij_\<pi> bij_betw_imp_surj_on bij_betw_inv_into_right comp_apply inv_into_into)
+    subgoal
+      unfolding g'_def g_def \<pi>'_def
+      by (smt (verit, best) PiE_restrict bij_\<pi> bij_betw_imp_surj_on bij_betw_inv_into_right comp_eq_dest_lhs inv_into_into restrict_def restrict_ext)
+    subgoal
+      unfolding g'_def g_def \<pi>'_def
+      by (smt (verit, ccfv_SIG) PiE_restrict bij_\<pi> bij_betwE bij_betw_inv_into_left comp_apply restrict_apply restrict_ext)
+    subgoal
+      unfolding g'_def g_def \<pi>'_def
+      using PiE_mem bij_\<pi> bij_betw_imp_surj_on by fastforce
+    subgoal
+      unfolding g'_def g_def \<pi>'_def
+      by (smt (verit, best) PiE_mem bij_\<pi> bij_betw_iff_bijections bij_betw_inv_into_left comp_def image_subset_iff restrict_PiE_iff)
+    done
   have open_gU: \<open>openin (product_topology S B) (g ` U)\<close> if \<open>openin (product_topology T A) U\<close> for U
   proof -
     from product_topology_open_contains_basis[OF that]
@@ -93,12 +94,11 @@ proof (rule bijective_open_imp_homeomorphic_map)
     moreover have \<open>x = restrict (g' x \<circ> \<pi>) B\<close>
       by (smt (verit) PiE_restrict \<pi>'_def assms(1) bij_betwE bij_betw_inv_into_left comp_apply restrict_apply restrict_ext that g'_def)
     ultimately show ?thesis
-      apply (rule_tac rev_image_eqI)
-      by assumption+
+      by (intro rev_image_eqI)
   qed
   show topspace: \<open>g ` topspace (product_topology T A) = topspace (product_topology S B)\<close>
-    apply (auto simp add: l1 g_def[abs_def])
-    by (metis PiE_mem assms(1) assms(2) bij_betw_apply)
+    using l1 assms unfolding g_def [abs_def] topspace_product_topology
+    by (auto simp: bij_betw_def)
 
   show \<open>inj_on g (topspace (product_topology T A))\<close>
     apply (simp add: g_def[abs_def])
@@ -109,11 +109,11 @@ proof (rule bijective_open_imp_homeomorphic_map)
      apply (metis ST \<pi>'_def big_\<pi> bij_betw_imp_surj_on bij_betw_inv_into_right inv_into_into)
     using g'_def by blast
   have g'g: \<open>g' (g x) = x\<close> if \<open>x \<in> topspace (product_topology T A)\<close> for x
-    using that
-    apply (auto simp: g'_def g_def)
-    by (smt (verit) PiE_restrict \<open>bij_betw \<pi>' A B\<close> \<pi>'_def big_\<pi> bij_betwE bij_betw_inv_into_right comp_def restrict_apply' restrict_ext)
+    using that unfolding g'_def g_def topspace_product_topology
+    by (smt (verit) PiE_restrict \<open>bij_betw \<pi>' A B\<close> \<pi>'_def big_\<pi> bij_betwE
+          bij_betw_inv_into_right comp_def restrict_apply' restrict_ext)
   have gg': \<open>g (g' x) = x\<close> if \<open>x \<in> topspace (product_topology S B)\<close> for x
-    apply (auto simp: g'_def g_def)
+    unfolding g'_def g_def
     by (metis (no_types, lifting) g'_def f_inv_into_f g'g g_def inv_into_into that topspace)
 
   from open_map_g'
@@ -147,16 +147,16 @@ proof -
   have \<open>homeomorphic_map (product_topology (\<lambda>_. euclidean) (Collect trace_class)) (product_topology (\<lambda>_. euclidean) UNIV) g\<close>
     unfolding g_def[abs_def]
     apply (rule homeomorphic_map_product_topology_reindex[where \<pi>=from_trace_class])
-      apply auto
-    by (smt (verit, best) UNIV_I bij_betwI' from_trace_class from_trace_class_cases from_trace_class_inject)
+    subgoal
+      by (smt (verit, best) UNIV_I bij_betwI' from_trace_class from_trace_class_cases from_trace_class_inject)
+    by auto
   then have homeo_g: \<open>homeomorphic_map (product_topology (\<lambda>_. euclidean) (Collect trace_class)) euclidean g\<close>
     by (simp add: euclidean_product_topology)
   have \<open>weak_star_topology = pullback_topology UNIV f (product_topology (\<lambda>_. euclidean) (Collect trace_class))\<close>
     by (simp add: weak_star_topology_def pullback_topology_homeo_cong homeo_g f_def[abs_def])
   also have \<open>\<dots> = pullback_topology UNIV (g o f) euclidean\<close>
-    apply (subst pullback_topology_homeo_cong)
-      apply (auto simp add: homeo_g f_def[abs_def])
-    by metis
+    by (subst pullback_topology_homeo_cong)
+       (auto simp add: homeo_g f_def[abs_def] split: if_splits)
   also have \<open>\<dots> = pullback_topology UNIV (\<lambda>x t. trace (from_trace_class t o\<^sub>C\<^sub>L x)) euclidean\<close>
     by (auto simp: f_def[abs_def] g_def[abs_def] o_def)
   finally show ?thesis
@@ -188,9 +188,7 @@ lemma weak_star_topology_basis:
   shows "openin weak_star_topology {f. \<forall>i\<in>I. trace (t i o\<^sub>C\<^sub>L f) \<in> U i}"
 proof -
   obtain t' where tt': \<open>t i = from_trace_class (t' i)\<close> if \<open>i \<in> I\<close> for i
-    apply atomize_elim 
-    using tc apply (auto intro!: choice ext)
-  by (metis from_trace_class_cases mem_Collect_eq)
+    by (atomize_elim, rule choice) (use tc from_trace_class_cases in blast)
   show ?thesis
     using assms by (auto simp: tt' o_def intro!: weak_star_topology_basis')
 qed
@@ -211,8 +209,12 @@ proof (rule continuous_map_pullback_both)
   show \<open>continuous_map (product_topology (\<lambda>_. euclidean) (Collect trace_class)) euclidean g'\<close>
     apply (subst euclidean_product_topology[symmetric])
     apply (rule continuous_map_coordinatewise_then_product)
-     apply (auto simp: g'_def[abs_def])
-    by (metis continuous_map_product_projection mem_Collect_eq trace_class_butterfly)
+    subgoal for i
+      unfolding g'_def case_prod_unfold
+      by (metis continuous_map_product_projection mem_Collect_eq trace_class_butterfly)
+    subgoal
+      by (auto simp: g'_def[abs_def])
+    done
 qed
 
 lemma wot_weaker_than_weak_star':
@@ -280,8 +282,7 @@ lift_definition minus_cblinfun_weak_star :: \<open>('a, 'b) cblinfun_weak_star \
 lift_definition plus_cblinfun_weak_star :: \<open>('a, 'b) cblinfun_weak_star \<Rightarrow> ('a, 'b) cblinfun_weak_star \<Rightarrow> ('a, 'b) cblinfun_weak_star\<close> is plus .
 lift_definition scaleR_cblinfun_weak_star :: \<open>real \<Rightarrow> ('a, 'b) cblinfun_weak_star \<Rightarrow> ('a, 'b) cblinfun_weak_star\<close> is scaleR .
 instance
-  apply (intro_classes; transfer)
-  by (auto simp add: scaleR_scaleC scaleC_add_right scaleC_add_left)
+  by (intro_classes; transfer) (auto simp add: scaleR_scaleC scaleC_add_right scaleC_add_left)
 end
 
 instantiation cblinfun_weak_star :: (chilbert_space, chilbert_space) topological_space begin
@@ -289,21 +290,25 @@ lift_definition open_cblinfun_weak_star :: \<open>('a, 'b) cblinfun_weak_star se
 instance
 proof intro_classes
   show \<open>open (UNIV :: ('a,'b) cblinfun_weak_star set)\<close>
-    apply transfer
-    by (metis weak_star_topology_topspace openin_topspace)
+    by transfer (metis weak_star_topology_topspace openin_topspace)
   show \<open>open S \<Longrightarrow> open T \<Longrightarrow> open (S \<inter> T)\<close> for S T :: \<open>('a,'b) cblinfun_weak_star set\<close>
-    apply transfer by auto
+    by transfer auto
   show \<open>\<forall>S\<in>K. open S \<Longrightarrow> open (\<Union> K)\<close> for K :: \<open>('a,'b) cblinfun_weak_star set set\<close>
-    apply transfer by auto
+    by transfer auto
 qed
 end
 
 lemma transfer_nhds_weak_star_topology[transfer_rule]:
   includes lifting_syntax
   shows \<open>(cr_cblinfun_weak_star ===> rel_filter cr_cblinfun_weak_star) (nhdsin weak_star_topology) nhds\<close>
-  unfolding nhds_def nhdsin_def
-  apply (simp add: weak_star_topology_topspace)
-  by transfer_prover
+proof -
+  have "(cr_cblinfun_weak_star ===> rel_filter cr_cblinfun_weak_star)
+          (\<lambda>a. \<Sqinter> (principal ` {S. openin weak_star_topology S \<and> a \<in> S}))
+          (\<lambda>a. \<Sqinter> (principal ` {S. open S \<and> a \<in> S}))"
+    by transfer_prover
+  thus ?thesis
+    unfolding nhds_def nhdsin_def weak_star_topology_topspace by simp
+qed
 
 lemma limitin_weak_star_topology':
   \<open>limitin weak_star_topology f l F \<longleftrightarrow> (\<forall>t. ((\<lambda>j. trace (from_trace_class t o\<^sub>C\<^sub>L f j)) \<longlongrightarrow> trace (from_trace_class t o\<^sub>C\<^sub>L l)) F)\<close>
@@ -323,7 +328,8 @@ lemma openin_weak_star_topology': \<open>openin weak_star_topology U \<longleftr
 (* lemma openin_weak_star_topology: \<open>openin weak_star_topology U \<longleftrightarrow> (\<exists>V. open V \<and> U = (\<lambda>x t. trace (t o\<^sub>C\<^sub>L x)) -` V)\<close> *)
 
 lemma hausdorff_weak_star[simp]: \<open>Hausdorff_space weak_star_topology\<close>
-  by (metis cweak_operator_topology_topspace hausdorff_cweak_operator_topology Hausdorff_space_def weak_star_topology_topspace wot_weaker_than_weak_star')
+  by (metis cweak_operator_topology_topspace hausdorff_cweak_operator_topology 
+            Hausdorff_space_def weak_star_topology_topspace wot_weaker_than_weak_star')
 (* proof (unfold Hausdorff_space_def, intro ballI impI)
   fix x y :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> assume \<open>x \<noteq> y\<close>
   then obtain a b where \<open>a \<bullet>\<^sub>C (x *\<^sub>V b) \<noteq> a \<bullet>\<^sub>C (y *\<^sub>V b)\<close>
@@ -370,13 +376,8 @@ lemma transfer_euclidean_weak_star_topology[transfer_rule]:
   shows \<open>(rel_topology cr_cblinfun_weak_star) weak_star_topology euclidean\<close>
 proof (unfold rel_topology_def, intro conjI allI impI)
   show \<open>(rel_set cr_cblinfun_weak_star ===> (=)) (openin weak_star_topology) (openin euclidean)\<close>
-    apply (auto simp: rel_topology_def cr_cblinfun_weak_star_def rel_set_def intro!: rel_funI)
-     apply transfer
-     apply auto
-     apply (meson openin_subopen subsetI)
-    apply transfer
-    apply auto
-    by (meson openin_subopen subsetI)
+    unfolding rel_fun_def rel_set_def open_openin [symmetric] cr_cblinfun_weak_star_def
+    by (transfer, intro allI impI arg_cong[of _ _ "openin x" for x]) blast
 next
   fix U :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set\<close>
   assume \<open>openin weak_star_topology U\<close>
@@ -413,8 +414,8 @@ proof -
     by (auto simp: cblinfun_compose_add_right trace_plus that trace_class_comp_left)
   show ?thesis
     unfolding weak_star_topology_def'
-    apply (rule_tac pullback_topology_bi_cont[where f'=plus])
-    by (auto simp: trace_plus case_prod_unfold tendsto_add_Pair)
+    by (rule pullback_topology_bi_cont[where f'=plus])
+       (auto simp: trace_plus case_prod_unfold tendsto_add_Pair)
 qed
 
 instance cblinfun_weak_star :: (chilbert_space, chilbert_space) topological_group_add
@@ -452,8 +453,14 @@ proof (unfold weak_star_topology_def, rule continuous_map_pullback_both)
   show \<open>continuous_map (product_topology (\<lambda>_. euclidean) (Collect trace_class))
      (product_topology (\<lambda>_. euclidean) (Collect trace_class)) g'\<close>
     apply (rule continuous_map_coordinatewise_then_product)
-     apply (auto simp: g'_def[abs_def])
-    by (metis continuous_map_product_projection mem_Collect_eq trace_class_comp_left)
+    subgoal for i
+      unfolding g'_def
+      apply (subst restrict_apply')
+      subgoal by simp     
+      subgoal by (metis continuous_map_product_projection mem_Collect_eq trace_class_comp_left)
+      done
+    subgoal by (auto simp: g'_def[abs_def])
+    done
 qed
 
 lemma continuous_map_right_comp_weak_star: 
@@ -465,26 +472,38 @@ proof (subst weak_star_topology_def, subst weak_star_topology_def, rule continuo
   show \<open>(\<lambda>x. \<lambda>t\<in>Collect trace_class. trace (t o\<^sub>C\<^sub>L x)) -` topspace (product_topology (\<lambda>_. euclidean) (Collect trace_class)) \<inter> UNIV
     \<subseteq> (\<lambda>b. b o\<^sub>C\<^sub>L a) -` UNIV\<close>
     by simp
+  have *: "trace (a o\<^sub>C\<^sub>L y o\<^sub>C\<^sub>L x) = trace (y o\<^sub>C\<^sub>L (x o\<^sub>C\<^sub>L a))" if "trace_class y" for x :: "'b \<Rightarrow>\<^sub>C\<^sub>L 'c" and y :: "'c \<Rightarrow>\<^sub>C\<^sub>L 'a"
+    by (simp add: circularity_of_trace simp_a_oCL_b that trace_class_comp_left)
   show \<open>g' (\<lambda>t\<in>Collect trace_class. trace (t o\<^sub>C\<^sub>L x)) = (\<lambda>t\<in>Collect trace_class. trace (t o\<^sub>C\<^sub>L (x o\<^sub>C\<^sub>L a)))\<close> for x
-    apply (auto intro!: ext simp: g'_def[abs_def] trace_class_comp_right)
-    by (metis (no_types, lifting) cblinfun_compose_assoc circularity_of_trace trace_class_comp_right)
+    by (auto intro!: ext simp: g'_def[abs_def] trace_class_comp_right *)
   show \<open>continuous_map (product_topology (\<lambda>_. euclidean) (Collect trace_class))
      (product_topology (\<lambda>_. euclidean) (Collect trace_class)) g'\<close>
     apply (rule continuous_map_coordinatewise_then_product)
-     apply (auto simp: g'_def[abs_def])
-    by (metis continuous_map_product_projection mem_Collect_eq trace_class_comp_right)
+    subgoal for i
+      unfolding g'_def mem_Collect_eq
+      apply (subst restrict_apply')
+      subgoal by simp
+      subgoal
+        by (metis continuous_map_product_projection mem_Collect_eq trace_class_comp_right)
+      done
+    subgoal by (auto simp: g'_def[abs_def])
+    done
 qed
 
 lemma continuous_map_scaleC_weak_star: \<open>continuous_map weak_star_topology weak_star_topology (scaleC c)\<close>
   apply (subst asm_rl[of \<open>scaleC c = (o\<^sub>C\<^sub>L) (c *\<^sub>C id_cblinfun)\<close>])
-   apply auto[1]
-  by (rule continuous_map_left_comp_weak_star)
+  subgoal by auto
+  subgoal by (rule continuous_map_left_comp_weak_star)
+  done
 
 lemma continuous_scaleC_weak_star: \<open>continuous_on X (scaleC c :: (_,_) cblinfun_weak_star \<Rightarrow> _)\<close>
-  apply (rule continuous_on_subset[rotated, where s=UNIV], simp)
-  apply (subst continuous_map_iff_continuous2[symmetric])
-  apply transfer
-  by (rule continuous_map_scaleC_weak_star)
+  apply (rule continuous_on_subset[rotated, where s=UNIV])
+  subgoal by simp
+  subgoal
+    apply (subst continuous_map_iff_continuous2[symmetric])
+    apply transfer
+    by (rule continuous_map_scaleC_weak_star)
+  done
 
 lemma weak_star_closure_is_csubspace[simp]:
   fixes A::"('a::chilbert_space, 'b::chilbert_space) cblinfun_weak_star set"
@@ -530,10 +549,14 @@ proof (rule complex_vector.subspaceI)
       using nt FF_plus by (rule limit_in_closure)
   qed
   show \<open>c *\<^sub>C x \<in> closure A\<close> if \<open>x \<in> closure A\<close> for x c
-    using  that
-    using image_closure_subset[where S=A and T=\<open>closure A\<close> and f=\<open>scaleC c\<close>, OF continuous_scaleC_weak_star]
-    apply auto
-    by (metis 0 assms closure_subset csubspace_scaleC_invariant imageI in_mono scaleC_eq_0_iff)
+  proof (cases "c = 0")
+    case False
+    have "(*\<^sub>C) c ` closure A \<subseteq> closure A"
+      using csubspace_scaleC_invariant[of c A] \<open>csubspace A\<close> False closure_subset[of A] 
+      by (intro image_closure_subset continuous_scaleC_weak_star closed_closure) auto
+    thus ?thesis
+      using that by blast
+  qed (use 0 in auto)
 qed
 
 
@@ -546,8 +569,14 @@ lemma transfer_csubspace_cblinfun_weak_star[transfer_rule]:
 lemma transfer_closed_cblinfun_weak_star[transfer_rule]:
   includes lifting_syntax
   shows \<open>(rel_set cr_cblinfun_weak_star ===> (=)) (closedin weak_star_topology) closed\<close>
-  apply (simp add: closed_def[abs_def] closedin_def[abs_def] weak_star_topology_topspace Compl_eq_Diff_UNIV)
-  by transfer_prover
+proof -
+  have "(rel_set cr_cblinfun_weak_star ===> (=))
+          (\<lambda>S. openin weak_star_topology (UNIV - S))
+          (\<lambda>S. open (UNIV - S)) "
+    by transfer_prover
+  thus ?thesis
+    by (simp add: closed_def[abs_def] closedin_def[abs_def] Compl_eq_Diff_UNIV)
+qed
 
 lemma transfer_closure_cblinfun_weak_star[transfer_rule]:
   includes lifting_syntax
@@ -752,8 +781,7 @@ lemma continuous_map_minus_weak_star[continuous_intros]:
   assumes \<open>continuous_map T weak_star_topology f\<close>
   assumes \<open>continuous_map T weak_star_topology g\<close>
   shows \<open>continuous_map T weak_star_topology (\<lambda>x. f x - g x)\<close>
-  apply (subst diff_conv_add_uminus)
-  by (intro assms continuous_intros)
+  by (subst diff_conv_add_uminus) (intro assms continuous_intros)
 
 lemma weak_star_topology_is_norm_topology_fin_dim[simp]: 
   \<open>(weak_star_topology :: ('a::{cfinite_dim,chilbert_space} \<Rightarrow>\<^sub>C\<^sub>L 'b::{cfinite_dim,chilbert_space}) topology) = euclidean\<close>
