@@ -17,9 +17,9 @@ end
 lemma annotate_assn: "x \<equiv> ASSN_ANNOT A x" by simp
 
 subsection \<open>Shortcuts\<close>
-abbreviation "nat_assn \<equiv> (id_assn::nat \<Rightarrow> _)"
-abbreviation "int_assn \<equiv> (id_assn::int \<Rightarrow> _)"
-abbreviation "bool_assn \<equiv> (id_assn::bool \<Rightarrow> _)"
+abbreviation (input) "nat_assn \<equiv> (id_assn::nat \<Rightarrow> _)"
+abbreviation (input) "int_assn \<equiv> (id_assn::int \<Rightarrow> _)"
+abbreviation (input) "bool_assn \<equiv> (id_assn::bool \<Rightarrow> _)"
 
 subsection \<open>Identity Relations\<close>
 definition "IS_ID R \<equiv> R=Id"
@@ -1277,7 +1277,7 @@ fun sum_assn :: "('ai \<Rightarrow> 'a \<Rightarrow> assn) \<Rightarrow> ('bi \<
 | "sum_assn A B (Inr bi) (Inr b) = B bi b"
 | "sum_assn A B _ _ = false"  
 
-notation sum_assn (infixr "+\<^sub>a" 67)
+notation sum_assn (infixr \<open>+\<^sub>a\<close> 67)
   
 lemma sum_assn_pure[safe_constraint_rules]: "\<lbrakk>is_pure A; is_pure B\<rbrakk> \<Longrightarrow> is_pure (sum_assn A B)"
   apply (auto simp: is_pure_iff_pure_assn)

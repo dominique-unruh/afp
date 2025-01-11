@@ -631,7 +631,7 @@ fun inductive_def (binding as ((R, T), _)) intrs lthy =
 fun define_graph Gname fvar domT ranT clauses RCss lthy =
   let
     val GT = domT --> ranT --> boolT
-    val (Gvar as (n, T)) = singleton (Variable.variant_frees lthy []) (Gname, GT)
+    val (Gvar as (n, T)) = singleton (Variable.variant_names lthy) (Gname, GT)
 
     fun mk_GIntro (ClauseContext {qs, gs, lhs, rhs, ...}) RCs =
       let
@@ -667,7 +667,7 @@ fun define_function fdefname (fname, mixfix) domT ranT G default lthy =
 fun define_recursion_relation Rname domT qglrs clauses RCss lthy =
   let
     val RT = domT --> domT --> boolT
-    val (Rvar as (n, T)) = singleton (Variable.variant_frees lthy []) (Rname, RT)
+    val (Rvar as (n, T)) = singleton (Variable.variant_names lthy) (Rname, RT)
 
     fun mk_RIntro (ClauseContext {qs, gs, lhs, ...}, (oqs, _, _, _)) (rcfix, rcassm, rcarg) =
       HOLogic.mk_Trueprop (Free Rvar $ rcarg $ lhs)
@@ -877,7 +877,7 @@ fun mk_domain_intro ctxt (Globals {domT, ...}) R R_cases clause =
 
 (** Termination rule **)
 
-val wf_induct_rule = @{thm Wellfounded.wfP_induct_rule}
+val wf_induct_rule = @{thm Wellfounded.wfp_induct_rule}
 val wf_in_rel = @{thm Fun_Def.wf_in_rel}
 val in_rel_def = @{thm Fun_Def.in_rel_def}
 
@@ -942,7 +942,7 @@ fun mk_nest_term_rule ctxt globals R R_cases clauses =
     val Rrel = Free ("R", HOLogic.mk_setT (HOLogic.mk_prodT (domT, domT)))
     val inrel_R = \<^Const>\<open>Fun_Def.in_rel domT domT for Rrel\<close>
 
-    val wfR' = HOLogic.mk_Trueprop (Const (\<^const_abbrev>\<open>Wellfounded.wfP\<close>,
+    val wfR' = HOLogic.mk_Trueprop (Const (\<^const_abbrev>\<open>Wellfounded.wfp\<close>,
       (domT --> domT --> boolT) --> boolT) $ R')
       |> Thm.cterm_of ctxt (* "wf R'" *)
 

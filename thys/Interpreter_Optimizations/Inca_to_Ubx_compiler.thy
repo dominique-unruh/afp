@@ -243,7 +243,7 @@ context
   fixes load_oracle :: "nat \<Rightarrow> type option"
 begin
 
-definition orelse :: "'a option \<Rightarrow> 'a option \<Rightarrow> 'a option"  (infixr "orelse" 55) where
+definition orelse :: "'a option \<Rightarrow> 'a option \<Rightarrow> 'a option"  (infixr \<open>orelse\<close> 55) where
   "x orelse y = (case x of Some x' \<Rightarrow> Some x' | None \<Rightarrow> y)"
 
 lemma None_orelse[simp]: "None orelse y = y"
@@ -817,10 +817,11 @@ proof -
   qed
 qed
 
-interpretation std_to_inca_compiler:
-  compiler Sinca.step Subx.step "final Finca_get Inca.IReturn" "final Fubx_get Ubx.IReturn"
-    Sinca.load Subx.load
-    "\<lambda>_ _. False" "\<lambda>_. match" compile
+interpretation std_to_inca_compiler: compiler where
+  step1 = Sinca.step and final1 = "final Finca_get Inca.IReturn" and load1 = Sinca.load and
+  step2 = Subx.step and final2 = "final Fubx_get Ubx.IReturn" and load2 = Subx.load and
+  match = "\<lambda>_. match" and order = "\<lambda>_ _. False" and
+  compile = compile
 using compile_load
   by unfold_locales auto
 

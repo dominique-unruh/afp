@@ -439,10 +439,10 @@ subsection \<open>Indeterminates\<close>
 definition indets :: "(('x \<Rightarrow>\<^sub>0 nat) \<Rightarrow>\<^sub>0 'b::zero) \<Rightarrow> 'x set"
   where "indets p = \<Union> (keys ` keys p)"
 
-definition PPs :: "'x set \<Rightarrow> ('x \<Rightarrow>\<^sub>0 nat) set"  (".[(_)]")
+definition PPs :: "'x set \<Rightarrow> ('x \<Rightarrow>\<^sub>0 nat) set"  (\<open>.[(_)]\<close>)
   where "PPs X = {t. keys t \<subseteq> X}"
 
-definition Polys :: "'x set \<Rightarrow> (('x \<Rightarrow>\<^sub>0 nat) \<Rightarrow>\<^sub>0 'b::zero) set"  ("P[(_)]")
+definition Polys :: "'x set \<Rightarrow> (('x \<Rightarrow>\<^sub>0 nat) \<Rightarrow>\<^sub>0 'b::zero) set"  (\<open>P[(_)]\<close>)
   where "Polys X = {p. keys p \<subseteq> .[X]}"
 
 subsubsection \<open>@{const indets}\<close>
@@ -1760,7 +1760,7 @@ proof (rule subset_antisym)
   also from refl have "\<dots> = (\<lambda>t. \<Sum>x. Poly_Mapping.single (f x) (lookup t x)) `
                        (\<lambda>t. \<Sum>x\<in>keys t. Poly_Mapping.single (?g x) (lookup t x)) ` keys (map_indets f p)"
     by (rule image_cong)
-        (smt Sum_any.conditionalize Sum_any.cong finite_keys not_in_keys_iff_lookup_eq_zero single_zero)
+        (smt (verit) Sum_any.conditionalize Sum_any.cong finite_keys not_in_keys_iff_lookup_eq_zero single_zero)
   also have "\<dots> = (\<lambda>t. t) ` keys (map_indets f p)" unfolding image_image using refl
   proof (rule image_cong)
     fix t
@@ -2895,7 +2895,7 @@ proof -
         by (simp add: dehomo_subst_def monomial_single_power)
       moreover assume "dehomo_subst x y ^ lookup t y = 1"
       ultimately have "Poly_Mapping.single y (lookup t y) = 0"
-        by (smt single_one monomial_inj zero_neq_one)
+        by (smt (verit) single_one monomial_inj zero_neq_one)
       hence "lookup t y = 0" by (rule monomial_0D)
       moreover assume "y \<in> keys t"
       ultimately have False by (simp add: in_keys_iff)
@@ -3925,7 +3925,7 @@ next
     by (rule except_eq_zeroI, auto simp: except_id_iff)
   from plus.hyps(3, 4) plus.prems have "c \<in> P[- X]" and "lookup p ` keys p \<subseteq> P[- X]"
     by (simp_all add: 2 lookup_add lookup_single in_keys_iff)
-        (smt add.commute add.right_neutral image_cong plus.hyps(4) when_simps(2))
+        (smt (verit) add.commute add.right_neutral image_cong plus.hyps(4) when_simps(2))
   from this(2) have "p \<in> range (focus X)" by (rule plus.hyps)
   then obtain q where p: "p = focus X q" ..
   moreover from \<open>c \<in> P[- X]\<close> have "monomial c t = focus X (monomial 1 t * c)"
@@ -4262,8 +4262,8 @@ end (* ordered_powerprod *)
 
 locale pm_powerprod =
   ordered_powerprod ord ord_strict
-  for ord::"('x::{countable,linorder} \<Rightarrow>\<^sub>0 nat) \<Rightarrow> ('x \<Rightarrow>\<^sub>0 nat) \<Rightarrow> bool" (infixl "\<preceq>" 50)
-  and ord_strict (infixl "\<prec>" 50)
+  for ord::"('x::{countable,linorder} \<Rightarrow>\<^sub>0 nat) \<Rightarrow> ('x \<Rightarrow>\<^sub>0 nat) \<Rightarrow> bool" (infixl \<open>\<preceq>\<close> 50)
+  and ord_strict (infixl \<open>\<prec>\<close> 50)
 begin
 
 sublocale gd_powerprod ..

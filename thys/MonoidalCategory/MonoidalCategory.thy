@@ -73,7 +73,7 @@ begin
     \<alpha>: natural_isomorphism CCC.comp C T.ToTC T.ToCT \<alpha> +
     L: equivalence_functor C C "\<lambda>f. T (cod \<iota>, f)" +
     R: equivalence_functor C C "\<lambda>f. T (f, cod \<iota>)"
-  for C :: "'a comp"       (infixr "\<cdot>" 55)
+  for C :: "'a comp"       (infixr \<open>\<cdot>\<close> 55)
   and T :: "'a * 'a \<Rightarrow> 'a"
   and \<alpha> :: "'a * 'a * 'a \<Rightarrow> 'a"
   and \<iota> :: 'a +
@@ -92,7 +92,7 @@ begin
       to be a binary functor requires that it take a pair as its argument.
 \<close>
 
-    abbreviation unity :: 'a ("\<I>")
+    abbreviation unity :: 'a (\<open>\<I>\<close>)
     where "unity \<equiv> cod \<iota>"
 
     abbreviation L :: "'a \<Rightarrow> 'a"
@@ -101,10 +101,10 @@ begin
     abbreviation R :: "'a \<Rightarrow> 'a"
     where "R f \<equiv> T (f, \<I>)"
 
-    abbreviation tensor      (infixr "\<otimes>" 53)
+    abbreviation tensor      (infixr \<open>\<otimes>\<close> 53)
     where "f \<otimes> g \<equiv> T (f, g)"
 
-    abbreviation assoc       ("\<a>[_, _, _]")
+    abbreviation assoc       (\<open>\<a>[_, _, _]\<close>)
     where "\<a>[a, b, c] \<equiv> \<alpha> (a, b, c)"
 
     text\<open>
@@ -114,10 +114,10 @@ begin
       unitors when applied to identities; that is, their components as natural transformations.
 \<close>
 
-    definition lunit ("\<l>[_]")
+    definition lunit (\<open>\<l>[_]\<close>)
     where "lunit a \<equiv> THE f. \<guillemotleft>f : \<I> \<otimes> a \<rightarrow> a\<guillemotright> \<and> \<I> \<otimes> f = (\<iota> \<otimes> a) \<cdot> inv \<a>[\<I>, \<I>, a]"
 
-    definition runit ("\<r>[_]")
+    definition runit (\<open>\<r>[_]\<close>)
     where "runit a \<equiv> THE f. \<guillemotleft>f : a \<otimes> \<I> \<rightarrow> a\<guillemotright> \<and> f \<otimes> \<I> = (a \<otimes> \<iota>) \<cdot> \<a>[a, \<I>, \<I>]"
 
     text\<open>
@@ -185,7 +185,7 @@ begin
     lemma \<alpha>_simp:
     assumes "arr f" and "arr g" and "arr h"
     shows "\<alpha> (f, g, h) = (f \<otimes> g \<otimes> h) \<cdot> \<a>[dom f, dom g, dom h]"
-      using assms \<alpha>.is_natural_1 [of "(f, g, h)"] by simp
+      using assms \<alpha>.naturality1 [of "(f, g, h)"] by simp
 
     lemma assoc_in_hom [intro]:
     assumes "ide a" and "ide b" and "ide c"
@@ -469,10 +469,10 @@ begin
     sublocale \<ll>: natural_transformation C C L map \<ll>
     proof -
       interpret \<ll>: transformation_by_components C C L map \<open>\<lambda>a. \<l>[a]\<close>
-        using lunit_in_hom lunit_naturality unit_in_hom_ax L.is_extensional
+        using lunit_in_hom lunit_naturality unit_in_hom_ax L.extensionality
         by (unfold_locales, auto)
       have "\<ll>.map = \<ll>"
-        using \<ll>.is_natural_1 \<ll>.is_extensional by auto
+        using \<ll>.naturality1 \<ll>.extensionality by auto
       thus "natural_transformation C C L map \<ll>"
         using \<ll>.natural_transformation_axioms by auto
     qed
@@ -484,10 +484,10 @@ begin
     sublocale \<rho>: natural_transformation C C R map \<rho>
     proof -
       interpret \<rho>: transformation_by_components C C R map \<open>\<lambda>a. \<r>[a]\<close>
-        using runit_naturality unit_in_hom_ax R.is_extensional
+        using runit_naturality unit_in_hom_ax R.extensionality
         by (unfold_locales, auto)
       have "\<rho>.map = \<rho>"
-        using \<rho>.is_natural_1 \<rho>.is_extensional by auto
+        using \<rho>.naturality1 \<rho>.extensionality by auto
       thus "natural_transformation C C R map \<rho>"
         using \<rho>.natural_transformation_axioms by auto
     qed
@@ -503,7 +503,7 @@ begin
     abbreviation \<alpha>'
     where "\<alpha>' \<equiv> \<alpha>'.map"
 
-    abbreviation assoc' ("\<a>\<^sup>-\<^sup>1[_, _, _]")
+    abbreviation assoc' (\<open>\<a>\<^sup>-\<^sup>1[_, _, _]\<close>)
     where "\<a>\<^sup>-\<^sup>1[a, b, c] \<equiv> inv \<a>[a, b, c]"
 
     lemma \<alpha>'_ide_simp:
@@ -514,7 +514,7 @@ begin
     lemma \<alpha>'_simp:
     assumes "arr f" and "arr g" and "arr h"
     shows "\<alpha>' (f, g, h) = ((f \<otimes> g) \<otimes> h) \<cdot> \<a>\<^sup>-\<^sup>1[dom f, dom g, dom h]"
-      using assms T.ToTC_simp \<alpha>'.is_natural_1 \<alpha>'_ide_simp by force
+      using assms T.ToTC_simp \<alpha>'.naturality1 \<alpha>'_ide_simp by force
 
     lemma assoc_inv:
     assumes "ide a" and "ide b" and "ide c"
@@ -556,7 +556,7 @@ begin
     abbreviation \<ll>'
     where "\<ll>' \<equiv> \<ll>'.map"
 
-    abbreviation lunit'                ("\<l>\<^sup>-\<^sup>1[_]")
+    abbreviation lunit'                (\<open>\<l>\<^sup>-\<^sup>1[_]\<close>)
     where "\<l>\<^sup>-\<^sup>1[a] \<equiv> inv \<l>[a]"
 
     lemma \<ll>'_ide_simp:
@@ -593,7 +593,7 @@ begin
     abbreviation \<rho>'
     where "\<rho>' \<equiv> \<rho>'.map"
 
-    abbreviation runit' ("\<r>\<^sup>-\<^sup>1[_]")
+    abbreviation runit' (\<open>\<r>\<^sup>-\<^sup>1[_]\<close>)
     where "\<r>\<^sup>-\<^sup>1[a] \<equiv> inv \<r>[a]"
 
     lemma \<rho>'_ide_simp:
@@ -631,14 +631,16 @@ begin
     assumes "ide a"
     shows "\<l>[\<I> \<otimes> a] = \<I> \<otimes> \<l>[a]"
       using assms lunit_naturality lunit_in_hom iso_lunit iso_is_section
-            section_is_mono monoE L.preserves_ide arrI cod_lunit dom_lunit seqI
+            section_is_mono mono_cancel L.preserves_ide arrI cod_lunit
+            dom_lunit seqI
       by metis
 
     lemma runit_commutes_with_R:
     assumes "ide a"
     shows "\<r>[a \<otimes> \<I>] = \<r>[a] \<otimes> \<I>"
       using assms runit_naturality runit_in_hom iso_runit iso_is_section
-            section_is_mono monoE R.preserves_ide arrI cod_runit dom_runit seqI
+            section_is_mono mono_cancel R.preserves_ide arrI cod_runit
+            dom_runit seqI
       by metis
 
     text\<open>
@@ -703,7 +705,8 @@ $$\xymatrix{
           have "epi \<a>[a \<otimes> \<I>, \<I>, b]"
             using assms iso_assoc iso_is_retraction retraction_is_epi by simp
           thus ?thesis
-            using 1 assms epiE [of "\<a>[a \<otimes> \<I>, \<I>, b]" "(a \<otimes> \<l>[\<I> \<otimes> b]) \<cdot> \<a>[a, \<I>, \<I> \<otimes> b]"]
+            using 1 assms
+                  epi_cancel [of "\<a>[a \<otimes> \<I>, \<I>, b]" "(a \<otimes> \<l>[\<I> \<otimes> b]) \<cdot> \<a>[a, \<I>, \<I> \<otimes> b]"]
             by fastforce
         qed
       qed
@@ -798,8 +801,9 @@ $$\xymatrix{
         using assms by auto
       ultimately show ?thesis
         using 1 2 assms iso_is_retraction retraction_is_epi
-              epiE [of "\<a>[a, \<I> \<otimes> b, c] \<cdot> (\<a>[a, \<I>, b] \<otimes> c)"
-                       "(a \<otimes> \<l>[b \<otimes> c]) \<cdot> (a \<otimes> \<a>[\<I>, b, c])" "a \<otimes> \<l>[b] \<otimes> c"]
+              epi_cancel
+                [of "\<a>[a, \<I> \<otimes> b, c] \<cdot> (\<a>[a, \<I>, b] \<otimes> c)"
+                    "(a \<otimes> \<l>[b \<otimes> c]) \<cdot> (a \<otimes> \<a>[\<I>, b, c])" "a \<otimes> \<l>[b] \<otimes> c"]
         by auto
     qed
 
@@ -999,26 +1003,26 @@ $$\xymatrix{
   locale monoidal_category_with_alternate_unit =
     monoidal_category C T \<alpha> \<iota> +
     C\<^sub>1: monoidal_category C T \<alpha> \<iota>\<^sub>1
-  for C :: "'a comp"      (infixr "\<cdot>" 55)
+  for C :: "'a comp"      (infixr \<open>\<cdot>\<close> 55)
   and T :: "'a * 'a \<Rightarrow> 'a"
   and \<alpha> :: "'a * 'a * 'a \<Rightarrow> 'a"
   and \<iota> :: 'a
   and \<iota>\<^sub>1 :: 'a
   begin
 
-    no_notation C\<^sub>1.tensor (infixr "\<otimes>" 53)
-    no_notation C\<^sub>1.unity  ("\<I>")
-    no_notation C\<^sub>1.lunit  ("\<l>[_]")
-    no_notation C\<^sub>1.runit  ("\<r>[_]")
-    no_notation C\<^sub>1.assoc  ("\<a>[_, _, _]")
-    no_notation C\<^sub>1.assoc' ("\<a>\<^sup>-\<^sup>1[_, _, _]")
+    no_notation C\<^sub>1.tensor (infixr \<open>\<otimes>\<close> 53)
+    no_notation C\<^sub>1.unity  (\<open>\<I>\<close>)
+    no_notation C\<^sub>1.lunit  (\<open>\<l>[_]\<close>)
+    no_notation C\<^sub>1.runit  (\<open>\<r>[_]\<close>)
+    no_notation C\<^sub>1.assoc  (\<open>\<a>[_, _, _]\<close>)
+    no_notation C\<^sub>1.assoc' (\<open>\<a>\<^sup>-\<^sup>1[_, _, _]\<close>)
 
-    notation C\<^sub>1.tensor    (infixr "\<otimes>\<^sub>1" 53)
-    notation C\<^sub>1.unity     ("\<I>\<^sub>1")
-    notation C\<^sub>1.lunit     ("\<l>\<^sub>1[_]")
-    notation C\<^sub>1.runit     ("\<r>\<^sub>1[_]")
-    notation C\<^sub>1.assoc     ("\<a>\<^sub>1[_, _, _]")
-    notation C\<^sub>1.assoc'    ("\<a>\<^sub>1\<^sup>-\<^sup>1[_, _, _]")
+    notation C\<^sub>1.tensor    (infixr \<open>\<otimes>\<^sub>1\<close> 53)
+    notation C\<^sub>1.unity     (\<open>\<I>\<^sub>1\<close>)
+    notation C\<^sub>1.lunit     (\<open>\<l>\<^sub>1[_]\<close>)
+    notation C\<^sub>1.runit     (\<open>\<r>\<^sub>1[_]\<close>)
+    notation C\<^sub>1.assoc     (\<open>\<a>\<^sub>1[_, _, _]\<close>)
+    notation C\<^sub>1.assoc'    (\<open>\<a>\<^sub>1\<^sup>-\<^sup>1[_, _, _]\<close>)
 
     definition i
     where "i \<equiv> \<l>[\<I>\<^sub>1] \<cdot> inv \<r>\<^sub>1[\<I>]"
@@ -1236,12 +1240,12 @@ $$\xymatrix{
 
   locale elementary_monoidal_category =
     category C
-  for C :: "'a comp"                  (infixr "\<cdot>" 55)
-  and tensor :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"       (infixr "\<otimes>" 53)
-  and unity :: 'a                      ("\<I>")
-  and lunit :: "'a \<Rightarrow> 'a"              ("\<l>[_]")
-  and runit :: "'a \<Rightarrow> 'a"              ("\<r>[_]")
-  and assoc :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"  ("\<a>[_, _, _]") +
+  for C :: "'a comp"                  (infixr \<open>\<cdot>\<close> 55)
+  and tensor :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"       (infixr \<open>\<otimes>\<close> 53)
+  and unity :: 'a                      (\<open>\<I>\<close>)
+  and lunit :: "'a \<Rightarrow> 'a"              (\<open>\<l>[_]\<close>)
+  and runit :: "'a \<Rightarrow> 'a"              (\<open>\<r>[_]\<close>)
+  and assoc :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"  (\<open>\<a>[_, _, _]\<close>) +
   assumes ide_unity [simp]: "ide \<I>"
   and iso_lunit: "ide a \<Longrightarrow> iso \<l>[a]"
   and iso_runit: "ide a \<Longrightarrow> iso \<r>[a]"
@@ -1624,7 +1628,7 @@ $$\xymatrix{
       
   locale opposite_monoidal_category =
     C: monoidal_category C T\<^sub>C \<alpha>\<^sub>C \<iota>
-  for C :: "'a comp"      (infixr "\<cdot>" 55)
+  for C :: "'a comp"      (infixr \<open>\<cdot>\<close> 55)
   and T\<^sub>C :: "'a * 'a \<Rightarrow> 'a"
   and \<alpha>\<^sub>C :: "'a * 'a * 'a \<Rightarrow> 'a"
   and \<iota> :: 'a
@@ -1641,13 +1645,13 @@ $$\xymatrix{
   sublocale opposite_monoidal_category \<subseteq> monoidal_category C T \<alpha> \<iota>
   proof -
     interpret T: binary_endofunctor C T
-      using C.T.is_extensional C.CC.seq_char C.interchange by (unfold_locales, auto)
+      using C.T.extensionality C.CC.seq_char C.interchange by (unfold_locales, auto)
     interpret ToTC: "functor" C.CCC.comp C T.ToTC
       using T.functor_ToTC by auto
     interpret ToCT: "functor" C.CCC.comp C T.ToCT
       using T.functor_ToCT by auto
     interpret \<alpha>: natural_transformation C.CCC.comp C T.ToTC T.ToCT \<alpha>
-      using C.\<alpha>'.is_extensional C.CCC.dom_char C.CCC.cod_char T.ToTC_def T.ToCT_def
+      using C.\<alpha>'.extensionality C.CCC.dom_char C.CCC.cod_char T.ToTC_def T.ToCT_def
             C.\<alpha>'_simp C.\<alpha>'.naturality
       by (unfold_locales) auto
     interpret \<alpha>: natural_isomorphism C.CCC.comp C T.ToTC T.ToCT \<alpha>
@@ -1691,7 +1695,7 @@ $$\xymatrix{
     sublocale dual_category C ..
     sublocale MM: product_category comp comp ..
     interpretation T: binary_functor comp comp comp T
-      using M.T.is_extensional M.interchange MM.comp_char
+      using M.T.extensionality M.interchange MM.comp_char
       by unfold_locales auto
     interpretation T: binary_endofunctor comp ..
     interpretation ToTC: "functor" T.CCC.comp comp T.ToTC
@@ -1699,7 +1703,7 @@ $$\xymatrix{
     interpretation ToCT: "functor" T.CCC.comp comp T.ToCT
       using T.functor_ToCT by blast
     interpretation \<alpha>: natural_transformation T.CCC.comp comp T.ToTC T.ToCT M.\<alpha>'
-      using M.\<alpha>'.is_extensional M.\<alpha>'.is_natural_1 M.\<alpha>'.is_natural_2
+      using M.\<alpha>'.extensionality M.\<alpha>'.naturality1 M.\<alpha>'.naturality2
       by unfold_locales auto
     interpretation \<alpha>: natural_isomorphism T.CCC.comp comp T.ToTC T.ToCT M.\<alpha>'
       by unfold_locales auto
@@ -1719,7 +1723,7 @@ $$\xymatrix{
     qed
 
     sublocale monoidal_category comp T M.\<alpha>' \<open>M.inv \<iota>\<close>
-      using T.is_extensional M.unit_in_hom M.inv_in_hom M.unit_is_iso M.pentagon'
+      using T.extensionality M.unit_in_hom M.inv_in_hom M.unit_is_iso M.pentagon'
             equivalence_functor_def category_axioms
       by unfold_locales auto
 
@@ -1727,7 +1731,7 @@ $$\xymatrix{
     shows "monoidal_category comp T M.\<alpha>' (M.inv \<iota>)"
       ..
 
-    no_notation comp  (infixr "\<cdot>" 55)
+    no_notation comp  (infixr \<open>\<cdot>\<close> 55)
 
     lemma assoc_char:
     assumes "ide a" and "ide b" and "ide c"
@@ -1800,20 +1804,20 @@ $$\xymatrix{
 
   locale monoidal_language =
     C: category C
-    for C :: "'a comp"                     (infixr "\<cdot>" 55)
+    for C :: "'a comp"                     (infixr \<open>\<cdot>\<close> 55)
   begin
 
     datatype (discs_sels) 't "term" =
-      Prim 't                              ("\<^bold>\<langle>_\<^bold>\<rangle>")
-    | Unity                                ("\<^bold>\<I>")
-    | Tensor "'t term" "'t term"           (infixr "\<^bold>\<otimes>" 53)
-    | Comp "'t term" "'t term"             (infixr "\<^bold>\<cdot>" 55)
-    | Lunit "'t term"                      ("\<^bold>\<l>\<^bold>[_\<^bold>]")
-    | Lunit' "'t term"                     ("\<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[_\<^bold>]")
-    | Runit "'t term"                      ("\<^bold>\<r>\<^bold>[_\<^bold>]")
-    | Runit' "'t term"                     ("\<^bold>\<r>\<^sup>-\<^sup>1\<^bold>[_\<^bold>]")
-    | Assoc "'t term" "'t term" "'t term"  ("\<^bold>\<a>\<^bold>[_, _, _\<^bold>]")
-    | Assoc' "'t term" "'t term" "'t term" ("\<^bold>\<a>\<^sup>-\<^sup>1\<^bold>[_, _, _\<^bold>]")
+      Prim 't                              (\<open>\<^bold>\<langle>_\<^bold>\<rangle>\<close>)
+    | Unity                                (\<open>\<^bold>\<I>\<close>)
+    | Tensor "'t term" "'t term"           (infixr \<open>\<^bold>\<otimes>\<close> 53)
+    | Comp "'t term" "'t term"             (infixr \<open>\<^bold>\<cdot>\<close> 55)
+    | Lunit "'t term"                      (\<open>\<^bold>\<l>\<^bold>[_\<^bold>]\<close>)
+    | Lunit' "'t term"                     (\<open>\<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[_\<^bold>]\<close>)
+    | Runit "'t term"                      (\<open>\<^bold>\<r>\<^bold>[_\<^bold>]\<close>)
+    | Runit' "'t term"                     (\<open>\<^bold>\<r>\<^sup>-\<^sup>1\<^bold>[_\<^bold>]\<close>)
+    | Assoc "'t term" "'t term" "'t term"  (\<open>\<^bold>\<a>\<^bold>[_, _, _\<^bold>]\<close>)
+    | Assoc' "'t term" "'t term" "'t term" (\<open>\<^bold>\<a>\<^sup>-\<^sup>1\<^bold>[_, _, _\<^bold>]\<close>)
 
     lemma not_is_Tensor_Unity:
     shows "\<not> is_Tensor Unity"
@@ -2093,7 +2097,7 @@ $$\xymatrix{
       diagonal matrix.
 \<close>
 
-    fun TensorDiag      (infixr "\<^bold>\<lfloor>\<^bold>\<otimes>\<^bold>\<rfloor>" 53)
+    fun TensorDiag      (infixr \<open>\<^bold>\<lfloor>\<^bold>\<otimes>\<^bold>\<rfloor>\<close> 53)
     where "\<^bold>\<I> \<^bold>\<lfloor>\<^bold>\<otimes>\<^bold>\<rfloor> u = u"
         | "t \<^bold>\<lfloor>\<^bold>\<otimes>\<^bold>\<rfloor> \<^bold>\<I> = t"
         | "\<^bold>\<langle>f\<^bold>\<rangle> \<^bold>\<lfloor>\<^bold>\<otimes>\<^bold>\<rfloor> u = \<^bold>\<langle>f\<^bold>\<rangle> \<^bold>\<otimes> u"
@@ -2359,7 +2363,7 @@ $$\xymatrix{
       by ``pushing the composition down'' to arrows of \<open>C\<close>.
 \<close>
 
-    fun CompDiag :: "'a term \<Rightarrow> 'a term \<Rightarrow> 'a term"      (infixr "\<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor>" 55)
+    fun CompDiag :: "'a term \<Rightarrow> 'a term \<Rightarrow> 'a term"      (infixr \<open>\<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor>\<close> 55)
     where "\<^bold>\<I> \<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor> u = u"
         | "\<^bold>\<langle>f\<^bold>\<rangle> \<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor> \<^bold>\<langle>g\<^bold>\<rangle> = \<^bold>\<langle>f \<cdot> g\<^bold>\<rangle>"
         | "(u \<^bold>\<otimes> v) \<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor> (w \<^bold>\<otimes> x) = (u \<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor> w \<^bold>\<otimes> v \<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor> x)"
@@ -2782,7 +2786,7 @@ $$\xymatrix{
       The precise relationship between a term and its diagonalization is developed below.
 \<close>
 
-    fun Diagonalize :: "'a term \<Rightarrow> 'a term"   ("\<^bold>\<lfloor>_\<^bold>\<rfloor>")
+    fun Diagonalize :: "'a term \<Rightarrow> 'a term"   (\<open>\<^bold>\<lfloor>_\<^bold>\<rfloor>\<close>)
     where "\<^bold>\<lfloor>\<^bold>\<langle>f\<^bold>\<rangle>\<^bold>\<rfloor> = \<^bold>\<langle>f\<^bold>\<rangle>"
         | "\<^bold>\<lfloor>\<^bold>\<I>\<^bold>\<rfloor> = \<^bold>\<I>"
         | "\<^bold>\<lfloor>t \<^bold>\<otimes> u\<^bold>\<rfloor> = \<^bold>\<lfloor>t\<^bold>\<rfloor> \<^bold>\<lfloor>\<^bold>\<otimes>\<^bold>\<rfloor> \<^bold>\<lfloor>u\<^bold>\<rfloor>"
@@ -2994,7 +2998,7 @@ $$\xymatrix{
       from @{term a} to @{term "\<^bold>\<lfloor>a\<^bold>\<rfloor>"}.
 \<close>
 
-    fun red2                       (infixr "\<^bold>\<Down>" 53)
+    fun red2                       (infixr \<open>\<^bold>\<Down>\<close> 53)
     where "\<^bold>\<I> \<^bold>\<Down> a = \<^bold>\<l>\<^bold>[a\<^bold>]"
         | "\<^bold>\<langle>f\<^bold>\<rangle> \<^bold>\<Down> \<^bold>\<I> = \<^bold>\<r>\<^bold>[\<^bold>\<langle>f\<^bold>\<rangle>\<^bold>]"
         | "\<^bold>\<langle>f\<^bold>\<rangle> \<^bold>\<Down> a = \<^bold>\<langle>f\<^bold>\<rangle> \<^bold>\<otimes> a"
@@ -3002,7 +3006,7 @@ $$\xymatrix{
         | "(a \<^bold>\<otimes> b) \<^bold>\<Down> c = (a \<^bold>\<Down> \<^bold>\<lfloor>b \<^bold>\<otimes> c\<^bold>\<rfloor>) \<^bold>\<cdot> (a \<^bold>\<otimes> (b \<^bold>\<Down> c)) \<^bold>\<cdot> \<^bold>\<a>\<^bold>[a, b, c\<^bold>]"
         | "a \<^bold>\<Down> b = undefined"
 
-    fun red                         ("_\<^bold>\<down>" [56] 56)
+    fun red                         (\<open>_\<^bold>\<down>\<close> [56] 56)
     where "\<^bold>\<I>\<^bold>\<down> = \<^bold>\<I>"
         | "\<^bold>\<langle>f\<^bold>\<rangle>\<^bold>\<down> = \<^bold>\<langle>f\<^bold>\<rangle>"
         | "(a \<^bold>\<otimes> b)\<^bold>\<down> = (if Diag (a \<^bold>\<otimes> b) then a \<^bold>\<otimes> b else (\<^bold>\<lfloor>a\<^bold>\<rfloor> \<^bold>\<Down> \<^bold>\<lfloor>b\<^bold>\<rfloor>) \<^bold>\<cdot> (a\<^bold>\<down> \<^bold>\<otimes> b\<^bold>\<down>))"
@@ -3201,24 +3205,24 @@ $$\xymatrix{
     monoidal_language C +
     monoidal_category D T \<alpha> \<iota> +
     V: "functor" C D V
-  for C :: "'c comp"                  (infixr "\<cdot>\<^sub>C" 55)
-  and D :: "'d comp"                  (infixr "\<cdot>" 55)
+  for C :: "'c comp"                  (infixr \<open>\<cdot>\<^sub>C\<close> 55)
+  and D :: "'d comp"                  (infixr \<open>\<cdot>\<close> 55)
   and T :: "'d * 'd \<Rightarrow> 'd"
   and \<alpha> :: "'d * 'd * 'd \<Rightarrow> 'd"
   and \<iota> :: 'd
   and V :: "'c \<Rightarrow> 'd"
   begin
 
-    no_notation C.in_hom               ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
+    no_notation C.in_hom               (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
 
-    notation unity                     ("\<I>")
-    notation runit                     ("\<r>[_]")
-    notation lunit                     ("\<l>[_]")
-    notation assoc'                    ("\<a>\<^sup>-\<^sup>1[_, _, _]")
-    notation runit'                    ("\<r>\<^sup>-\<^sup>1[_]")
-    notation lunit'                    ("\<l>\<^sup>-\<^sup>1[_]")
+    notation unity                     (\<open>\<I>\<close>)
+    notation runit                     (\<open>\<r>[_]\<close>)
+    notation lunit                     (\<open>\<l>[_]\<close>)
+    notation assoc'                    (\<open>\<a>\<^sup>-\<^sup>1[_, _, _]\<close>)
+    notation runit'                    (\<open>\<r>\<^sup>-\<^sup>1[_]\<close>)
+    notation lunit'                    (\<open>\<l>\<^sup>-\<^sup>1[_]\<close>)
 
-    primrec eval :: "'c term \<Rightarrow> 'd"    ("\<lbrace>_\<rbrace>")
+    primrec eval :: "'c term \<Rightarrow> 'd"    (\<open>\<lbrace>_\<rbrace>\<close>)
     where "\<lbrace>\<^bold>\<langle>f\<^bold>\<rangle>\<rbrace> = V f"
         | "\<lbrace>\<^bold>\<I>\<rbrace> = \<I>"
         | "\<lbrace>t \<^bold>\<otimes> u\<rbrace> = \<lbrace>t\<rbrace> \<otimes> \<lbrace>u\<rbrace>"
@@ -3350,7 +3354,7 @@ $$\xymatrix{
     lemma eval_Assoc [simp]:
     assumes "Arr t" and "Arr u" and "Arr v"
     shows "\<lbrace>\<^bold>\<a>\<^bold>[t, u, v\<^bold>]\<rbrace> = \<a>[cod \<lbrace>t\<rbrace>, cod \<lbrace>u\<rbrace>, cod \<lbrace>v\<rbrace>] \<cdot> ((\<lbrace>t\<rbrace> \<otimes> \<lbrace>u\<rbrace>) \<otimes> \<lbrace>v\<rbrace>)"
-      using assms \<alpha>.is_natural_2 [of "(\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)"] by auto
+      using assms \<alpha>.naturality2 [of "(\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)"] by auto
 
     lemma eval_Assoc' [simp]:
     assumes "Arr t" and "Arr u" and "Arr v"
@@ -3414,11 +3418,11 @@ $$\xymatrix{
       fix t
       assume I: "Can t \<Longrightarrow> \<lbrace>Inv t\<rbrace> = inv \<lbrace>t\<rbrace>"
       show "Can \<^bold>\<l>\<^bold>[t\<^bold>] \<Longrightarrow> \<lbrace>Inv \<^bold>\<l>\<^bold>[t\<^bold>]\<rbrace> = inv \<lbrace>\<^bold>\<l>\<^bold>[t\<^bold>]\<rbrace>"
-        using I \<ll>'.is_natural_2 [of "inv \<lbrace>t\<rbrace>"] iso_eval_Can \<ll>_ide_simp iso_is_arr
+        using I \<ll>'.naturality2 [of "inv \<lbrace>t\<rbrace>"] iso_eval_Can \<ll>_ide_simp iso_is_arr
              comp_cod_arr inv_comp
         by simp
       show "Can \<^bold>\<r>\<^bold>[t\<^bold>] \<Longrightarrow> \<lbrace>Inv \<^bold>\<r>\<^bold>[t\<^bold>]\<rbrace> = inv \<lbrace>\<^bold>\<r>\<^bold>[t\<^bold>]\<rbrace>"
-        using I \<rho>'.is_natural_2 [of "inv \<lbrace>t\<rbrace>"] iso_eval_Can \<rho>_ide_simp iso_is_arr
+        using I \<rho>'.naturality2 [of "inv \<lbrace>t\<rbrace>"] iso_eval_Can \<rho>_ide_simp iso_is_arr
               comp_cod_arr inv_comp
         by simp
       show "Can \<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[t\<^bold>] \<Longrightarrow> \<lbrace>Inv \<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]\<rbrace> = inv \<lbrace>\<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]\<rbrace>"
@@ -3428,7 +3432,7 @@ $$\xymatrix{
         have "inv \<lbrace>\<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]\<rbrace> = inv (\<ll>' \<lbrace>t\<rbrace>)"
           using t by simp
         also have "... = inv (\<l>\<^sup>-\<^sup>1[cod \<lbrace>t\<rbrace>] \<cdot> \<lbrace>t\<rbrace>)"
-          using 1 \<ll>'.is_natural_2 [of "\<lbrace>t\<rbrace>"] \<ll>'_ide_simp iso_is_arr by auto
+          using 1 \<ll>'.naturality2 [of "\<lbrace>t\<rbrace>"] \<ll>'_ide_simp iso_is_arr by auto
         also have "... = \<lbrace>Inv \<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]\<rbrace>"
           using t I 1 iso_is_arr inv_comp by auto
         finally show ?thesis by simp
@@ -3440,7 +3444,7 @@ $$\xymatrix{
         have "inv \<lbrace>\<^bold>\<r>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]\<rbrace> = inv (\<rho>' \<lbrace>t\<rbrace>)"
           using t by simp
         also have "... = inv (\<r>\<^sup>-\<^sup>1[cod \<lbrace>t\<rbrace>] \<cdot> \<lbrace>t\<rbrace>)"
-          using 1 \<rho>'.is_natural_2 [of "\<lbrace>t\<rbrace>"] \<rho>'_ide_simp iso_is_arr by auto
+          using 1 \<rho>'.naturality2 [of "\<lbrace>t\<rbrace>"] \<rho>'_ide_simp iso_is_arr by auto
         also have "... = \<lbrace>Inv \<^bold>\<r>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]\<rbrace>"
           using t I 1 iso_is_arr inv_comp by auto
         finally show ?thesis by simp
@@ -4297,7 +4301,7 @@ $$\xymatrix{
             by fastforce
           thus ?thesis
             using t Arr_implies_Ide_Cod Ide_implies_Arr Ide_in_Hom Diagonalize_Comp_Cod_Arr
-                  eval_in_hom \<ll>'.is_natural_2 [of "\<lbrace>t\<rbrace>"]
+                  eval_in_hom \<ll>'.naturality2 [of "\<lbrace>t\<rbrace>"]
             by force
         qed
         show "Arr \<^bold>\<r>\<^sup>-\<^sup>1\<^bold>[t\<^bold>] \<Longrightarrow> coherent \<^bold>\<r>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]"
@@ -4310,7 +4314,7 @@ $$\xymatrix{
             by fastforce
           thus ?thesis
             using t Arr_implies_Ide_Cod Ide_implies_Arr Ide_in_Hom Diagonalize_Comp_Cod_Arr
-                  eval_in_hom \<rho>'.is_natural_2 [of "\<lbrace>t\<rbrace>"]
+                  eval_in_hom \<rho>'.naturality2 [of "\<lbrace>t\<rbrace>"]
             by force
         qed
         next
@@ -4412,7 +4416,7 @@ $$\xymatrix{
             by simp
           moreover have "\<lbrace>\<^bold>\<a>\<^sup>-\<^sup>1\<^bold>[t, u, v\<^bold>]\<rbrace> = \<lbrace>((t \<^bold>\<otimes> u) \<^bold>\<otimes> v) \<^bold>\<cdot> \<^bold>\<a>\<^sup>-\<^sup>1\<^bold>[Dom t, Dom u, Dom v\<^bold>]\<rbrace>"
             using t u v Arr_implies_Ide_Dom Ide_implies_Arr eval_in_hom comp_cod_arr
-                  \<alpha>'.is_natural_1 \<alpha>'_simp
+                  \<alpha>'.naturality1 \<alpha>'_simp
             by simp
           ultimately show "coherent \<^bold>\<a>\<^sup>-\<^sup>1\<^bold>[t, u, v\<^bold>]" by argo
         qed

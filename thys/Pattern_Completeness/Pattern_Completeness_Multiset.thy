@@ -44,14 +44,19 @@ definition subst_pat_problem_mset :: "('f,nat \<times> 's)subst \<Rightarrow> ('
 
 definition \<tau>s_list :: "nat \<Rightarrow> nat \<times> 's \<Rightarrow> ('f,nat \<times> 's)subst list" where 
   "\<tau>s_list n x = map (\<tau>c n x) (Cl (snd x))" 
-
-inductive mp_step_mset :: "('f,'v,'s)match_problem_mset \<Rightarrow> ('f,'v,'s)match_problem_mset \<Rightarrow> bool" (infix "\<rightarrow>\<^sub>m" 50)where
+ 
+inductive mp_step_mset :: "('f,'v,'s)match_problem_mset \<Rightarrow> ('f,'v,'s)match_problem_mset \<Rightarrow> bool" (infix \<open>\<rightarrow>\<^sub>m\<close> 50)where
   match_decompose: "(f,length ts) = (g,length ls)
     \<Longrightarrow> add_mset (Fun f ts, Fun g ls) mp \<rightarrow>\<^sub>m mp + mset (zip ts ls)" 
 | match_match: "x \<notin> \<Union> (vars ` snd ` set_mset mp)
     \<Longrightarrow> add_mset (t, Var x) mp \<rightarrow>\<^sub>m mp" 
-| match_duplicate: "add_mset pair (add_mset pair mp) \<rightarrow>\<^sub>m add_mset pair mp"  
-
+| match_duplicate: "add_mset pair (add_mset pair mp) \<rightarrow>\<^sub>m add_mset pair mp"
+| match_decompose': "mp + mp' \<rightarrow>\<^sub>m (\<Sum>(t, l) \<in># mp. mset (zip (args t) (map Var ys))) + mp'"
+  if "\<And> t l. (t,l) \<in># mp \<Longrightarrow> l = Var y \<and> root t = Some (f,n)" 
+     "\<And> t l. (t,l) \<in># mp' \<Longrightarrow> y \<notin> vars l"
+     "lvars_disj_mp ys (mp_mset (mp + mp'))" "length ys = n"
+     "size mp \<ge> 2" (* for size = 0, get non-termination, for size = 1, use match_match instead *)
+     improved
 
 inductive match_fail :: "('f,'v,'s)match_problem_mset \<Rightarrow> bool" where
   match_clash: "(f,length ts) \<noteq> (g,length ls)  
@@ -59,26 +64,29 @@ inductive match_fail :: "('f,'v,'s)match_problem_mset \<Rightarrow> bool" where
 | match_clash': "Conflict_Clash s t \<Longrightarrow> match_fail (add_mset (s, Var x) (add_mset (t, Var x) mp))"       
 
 inductive pp_step_mset :: "('f,'v,'s)pat_problem_mset \<Rightarrow> ('f,'v,'s)pats_problem_mset \<Rightarrow> bool"
-  (infix "\<Rightarrow>\<^sub>m" 50) where
+  (infix \<open>\<Rightarrow>\<^sub>m\<close> 50) where
   pat_remove_pp: "add_mset {#} pp \<Rightarrow>\<^sub>m {#}" 
 | pat_simp_mp: "mp_step_mset mp mp' \<Longrightarrow> add_mset mp pp \<Rightarrow>\<^sub>m {# (add_mset mp' pp) #}" 
 | pat_remove_mp: "match_fail mp \<Longrightarrow> add_mset mp pp \<Rightarrow>\<^sub>m {# pp #}"
 | pat_instantiate: "tvars_disj_pp {n ..< n+m} (pat_mset (add_mset mp pp)) \<Longrightarrow>
    (Var x, l) \<in> mp_mset mp \<and> is_Fun l \<or>
-   (s,Var y) \<in> mp_mset mp \<and> (t,Var y) \<in> mp_mset mp \<and> Conflict_Var s t x \<and> \<not> inf_sort (snd x) \<Longrightarrow>
+   (s,Var y) \<in> mp_mset mp \<and> (t,Var y) \<in> mp_mset mp \<and> Conflict_Var s t x \<and> \<not> inf_sort (snd x)
+   \<and> (improved \<longrightarrow> s = Var x \<and> is_Fun t) \<Longrightarrow>
   add_mset mp pp \<Rightarrow>\<^sub>m mset (map (\<lambda> \<tau>. subst_pat_problem_mset \<tau> (add_mset mp pp)) (\<tau>s_list n x))"
+| pat_inf_var_conflict: "Ball (pat_mset pp) inf_var_conflict \<Longrightarrow> pp \<noteq> {#}
+    \<Longrightarrow> Ball (tvars_pp (pat_mset pp')) (\<lambda> x. \<not> inf_sort (snd x)) \<Longrightarrow> pp + pp' \<Rightarrow>\<^sub>m {# pp' #}" 
+
 
 inductive pat_fail :: "('f,'v,'s)pat_problem_mset \<Rightarrow> bool" where
-  pat_failure': "Ball (pat_mset pp) inf_var_conflict \<Longrightarrow> pat_fail pp" 
-| pat_empty: "pat_fail {#}" 
+  pat_empty: "pat_fail {#}" 
 
 inductive P_step_mset :: "('f,'v,'s)pats_problem_mset \<Rightarrow> ('f,'v,'s)pats_problem_mset \<Rightarrow> bool"
-  (infix "\<Rrightarrow>\<^sub>m" 50)where
+  (infix \<open>\<Rrightarrow>\<^sub>m\<close> 50)where
   P_failure: "pat_fail pp \<Longrightarrow> add_mset pp P \<noteq> bottom_mset \<Longrightarrow> add_mset pp P \<Rrightarrow>\<^sub>m bottom_mset" 
 | P_simp_pp: "pp \<Rightarrow>\<^sub>m pp' \<Longrightarrow> add_mset pp P \<Rrightarrow>\<^sub>m pp' + P"
 
 text \<open>The relation (encoded as predicate) is finally wrapped in a set\<close>
-definition P_step :: "(('f,'v,'s)pats_problem_mset \<times> ('f,'v,'s)pats_problem_mset)set" ("\<Rrightarrow>") where
+definition P_step :: "(('f,'v,'s)pats_problem_mset \<times> ('f,'v,'s)pats_problem_mset)set" (\<open>\<Rrightarrow>\<close>) where
   "\<Rrightarrow> = {(P,P'). P \<Rrightarrow>\<^sub>m P'}" 
 
 
@@ -115,8 +123,27 @@ proof -
     by (intro exI[of _ n] ballI, force)
 qed
 
-lemma pat_fail_or_trans: 
-  "pat_fail p \<or> (\<exists> ps. p \<Rightarrow>\<^sub>m ps)" 
+(* all patterns are reduced to variables,
+   all var-conflicts for finite sorts are between variables (no function symbols),
+   and all var-conflicts give rise to a var-conflict of an infinite sort that occurs at root,
+   moreover, no obvious clashes are present *)
+definition weak_finite_var_form_mp :: "('f,'v,'s)match_problem_mset \<Rightarrow> bool" where
+  "weak_finite_var_form_mp mp = ((\<forall> (t,l) \<in># mp. \<exists> y. l = Var y)
+     \<and> (\<forall> f ts y. (Fun f ts, Var y) \<in># mp \<longrightarrow>  
+          (\<exists> x. (Var x, Var y) \<in># mp \<and> inf_sort (snd x))
+        \<and> (\<forall> t. (t, Var y) \<in># mp \<longrightarrow> root t \<in> {None, Some (f,length ts)})))"
+
+definition finite_var_form_mp :: "('f,'v,'s)match_problem_mset \<Rightarrow> bool" where
+  "finite_var_form_mp mp = (\<forall> (t,l) \<in># mp. \<exists> x y. t = Var x \<and> l = Var y \<and> \<not> inf_sort (snd x))" 
+
+definition weak_finite_var_form_pp :: "('f,'v,'s)pat_problem_mset \<Rightarrow> bool" where
+  "weak_finite_var_form_pp p = (\<forall> mp \<in># p. weak_finite_var_form_mp mp)" 
+
+definition finite_var_form_pp :: "('f,'v,'s)pat_problem_mset \<Rightarrow> bool" where
+  "finite_var_form_pp p = (\<forall> mp \<in># p. finite_var_form_mp mp)" 
+
+lemma pat_fail_or_trans_or_finite_var_form: assumes "improved \<Longrightarrow> infinite (UNIV :: 'v set)" 
+  shows "pat_fail p \<or> (\<exists> ps. p \<Rightarrow>\<^sub>m ps) \<or> (improved \<and> finite_var_form_pp p)" 
 proof (cases "p = {#}")
   case True
   with pat_empty show ?thesis by auto
@@ -189,31 +216,203 @@ next
           hence "\<exists> s t x mp'. mp = add_mset (s, Var x) (add_mset (t, Var x) mp') \<and> s \<noteq> t" unfolding mp mp' by auto
         } note two = this
         show ?thesis
-        proof (cases "\<exists> mp s t x y. add_mset (s, Var x) (add_mset (t, Var x) mp) \<in># p \<and> Conflict_Var s t y \<and> \<not> inf_sort (snd y)") 
+        proof (cases "\<exists> mp s t x. add_mset (s, Var x) (add_mset (t, Var x) mp) \<in># p \<and> Conflict_Clash s t")
           case True
-          then obtain mp s t x y where 
-            mp: "add_mset (s, Var x) (add_mset (t, Var x) mp) \<in># p" (is "?mp \<in># _") and conf: "Conflict_Var s t y" and y: "\<not> inf_sort (snd y)" 
+          then obtain mp s t x where 
+            mp: "add_mset (s, Var x) (add_mset (t, Var x) mp) \<in># p" (is "?mp \<in># _") and conf: "Conflict_Clash s t" 
             by blast
-          from conflicts(4)[OF conf] have "y \<in> vars s \<union> vars t" by auto
-          with mp have "y \<in> tvars_mp (mp_mset ?mp)" unfolding tvars_mp_def by auto
-          from mp obtain p' where p: "p = add_mset ?mp p'" by (rule mset_add)
-          let ?mp = "add_mset (s, Var x) (add_mset (t, Var x) mp)" 
-          from pat_instantiate[OF _ disjI2, of n ?mp p' s x t y, folded p, OF fresh]
-          show ?thesis using y conf by auto
+          from pat_remove_mp[OF match_clash'[OF conf, of x mp]] 
+          show ?thesis using mset_add[OF mp] by metis
         next
-          case no_non_inf: False
+          case no_clash: False
           show ?thesis
-          proof (cases "\<exists> mp s t x. add_mset (s, Var x) (add_mset (t, Var x) mp) \<in># p \<and> Conflict_Clash s t")
+          proof (cases "\<exists> mp s t x y. add_mset (s, Var x) (add_mset (t, Var x) mp) \<in># p \<and> Conflict_Var s t y \<and> \<not> inf_sort (snd y)") 
             case True
-            then obtain mp s t x where 
-              mp: "add_mset (s, Var x) (add_mset (t, Var x) mp) \<in># p" (is "?mp \<in># _") and conf: "Conflict_Clash s t" 
-              by blast
-            from pat_remove_mp[OF match_clash'[OF conf, of x mp]] 
-            show ?thesis using mset_add[OF mp] by metis
+            show ?thesis 
+            proof (cases improved)
+              case not_impr: False
+              from True obtain mp s t x y where 
+                mp: "add_mset (s, Var x) (add_mset (t, Var x) mp) \<in># p" (is "?mp \<in># _") and conf: "Conflict_Var s t y" and y: "\<not> inf_sort (snd y)" 
+                by blast
+              from mp obtain p' where p: "p = add_mset ?mp p'" by (rule mset_add)
+              let ?mp = "add_mset (s, Var x) (add_mset (t, Var x) mp)" 
+              from pat_instantiate[OF _ disjI2, of n ?mp p' s x t y, folded p, OF fresh]
+              show ?thesis using y conf not_impr by auto
+            next
+              case impr: True
+              (* we first prove that we can reach weak-finite-var-form and switch to finite-var-form later *)
+              (* TODO: one might clean up this two-way proof and directly go to finite-var-form *)
+              have "(pat_fail p \<or> (\<exists>ps. p \<Rightarrow>\<^sub>m ps)) \<or> weak_finite_var_form_pp p" 
+              proof (cases "weak_finite_var_form_pp p")
+                case False
+                from this[unfolded weak_finite_var_form_pp_def] obtain mp 
+                  where mp: "mp \<in># p" and nmp: "\<not> weak_finite_var_form_mp mp" by auto
+                from mset_add[OF mp] obtain p' where p': "p = add_mset mp p'" by auto
+                from rhs_vars[OF mp] have "((\<forall>(t, l)\<in>#mp. \<exists>y. l = Var y) \<and> b) = b" for b
+                  by force
+                note nmp = nmp[unfolded weak_finite_var_form_mp_def this]
+                from this[simplified] obtain f ss y where
+                  s: "(Fun f ss, Var y) \<in># mp" and
+                  violation: "((\<forall>x. (Var x, Var y) \<in># mp \<longrightarrow> \<not> inf_sort (snd x)) \<or>
+                    (\<exists>t g n. (t, Var y) \<in># mp \<and> root t = Some (g, n) \<and> root t \<noteq> Some (f, length ss)))" 
+                   (is "?A \<or> ?B")
+                  by force
+                let ?s = "Fun f ss" 
+                let ?n = "length ss" 
+                show ?thesis
+                proof (cases ?B)
+                  case True
+                  then obtain t g n where t: "(t, Var y) \<in># mp" "root t = Some (g, n)" "root t \<noteq> Some (f, ?n)" 
+                    by auto  
+                  from t have st: "(?s, Var y) \<noteq> (t, Var y)" by (cases t, auto)
+                  define mp' where "mp' = mp - {#(?s, Var y),(t, Var y)#}" 
+                  from s t(1) st have "mp = add_mset (?s, Var y) (add_mset (t, Var y) mp')" 
+                    unfolding mp'_def
+                    by (metis Multiset.diff_add add_mset_add_single diff_union_swap insert_DiffM)
+                  with no_clash mp have "\<not> Conflict_Clash ?s t" by metis
+                  moreover have "Conflict_Clash ?s t" 
+                    using t by (cases t, auto simp: conflicts.simps)
+                  ultimately show ?thesis ..
+                next
+                  case no_clash': False
+                  with violation have finsort: "\<And> x. (Var x, Var y) \<in># mp \<Longrightarrow> \<not> inf_sort (snd x)" by blast                  
+                  show ?thesis 
+                  proof (cases "\<exists> x. (Var x, Var y) \<in># mp")
+                    case True
+                    then obtain x where t: "(Var x, Var y) \<in># mp" (is "(?t,_) \<in># _") by auto
+                    from finsort[OF t] have fin: "\<not> inf_sort (snd x)" .
+                    from s t fin pat_instantiate[OF _ disjI2, of _ mp p' ?t y ?s x, folded p', OF fresh]
+                    show ?thesis by (auto simp: conflicts.simps)
+                  next
+                    case False
+                    define test_y where "test_y tl = (snd tl = Var y)" for tl :: "('f, nat \<times> 's) term \<times> ('f,'v)term" 
+                    define mpy where "mpy = filter_mset test_y mp" 
+                    have size: "size mpy \<ge> 2" 
+                    proof -                      
+                      from mset_add[OF s] obtain mp' where mp': "mp = add_mset (?s, Var y) mp'" by blast
+                      have "y \<in> \<Union> (vars ` snd ` mp_mset mp')" 
+                        using nsvar[rule_format] mp' mp by blast
+                      then obtain t' l' where tl': "(t',l') \<in># mp'" and "y \<in> vars l'" by auto
+                      with rhs_vars[OF mp, of t' l'] mp' have "is_Var l'" by auto
+                      with \<open>y \<in> vars l'\<close> have l': "l' = Var y" by auto
+                      hence "(t',Var y) \<in># mp'" using tl' by auto
+                      from mset_add[OF this] obtain mp'' where mp'': "mp' = add_mset (t', Var y) mp''" 
+                        by auto
+                      have mpy: "mpy = add_mset (?s, Var y) (add_mset (t', Var y) (filter_mset test_y mp''))" 
+                        unfolding mpy_def mp' mp'' by (simp add: test_y_def)
+                      thus ?thesis by simp
+                    qed                    
+                    define mpny where "mpny = filter_mset (Not o test_y) mp" 
+                    have id: "mp = mpy + mpny" by (simp add: mpy_def mpny_def)
+                    {
+                      fix t l
+                      assume "(t, l) \<in># mpny" 
+                      hence "l \<noteq> Var y" "(t,l) \<in># mp" unfolding mpny_def test_y_def o_def by auto
+                      with rhs_vars[OF mp, of t l] have "y \<notin> vars l" by (cases l, auto)
+                    } note mpny = this
+                    {
+                      fix t l
+                      assume "(t, l) \<in># mpy" 
+                      hence l: "l = Var y" and pair: "(t,Var y) \<in># mp" unfolding mpy_def test_y_def o_def by auto
+                      with False obtain g ts where t: "t = Fun g ts" by (cases t, auto)
+                      from no_clash' pair t have "root t = Some (f,?n)" by auto
+                      with l have "l = Var y \<and> root t = Some (f,?n)" by auto
+                    } note mpy = this  
+                    define VV where "VV = \<Union> (vars ` snd ` mp_mset mp)" 
+                    have "finite VV" by (auto simp: VV_def)
+                    with assms(1)[OF impr] have "infinite (UNIV - VV)" by auto
+                    then obtain Ys where Ys: "Ys \<subseteq> UNIV - VV" "card Ys = ?n" "finite Ys"
+                      by (meson infinite_arbitrarily_large)
+                    from Ys(2-3) obtain ys where ys: "distinct ys" "length ys = ?n" "set ys = Ys"
+                      by (metis distinct_card finite_distinct_list)
+                    with Ys have dist: "VV \<inter> set ys = {}" by auto
+                    have "lvars_disj_mp ys (mp_mset mp)" "length ys = ?n" 
+                      unfolding lvars_disj_mp_def using ys dist unfolding VV_def by auto
+                    from match_decompose'[of mpy y f ?n mpny, folded id, OF mpy mpny this size impr]
+                    obtain mp' where "mp \<rightarrow>\<^sub>m mp'" by force
+                    from pat_simp_mp[OF this, of p'] p' show ?thesis by auto
+                  qed
+                qed
+              qed auto
+              (* and continue to switch from weak-finite-var-form to full finite-var-form *)
+              thus ?thesis
+              proof (elim context_disjE)
+                assume no_step: "\<not> (pat_fail p \<or> (\<exists>ps. p \<Rightarrow>\<^sub>m ps))" 
+                assume "weak_finite_var_form_pp p" 
+                note wfvf = this[unfolded weak_finite_var_form_pp_def weak_finite_var_form_mp_def, rule_format]
+                note get_var = wfvf[THEN conjunct1, rule_format]
+                note fun_case = wfvf[THEN conjunct2, rule_format]
+                (* fin-predicate: all variables in mp are of finite sort *)
+                define fin where "fin mp = Ball (tvars_mp (mp_mset mp)) (\<lambda> x. \<not> inf_sort (snd x))" for mp
+                define p_fin where "p_fin = filter_mset fin p" 
+                define p_inf where "p_inf = filter_mset (Not o fin) p" 
+                have p_split: "p = p_inf + p_fin" unfolding p_fin_def p_inf_def by auto
+                show ?thesis
+                proof (cases "p_inf = {#}")
+                  case True
+                  have fin: "\<And> mp. mp \<in># p \<Longrightarrow> fin mp" unfolding p_split True unfolding p_fin_def by auto
+                  have "finite_var_form_pp p" 
+                    unfolding finite_var_form_pp_def finite_var_form_mp_def
+                  proof (intro ballI, clarify)
+                    fix mp t l
+                    assume mp: "mp \<in># p" and tl: "(t,l) \<in># mp" 
+                    from fin[OF mp, unfolded fin_def tvars_mp_def] tl 
+                    have fint: "\<And> x. x \<in> vars t \<Longrightarrow> \<not> inf_sort (snd x)" by auto
+                    from get_var[OF mp tl] tl obtain y where 
+                      ty: "(t, Var y) \<in># mp" and ly: "l = Var y" by (cases l, auto)
+                    have "is_Var t"
+                    proof (cases t)
+                      case (Fun f ts)
+                      with ty have "(Fun f ts, Var y) \<in># mp" by auto
+                      from fun_case[OF mp this] obtain x where "(Var x, Var y) \<in># mp" "inf_sort (snd x)" by auto
+                      with fin[OF mp, unfolded fin_def tvars_mp_def] tl have False by auto
+                      thus ?thesis by auto
+                    qed auto
+                    then obtain x where tx: "t = Var x" by auto
+                    from fint[unfolded tx] have fin: "\<not> inf_sort (snd x)" by auto
+                    with ly tx show "\<exists>x y. t = Var x \<and> l = Var y \<and> \<not> inf_sort (snd x)" by auto
+                  qed
+                  with impr show ?thesis by auto
+                next
+                  case False
+                  have "\<forall>x\<in>tvars_pp (pat_mset p_fin). \<not> inf_sort (snd x)" unfolding p_fin_def fin_def
+                    by (auto simp: tvars_pp_def)
+                  from pat_inf_var_conflict[OF _ False this, folded p_split] no_step
+                  obtain mp where mp: "mp \<in># p" and inf: "\<not> fin mp" and no_confl: "\<not> inf_var_conflict (mp_mset mp)" 
+                    unfolding p_inf_def by fastforce
+                  from inf[unfolded fin_def tvars_mp_def]
+                  obtain t l x where tl: "(t,l) \<in># mp" and x: "x \<in> vars t" and inf: "inf_sort (snd x)" by auto
+                  from get_var[OF mp tl] tl obtain y where ty: "(t, Var y) \<in># mp" by auto
+                  have "\<exists> x. (Var x, Var y) \<in># mp \<and> inf_sort (snd x)" 
+                  proof (cases t)
+                    case (Var z)
+                    with ty inf x show ?thesis by (intro exI[of _ z], auto)
+                  next
+                    case (Fun f ts)
+                    from fun_case[OF mp ty[unfolded Fun]] show ?thesis by auto
+                  qed
+                  then obtain x where xy: "(Var x, Var y) \<in># mp" and inf: "inf_sort (snd x)" by auto
+                  from mset_add[OF xy] obtain mp' where mp': "mp = add_mset (Var x, Var y) mp'" by auto
+                  from nsvar[simplified, rule_format, OF mp[unfolded mp']] obtain s y' where 
+                    sy': "(s,y') \<in># mp'" and y': "y \<in> vars y'" by force
+                  from mset_add[OF sy'] mp' obtain mp'' where 
+                    mp'': "mp = add_mset (s,y') (add_mset (Var x, Var y) mp'')" 
+                    by auto
+                  from get_var[OF mp[unfolded mp'']] y'
+                  have mp'': "mp = add_mset (s, Var y) (add_mset (Var x, Var y) mp'')" 
+                    unfolding mp'' by (cases y', auto)
+                  from ndup mp'' mp have sx: "s \<noteq> Var x" by auto
+                  from no_confl[unfolded inf_var_conflict_def not_ex, rule_format, of s y "Var x" x] mp'' inf                     
+                  have "\<not> Conflict_Var s (Var x) x" by auto
+                  with sx have False by (cases s, auto simp: conflicts.simps)
+                  thus ?thesis by auto
+                qed
+              qed auto
+            qed
           next
-            case no_clash: False
-            show ?thesis
-            proof (intro disjI1 pat_failure' ballI)
+            case no_non_inf: False
+            have "\<exists> ps. p + {#} \<Rightarrow>\<^sub>m ps"
+            proof (intro exI, rule pat_inf_var_conflict[OF _ pne], intro ballI)
               fix mp
               assume mp: "mp \<in> pat_mset p"
               then obtain mp' where mp': "mp' \<in># p" and mp: "mp = mp_mset mp'" by auto 
@@ -227,13 +426,21 @@ next
                 apply (rule exI[of _ s], rule exI[of _ t])
                 apply (intro exI[of _ x] exI[of _ y])
                 using insert inf conf by auto
-            qed
+            qed (auto simp: tvars_pp_def)
+            thus ?thesis by auto
           qed
         qed
       qed
     qed
   qed
 qed
+
+context
+  assumes non_improved: "\<not> improved"
+begin
+  
+lemma pat_fail_or_trans: "pat_fail p \<or> (\<exists> ps. p \<Rightarrow>\<^sub>m ps)" 
+  using pat_fail_or_trans_or_finite_var_form[of p] non_improved by auto
 
 text \<open>Pattern problems just have two normal forms: 
   empty set (solvable) or bottom (not solvable)\<close>
@@ -251,6 +458,36 @@ proof (rule ccontr)
   have "pat_fail p" unfolding P by auto
   from P_failure[OF this, of P', folded P] nNF NF show False by auto
 qed
+end
+
+
+context
+  assumes improved: "improved"
+    and inf: "infinite (UNIV :: 'v set)" 
+begin
+  
+lemma pat_fail_or_trans_or_fvf: "pat_fail p \<or> (\<exists> ps. p \<Rightarrow>\<^sub>m ps) \<or> finite_var_form_pp p" 
+  using pat_fail_or_trans_or_finite_var_form[of p, OF inf] by auto
+
+text \<open>Normal forms only consist of finite-var-form pattern problems\<close>
+theorem P_step_NF_fvf: 
+  assumes NF: "P \<in> NF \<Rrightarrow>" 
+    and p: "p \<in># P"
+  shows "finite_var_form_pp p"  
+proof (rule ccontr)
+  assume nfvf: "\<not> ?thesis" 
+  from mset_add[OF p] obtain P' where P: "P = add_mset p P'" by auto
+  from NF have NF: "\<not> (\<exists> Q. P \<Rrightarrow>\<^sub>m Q)" unfolding P_step_def by blast
+  from pat_fail_or_trans_or_fvf[of p] nfvf
+  obtain ps where "pat_fail p \<or> p \<Rightarrow>\<^sub>m ps" by auto
+  with P_simp_pp[of p ps] NF
+  have "pat_fail p" unfolding P by auto
+  from P_failure[OF this, of P', folded P] NF have "P = {# {#} #}" by auto
+  with P have "p = {#}" by auto
+  with nfvf show False unfolding finite_var_form_pp_def by auto
+qed
+end
+
 end
 
 subsection \<open>Termination\<close>
@@ -348,22 +585,22 @@ definition meas_finvars :: "('f,'v,'s)pat_problem_mset \<Rightarrow> nat" where
   "meas_finvars = sum_ms (\<lambda> mp. sum (max_size o snd) (tvars_mp (mp_mset mp)))" 
 
 definition meas_symbols :: "('f,'v,'s)pat_problem_mset \<Rightarrow> nat" where
-  "meas_symbols = sum_ms size_mset" 
+  "meas_symbols = sum_ms (sum_ms (\<lambda> (t,l). num_funs t))" 
 
 definition meas_setsize :: "('f,'v,'s)pat_problem_mset \<Rightarrow> nat" where
   "meas_setsize p = sum_ms (sum_ms (\<lambda> _. 1)) p + size p" 
 
-definition rel_pat :: "(('f,'v,'s)pat_problem_mset \<times> ('f,'v,'s)pat_problem_mset)set" ("\<prec>") where
+definition rel_pat :: "(('f,'v,'s)pat_problem_mset \<times> ('f,'v,'s)pat_problem_mset)set" (\<open>\<prec>\<close>) where
   "(\<prec>) = inv_image ({(x, y). x < y} <*lex*> {(x, y). x < y} <*lex*> {(x, y). x < y} <*lex*> {(x, y). x < y}) 
   (\<lambda> mp. (meas_diff mp, meas_finvars mp, meas_symbols mp, meas_setsize mp))" 
  
-abbreviation gt_rel_pat (infix "\<succ>" 50) where
+abbreviation gt_rel_pat (infix \<open>\<succ>\<close> 50) where
   "pp \<succ> pp' \<equiv> (pp',pp) \<in> \<prec>" 
 
-definition rel_pats :: "(('f,'v,'s)pats_problem_mset \<times> ('f,'v,'s)pats_problem_mset)set" ("\<prec>mul") where
+definition rel_pats :: "(('f,'v,'s)pats_problem_mset \<times> ('f,'v,'s)pats_problem_mset)set" (\<open>\<prec>mul\<close>) where
   "\<prec>mul = mult (\<prec>)" 
 
-abbreviation gt_rel_pats (infix "\<succ>mul" 50) where
+abbreviation gt_rel_pats (infix \<open>\<succ>mul\<close> 50) where
   "P \<succ>mul P' \<equiv> (P',P) \<in> \<prec>mul" 
 
 lemma wf_rel_pat: "wf \<prec>" 
@@ -416,9 +653,66 @@ proof cases
   have "meas_diff {#mp'#} \<le> meas_diff {#mp#}" 
     unfolding meas_def * using *(3) 
     by (auto simp: sum_mset_sum_list[symmetric] zip_commute[of ts ls] image_mset.compositionality o_def id)
-  moreover have "meas_symbols {#mp'#} < meas_symbols {#mp#}" 
-    unfolding meas_def * using *(3) size_mset_Fun_less[of ts ls g g]
+  moreover have "length ts = length ls \<Longrightarrow> (\<Sum>(t, l)\<in>#mset (zip ts ls). num_funs t) \<le> sum_list (map num_funs ts)" 
+    by (induct ts ls rule: list_induct2, auto)
+  hence "meas_symbols {#mp'#} < meas_symbols {#mp#}" 
+    unfolding meas_def * using *(3)
     by (auto simp: sum_mset_sum_list)
+  ultimately show ?thesis unfolding rel_pat_def by auto
+next
+  case *: (match_decompose' mp1 y f n mp2 ys)
+  let ?Var = "Var :: 'v \<Rightarrow> ('f, 'v) term" 
+  have "meas_diff {#mp'#} \<le> meas_diff {#mp#}
+    \<longleftrightarrow> (\<Sum>(ti, yi)\<in>#(\<Sum>(t, l)\<in>#mp1. mset (zip (args t) (map ?Var ys))). fun_diff yi ti)
+    \<le> (\<Sum>(t, l)\<in>#mp1. fun_diff l t)" (is "_ \<longleftrightarrow> ?sum \<le> _")
+    unfolding * meas_diff_def by simp
+  also have "?sum = 0" 
+    by (intro sum_mset.neutral ballI, auto simp: set_zip)
+  finally have "meas_diff {#mp'#} \<le> meas_diff {#mp#}" by simp
+  moreover
+  have "meas_finvars {#mp'#} \<le> meas_finvars {#mp#}" 
+  proof (rule meas_finvars_mono)
+    show "tvars_mp (mp_mset mp') \<subseteq> tvars_mp (mp_mset mp)" 
+      unfolding tvars_mp_def * using *(3,6) 
+      by (auto simp: set_zip set_conv_nth) 
+        (metis case_prod_conv nth_mem option.simps(3) root.elims term.sel(4) term.set_intros(4))
+  qed
+  moreover       
+  have "meas_symbols {#mp'#} < meas_symbols {#mp#}"
+  proof -
+    from \<open>2 \<le> size mp1\<close> obtain T L MP where mp1: "mp1 = add_mset (T,L) MP" 
+      by (cases mp1; force)
+    from *(3)[of T L] mp1 obtain TS where id: "T = Fun f TS" "L = Var y" and lTS: "length TS = n" 
+      by (cases T, auto)
+    have aux: "length ts = length ls \<Longrightarrow> 
+      (\<Sum>(t, l)\<in>#mset (zip ts ls). num_funs t) \<le> sum_list (map num_funs ts)" 
+      for ts :: "('f, nat \<times> 's)term list" and ls :: "('f,'v)term list" 
+      by (induct ts ls rule: list_induct2, auto)
+    have "meas_symbols {#mp'#} < meas_symbols {#mp#} \<longleftrightarrow> 
+    ((\<Sum>(t, l)\<in>#mset (zip TS (map ?Var ys)). num_funs t) +
+     (\<Sum>(ti, yi)\<in>#(\<Sum>(t, l)\<in>#MP. mset (zip (args t) (map ?Var ys))). num_funs ti)
+     \<le> (sum_list (map num_funs TS) + (\<Sum>(t, l)\<in>#MP. num_funs t)))" 
+      (is "_ \<longleftrightarrow> (?a + ?b \<le> ?c + ?d)")
+      unfolding meas_symbols_def * mp1 id by (simp add: sum_mset_sum_list less_Suc_eq_le) 
+    also have \<dots>
+    proof (rule add_le_mono)
+      show "?a \<le> ?c" using aux lTS \<open>length ys = n\<close> by auto
+      from *(3) mp1 have "(t, l) \<in># MP \<Longrightarrow> l = Var y \<and> root t = Some (f, n)" for l t by auto
+      thus "?b \<le> ?d" 
+      proof (induct MP)
+        case (add pair MP)
+        obtain t l where pair: "pair = (t,l)" by force
+        from add(2)[of t l] obtain ts where id: "l = Var y" "t = Fun f ts" and lts: "length ts = n" 
+          by (cases t, auto simp: pair)
+        from add(1)[OF add(2)]
+        have IH: "(\<Sum>(ti, yi)\<in>#(\<Sum>(t, l)\<in>#MP. mset (zip (args t) (map ?Var ys))). num_funs ti)
+          \<le> (\<Sum>(t, l)\<in>#MP. num_funs t)" by auto
+        from IH aux[of ts, unfolded lts, of "map ?Var ys"] \<open>length ys = n\<close>
+        show ?case unfolding pair id by auto
+      qed auto
+    qed
+    finally show "meas_symbols {#mp'#} < meas_symbols {#mp#}" .
+  qed
   ultimately show ?thesis unfolding rel_pat_def by auto
 next
   case *: (match_match x t)
@@ -560,7 +854,8 @@ next
   from *(2) have "\<exists> s t. (s,t) \<in># mp \<and>  (s = Var x \<and> is_Fun t
           \<or> (x \<in> vars s \<and> \<not> inf_sort (snd x)))"
   proof
-    assume *: "(s, Var y) \<in># mp \<and> (t, Var y) \<in># mp \<and> Conflict_Var s t x \<and> \<not> inf_sort (snd x)" 
+    assume *: "(s, Var y) \<in># mp \<and> (t, Var y) \<in># mp \<and> Conflict_Var s t x \<and> \<not> inf_sort (snd x)
+     \<and> (improved \<longrightarrow> s = Var x \<and> is_Fun t)" 
     hence "Conflict_Var s t x" and "\<not> inf_sort (snd x)" by auto
     from conflicts(4)[OF this(1)] this(2) *
     show ?thesis by auto
@@ -667,6 +962,9 @@ next
 next
   case *: (pat_remove_pp p)
   thus ?case by (intro meas_sub_rel_pat, auto)
+next
+  case *: (pat_inf_var_conflict p)
+  thus ?case by (intro meas_sub_rel_pat, cases p, auto)
 qed
 
 text \<open>finally: the transformation is terminating w.r.t. @{term "(\<succ>mul)"}\<close>
@@ -723,6 +1021,9 @@ next
 next
   case (match_duplicate pair mp)
   show ?case by (rule mp_step_cong[OF mp_identity], auto)
+next
+  case *: (match_decompose' mp y f n mp' ys) 
+  show ?case by (rule mp_step_cong[OF mp_decompose'[OF *(1,2) *(3)[unfolded set_mset_union] *(4,6)]], auto)
 qed
 
 lemma mp_fail_cong: "mp_fail mp \<Longrightarrow> mp = mp' \<Longrightarrow> mp_fail mp'" by auto
@@ -747,10 +1048,6 @@ proof (induct)
   from *(1)
   have "?P \<Rrightarrow>\<^sub>s bottom"
   proof induct
-    case (pat_failure' p)
-    from P_failure'[OF this]
-    show ?case by auto
-  next
     case pat_empty
     show ?case using P_fail by auto
   qed
@@ -787,6 +1084,13 @@ next
     show ?case unfolding conv \<tau>s_list
       apply (rule P_step_set_cong[OF P_instantiate[OF *(1) x]])
       by (unfold conv subst_defs set_map image_comp, auto)
+  next
+    case *: (pat_inf_var_conflict pp pp')
+    from pp_inf_var_conflict[OF *(1), of "pat_mset pp'"] 
+    have "pat_mset (pp + pp') \<Rightarrow>\<^sub>s pat_mset pp'" 
+      using * by (auto simp: tvars_pp_def image_Un)
+    from P_simp[OF this]
+    show ?case by auto
   qed
   thus ?case unfolding conv .
 qed
@@ -812,7 +1116,8 @@ text \<open>Gather all results for the multiset-based implementation:
     decision procedure on well-formed inputs (termination was proven before)\<close>
 
 theorem P_step:
-  assumes wf: "wf_pats (pats_mset P)" and NF: "(P,Q) \<in> \<Rrightarrow>\<^sup>!"
+  assumes non_improved: "\<not> improved" 
+    and wf: "wf_pats (pats_mset P)" and NF: "(P,Q) \<in> \<Rrightarrow>\<^sup>!"
   shows "Q = {#} \<and> pats_complete (pats_mset P) \<comment> \<open>either the result is {} and input P is complete\<close>
   \<or> Q = bottom_mset \<and> \<not> pats_complete (pats_mset P) \<comment> \<open>or the result = bot and P is not complete\<close>" 
 proof -
@@ -821,7 +1126,7 @@ proof -
   have wf: "wf_pats (pats_mset Q)" and 
     sound: "pats_complete (pats_mset P) = pats_complete (pats_mset Q)" 
     by blast+
-  from P_step_NF[OF NF] have "Q \<in> {{#},bottom_mset}" .
+  from P_step_NF[OF non_improved NF] have "Q \<in> {{#},bottom_mset}" .
   thus ?thesis unfolding sound by auto
 qed
 

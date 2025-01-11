@@ -2,8 +2,8 @@ theory Relation_of_PNTs
 imports
   "PNT_Remainder_Library"
 begin
-unbundle pnt_notation
-unbundle prime_counting_notation
+unbundle pnt_syntax
+unbundle prime_counting_syntax
 
 section \<open>Implication relation of many forms of prime number theorem\<close>
 
@@ -319,9 +319,7 @@ proof (subst mult.assoc,
     hence "(\<lambda>x. h x * (1 / (ln x)\<^sup>2)) \<in> O(\<lambda>x. h x * 1)"
       by (rule landau_o.big.mult_left)
     thus ?thesis
-      by (auto simp add: field_simps
-               intro!: landau_o.big.ev_eq_trans2)
-         (auto intro: eventually_at_top_linorderI [of 1])
+      by (auto simp add: field_simps intro!: landau_o.big.ev_eq_trans2)
   qed
   finally show "(\<lambda>t. r\<^sub>2 t / (t * (ln t)\<^sup>2))
     \<in> O(\<lambda>x. exp (- (c * (ln x powr m * ln (ln x) powr n))))"
@@ -421,6 +419,6 @@ theorem PNT_3_imp_PNT_1:
   by (intro PNT_2_imp_PNT_1 PNT_3_imp_PNT_2 assms)
 
 hide_const (open) r\<^sub>1 r\<^sub>2
-unbundle no_prime_counting_notation
-unbundle no_pnt_notation
+unbundle no prime_counting_syntax and no pnt_syntax
+
 end

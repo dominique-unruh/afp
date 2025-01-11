@@ -162,17 +162,17 @@ lemma assign_ge_0[intro]: "legal_zpassign A \<Longrightarrow> A x \<ge> 0"
   unfolding legal_zpassign_def by (auto intro: dual_order.trans)
 
 definition
-  eq_tpoly :: "('v pvar, hmultiset) tpoly \<Rightarrow> ('v pvar, hmultiset) tpoly \<Rightarrow> bool" (infix "=\<^sub>p" 50)
+  eq_tpoly :: "('v pvar, hmultiset) tpoly \<Rightarrow> ('v pvar, hmultiset) tpoly \<Rightarrow> bool" (infix \<open>=\<^sub>p\<close> 50)
 where
   "q =\<^sub>p p \<longleftrightarrow> (\<forall>A. legal_zpassign A \<longrightarrow> eval_ztpoly A q = eval_ztpoly A p)"
 
 definition
-  ge_tpoly :: "('v pvar, hmultiset) tpoly \<Rightarrow> ('v pvar, hmultiset) tpoly \<Rightarrow> bool" (infix "\<ge>\<^sub>p" 50)
+  ge_tpoly :: "('v pvar, hmultiset) tpoly \<Rightarrow> ('v pvar, hmultiset) tpoly \<Rightarrow> bool" (infix \<open>\<ge>\<^sub>p\<close> 50)
 where
   "q \<ge>\<^sub>p p \<longleftrightarrow> (\<forall>A. legal_zpassign A \<longrightarrow> eval_ztpoly A q \<ge> eval_ztpoly A p)"
 
 definition
-  gt_tpoly :: "('v pvar, hmultiset) tpoly \<Rightarrow> ('v pvar, hmultiset) tpoly \<Rightarrow> bool" (infix ">\<^sub>p" 50)
+  gt_tpoly :: "('v pvar, hmultiset) tpoly \<Rightarrow> ('v pvar, hmultiset) tpoly \<Rightarrow> bool" (infix \<open>>\<^sub>p\<close> 50)
 where
   "q >\<^sub>p p \<longleftrightarrow> (\<forall>A. legal_zpassign A \<longrightarrow> eval_ztpoly A q > eval_ztpoly A p)"
 
@@ -641,7 +641,7 @@ qed
 
 subsection \<open>Inductive Definitions\<close>
 
-inductive gt :: "('s, 'v) tm \<Rightarrow> ('s, 'v) tm \<Rightarrow> bool" (infix ">\<^sub>t" 50) where
+inductive gt :: "('s, 'v) tm \<Rightarrow> ('s, 'v) tm \<Rightarrow> bool" (infix \<open>>\<^sub>t\<close> 50) where
   gt_wt: "wt t >\<^sub>p wt s \<Longrightarrow> t >\<^sub>t s"
 | gt_unary: "wt t \<ge>\<^sub>p wt s \<Longrightarrow> \<not> head t \<le>\<ge>\<^sub>h\<^sub>d head s \<Longrightarrow> num_args t = 1 \<Longrightarrow>
     (\<exists>f \<in> ground_heads (head t). arity_sym f = 1 \<and> wt_sym f = 0) \<Longrightarrow> arg t >\<^sub>t s \<or> arg t = s \<Longrightarrow>
@@ -650,7 +650,7 @@ inductive gt :: "('s, 'v) tm \<Rightarrow> ('s, 'v) tm \<Rightarrow> bool" (infi
 | gt_same: "wt t \<ge>\<^sub>p wt s \<Longrightarrow> head t = head s \<Longrightarrow>
     (\<forall>f \<in> ground_heads (head t). extf f (>\<^sub>t) (args t) (args s)) \<Longrightarrow> t >\<^sub>t s"
 
-abbreviation ge :: "('s, 'v) tm \<Rightarrow> ('s, 'v) tm \<Rightarrow> bool" (infix "\<ge>\<^sub>t" 50) where
+abbreviation ge :: "('s, 'v) tm \<Rightarrow> ('s, 'v) tm \<Rightarrow> bool" (infix \<open>\<ge>\<^sub>t\<close> 50) where
   "t \<ge>\<^sub>t s \<equiv> t >\<^sub>t s \<or> t = s"
 
 inductive gt_wt :: "('s, 'v) tm \<Rightarrow> ('s, 'v) tm \<Rightarrow> bool" where
@@ -1765,10 +1765,10 @@ qed
 
 subsection \<open>Well-foundedness\<close>
 
-abbreviation gtw :: "('s, 'v) tm \<Rightarrow> ('s, 'v) tm \<Rightarrow> bool" (infix ">\<^sub>t\<^sub>w" 50) where
+abbreviation gtw :: "('s, 'v) tm \<Rightarrow> ('s, 'v) tm \<Rightarrow> bool" (infix \<open>>\<^sub>t\<^sub>w\<close> 50) where
   "(>\<^sub>t\<^sub>w) \<equiv> \<lambda>t s. wary t \<and> wary s \<and> t >\<^sub>t s"
 
-abbreviation gtwg :: "('s, 'v) tm \<Rightarrow> ('s, 'v) tm \<Rightarrow> bool" (infix ">\<^sub>t\<^sub>w\<^sub>g" 50) where
+abbreviation gtwg :: "('s, 'v) tm \<Rightarrow> ('s, 'v) tm \<Rightarrow> bool" (infix \<open>>\<^sub>t\<^sub>w\<^sub>g\<close> 50) where
   "(>\<^sub>t\<^sub>w\<^sub>g) \<equiv> \<lambda>t s. ground t \<and> t >\<^sub>t\<^sub>w s"
 
 lemma ground_gt_unary:
@@ -1834,7 +1834,7 @@ proof -
       unfolding inf_chain_def wt_diff_same_as_union[symmetric] by auto
 
     have "wf {(s, t). ground s \<and> ground t \<and> wt t =\<^sub>p wt s \<and> sym (head t) >\<^sub>s sym (head s)}"
-      using gt_sym_wf unfolding wfP_def wf_iff_no_infinite_down_chain by fast
+      using gt_sym_wf unfolding wfp_def wf_iff_no_infinite_down_chain by fast
     moreover have "{(s, t). ground t \<and> wt t =\<^sub>p wt s \<and> gt_diff t s}
       \<subseteq> {(s, t). ground s \<and> ground t \<and> wt t =\<^sub>p wt s \<and> sym (head t) >\<^sub>s sym (head s)}"
     proof (clarsimp, intro conjI)
@@ -1954,7 +1954,7 @@ proof -
       unfolding inf_chain_def by blast
     hence nwf_ext:
       "\<not> wfP (\<lambda>xs ys. length ys \<le> max_args \<and> length xs \<le> max_args \<and> extf f ?gtwu ys xs)"
-      unfolding inf_chain_def wfP_def wf_iff_no_infinite_down_chain using nargs_le_max_args by fast
+      unfolding inf_chain_def wfp_def wf_iff_no_infinite_down_chain using nargs_le_max_args by fast
 
     have gtwu_le_gtwg: "?gtwu \<le> (>\<^sub>t\<^sub>w\<^sub>g)"
       by (auto intro!: gr_u)
@@ -1989,7 +1989,7 @@ proof -
   hence "wfP (\<lambda>s t. ?subst t >\<^sub>t\<^sub>w ?subst s)"
     by (simp add: ground_grounding_\<rho>)
   thus ?thesis
-    by (auto intro: wfP_subset wary_subst_wary[OF wary_grounding_\<rho>] gt_subst[OF wary_grounding_\<rho>])
+    by (auto intro: wfp_subset wary_subst_wary[OF wary_grounding_\<rho>] gt_subst[OF wary_grounding_\<rho>])
 qed
 
 end

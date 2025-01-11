@@ -14,29 +14,14 @@ begin
 
 \<comment> \<open> Notation \<close>
 
-bundle derivative_notation
+open_bundle derivative_syntax
 begin
-
-no_notation has_vderiv_on (infix "(has'_vderiv'_on)" 50)
-
-notation has_derivative ("(1(D _ \<mapsto> (_))/ _)" [65,65] 61)
-     and has_vderiv_on ("(1 D _ = (_)/ on _)" [65,65] 61)
-
+no_notation has_vderiv_on (infix \<open>(has'_vderiv'_on)\<close> 50)
+notation has_derivative (\<open>(1(D _ \<mapsto> (_))/ _)\<close> [65,65] 61)
+  and has_vderiv_on (\<open>(1 D _ = (_)/ on _)\<close> [65,65] 61)
 end
 
-bundle derivative_no_notation
-begin
-
-notation has_vderiv_on (infix "(has'_vderiv'_on)" 50)
-
-no_notation has_derivative ("(1(D _ \<mapsto> (_))/ _)" [65,65] 61)
-     and has_vderiv_on ("(1 D _ = (_)/ on _)" [65,65] 61)
-
-end
-
-unbundle derivative_notation
-
-notation norm ("\<parallel>_\<parallel>")
+notation norm (\<open>\<parallel>_\<parallel>\<close>)
 
 subsection \<open> Real numbers \<close>
 

@@ -31,9 +31,8 @@ theory C2KA
   imports CKA Stimuli
 begin
 
-no_notation
-comp (infixl "\<circ>" 55)
-and rtrancl ("(_\<^sup>*)" [1000] 999)
+no_notation comp (infixl \<open>\<circ>\<close> 55)
+unbundle no rtrancl_syntax
 
 text \<open>
 The locale \emph{c2ka} contains an axiomatisation of \CCKAabbrv  and some basic theorems relying on the 
@@ -43,8 +42,8 @@ stimuli and behaviours to have two different types.
 \<close>
 
 locale c2ka =
-  fixes next_behaviour :: "'b::stimuli \<Rightarrow> 'a::cka \<Rightarrow> 'a" (infixr "\<circ>" 75)
-  and next_stimulus :: "('b::stimuli \<times> 'a::cka) \<Rightarrow> 'b" ("\<lambda>")
+  fixes next_behaviour :: "'b::stimuli \<Rightarrow> 'a::cka \<Rightarrow> 'a" (infixr \<open>\<circ>\<close> 75)
+  and next_stimulus :: "('b::stimuli \<times> 'a::cka) \<Rightarrow> 'b" (\<open>\<lambda>\<close>)
   assumes lsemimodule1 [simp]: "s \<circ> (a + b) = (s \<circ> a) + (s \<circ> b)"
   and lsemimodule2 [simp]: "(s \<oplus> t) \<circ> a = (s \<circ> a) + (t \<circ> a)"
   and lsemimodule3 [simp]: "(s \<odot> t) \<circ> a = s \<circ> (t \<circ> a)"

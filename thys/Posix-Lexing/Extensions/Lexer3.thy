@@ -49,7 +49,7 @@ by(induct vs) (simp_all)
 section \<open>Relation between values and regular expressions\<close>
 
 inductive 
-  Prf :: "'a val \<Rightarrow> 'a rexp \<Rightarrow> bool" ("\<turnstile> _ : _" [100, 100] 100)
+  Prf :: "'a val \<Rightarrow> 'a rexp \<Rightarrow> bool" (\<open>\<turnstile> _ : _\<close> [100, 100] 100)
 where
  "\<lbrakk>\<turnstile> v1 : r1; \<turnstile> v2 : r2\<rbrakk> \<Longrightarrow> \<turnstile> Seq v1 v2 : Times r1 r2"
 | "\<turnstile> v1 : r1 \<Longrightarrow> \<turnstile> Left v1 : Plus r1 r2"
@@ -210,7 +210,8 @@ proof(induct r arbitrary: s)
   have IH: "\<And>s. s \<in> lang r \<Longrightarrow> \<exists>v.\<turnstile> v : r \<and> flat v = s" by fact
   have "s \<in> lang (Star r)" by fact
   then obtain ss where "concat ss = s" "\<forall>s \<in> set ss. s \<in> lang r \<and> s \<noteq> []"
-    by (smt (z3) IH Prf_flat_lang Star_val imageE in_star_iff_concat lang.simps(6) list.set_map subset_iff)  
+    by (smt (verit) Nil_eq_concat_conv concat_append lang.simps(6) pow_cstring self_append_conv
+        star_pow)
   then obtain vs where "flats vs = s" "\<forall>v\<in>set vs. \<turnstile> v : r \<and> flat v \<noteq> []"
   using IH by (metis Star_val) 
   then show "\<exists>v. \<turnstile> v : Star r \<and> flat v = s"
@@ -406,7 +407,7 @@ by (metis Prf.intros(12) Prf_elims(1) Prf_elims(4) deriv.simps(11) injval.simps(
 section \<open>Our Alternative Posix definition\<close>
 
 inductive 
-  Posix :: "'a list \<Rightarrow> 'a rexp \<Rightarrow> 'a val \<Rightarrow> bool" ("_ \<in> _ \<rightarrow> _" [100, 100, 100] 100)
+  Posix :: "'a list \<Rightarrow> 'a rexp \<Rightarrow> 'a val \<Rightarrow> bool" (\<open>_ \<in> _ \<rightarrow> _\<close> [100, 100, 100] 100)
 where
   Posix_One: "[] \<in> One \<rightarrow> Void"
 | Posix_Atom: "[c] \<in> (Atom c) \<rightarrow> (Atm c)"

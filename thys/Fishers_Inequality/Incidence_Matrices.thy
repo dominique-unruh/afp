@@ -292,7 +292,7 @@ subsection \<open>0-1 Matrices \<close>
 text \<open>Incidence matrices contain only two elements: 0 and 1. We define a locale which provides
 a context to work in for matrices satisfying this condition for any @{typ "'b :: zero_neq_one"} type.\<close>
 locale zero_one_matrix = 
-  fixes matrix :: "'b :: {zero_neq_one} mat" ("M")
+  fixes matrix :: "'b :: {zero_neq_one} mat" (\<open>M\<close>)
   assumes elems01: "elements_mat M \<subseteq> {0, 1}"
 begin
 
@@ -1669,7 +1669,8 @@ proof (intro eq_matI)
       using True jlt by auto
     then have "(int \<Lambda> \<cdot>\<^sub>m J\<^sub>m \<v> + int (\<r> - \<Lambda>) \<cdot>\<^sub>m 1\<^sub>m \<v>) $$ (i, j) = \<r>" 
       using reg_index_lt_rep by (simp add: nat_diff_split)
-    then show ?thesis using lhs split rhs True transpose_N_mult_diag ilt jlt by simp
+    then show ?thesis
+      using True jlt transpose_N_mult_diag by auto
   next
     case False
     then have "(1\<^sub>m \<v>) $$ (i, j) = 0" using ilt jlt by simp

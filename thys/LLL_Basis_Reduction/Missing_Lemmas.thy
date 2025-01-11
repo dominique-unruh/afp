@@ -103,8 +103,8 @@ lemma log_prod: assumes "0 < a" "a \<noteq> 1" "\<And> x. x \<in> X \<Longrighta
 proof (induct X rule: infinite_finite_induct)
   case (insert x F)
   have "log a (prod f (insert x F)) = log a (f x * prod f F)" using insert by simp
-  also have "\<dots> = log a (f x) + log a (prod f F)" 
-    by (rule log_mult[OF _ prod_pos], insert assms insert, auto)
+  also have "\<dots> = log a (f x) + log a (prod f F)"
+    by (meson insert.prems insertCI log_mult_pos prod_pos)
   finally show ?case using insert by auto
 qed auto
 
@@ -294,7 +294,7 @@ lemma hom_max_list_commute:
 
 
 (*Efficient rev [i..<j]*)
-primrec rev_upt :: "nat \<Rightarrow> nat \<Rightarrow> nat list" ("(1[_>.._])") where
+primrec rev_upt :: "nat \<Rightarrow> nat \<Rightarrow> nat list" (\<open>(1[_>.._])\<close>) where
 rev_upt_0: "[0>..j] = []" |
 rev_upt_Suc: "[(Suc i)>..j] = (if i \<ge> j then i # [i>..j] else [])"
 

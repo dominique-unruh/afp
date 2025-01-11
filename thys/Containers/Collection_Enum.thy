@@ -38,7 +38,9 @@ where "cenum_ex \<equiv> snd (snd (the (ID cEnum)))"
 
 end
 
-syntax "_CENUM" :: "type => logic"  ("(1CENUM/(1'(_')))")
+syntax "_CENUM" :: "type => logic"  (\<open>(1CENUM/(1'(_')))\<close>)
+
+syntax_consts "_CENUM" == cEnum
 
 parse_translation \<open>
 let

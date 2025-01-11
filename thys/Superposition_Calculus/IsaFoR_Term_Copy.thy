@@ -4,6 +4,7 @@
     Maintainer:  Anders Schlichtkrull <andschl at dtu.dk>
 *)
 
+(* TODO: Try to rename Name clash, such that a copy is not needed *)
 section \<open>Integration of \textsf{IsaFoR} Terms and the Knuth--Bendix Order\<close>
 
 text \<open>
@@ -91,7 +92,7 @@ proof -
   have "SN {(x, y). fst (kbo x y)}"
     using pr_strict_asymp by (fastforce simp: asympI irreflp_def intro!: KBO.S_SN scf_ok)
   then show ?thesis
-    unfolding SN_iff_wf wfP_def by (rule wf_subset) (auto simp: less_kbo_def)
+    unfolding SN_iff_wf wfp_def by (rule wf_subset) (auto simp: less_kbo_def)
 qed
 
 end

@@ -727,14 +727,10 @@ lemma eucl_eq_iff: "x = y \<longleftrightarrow> (\<forall>i<DIM('a). nth_eucl x 
   apply (auto simp: nth_eucl_def euclidean_eq_iff[where 'a='a])
   by (metis eucl_of_list_list_of_eucl list_of_eucl_eq_iff)
 
-bundle eucl_notation begin
-notation nth_eucl (infixl "$\<^sub>e" 90)
+open_bundle eucl_syntax
+begin
+notation nth_eucl (infixl \<open>$\<^sub>e\<close> 90)
 end
-bundle no_eucl_notation begin
-no_notation nth_eucl (infixl "$\<^sub>e" 90)
-end
-
-unbundle eucl_notation
 
 lemma eucl_of_list_eucl_nth:
   "(eucl_of_list xs::'a) $\<^sub>e i = xs ! i"
@@ -895,11 +891,11 @@ subsection \<open>Segments\<close>
 text \<open>\<open>closed_segment\<close> throws away the order that our intuition keeps\<close>
 
 definition line::"'a::real_vector \<Rightarrow> 'a \<Rightarrow> real \<Rightarrow> 'a"
-  ("{_ -- _}\<^bsub>_\<^esub>")
+  (\<open>{_ -- _}\<^bsub>_\<^esub>\<close>)
   where "{a -- b}\<^bsub>u\<^esub> = a + u *\<^sub>R (b - a)"
 
 abbreviation "line_image a b U \<equiv>(\<lambda>u. {a -- b}\<^bsub>u\<^esub>) ` U"
-notation line_image ("{_ -- _}\<^bsub>`_\<^esub>")
+notation line_image (\<open>{_ -- _}\<^bsub>`_\<^esub>\<close>)
 
 lemma in_closed_segment_iff_line: "x \<in> {a -- b} \<longleftrightarrow> (\<exists>c\<in>{0..1}. x = line a b c)"
   by (auto simp: in_segment line_def algebra_simps)
@@ -1044,11 +1040,11 @@ qed
 subsection \<open>Syntax\<close>
 
 abbreviation sequentially_at_top::"(nat\<Rightarrow>real)\<Rightarrow>bool"
-  ("_ \<longlonglongrightarrow>\<^bsub>\<^esub> \<infinity>") \<comment> \<open>the \<open>\<^bsub>\<^esub>\<close> is to disambiguate syntax...\<close>
+  (\<open>_ \<longlonglongrightarrow>\<^bsub>\<^esub> \<infinity>\<close>) \<comment> \<open>the \<open>\<^bsub>\<^esub>\<close> is to disambiguate syntax...\<close>
   where "s \<longlonglongrightarrow>\<^bsub>\<^esub> \<infinity>  \<equiv> filterlim s at_top sequentially"
 
 abbreviation sequentially_at_bot::"(nat\<Rightarrow>real)\<Rightarrow>bool"
-  ("_ \<longlonglongrightarrow>\<^bsub>\<^esub> -\<infinity>")
+  (\<open>_ \<longlonglongrightarrow>\<^bsub>\<^esub> -\<infinity>\<close>)
   where "s \<longlonglongrightarrow>\<^bsub>\<^esub> -\<infinity>  \<equiv> filterlim s at_bot sequentially"
 
 

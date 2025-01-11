@@ -213,7 +213,7 @@ proof -
   hence "0 \<le> (inner_prod x x - (inner_prod x y) * cnj (inner_prod x y) / (inner_prod y y)) * (inner_prod y y)"
     by (auto simp: less_eq_complex_def)
   also have "\<dots> = ((inner_prod x x)*(inner_prod y y) - (inner_prod x y) * cnj (inner_prod x y))"
-    by (smt add.inverse_neutral add_diff_cancel diff_0 diff_divide_eq_iff divide_cancel_right mult_eq_0_iff nonzero_mult_div_cancel_right rw_0)
+    by (smt (verit) add.inverse_neutral add_diff_cancel diff_0 diff_divide_eq_iff divide_cancel_right mult_eq_0_iff nonzero_mult_div_cancel_right rw_0)
   finally have "(inner_prod x y) * cnj (inner_prod x y) \<le> (inner_prod x x)*(inner_prod y y)" by auto
   then show ?thesis 
     apply (subst inner_prod_swap[of y n x]) by (auto simp add: assms)
@@ -1948,7 +1948,7 @@ lemma positive_scale:
 
 subsection \<open>L\"{o}wner partial order\<close>
 
-definition lowner_le :: "complex mat \<Rightarrow> complex mat \<Rightarrow> bool"  (infix "\<le>\<^sub>L" 50) where
+definition lowner_le :: "complex mat \<Rightarrow> complex mat \<Rightarrow> bool"  (infix \<open>\<le>\<^sub>L\<close> 50) where
   "A \<le>\<^sub>L B \<longleftrightarrow> dim_row A = dim_row B \<and> dim_col A = dim_col B \<and> positive (B - A)"
 
 lemma lowner_le_refl:

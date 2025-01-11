@@ -36,8 +36,8 @@ locale fair_zipperposition_loop =
     Red_F_q :: "'q \<Rightarrow> 'g set \<Rightarrow> 'g set" and
     \<G>_F_q :: "'q \<Rightarrow> 'f \<Rightarrow> 'g set" and
     \<G>_I_q :: "'q \<Rightarrow> 'f inference \<Rightarrow> 'g inference set option" and
-    Equiv_F :: "'f \<Rightarrow> 'f \<Rightarrow> bool" (infix "\<doteq>" 50) and
-    Prec_F :: "'f \<Rightarrow> 'f \<Rightarrow> bool" (infix "\<prec>\<cdot>" 50) and
+    Equiv_F :: "'f \<Rightarrow> 'f \<Rightarrow> bool" (infix \<open>\<doteq>\<close> 50) and
+    Prec_F :: "'f \<Rightarrow> 'f \<Rightarrow> bool" (infix \<open>\<prec>\<cdot>\<close> 50) and
     t_empty :: 't and
     t_add_llist :: "'f inference llist \<Rightarrow> 't \<Rightarrow> 't" and
     t_remove_llist :: "'f inference llist \<Rightarrow> 't \<Rightarrow> 't" and
@@ -49,7 +49,7 @@ locale fair_zipperposition_loop =
     p_remove :: "'f \<Rightarrow> 'p \<Rightarrow> 'p" and
     p_felems :: "'p \<Rightarrow> 'f fset" +
   fixes
-    Prec_S :: "'f \<Rightarrow> 'f \<Rightarrow> bool" (infix "\<prec>S" 50)
+    Prec_S :: "'f \<Rightarrow> 'f \<Rightarrow> bool" (infix \<open>\<prec>S\<close> 50)
   assumes
     wf_Prec_S: "minimal_element (\<prec>S) UNIV" and
     transp_Prec_S: "transp (\<prec>S)" and
@@ -60,7 +60,7 @@ lemma trans_Prec_S: "trans {(x, y). x \<prec>S y}"
   using transp_Prec_S transp_trans by blast
 
 lemma irreflp_Prec_S: "irreflp (\<prec>S)"
-  using minimal_element.wf wfP_imp_irreflp wf_Prec_S wfp_on_UNIV by blast
+  using minimal_element.wf wfp_imp_irreflp wf_Prec_S wfp_on_UNIV by blast
 
 lemma irrefl_Prec_S: "irrefl {(x, y). x \<prec>S y}"
   by (metis CollectD case_prod_conv irrefl_def irreflp_Prec_S irreflp_def)
@@ -118,7 +118,7 @@ fun formulas_union :: "'f set \<times> 'f set \<times> 'f set \<Rightarrow> 'f s
   "formulas_union (P, Y, A) = P \<union> Y \<union> A"
 
 inductive
-  fair_ZL :: "('t, 'p, 'f) ZLf_state \<Rightarrow> ('t, 'p, 'f) ZLf_state \<Rightarrow> bool" (infix "\<leadsto>ZLf" 50)
+  fair_ZL :: "('t, 'p, 'f) ZLf_state \<Rightarrow> ('t, 'p, 'f) ZLf_state \<Rightarrow> bool" (infix \<open>\<leadsto>ZLf\<close> 50)
 where
   compute_infer: "(\<exists>\<iota>s \<in># t_llists T. \<iota>s \<noteq> LNil) \<Longrightarrow> t_pick_elem T = (\<iota>0, T') \<Longrightarrow>
     \<iota>0 \<in> no_labels.Red_I (fset A \<union> {C}) \<Longrightarrow>
@@ -474,13 +474,13 @@ fun mset_of_zl_fstate :: "('t, 'p, 'f) ZLf_state \<Rightarrow> 'f multiset" wher
   "mset_of_zl_fstate (T, D, P, Y, A) =
    mset_set (passive.elems P) + mset_set (set_option Y) + mset_set (fset A)"
 
-abbreviation Precprec_S :: "'f multiset \<Rightarrow> 'f multiset \<Rightarrow> bool" (infix "\<prec>\<prec>S" 50)  where
+abbreviation Precprec_S :: "'f multiset \<Rightarrow> 'f multiset \<Rightarrow> bool" (infix \<open>\<prec>\<prec>S\<close> 50)  where
   "(\<prec>\<prec>S) \<equiv> multp (\<prec>S)"
 
 lemma wfP_Precprec_S: "wfP (\<prec>\<prec>S)"
-  using minimal_element_def wfP_multp wf_Prec_S wfp_on_UNIV by blast
+  using minimal_element_def wfp_multp wf_Prec_S wfp_on_UNIV by blast
 
-definition Less_state :: "('t, 'p, 'f) ZLf_state \<Rightarrow> ('t, 'p, 'f) ZLf_state \<Rightarrow> bool" (infix "\<sqsubset>" 50)
+definition Less_state :: "('t, 'p, 'f) ZLf_state \<Rightarrow> ('t, 'p, 'f) ZLf_state \<Rightarrow> bool" (infix \<open>\<sqsubset>\<close> 50)
 where
   "St' \<sqsubset> St \<longleftrightarrow>
    mset_of_zl_fstate St' \<prec>\<prec>S mset_of_zl_fstate St
@@ -499,7 +499,7 @@ proof -
     mset_set (set_option (yy_of St)), size (t_llists (todo_of St)))"
 
   have wf_msetset: "wf ?msetset"
-    using wfP_Precprec_S wfP_def by auto
+    using wfP_Precprec_S wfp_def by auto
   have wf_natset: "wf ?natset"
     by (rule Wellfounded.wellorder_class.wf)
   have wf_lex_prod: "wf (?msetset <*lex*> ?msetset <*lex*> ?msetset <*lex*> ?natset)"
@@ -511,7 +511,7 @@ proof -
     unfolding Less_state_def by auto
 
   show ?thesis
-    unfolding wfP_def Less_state_alt_def using wf_app[of _ ?quad_of] wf_lex_prod by blast
+    unfolding wfp_def Less_state_alt_def using wf_app[of _ ?quad_of] wf_lex_prod by blast
 qed
 
 lemma non_compute_infer_ZLf_step_imp_Less_state:

@@ -355,14 +355,24 @@ object AFP_Submit {
 
     case class Metadata(authors: Authors, entries: List[Entry]) {
       def new_authors(state: State): List[Author] =
-        entries.flatMap(_.authors).map(_.author).filterNot(state.authors.contains).toSet.map(authors).toList
+        (for {
+          entry <- entries
+          affil <- entry.authors ++ entry.notifies
+          author = affil.author
+          if !state.authors.contains(author)
+        } yield authors(author)).distinct
 
       def new_affils(state: State): List[Affiliation] =
-        entries.flatMap(entry => entry.authors ++ entry.notifies).toSet.filter {
-          case _: Unaffiliated => false
-          case e: Email => !state.authors.get(e.author).exists(_.emails.contains(e))
-          case h: Homepage => !state.authors.get(h.author).exists(_.homepages.contains(h))
-        }.toList
+        (for {
+          entry <- entries
+          affil <- entry.authors ++ entry.notifies
+          author = affil.author
+          if (affil match {
+            case _: Unaffiliated => false
+            case e: Email => !state.authors.get(author).exists(_.emails.contains(e))
+            case h: Homepage => !state.authors.get(author).exists(_.homepages.contains(h))
+          })
+        } yield affil).distinct
     }
 
     case object Invalid extends T
@@ -935,8 +945,7 @@ object AFP_Submit {
         par(
           hidden(key + ID, email.author) ::
             text(author_string(updated_authors(email.author))) :::
-            selection(
-              key + AFFILIATION,
+            selection(key + AFFILIATION,
               Some(affil_id(email)),
               author.emails.map(affil => option(affil_id(affil), affil_string(affil)))) ::
             action_button(paths.api_route(API.SUBMISSION_ENTRY_NOTIFIES_REMOVE), "x", key) :: Nil)
@@ -1188,7 +1197,7 @@ object AFP_Submit {
           hidden(key + ID, overview.id) ::
           hidden(key + DATE, overview.date.toString) ::
           hidden(key + NAME, overview.name) ::
-          span(text(overview.date.toString)) ::
+          css("white-space: nowrap")(span(text(overview.date.toString))) ::
           span(List(frontend_link(Page.SUBMISSION, List(ID.print -> overview.id),
             text(overview.name)))) ::
           render_if(mode == Mode.SUBMISSION,
@@ -1197,20 +1206,20 @@ object AFP_Submit {
                 Model.Status.values.toList.map(v => option(v.toString, v.toString))),
               action_button(paths.api_route(API.SUBMISSION_STATUS), "update", key))))))
 
-      def list1(ls: List[XML.Elem]): XML.Elem = if (ls.isEmpty) par(Nil) else list(ls)
+      val indexed = Params.indexed(ENTRY, submission_list.submissions, (k, s) => (k, s))
 
-      val ls = Params.indexed(ENTRY, submission_list.submissions, (k, s) => (k, s))
+      val open = indexed.filter(_._2.status == Model.Status.Submitted)
+      val in_progress = indexed.filter(_._2.status == Model.Status.Review)
       val finished =
-        ls.filter(t => Set(Model.Status.Added, Model.Status.Rejected).contains(t._2.status))
+        indexed.filter(t => Set(Model.Status.Added, Model.Status.Rejected).contains(t._2.status))
+
+      def proper_list(ls: List[XML.Elem]): XML.Elem = if (ls.isEmpty) par(Nil) else list(ls)
 
       List(submit_form(paths.api_route(API.SUBMISSION_STATUS),
         render_if(mode == Mode.SUBMISSION,
-          text("Open") :::
-          list1(ls.filter(_._2.status == Model.Status.Submitted).map(render_overview)) ::
-          text("In Progress") :::
-          list1(ls.filter(_._2.status == Model.Status.Review).map(render_overview)) ::
-          text("Finished")) :::
-        list1(finished.map(render_overview)) :: Nil))
+          text("Open") ::: proper_list(open.map(render_overview.tupled)) ::
+          text("In Progress") ::: proper_list(in_progress.map(render_overview.tupled)) ::
+          text("Finished")) ::: proper_list(finished.map(render_overview.tupled)) :: Nil))
     }
 
     def render_created(created: Model.Created): XML.Body = {

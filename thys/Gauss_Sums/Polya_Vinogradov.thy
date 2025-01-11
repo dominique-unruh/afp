@@ -12,7 +12,7 @@ imports
   "Dirichlet_Series.Divisor_Count"
 begin
 
-unbundle no_vec_lambda_notation
+unbundle no vec_lambda_syntax
 
 subsection \<open>The case of primitive characters\<close>
 
@@ -137,7 +137,7 @@ next
     then show ?thesis by auto
   qed
   also have "\<dots> = ln ((2 * n + 1) * (1+2/(2*n+1)))"
-    by (rule ln_mult[symmetric],simp,simp add: field_simps)
+    by (auto simp add: ln_div divide_simps)
   also have "\<dots> = ln (2*(n+1)+1)"
   proof -
     have "(2 * n + 1) * (1+2/(2*n+1)) = 2*(n+1)+1"
@@ -590,8 +590,8 @@ proof -
       proof -
         have "real (n - 1) > 0" "1 + 1 / (real n - 1) > 0"  
           using n by (auto simp add: add_pos_nonneg)
-        show ?thesis 
-          by (subst ln_mult [OF \<open>real (n - 1) > 0\<close> \<open>1 + 1 / (real n - 1) > 0\<close>,symmetric],blast)          
+        then show ?thesis
+          by (simp add: ln_mult)          
       qed
       also have "\<dots> = real n * ln n"
         using n by (auto simp add: divide_simps)
@@ -663,8 +663,8 @@ theorem (in dcharacter) polya_vinogradov_inequality_explicit:
   assumes nonprincipal: "\<chi> \<noteq> principal_dchar n"
   shows   "norm (sum \<chi> {1..x}) < sqrt conductor * ln conductor * divisor_count (n div conductor)"
 proof -
-  write primitive_extension ("\<Phi>")
-  write conductor ("c")
+  write primitive_extension (\<open>\<Phi>\<close>)
+  write conductor (\<open>c\<close>)
   interpret \<Phi>: primitive_dchar c "residue_mult_group c" primitive_extension
     using primitive_primitive_extension nonprincipal by metis
 
@@ -844,6 +844,6 @@ proof -
   finally show ?thesis .
 qed
 
-unbundle vec_lambda_notation
+unbundle vec_lambda_syntax
 
 end

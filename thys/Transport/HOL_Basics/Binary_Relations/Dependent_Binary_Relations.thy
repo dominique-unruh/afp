@@ -5,20 +5,17 @@ theory Dependent_Binary_Relations
     Binary_Relations_Agree
 begin
 
-consts dep_bin_rel :: "'a \<Rightarrow> ('b \<Rightarrow> 'c) \<Rightarrow> 'd \<Rightarrow> bool"
-consts bin_rel :: "'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> bool"
+consts dep_bin_rel :: "'a \<Rightarrow> ('b \<Rightarrow> 'c) \<Rightarrow> 'd"
+consts bin_rel :: "'a \<Rightarrow> 'b \<Rightarrow> 'c"
 
-bundle bin_rel_syntax
+open_bundle bin_rel_syntax
 begin
-syntax "_dep_bin_rel" :: \<open>idt \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd\<close> ("{\<Sum>}_ : _./ _" [41, 41, 40] 51)
-notation bin_rel (infixl "{\<times>}" 51)
+syntax "_dep_bin_rel" :: \<open>idt \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> 'c\<close> (\<open>{\<Sum>}_ : _./ _\<close> [51, 50, 50] 51)
+notation bin_rel (infixr \<open>{\<times>}\<close> 51)
 end
-bundle no_bin_rel_syntax
-begin
-no_syntax "_dep_bin_rel" :: \<open>idt \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd\<close> ("{\<Sum>}_ : _./ _" [41, 41, 40] 51)
-no_notation bin_rel (infixl "{\<times>}" 51)
-end
-unbundle bin_rel_syntax
+
+syntax_consts
+  "_dep_bin_rel" \<rightleftharpoons> dep_bin_rel
 translations
   "{\<Sum>}x : A. B" \<rightleftharpoons> "CONST dep_bin_rel A (\<lambda>x. B)"
 
@@ -35,7 +32,7 @@ lemma bin_rel_pred_eq_dep_bin_rel_pred: "A {\<times>} B = {\<Sum>}_ : A. B"
 
 lemma bin_rel_pred_eq_dep_bin_rel_pred_uhint [uhint]:
   assumes "A \<equiv> A'"
-  and "B' \<equiv> (\<lambda>_. B)"
+  and "\<And>x. B \<equiv> B' x"
   shows "A {\<times>} B \<equiv> {\<Sum>}x : A'. B' x"
   using assms by (simp add: bin_rel_pred_eq_dep_bin_rel_pred)
 
@@ -101,10 +98,10 @@ lemma dep_bin_rel_covariant_codom:
   shows "({\<Sum>}x : A. B' x) R"
   using assms by (intro dep_bin_relI) auto
 
-lemma mono_dep_bin_rel: "((\<le>) \<Rrightarrow>\<^sub>m (\<le>) \<Rrightarrow> (\<ge>) \<Rrightarrow> (\<le>)) dep_bin_rel"
+lemma mono_dep_bin_rel: "((\<le>) \<Rightarrow> (\<le>) \<Rrightarrow> (\<ge>) \<Rrightarrow> (\<le>)) dep_bin_rel"
   by (intro mono_wrt_relI Fun_Rel_relI dep_bin_relI) force
 
-lemma mono_bin_rel: "((\<le>) \<Rrightarrow>\<^sub>m (\<le>) \<Rrightarrow> (\<ge>) \<Rrightarrow> (\<le>)) ({\<times>})"
+lemma mono_bin_rel: "((\<le>) \<Rightarrow> (\<le>) \<Rrightarrow> (\<ge>) \<Rrightarrow> (\<le>)) ({\<times>})"
   by (intro mono_wrt_relI Fun_Rel_relI) auto
 
 lemma in_dom_le_if_dep_bin_rel:
@@ -128,22 +125,29 @@ lemma dep_bin_rel_bottom_dom_iff_eq_bottom [iff]: "({\<Sum>}x : \<bottom>. B x) 
 lemma dep_bin_rel_bottom_codom_iff_eq_bottom [iff]: "({\<Sum>}x : A. \<bottom>) R \<longleftrightarrow> R = \<bottom>"
   by fastforce
 
-lemma mono_bin_rel_dep_bin_rel_bin_rel_rel_comp:
-  "(A {\<times>} B \<Rrightarrow>\<^sub>m ({\<Sum>}x : B. C x) \<Rrightarrow>\<^sub>m A {\<times>} in_codom_on B C) (\<circ>\<circ>)"
+lemma mono_bin_rel_dep_bin_rel_bin_rel_in_codom_on_rel_comp:
+  "(A {\<times>} B \<Rightarrow> ({\<Sum>}x : B. C x) \<Rightarrow> A {\<times>} in_codom_on B C) (\<circ>\<circ>)"
   by fastforce
 
-lemma mono_dep_bin_rel_bin_rel_rel_inv: "(({\<Sum>}x : A. B x) \<Rrightarrow>\<^sub>m in_codom_on A B {\<times>} A) rel_inv"
+lemma mono_bin_rel_bin_rel_bin_rel_rel_comp: "(A {\<times>} B \<Rightarrow> B {\<times>} C \<Rightarrow> A {\<times>} C) (\<circ>\<circ>)"
+  by fast
+
+lemma mono_dep_bin_rel_bin_rel_rel_inv: "(({\<Sum>}x : A. B x) \<Rightarrow> in_codom_on A B {\<times>} A) rel_inv"
   by force
 
-lemma mono_bin_rel_rel_inv: "(A {\<times>} B \<Rrightarrow>\<^sub>m B {\<times>} A) rel_inv"
+lemma mono_bin_rel_rel_inv: "(A {\<times>} B \<Rightarrow> B {\<times>} A) rel_inv"
   by auto
 
 lemma mono_dep_bin_rel_top_dep_bin_rel_inf_rel_restrict_left:
-  "(({\<Sum>}x : A. B x) \<Rrightarrow>\<^sub>m (P : \<top>) \<Rrightarrow>\<^sub>m ({\<Sum>}x : A \<sqinter> P. B x)) rel_restrict_left"
+  "(({\<Sum>}x : A. B x) \<Rightarrow> (P : \<top>) \<Rightarrow> ({\<Sum>}x : A \<sqinter> P. B x)) rel_restrict_left"
   by fast
 
 lemma mono_dep_bin_rel_top_dep_bin_rel_inf_rel_restrict_right:
-  "(({\<Sum>}x : A. B x) \<Rrightarrow>\<^sub>m (P : \<top>) \<Rrightarrow>\<^sub>m ({\<Sum>}x : A. (B x) \<sqinter> P)) rel_restrict_right"
+  "(({\<Sum>}x : A. B x) \<Rightarrow> (P : \<top>) \<Rightarrow> ({\<Sum>}x : A. B x \<sqinter> P)) rel_restrict_right"
+  by fast
+
+lemma mono_dep_bin_rel_top_dep_bin_rel_inf_rel_restrict:
+  "(({\<Sum>}x : A. B x) \<Rightarrow> (P : \<top>) \<Rightarrow> ({\<Sum>}x : A \<sqinter> P. B x \<sqinter> P)) rel_restrict"
   by fast
 
 lemma le_if_rel_agree_on_if_dep_bin_relI:

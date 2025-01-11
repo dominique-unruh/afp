@@ -48,7 +48,7 @@ end
 lemma in_list_interval_lengthD: "x \<in> list_interval a b \<Longrightarrow> length x = length a"
   by (auto simp: list_interval_def list_all2_lengthD)
 
-context includes floatarith_notation begin
+context includes floatarith_syntax begin
 
 definition "varvec_fas' D C = ((map Var [0..<D]) @
       concat (map (\<lambda>b.
@@ -994,7 +994,7 @@ lemma c1_info_of_appr_subsetI1:
 lemmas [simp] = compute_tdev
 
 syntax product_aforms::"(real aform) list \<Rightarrow> (real aform) list \<Rightarrow> (real aform) list"
-  (infixr "\<times>\<^sub>a" 70)
+  (infixr \<open>\<times>\<^sub>a\<close> 70)
 
 lemma matrix_inner_Basis_list:
   includes vec_syntax
@@ -1059,7 +1059,7 @@ lemma ldec: "ldec x \<le> real_of_rat x"
       quotient_of_denom_pos quotient_of_div)
   done
 
-context includes floatarith_notation begin
+context includes floatarith_syntax begin
 
 definition "matrix_of_degrees\<^sub>e =
   (let

@@ -85,8 +85,8 @@ next
     by simp
   finally have \<section>: "(a choose b) * ?p ^ b * (1-?p) ^ (a-b) \<le> 1" .
   have "log 2 (a choose b) + b * log 2 ?p + (a-b) * log 2 (1-?p) \<le> 0"
-    using Transcendental.log_mono [OF _ _ \<section>]
-    by (simp add: p01 assms log_mult log_nat_power)
+    using Transcendental.log_mono [OF _ _ \<section>] False assms 
+    by (force simp add: p01 log_mult log_nat_power)
   then show ?thesis
     using p01 False assms unfolding H_def by (simp add: divide_simps)
 qed 
@@ -102,7 +102,7 @@ definition "f2 \<equiv> \<lambda>x y. f1 x y - (1 / (40 * ln 2)) * ((1-x) / (2-x
 
 definition "ff \<equiv> \<lambda>x y. if x < 3/4 then f1 x y else f2 x y"
 
-text \<open>Incorporating Bhavik‘s idea, which gives us a lower bound for @{term \<gamma>} of 1/101\<close>
+text \<open>Incorporating Bhavik's idea, which gives us a lower bound for @{term \<gamma>} of 1/101\<close>
 definition ffGG :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
   "ffGG \<equiv> \<lambda>\<mu> x y. max 1.9 (min (ff x y) (GG \<mu> x y))"
 
@@ -153,7 +153,7 @@ lemma FF_le_f1:
 proof (cases "nat\<lfloor>k - x*k\<rfloor> = 0")
   case True
   with x show ?thesis
-    by (simp add: FF_def f1_def H_ge0)
+    by (simp add: FF_def f1_def H_ge0 log_def)
 next
   case False
   let ?kl = "k + k - nat \<lceil>x*k\<rceil>"
@@ -169,10 +169,7 @@ next
   then have \<section>: "RN k (nat\<lfloor>k - x*k\<rfloor>) \<le> k + nat\<lfloor>k - x*k\<rfloor> choose k"
     using RN_le_choose by force
   also have "\<dots> \<le> k + k - nat\<lceil>x*k\<rceil> choose k"
-  proof (intro Binomial.binomial_mono)
-    show "k + nat \<lfloor>k - x*k\<rfloor> \<le> ?kl"
-      using False le by linarith
-  qed
+    using False Nat.le_diff_conv2 binomial_right_mono le by fastforce
   finally have "RN k (nat \<lfloor>real k - x*k\<rfloor>) \<le> ?kl choose k" .
   with RN_gt0 have "FF k x y \<le> log 2 (?kl choose k) / k + x + y"
     by (simp add: FF_def divide_right_mono nat_less_real_le)
@@ -311,7 +308,7 @@ proof -
     and "X0 = V \<setminus> Y0" "Y0\<subseteq>V"
     and p0_half: "1/2 \<le> gen_density Red X0 Y0"
     and "Book V E p0_min Red Blue k k \<mu> X0 Y0" 
-  proof (rule Basis_imp_Book)
+  proof (rule to_Book)
     show "p0_min \<le> graph_density Red"
       using p0_min12 Red by linarith
     show "0 < \<mu>" "\<mu> < 1"
@@ -494,7 +491,7 @@ proof -
 qed 
 
 theorem (in P0_min) From_11_1:
-  assumes \<mu>: "0 < \<mu>" "\<mu> \<le> 2/5" and "\<eta> > 0" and le: "\<eta> \<le> 1/12"
+  assumes \<mu>: "0 < \<mu>" "\<mu> \<le> 2/5" and "0 < \<eta>" "\<eta> \<le> 1/12"
     and p0_min12: "p0_min \<le> 1/2" and big: "Big_From_11_1 \<eta> \<mu> k"
   shows "log 2 (RN k k) / k \<le> (SUP x \<in> {0..1}. SUP y \<in> {0..3/4}. ffGG \<mu> x y + \<eta>)"
 proof -
@@ -842,7 +839,6 @@ proof -
     using assms by (simp add: x_def x_of_def)
   then have x: "x \<in> I"
     by (simp add: x_of_def I_def)
-
   have D: "((\<lambda>x. f1 x (y_of x)) has_real_derivative D x) (at x)" if "x \<in> I" for x
     using that Df1_y by (force simp: D_def I_def)
   have Dgt0: "D x \<ge> 0" if "x \<in> I" for x
@@ -874,8 +870,7 @@ begin
 
 text \<open>The truly horrible Lemma 12.3\<close>
 lemma 123:
-  fixes \<delta>::real
-  assumes "0 < \<delta>" "\<delta> \<le> 1 / 2^11"
+  assumes "\<delta> \<le> 1 / 2^11"
   shows "(SUP x \<in> {0..1}. SUP y \<in> {0..3/4}. ffGG (2/5) x y) \<le> 2-\<delta>"
 proof -
   have "min (ff x y) (gg x y) \<le> 2 - 1/2^11" if "x \<in> {0..1}" "y \<in> {0..3/4}" for x y
@@ -978,14 +973,14 @@ proof
     then have "log 2 (RN k k) \<le> (2-delta') * k"
       by (meson of_nat_0_less_iff pos_divide_le_eq)
     then have "RN k k \<le> 2 powr ((2-delta') * k)"
-      by (smt (verit, best) Transcendental.log_le_iff powr_ge_pzero)
+      by (smt (verit, best) Transcendental.log_le_iff powr_ge_zero)
     then show "RN k k \<le> (2 powr (2-delta')) ^ k"
       by (simp add: mult.commute powr_power)
   qed
   moreover have "2 powr (2-delta') \<le> 4 - ?\<epsilon>"
     unfolding delta'_def by (approximation 25)
   ultimately show "\<forall>\<^sup>\<infinity>k. real (RN k k) \<le> (4-?\<epsilon>) ^ k"
-    by (smt (verit) power_mono powr_ge_pzero eventually_mono)
+    by (smt (verit) power_mono powr_ge_zero eventually_mono)
 qed auto
 
 end

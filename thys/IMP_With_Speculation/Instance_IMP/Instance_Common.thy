@@ -115,7 +115,6 @@ and update :: "predState \<Rightarrow> pcounter list \<Rightarrow> predState"
 + 
 fixes initPstate :: predState
   and istate :: "state \<Rightarrow> bool"
-  and input :: "nat"
 begin
 
 fun istateV :: "stateV \<Rightarrow> bool" where 

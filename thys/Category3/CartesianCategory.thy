@@ -84,13 +84,13 @@ begin
   locale binary_product_diagram =
     J: binary_product_shape +
     C: category C
-  for C :: "'c comp"      (infixr "\<cdot>" 55)
+  for C :: "'c comp"      (infixr \<open>\<cdot>\<close> 55)
   and a0 :: 'c
   and a1 :: 'c +
   assumes is_discrete: "C.ide a0 \<and> C.ide a1"
   begin
 
-    notation J.comp      (infixr "\<cdot>\<^sub>J" 55)
+    notation J.comp      (infixr \<open>\<cdot>\<^sub>J\<close> 55)
 
     fun map
     where "map J.FF = a0"
@@ -169,8 +169,8 @@ begin
       interpret mkCone_\<chi>: cone J.comp C map \<open>C.dom (\<chi> J.FF)\<close> \<open>mkCone (\<chi> J.FF) (\<chi> J.TT)\<close>
         using assms is_rendered_commutative_by_cone cone_mkCone by blast
       show ?thesis
-        using mkCone_def \<chi>.is_extensional J.ide_char mkCone_def
-              NaturalTransformation.eqI [of J.comp C]
+        using mkCone_def \<chi>.extensionality  J.ide_char mkCone_def
+              natural_transformation_eqI [of J.comp C]
               \<chi>.natural_transformation_axioms mkCone_\<chi>.natural_transformation_axioms
         by fastforce
     qed
@@ -225,7 +225,7 @@ begin
     C: category C +
     D: binary_product_diagram C f0 f1 +
     limit_cone J.comp C D.map \<open>C.dom p0\<close> \<open>D.mkCone p0 p1\<close>
-  for C :: "'c comp"      (infixr "\<cdot>" 55)
+  for C :: "'c comp"      (infixr \<open>\<cdot>\<close> 55)
   and f0 :: 'c
   and f1 :: 'c
   and p0 :: 'c
@@ -354,7 +354,7 @@ begin
               fix j
               show "D.cones_map h (D.mkCone p q) j = \<chi>' j"
                 using h 1 3 4 D.cones_map_mkCone_eq_iff [of p q "\<chi>' J.FF" "\<chi>' J.TT"]
-                      \<chi>.cone_axioms J.is_discrete \<chi>'.is_extensional
+                      \<chi>.cone_axioms J.is_discrete \<chi>'.extensionality 
                       D.mkCone_def binary_product_shape.ide_char
                 apply (cases "J.ide j")
                 by (metis (no_types, lifting))+
@@ -474,9 +474,9 @@ begin
 
   locale elementary_category_with_binary_products =
     category C
-  for C :: "'a comp"                             (infixr "\<cdot>" 55)
-  and pr0 :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"                    ("\<pp>\<^sub>0[_, _]")
-  and pr1 :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"                    ("\<pp>\<^sub>1[_, _]") +
+  for C :: "'a comp"                             (infixr \<open>\<cdot>\<close> 55)
+  and pr0 :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"                    (\<open>\<pp>\<^sub>0[_, _]\<close>)
+  and pr1 :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"                    (\<open>\<pp>\<^sub>1[_, _]\<close>) +
   assumes span_pr: "\<lbrakk> ide a; ide b \<rbrakk> \<Longrightarrow> span \<pp>\<^sub>1[a, b] \<pp>\<^sub>0[a, b]"
   and cod_pr0: "\<lbrakk> ide a; ide b \<rbrakk> \<Longrightarrow> cod \<pp>\<^sub>0[a, b] = b"
   and cod_pr1: "\<lbrakk> ide a; ide b \<rbrakk> \<Longrightarrow> cod \<pp>\<^sub>1[a, b] = a"
@@ -498,7 +498,7 @@ begin
       is induced by a span.
     \<close>
 
-    definition tuple         ("\<langle>_, _\<rangle>")
+    definition tuple         (\<open>\<langle>_, _\<rangle>\<close>)
     where "\<langle>f, g\<rangle> \<equiv> if span f g then
                       THE l. \<pp>\<^sub>1[cod f, cod g] \<cdot> l = f \<and> \<pp>\<^sub>0[cod f, cod g] \<cdot> l = g
                     else null"
@@ -511,7 +511,7 @@ begin
       separate preliminary notation just for the product of objects.
     \<close>
     (* TODO: I want to use \<times> but it has already been commandeered for product types. *)
-    definition prod         (infixr "\<otimes>" 51)
+    definition prod         (infixr \<open>\<otimes>\<close> 51)
     where "f \<otimes> g \<equiv> \<langle>f \<cdot> \<pp>\<^sub>1[dom f, dom g], g \<cdot> \<pp>\<^sub>0[dom f, dom g]\<rangle>"
 
     lemma seq_pr_tuple:
@@ -743,12 +743,12 @@ begin
   context category_with_binary_products
   begin
 
-    definition some_pr1  ("\<pp>\<^sub>1\<^sup>?[_, _]")
+    definition some_pr1  (\<open>\<pp>\<^sub>1\<^sup>?[_, _]\<close>)
     where "some_pr1 a b \<equiv> if ide a \<and> ide b then
                              fst (SOME x. has_as_binary_product a b (fst x) (snd x))
                            else null"
 
-    definition some_pr0  ("\<pp>\<^sub>0\<^sup>?[_, _]")
+    definition some_pr0  (\<open>\<pp>\<^sub>0\<^sup>?[_, _]\<close>)
     where "some_pr0 a b \<equiv> if ide a \<and> ide b then
                              snd (SOME x. has_as_binary_product a b (fst x) (snd x))
                            else null"
@@ -818,7 +818,7 @@ begin
     shows "elementary_category_with_binary_products C some_pr0 some_pr1"
       ..
 
-    abbreviation some_prod    (infixr "\<otimes>\<^sup>?" 51)
+    abbreviation some_prod    (infixr \<open>\<otimes>\<^sup>?\<close> 51)
     where "some_prod \<equiv> prod"
 
   end
@@ -968,7 +968,7 @@ begin
     and "\<pp>\<^sub>1[c, d] \<cdot> (f \<otimes> g) = f \<cdot> \<pp>\<^sub>1[a, b]"
       using assms prod_def by fastforce+
 
-    abbreviation dup ("\<d>[_]")
+    abbreviation dup (\<open>\<d>[_]\<close>)
     where "\<d>[f] \<equiv> \<langle>f, f\<rangle>"
 
     lemma dup_in_hom [intro, simp]:
@@ -1008,10 +1008,10 @@ begin
     shows "(f \<otimes> g) \<cdot> \<d>[dom f] = \<langle>f, g\<rangle>"
       using assms prod_tuple comp_arr_dom by simp
 
-    definition assoc ("\<a>[_, _, _]")
+    definition assoc (\<open>\<a>[_, _, _]\<close>)
     where "\<a>[a, b, c] \<equiv> \<langle>\<pp>\<^sub>1[a, b] \<cdot> \<pp>\<^sub>1[a \<otimes> b, c], \<langle>\<pp>\<^sub>0[a, b] \<cdot> \<pp>\<^sub>1[a \<otimes> b, c], \<pp>\<^sub>0[a \<otimes> b, c]\<rangle>\<rangle>"
 
-    definition assoc' ("\<a>\<^sup>-\<^sup>1[_, _, _]")
+    definition assoc' (\<open>\<a>\<^sup>-\<^sup>1[_, _, _]\<close>)
     where "\<a>\<^sup>-\<^sup>1[a, b, c] \<equiv> \<langle>\<langle>\<pp>\<^sub>1[a, b \<otimes> c], \<pp>\<^sub>1[b, c] \<cdot> \<pp>\<^sub>0[a, b \<otimes> c]\<rangle>, \<pp>\<^sub>0[b, c] \<cdot> \<pp>\<^sub>0[a, b \<otimes> c]\<rangle>"
 
     lemma assoc_in_hom [intro]:
@@ -1240,9 +1240,7 @@ begin
       show "\<not> CCC.arr f \<Longrightarrow> \<alpha> f = null"
         by (metis CC.arr_char CCC.arr_char ext prod_def seqE tuple_ext)
       assume f: "CCC.arr f"
-      show "dom (\<alpha> f) = T.ToTC (CCC.dom f)"
-        using f by auto
-      show "cod (\<alpha> f) = T.ToCT (CCC.cod f)"
+      show "arr (\<alpha> f)"
         using f by auto
       show "T.ToCT f \<cdot> \<alpha> (CCC.dom f) = \<alpha> f"
         using f T.ToCT_def T.ToTC_def comp_assoc
@@ -1259,11 +1257,11 @@ begin
         by (metis assoc_simps(1-2) ideD(3))
     qed
 
-    lemma \<alpha>_is_natural_isomorphism:
+    lemma \<alpha>_naturalityisomorphism:
     shows "natural_isomorphism CCC.comp C T.ToTC T.ToCT \<alpha>"
       ..
 
-    definition sym ("\<s>[_, _]")
+    definition sym (\<open>\<s>[_, _]\<close>)
     where "\<s>[a1, a0] \<equiv> if ide a0 \<and> ide a1 then \<langle>\<pp>\<^sub>0[a1, a0], \<pp>\<^sub>1[a1, a0]\<rangle> else null"
 
     lemma sym_in_hom [intro]:
@@ -1320,7 +1318,7 @@ begin
        apply metis
       using prod_tuple by simp
 
-    lemma \<sigma>_is_natural_transformation:
+    lemma \<sigma>_naturalitytransformation:
     shows "natural_transformation CC.comp C Prod Prod' \<sigma>"
       ..
 
@@ -1344,11 +1342,11 @@ begin
       using pr_naturality comp_arr_dom comp_cod_arr
       by unfold_locales auto
 
-    lemma \<pi>_is_natural_transformation:
+    lemma \<pi>_naturalitytransformation:
     shows "natural_transformation CC.comp CC.comp \<Delta>o\<Pi>.map CC.map \<pi>"
     proof -
       have "\<pi>.map = \<pi>"
-        using \<pi>.map_def ext \<Pi>.is_extensional comp_arr_dom comp_cod_arr by auto
+        using \<pi>.map_def ext \<Pi>.extensionality  comp_arr_dom comp_cod_arr by auto
       thus "natural_transformation CC.comp CC.comp \<Delta>o\<Pi>.map CC.map \<pi>"
         using \<pi>.natural_transformation_axioms by simp
     qed
@@ -1357,7 +1355,7 @@ begin
       using dup_naturality comp_arr_dom comp_cod_arr prod_tuple tuple_ext
       by unfold_locales auto
 
-    lemma dup_is_natural_transformation:
+    lemma dup_naturalitytransformation:
     shows "natural_transformation C C map \<Pi>o\<Delta>.map dup"
       ..
 
@@ -1410,7 +1408,7 @@ begin
       proof
         fix f
         have "\<not> arr f \<Longrightarrow> \<Delta>o\<delta>_\<pi>o\<Delta>.map f = Diag f"
-          by (simp add: \<Delta>o\<delta>_\<pi>o\<Delta>.is_extensional)
+          by (simp add: \<Delta>o\<delta>_\<pi>o\<Delta>.extensionality )
         moreover have "arr f \<Longrightarrow> \<Delta>o\<delta>_\<pi>o\<Delta>.map f = Diag f"
           using comp_cod_arr comp_assoc \<Delta>o\<delta>_\<pi>o\<Delta>.map_def by auto
         ultimately show "\<Delta>o\<delta>_\<pi>o\<Delta>.map f = Diag f" by blast
@@ -1421,13 +1419,13 @@ begin
         show "\<Pi>o\<pi>_\<delta>o\<Pi>.map fg = Prod fg"
         proof -
           have "\<not> CC.arr fg \<Longrightarrow> ?thesis"
-            by (simp add: \<Pi>.is_extensional \<Pi>o\<pi>_\<delta>o\<Pi>.is_extensional)
+            by (simp add: \<Pi>.extensionality  \<Pi>o\<pi>_\<delta>o\<Pi>.extensionality )
           moreover have "CC.arr fg \<Longrightarrow> ?thesis"
           proof -
             assume fg: "CC.arr fg"
             have 1: "dup (Prod fg) = \<langle>cod (fst fg) \<otimes> cod (snd fg), cod (fst fg) \<otimes> cod (snd fg)\<rangle> \<cdot>
                                         (fst fg \<otimes> snd fg)"
-              using fg \<delta>.is_natural_2
+              using fg \<delta>.naturality2
               apply simp
               by (metis (no_types, lifting) prod_simps(1) prod_simps(3))
             have "\<Pi>o\<pi>_\<delta>o\<Pi>.map fg =
@@ -1444,7 +1442,7 @@ begin
                              (fst fg \<otimes> snd fg)"
               using fg prod_tuple by simp
             also have "... = Prod fg"
-              using fg comp_arr_dom \<Pi>.as_nat_trans.is_natural_2 by auto
+              using fg comp_arr_dom \<Pi>.as_nat_trans.naturality2 by auto
             finally show ?thesis by simp
           qed
           ultimately show ?thesis by blast
@@ -1466,9 +1464,9 @@ begin
 
   locale elementary_category_with_terminal_object =
     category C
-  for C :: "'a comp"                              (infixr "\<cdot>" 55)
-  and one :: "'a"                                 ("\<one>")
-  and trm :: "'a \<Rightarrow> 'a"                           ("\<t>[_]") +
+  for C :: "'a comp"                              (infixr \<open>\<cdot>\<close> 55)
+  and one :: "'a"                                 (\<open>\<one>\<close>)
+  and trm :: "'a \<Rightarrow> 'a"                           (\<open>\<t>[_]\<close>) +
   assumes ide_one: "ide \<one>"
   and trm_in_hom [intro, simp]: "ide a \<Longrightarrow> \<guillemotleft>\<t>[a] : a \<rightarrow> \<one>\<guillemotright>"
   and trm_eqI: "\<lbrakk> ide a; \<guillemotleft>f : a \<rightarrow> \<one>\<guillemotright> \<rbrakk> \<Longrightarrow> f = \<t>[a]"
@@ -1528,10 +1526,10 @@ begin
   context category_with_terminal_object
   begin
 
-    definition some_terminal ("\<one>\<^sup>?")
+    definition some_terminal (\<open>\<one>\<^sup>?\<close>)
     where "some_terminal \<equiv> SOME t. terminal t"
 
-    definition "some_terminator" ("\<t>\<^sup>?[_]")
+    definition "some_terminator" (\<open>\<t>\<^sup>?[_]\<close>)
     where "\<t>\<^sup>?[f] \<equiv> if arr f then THE t. \<guillemotleft>t : dom f \<rightarrow> \<one>\<^sup>?\<guillemotright> else null"
 
     lemma terminal_some_terminal [intro]:
@@ -1726,16 +1724,16 @@ subsection "Monoidal Structure"
       using assms unit_is_terminal_arr terminal_arr_unique ide_one
       by (simp add: unit_eq_trm)
 
-    abbreviation runit ("\<r>[_]")
+    abbreviation runit (\<open>\<r>[_]\<close>)
     where "\<r>[a] \<equiv> \<pp>\<^sub>1[a, \<one>]"
 
-    abbreviation runit' ("\<r>\<^sup>-\<^sup>1[_]")
+    abbreviation runit' (\<open>\<r>\<^sup>-\<^sup>1[_]\<close>)
     where "\<r>\<^sup>-\<^sup>1[a] \<equiv> \<langle>a, \<t>[a]\<rangle>"
 
-    abbreviation lunit ("\<l>[_]")
+    abbreviation lunit (\<open>\<l>[_]\<close>)
     where "\<l>[a] \<equiv> \<pp>\<^sub>0[\<one>, a]"
 
-    abbreviation lunit' ("\<l>\<^sup>-\<^sup>1[_]")
+    abbreviation lunit' (\<open>\<l>\<^sup>-\<^sup>1[_]\<close>)
     where "\<l>\<^sup>-\<^sup>1[a] \<equiv> \<langle>\<t>[a], a\<rangle>"
 
     lemma runit_in_hom:
@@ -2215,7 +2213,7 @@ subsection "Exponentials"
             ultimately show ?thesis
               using D.mkCone_def \<pi>.natural_transformation_axioms
                     D.cone_mkCone [of "\<pi> J.FF" "\<pi> J.TT"]
-                    NaturalTransformation.eqI
+                    natural_transformation_eqI
                       [of "J.comp" C \<pi>.A.map "D.map" \<pi> "D.mkCone (\<pi> J.FF) (\<pi> J.TT)"]
                     cone_def [of J.comp C D.map a "D.mkCone (\<pi> J.FF) (\<pi> J.TT)"] J.ide_char
               by blast
@@ -2346,18 +2344,14 @@ subsection "Exponentials"
           using D0.is_discrete by auto
         have \<pi>1j: "J1.arr j \<Longrightarrow> \<guillemotleft>\<pi>1 j : a1 \<rightarrow> D1 j\<guillemotright>"
           using D1.is_discrete by auto
-        show "dom (?\<pi> j) = A.map (J.dom j)"
-          using j J.arr_char p0 p1 \<pi>0j \<pi>1j
-          by fastforce
-        show "cod (?\<pi> j) = ?D (J.cod j)"
-          using j J.arr_char p0 p1 \<pi>0j \<pi>1j
-          by fastforce
+        show "arr (?\<pi> j)"
+          using j J.arr_char p0 p1 \<pi>0j \<pi>1j by fastforce
         show "?D j \<cdot> ?\<pi> (J.dom j) = ?\<pi> j"
         proof -
           have 0: "J0.arr j \<Longrightarrow> D0 j \<cdot> \<pi>0 j \<cdot> p0 = \<pi>0 j \<cdot> p0"
-            by (metis D0.is_discrete J0.ide_char \<pi>0.is_natural_1 comp_assoc)
+            by (metis D0.is_discrete J0.ide_char \<pi>0.naturality1 comp_assoc)
           have 1: "J1.arr j \<Longrightarrow> D1 j \<cdot> \<pi>1 j \<cdot> p1 = \<pi>1 j \<cdot> p1"
-            by (metis D1.is_discrete J1.ide_char \<pi>1.is_natural_1 comp_assoc)
+            by (metis D1.is_discrete J1.ide_char \<pi>1.naturality1 comp_assoc)
           show ?thesis
             using 0 1 by auto
         qed
@@ -2391,9 +2385,11 @@ subsection "Exponentials"
               show "\<not> J0.arr j \<Longrightarrow> (if j \<in> Collect J0.arr then \<chi>' j else null) = null"
                 by simp
               assume j: "J0.arr j"
-              show 0: "dom (?\<chi>0' j) = A0'.map (J0.dom j)"
+              show "arr (?\<chi>0' j)"
                 using j by simp
-              show 1: "cod (?\<chi>0' j) = D0 (J0.cod j)"
+              have 0: "dom (?\<chi>0' j) = A0'.map (J0.dom j)"
+                using j by simp
+              have 1: "cod (?\<chi>0' j) = D0 (J0.cod j)"
                 using j J.arr_char J.cod_char D0.is_discrete by simp
               show "D0 j \<cdot> (?\<chi>0' (J0.dom j)) = ?\<chi>0' j"
                 using 1 j J.arr_char D0.is_discrete comp_cod_arr by simp
@@ -2406,9 +2402,11 @@ subsection "Exponentials"
               show "\<not> J1.arr j \<Longrightarrow> (if j \<in> Collect J1.arr then \<chi>' j else null) = null"
                 by simp
               assume j: "J1.arr j"
-              show 0: "dom (?\<chi>1' j) = A1'.map (J1.dom j)"
+              show "arr (?\<chi>1' j)"
                 using j by simp
-              show 1: "cod (?\<chi>1' j) = D1 (J1.cod j)"
+              have 0: "dom (?\<chi>1' j) = A1'.map (J1.dom j)"
+                using j by simp
+              have 1: "cod (?\<chi>1' j) = D1 (J1.cod j)"
                 using assms(4) j J.arr_char J.cod_char D1.is_discrete by auto
               show "D1 j \<cdot> (?\<chi>1' (J1.dom j)) = ?\<chi>1' j"
                 using 1 j J.arr_char D1.is_discrete comp_cod_arr by simp
@@ -2477,7 +2475,7 @@ subsection "Exponentials"
                 show "\<not> J0.arr j \<Longrightarrow> D.cones_map f ?\<pi> j = \<chi>' j"
                 proof (cases "J1.arr j")
                   show "\<lbrakk>\<not> J0.arr j; \<not> J1.arr j\<rbrakk> \<Longrightarrow> D.cones_map f ?\<pi> j = \<chi>' j"
-                    using f \<pi>.cone_axioms \<chi>'.is_extensional by auto
+                    using f \<pi>.cone_axioms \<chi>'.extensionality  by auto
                   show "\<lbrakk>\<not> J0.arr j; J1.arr j\<rbrakk> \<Longrightarrow> D.cones_map f ?\<pi> j = \<chi>' j"
                   proof -
                     assume J0: "\<not> J0.arr j" and J1: "J1.arr j"
@@ -2688,7 +2686,7 @@ subsection "Exponentials"
                     show "D j = (if j \<in> Collect J0.arr then D0.map j
                                  else if j \<in> Collect J1.arr then D1.map j
                                  else null)"
-                      using 1 D0.map_def D1.map_def D.is_extensional D J0.arr_char J1.arr_char
+                      using 1 D0.map_def D1.map_def D.extensionality  D J0.arr_char J1.arr_char
                       by auto
                   qed
                   moreover have "J = J0uJ1.comp"

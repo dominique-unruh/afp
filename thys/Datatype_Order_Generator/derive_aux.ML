@@ -193,8 +193,7 @@ fun typ_subst_for_sort thy info sort =
 fun typ_and_vs_of_typname thy typ_name sort =
   let
     val ar = Sign.arity_number thy typ_name
-    val sorts = map (K sort) (1 upto ar)
-    val ty_vars = Name.invent_names (Name.make_context [typ_name]) "a" sorts
+    val ty_vars = Name.invent_names (Name.make_context [typ_name]) "a" (replicate ar sort)
     val ty = Type (typ_name,map TFree ty_vars)
   in (ty,ty_vars)
 end
@@ -274,7 +273,7 @@ fun simps_of_info info = #case_rewrites info @ #rec_rewrites info @ #inject info
 
 val my_simp_set =
   simpset_of (@{context}
-    delsimps (simpset_of @{context} |> dest_ss |> #simps |> map snd)
+    delsimps (simpset_of @{context} |> Simplifier.dest_simps |> map #2)
     addsimps @{thms HOL.simp_thms})
 
 fun mk_binary_thm mk_prop_trm mk_bin_idx bin_const_name thy (info : Old_Datatype_Aux.info) prop_gen sort same_constructor_tac =

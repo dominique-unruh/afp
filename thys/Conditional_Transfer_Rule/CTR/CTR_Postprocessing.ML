@@ -35,7 +35,7 @@ fun postprocess_transfer_rule b thm ctxt =
       |>> #2
       |>> the_single
       |> #2
-    val lthy_print = Bundle.includes ["Transfer.lifting_syntax"] lthy
+    val lthy_print = Bundle.includes [(true, \<^bundle>\<open>lifting_syntax\<close>)] lthy
     val _ =
       Proof_Display.print_theorem (Position.thread_data ()) lthy_print
         (Local_Theory.full_name lthy_print b, [thm])
@@ -79,7 +79,7 @@ fun postprocess_relativization b mf thm ctxt =
     val (ow_def_thm, lthy') = Local_Theory.raw_theory_result make_with_def lthy
     val _ =
       Proof_Display.print_theorem (Position.thread_data ()) lthy'
-        (Thm.derivation_name ow_def_thm, [ow_def_thm])
+        (Thm_Name.short (Thm.derivation_name ow_def_thm), [ow_def_thm])
     val thm' = thm 
       |> singleton (Proof_Context.export ctxt lthy')
       |> Thm.pure_unfold lthy' (ow_def_thm |> Thm.symmetric |> single)

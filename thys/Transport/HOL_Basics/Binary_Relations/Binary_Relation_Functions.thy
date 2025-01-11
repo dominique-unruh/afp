@@ -127,9 +127,10 @@ subsubsection \<open>Composition\<close>
 
 consts rel_comp :: "'a \<Rightarrow> 'b \<Rightarrow> 'c"
 
-bundle rel_comp_syntax begin notation rel_comp (infixl "\<circ>\<circ>" 55) end
-bundle no_rel_comp_syntax begin no_notation rel_comp (infixl "\<circ>\<circ>" 55) end
-unbundle rel_comp_syntax
+open_bundle rel_comp_syntax
+begin
+notation rel_comp (infixl \<open>\<circ>\<circ>\<close> 55)
+end
 
 definition "rel_comp_rel R S x y \<equiv> \<exists>z. R x z \<and> S z y"
 adhoc_overloading rel_comp rel_comp_rel
@@ -168,9 +169,10 @@ subsubsection \<open>Inverse\<close>
 
 consts rel_inv :: "'a \<Rightarrow> 'b"
 
-bundle rel_inv_syntax begin notation rel_inv ("(_\<inverse>)" [1000]) end
-bundle no_rel_inv_syntax begin no_notation rel_inv ("(_\<inverse>)" [1000]) end
-unbundle rel_inv_syntax
+open_bundle rel_inv_syntax
+begin
+notation rel_inv (\<open>(_\<inverse>)\<close> [1000])
+end
 
 definition rel_inv_rel :: "('a \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> 'b \<Rightarrow> 'a \<Rightarrow> bool"
   where "rel_inv_rel R x y \<equiv> R y x"
@@ -208,7 +210,7 @@ lemma rel_inv_eq_iff_eq [iff]: "R\<inverse> = S\<inverse> \<longleftrightarrow> 
   by (blast dest: fun_cong)
 
 lemma rel_inv_le_rel_inv_iff [iff]: "R\<inverse> \<le> S\<inverse> \<longleftrightarrow> R \<le> S"
-  by (auto intro: predicate2I dest: predicate2D)
+  by (blast intro: predicate2I dest: predicate2D)
 
 lemma rel_inv_top_eq [simp]: "\<top>\<inverse> = \<top>" by fastforce
 lemma rel_inv_bottom_eq [simp]: "\<bottom>\<inverse> = \<bottom>" by fastforce
@@ -217,9 +219,10 @@ subsubsection \<open>Restrictions\<close>
 
 consts rel_if :: "bool \<Rightarrow> 'a \<Rightarrow> 'a"
 
-bundle rel_if_syntax begin notation (output) rel_if (infixl "\<longrightarrow>" 50) end
-bundle no_rel_if_syntax begin no_notation (output) rel_if (infixl "\<longrightarrow>" 50) end
-unbundle rel_if_syntax
+open_bundle rel_if_syntax
+begin
+notation (output) rel_if (infixl \<open>\<longrightarrow>\<close> 50)
+end
 
 definition "rel_if_rel B R x y \<equiv> B \<longrightarrow> R x y"
 adhoc_overloading rel_if rel_if_rel
@@ -252,23 +255,21 @@ lemma rel_ifD:
 
 consts rel_restrict_left :: "'a \<Rightarrow> 'b \<Rightarrow> 'a"
 consts rel_restrict_right :: "'a \<Rightarrow> 'b \<Rightarrow> 'a"
+consts rel_restrict :: "'a \<Rightarrow> 'b \<Rightarrow> 'a"
 
-bundle rel_restrict_syntax
+open_bundle rel_restrict_syntax
 begin
-notation rel_restrict_left ("(_)\<restriction>(\<^bsub>_\<^esub>)" [1000])
-notation rel_restrict_right ("(_)\<upharpoonleft>(\<^bsub>_\<^esub>)" [1000])
+notation rel_restrict_left (\<open>(_)\<restriction>(\<^bsub>_\<^esub>)\<close> [1000])
+notation rel_restrict_right (\<open>(_)\<upharpoonleft>(\<^bsub>_\<^esub>)\<close> [1000])
+notation rel_restrict (\<open>(_)\<up>(\<^bsub>_\<^esub>)\<close> [1000])
 end
-bundle no_rel_restrict_syntax
-begin
-no_notation rel_restrict_left ("(_)\<restriction>(\<^bsub>_\<^esub>)" [1000])
-no_notation rel_restrict_right ("(_)\<upharpoonleft>(\<^bsub>_\<^esub>)" [1000])
-end
-unbundle rel_restrict_syntax
 
 definition "rel_restrict_left_pred R P x y \<equiv> P x \<and> R x y"
 adhoc_overloading rel_restrict_left rel_restrict_left_pred
 definition "rel_restrict_right_pred R P x y \<equiv> P y \<and> R x y"
 adhoc_overloading rel_restrict_right rel_restrict_right_pred
+definition "rel_restrict_pred R P \<equiv> R\<restriction>\<^bsub>P\<^esub>\<upharpoonleft>\<^bsub>P\<^esub>"
+adhoc_overloading rel_restrict rel_restrict_pred
 
 lemma rel_restrict_leftI [intro]:
   assumes "R x y"
@@ -287,6 +288,9 @@ lemma rel_restrict_left_cong:
   shows "R\<restriction>\<^bsub>P\<^esub> = R'\<restriction>\<^bsub>P'\<^esub>"
   using assms by (intro ext iffI) blast+
 
+lemma rel_restrict_left_restrict_left_eq_restrict_left [simp]: "R\<restriction>\<^bsub>P\<^esub>\<restriction>\<^bsub>P\<^esub> = R\<restriction>\<^bsub>P\<^esub>"
+  by blast
+
 lemma rel_restrict_left_top_eq [simp]: "(R :: 'a \<Rightarrow> 'b \<Rightarrow> bool)\<restriction>\<^bsub>\<top> :: 'a \<Rightarrow> bool\<^esub> = R"
   by (intro ext rel_restrict_leftI) auto
 
@@ -302,12 +306,12 @@ lemma bottom_restrict_left_eq [simp]: "\<bottom>\<restriction>\<^bsub>P :: 'a \<
   by fastforce
 
 lemma rel_restrict_left_le_self: "(R :: 'a \<Rightarrow> 'b \<Rightarrow> bool)\<restriction>\<^bsub>(P :: 'a \<Rightarrow> bool)\<^esub> \<le> R"
-  by (auto intro: predicate2I dest: predicate2D)
+  by (blast intro: predicate2I dest: predicate2D)
 
 lemma le_rel_restrict_left_self_if_in_dom_le:
   assumes "in_dom R \<le> P"
   shows "R \<le> (R :: 'a \<Rightarrow> 'b \<Rightarrow> bool)\<restriction>\<^bsub>(P :: 'a \<Rightarrow> bool)\<^esub>"
-  using assms by (auto intro: predicate2I dest: predicate2D predicate1D)
+  using assms by (blast intro: predicate2I dest: predicate2D predicate1D)
 
 corollary rel_restrict_left_eq_self_if_in_dom_le [simp]:
   assumes "in_dom R \<le> P"
@@ -315,6 +319,19 @@ corollary rel_restrict_left_eq_self_if_in_dom_le [simp]:
   using assms rel_restrict_left_le_self le_rel_restrict_left_self_if_in_dom_le by (intro antisym)
 
 lemma ex_rel_restrict_left_iff_in_codom_on [iff]: "(\<exists>x. R\<restriction>\<^bsub>P\<^esub> x y) \<longleftrightarrow> (in_codom_on P R y)" by blast
+
+lemma in_dom_rel_restrict_leftI [intro]:
+  assumes "R x y"
+  and "P x"
+  shows "in_dom R\<restriction>\<^bsub>P\<^esub> x"
+  using assms by blast
+
+lemma in_codom_rel_restrict_leftI [intro]:
+  assumes "R x y"
+  and "P x"
+  shows "in_codom R\<restriction>\<^bsub>P\<^esub> y"
+  using assms by blast
+
 
 lemma rel_restrict_rightI [intro]:
   assumes "R x y"
@@ -333,6 +350,9 @@ lemma rel_restrict_right_cong:
   shows "R\<upharpoonleft>\<^bsub>P\<^esub> = R'\<upharpoonleft>\<^bsub>P'\<^esub>"
   using assms by (intro ext iffI) blast+
 
+lemma rel_restrict_right_restrict_right_eq_restrict_right [simp]: "R\<upharpoonleft>\<^bsub>P\<^esub>\<upharpoonleft>\<^bsub>P\<^esub> = R\<upharpoonleft>\<^bsub>P\<^esub>"
+  by blast
+
 lemma rel_restrict_right_top_eq [simp]: "(R :: 'a \<Rightarrow> 'b \<Rightarrow> bool)\<upharpoonleft>\<^bsub>\<top> ::'b \<Rightarrow> bool\<^esub> = R"
   by (intro ext rel_restrict_rightI) auto
 
@@ -348,12 +368,12 @@ lemma bottom_restrict_right_eq [simp]: "\<bottom>\<upharpoonleft>\<^bsub>P :: 'b
   by fastforce
 
 lemma rel_restrict_right_le_self: "(R :: 'a \<Rightarrow> 'b \<Rightarrow> bool)\<upharpoonleft>\<^bsub>(P :: 'b \<Rightarrow> bool)\<^esub> \<le> R"
-  by (auto intro: predicate2I dest: predicate2D)
+  by (blast intro: predicate2I dest: predicate2D)
 
 lemma le_rel_restrict_right_self_if_in_codom_le:
   assumes "in_codom R \<le> P"
   shows "R \<le> (R :: 'a \<Rightarrow> 'b \<Rightarrow> bool)\<upharpoonleft>\<^bsub>(P :: 'b \<Rightarrow> bool)\<^esub>"
-  using assms by (auto intro: predicate2I dest: predicate2D predicate1D)
+  using assms by (blast intro: predicate2I dest: predicate2D predicate1D)
 
 corollary rel_restrict_right_eq_self_if_in_codom_le [simp]:
   assumes "in_codom R \<le> P"
@@ -387,27 +407,55 @@ lemma rel_restrict_left_right_eq_restrict_right_left:
   unfolding rel_restrict_right_eq
   by (fact rel_inv_rel_restrict_left_inv_rel_restrict_left_eq)
 
-lemma in_dom_rel_restrict_leftI [intro]:
-  assumes "R x y"
-  and "P x"
-  shows "in_dom R\<restriction>\<^bsub>P\<^esub> x"
-  using assms by blast
+lemma rel_restrictI [intro]:
+  assumes "R\<restriction>\<^bsub>P\<^esub>\<upharpoonleft>\<^bsub>P\<^esub> x y"
+  shows "R\<up>\<^bsub>P\<^esub> x y"
+  using assms unfolding rel_restrict_pred_def by blast
 
-lemma in_dom_rel_restrict_leftE [elim]:
-  assumes "in_dom R\<restriction>\<^bsub>P\<^esub> x"
-  obtains y where "P x" "R x y"
-  using assms by blast
+lemma rel_restrictD [dest!]:
+  assumes "R\<up>\<^bsub>P\<^esub> x y"
+  shows "R\<restriction>\<^bsub>P\<^esub>\<upharpoonleft>\<^bsub>P\<^esub> x y"
+  using assms unfolding rel_restrict_pred_def by blast
 
-lemma in_codom_rel_restrict_leftI [intro]:
-  assumes "R x y"
-  and "P x"
-  shows "in_codom R\<restriction>\<^bsub>P\<^esub> y"
-  using assms by blast
+lemma rel_restrict_eq_restrict_left_right [simp]: "R\<up>\<^bsub>P\<^esub> = R\<restriction>\<^bsub>P\<^esub>\<upharpoonleft>\<^bsub>P\<^esub>"
+  by (intro ext) auto
 
-lemma in_codom_rel_restrict_leftE [elim]:
-  assumes "in_codom R\<restriction>\<^bsub>P\<^esub> y"
-  obtains x where "P x" "R x y"
-  using assms by blast
+lemma rel_restrict_cong:
+  assumes "\<And>y. P y \<longleftrightarrow> P' y"
+  and "\<And>x y. P' x \<Longrightarrow> P' y \<Longrightarrow> R x y \<longleftrightarrow> R' x y"
+  shows "R\<up>\<^bsub>P\<^esub> = R'\<up>\<^bsub>P'\<^esub>"
+  using assms by (intro ext) fast
+
+lemma rel_restrict_restrict_eq_restrict [simp]: "R\<up>\<^bsub>P\<^esub>\<up>\<^bsub>P\<^esub> = R\<up>\<^bsub>P\<^esub>"
+  by blast
+
+lemma rel_restrict_top_eq [simp]: "(R :: 'a \<Rightarrow> 'a \<Rightarrow> bool)\<up>\<^bsub>\<top> :: 'a \<Rightarrow> bool\<^esub> = R"
+  by (intro ext rel_restrictI) auto
+
+lemma rel_restrict_top_eq_uhint [uhint]:
+  assumes "P \<equiv> (\<top> ::'a \<Rightarrow> bool)"
+  shows "(R :: 'a \<Rightarrow> 'a \<Rightarrow> bool)\<up>\<^bsub>P\<^esub> \<equiv> R"
+  using assms by simp
+
+lemma rel_restrict_bottom_eq [simp]: "(R :: 'a \<Rightarrow> 'a \<Rightarrow> bool)\<up>\<^bsub>\<bottom> :: 'a \<Rightarrow> bool\<^esub> = \<bottom>"
+  by (intro ext rel_restrictI) auto
+
+lemma bottom_restrict_eq [simp]: "\<bottom>\<up>\<^bsub>P :: 'a \<Rightarrow> bool\<^esub> = \<bottom>"
+  by fastforce
+
+lemma rel_restrict_le_self: "(R :: 'a \<Rightarrow> 'a \<Rightarrow> bool)\<up>\<^bsub>(P :: 'a \<Rightarrow> bool)\<^esub> \<le> R"
+  by (auto intro: predicate2I dest: predicate2D)
+
+lemma le_rel_restrict_self_if_in_field_le:
+  assumes "in_field R \<le> P"
+  shows "R \<le> (R :: 'a \<Rightarrow> 'a \<Rightarrow> bool)\<up>\<^bsub>(P :: 'a \<Rightarrow> bool)\<^esub>"
+  using assms by (blast intro: predicate2I dest: predicate2D predicate1D)
+
+corollary rel_restrict_eq_self_if_in_field_le [simp]:
+  assumes "in_field R \<le> P"
+  shows "R\<up>\<^bsub>P\<^esub> = R"
+  using assms rel_restrict_le_self le_rel_restrict_self_if_in_field_le
+  by (intro antisym)
 
 
 subsubsection \<open>Mappers\<close>
@@ -424,6 +472,5 @@ lemma rel_bimap_self_eq_rel_map [simp]: "rel_bimap f f R = rel_map f R"
 
 lemma rel_map_eq [simp]: "rel_map f R x y = R (f x) (f y)"
   by (simp only: rel_bimap_self_eq_rel_map[symmetric] rel_bimap_eq)
-
 
 end

@@ -5,30 +5,8 @@ theory FSet_Utils
 begin
 
 notation (latex output)
-  "FSet.fempty" ("\<emptyset>") and
-  "FSet.fmember" ("\<in>")
-
-syntax (ASCII)
-  "_fBall"       :: "pttrn \<Rightarrow> 'a fset \<Rightarrow> bool \<Rightarrow> bool"      ("(3ALL (_/:_)./ _)" [0, 0, 10] 10)
-  "_fBex"        :: "pttrn \<Rightarrow> 'a fset \<Rightarrow> bool \<Rightarrow> bool"      ("(3EX (_/:_)./ _)" [0, 0, 10] 10)
-  "_fBex1"       :: "pttrn \<Rightarrow> 'a fset \<Rightarrow> bool \<Rightarrow> bool"      ("(3EX! (_/:_)./ _)" [0, 0, 10] 10)
-
-syntax (input)
-  "_fBall"       :: "pttrn \<Rightarrow> 'a fset \<Rightarrow> bool \<Rightarrow> bool"      ("(3! (_/:_)./ _)" [0, 0, 10] 10)
-  "_fBex"        :: "pttrn \<Rightarrow> 'a fset \<Rightarrow> bool \<Rightarrow> bool"      ("(3? (_/:_)./ _)" [0, 0, 10] 10)
-  "_fBex1"       :: "pttrn \<Rightarrow> 'a fset \<Rightarrow> bool \<Rightarrow> bool"      ("(3?! (_/:_)./ _)" [0, 0, 10] 10)
-
-syntax
-  "_fBall"       :: "pttrn \<Rightarrow> 'a fset \<Rightarrow> bool \<Rightarrow> bool"      ("(3\<forall>(_/|\<in>|_)./ _)" [0, 0, 10] 10)
-  "_fBex"        :: "pttrn \<Rightarrow> 'a fset \<Rightarrow> bool \<Rightarrow> bool"      ("(3\<exists>(_/|\<in>|_)./ _)" [0, 0, 10] 10)
-  "_fBnex"       :: "pttrn \<Rightarrow> 'a fset \<Rightarrow> bool \<Rightarrow> bool"      ("(3\<nexists>(_/|\<in>|_)./ _)" [0, 0, 10] 10)
-  "_fBex1"       :: "pttrn \<Rightarrow> 'a fset \<Rightarrow> bool \<Rightarrow> bool"      ("(3\<exists>!(_/|\<in>|_)./ _)" [0, 0, 10] 10)
-
-translations
-  "\<forall>x|\<in>|A. P" \<rightleftharpoons> "CONST fBall A (\<lambda>x. P)"
-  "\<exists>x|\<in>|A. P" \<rightleftharpoons> "CONST fBex  A (\<lambda>x. P)"
-  "\<nexists>x|\<in>|A. P" \<rightleftharpoons> "CONST fBall A (\<lambda>x. \<not>P)"
-  "\<exists>!x|\<in>|A. P" \<rightharpoonup> "\<exists>!x. x |\<in>| A \<and> P"
+  "FSet.fempty" (\<open>\<emptyset>\<close>) and
+  "FSet.fmember" (\<open>\<in>\<close>)
 
 lemma fset_of_list_remdups [simp]: "fset_of_list (remdups l) = fset_of_list l"
   apply (induct l)
@@ -217,7 +195,7 @@ lemma ffold_ord_fold_sorted: "ffold_ord f s b = fold f (sorted_list_of_fset s) b
   by (metis exists_sorted_distinct_fset_of_list sorted_distinct_ffold_ord distinct_remdups_id sorted_list_of_fset_sort sorted_sort_id)
 
 context includes fset.lifting begin
-  lift_definition fprod  :: "'a fset \<Rightarrow> 'b fset \<Rightarrow> ('a \<times> 'b) fset " (infixr "|\<times>|" 80) is "\<lambda>a b. fset a \<times> fset b"
+  lift_definition fprod  :: "'a fset \<Rightarrow> 'b fset \<Rightarrow> ('a \<times> 'b) fset " (infixr \<open>|\<times>|\<close> 80) is "\<lambda>a b. fset a \<times> fset b"
     by simp
 
   lift_definition fis_singleton :: "'a fset \<Rightarrow> bool" is "\<lambda>A. is_singleton (fset A)".
@@ -317,7 +295,7 @@ lemma fimage_size_le: "\<And>f s. size s \<le> n \<Longrightarrow> size (fimage 
 lemma ffilter_size_le: "\<And>f s. size s \<le> n \<Longrightarrow> size (ffilter f s) \<le> n"
   using dual_order.trans size_ffilter by blast
 
-lemma set_membership_eq: "A = B \<longleftrightarrow> (\<lambda>x. Set.member x A) = (\<lambda>x. Set.member x B)"
+lemma set_membership_eq: "A = B \<longleftrightarrow> (\<lambda>x. x \<in> A) = (\<lambda>x. x \<in> B)"
   apply standard
    apply simp
   by (meson equalityI subsetI)

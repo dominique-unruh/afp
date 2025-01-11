@@ -59,14 +59,13 @@ proof (rule smallo_imp_le_real)
   finally have "g \<in> o(h2)" by (simp add: smallomega_iff_smallo)
   also have "eventually (\<lambda>x. h2 x = ln (b*x) powr (-e/2) - ln x powr (-e/2)) at_top"
     using eventually_gt_at_top[of "1::real"] eventually_gt_at_top[of "1/b"]
-    by eventually_elim (insert bep, simp add: field_simps powr_diff [symmetric]  h2_def
-                                      ln_mult [symmetric] powr_divide del: ln_mult)
+    by eventually_elim (use bep in \<open>simp add: ln_mult powr_diff h2_def powr_minus powr_divide field_simps\<close>)
   hence "h2 \<in> \<Theta>(\<lambda>x. ln (b*x) powr (-e/2) - ln x powr (-e/2))" by (rule bigthetaI_cong)
   finally show "g \<in> o(\<lambda>x. ln (b * x) powr (- e / 2) - ln x powr (- e / 2))" .
 next
   show "eventually (\<lambda>x. ln (b*x) powr (-e/2) - ln x powr (-e/2) \<ge> 0) at_top"
     using eventually_gt_at_top[of "1/b"] eventually_gt_at_top[of "1::real"]
-    by eventually_elim (insert bep, auto intro!: powr_mono2' simp: field_simps simp del: ln_mult)
+    by eventually_elim (use bep in \<open>auto intro!: powr_mono2' simp: field_simps simp flip: ln_mult\<close>)
 qed
 
 private lemma ev1:
@@ -139,7 +138,7 @@ proof -
         by (simp add: field_simps powr_diff powr_add powr_minus)
       also from elim(1) bep
         have "ln \<dots> = ln (b*x) * (1 + 1/ln (b*x) * ln (1 + hb / b * ln x powr (-1-e)))"
-        by (subst ln_mult) (simp_all add: add_pos_nonneg field_simps)
+        by (subst ln_mult_pos) (simp_all add: add_pos_nonneg field_simps)
       also from elim(1) bep have "\<dots> powr (-e/2) = ln (b*x) powr (-e/2) * f' x"
         by (subst powr_mult) (simp_all add: field_simps f'_def)
       also from elim have "\<dots> \<ge> ln (b*x) powr (-e/2) * (1 + g x)"

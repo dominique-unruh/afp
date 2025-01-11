@@ -3,7 +3,7 @@ section \<open>Exponentiation is Diophaninte\<close>
 subsection \<open>Expressing Exponentiation in terms of the alpha function\<close>
 
 theory Exponentiation
-  imports "HOL-Library.Discrete"
+  imports Complex_Main
 begin
 
 locale Exp_Matrices
@@ -77,9 +77,10 @@ proof (induct n)
   show ?case by simp
 next
   case (Suc n)
-  have pos: "0 < \<alpha> b (Suc n)" by (simp add:Suc)
+  have pos: "0 < \<alpha> b (Suc n)"
+    using Suc by fastforce
   have "\<alpha> b (Suc n) \<le> (int b) * (\<alpha> b (Suc n)) - \<alpha> b (Suc n)" using pos Suc by simp
-  also have "... < \<alpha> b (Suc (Suc n))" by (simp add: Suc)
+  also have "... < \<alpha> b (Suc (Suc n))" using Suc by fastforce
   finally show ?case using pos Suc by simp
 qed
 
@@ -1332,7 +1333,8 @@ proof -
   from sth assms have sth1: "U^2+T^2\<ge>b*U*T" using UT1 by linarith
   from sth1 of_nat_diff have sth2: "int (U^2+T^2-b*U*T) = int (U^2+T^2) - int (b*U*T)" by blast
   from UT1 UT2 have UT3: "int (U^2+T^2)-int (b*U*T)=u^2+t^2-b*u*t" by simp
-  from sth2 UT3 assms have sth4: "int (U^2+T^2-b*U*T) = 1" by auto
+  from sth2 UT3 assms have sth4: "int (U^2+T^2-b*U*T) = 1"
+    by linarith
   from sth4 have sth5: "U^2+T^2-b*U*T=1" by simp
   from sth5 have sth6: "U^2+T^2=1+b*U*T" by simp
   show ?thesis using sth6 U_def T_def by simp

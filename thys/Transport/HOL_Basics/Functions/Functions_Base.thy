@@ -11,11 +11,14 @@ definition "id x \<equiv> x"
 lemma id_eq_self [simp]: "id x = x"
   unfolding id_def ..
 
+lemma rel_map_id_eq_self [simp]: "rel_map id R = R" by (intro ext) auto
+
 consts comp :: "'a \<Rightarrow> 'b \<Rightarrow> 'c"
 
-bundle comp_syntax begin notation comp (infixl "\<circ>" 55) end
-bundle no_comp_syntax begin no_notation comp (infixl "\<circ>" 55) end
-unbundle comp_syntax
+open_bundle comp_syntax
+begin
+notation comp (infixl \<open>\<circ>\<close> 55)
+end
 
 definition "comp_fun f g x \<equiv> f (g x)"
 adhoc_overloading comp comp_fun
@@ -37,23 +40,15 @@ definition "dep_fun_map f g h x \<equiv> g x (f x) (h (f x))"
 
 definition "fun_map f g h \<equiv> dep_fun_map f (\<lambda>_ _. g) h"
 
-bundle dep_fun_map_syntax begin
+open_bundle dep_fun_map_syntax
+begin
+notation "fun_map" (infixr \<open>\<leadsto>\<close> 40)
 syntax
-  "_fun_map" :: "('a \<Rightarrow> 'b) \<Rightarrow> ('c \<Rightarrow> 'd) \<Rightarrow> ('b \<Rightarrow> 'c) \<Rightarrow>
-    ('a \<Rightarrow> 'd)" ("(_) \<leadsto> (_)" [41, 40] 40)
   "_dep_fun_map" :: "idt \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> ('c \<Rightarrow> 'd) \<Rightarrow> ('b \<Rightarrow> 'c) \<Rightarrow>
-    ('a \<Rightarrow> 'd)" ("'(_/ : / _') \<leadsto> (_)" [41, 41, 40] 40)
+    ('a \<Rightarrow> 'd)" (\<open>'(_/ : / _') \<leadsto> (_)\<close> [41, 41, 40] 40)
 end
-bundle no_dep_fun_map_syntax begin
-no_syntax
-  "_fun_map" :: "('a \<Rightarrow> 'b) \<Rightarrow> ('c \<Rightarrow> 'd) \<Rightarrow> ('b \<Rightarrow> 'c) \<Rightarrow>
-    ('a \<Rightarrow> 'd)" ("(_) \<leadsto> (_)" [41, 40] 40)
-  "_dep_fun_map" :: "idt \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> ('c \<Rightarrow> 'd) \<Rightarrow> ('b \<Rightarrow> 'c) \<Rightarrow>
-    ('a \<Rightarrow> 'd)" ("'(_/ : / _') \<leadsto> (_)" [41, 41, 40] 40)
-end
-unbundle dep_fun_map_syntax
+syntax_consts "_dep_fun_map" \<rightleftharpoons> dep_fun_map
 translations
-  "f \<leadsto> g" \<rightleftharpoons> "CONST fun_map f g"
   "(x : f) \<leadsto> g" \<rightleftharpoons> "CONST dep_fun_map f (\<lambda>x. g)"
 
 lemma fun_map_eq_dep_fun_map: "(f \<leadsto> g) = ((_ :  f) \<leadsto> (\<lambda>_. g))"

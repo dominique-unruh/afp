@@ -13,7 +13,8 @@ definition
   option_bind :: "['a option, 'a => 'b option] => 'b option" where
   "option_bind m f = (case m of None => None | Some r => f r)"
 
-syntax "_option_bind" :: "[pttrns,'a option,'b] => 'c" ("(_ := _;//_)" 0)
+syntax "_option_bind" :: "[pttrns,'a option,'b] => 'c" (\<open>(_ := _;//_)\<close> 0)
+syntax_consts "_option_bind" == option_bind
 translations "P := E; F" == "CONST option_bind E (\<lambda>P. F)"
 
 
@@ -40,8 +41,5 @@ lemma split_option_bind_asm: "P(option_bind res f) =
 lemma option_bind_eq_None [simp]:
     "((option_bind m f) = None) = ((m=None) | (\<exists>p. m = Some p \<and> f p = None))"
   by (simp split: split_option_bind)
-
-lemma rotate_Some: "(y = Some x) = (Some x = y)"
-  by (simp add: eq_sym_conv)
 
 end

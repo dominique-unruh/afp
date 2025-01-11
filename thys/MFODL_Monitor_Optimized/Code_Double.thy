@@ -232,7 +232,7 @@ end
 lift_definition sqrt_double :: "double \<Rightarrow> double" is float_sqrt
   by (auto simp: is_nan_float_sqrt)
 
-no_notation plus_infinity ("\<infinity>")
+no_notation plus_infinity (\<open>\<infinity>\<close>)
 
 lift_definition infinity :: "double" is plus_infinity .
 
@@ -489,7 +489,7 @@ end = struct
   let compare x y = Z.of_int (Pervasives.compare x y);;
 end;;\<close>
 
-code_reserved OCaml Pervasives FloatUtil
+code_reserved (OCaml) Pervasives FloatUtil
 
 code_printing
   type_constructor double \<rightharpoonup> (OCaml) "float"

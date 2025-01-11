@@ -9,129 +9,129 @@ locale interest =
   assumes v_futr_pos: "1 + i > 0"  \<comment> \<open>Assume that the future value is positive.\<close>
 begin
 
-definition i_nom :: "nat \<Rightarrow> real" ("$i^{_}" [0] 200)
+definition i_nom :: "nat \<Rightarrow> real" (\<open>$i^{_}\<close> [0] 200)
   where "$i^{m} \<equiv> m * ((1+i).^(1/m) - 1)"  \<comment> \<open>nominal interest rate\<close>
 
-definition i_force :: real ("$\<delta>" 200)
+definition i_force :: real (\<open>$\<delta>\<close> 200)
   where "$\<delta> \<equiv> ln (1+i)" \<comment> \<open>force of interest\<close>
 
-definition d_nom :: "nat \<Rightarrow> real" ("$d^{_}" [0] 200)
+definition d_nom :: "nat \<Rightarrow> real" (\<open>$d^{_}\<close> [0] 200)
   where "$d^{m} \<equiv> $i^{m} / (1 + $i^{m}/m)"  \<comment> \<open>discount rate\<close> 
 
-abbreviation d_nom_yr :: real ("$d" 200)
+abbreviation d_nom_yr :: real (\<open>$d\<close> 200)
   where "$d \<equiv> $d^{1}"  \<comment> \<open>Post-fix \<open>yr\<close> stands for "year".\<close>
 
-definition v_pres :: real ("$v" 200)
+definition v_pres :: real (\<open>$v\<close> 200)
   where "$v \<equiv> 1 / (1+i)"  \<comment> \<open>present value factor\<close>
 
-definition ann :: "nat \<Rightarrow> nat \<Rightarrow> real" ("$a^{_}'__" [0,101] 200)
+definition ann :: "nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$a^{_}'__\<close> [0,101] 200)
   where "$a^{m}_n \<equiv> \<Sum>k<n*m. $v.^((k+1::nat)/m) / m"
     \<comment> \<open>present value of an immediate annuity\<close>
 
-abbreviation ann_yr :: "nat \<Rightarrow> real" ("$a'__" [101] 200)
+abbreviation ann_yr :: "nat \<Rightarrow> real" (\<open>$a'__\<close> [101] 200)
   where "$a_n \<equiv> $a^{1}_n"
 
-definition acc :: "nat \<Rightarrow> nat \<Rightarrow> real" ("$s^{_}'__" [0,101] 200)
+definition acc :: "nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$s^{_}'__\<close> [0,101] 200)
   where "$s^{m}_n \<equiv> \<Sum>k<n*m. (1+i).^((k::nat)/m) / m"
     \<comment> \<open>future value of an immediate annuity\<close>
     \<comment> \<open>The name \<open>acc\<close> stands for "accumulation".\<close>
 
-abbreviation acc_yr :: "nat \<Rightarrow> real" ("$s'__" 200)
+abbreviation acc_yr :: "nat \<Rightarrow> real" (\<open>$s'__\<close> 200)
   where "$s_n \<equiv> $s^{1}_n"
 
-definition ann_due :: "nat \<Rightarrow> nat \<Rightarrow> real" ("$a''''^{_}'__" [0,101] 200)
+definition ann_due :: "nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$a''''^{_}'__\<close> [0,101] 200)
   where "$a''^{m}_n \<equiv> \<Sum>k<n*m. $v.^((k::nat)/m) / m"
     \<comment> \<open>present value of an annuity-due\<close>
 
-abbreviation ann_due_yr :: "nat \<Rightarrow> real" ("$a'''''__" [101] 200)
+abbreviation ann_due_yr :: "nat \<Rightarrow> real" (\<open>$a'''''__\<close> [101] 200)
   where "$a''_n \<equiv> $a''^{1}_n"
 
-definition acc_due :: "nat \<Rightarrow> nat \<Rightarrow> real" ("$s''''^{_}'__" [0,101] 200)
+definition acc_due :: "nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$s''''^{_}'__\<close> [0,101] 200)
   where "$s''^{m}_n \<equiv> \<Sum>k<n*m. (1+i).^((k+1::nat)/m) / m"
     \<comment> \<open>future value of an annuity-due\<close>
 
-abbreviation acc_due_yr :: "nat \<Rightarrow> real" ("$s'''''__" [101] 200)
+abbreviation acc_due_yr :: "nat \<Rightarrow> real" (\<open>$s'''''__\<close> [101] 200)
   where "$s''_n \<equiv> $s''^{1}_n"
 
-definition ann_cont :: "real \<Rightarrow> real" ("$a'''__" [101] 200)
+definition ann_cont :: "real \<Rightarrow> real" (\<open>$a'''__\<close> [101] 200)
   where "$a'_n \<equiv> integral {0..n} (\<lambda>t::real. $v.^t)"
     \<comment> \<open>present value of a continuous annuity\<close>
 
-definition acc_cont :: "real \<Rightarrow> real" ("$s'''__" [101] 200)
+definition acc_cont :: "real \<Rightarrow> real" (\<open>$s'''__\<close> [101] 200)
   where "$s'_n \<equiv> integral {0..n} (\<lambda>t::real. (1+i).^t)"
     \<comment> \<open>future value of a continuous annuity\<close>
 
-definition perp :: "nat \<Rightarrow> real" ("$a^{_}'_\<infinity>" [0] 200)
+definition perp :: "nat \<Rightarrow> real" (\<open>$a^{_}'_\<infinity>\<close> [0] 200)
   where "$a^{m}_\<infinity> \<equiv> 1 / $i^{m}"
     \<comment> \<open>present value of a perpetual annuity\<close>
 
-abbreviation perp_yr :: real ("$a'_\<infinity>" 200)
+abbreviation perp_yr :: real (\<open>$a'_\<infinity>\<close> 200)
   where "$a_\<infinity> \<equiv> $a^{1}_\<infinity>"
 
-definition perp_due :: "nat \<Rightarrow> real" ("$a''''^{_}'_\<infinity>" [0] 200)
+definition perp_due :: "nat \<Rightarrow> real" (\<open>$a''''^{_}'_\<infinity>\<close> [0] 200)
   where "$a''^{m}_\<infinity> \<equiv> 1 / $d^{m}"
     \<comment> \<open>present value of a perpetual annuity-due\<close>
 
-abbreviation perp_due_yr :: real ("$a'''''_\<infinity>" 200)
+abbreviation perp_due_yr :: real (\<open>$a'''''_\<infinity>\<close> 200)
   where "$a''_\<infinity> \<equiv> $a''^{1}_\<infinity>"
 
-definition ann_incr :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> real" ("$'(I^{_}a')^{_}'__" [0,0,101] 200)
+definition ann_incr :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$'(I^{_}a')^{_}'__\<close> [0,0,101] 200)
   where "$(I^{l}a)^{m}_n \<equiv> \<Sum>k<n*m. $v.^((k+1::nat)/m) * \<lceil>l*(k+1::nat)/m\<rceil> / (l*m)"
     \<comment> \<open>present value of an increasing annuity\<close>
     \<comment> \<open>This is my original definition.\<close>
     \<comment> \<open>Here, \<open>l\<close> represents the number of increments per unit time.\<close>
 
-abbreviation ann_incr_lvl :: "nat \<Rightarrow> nat \<Rightarrow> real" ("$'(Ia')^{_}'__" [0,101] 200)
+abbreviation ann_incr_lvl :: "nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$'(Ia')^{_}'__\<close> [0,101] 200)
   where "$(Ia)^{m}_n \<equiv> $(I^{1}a)^{m}_n"
     \<comment> \<open>The post-fix \<open>lvl\<close> stands for "level".\<close>
 
-abbreviation ann_incr_yr :: "nat \<Rightarrow> real" ("$'(Ia')'__" [101] 200)
+abbreviation ann_incr_yr :: "nat \<Rightarrow> real" (\<open>$'(Ia')'__\<close> [101] 200)
   where "$(Ia)_n \<equiv> $(Ia)^{1}_n"
 
-definition acc_incr :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> real" ("$'(I^{_}s')^{_}'__" [0,0,101] 200)
+definition acc_incr :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$'(I^{_}s')^{_}'__\<close> [0,0,101] 200)
   where "$(I^{l}s)^{m}_n \<equiv> \<Sum>k<n*m. (1+i).^(n-(k+1::nat)/m) * \<lceil>l*(k+1::nat)/m\<rceil> / (l*m)"
     \<comment> \<open>future value of an increasing annuity\<close>
 
-abbreviation acc_incr_lvl :: "nat \<Rightarrow> nat \<Rightarrow> real" ("$'(Is')^{_}'__" [0,101] 200)
+abbreviation acc_incr_lvl :: "nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$'(Is')^{_}'__\<close> [0,101] 200)
   where "$(Is)^{m}_n \<equiv> $(I^{1}s)^{m}_n"
 
-abbreviation acc_incr_yr :: "nat \<Rightarrow> real" ("$'(Is')'__" [101] 200)
+abbreviation acc_incr_yr :: "nat \<Rightarrow> real" (\<open>$'(Is')'__\<close> [101] 200)
   where "$(Is)_n \<equiv> $(Is)^{1}_n"
 
-definition ann_due_incr :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> real" ("$'(I^{_}a''''')^{_}'__" [0,0,101] 200)
+definition ann_due_incr :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$'(I^{_}a''''')^{_}'__\<close> [0,0,101] 200)
   where "$(I^{l}a'')^{m}_n \<equiv> \<Sum>k<n*m. $v.^((k::nat)/m) * \<lceil>l*(k+1::nat)/m\<rceil> / (l*m)"
 
-abbreviation ann_due_incr_lvl :: "nat \<Rightarrow> nat \<Rightarrow> real" ("$'(Ia''''')^{_}'__" [0,101] 200)
+abbreviation ann_due_incr_lvl :: "nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$'(Ia''''')^{_}'__\<close> [0,101] 200)
   where "$(Ia'')^{m}_n \<equiv> $(I^{1}a'')^{m}_n"
 
-abbreviation ann_due_incr_yr :: "nat \<Rightarrow> real" ("$'(Ia''''')'__" [101] 200)
+abbreviation ann_due_incr_yr :: "nat \<Rightarrow> real" (\<open>$'(Ia''''')'__\<close> [101] 200)
   where "$(Ia'')_n \<equiv> $(Ia'')^{1}_n"
 
-definition acc_due_incr :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> real" ("$'(I^{_}s''''')^{_}'__" [0,0,101] 200)
+definition acc_due_incr :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$'(I^{_}s''''')^{_}'__\<close> [0,0,101] 200)
   where "$(I^{l}s'')^{m}_n \<equiv> \<Sum>k<n*m. (1+i).^(n-(k::nat)/m) * \<lceil>l*(k+1::nat)/m\<rceil> / (l*m)"
 
-abbreviation acc_due_incr_lvl :: "nat \<Rightarrow> nat \<Rightarrow> real" ("$'(Is''''')^{_}'__" [0,101] 200)
+abbreviation acc_due_incr_lvl :: "nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$'(Is''''')^{_}'__\<close> [0,101] 200)
   where "$(Is'')^{m}_n \<equiv> $(I^{1}s'')^{m}_n"
 
-abbreviation acc_due_incr_yr :: "nat \<Rightarrow> real" ("$'(Is''''')'__" [101] 200)
+abbreviation acc_due_incr_yr :: "nat \<Rightarrow> real" (\<open>$'(Is''''')'__\<close> [101] 200)
   where "$(Is'')_n \<equiv> $(Is'')^{1}_n"
 
-definition perp_incr :: "nat \<Rightarrow> nat \<Rightarrow> real" ("$'(I^{_}a')^{_}'_\<infinity>" [0,0] 200)
+definition perp_incr :: "nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$'(I^{_}a')^{_}'_\<infinity>\<close> [0,0] 200)
   where "$(I^{l}a)^{m}_\<infinity> \<equiv> lim (\<lambda>n. $(I^{l}a)^{m}_n)"
 
-abbreviation perp_incr_lvl :: "nat \<Rightarrow> real" ("$'(Ia')^{_}'_\<infinity>" [0] 200)
+abbreviation perp_incr_lvl :: "nat \<Rightarrow> real" (\<open>$'(Ia')^{_}'_\<infinity>\<close> [0] 200)
   where "$(Ia)^{m}_\<infinity> \<equiv> $(I^{1}a)^{m}_\<infinity>"
 
-abbreviation perp_incr_yr :: real ("$'(Ia')'_\<infinity>" 200)
+abbreviation perp_incr_yr :: real (\<open>$'(Ia')'_\<infinity>\<close> 200)
   where "$(Ia)_\<infinity> \<equiv> $(Ia)^{1}_\<infinity>"
 
-definition perp_due_incr :: "nat \<Rightarrow> nat \<Rightarrow> real" ("$'(I^{_}a''''')^{_}'_\<infinity>" [0,0] 200)
+definition perp_due_incr :: "nat \<Rightarrow> nat \<Rightarrow> real" (\<open>$'(I^{_}a''''')^{_}'_\<infinity>\<close> [0,0] 200)
   where "$(I^{l}a'')^{m}_\<infinity> \<equiv> lim (\<lambda>n. $(I^{l}a'')^{m}_n)"
 
-abbreviation perp_due_incr_lvl :: "nat \<Rightarrow> real" ("$'(Ia''''')^{_}'_\<infinity>" [0] 200)
+abbreviation perp_due_incr_lvl :: "nat \<Rightarrow> real" (\<open>$'(Ia''''')^{_}'_\<infinity>\<close> [0] 200)
   where "$(Ia'')^{m}_\<infinity> \<equiv> $(I^{1}a'')^{m}_\<infinity>"
 
-abbreviation perp_due_incr_yr :: real ("$'(Ia''''')'_\<infinity>" 200)
+abbreviation perp_due_incr_yr :: real (\<open>$'(Ia''''')'_\<infinity>\<close> 200)
   where "$(Ia'')_\<infinity> \<equiv> $(Ia'')^{1}_\<infinity>"
 
 lemma v_futr_m_pos: "1 + $i^{m}/m > 0" if "m \<noteq> 0" for m::nat
@@ -156,7 +156,7 @@ proof
   show "i = 0"
   proof (rule ccontr)
     assume "i \<noteq> 0"
-    hence "1/m = 0" using powr_inj \<star> v_futr_pos by smt
+    hence "1/m = 0" using powr_inj \<star> v_futr_pos by (smt (verit))
     thus False using that by simp
   qed
 next
@@ -223,7 +223,7 @@ qed
 lemma d_nom_pos_iff_i_pos: "$d^{m} > 0 \<longleftrightarrow> i > 0" if "m \<noteq> 0" for m::nat
 proof -
   have "$d^{m} > 0 \<longleftrightarrow> $i^{m} > 0"
-    unfolding d_nom_def using zero_less_divide_iff i_nom_pos_iff_i_pos v_futr_m_pos that by smt
+    unfolding d_nom_def using zero_less_divide_iff i_nom_pos_iff_i_pos v_futr_m_pos that by (smt (verit))
   thus ?thesis
     using i_nom_pos_iff_i_pos that by auto
 qed
@@ -280,7 +280,7 @@ proof -
   also have "\<dots> = ((1 + $i^{m}/m)^m).^-1"
     using i_nom_eff that by presburger
   also have "\<dots> = (1 + $i^{m}/m).^-m"
-    using powr_powr powr_realpow[THEN sym] v_futr_m_pos that by simp
+    using i_nom_eff i_nom_i powr_powr that by fastforce
   finally show ?thesis .
 qed
 
@@ -332,7 +332,7 @@ proof -
     apply (subst times_divide_eq_right[of _ _ "$v.^(1/m)", THEN sym])
     using v_pos by (subst diff_divide_distrib[of _ _ "$v.^(1/m)"], simp)
   also have "\<dots> = (1 - $v^n) / (m * (1 / $v.^(1/m) - 1))"
-    using minus_divide_divide by (smt mult_minus_right)
+    using minus_divide_divide by (smt (verit) mult_minus_right)
   also have "\<dots> = (1 - $v^n) / $i^{m}"
     unfolding i_nom_def v_pres_def using v_futr_pos powr_divide by auto
   finally show ?thesis .
@@ -352,10 +352,7 @@ proof -
   proof -
     have "\<And>k::nat. k < n*m \<Longrightarrow> (1+i)^n * ($v.^((k+1::nat)/m) / m) = (1+i).^((n*m - Suc k)/m) / m"
       unfolding v_pres_def
-      apply (subst powr_realpow[THEN sym], simp add: v_futr_pos)
-      apply (subst inverse_powr, simp add: v_futr_pos)
-      apply (subst times_divide_eq_right, subst powr_add[THEN sym], simp add: that)
-      by (subst of_nat_diff, simp add: Suc_le_eq, simp add: diff_divide_distrib that)
+      by (simp add: v_futr_pos inverse_powr diff_divide_eq_iff that flip: powr_realpow powr_add)
     thus ?thesis by (meson lessThan_iff sum.cong)
   qed
   also have "\<dots> = (\<Sum>k<n*m. (1+i).^(k/m) / m)"
@@ -429,7 +426,7 @@ lemma a'_calc: "$a'_n = (1 - $v.^n) / $\<delta>" if "i \<noteq> 0" "n \<ge> 0" f
   unfolding ann_cont_def
   apply (rule integral_unique)
   using has_integral_powr2_from_0[OF v_pos _ that(2)] v_delta v_1_iff_i_0 that
-  by (smt minus_divide_divide)
+  by (smt (verit) minus_divide_divide)
 
 lemma a'_calc_i_0: "$a'_n = n" if "i = 0" "n \<ge> 0" for n::real
   unfolding ann_cont_def
@@ -454,7 +451,7 @@ proof -
     using integrable_on_powr2_from_0_general[of "$v" n] v_pos v_futr_pos that
     apply (subst integral_mult, simp)
     apply (rule integral_cong)
-    unfolding v_pres_def using inverse_powr powr_add[THEN sym] by smt
+    unfolding v_pres_def using inverse_powr powr_add[THEN sym] by (smt (verit))
   also have "\<dots> = $s'_n"
     unfolding acc_cont_def using v_futr_pos that
     apply (subst has_integral_interval_reverse[of 0 n, simplified, THEN integral_unique]; simp?)
@@ -540,7 +537,7 @@ qed
 
 lemma lim_n_a: "(\<lambda>n. $a^{m}_n) \<longlonglongrightarrow> $a^{m}_\<infinity>" if "m \<noteq> 0" "i > 0" for m::nat
 proof -
-  have "$i^{m} \<noteq> 0" using i_nom_pos_iff_i_pos that by smt
+  have "$i^{m} \<noteq> 0" using i_nom_pos_iff_i_pos that by (smt (verit))
   moreover have "(\<lambda>n. $v^n) \<longlonglongrightarrow> 0"
     using LIMSEQ_realpow_zero[of "$v"] v_pos v_lt_1_iff_i_pos that by simp
   ultimately show ?thesis
@@ -551,7 +548,7 @@ qed
 
 lemma lim_n_a'': "(\<lambda>n. $a''^{m}_n) \<longlonglongrightarrow> $a''^{m}_\<infinity>" if "m \<noteq> 0" "i > 0" for m::nat
 proof -
-  have "$d^{m} \<noteq> 0" using d_nom_pos_iff_i_pos that by smt
+  have "$d^{m} \<noteq> 0" using d_nom_pos_iff_i_pos that by (smt (verit))
   moreover have "(\<lambda>n. $v^n) \<longlonglongrightarrow> 0"
     using LIMSEQ_realpow_zero[of "$v"] v_pos v_lt_1_iff_i_pos that by simp
   ultimately show ?thesis
@@ -681,7 +678,7 @@ proof -
         apply ((erule ssubst)+, simp_all add: field_simps)
       using v_pos
        apply (simp add: powr_diff[THEN sym] powr_realpow[THEN sym])
-      by (smt powr_minus_divide)
+      by (smt (verit) powr_minus_divide)
     also have "\<dots> =
       ($v^n * ($v.^(-n-1/m) - (n*m+1)*$v.^(-1/m) + n*m)) / ((m*($v.^(-1/m)-1))^2)"
       apply (subst powr_add[of _ n "1/m"])
@@ -742,8 +739,7 @@ lemma Ima''m_calc: "$(I^{m}a'')^{m}_n = (1 - (n*m+1)*$v^n + n*m*$v.^(n+1/m)) / (
   using that v_pos
   apply (subst Ila''m_Ilam, simp)
   apply (subst Imam_calc; simp)
-  apply (rule disjI2)+
-  by (subst i_v, subst powr_powr, subst powr_add[THEN sym], simp)
+  by (simp add: powr_divide v_pres_def)
 
 lemma Ils''m_Ilsm: "$(I^{l}s'')^{m}_n = (1+i).^(1/m) * $(I^{l}s)^{m}_n"
   if "l \<noteq> 0" "m \<noteq> 0" for l m n :: nat

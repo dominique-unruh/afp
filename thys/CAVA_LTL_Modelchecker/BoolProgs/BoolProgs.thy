@@ -99,11 +99,11 @@ datatype
 
 locale BoolProg_Syntax begin
   notation 
-        Assign       ("_ ::= _" [999, 61] 61)
-    and Seq          ("_;/ _"  [60, 61] 60)
-    and GC           ("IF _ FI")
-    and IfTE         ("(IF _/ THEN _/ ELSE _)"  [0, 61, 61] 61)
-    and While        ("(WHILE _/ DO _)"  [0, 61] 61)
+        Assign       (\<open>_ ::= _\<close> [999, 61] 61)
+    and Seq          (\<open>_;/ _\<close>  [60, 61] 60)
+    and GC           (\<open>IF _ FI\<close>)
+    and IfTE         (\<open>(IF _/ THEN _/ ELSE _)\<close>  [0, 61, 61] 61)
+    and While        (\<open>(WHILE _/ DO _)\<close>  [0, 61] 61)
 end
 
 context begin interpretation BoolProg_Syntax .
@@ -283,11 +283,11 @@ proof (induction bp s pc arbitrary: pc' rule: exec'.induct[case_names C])
     apply (frule (2) C.IH(1), auto) []
     apply (auto simp: pc_bound_def) []
     apply (frule (2) C.IH(2), auto) []
-    apply (rename_tac bexp int)
-    apply (subgoal_tac "int \<in> offsets_is (list_of_array ins)")
+    apply (rename_tac bexp int')
+    apply (subgoal_tac "int' \<in> offsets_is (list_of_array ins)")
     apply (blast intro: aux2)
     apply (auto simp: offsets_is_def) []
-    apply (rule_tac x="TestI bexp int" in bexI, auto simp: array_idx_in_set) []
+    apply (rule_tac x="TestI bexp int'" in bexI, auto simp: array_idx_in_set) []
 
     apply (rename_tac list)
     apply (auto split: if_split_asm)[]
@@ -299,13 +299,13 @@ proof (induction bp s pc arbitrary: pc' rule: exec'.induct[case_names C])
     apply (auto simp: offsets_is_def) []
     apply (rule_tac x="ChoiceI list" in bexI, auto simp: array_idx_in_set) []
 
-    apply (rename_tac int)
+    apply (rename_tac int')
     apply (simp split: if_split_asm add: Let_def)
     apply (frule (1) C.IH(4), auto) []
-    apply (subgoal_tac "int \<in> offsets_is (list_of_array ins)")
+    apply (subgoal_tac "int' \<in> offsets_is (list_of_array ins)")
     apply (blast intro: aux2)
     apply (auto simp: offsets_is_def) []
-    apply (rule_tac x="GotoI int" in bexI, auto simp: array_idx_in_set) []
+    apply (rule_tac x="GotoI int'" in bexI, auto simp: array_idx_in_set) []
     
     apply simp
     done

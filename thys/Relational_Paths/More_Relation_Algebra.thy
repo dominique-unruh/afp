@@ -17,14 +17,13 @@ imports Relation_Algebra.Relation_Algebra_RTC Relation_Algebra.Relation_Algebra_
 
 begin
 
-no_notation
-  trancl ("(_\<^sup>+)" [1000] 999)
+unbundle no trancl_syntax
 
 context relation_algebra
 begin
 
 notation
-  converse ("(_\<^sup>T)" [102] 101)
+  converse (\<open>(_\<^sup>T)\<close> [102] 101)
 
 abbreviation bijective
   where "bijective x \<equiv> is_inj x \<and> is_sur x"
@@ -720,7 +719,7 @@ end (* relation_algebra *)
 context relation_algebra_rtc
 begin
 
-abbreviation tc ("(_\<^sup>+)" [101] 100) where "tc x \<equiv> x;x\<^sup>\<star>"
+abbreviation tc (\<open>(_\<^sup>+)\<close> [101] 100) where "tc x \<equiv> x;x\<^sup>\<star>"
 
 abbreviation is_acyclic
   where "is_acyclic x \<equiv> x\<^sup>+ \<le> -1'"
@@ -935,7 +934,7 @@ proof -
     by (simp add: galois_aux ss_p18)
 qed
 
-notation power (infixr "\<up>" 80)
+notation power (infixr \<open>\<up>\<close> 80)
 
 lemma power_suc_below_plus:
   "x \<up> Suc n \<le> x\<^sup>+"

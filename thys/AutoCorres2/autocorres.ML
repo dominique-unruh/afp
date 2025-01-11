@@ -211,7 +211,7 @@ fun add_progenv_corres_bundle (prev_phase, phase) prog_info filename thy =
     val name = AutoCorresData.global_impl_corres_bundle phase filename
   in
     thy 
-    |> Bundle.init (Binding.make (name, \<^here>))
+    |> Bundle.init {open_bundle = false} (Binding.make (name, \<^here>))
     |> AutoCorresData.prove_and_note_fun_ptr_intros true (prev_phase, phase) prog_info (mk_thm)
     |> Local_Theory.exit_global
   end
@@ -520,7 +520,7 @@ fun finalise prog_info skips keep_going existing_ts (cliques, thy) =
       val ts_info_todos = Symtab.dest ts_info 
           |> filter_out (fn (k,p) => not (member (op =) clique k) orelse Symtab.defined existing_ts k)
 
-      val _ = verbose_msg 0 lthy (fn _ => "Doing final autocorres proof for: " ^ Utils.commas (map fst ts_info_todos) ^ 
+      val _ = verbose_msg 0 lthy (fn _ => "Doing final autocorres proof for: " ^ commas (map fst ts_info_todos) ^ 
                 " in locale " ^ loc)
 
       val ac_corres_thms = ts_info_todos
@@ -639,9 +639,9 @@ let
   val functions_to_translate = Symset.union undefined_functions functions_to_translate
 
   val _ = verbose_msg 0 lthy (fn _ => "autocorres scope: selected " ^ Int.toString (Symset.card functions_to_translate) ^ " function(s): " ^ 
-            Utils.commas (Symset.dest functions_to_translate) ^ "\n" ^
+            commas (Symset.dest functions_to_translate) ^ "\n" ^
             "autocorres scope: wrapping " ^ Int.toString (Symset.card functions_to_wrap) ^ " function(s): " ^
-            Utils.commas (Symset.dest functions_to_wrap));
+            commas (Symset.dest functions_to_wrap));
 
   val nothing_todo =  Symset.is_empty (Symset.subtract already_translated functions_to_translate) 
 
@@ -756,7 +756,7 @@ let
   val do_phase = do_phase' (fn lthy => ([], lthy))
 
   val base_locale_opt = AutoCorres_Options.get_base_locale opt
-    |> Option.map (Locale.check thy)
+    |> Option.map (Locale.check_global thy)
 
   (* Do the translation. *)
   val (simpl_call_graph, _) = FunctionInfo.calc_call_graph simpl_info;

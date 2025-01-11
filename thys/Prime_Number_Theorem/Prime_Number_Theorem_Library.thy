@@ -6,7 +6,7 @@ imports
 begin
 
 text \<open>Conflicting notation from \<^theory>\<open>HOL-Analysis.Infinite_Sum\<close>\<close>
-no_notation Infinite_Sum.abs_summable_on (infixr "abs'_summable'_on" 46)
+no_notation Infinite_Sum.abs_summable_on (infixr \<open>abs'_summable'_on\<close> 46)
 
 lemma homotopic_loopsI:
   fixes h :: "real \<times> real \<Rightarrow> _"
@@ -189,11 +189,11 @@ proof -
                "((?F \<circ> real_of_ereal) \<longlongrightarrow> 0) (at_left \<infinity>)"
     using c ab unfolding ereal_tendsto_simps1 by (real_asymp simp: field_simps)+
   have 1: "set_integrable lborel (einterval a \<infinity>) ?f" using ab c limits
-    by (intro interval_integral_FTC_nonneg) (auto intro!: derivative_eq_intros)
+    by (intro interval_integral_FTC_nonneg) (auto intro!: derivative_eq_intros continuous_intros)
   thus 2: "?f absolutely_integrable_on {a<..}"
     by (auto simp: set_integrable_def integrable_completion)
   have "LBINT x=ereal a..\<infinity>. (b + x) powr c = 0 - ?F a" using ab c limits
-    by (intro interval_integral_FTC_nonneg) (auto intro!: derivative_eq_intros)
+    by (intro interval_integral_FTC_nonneg) (auto intro!: derivative_eq_intros continuous_intros)
   thus 3: "(\<integral>x\<in>{a<..}. ((b + x) powr c) \<partial>lborel) = -((b + a) powr (c + 1) / (c + 1))"
     by (simp add: interval_integral_to_infinity_eq)
   show "(?f has_integral -((b + a) powr (c + 1) / (c + 1))) {a<..}"

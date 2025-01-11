@@ -5,7 +5,9 @@
 chapter \<open>Unsigned words of 16 bits\<close>
 
 theory Uint16 imports
-  Word_Type_Copies
+  Uint_Common
+  Code_Target_Word
+  Code_Int_Integer_Conversion
   Code_Target_Integer_Bit
 begin
 
@@ -131,13 +133,12 @@ global_interpretation uint16: word_type_copy_more Abs_uint16 Rep_uint16 signed_d
          Uint16.rep_eq integer_of_uint16.rep_eq integer_eq_iff)
   done
 
-instantiation uint16 :: "{size, msb, lsb, set_bit, bit_comprehension}"
+instantiation uint16 :: "{size, msb, set_bit, bit_comprehension}"
 begin
 
 lift_definition size_uint16 :: \<open>uint16 \<Rightarrow> nat\<close> is size .
 
 lift_definition msb_uint16 :: \<open>uint16 \<Rightarrow> bool\<close> is msb .
-lift_definition lsb_uint16 :: \<open>uint16 \<Rightarrow> bool\<close> is lsb .
 
 text \<open>Workaround: avoid name space clash by spelling out \<^text>\<open>lift_definition\<close> explicitly.\<close>
 
@@ -162,7 +163,7 @@ global_interpretation uint16: word_type_copy_misc Abs_uint16 Rep_uint16 signed_d
   by (standard; transfer) simp_all
 
 instance using uint16.of_class_bit_comprehension
-  uint16.of_class_set_bit uint16.of_class_lsb
+  uint16.of_class_set_bit
   by simp_all standard
 
 end
@@ -174,14 +175,14 @@ code_printing code_module Uint16 \<rightharpoonup> (SML_word)
 val _ = if 4 <= Word.wordSize then () else raise (Fail ("wordSize less than 4"));
 
 structure Uint16 : sig
-  val set_bit : Word16.word -> IntInf.int -> bool -> Word16.word
+  val generic_set_bit : Word16.word -> IntInf.int -> bool -> Word16.word
   val shiftl : Word16.word -> IntInf.int -> Word16.word
   val shiftr : Word16.word -> IntInf.int -> Word16.word
   val shiftr_signed : Word16.word -> IntInf.int -> Word16.word
   val test_bit : Word16.word -> IntInf.int -> bool
 end = struct
 
-fun set_bit x n b =
+fun generic_set_bit x n b =
   let val mask = Word16.<< (0wx1, Word.fromLargeInt (IntInf.toLarge n))
   in if b then Word16.orb (x, mask)
      else Word16.andb (x, Word16.notb mask)
@@ -200,21 +201,21 @@ fun test_bit x n =
   Word16.andb (x, Word16.<< (0wx1, Word.fromLargeInt (IntInf.toLarge n))) <> Word16.fromInt 0
 
 end; (* struct Uint16 *)\<close>
-code_reserved SML_word Uint16
+code_reserved (SML_word) Uint16
 
 code_printing code_module Uint16 \<rightharpoonup> (Haskell)
  \<open>module Uint16(Int16, Word16) where
 
   import Data.Int(Int16)
   import Data.Word(Word16)\<close>
-code_reserved Haskell Uint16
+code_reserved (Haskell) Uint16
 
 text \<open>Scala provides unsigned 16-bit numbers as Char.\<close>
 
 code_printing code_module Uint16 \<rightharpoonup> (Scala)
 \<open>object Uint16 {
 
-def set_bit(x: scala.Char, n: BigInt, b: Boolean) : scala.Char =
+def generic_set_bit(x: scala.Char, n: BigInt, b: Boolean) : scala.Char =
   b match {
     case true => (x | (1.toChar << n.intValue)).toChar
     case false => (x & (1.toChar << n.intValue).unary_~).toChar
@@ -229,7 +230,7 @@ def shiftr_signed(x: scala.Char, n: BigInt) : scala.Char = (x.toShort >> n.intVa
 def test_bit(x: scala.Char, n: BigInt) : Boolean = (x & (1.toChar << n.intValue)) != 0
 
 } /* object Uint16 */\<close>
-code_reserved Scala Uint16
+code_reserved (Scala) Uint16
 
 text \<open>
   Avoid @{term Abs_uint16} in generated code, use @{term Rep_uint16'} instead. 
@@ -372,105 +373,34 @@ code_printing constant uint16_div \<rightharpoonup>
   (Haskell) "Prelude.mod" and
   (Scala) "(_ % _).toChar"
 
-definition uint16_test_bit :: "uint16 \<Rightarrow> integer \<Rightarrow> bool"
-where [code del]:
-  "uint16_test_bit x n =
-  (if n < 0 \<or> 15 < n then undefined (bit :: uint16 \<Rightarrow> _) x n
-   else bit x (nat_of_integer n))"
-
-lemma test_bit_uint16_code [code]:
-  "bit x n \<longleftrightarrow> n < 16 \<and> uint16_test_bit x (integer_of_nat n)"
-  including undefined_transfer integer.lifting unfolding uint16_test_bit_def
-  by (transfer, simp, transfer, simp)
-
-lemma uint16_test_bit_code [code]:
-  "uint16_test_bit w n =
-  (if n < 0 \<or> 15 < n then undefined (bit :: uint16 \<Rightarrow> _) w n else bit (Rep_uint16 w) (nat_of_integer n))"
-  unfolding uint16_test_bit_def by (simp add: bit_uint16.rep_eq)
+global_interpretation uint16: word_type_copy_target_language Abs_uint16 Rep_uint16 signed_drop_bit_uint16
+  uint16_of_nat nat_of_uint16 uint16_of_int int_of_uint16 Uint16 integer_of_uint16 16 set_bits_aux_uint16 16 15
+  defines uint16_test_bit = uint16.test_bit
+    and uint16_shiftl = uint16.shiftl
+    and uint16_shiftr = uint16.shiftr
+    and uint16_sshiftr = uint16.sshiftr
+    and uint16_generic_set_bit = uint16.gen_set_bit
+  by standard simp_all
 
 code_printing constant uint16_test_bit \<rightharpoonup>
   (SML_word) "Uint16.test'_bit" and
   (Haskell) "Data'_Bits.testBitBounded" and
   (Scala) "Uint16.test'_bit"
 
-definition uint16_set_bit :: "uint16 \<Rightarrow> integer \<Rightarrow> bool \<Rightarrow> uint16"
-where [code del]:
-  "uint16_set_bit x n b =
-  (if n < 0 \<or> 15 < n then undefined (set_bit :: uint16 \<Rightarrow> _) x n b
-   else set_bit x (nat_of_integer n) b)"
-
-lemma set_bit_uint16_code [code]:
-  "set_bit x n b = (if n < 16 then uint16_set_bit x (integer_of_nat n) b else x)"
-including undefined_transfer integer.lifting unfolding uint16_set_bit_def
-by(transfer)(auto cong: conj_cong simp add: not_less set_bit_beyond word_size)
-
-lemma uint16_set_bit_code [code]:
-  "Rep_uint16 (uint16_set_bit w n b) = 
-  (if n < 0 \<or> 15 < n then Rep_uint16 (undefined (set_bit :: uint16 \<Rightarrow> _) w n b)
-   else set_bit (Rep_uint16 w) (nat_of_integer n) b)"
-including undefined_transfer unfolding uint16_set_bit_def by transfer simp
-
-code_printing constant uint16_set_bit \<rightharpoonup>
-  (SML_word) "Uint16.set'_bit" and
-  (Haskell) "Data'_Bits.setBitBounded" and
-  (Scala) "Uint16.set'_bit"
-
-definition uint16_shiftl :: "uint16 \<Rightarrow> integer \<Rightarrow> uint16"
-where [code del]:
-  "uint16_shiftl x n = (if n < 0 \<or> 16 \<le> n then undefined (push_bit :: nat \<Rightarrow> uint16 \<Rightarrow> _) x n else push_bit (nat_of_integer n) x)"
-
-lemma shiftl_uint16_code [code]: "push_bit n x = (if n < 16 then uint16_shiftl x (integer_of_nat n) else 0)"
-  including undefined_transfer integer.lifting unfolding uint16_shiftl_def
-  by transfer simp
-
-lemma uint16_shiftl_code [code]:
-  "Rep_uint16 (uint16_shiftl w n) =
-  (if n < 0 \<or> 16 \<le> n then Rep_uint16 (undefined (push_bit :: nat \<Rightarrow> uint16 \<Rightarrow> _) w n)
-   else push_bit (nat_of_integer n) (Rep_uint16 w))"
-  including undefined_transfer unfolding uint16_shiftl_def
-  by transfer simp
+code_printing constant uint16_generic_set_bit \<rightharpoonup>
+  (SML_word) "Uint16.generic'_set'_bit" and
+  (Haskell) "Data'_Bits.genericSetBitBounded" and
+  (Scala) "Uint16.generic'_set'_bit"
 
 code_printing constant uint16_shiftl \<rightharpoonup>
   (SML_word) "Uint16.shiftl" and
   (Haskell) "Data'_Bits.shiftlBounded" and
   (Scala) "Uint16.shiftl"
 
-definition uint16_shiftr :: "uint16 \<Rightarrow> integer \<Rightarrow> uint16"
-where [code del]:
-  "uint16_shiftr x n = (if n < 0 \<or> 16 \<le> n then undefined (drop_bit :: nat \<Rightarrow> uint16 \<Rightarrow> _) x n else drop_bit (nat_of_integer n) x)"
-
-lemma shiftr_uint16_code [code]: "drop_bit n x = (if n < 16 then uint16_shiftr x (integer_of_nat n) else 0)"
-  including undefined_transfer integer.lifting unfolding uint16_shiftr_def
-  by transfer simp
-
-lemma uint16_shiftr_code [code]:
-  "Rep_uint16 (uint16_shiftr w n) =
-  (if n < 0 \<or> 16 \<le> n then Rep_uint16 (undefined (drop_bit :: nat \<Rightarrow> uint16 \<Rightarrow> _) w n)
-   else drop_bit (nat_of_integer n) (Rep_uint16 w))"
-including undefined_transfer unfolding uint16_shiftr_def by transfer simp
-
 code_printing constant uint16_shiftr \<rightharpoonup>
   (SML_word) "Uint16.shiftr" and
   (Haskell) "Data'_Bits.shiftrBounded" and
   (Scala) "Uint16.shiftr"
-
-definition uint16_sshiftr :: "uint16 \<Rightarrow> integer \<Rightarrow> uint16"
-where [code del]:
-  "uint16_sshiftr x n =
-  (if n < 0 \<or> 16 \<le> n then undefined signed_drop_bit_uint16 n x else signed_drop_bit_uint16 (nat_of_integer n) x)"
-
-lemma sshiftr_uint16_code [code]:
-  "signed_drop_bit_uint16 n x = 
-  (if n < 16 then uint16_sshiftr x (integer_of_nat n) else if bit x 15 then -1 else 0)"
-  including undefined_transfer integer.lifting unfolding uint16_sshiftr_def
-  by transfer (simp add: not_less signed_drop_bit_beyond word_size)
-
-lemma uint16_sshiftr_code [code]:
-  "Rep_uint16 (uint16_sshiftr w n) =
-  (if n < 0 \<or> 16 \<le> n then Rep_uint16 (undefined signed_drop_bit_uint16 n w)
-   else signed_drop_bit (nat_of_integer n) (Rep_uint16 w))"
-  including undefined_transfer unfolding uint16_sshiftr_def
-  by transfer simp
 
 code_printing constant uint16_sshiftr \<rightharpoonup>
   (SML_word) "Uint16.shiftr'_signed" and
@@ -482,7 +412,7 @@ lemma uint16_msb_test_bit: "msb x \<longleftrightarrow> bit (x :: uint16) 15"
   by transfer (simp add: msb_word_iff_bit)
 
 lemma msb_uint16_code [code]: "msb x \<longleftrightarrow> uint16_test_bit x 15"
-  by (simp add: uint16_test_bit_def uint16_msb_test_bit)
+  by (simp add: uint16.test_bit_def uint16_msb_test_bit)
 
 lemma uint16_of_int_code [code]: "uint16_of_int i = Uint16 (integer_of_int i)"
 including integer.lifting by transfer simp

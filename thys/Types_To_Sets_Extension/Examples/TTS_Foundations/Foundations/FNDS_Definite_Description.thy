@@ -17,15 +17,17 @@ definition The_on
 
 syntax 
   "_The_on" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> bool \<Rightarrow> 'a option" 
-  ("(THE _ on _./ _)" [0, 0, 10] 10)
+  (\<open>(THE _ on _./ _)\<close> [0, 0, 10] 10)
+syntax_consts
+  "_The_on" \<rightleftharpoons> The_on
 translations "THE x on U. P" \<rightleftharpoons> "CONST The_on U (\<lambda>x. P)"
 
 print_translation \<open>
   [
     (
       \<^const_syntax>\<open>The_on\<close>, 
-      fn _ => fn [Ut, Abs abs] =>
-        let val (x, t) = Syntax_Trans.atomic_abs_tr' abs
+      fn ctxt => fn [Ut, Abs abs] =>
+        let val (x, t) = Syntax_Trans.atomic_abs_tr' ctxt abs
         in Syntax.const \<^syntax_const>\<open>_The_on\<close> $ x $ Ut $ t end
     )
   ]

@@ -26,8 +26,8 @@ theory Complex_Vector_Spaces
     Complex_Vector_Spaces0
 begin
 
-bundle notation_norm begin
-notation norm ("\<parallel>_\<parallel>")
+bundle norm_syntax begin
+notation norm (\<open>\<parallel>_\<parallel>\<close>)
 end
 
 unbundle lattice_syntax
@@ -888,7 +888,7 @@ qed
 locale bounded_sesquilinear =
   fixes
     prod :: "'a::complex_normed_vector \<Rightarrow> 'b::complex_normed_vector \<Rightarrow> 'c::complex_normed_vector"
-      (infixl "**" 70)
+      (infixl \<open>**\<close> 70)
   assumes add_left: "prod (a + a') b = prod a b + prod a' b"
     and add_right: "prod a (b + b') = prod a b + prod a b'"
     and scaleC_left: "prod (r *\<^sub>C a) b = (cnj r) *\<^sub>C (prod a b)"
@@ -1892,7 +1892,7 @@ lemma bounded_clinear_finite_dim[simp]:
   assumes \<open>clinear f\<close>
   shows \<open>bounded_clinear f\<close>
 proof -
-  include notation_norm
+  include norm_syntax
   obtain basis :: \<open>'a set\<close> where b1: "complex_vector.span basis = UNIV"
     and b2: "cindependent basis"
     and b3:"finite basis"
@@ -2692,7 +2692,7 @@ subsection \<open>Closed sums\<close>
 definition closed_sum:: \<open>'a::{semigroup_add,topological_space} set \<Rightarrow> 'a set \<Rightarrow> 'a set\<close> where
   \<open>closed_sum A B = closure (A + B)\<close>
 
-notation closed_sum (infixl "+\<^sub>M" 65)
+notation closed_sum (infixl \<open>+\<^sub>M\<close> 65)
 
 lemma closed_sum_comm: \<open>A +\<^sub>M B = B +\<^sub>M A\<close> for A B :: "_::ab_semigroup_add"
   by (simp add: add.commute closed_sum_def)
@@ -3235,6 +3235,6 @@ end
 lemmas tendsto_scaleC [tendsto_intros] =
   bounded_cbilinear.tendsto [OF bounded_cbilinear_scaleC]
 
-unbundle no_lattice_syntax
+unbundle no lattice_syntax
 
 end

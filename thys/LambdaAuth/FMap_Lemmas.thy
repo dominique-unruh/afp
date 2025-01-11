@@ -10,9 +10,9 @@ begin
 
 text \<open>Nominal setup for finite maps.\<close>
 
-abbreviation fmap_update ("_'(_ $$:= _')" [1000,0,0] 1000)  where "fmap_update \<Gamma> x \<tau> \<equiv> fmupd x \<tau> \<Gamma>"
-notation fmlookup (infixl "$$" 999)
-notation fmempty ("{$$}")
+abbreviation fmap_update (\<open>_'(_ $$:= _')\<close> [1000,0,0] 1000)  where "fmap_update \<Gamma> x \<tau> \<equiv> fmupd x \<tau> \<Gamma>"
+notation fmlookup (infixl \<open>$$\<close> 999)
+notation fmempty (\<open>{$$}\<close>)
 
 instantiation fmap :: (pt, pt) pt
 begin
@@ -116,7 +116,7 @@ lemma fmap_freshness_lemma_unique:
 
 lemma fmdrop_fset_fmupd[simp]:
   "(fmdrop_fset A f)(x $$:= y) = fmdrop_fset (A |-| {|x|}) f(x $$:= y)"
-  including fmap.lifting fset.lifting
+  including fmap.lifting and fset.lifting
   by transfer (auto simp: map_drop_set_def map_upd_def map_filter_def)
 
 lemma fresh_fset_fminus:

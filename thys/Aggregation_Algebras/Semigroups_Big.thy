@@ -24,7 +24,7 @@ We have generalised a selection of its results from Abelian monoids to Abelian s
 subsection \<open>Generic Abelian semigroup operation over a set\<close>
 
 locale abel_semigroup_set = abel_semigroup +
-  fixes z :: 'a ("\<^bold>1")
+  fixes z :: 'a (\<open>\<^bold>1\<close>)
   assumes z_neutral [simp]: "x \<^bold>* y \<^bold>* \<^bold>1 = x \<^bold>* y"
   assumes z_idem [simp]: "\<^bold>1 \<^bold>* \<^bold>1 = \<^bold>1"
 begin
@@ -197,9 +197,9 @@ lemma UNION_disjoint:
   apply (induct rule: finite_induct)
    apply simp
   apply atomize
-  apply (subgoal_tac "\<forall>i\<in>Fa. x \<noteq> i")
+  apply (subgoal_tac "\<forall>i\<in>F. x \<noteq> i")
    prefer 2 apply blast
-  apply (subgoal_tac "A x \<inter> \<Union>(A ` Fa) = {}")
+  apply (subgoal_tac "A x \<inter> \<Union>(A ` F) = {}")
    prefer 2 apply blast
   apply (simp add: union_disjoint)
   done
@@ -519,8 +519,8 @@ end
 
 
 subsection \<open>Generalized summation over a set\<close>
-
-no_notation Sum ("\<Sum>")
+text \<open>Instead of @{term"\<Sum>x\<in>{x. P}. e"} we introduce the shorter \<open>\<Sum>x|P. e\<close>.\<close>
+no_notation Sum (\<open>\<Sum>\<close>)
 
 class ab_semigroup_add_0 = zero + ab_semigroup_add +
   assumes zero_neutral [simp]: "x + y + 0 = x + y"
@@ -531,7 +531,7 @@ sublocale sum_0: abel_semigroup_set plus 0
   defines sum_0 = sum_0.F
   by unfold_locales simp_all
 
-abbreviation Sum_0 ("\<Sum>")
+abbreviation Sum_0 (\<open>\<Sum>\<close>)
   where "\<Sum> \<equiv> sum_0 (\<lambda>x. x)"
 
 end
@@ -546,36 +546,37 @@ end
 
 text \<open>Now: lots of fancy syntax. First, @{term "sum_0 (\<lambda>x. e) A"} is written \<open>\<Sum>x\<in>A. e\<close>.\<close>
 
+no_syntax (ASCII)
+  "_sum" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'b \<Rightarrow> 'b::comm_monoid_add"  (\<open>(\<open>indent=3 notation=\<open>binder SUM\<close>\<close>SUM (_/:_)./ _)\<close> [0, 51, 10] 10)
+no_syntax
+  "_sum" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'b \<Rightarrow> 'b::comm_monoid_add"  (\<open>(\<open>indent=2 notation=\<open>binder \<Sum>\<close>\<close>\<Sum>(_/\<in>_)./ _)\<close> [0, 51, 10] 10)
+
 syntax (ASCII)
-  "_sum" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'b \<Rightarrow> 'b::comm_monoid_add"  ("(3SUM (_/:_)./ _)" [0, 51, 10] 10)
+  "_sum0" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'b \<Rightarrow> 'b::comm_monoid_add"  (\<open>(\<open>indent=3 notation=\<open>binder SUM\<close>\<close>SUM (_/:_)./ _)\<close> [0, 51, 10] 10)
 syntax
-  "_sum" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'b \<Rightarrow> 'b::comm_monoid_add"  ("(2\<Sum>(_/\<in>_)./ _)" [0, 51, 10] 10)
+  "_sum0" :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'b \<Rightarrow> 'b::comm_monoid_add"  (\<open>(\<open>indent=2 notation=\<open>binder \<Sum>\<close>\<close>\<Sum>(_/\<in>_)./ _)\<close> [0, 51, 10] 10)
+syntax_consts
+  "_sum0" \<rightleftharpoons> sum_0
 translations \<comment> \<open>Beware of argument permutation!\<close>
   "\<Sum>i\<in>A. b" \<rightleftharpoons> "CONST sum_0 (\<lambda>i. b) A"
 
 text \<open>Instead of @{term"\<Sum>x\<in>{x. P}. e"} we introduce the shorter \<open>\<Sum>x|P. e\<close>.\<close>
 
+no_syntax (ASCII)
+  "_qsum" :: "pttrn \<Rightarrow> bool \<Rightarrow> 'a \<Rightarrow> 'a"  (\<open>(\<open>indent=3 notation=\<open>binder SUM Collect\<close>\<close>SUM _ |/ _./ _)\<close> [0, 0, 10] 10)
+no_syntax
+  "_qsum" :: "pttrn \<Rightarrow> bool \<Rightarrow> 'a \<Rightarrow> 'a"  (\<open>(\<open>indent=2 notation=\<open>binder \<Sum> Collect\<close>\<close>\<Sum>_ | (_)./ _)\<close> [0, 0, 10] 10)
+
 syntax (ASCII)
-  "_qsum" :: "pttrn \<Rightarrow> bool \<Rightarrow> 'a \<Rightarrow> 'a"  ("(3SUM _ |/ _./ _)" [0, 0, 10] 10)
+  "_qsum0" :: "pttrn \<Rightarrow> bool \<Rightarrow> 'a \<Rightarrow> 'a"  (\<open>(\<open>indent=3 notation=\<open>binder SUM Collect\<close>\<close>SUM _ |/ _./ _)\<close> [0, 0, 10] 10)
 syntax
-  "_qsum" :: "pttrn \<Rightarrow> bool \<Rightarrow> 'a \<Rightarrow> 'a"  ("(2\<Sum>_ | (_)./ _)" [0, 0, 10] 10)
+  "_qsum0" :: "pttrn \<Rightarrow> bool \<Rightarrow> 'a \<Rightarrow> 'a"  (\<open>(\<open>indent=2 notation=\<open>binder \<Sum> Collect\<close>\<close>\<Sum>_ | (_)./ _)\<close> [0, 0, 10] 10)
+syntax_consts
+  "_qsum0" \<rightleftharpoons> sum_0
 translations
   "\<Sum>x|P. t" => "CONST sum_0 (\<lambda>x. t) {x. P}"
-
 print_translation \<open>
-let
-  fun sum_tr' [Abs (x, Tx, t), Const (@{const_syntax Collect}, _) $ Abs (y, Ty, P)] =
-        if x <> y then raise Match
-        else
-          let
-            val x' = Syntax_Trans.mark_bound_body (x, Tx);
-            val t' = subst_bound (x', t);
-            val P' = subst_bound (x', P);
-          in
-            Syntax.const @{syntax_const "_qsum"} $ Syntax_Trans.mark_bound_abs (x, Tx) $ P' $ t'
-          end
-    | sum_tr' _ = raise Match;
-in [(@{const_syntax sum_0}, K sum_tr')] end
+  [(\<^const_syntax>\<open>sum_0\<close>, K (Collect_binder_tr' \<^syntax_const>\<open>_qsum\<close>))]
 \<close>
 
 lemma (in ab_semigroup_add_0) sum_image_gen_0:

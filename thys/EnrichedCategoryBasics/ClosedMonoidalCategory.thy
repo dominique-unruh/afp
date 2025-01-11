@@ -86,9 +86,9 @@ begin
   context elementary_closed_monoidal_category
   begin
 
-    notation Curry  ("Curry[_, _, _]")
+    notation Curry  (\<open>Curry[_, _, _]\<close>)
 
-    abbreviation Uncurry  ("Uncurry[_, _]")
+    abbreviation Uncurry  (\<open>Uncurry[_, _]\<close>)
     where "Uncurry[b, c] f \<equiv> eval b c \<cdot> (f \<otimes> b)"
 
     lemma Curry_in_hom [intro]:
@@ -156,7 +156,7 @@ begin
     shows "terminal_arrow_from_functor C C (\<lambda>x. T (x, b)) (exp b c) c (eval b c)"
     proof -
       interpret "functor" C C \<open>\<lambda>x. T (x, b)\<close>
-        using assms(1) interchange T.is_extensional
+        using assms(1) interchange T.extensionality
         by unfold_locales auto
       interpret arrow_from_functor C C \<open>\<lambda>x. T (x, b)\<close> \<open>exp b c\<close> c \<open>eval b c\<close>
         using assms eval_in_hom\<^sub>E\<^sub>C\<^sub>M\<^sub>C
@@ -188,7 +188,7 @@ begin
 
     lemma is_closed_monoidal_category:
     shows "closed_monoidal_category C T \<alpha> \<iota>"
-      using T.is_extensional interchange terminal_arrow_from_functor_eval
+      using T.extensionality interchange terminal_arrow_from_functor_eval
       apply unfold_locales
            apply auto[5]
       by metis
@@ -250,22 +250,22 @@ begin
         using e.arrow by metis
     qed
 
-    definition some_exp  ("exp\<^sup>?")
+    definition some_exp  (\<open>exp\<^sup>?\<close>)
     where "exp\<^sup>? b c \<equiv> SOME x. ide x \<and>
                                 (\<exists>e. \<guillemotleft>e : x \<otimes> b \<rightarrow> c\<guillemotright> \<and>
                                   (\<forall>a g. ide a \<and> \<guillemotleft>g : a \<otimes> b \<rightarrow> c\<guillemotright>
                                           \<longrightarrow> (\<exists>!f. \<guillemotleft>f : a \<rightarrow> x\<guillemotright> \<and> g = e \<cdot> (f \<otimes> b))))"
 
-    definition some_eval  ("eval\<^sup>?")
+    definition some_eval  (\<open>eval\<^sup>?\<close>)
     where "eval\<^sup>? b c \<equiv> SOME e. \<guillemotleft>e : exp\<^sup>? b c \<otimes> b \<rightarrow> c\<guillemotright> \<and>
                                  (\<forall>a g. ide a \<and> \<guillemotleft>g : a \<otimes> b \<rightarrow> c\<guillemotright>
                                           \<longrightarrow> (\<exists>!f. \<guillemotleft>f : a \<rightarrow> exp\<^sup>? b c\<guillemotright> \<and> g = e \<cdot> (f \<otimes> b)))"
 
-    definition some_Curry  ("Curry\<^sup>?[_, _, _]")
+    definition some_Curry  (\<open>Curry\<^sup>?[_, _, _]\<close>)
     where "Curry\<^sup>?[a, b, c] g \<equiv>
            THE f. \<guillemotleft>f : a \<rightarrow> exp\<^sup>? b c\<guillemotright> \<and> g = eval\<^sup>? b c \<cdot> (f \<otimes> b)"
 
-    abbreviation some_Uncurry  ("Uncurry\<^sup>?[_, _]")
+    abbreviation some_Uncurry  (\<open>Uncurry\<^sup>?[_, _]\<close>)
     where "Uncurry\<^sup>?[b, c] f \<equiv> eval\<^sup>? b c \<cdot> (f \<otimes> b)"
 
     lemma Curry_uniqueness:
@@ -358,12 +358,12 @@ begin
   context elementary_closed_monoidal_category
   begin
 
-    abbreviation cov_Exp  ("Exp\<^sup>\<rightarrow>")
+    abbreviation cov_Exp  (\<open>Exp\<^sup>\<rightarrow>\<close>)
     where "Exp\<^sup>\<rightarrow> x g \<equiv> if arr g
                        then Curry[exp x (dom g), x, cod g] (g \<cdot> eval x (dom g))
                        else null"
 
-    abbreviation cnt_Exp  ("Exp\<^sup>\<leftarrow>")
+    abbreviation cnt_Exp  (\<open>Exp\<^sup>\<leftarrow>\<close>)
     where "Exp\<^sup>\<leftarrow> f y \<equiv> if arr f
                        then Curry[exp (cod f) y, dom f, y]
                               (eval (cod f) y \<cdot> (exp (cod f) y \<otimes> f))
@@ -1027,8 +1027,8 @@ begin
       proof
         fix f
         show "\<psi>.map f = curry (Cop.cod f) b c \<cdot> Exp\<^sup>\<leftarrow> (f \<otimes> b) c"
-          using assms 1 \<psi>.inverts_components internal_curry(3) \<psi>.is_natural_2
-            Cop.ide_char \<psi>.is_extensional
+          using assms 1 \<psi>.inverts_components internal_curry(3) \<psi>.naturality2
+            Cop.ide_char \<psi>.extensionality
           by auto
       qed
       thus ?thesis
@@ -1090,7 +1090,7 @@ begin
         using assms Uncurry_Exp_dom by metis
       thus "g = g'"
         using assms retraction_eval_ide_self retraction_is_epi
-        by (metis epiE eval_simps(1,3) ide_dom seqI)
+        by (metis epi_cancel eval_simps(1,3) ide_dom seqI)
     qed
 
     text \<open>
@@ -1221,7 +1221,7 @@ begin
         proof -
           have "(\<I> \<otimes> eval x a) \<cdot> (\<I> \<otimes> (e \<otimes> x) \<cdot> \<l>\<^sup>-\<^sup>1[x]) =
                 (\<I> \<otimes> a) \<cdot> (\<I> \<otimes> eval x a) \<cdot> (\<I> \<otimes> (e \<otimes> x) \<cdot> \<l>\<^sup>-\<^sup>1[x])"
-            using assms e' L.as_nat_trans.is_natural_2 comp_lunit_lunit'(2) comp_assoc
+            using assms e' L.as_nat_trans.naturality2 comp_lunit_lunit'(2) comp_assoc
             by (metis (no_types, lifting) L.as_nat_trans.preserves_comp_2 in_homE)
           thus ?thesis
             using assms e' comp_assoc
@@ -1435,7 +1435,7 @@ begin
                  exp a b \<otimes> \<iota>"
             using assms ide_exp iso_cancel_left [of "\<r>[exp a b]"] iso_runit by fastforce
           thus ?thesis
-            by (metis assms(1-2) 0 R.as_nat_trans.is_natural_1 comp_assoc_assoc'(2)
+            by (metis assms(1-2) 0 R.as_nat_trans.naturality1 comp_assoc_assoc'(2)
                 ide_exp ide_unity in_homE comp_assoc)
         qed
       qed
@@ -1560,7 +1560,7 @@ begin
                         \<iota> \<otimes> exp a b"
             by blast
           thus ?thesis
-            using assms(1-2) 0 L.as_nat_trans.is_natural_1 comp_assoc_assoc'(1)
+            using assms(1-2) 0 L.as_nat_trans.naturality1 comp_assoc_assoc'(1)
                   ide_exp ide_unity in_homE comp_assoc
             by metis
         qed

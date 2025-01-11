@@ -40,8 +40,8 @@ proof-
     proof(induction n arbitrary : G "(\<oplus>)" \<zero> rule: nat_less_induct)
       fix n 
       fix A B G :: "'a set"
-      fix add (infixl "[\<oplus>]" 65)
-      fix zero ("[\<zero>]")
+      fix add (infixl \<open>[\<oplus>]\<close> 65)
+      fix zero (\<open>[\<zero>]\<close>)
       assume hind: "\<forall>m<n. \<forall>x xa xb :: 'a set. \<forall> xc xd. 
         additive_abelian_group xb xc xd \<longrightarrow> x \<subseteq> xb \<longrightarrow>
         xa \<subseteq> xb \<longrightarrow> finite x \<longrightarrow> finite xa \<longrightarrow> x \<noteq> {} \<longrightarrow> xa \<noteq> {} \<longrightarrow>
@@ -825,8 +825,9 @@ theorem Cauchy_Davenport:
 
 proof(cases "Z_p.stabilizer p (Z_p.sumset p A B) = {0}")
   case True
-  moreover have "Z_p.sumset p A {0} = A" and "Z_p.sumset p B {0} = B" using assms Z_p.sumset_D(1) by auto
-  ultimately show ?thesis using Z_p.Kneser[of "A" "p" "B"] assms by fastforce
+  moreover have "Z_p.sumset p A {0} = A" and "Z_p.sumset p B {0} = B" 
+    using assms Z_p.sumset_D(1) by auto
+  ultimately show ?thesis using Z_p.Kneser[of "A" "p" "B"] assms by simp
 next
   case hne: False
   let ?H = "Z_p.stabilizer p (Z_p.sumset p A B)"

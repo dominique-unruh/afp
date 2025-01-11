@@ -121,7 +121,7 @@ lemma Abadi_Merz_Prop_1_subseteq: \<comment>\<open> First half of \<^citet>\<ope
   shows "next_imp P Q \<subseteq> downwards.imp (downwards.imp Q P) Q" (is "?lhs \<subseteq> ?rhs")
 proof(rule subsetI)
   fix \<sigma> assume "\<sigma> \<in> ?lhs" with wf show "\<sigma> \<in> ?rhs"
-  proof(induct rule: wfP_induct_rule)
+  proof(induct rule: wfp_induct_rule)
     case (less \<sigma>)
     have "\<tau> \<in> Q" if "\<tau> \<le> \<sigma>" and YYY: "\<forall>\<sigma>'\<le>\<tau>. \<sigma>' \<in> Q \<longrightarrow> \<sigma>' \<in> P" for \<tau>
     proof -
@@ -183,7 +183,7 @@ setup \<open>Sign.parent_path\<close>
 
 setup \<open>Sign.mandatory_path "spec"\<close>
 
-lift_definition "next_imp" :: "('a, 's, 'v) spec \<Rightarrow> ('a, 's, 'v) spec \<Rightarrow> ('a, 's, 'v) spec" (infixr "\<^bold>\<longrightarrow>\<^sub>+" 61) is
+lift_definition "next_imp" :: "('a, 's, 'v) spec \<Rightarrow> ('a, 's, 'v) spec \<Rightarrow> ('a, 's, 'v) spec" (infixr \<open>\<^bold>\<longrightarrow>\<^sub>+\<close> 61) is
   "Next_Imp.next_imp"
 by (simp add: next_imp.downwards_imp raw.spec.closed.downwards_closed raw.spec.closed.downwards_imp)
 

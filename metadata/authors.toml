@@ -139,6 +139,7 @@ aransay_homepage = "https://www.unirioja.es/cu/jearansa"
 
 [argyraki]
 name = "Angeliki Koutsoukou-Argyraki"
+orcid = "0000-0002-8886-5281"
 
 [argyraki.emails]
 
@@ -152,9 +153,21 @@ host = [
   "uk",
 ]
 
+[argyraki.emails.argyraki_email1]
+user = [
+  "angeliki",
+  "koutsoukouargyraki",
+]
+host = [
+  "rhul",
+  "ac",
+  "uk",
+]
+
 [argyraki.homepages]
 argyraki_homepage = "https://www.cl.cam.ac.uk/~ak2110/"
-argyraki_homepage2 = "https://www.cst.cam.ac.uk/people/ak2110"
+argyraki_homepage1 = "https://www.cst.cam.ac.uk/people/ak2110"
+argyraki_homepage2 = "https://pure.royalholloway.ac.uk/en/persons/angeliki-koutsoukou-argyraki"
 
 [armstrong]
 name = "Alasdair Armstrong"
@@ -971,6 +984,7 @@ host = [
 
 [brucker]
 name = "Achim D. Brucker"
+orcid = "0000-0002-6355-1200"
 
 [brucker.emails]
 
@@ -1613,16 +1627,6 @@ name = "Martin Desharnais"
 
 [desharnais.emails.desharnais_email]
 user = [
-  "martin",
-  "desharnais",
-]
-host = [
-  "unibw",
-  "de",
-]
-
-[desharnais.emails.desharnais_email1]
-user = [
   "desharnais",
 ]
 host = [
@@ -1832,30 +1836,8 @@ host = [
   "org",
 ]
 
-[eberl.emails.eberl_email1]
-user = [
-  "manuel",
-  "eberl",
-]
-host = [
-  "tum",
-  "de",
-]
-
-[eberl.emails.eberl_email2]
-user = [
-  "manuel",
-  "eberl",
-]
-host = [
-  "uibk",
-  "ac",
-  "at",
-]
-
 [eberl.homepages]
 eberl_homepage = "https://pruvisto.org/"
-eberl_homepage2 = "https://www.in.tum.de/~eberlm"
 
 [echenim]
 name = "Mnacho Echenim"
@@ -2179,15 +2161,16 @@ name = "Asta Halkjær From"
 
 [from.emails.from_email]
 user = [
-  "ahfrom",
+  "asfr",
 ]
 host = [
-  "dtu",
+  "di",
+  "ku",
   "dk",
 ]
 
 [from.homepages]
-from_homepage = "https://people.compute.dtu.dk/ahfrom/"
+from_homepage = "https://astahfrom.github.io/"
 
 [fuenmayor]
 name = "David Fuenmayor"
@@ -4922,13 +4905,12 @@ name = "Yutaka Nagashima"
 
 [nagashima.emails.nagashima_email]
 user = [
-  "Yutaka",
-  "Nagashima",
+  "nagashima",
 ]
 host = [
-  "data61",
-  "csiro",
-  "au",
+  "cs",
+  "cas",
+  "cz",
 ]
 
 [nagashima.homepages]
@@ -8230,3 +8212,19 @@ name = "Naijun Zhan"
 [zhann.emails]
 
 [zhann.homepages]
+
+[zimmerer]
+name = "Christian Zimmerer"
+
+[zimmerer.emails]
+
+[zimmerer.emails.zimmerer_email]
+user = [
+  "chzi",
+]
+host = [
+  "pm",
+  "me",
+]
+
+[zimmerer.homepages]

@@ -118,8 +118,8 @@ begin
     VxV: product_category V V +
     VoV: subcategory VxV.comp \<open>\<lambda>\<mu>\<nu>. fst \<mu>\<nu> \<star> snd \<mu>\<nu> \<noteq> null\<close> +
     "functor" VoV.comp V \<open>\<lambda>\<mu>\<nu>. fst \<mu>\<nu> \<star> snd \<mu>\<nu>\<close>
-  for V :: "'a comp"         (infixr "\<cdot>" 55)
-  and H :: "'a comp"         (infixr "\<star>" 53) +
+  for V :: "'a comp"         (infixr \<open>\<cdot>\<close> 55)
+  and H :: "'a comp"         (infixr \<open>\<star>\<close> 53) +
   assumes left_connected: "seq \<nu> \<nu>' \<Longrightarrow> \<nu> \<star> \<mu> \<noteq> null \<longleftrightarrow> \<nu>' \<star> \<mu> \<noteq> null"
   and right_connected: "seq \<mu> \<mu>' \<Longrightarrow> \<nu> \<star> \<mu> \<noteq> null \<longleftrightarrow> \<nu> \<star> \<mu>' \<noteq> null"
   and match_1: "\<lbrakk> \<nu> \<star> \<mu> \<noteq> null; (\<nu> \<star> \<mu>) \<star> \<tau> \<noteq> null \<rbrakk> \<Longrightarrow> \<mu> \<star> \<tau> \<noteq> null"
@@ -146,8 +146,8 @@ begin
       introduced subsequently.
     \<close>
 
-    no_notation in_hom      ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
-    notation in_hom         ("\<guillemotleft>_ : _ \<Rightarrow> _\<guillemotright>")
+    no_notation in_hom      (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
+    notation in_hom         (\<open>\<guillemotleft>_ : _ \<Rightarrow> _\<guillemotright>\<close>)
 
     lemma is_partial_magma:
     shows "partial_magma H"
@@ -155,9 +155,9 @@ begin
       show "\<exists>!n. \<forall>f. n \<star> f = n \<and> f \<star> n = n"
       proof
         show 1: "\<forall>f. null \<star> f = null \<and> f \<star> null = null"
-          using is_extensional VoV.inclusion VoV.arr_char\<^sub>S\<^sub>b\<^sub>C by force
+          using extensionality VoV.inclusion VoV.arr_char\<^sub>S\<^sub>b\<^sub>C by force
         show "\<And>n. \<forall>f. n \<star> f = n \<and> f \<star> n = n \<Longrightarrow> n = null"
-          using 1 VoV.arr_char\<^sub>S\<^sub>b\<^sub>C is_extensional not_arr_null by metis
+          using 1 VoV.arr_char\<^sub>S\<^sub>b\<^sub>C extensionality not_arr_null by metis
       qed
     qed
 
@@ -182,7 +182,7 @@ begin
     lemma composable_implies_arr:
     assumes "\<nu> \<star> \<mu> \<noteq> null"
     shows "arr \<mu>" and "arr \<nu>"
-      using assms is_extensional VoV.arr_char\<^sub>S\<^sub>b\<^sub>C VoV.inclusion by auto
+      using assms extensionality VoV.arr_char\<^sub>S\<^sub>b\<^sub>C VoV.inclusion by auto
 
     lemma hcomp_null [simp]:
     shows "null \<star> \<mu> = null" and "\<mu> \<star> null = null"
@@ -407,16 +407,16 @@ begin
   locale left_hom =
     weak_composition V H +
     S: subcategory V \<open>left \<omega>\<close>
-  for V :: "'a comp"        (infixr "\<cdot>" 55)
-  and H :: "'a comp"        (infixr "\<star>" 53)
+  for V :: "'a comp"        (infixr \<open>\<cdot>\<close> 55)
+  and H :: "'a comp"        (infixr \<open>\<star>\<close> 53)
   and \<omega> :: 'a +
   assumes arr_\<omega>: "arr \<omega>"
   begin
 
-    no_notation in_hom      ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
-    notation in_hom         ("\<guillemotleft>_ : _ \<Rightarrow> _\<guillemotright>")
-    notation S.comp         (infixr "\<cdot>\<^sub>S" 55)
-    notation S.in_hom       ("\<guillemotleft>_ : _ \<Rightarrow>\<^sub>S _\<guillemotright>")
+    no_notation in_hom      (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
+    notation in_hom         (\<open>\<guillemotleft>_ : _ \<Rightarrow> _\<guillemotright>\<close>)
+    notation S.comp         (infixr \<open>\<cdot>\<^sub>S\<close> 55)
+    notation S.in_hom       (\<open>\<guillemotleft>_ : _ \<Rightarrow>\<^sub>S _\<guillemotright>\<close>)
 
     lemma right_hcomp_closed:
     assumes "\<guillemotleft>\<mu> : x \<Rightarrow>\<^sub>S y\<guillemotright>" and "\<guillemotleft>\<nu> : c \<Rightarrow> d\<guillemotright>" and "\<mu> \<star> \<nu> \<noteq> null"
@@ -466,16 +466,16 @@ begin
   locale right_hom =
     weak_composition V H +
     S: subcategory V \<open>right \<omega>\<close>
-  for V :: "'a comp"        (infixr "\<cdot>" 55)
-  and H :: "'a comp"        (infixr "\<star>" 53)
+  for V :: "'a comp"        (infixr \<open>\<cdot>\<close> 55)
+  and H :: "'a comp"        (infixr \<open>\<star>\<close> 53)
   and \<omega> :: 'a +
   assumes arr_\<omega>: "arr \<omega>"
   begin
 
-    no_notation in_hom      ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
-    notation in_hom         ("\<guillemotleft>_ : _ \<Rightarrow> _\<guillemotright>")
-    notation S.comp         (infixr "\<cdot>\<^sub>S" 55)
-    notation S.in_hom       ("\<guillemotleft>_ : _ \<Rightarrow>\<^sub>S _\<guillemotright>")
+    no_notation in_hom      (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
+    notation in_hom         (\<open>\<guillemotleft>_ : _ \<Rightarrow> _\<guillemotright>\<close>)
+    notation S.comp         (infixr \<open>\<cdot>\<^sub>S\<close> 55)
+    notation S.in_hom       (\<open>\<guillemotleft>_ : _ \<Rightarrow>\<^sub>S _\<guillemotright>\<close>)
 
     lemma left_hcomp_closed:
     assumes "\<guillemotleft>\<mu> : x \<Rightarrow>\<^sub>S y\<guillemotright>" and "\<guillemotleft>\<nu> : c \<Rightarrow> d\<guillemotright>" and "\<nu> \<star> \<mu> \<noteq> null"
@@ -653,7 +653,7 @@ begin
     shows "weak_unit b \<longleftrightarrow> b \<in> targets b"
       using weak_unit_self_composable by auto
 
-    abbreviation (input) in_hhom\<^sub>W\<^sub>C  ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>W\<^sub>C _\<guillemotright>")
+    abbreviation (input) in_hhom\<^sub>W\<^sub>C  (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>W\<^sub>C _\<guillemotright>\<close>)
     where "in_hhom\<^sub>W\<^sub>C \<mu> f g \<equiv> arr \<mu> \<and> f \<in> sources \<mu> \<and> g \<in> targets \<mu>"
 
     lemma sources_hcomp:
@@ -890,7 +890,7 @@ begin
 
   locale associative_weak_composition =
     weak_composition +
-  fixes \<a> :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"    ("\<a>[_, _, _]")
+  fixes \<a> :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"    (\<open>\<a>[_, _, _]\<close>)
   assumes assoc_in_vhom\<^sub>A\<^sub>W\<^sub>C:
            "\<lbrakk> ide f; ide g; ide h; f \<star> g \<noteq> null; g \<star> h \<noteq> null \<rbrakk> \<Longrightarrow>
               \<guillemotleft>\<a>[f, g, h] : (f \<star> g) \<star> h \<Rightarrow> f \<star> g \<star> h\<guillemotright>"
@@ -1008,9 +1008,9 @@ begin
   locale right_hom_with_unit =
     associative_weak_composition V H \<a> +
     right_hom V H a
-  for V :: "'a comp"                  (infixr "\<cdot>" 55)
-  and H :: "'a comp"                  (infixr "\<star>" 53)
-  and \<a> :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"      ("\<a>[_, _, _]")
+  for V :: "'a comp"                  (infixr \<open>\<cdot>\<close> 55)
+  and H :: "'a comp"                  (infixr \<open>\<star>\<close> 53)
+  and \<a> :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"      (\<open>\<a>[_, _, _]\<close>)
   and \<iota> :: 'a
   and a :: 'a +
   assumes weak_unit_a: "weak_unit a"
@@ -1030,7 +1030,7 @@ begin
     shows "fully_faithful_functor S.comp S.comp R"
       ..
 
-    definition runit  ("\<r>[_]")
+    definition runit  (\<open>\<r>[_]\<close>)
     where "runit f \<equiv> THE \<mu>. \<guillemotleft>\<mu> : R f \<Rightarrow>\<^sub>S f\<guillemotright> \<and> R \<mu> = (f \<star> \<iota>) \<cdot>\<^sub>S \<a>[f, a, a]"
 
     lemma iso_unit:
@@ -1199,7 +1199,7 @@ begin
       interpret \<rr>: transformation_by_components S.comp S.comp R S.map runit
         using runit_char(1) runit_naturality by unfold_locales simp_all
       have "\<rr>.map = \<rr>"
-        using \<rr>.is_extensional \<rr>.map_def \<rr>.naturality \<rr>.map_simp_ide S.ide_dom S.ide_cod
+        using \<rr>.extensionality \<rr>.map_def \<rr>.naturality \<rr>.map_simp_ide S.ide_dom S.ide_cod
               S.map_def
         by auto
       thus "natural_transformation S.comp S.comp R S.map \<rr>"
@@ -1227,8 +1227,7 @@ begin
     assumes "S.ide f"
     shows "\<r>[R f] = R \<r>[f]"
       using assms runit_char(1) R.preserves_hom [of "\<r>[f]" "R f" f]
-            runit_naturality iso_runit S.iso_is_section
-            S.section_is_mono S.monoE
+            runit_naturality iso_runit S.iso_is_section S.section_is_mono S.mono_cancel
       by (metis S.in_homE S.seqI')
 
   end
@@ -1241,9 +1240,9 @@ begin
   locale left_hom_with_unit =
     associative_weak_composition V H \<a> +
     left_hom V H b
-  for V :: "'a comp"                  (infixr "\<cdot>" 55)
-  and H :: "'a comp"                  (infixr "\<star>" 53)
-  and \<a> :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"      ("\<a>[_, _, _]")
+  for V :: "'a comp"                  (infixr \<open>\<cdot>\<close> 55)
+  and H :: "'a comp"                  (infixr \<open>\<star>\<close> 53)
+  and \<a> :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"      (\<open>\<a>[_, _, _]\<close>)
   and \<iota> :: 'a
   and b :: 'a +
   assumes weak_unit_b: "weak_unit b"
@@ -1263,7 +1262,7 @@ begin
     shows "fully_faithful_functor S.comp S.comp L"
       ..
 
-    definition lunit  ("\<l>[_]")
+    definition lunit  (\<open>\<l>[_]\<close>)
     where "lunit f \<equiv> THE \<mu>. \<guillemotleft>\<mu> : L f \<Rightarrow>\<^sub>S f\<guillemotright> \<and> L \<mu> = (\<iota> \<star> f) \<cdot>\<^sub>S (inv \<a>[b, b, f])"
 
     lemma iso_unit:
@@ -1442,7 +1441,7 @@ begin
       interpret \<ll>: transformation_by_components S.comp S.comp L S.map lunit
         using lunit_char(1) lunit_naturality by (unfold_locales, simp_all)
       have "\<ll>.map = \<ll>"
-        using \<ll>.is_extensional \<ll>.map_def \<ll>.naturality \<ll>.map_simp_ide S.ide_dom S.ide_cod
+        using \<ll>.extensionality \<ll>.map_def \<ll>.naturality \<ll>.map_simp_ide S.ide_dom S.ide_cod
               S.map_def
         by auto
       thus "natural_transformation S.comp S.comp L S.map \<ll>"
@@ -1470,8 +1469,7 @@ begin
     assumes "S.ide f"
     shows "\<l>[L f] = L \<l>[f]"
       using assms lunit_char(1) L.preserves_hom [of "\<l>[f]" "L f" f]
-            lunit_naturality iso_lunit S.iso_is_section
-            S.section_is_mono S.monoE
+            lunit_naturality iso_lunit S.iso_is_section S.section_is_mono S.mono_cancel
       by (metis S.in_homE S.seqI')
 
   end
@@ -1665,13 +1663,9 @@ begin
           using Left_a.arr_char\<^sub>S\<^sub>b\<^sub>C left_def composable_implies_arr by simp
         have 2: "\<phi> \<star> \<mu> \<noteq> null"
           using assms \<phi> \<mu> Left_a.arr_char\<^sub>S\<^sub>b\<^sub>C left_def hom_connected by auto
-        show "Left_a.dom (H\<^sub>L \<phi> \<mu>) = H\<^sub>L a (Left_a.dom \<mu>)"
+        show "Left_a.arr (H\<^sub>L \<phi> \<mu>)"
           using assms 2 \<phi> \<mu> Left_a.arr_char\<^sub>S\<^sub>b\<^sub>C left_def hom_connected(2) [of a \<phi>]
-                weak_unit_self_composable match_4 Left_a.dom_char\<^sub>S\<^sub>b\<^sub>C H\<^sub>L_def by auto
-        show "Left_a.cod (H\<^sub>L \<phi> \<mu>) = H\<^sub>L a' (Left_a.cod \<mu>)"
-          using assms 2 \<phi> \<mu> Left_a.arr_char\<^sub>S\<^sub>b\<^sub>C left_def hom_connected(2) [of a \<phi>]
-                weak_unit_self_composable match_4 Left_a.cod_char\<^sub>S\<^sub>b\<^sub>C H\<^sub>L_def
-          by auto
+                weak_unit_self_composable match_4 H\<^sub>L_def by auto
         show "Left_a.comp (H\<^sub>L a' \<mu>) (H\<^sub>L \<phi> (Left_a.dom \<mu>)) = H\<^sub>L \<phi> \<mu>"
         proof -
           have "Left_a.comp (H\<^sub>L a' \<mu>) (H\<^sub>L \<phi> (Left_a.dom \<mu>)) =
@@ -1786,13 +1780,8 @@ begin
           using Right_a.arr_char\<^sub>S\<^sub>b\<^sub>C right_def composable_implies_arr by simp
         have 2: "\<mu> \<star> \<phi> \<noteq> null"
           using assms \<phi> \<mu> Right_a.arr_char\<^sub>S\<^sub>b\<^sub>C right_def hom_connected by auto
-        show "Right_a.dom (H\<^sub>R \<phi> \<mu>) = H\<^sub>R a (Right_a.dom \<mu>)"
-          by (metis "2" H\<^sub>R_def R'.is_extensional Right_a.dom_simp Right_a.null_char
-              \<open>Right_a.arr \<mu>\<close> \<phi> a' hcomp_simps\<^sub>W\<^sub>C(2) in_homE match_3)
-        show "Right_a.cod (H\<^sub>R \<phi> \<mu>) = H\<^sub>R a' (Right_a.cod \<mu>)"
-          using assms 2 a' \<phi> \<mu> Right_a.arr_char\<^sub>S\<^sub>b\<^sub>C right_def hom_connected(3) [of \<phi> a]
-                weak_unit_self_composable match_3 Right_a.cod_char\<^sub>S\<^sub>b\<^sub>C H\<^sub>R_def
-          by auto
+        show "Right_a.arr (H\<^sub>R \<phi> \<mu>)"
+          by (metis "2" H\<^sub>R_def R'.extensionality Right_a.null_char a' match_3)
         show "Right_a.comp (H\<^sub>R a' \<mu>) (H\<^sub>R \<phi> (Right_a.dom \<mu>)) = H\<^sub>R \<phi> \<mu>"
         proof -
           have "Right_a.comp (H\<^sub>R a' \<mu>) (H\<^sub>R \<phi> (Right_a.dom \<mu>)) =
@@ -1951,7 +1940,7 @@ begin
     category V +
     src: endofunctor V src +
     trg: endofunctor V trg
-  for V :: "'a comp"      (infixr "\<cdot>" 55)
+  for V :: "'a comp"      (infixr \<open>\<cdot>\<close> 55)
   and src :: "'a \<Rightarrow> 'a"
   and trg :: "'a \<Rightarrow> 'a" +
   assumes ide_src [simp]: "arr \<mu> \<Longrightarrow> ide (src \<mu>)"
@@ -1962,8 +1951,8 @@ begin
   and src_trg [simp]: "arr \<mu> \<Longrightarrow> src (trg \<mu>) = trg \<mu>"
   begin
 
-    no_notation in_hom        ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
-    notation in_hom           ("\<guillemotleft>_ : _ \<Rightarrow> _\<guillemotright>")
+    no_notation in_hom        (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
+    notation in_hom           (\<open>\<guillemotleft>_ : _ \<Rightarrow> _\<guillemotright>\<close>)
 
     text \<open>
       We define an \emph{object} to be an arrow that is its own source
@@ -2012,7 +2001,7 @@ begin
     shows "obj (trg \<mu>)"
       using assms objI_trg by auto
 
-    definition in_hhom  ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
+    definition in_hhom  (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
     where "in_hhom \<mu> a b \<equiv> arr \<mu> \<and> src \<mu> = a \<and> trg \<mu> = b"
 
     abbreviation hhom
@@ -2046,19 +2035,19 @@ begin
 
     lemma src_dom [simp]:
     shows "src (dom \<mu>) = src \<mu>"
-      by (metis arr_dom_iff_arr obj_simps(4) obj_src src.is_extensional src.preserves_dom)
+      by (metis arr_dom_iff_arr obj_simps(4) obj_src src.extensionality src.preserves_dom)
 
     lemma src_cod [simp]:
     shows "src (cod \<mu>) = src \<mu>"
-      by (metis arr_cod_iff_arr obj_simps(5) obj_src src.is_extensional src.preserves_cod)
+      by (metis arr_cod_iff_arr obj_simps(5) obj_src src.extensionality src.preserves_cod)
 
     lemma trg_dom [simp]:
     shows "trg (dom \<mu>) = trg \<mu>"
-      by (metis arr_dom_iff_arr ide_char ide_trg trg.is_extensional trg.preserves_dom)
+      by (metis arr_dom_iff_arr ide_char ide_trg trg.extensionality trg.preserves_dom)
 
     lemma trg_cod [simp]:
     shows "trg (cod \<mu>) = trg \<mu>"
-      by (metis arr_cod_iff_arr ide_char ide_trg trg.is_extensional trg.preserves_cod)
+      by (metis arr_cod_iff_arr ide_char ide_trg trg.extensionality trg.preserves_cod)
 
     (*
      * TODO: In theory, the following simps should already be available from the fact
@@ -2066,19 +2055,19 @@ begin
      *)
     lemma dom_src [simp]:
     shows "dom (src \<mu>) = src \<mu>"
-      by (metis dom_null ideD(2) ide_src src.is_extensional)
+      by (metis dom_null ideD(2) ide_src src.extensionality)
 
     lemma cod_src [simp]:
     shows "cod (src \<mu>) = src \<mu>"
-      by (metis cod_null ideD(3) ide_src src.is_extensional)
+      by (metis cod_null ideD(3) ide_src src.extensionality)
 
     lemma dom_trg [simp]:
     shows "dom (trg \<mu>) = trg \<mu>"
-      by (metis dom_null ideD(2) ide_trg trg.is_extensional)
+      by (metis dom_null ideD(2) ide_trg trg.extensionality)
 
     lemma cod_trg [simp]:
     shows "cod (trg \<mu>) = trg \<mu>"
-      by (metis cod_null ideD(3) ide_trg trg.is_extensional)
+      by (metis cod_null ideD(3) ide_trg trg.extensionality)
 
     lemma vcomp_in_hhom [intro, simp]:
     assumes "seq \<nu> \<mu>" and "src \<nu> = a" and "trg \<nu> = b"
@@ -2532,10 +2521,10 @@ begin
   locale prebicategory_with_units =
     prebicategory V H \<a> +
     weak_composition V H
-  for V :: "'a comp"                  (infixr "\<cdot>" 55)
-  and H :: "'a comp"                  (infixr "\<star>" 53)
-  and \<a> :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"      ("\<a>[_, _, _]")
-  and \<i> :: "'a \<Rightarrow> 'a"                  ("\<i>[_]") +
+  for V :: "'a comp"                  (infixr \<open>\<cdot>\<close> 55)
+  and H :: "'a comp"                  (infixr \<open>\<star>\<close> 53)
+  and \<a> :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"      (\<open>\<a>[_, _, _]\<close>)
+  and \<i> :: "'a \<Rightarrow> 'a"                  (\<open>\<i>[_]\<close>) +
   assumes unit_in_vhom\<^sub>P\<^sub>B\<^sub>U: "weak_unit a \<Longrightarrow> \<guillemotleft>\<i>[a] : a \<star> a \<Rightarrow> a\<guillemotright>"
   and iso_unit\<^sub>P\<^sub>B\<^sub>U: "weak_unit a \<Longrightarrow> iso \<i>[a]"
   begin
@@ -2584,15 +2573,15 @@ begin
   locale horizontal_composition =
     horizontal_homs V src trg +
     H: "functor" VV.comp V \<open>\<lambda>\<mu>\<nu>. H (fst \<mu>\<nu>) (snd \<mu>\<nu>)\<close>
-  for V :: "'a comp"          (infixr "\<cdot>" 55)
-  and H :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"   (infixr "\<star>" 53)
+  for V :: "'a comp"          (infixr \<open>\<cdot>\<close> 55)
+  and H :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"   (infixr \<open>\<star>\<close> 53)
   and src :: "'a \<Rightarrow> 'a"
   and trg :: "'a \<Rightarrow> 'a" +
   assumes src_hcomp: "arr (\<mu> \<star> \<nu>) \<Longrightarrow> src (\<mu> \<star> \<nu>) = src \<nu>"
   and trg_hcomp: "arr (\<mu> \<star> \<nu>) \<Longrightarrow> trg (\<mu> \<star> \<nu>) = trg \<mu>"
   begin
     (* TODO: Why does this get re-introduced? *)
-    no_notation in_hom        ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
+    no_notation in_hom        (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
 
     text \<open>
       \<open>H\<close> is a partial composition, which shares its null with \<open>V\<close>.
@@ -2602,9 +2591,9 @@ begin
     shows "partial_composition H" and "partial_magma.null H = null"
     proof -
       have 1: "\<forall>f. null \<star> f = null \<and> f \<star> null = null"
-        using H.is_extensional VV.arr_char\<^sub>S\<^sub>b\<^sub>C not_arr_null by auto
+        using H.extensionality VV.arr_char\<^sub>S\<^sub>b\<^sub>C not_arr_null by auto
       interpret H: partial_composition H
-        using 1 VV.arr_char\<^sub>S\<^sub>b\<^sub>C H.is_extensional not_arr_null
+        using 1 VV.arr_char\<^sub>S\<^sub>b\<^sub>C H.extensionality not_arr_null
         by unfold_locales metis
       show "partial_composition H" ..
       show "H.null = null"
@@ -2627,7 +2616,7 @@ begin
     shows "hseq \<nu> \<mu> \<longleftrightarrow> arr \<mu> \<and> arr \<nu> \<and> src \<nu> = trg \<mu>"
     proof -
       have "hseq \<nu> \<mu> \<longleftrightarrow> VV.arr (\<nu>, \<mu>)"
-        using H.is_extensional H.preserves_arr by force
+        using H.extensionality H.preserves_arr by force
       also have "... \<longleftrightarrow> arr \<mu> \<and> arr \<nu> \<and> src \<nu> = trg \<mu>"
         using VV.arr_char\<^sub>S\<^sub>b\<^sub>C by force
       finally show ?thesis by blast
@@ -2635,7 +2624,7 @@ begin
 
     lemma hseq_char':
     shows "hseq \<nu> \<mu> \<longleftrightarrow> \<nu> \<star> \<mu> \<noteq> null"
-      using VV.arr_char\<^sub>S\<^sub>b\<^sub>C H.preserves_arr H.is_extensional hseq_char [of \<nu> \<mu>] by auto
+      using VV.arr_char\<^sub>S\<^sub>b\<^sub>C H.preserves_arr H.extensionality hseq_char [of \<nu> \<mu>] by auto
 
     lemma hseqI' [intro, simp]:
     assumes "arr \<mu>" and "arr \<nu>" and "src \<nu> = trg \<mu>"
@@ -2711,33 +2700,33 @@ begin
     lemma match_1:
     assumes "\<nu> \<star> \<mu> \<noteq> null" and "(\<nu> \<star> \<mu>) \<star> \<tau> \<noteq> null"
     shows "\<mu> \<star> \<tau> \<noteq> null"
-      using assms H.is_extensional not_arr_null VV.arr_char\<^sub>S\<^sub>b\<^sub>C hseq_char hseq_char' by auto
+      using assms H.extensionality not_arr_null VV.arr_char\<^sub>S\<^sub>b\<^sub>C hseq_char hseq_char' by auto
 
     lemma match_2:
     assumes "\<nu> \<star> (\<mu> \<star> \<tau>) \<noteq> null" and "\<mu> \<star> \<tau> \<noteq> null"
     shows "\<nu> \<star> \<mu> \<noteq> null"
-      using assms H.is_extensional not_arr_null VV.arr_char\<^sub>S\<^sub>b\<^sub>C hseq_char hseq_char' by auto
+      using assms H.extensionality not_arr_null VV.arr_char\<^sub>S\<^sub>b\<^sub>C hseq_char hseq_char' by auto
 
     lemma match_3:
     assumes "\<mu> \<star> \<tau> \<noteq> null" and "\<nu> \<star> \<mu> \<noteq> null"
     shows "(\<nu> \<star> \<mu>) \<star> \<tau> \<noteq> null"
-      using assms H.is_extensional not_arr_null VV.arr_char\<^sub>S\<^sub>b\<^sub>C hseq_char hseq_char' by auto
+      using assms H.extensionality not_arr_null VV.arr_char\<^sub>S\<^sub>b\<^sub>C hseq_char hseq_char' by auto
 
     lemma match_4:
     assumes "\<mu> \<star> \<tau> \<noteq> null" and "\<nu> \<star> \<mu> \<noteq> null"
     shows "\<nu> \<star> (\<mu> \<star> \<tau>) \<noteq> null"
-      using assms H.is_extensional not_arr_null VV.arr_char\<^sub>S\<^sub>b\<^sub>C hseq_char hseq_char' by auto
+      using assms H.extensionality not_arr_null VV.arr_char\<^sub>S\<^sub>b\<^sub>C hseq_char hseq_char' by auto
 
     lemma left_connected:
     assumes "seq \<nu> \<nu>'"
     shows "\<nu> \<star> \<mu> \<noteq> null \<longleftrightarrow> \<nu>' \<star> \<mu> \<noteq> null"
-      using assms H.is_extensional not_arr_null VV.arr_char\<^sub>S\<^sub>b\<^sub>C hseq_char'
+      using assms H.extensionality not_arr_null VV.arr_char\<^sub>S\<^sub>b\<^sub>C hseq_char'
       by (metis hseq_char seqE vseq_implies_hpar(1))
 
     lemma right_connected:
     assumes "seq \<mu> \<mu>'"
     shows "H \<nu> \<mu> \<noteq> null \<longleftrightarrow> H \<nu> \<mu>' \<noteq> null"
-      using assms H.is_extensional not_arr_null VV.arr_char\<^sub>S\<^sub>b\<^sub>C hseq_char'
+      using assms H.extensionality not_arr_null VV.arr_char\<^sub>S\<^sub>b\<^sub>C hseq_char'
       by (metis hseq_char seqE vseq_implies_hpar(2))
 
     proposition is_weak_composition:

@@ -13,17 +13,12 @@ begin
 
 section \<open>Gauss sums\<close>
 
-bundle vec_lambda_notation
+bundle vec_lambda_syntax
 begin
-notation vec_lambda (binder "\<chi>" 10)
+notation vec_lambda (binder \<open>\<chi>\<close> 10)
 end
 
-bundle no_vec_lambda_notation
-begin
-no_notation vec_lambda (binder "\<chi>" 10)
-end
-
-unbundle no_vec_lambda_notation
+unbundle no vec_lambda_syntax
 
 
 subsection \<open>Definition and basic properties\<close>
@@ -1299,7 +1294,7 @@ proof -
       have foral: "(\<And>y. y \<in> b \<Longrightarrow> f y = f l)" 
          using m_mod l_prop unfolding f_def by blast
       have eq: "the_elem (f ` b) = f l"
-        using the_elem_image_unique[of _ f l, OF b_not_empty foral] by simp
+        by (simp add: b_not_empty foral the_elem_image_unique)
       have per: "periodic_arithmetic \<Phi> d" using prod \<Phi>.dir_periodic_arithmetic by blast
       show ?thesis
         unfolding eq using mod_periodic_arithmetic[OF per, of "l mod d" l]
@@ -1438,7 +1433,7 @@ qed
 
 text\<open>Theorem 8.20\<close>
 theorem (in primitive_dchar) fourier_primitive:
-  includes no_vec_lambda_notation
+  includes no vec_lambda_syntax
   fixes \<tau> :: complex
   defines "\<tau> \<equiv> gauss_sum 1 / sqrt n"
   shows   "\<chi> m = \<tau> / sqrt n * (\<Sum>k=1..n. cnj (\<chi> k) * unity_root n (-m*k))"
@@ -1682,6 +1677,6 @@ proof -
   show "norm \<tau> = 1" using 1 2 n by simp
 qed
 
-unbundle vec_lambda_notation
+unbundle vec_lambda_syntax
 
 end

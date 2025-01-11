@@ -530,7 +530,7 @@ let
          resolve_tac lthy' exp_thms 1,
          (REPEAT (
             FIRST [
-               CHANGED (asm_simp_tac (put_simpset HOL_ss (Utils.set_hidden_ctxt lthy') addsimps simps) 1),
+               CHANGED (asm_simp_tac (put_simpset HOL_ss (Context_Position.set_visible false lthy') addsimps simps) 1),
                Method.assm_tac lthy' 1]))
          ]
        )
@@ -709,7 +709,7 @@ let
        lthy
     else
       let
-        val _ = writeln ("Translating (type strengthen) " ^ Utils.commas fn_names);
+        val _ = writeln ("Translating (type strengthen) " ^ commas fn_names);
 
         val lthy = lthy |> AutoCorresData.in_theory (
             AutoCorresData.add_definition_and_corres_proof_locales prog_info base_locale_opt infos_prev_phase skips phase fn_names 

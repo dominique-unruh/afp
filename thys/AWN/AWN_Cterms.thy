@@ -37,13 +37,18 @@ where "microstep_tcl \<Gamma> p q \<equiv> (microstep \<Gamma>)\<^sup>+\<^sup>+ 
 syntax
   "_microstep"
      :: "[('s, 'm, 'p, 'l) seqp, ('s, 'm, 'p, 'l) seqp_env, ('s, 'm, 'p, 'l) seqp] \<Rightarrow> bool"
-     ("(_) \<leadsto>\<^bsub>_\<^esub> (_)" [61, 0, 61] 50)
+     (\<open>(_) \<leadsto>\<^bsub>_\<^esub> (_)\<close> [61, 0, 61] 50)
   "_microstep_rtcl"
      :: "[('s, 'm, 'p, 'l) seqp, ('s, 'm, 'p, 'l) seqp_env, ('s, 'm, 'p, 'l) seqp] \<Rightarrow> bool"
-     ("(_) \<leadsto>\<^bsub>_\<^esub>\<^sup>* (_)" [61, 0, 61] 50)
+     (\<open>(_) \<leadsto>\<^bsub>_\<^esub>\<^sup>* (_)\<close> [61, 0, 61] 50)
   "_microstep_tcl"
      :: "[('s, 'm, 'p, 'l) seqp, ('s, 'm, 'p, 'l) seqp_env, ('s, 'm, 'p, 'l) seqp] \<Rightarrow> bool"
-     ("(_) \<leadsto>\<^bsub>_\<^esub>\<^sup>+ (_)" [61, 0, 61] 50)
+     (\<open>(_) \<leadsto>\<^bsub>_\<^esub>\<^sup>+ (_)\<close> [61, 0, 61] 50)
+
+syntax_consts
+  "_microstep" \<rightleftharpoons> microstep and
+  "_microstep_rtcl" \<rightleftharpoons> microstep_rtcl and
+  "_microstep_tcl" \<rightleftharpoons> microstep_tcl
 
 translations
   "p1 \<leadsto>\<^bsub>\<Gamma>\<^esub> p2"  \<rightleftharpoons> "CONST microstep \<Gamma> p1 p2"
@@ -131,7 +136,7 @@ where
   "wellformed \<Gamma> = wf {(q, p). p \<leadsto>\<^bsub>\<Gamma>\<^esub> q}"
 
 lemma wellformed_defP: "wellformed \<Gamma> = wfP (\<lambda>q p. p \<leadsto>\<^bsub>\<Gamma>\<^esub> q)"
-  unfolding wellformed_def wfP_def by simp
+  unfolding wellformed_def wfp_def by simp
 
 text \<open>
   The induction rule for @{term "wellformed \<Gamma>"} is stronger than @{thm seqp.induct} because
@@ -154,7 +159,7 @@ lemma wellformed_induct
       and CALL:    "\<And>pn.           \<lbrakk> wellformed \<Gamma>; P (\<Gamma> pn) \<rbrakk> \<Longrightarrow> P (call(pn))"
     shows "P a"
   using assms(1) unfolding wellformed_defP
-  proof (rule wfP_induct_rule, case_tac x, simp_all)
+  proof (rule wfp_induct_rule, case_tac x, simp_all)
     fix p1 p2
     assume "\<And>q. (p1 \<oplus> p2) \<leadsto>\<^bsub>\<Gamma>\<^esub> q \<Longrightarrow> P q"
     then obtain "P p1" and "P p2" by (auto intro!: microstep.intros)
@@ -239,7 +244,7 @@ theorem wf_no_direct_calls[intro]:
     fixes \<Gamma> :: "('s, 'm, 'p, 'l) seqp_env"
   assumes no_calls: "\<And>pn. \<forall>pn'. call(pn') \<notin> stermsl(\<Gamma>(pn))"
     shows "wellformed \<Gamma>"
-  unfolding wellformed_def wfP_def
+  unfolding wellformed_def wfp_def
   proof (rule wfI_pf)
     fix A
     assume ARA: "A \<subseteq> {(q, p). p \<leadsto>\<^bsub>\<Gamma>\<^esub> q} `` A"
@@ -313,7 +318,7 @@ lemma sterms_termination:
       by (rule ext)+ (auto simp: sterms_rel.simps elim: microstep.cases)
 
     from assms have "\<forall>x. x \<in> Wellfounded.acc {(q, p). p \<leadsto>\<^bsub>\<Gamma>\<^esub> q}"
-      unfolding wellformed_def by (simp add: wf_acc_iff)
+      unfolding wellformed_def by (simp add: wf_iff_acc)
     hence "p \<in> Wellfounded.acc {(q, p). p \<leadsto>\<^bsub>\<Gamma>\<^esub> q}" ..
 
     hence "(\<Gamma>, p) \<in> Wellfounded.acc {((\<Gamma>, q), (\<Gamma>', p)). \<Gamma> = \<Gamma>' \<and> p \<leadsto>\<^bsub>\<Gamma>\<^esub> q}"
@@ -622,7 +627,7 @@ lemma dterms_termination:
     have dterms_rel': "dterms_rel = (\<lambda>gq gp. (gq, gp) \<in> {((\<Gamma>, q), (\<Gamma>', p)). \<Gamma> = \<Gamma>' \<and> p \<leadsto>\<^bsub>\<Gamma>\<^esub> q})"
       by (rule ext)+ (auto simp: dterms_rel.simps elim: microstep.cases)
     from \<open>wellformed(\<Gamma>)\<close> have "\<forall>x. x \<in> Wellfounded.acc {(q, p). p \<leadsto>\<^bsub>\<Gamma>\<^esub> q}"
-      unfolding wellformed_def by (simp add: wf_acc_iff)
+      unfolding wellformed_def by (simp add: wf_iff_acc)
     hence "p \<in> Wellfounded.acc {(q, p). p \<leadsto>\<^bsub>\<Gamma>\<^esub> q}" ..
     hence "(\<Gamma>, p) \<in> Wellfounded.acc {((\<Gamma>, q), \<Gamma>', p). \<Gamma> = \<Gamma>' \<and> p \<leadsto>\<^bsub>\<Gamma>\<^esub> q}"
       by (rule acc_induct) (auto intro: accI)

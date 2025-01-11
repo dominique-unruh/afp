@@ -425,7 +425,7 @@ qed
 
 subsubsection "The Potential Function"
  
-fun phi :: "nat \<Rightarrow>'a list\<times>  (bool list \<times> 'a list)  \<Rightarrow> real" ("\<phi>")  where
+fun phi :: "nat \<Rightarrow>'a list\<times>  (bool list \<times> 'a list)  \<Rightarrow> real" (\<open>\<phi>\<close>)  where
 "phi n (c,(b,_)) = (\<Sum>(x,y)\<in>(Inv c (s_A n)). (if b!(index init y) then 2 else 1))"
 
 lemma phi': "phi n z = (\<Sum>(x,y)\<in>(Inv (fst z) (s_A n)). (if (fst (snd z))!(index init y) then 2 else 1))"
@@ -448,10 +448,10 @@ lemma phi_nonzero: "phi n (c,(b,i)) \<ge> 0"
 by (simp add: sum_nonneg split_def)
 
 (* definition of the potential function! *)
-definition Phi :: "nat \<Rightarrow> real" ("\<Phi>") where
+definition Phi :: "nat \<Rightarrow> real" (\<open>\<Phi>\<close>) where
 "Phi n = E( map_pmf (\<phi> n) (config'' BIT qs init n))"
 
-definition PhiPlus :: "nat \<Rightarrow> real" ("\<Phi>\<^sup>+") where
+definition PhiPlus :: "nat \<Rightarrow> real" (\<open>\<Phi>\<^sup>+\<close>) where
 "PhiPlus n = (let
         nextconfig = bind_pmf (config'' BIT qs init n)
                 (\<lambda>(s,is). bind_pmf  (BIT_step (s,is) (qs!n)) (\<lambda>(a,nis). return_pmf (step s (qs!n) a,nis)) ) 
@@ -1904,19 +1904,12 @@ text "Approximation of the Term for Free exchanges"
                 yes, if ?l=0 then k=k'<?l impossible, perhaps I can insert that
                   somehow ? 
               *)
-      also have E9: "\<dots> = (1/2) *   (   real(k-k') + (k')*(3/2)    )"
-      proof - 
-        have "((1::real)/2)^l' * 2^l'  = ((1::real)/2 * 2)^l' " by(rule power_mult_distrib[symmetric])
-        also have "...   = 1" by auto
-        finally have "(((1::real)/2)^(Suc l'))* 2^l'=(1/2)" by auto
-        then show ?thesis by auto
-      qed      
-      also have E10: "\<dots> \<le> (1/2) * (  (3/2)*(k-k') + (k')*(3/2)  )" by auto (* and one inequality *)
-      also have "\<dots> = (1/2) * (  (3/2)*(k-k'+(k'))  )" by auto
-      also have "\<dots> = (1/2) * (  (3/2)*(k)  )" by auto
-      also have E11: "\<dots> = (3/4)*(k )" by auto
+    also have E9: "\<dots> = (1/2) *   (   real(k-k') + (k')*(3/2)    )"
+      by (simp add: field_simps)
+      also have "\<dots> \<le> (3/4)*(k )" by auto
       finally show "E(map_pmf (\<lambda>x. (if q \<in> set init then (if (fst (snd x))!(index init q) then real( k-k' ) else (\<Sum>j<k'. (if (fst (snd x))!index init (xs'!j) then 2::real else 1))) else 0 )) D)
-          \<le> 3/4 * k " using True by simp    
+          \<le> 3/4 * k "
+        using True by simp    
  
     qed (* free_absch *)
  

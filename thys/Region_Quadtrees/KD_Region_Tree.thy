@@ -6,14 +6,6 @@ imports
   "HOL-Library.Tree" (* only for \<open>height\<close> *)
 begin                                         
 
-(* TODO: In Isabelle after 2023 - remove *)
-lemma nlists_Suc: "nlists (Suc n) A = (\<Union>a\<in>A. (#) a ` nlists n A)"
-by(auto simp: set_eq_iff image_iff in_nlists_Suc_iff)
-lemma in_nlists_UNIV: "xs \<in> nlists k UNIV \<longleftrightarrow> length xs = k"
-unfolding nlists_def by(auto)
-lemma nlists_singleton: "nlists n {a} = {replicate n a}"
-unfolding nlists_def by(auto simp: replicate_length_same dest!: subset_singletonD)
-
 text \<open>Generalizes quadtrees. Instead of having \<open>2^n\<close> direct children of a node,
 the children are arranged in a binary tree where each \<open>Split\<close> splits along one dimension.\<close>
 
@@ -165,7 +157,7 @@ text \<open>Compressing Split:\<close>
 
 fun SplitC :: "'a kdt \<Rightarrow> 'a kdt \<Rightarrow> 'a kdt" where
 "SplitC (Box b1) (Box b2) = (if b1=b2 then Box b1 else Split (Box b1) (Box b2))" |
-"SplitC t1 t2 = Split t1 t2"
+"SplitC l r = Split l r"
 
 fun compressed :: "'a kdt \<Rightarrow> bool" where
 "compressed (Box _) = True" |

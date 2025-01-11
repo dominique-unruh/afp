@@ -3,7 +3,7 @@ imports
   "PNT_Remainder_Library"
   "PNT_Subsummable"
 begin
-unbundle pnt_notation
+unbundle pnt_syntax
 
 section \<open>Perron's formula\<close>
 
@@ -86,7 +86,7 @@ proof -
         using * by (subst has_real_derivative_iff_has_vector_derivative [symmetric]) auto
     qed
     moreover have "ln (b + T) - ln (b + 0) = ln (1 + T / b)"
-      using Hb hT by (subst ln_div [symmetric]) (auto simp add: field_simps)
+      using Hb hT by (simp add: ln_div field_simps)
     ultimately show ?thesis by auto
   qed
   finally have "\<parallel>1 / (2 * pi * \<i>) * contour_integral path (\<lambda>s. f s * a powr s / s)\<parallel>
@@ -104,7 +104,7 @@ locale perron_locale =
   fixes b B H T x :: real and f :: "complex fds"
   assumes Hb: "0 < b" and hT: "b \<le> T"
     and Hb': "abs_conv_abscissa f < b"
-    and hH: "2 \<le> H" and hH': "b + 1 \<le> H" and Hx: "0 < x"
+    and hH: "1 < H" and hH': "b + 1 \<le> H" and Hx: "0 < x"
     and hB: "(\<Sum>`n \<ge> 1. \<parallel>fds_nth f n\<parallel> / n nat_powr b) \<le> B"
 begin
 definition r where "r a \<equiv>
@@ -477,7 +477,8 @@ proof -
   proof -
     have "1 \<le> T / b" using hT Hb by auto
     hence "1 + T / b \<le> 2 * (T / b)" by auto
-    hence "ln (1 + T / b) \<le> ln 2 + ln (T / b)" by (subst ln_mult [symmetric]) auto
+    hence "ln (1 + T / b) \<le> ln 2 + ln (T / b)"
+      by (subst ln_mult_pos [symmetric]) auto
     thus ?thesis using ln_2_less_1 by auto
   qed
   have *: "\<parallel>F a\<parallel> \<le> a powr b * (2 + ln (T / b))"
@@ -575,15 +576,17 @@ proof (cases "n \<in> region")
       have "ln (x / n) < ln (1 / (1 + 1 / H))"
         using xn xn' by (subst ln_less_cancel_iff) (blast, linarith)
       also have "\<dots> = - ln (1 + 1 / H)"
-        by (subst (1) inverse_eq_divide [symmetric])
-           (subst ln_inverse, intro add_pos_pos, use hH in auto)
+        by (simp add: divide_inverse ln_inverse)
       also have "\<dots> \<le> - 1 / (2 * H)"
       proof -
-        have "1 / H - (1 / H)\<^sup>2 \<le> ln (1 + 1 / H)"
-          by (rule ln_one_plus_pos_lower_bound) (use hH in auto)
-        hence "- ln (1 + 1 / H) \<le> - 1 / H + (1 / H)\<^sup>2" by auto
+        have "- ln (1 + 1 / H) = ln (inverse (1 + 1 / H))"
+          by (simp add: ln_inverse)
+        also have "\<dots> = ln (1 - 1 / (H + 1))"
+          using hH by (auto simp: field_simps)
+        also have "\<dots> \<le> - (1 / (H + 1))"
+          using hH by (auto intro: ln_one_minus_pos_upper_bound)
         also have "\<dots> \<le> - 1 / (2 * H)"
-          using hH unfolding power2_eq_square by (auto simp add: field_simps)
+          using hH by (auto simp: field_simps)
         finally show ?thesis .
       qed
       finally have "-1 / ln (x / n) \<le> -1 / (-1 / (2 * H))"
@@ -918,7 +921,7 @@ theorem perron_formula:
   fixes b B H T x :: real and f :: "complex fds"
   assumes Hb: "0 < b" and hT: "b \<le> T"
     and Hb': "abs_conv_abscissa f < b"
-    and hH: "2 \<le> H" and hH': "b + 1 \<le> H" and Hx: "2 \<le> x"
+    and hH: "1 < H" and hH': "b + 1 \<le> H" and Hx: "0 < x"
     and hB: "(\<Sum>`n \<ge> 1. \<parallel>fds_nth f n\<parallel> / n nat_powr b) \<le> B"
   shows "(\<lambda>s. eval_fds f s * x powr s / s) contour_integrable_on (linepath (Complex b (-T)) (Complex b T))"
         "\<parallel>sum_upto (fds_nth f) x - 1 / (2 * pi * \<i>) *
@@ -933,7 +936,7 @@ qed
 theorem perron_asymp:
   fixes b x :: real
   assumes b: "b > 0" "ereal b > abs_conv_abscissa f"
-  assumes x: "x \<ge> 2" "x \<notin> \<nat>"
+  assumes x: "0 < x" "x \<notin> \<nat>"
   defines "L \<equiv> (\<lambda>T. linepath (Complex b (-T)) (Complex b T))"
   shows   "((\<lambda>T. contour_integral (L T) (\<lambda>s. eval_fds f s * of_real x powr s / s))
                \<longlongrightarrow> 2 * pi * \<i> * sum_upto (\<lambda>n. fds_nth f n) x) at_top"
@@ -941,28 +944,9 @@ proof -
   define R where "R = (\<lambda>H. {n. x - x / H \<le> real n \<and> real n \<le> x + x / H})"
   have R_altdef: "R H = {n. dist (of_nat n) x \<le> x / H}" for H
     unfolding R_def by (intro Collect_cong) (auto simp: dist_norm)
-  obtain H where H: "H \<ge> 2" "H \<ge> b + 1" "R H = (if x \<in> \<nat> then {nat \<lfloor>x\<rfloor>} else {})"
+  obtain H where H: "H > 1" "H \<ge> b + 1" "R H = (if x \<in> \<nat> then {nat \<lfloor>x\<rfloor>} else {})"
   proof (cases "x \<in> \<nat>")
-    case True
-    then obtain m where [simp]: "x = of_nat m" by (elim Nats_cases)
-    define H where "H = Max {2, b + 1, x / 2}"
-    have H: "H \<ge> 2" "H \<ge> b + 1" "H \<ge> x / 2"
-      unfolding H_def by (rule Max.coboundedI; simp)+
-    show ?thesis
-    proof (rule that[of H])
-      have "n \<notin> R H" if "n \<noteq> m" for n :: nat
-      proof -
-        have "x / H \<le> x / (x / 2)"
-          by (intro divide_left_mono) (use H x in auto)
-        hence "x / H < 1" using x by simp
-        also have "\<dots> \<le> \<bar>int n - int m\<bar>" using \<open>n \<noteq> m\<close> by linarith
-        also have "\<dots> = dist (of_nat n) x"
-          unfolding \<open>x = of_nat m\<close> dist_of_nat by simp
-        finally show "n \<notin> R H" by (simp add: R_altdef)
-      qed
-      moreover have "m \<in> R H" using x by (auto simp: R_def)
-      ultimately show "R H = (if x \<in> \<nat> then {nat \<lfloor>x\<rfloor>} else {})" by auto
-    qed (use H in auto)
+    case True thus ?thesis using x by auto
   next
     case False
     define d where "d = setdist {x} \<nat>"
@@ -1028,5 +1012,6 @@ proof -
     by (simp add: c_def A_def I_def g_def)
 qed
 
-unbundle no_pnt_notation
+unbundle no pnt_syntax
+
 end

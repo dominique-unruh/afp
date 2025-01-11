@@ -41,7 +41,7 @@ an arbitrary formula as it may depend on propositions that the agent
 has no certainty about. For example, a card-playing agent cannot
 determine which cards are in the deck, despite being sure that those
 in her hand are not. Conversely agent $a$ can evaluate formulas of the
-form @{term "\<^bold>K\<^sub>a \<phi>"} as these depend only on the worlds the agent thinks
+form @{term "\<^bold>K\<^bsub>a\<^esub> \<phi>"} as these depend only on the worlds the agent thinks
 is possible.
 
 Thus we restrict the guards of the JKBP to be boolean combinations of
@@ -331,7 +331,7 @@ of sets of traces of increasing length:
 
 \<close>
 
-fun jkbpTn :: "nat \<Rightarrow> 's Trace set \<Rightarrow> 's Trace set"(*<*)("jkbpT\<^bsub>_\<^esub>")(*>*) where
+fun jkbpTn :: "nat \<Rightarrow> 's Trace set \<Rightarrow> 's Trace set"(*<*)(\<open>jkbpT\<^bsub>_\<^esub>\<close>)(*>*) where
   "jkbpT\<^bsub>0\<^esub> T     = { tInit s |s. s \<in> set envInit }"
 | "jkbpT\<^bsub>Suc n\<^esub> T = { t \<leadsto> envTrans eact aact (tLast t) |t eact aact.
                              t \<in> jkbpT\<^bsub>n\<^esub> T \<and> eact \<in> set (envAction (tLast t))
@@ -452,13 +452,13 @@ traces. We do this by constructing the sequence \<open>jkbpC\<^sub>n\<close> of
 
 \<close>
 
-fun jkbpCn :: "nat \<Rightarrow> 's Trace set"(*<*)("jkbpC\<^bsub>_\<^esub>")(*>*) where
+fun jkbpCn :: "nat \<Rightarrow> 's Trace set"(*<*)(\<open>jkbpC\<^bsub>_\<^esub>\<close>)(*>*) where
   "jkbpC\<^bsub>0\<^esub>      = { tInit s |s. s \<in> set envInit }"
 | "jkbpC\<^bsub>Suc n\<^esub> = { t \<leadsto> envTrans eact aact (tLast t) |t eact aact.
                              t \<in> jkbpC\<^bsub>n\<^esub> \<and> eact \<in> set (envAction (tLast t))
                           \<and> (\<forall>a. aact a \<in> set (jAction (mkM jkbpC\<^bsub>n\<^esub>) t a)) }"
 
-abbreviation MCn :: "nat \<Rightarrow> ('a, 'p, 's Trace) KripkeStructure"(*<*)("MC\<^bsub>_\<^esub>")(*>*) where
+abbreviation MCn :: "nat \<Rightarrow> ('a, 'p, 's Trace) KripkeStructure"(*<*)(\<open>MC\<^bsub>_\<^esub>\<close>)(*>*) where
   "MC\<^bsub>n\<^esub> \<equiv> mkM jkbpC\<^bsub>n\<^esub>"
 (*<*)
 

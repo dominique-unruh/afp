@@ -240,7 +240,7 @@ proof -
     proof -
       define n where "n = nat \<lfloor>x\<rfloor>"
       have "\<bar>R x - R (real n)\<bar> = ln (x / n)"
-        using x by (simp add: R_def A_def sum_upto_altdef n_def ln_div)
+        using x by (simp add: R_def A_def sum_upto_altdef n_def ln_divide_pos)
       also {
         have "x \<le> real n + 1"
           unfolding n_def by linarith
@@ -333,7 +333,7 @@ text \<open>
   We can now apply Shapiro's Tauberian theorem to \<^term>\<open>\<psi>\<close> and \<^term>\<open>\<theta>\<close>.
 \<close>
 lemma dirichlet_prod_mangoldt1_floor_bigo:
-  includes prime_counting_notation
+  includes prime_counting_syntax
   shows "(\<lambda>x. dirichlet_prod' (\<lambda>n. ind prime n * ln n) floor x - x * ln x) \<in> O(\<lambda>x. x)"
 proof -
   \<comment> \<open>This is a perhaps somewhat roundabout way of proving this statement. We show this using

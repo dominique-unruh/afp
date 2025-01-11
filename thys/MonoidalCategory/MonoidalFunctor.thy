@@ -39,11 +39,11 @@ begin
     FoT\<^sub>C: composite_functor C.CC.comp C D T\<^sub>C F +
     T\<^sub>DoFF: composite_functor C.CC.comp D.CC.comp D FF.map T\<^sub>D +
     \<phi>: natural_isomorphism C.CC.comp D T\<^sub>DoFF.map FoT\<^sub>C.map \<phi>
-  for C :: "'c comp"                    (infixr "\<cdot>\<^sub>C" 55)
+  for C :: "'c comp"                    (infixr \<open>\<cdot>\<^sub>C\<close> 55)
   and T\<^sub>C :: "'c * 'c \<Rightarrow> 'c"
   and \<alpha>\<^sub>C :: "'c * 'c * 'c \<Rightarrow> 'c"
   and \<iota>\<^sub>C :: "'c"
-  and D :: "'d comp"                    (infixr "\<cdot>\<^sub>D" 55)
+  and D :: "'d comp"                    (infixr \<open>\<cdot>\<^sub>D\<close> 55)
   and T\<^sub>D :: "'d * 'd \<Rightarrow> 'd"
   and \<alpha>\<^sub>D :: "'d * 'd * 'd \<Rightarrow> 'd"
   and \<iota>\<^sub>D :: "'d"
@@ -56,16 +56,16 @@ begin
            = \<phi> (a, T\<^sub>C (b, c)) \<cdot>\<^sub>D T\<^sub>D (F a, \<phi> (b, c)) \<cdot>\<^sub>D \<alpha>\<^sub>D (F a, F b, F c)"
   begin
 
-    notation C.tensor                     (infixr "\<otimes>\<^sub>C" 53)
-    and C.unity                           ("\<I>\<^sub>C")
-    and C.lunit                           ("\<l>\<^sub>C[_]")
-    and C.runit                           ("\<r>\<^sub>C[_]")
-    and C.assoc                           ("\<a>\<^sub>C[_, _, _]")
-    and D.tensor                          (infixr "\<otimes>\<^sub>D" 53)
-    and D.unity                           ("\<I>\<^sub>D")
-    and D.lunit                           ("\<l>\<^sub>D[_]")
-    and D.runit                           ("\<r>\<^sub>D[_]")
-    and D.assoc                           ("\<a>\<^sub>D[_, _, _]")
+    notation C.tensor                     (infixr \<open>\<otimes>\<^sub>C\<close> 53)
+    and C.unity                           (\<open>\<I>\<^sub>C\<close>)
+    and C.lunit                           (\<open>\<l>\<^sub>C[_]\<close>)
+    and C.runit                           (\<open>\<r>\<^sub>C[_]\<close>)
+    and C.assoc                           (\<open>\<a>\<^sub>C[_, _, _]\<close>)
+    and D.tensor                          (infixr \<open>\<otimes>\<^sub>D\<close> 53)
+    and D.unity                           (\<open>\<I>\<^sub>D\<close>)
+    and D.lunit                           (\<open>\<l>\<^sub>D[_]\<close>)
+    and D.runit                           (\<open>\<r>\<^sub>D[_]\<close>)
+    and D.assoc                           (\<open>\<a>\<^sub>D[_, _, _]\<close>)
 
     lemma \<phi>_in_hom:
     assumes "C.ide a" and "C.ide b"
@@ -162,15 +162,15 @@ begin
         by (unfold_locales, auto)
     qed
 
-    no_notation D.tensor   (infixr "\<otimes>\<^sub>D" 53)
-    notation D.C\<^sub>1.tensor   (infixr "\<otimes>\<^sub>D" 53)   (* equal to D.tensor *)
-    no_notation D.assoc    ("\<a>\<^sub>D[_, _, _]")
-    notation D.C\<^sub>1.assoc    ("\<a>\<^sub>D[_, _, _]")      (* equal to D.assoc *)
-    no_notation D.assoc'   ("\<a>\<^sub>D\<^sup>-\<^sup>1[_, _, _]")
-    notation D.C\<^sub>1.assoc'   ("\<a>\<^sub>D\<^sup>-\<^sup>1[_, _, _]")   (* equal to D.assoc' *)
-    notation D.C\<^sub>1.unity    ("\<I>\<^sub>1")
-    notation D.C\<^sub>1.lunit    ("\<l>\<^sub>1[_]")
-    notation D.C\<^sub>1.runit    ("\<r>\<^sub>1[_]")
+    no_notation D.tensor   (infixr \<open>\<otimes>\<^sub>D\<close> 53)
+    notation D.C\<^sub>1.tensor   (infixr \<open>\<otimes>\<^sub>D\<close> 53)   (* equal to D.tensor *)
+    no_notation D.assoc    (\<open>\<a>\<^sub>D[_, _, _]\<close>)
+    notation D.C\<^sub>1.assoc    (\<open>\<a>\<^sub>D[_, _, _]\<close>)      (* equal to D.assoc *)
+    no_notation D.assoc'   (\<open>\<a>\<^sub>D\<^sup>-\<^sup>1[_, _, _]\<close>)
+    notation D.C\<^sub>1.assoc'   (\<open>\<a>\<^sub>D\<^sup>-\<^sup>1[_, _, _]\<close>)   (* equal to D.assoc' *)
+    notation D.C\<^sub>1.unity    (\<open>\<I>\<^sub>1\<close>)
+    notation D.C\<^sub>1.lunit    (\<open>\<l>\<^sub>1[_]\<close>)
+    notation D.C\<^sub>1.runit    (\<open>\<r>\<^sub>1[_]\<close>)
 
     lemma \<I>\<^sub>1_char [simp]:
     shows "\<I>\<^sub>1 = F \<I>\<^sub>C"
@@ -485,7 +485,7 @@ $$\xymatrix{
     interpretation FoT\<^sub>C': composite_functor C.CC.comp C D C'.T F ..
     interpretation \<phi>': natural_transformation C.CC.comp D T\<^sub>D'oFF.map FoT\<^sub>C'.map
                                               \<open>\<lambda>f. \<phi> (snd f, fst f)\<close>
-      using \<phi>.is_natural_1 \<phi>.is_natural_2 \<phi>.is_extensional by (unfold_locales, auto)
+      using \<phi>.naturality1 \<phi>.naturality2 \<phi>.extensionality by (unfold_locales, auto)
     interpretation \<phi>': natural_isomorphism C.CC.comp D T\<^sub>D'oFF.map FoT\<^sub>C'.map
                                            \<open>\<lambda>f. \<phi> (snd f, fst f)\<close>
       by (unfold_locales, simp)
@@ -554,11 +554,11 @@ $$\xymatrix{
     C: monoidal_category C T\<^sub>C \<alpha>\<^sub>C \<iota>\<^sub>C +
     D: monoidal_category D T\<^sub>D \<alpha>\<^sub>D \<iota>\<^sub>D +
     "functor" C D F
-  for C :: "'c comp"                    (infixr "\<cdot>\<^sub>C" 55)
+  for C :: "'c comp"                    (infixr \<open>\<cdot>\<^sub>C\<close> 55)
   and T\<^sub>C :: "'c * 'c \<Rightarrow> 'c"
   and \<alpha>\<^sub>C :: "'c * 'c * 'c \<Rightarrow> 'c"
   and \<iota>\<^sub>C :: "'c"
-  and D :: "'d comp"                    (infixr "\<cdot>\<^sub>D" 55)
+  and D :: "'d comp"                    (infixr \<open>\<cdot>\<^sub>D\<close> 55)
   and T\<^sub>D :: "'d * 'd \<Rightarrow> 'd"
   and \<alpha>\<^sub>D :: "'d * 'd * 'd \<Rightarrow> 'd"
   and \<iota>\<^sub>D :: "'d"
@@ -569,16 +569,16 @@ $$\xymatrix{
                                    F (\<alpha>\<^sub>C (a, b, c)) = \<alpha>\<^sub>D (F a, F b, F c)"
   begin
 
-    notation C.tensor                  (infixr "\<otimes>\<^sub>C" 53)
-    and C.unity                        ("\<I>\<^sub>C")
-    and C.lunit                        ("\<l>\<^sub>C[_]")
-    and C.runit                        ("\<r>\<^sub>C[_]")
-    and C.assoc                        ("\<a>\<^sub>C[_, _, _]")
-    and D.tensor                       (infixr "\<otimes>\<^sub>D" 53)
-    and D.unity                        ("\<I>\<^sub>D")
-    and D.lunit                        ("\<l>\<^sub>D[_]")
-    and D.runit                        ("\<r>\<^sub>D[_]")
-    and D.assoc                        ("\<a>\<^sub>D[_, _, _]")
+    notation C.tensor                  (infixr \<open>\<otimes>\<^sub>C\<close> 53)
+    and C.unity                        (\<open>\<I>\<^sub>C\<close>)
+    and C.lunit                        (\<open>\<l>\<^sub>C[_]\<close>)
+    and C.runit                        (\<open>\<r>\<^sub>C[_]\<close>)
+    and C.assoc                        (\<open>\<a>\<^sub>C[_, _, _]\<close>)
+    and D.tensor                       (infixr \<open>\<otimes>\<^sub>D\<close> 53)
+    and D.unity                        (\<open>\<I>\<^sub>D\<close>)
+    and D.lunit                        (\<open>\<l>\<^sub>D[_]\<close>)
+    and D.runit                        (\<open>\<r>\<^sub>D[_]\<close>)
+    and D.assoc                        (\<open>\<a>\<^sub>D[_, _, _]\<close>)
 
     lemma strictly_preserves_tensor:
     assumes "C.arr f" and "C.arr g"
@@ -590,11 +590,11 @@ $$\xymatrix{
     shows "F (\<alpha>\<^sub>C (f, g, h)) = \<alpha>\<^sub>D (F f, F g, F h)"
     proof -
       have "F (\<alpha>\<^sub>C (f, g, h)) = F ((f \<otimes>\<^sub>C g \<otimes>\<^sub>C h) \<cdot>\<^sub>C \<alpha>\<^sub>C (C.dom f, C.dom g, C.dom h))"
-        using assms C.\<alpha>.is_natural_1 [of "(f, g, h)"] C.T.ToCT_simp by force
+        using assms C.\<alpha>.naturality1 [of "(f, g, h)"] C.T.ToCT_simp by force
       also have "... = (F f \<otimes>\<^sub>D F g \<otimes>\<^sub>D F h) \<cdot>\<^sub>D \<alpha>\<^sub>D (D.dom (F f), D.dom (F g), D.dom (F h))"
         using assms strictly_preserves_\<alpha>_ide strictly_preserves_tensor by simp
       also have "... = \<alpha>\<^sub>D (F f, F g, F h)"
-        using assms D.\<alpha>.is_natural_1 [of "(F f, F g, F h)"] by simp
+        using assms D.\<alpha>.naturality1 [of "(F f, F g, F h)"] by simp
       finally show ?thesis by blast
     qed
 
@@ -682,13 +682,13 @@ $$\xymatrix{
         finally show "T\<^sub>DoFF.map x = FoT\<^sub>C.map x" by simp
       qed
       moreover have "\<not> C.CC.arr x \<Longrightarrow> T\<^sub>DoFF.map x = FoT\<^sub>C.map x"
-        using T\<^sub>DoFF.is_extensional FoT\<^sub>C.is_extensional by simp
+        using T\<^sub>DoFF.extensionality FoT\<^sub>C.extensionality by simp
       ultimately show "T\<^sub>DoFF.map x = FoT\<^sub>C.map x" by blast
     qed
 
     abbreviation \<phi> where "\<phi> \<equiv> T\<^sub>DoFF.map"
 
-    lemma structure_is_natural_isomorphism:
+    lemma structure_naturalityisomorphism:
     shows "natural_isomorphism C.CC.comp D T\<^sub>DoFF.map FoT\<^sub>C.map \<phi>"
       using T\<^sub>DoFF.as_nat_iso.natural_isomorphism_axioms structure_is_trivial by force
 
@@ -704,7 +704,7 @@ $$\xymatrix{
     interpret FoT\<^sub>C: composite_functor C.CC.comp C D T\<^sub>C F ..
     interpret T\<^sub>DoFF: composite_functor C.CC.comp D.CC.comp D FF.map T\<^sub>D ..
     interpret \<phi>: natural_isomorphism C.CC.comp D T\<^sub>DoFF.map FoT\<^sub>C.map \<phi>
-      using structure_is_natural_isomorphism by simp
+      using structure_naturalityisomorphism by simp
     show "monoidal_functor C T\<^sub>C \<alpha>\<^sub>C \<iota>\<^sub>C D T\<^sub>D \<alpha>\<^sub>D \<iota>\<^sub>D F \<phi>"
     proof
       show "D.isomorphic \<I>\<^sub>D (F \<I>\<^sub>C)"
@@ -751,11 +751,11 @@ $$\xymatrix{
     D: monoidal_category D T\<^sub>D \<alpha>\<^sub>D \<iota>\<^sub>D +
     equivalence_of_categories C D F G \<eta> \<epsilon> +
     monoidal_functor D T\<^sub>D \<alpha>\<^sub>D \<iota>\<^sub>D C T\<^sub>C \<alpha>\<^sub>C \<iota>\<^sub>C F \<phi>
-  for C :: "'c comp"                    (infixr "\<cdot>\<^sub>C" 55)
+  for C :: "'c comp"                    (infixr \<open>\<cdot>\<^sub>C\<close> 55)
   and T\<^sub>C :: "'c * 'c \<Rightarrow> 'c"
   and \<alpha>\<^sub>C :: "'c * 'c * 'c \<Rightarrow> 'c"
   and \<iota>\<^sub>C :: "'c"
-  and D :: "'d comp"                    (infixr "\<cdot>\<^sub>D" 55)
+  and D :: "'d comp"                    (infixr \<open>\<cdot>\<^sub>D\<close> 55)
   and T\<^sub>D :: "'d * 'd \<Rightarrow> 'd"
   and \<alpha>\<^sub>D :: "'d * 'd * 'd \<Rightarrow> 'd"
   and \<iota>\<^sub>D :: "'d"

@@ -215,7 +215,7 @@ lemma except_id_iff: "except p S = p \<longleftrightarrow> keys p \<inter> S = {
 
 lemma keys_subset_wf:
   "wfP (\<lambda>p q::('a, 'b::zero) poly_mapping. keys p \<subset> keys q)"
-unfolding wfP_def
+unfolding wfp_def
 proof (intro wfI_min)
   fix x::"('a, 'b) poly_mapping" and Q
   assume x_in: "x \<in> Q"
@@ -239,7 +239,7 @@ qed
 lemma poly_mapping_except_induct:
   assumes base: "P 0" and ind: "\<And>p t. p \<noteq> 0 \<Longrightarrow> t \<in> keys p \<Longrightarrow> P (except p {t}) \<Longrightarrow> P p"
   shows "P p"
-proof (induct rule: wfP_induct[OF keys_subset_wf])
+proof (induct rule: wfp_induct[OF keys_subset_wf])
   fix p::"('a, 'b) poly_mapping"
   assume "\<forall>q. keys q \<subset> keys p \<longrightarrow> P q"
   hence IH: "\<And>q. keys q \<subset> keys p \<Longrightarrow> P q" by simp
@@ -350,7 +350,7 @@ subsection \<open>'Divisibility' on Additive Structures\<close>
 
 context plus begin
 
-definition adds :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infix "adds" 50)
+definition adds :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infix \<open>adds\<close> 50)
   where "b adds a \<longleftrightarrow> (\<exists>k. a = b + k)"
 
 lemma addsI [intro?]: "a = b + k \<Longrightarrow> b adds a"
@@ -1050,18 +1050,18 @@ subsection \<open>Ordered Power-Products\<close>
 
 locale ordered_powerprod =
   ordered_powerprod_lin: linorder ord ord_strict
-  for ord::"'a \<Rightarrow> 'a::comm_powerprod \<Rightarrow> bool" (infixl "\<preceq>" 50)
-  and ord_strict::"'a \<Rightarrow> 'a::comm_powerprod \<Rightarrow> bool" (infixl "\<prec>" 50) +
+  for ord::"'a \<Rightarrow> 'a::comm_powerprod \<Rightarrow> bool" (infixl \<open>\<preceq>\<close> 50)
+  and ord_strict::"'a \<Rightarrow> 'a::comm_powerprod \<Rightarrow> bool" (infixl \<open>\<prec>\<close> 50) +
   assumes zero_min: "0 \<preceq> t"
   assumes plus_monotone: "s \<preceq> t \<Longrightarrow> s + u \<preceq> t + u"
 begin
 
 text \<open>Conceal these relations defined in Equipollence\<close>
 no_notation lesspoll (infixl \<open>\<prec>\<close> 50)
-no_notation lepoll   (infixl "\<lesssim>" 50)
+no_notation lepoll   (infixl \<open>\<lesssim>\<close> 50)
 
-abbreviation ord_conv (infixl "\<succeq>" 50) where "ord_conv \<equiv> (\<preceq>)\<inverse>\<inverse>"
-abbreviation ord_strict_conv (infixl "\<succ>" 50) where "ord_strict_conv \<equiv> (\<prec>)\<inverse>\<inverse>"
+abbreviation ord_conv (infixl \<open>\<succeq>\<close> 50) where "ord_conv \<equiv> (\<preceq>)\<inverse>\<inverse>"
+abbreviation ord_strict_conv (infixl \<open>\<succ>\<close> 50) where "ord_strict_conv \<equiv> (\<prec>)\<inverse>\<inverse>"
 
 lemma ord_canc:
   assumes "s + u \<preceq> t + u"
@@ -1121,8 +1121,8 @@ end
 
 locale gd_powerprod =
   ordered_powerprod ord ord_strict
-  for ord::"'a \<Rightarrow> 'a::graded_dickson_powerprod \<Rightarrow> bool" (infixl "\<preceq>" 50)
-  and ord_strict (infixl "\<prec>" 50)
+  for ord::"'a \<Rightarrow> 'a::graded_dickson_powerprod \<Rightarrow> bool" (infixl \<open>\<preceq>\<close> 50)
+  and ord_strict (infixl \<open>\<prec>\<close> 50)
 begin
 
 definition dickson_le :: "('a \<Rightarrow> nat) \<Rightarrow> nat \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool"
@@ -1237,8 +1237,8 @@ text \<open>\<open>gd_powerprod\<close> stands for @{emph \<open>graded ordered 
 
 locale od_powerprod =
   ordered_powerprod ord ord_strict
-  for ord::"'a \<Rightarrow> 'a::dickson_powerprod \<Rightarrow> bool" (infixl "\<preceq>" 50)
-  and ord_strict (infixl "\<prec>" 50)
+  for ord::"'a \<Rightarrow> 'a::dickson_powerprod \<Rightarrow> bool" (infixl \<open>\<preceq>\<close> 50)
+  and ord_strict (infixl \<open>\<prec>\<close> 50)
 begin
 
 sublocale gd_powerprod by standard
@@ -1502,7 +1502,7 @@ next
       assume "\<forall>i. f i \<in> {x. supp_fun x \<subseteq> {v}}"
       hence b: "supp_fun (f i) \<subseteq> {v}" for i by simp
       let ?f = "\<lambda>i. f i v"
-      have "wfP ((<)::'b \<Rightarrow> _)" by (simp add: wf wfP_def)
+      have "wfP ((<)::'b \<Rightarrow> _)" by (simp add: wf wfp_def)
       hence "\<nexists>f :: _ \<Rightarrow> 'b. \<forall>i. f (Suc i) < f i"
         unfolding wf_iff_no_infinite_down_chain[to_pred] .
       hence "\<forall>f::nat \<Rightarrow> 'b. \<exists>i. f i \<le> f (Suc i)"

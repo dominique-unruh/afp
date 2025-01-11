@@ -4,12 +4,8 @@ imports "List-Infinite.InfiniteSet2" Representation
 
 begin
 
-context uminus
-begin
+unbundle (in uminus) no uminus_syntax
 
-no_notation uminus ("- _" [81] 80)
-
-end
 
 section \<open>Atoms Below an Element in Partial Orders\<close>
 
@@ -139,10 +135,10 @@ end
 context order_bot
 begin
 
-abbreviation atoms_below :: "'a \<Rightarrow> 'a set" ("AB")
+abbreviation atoms_below :: "'a \<Rightarrow> 'a set" (\<open>AB\<close>)
   where "atoms_below x \<equiv> { a . atom a \<and> a \<le> x }"
 
-definition num_atoms_below :: "'a \<Rightarrow> enat" ("nAB")
+definition num_atoms_below :: "'a \<Rightarrow> enat" (\<open>nAB\<close>)
   where "num_atoms_below x \<equiv> icard (atoms_below x)"
 
 lemma AB_iso:
@@ -1508,7 +1504,7 @@ We study various axioms for a cardinality operation in Stone relation algebras.
 \<close>
 
 class card =
-  fixes cardinality :: "'a \<Rightarrow> enat" ("#_" [100] 100)
+  fixes cardinality :: "'a \<Rightarrow> enat" (\<open>#_\<close> [100] 100)
 
 class sra_card = stone_relation_algebra + card
 begin

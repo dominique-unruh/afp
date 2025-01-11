@@ -176,7 +176,7 @@ qed
 
 section \<open>Simulation relation\<close>
 
-inductive match (infix "\<sim>" 55) where
+inductive match (infix \<open>\<sim>\<close> 55) where
   "wf_fundefs (Fstd_get F1) \<Longrightarrow>
   rel_fundefs (Fstd_get F1) (Finca_get F2) \<Longrightarrow>
   (State F1 H st) \<sim> (State F2 H st)"
@@ -673,7 +673,7 @@ sublocale std_inca_bisimulation:
   bisimulation where
     step1 = Sstd.step and final1 = "final Fstd_get Std.IReturn" and
     step2 = Sinca.step and final2 = "final Finca_get Inca.IReturn" and
-    order = "\<lambda>_ _. False" and match = "\<lambda>_. match"
+    order\<^sub>f = "\<lambda>_ _. False" and order\<^sub>b = "\<lambda>_ _. False" and match = "\<lambda>_. match"
   by unfold_locales
 
 end

@@ -59,14 +59,14 @@ ML \<open>
       let fun err () = raise TERM ("string_tr", args) in
         (case args of
           [(c as Const (@{syntax_const "_constrain"}, _)) $ Free (s, _) $ p] =>
-            (case Term_Position.decode_position p of
-              SOME (pos, _) => c $ f (mk_string f_mk accu (content (s, pos))) $ p
+            (case Term_Position.decode_position1 p of
+              SOME {pos, ...} => c $ f (mk_string f_mk accu (content (s, pos))) $ p
             | NONE => err ())
         | _ => err ())
       end;
   end;
 \<close>
 
-syntax "_cartouche_string" :: "cartouche_position \<Rightarrow> _"  ("_")
+syntax "_cartouche_string" :: "cartouche_position \<Rightarrow> _"  (\<open>_\<close>)
 
 end

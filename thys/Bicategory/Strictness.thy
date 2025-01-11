@@ -119,7 +119,7 @@ begin
 
     interpretation bicategorical_language ..
     interpretation E: self_evaluation_map V H \<a> \<i> src trg ..
-    notation E.eval ("\<lbrace>_\<rbrace>")
+    notation E.eval (\<open>\<lbrace>_\<rbrace>\<close>)
 
     lemma ide_eval_Can:
     assumes "Can t"
@@ -249,21 +249,21 @@ begin
 
   locale strictified_bicategory =
     B: bicategory V\<^sub>B H\<^sub>B \<a>\<^sub>B \<i>\<^sub>B src\<^sub>B trg\<^sub>B
-  for V\<^sub>B :: "'a comp"                  (infixr "\<cdot>\<^sub>B" 55)
-  and H\<^sub>B :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"           (infixr "\<star>\<^sub>B" 53)
-  and \<a>\<^sub>B :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"      ("\<a>\<^sub>B[_, _, _]")
-  and \<i>\<^sub>B :: "'a \<Rightarrow> 'a"                  ("\<i>\<^sub>B[_]")
+  for V\<^sub>B :: "'a comp"                  (infixr \<open>\<cdot>\<^sub>B\<close> 55)
+  and H\<^sub>B :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"           (infixr \<open>\<star>\<^sub>B\<close> 53)
+  and \<a>\<^sub>B :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"      (\<open>\<a>\<^sub>B[_, _, _]\<close>)
+  and \<i>\<^sub>B :: "'a \<Rightarrow> 'a"                  (\<open>\<i>\<^sub>B[_]\<close>)
   and src\<^sub>B :: "'a \<Rightarrow> 'a"
   and trg\<^sub>B :: "'a \<Rightarrow> 'a"
   begin
 
     sublocale E: self_evaluation_map V\<^sub>B H\<^sub>B \<a>\<^sub>B \<i>\<^sub>B src\<^sub>B trg\<^sub>B ..
 
-    notation B.in_hhom  ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>B _\<guillemotright>")
-    notation B.in_hom  ("\<guillemotleft>_ : _ \<Rightarrow>\<^sub>B _\<guillemotright>")
+    notation B.in_hhom  (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>B _\<guillemotright>\<close>)
+    notation B.in_hom  (\<open>\<guillemotleft>_ : _ \<Rightarrow>\<^sub>B _\<guillemotright>\<close>)
 
-    notation E.eval ("\<lbrace>_\<rbrace>")
-    notation E.Nmlize ("\<^bold>\<lfloor>_\<^bold>\<rfloor>")
+    notation E.eval (\<open>\<lbrace>_\<rbrace>\<close>)
+    notation E.Nmlize (\<open>\<^bold>\<lfloor>_\<^bold>\<rfloor>\<close>)
 
     text \<open>
       The following gives the construction of a bicategory whose arrows are triples \<open>(A, B, \<mu>)\<close>,
@@ -305,7 +305,7 @@ begin
     shows "concrete_category IDE HOM EVAL (\<lambda>_ _ _ \<mu> \<nu>. \<mu> \<cdot>\<^sub>B \<nu>)"
       ..
 
-    abbreviation vcomp     (infixr "\<cdot>" 55)
+    abbreviation vcomp     (infixr \<open>\<cdot>\<close> 55)
     where "vcomp \<equiv> COMP"
 
     lemma arr_char:
@@ -419,9 +419,9 @@ begin
       using src_def trg_def Cod_in_Obj Map_in_Hom E.Obj_implies_Ide
       by unfold_locales auto
 
-    notation in_hhom  ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
+    notation in_hhom  (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
 
-    definition hcomp    (infixr "\<star>" 53)
+    definition hcomp    (infixr \<open>\<star>\<close> 53)
     where "\<mu> \<star> \<nu> \<equiv> if arr \<mu> \<and> arr \<nu> \<and> src \<mu> = trg \<nu>
                    then MkArr (Dom \<mu> \<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor> Dom \<nu>) (Cod \<mu> \<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor> Cod \<nu>)
                               (B.can (Cod \<mu> \<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor> Cod \<nu>) (Cod \<mu> \<^bold>\<star> Cod \<nu>) \<cdot>\<^sub>B
@@ -1457,7 +1457,7 @@ begin
                                B.can (E.Trg (Dom f') \<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor> Cod f') (E.Trg (Dom f') \<^bold>\<star> Cod f')"
                   using par 1 arr_char by simp
                 ultimately show ?thesis
-                  using 2 B.monoE cod_char by auto
+                  using 2 B.mono_cancel cod_char by auto
               qed
               show ?thesis
               proof -
@@ -1474,7 +1474,7 @@ begin
                                      (B.can (E.Trg (Dom f) \<^bold>\<star> Dom f) (E.Trg (Dom f) \<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor> Dom f))"
                   using 1 3 calculation(2) by auto
                 ultimately show ?thesis
-                  using par 1 3 arr_char B.epiE by simp
+                  using par 1 3 arr_char B.epi_cancel by simp
               qed
             qed
             moreover have "trg\<^sub>B (Map f) = \<lbrace>E.Trg (Dom f)\<rbrace> \<and>
@@ -1574,7 +1574,7 @@ begin
                                B.can (Cod f' \<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor> E.Src (Dom f')) (Cod f' \<^bold>\<star> E.Src (Dom f'))"
                   using par 1 arr_char by simp
                 ultimately show ?thesis
-                  using 6 B.monoE cod_char by auto
+                  using 6 B.mono_cancel cod_char by auto
               qed
               show ?thesis
               proof -
@@ -1589,7 +1589,7 @@ begin
                                    (B.can (Dom f \<^bold>\<star> E.Src (Dom f)) (Dom f \<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor> E.Src (Dom f)))"
                   using 1 5 calculation(2) by auto
                 ultimately show ?thesis
-                  using par 1 5 arr_char B.epiE by simp
+                  using par 1 5 arr_char B.epi_cancel by simp
               qed
             qed
             moreover have "src\<^sub>B (Map f) = \<lbrace>E.Src (Dom f)\<rbrace> \<and>
@@ -1618,19 +1618,15 @@ begin
     proof
       show "\<And>\<tau>\<mu>\<nu>. \<not> VVV.arr \<tau>\<mu>\<nu> \<Longrightarrow> \<a> (fst \<tau>\<mu>\<nu>) (fst (snd \<tau>\<mu>\<nu>)) (snd (snd \<tau>\<mu>\<nu>)) = null"
         using \<a>_def by simp
-      show "\<And>\<tau>\<mu>\<nu>. VVV.arr \<tau>\<mu>\<nu> \<Longrightarrow>
-                  dom (\<a> (fst \<tau>\<mu>\<nu>) (fst (snd \<tau>\<mu>\<nu>)) (snd (snd \<tau>\<mu>\<nu>))) = HoHV (VVV.dom \<tau>\<mu>\<nu>)"
+      show 1: "\<And>\<tau>\<mu>\<nu>. VVV.arr \<tau>\<mu>\<nu> \<Longrightarrow> arr (\<a> (fst \<tau>\<mu>\<nu>) (fst (snd \<tau>\<mu>\<nu>)) (snd (snd \<tau>\<mu>\<nu>)))"
         using VVV.arr_char\<^sub>S\<^sub>b\<^sub>C VV.arr_char\<^sub>S\<^sub>b\<^sub>C \<a>_def hcomp_assoc HoHV_def VVV.dom_simp VV.dom_simp
         by force
-      show 1: "\<And>\<tau>\<mu>\<nu>. VVV.arr \<tau>\<mu>\<nu> \<Longrightarrow>
-                     cod (\<a> (fst \<tau>\<mu>\<nu>) (fst (snd \<tau>\<mu>\<nu>)) (snd (snd \<tau>\<mu>\<nu>))) = HoVH (VVV.cod \<tau>\<mu>\<nu>)"
-        using VVV.arr_char\<^sub>S\<^sub>b\<^sub>C VV.arr_char\<^sub>S\<^sub>b\<^sub>C \<a>_def HoVH_def VVV.cod_simp VV.cod_simp by force
       show "\<And>\<tau>\<mu>\<nu>. VVV.arr \<tau>\<mu>\<nu> \<Longrightarrow>
                   HoVH \<tau>\<mu>\<nu> \<cdot>
                     \<a> (fst (VVV.dom \<tau>\<mu>\<nu>)) (fst (snd (VVV.dom \<tau>\<mu>\<nu>)))
                       (snd (snd (VVV.dom \<tau>\<mu>\<nu>))) =
                   \<a> (fst \<tau>\<mu>\<nu>) (fst (snd \<tau>\<mu>\<nu>)) (snd (snd \<tau>\<mu>\<nu>))"
-        using \<a>_def HoVH.as_nat_trans.is_natural_1 HoVH_def by auto
+        using \<a>_def HoVH.as_nat_trans.naturality1 HoVH_def by auto
       show "\<And>\<tau>\<mu>\<nu>. VVV.arr \<tau>\<mu>\<nu> \<Longrightarrow>
                    \<a> (fst (VVV.cod \<tau>\<mu>\<nu>)) (fst (snd (VVV.cod \<tau>\<mu>\<nu>)))
                      (snd (snd (VVV.cod \<tau>\<mu>\<nu>))) \<cdot> HoHV \<tau>\<mu>\<nu> =
@@ -1645,8 +1641,8 @@ begin
         thus "\<a> (fst (VVV.cod \<tau>\<mu>\<nu>)) (fst (snd (VVV.cod \<tau>\<mu>\<nu>))) (snd (snd (VVV.cod \<tau>\<mu>\<nu>))) \<cdot>
                 HoHV \<tau>\<mu>\<nu> =
               \<a> (fst \<tau>\<mu>\<nu>) (fst (snd \<tau>\<mu>\<nu>)) (snd (snd \<tau>\<mu>\<nu>))"
-          using 1 \<tau>\<mu>\<nu> comp_cod_arr \<a>_def
-          by (metis (no_types, lifting) HoVH_def HoHV.preserves_arr prod.collapse)
+          using 1 \<tau>\<mu>\<nu> comp_cod_arr \<a>_def HoVH.as_nat_trans.naturality2
+          by (metis (no_types, lifting) HoVH_def prod.collapse)
       qed
       show "\<And>fgh. VVV.ide fgh \<Longrightarrow> iso (\<a> (fst fgh) (fst (snd fgh)) (snd (snd fgh)))"
         using \<a>_def HoVH.preserves_ide HoVH_def by auto
@@ -2246,7 +2242,7 @@ begin
     shows "fully_faithful_functor V\<^sub>B vcomp UP"
       ..
 
-    no_notation B.in_hom  ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>B _\<guillemotright>")   (* Inherited from functor, I think. *)
+    no_notation B.in_hom  (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>B _\<guillemotright>\<close>)   (* Inherited from functor, I think. *)
 
     lemma Map_reflects_hhom:
     assumes "B.obj a" and "B.obj b" and "ide g"
@@ -2302,7 +2298,7 @@ begin
       also have 1: "... = \<lbrace>E.Src (Dom a)\<rbrace>"
         using assms src_def by auto
       also have "... = \<lbrace>\<^bold>\<langle>Map a\<^bold>\<rangle>\<^sub>0\<rbrace>"
-        using assms B.src.is_extensional 1 obj_simps(2) by force
+        using assms B.src.extensionality 1 obj_simps(2) by force
       also have "... = Map a"
         using assms by auto
       finally have "src\<^sub>B (Map a) = Map a" by simp
@@ -2473,7 +2469,7 @@ begin
       show "B.isomorphic (DN (src \<mu>)) (src\<^sub>B (DN \<mu>))"
       proof -
         have "DN (src \<mu>) = src\<^sub>B (DN \<mu>)"
-          using B.src.is_extensional DN_def DN_simps(2) by auto
+          using B.src.extensionality DN_def DN_simps(2) by auto
         moreover have "B.ide (DN (src \<mu>))"
           using \<mu> by simp
         ultimately show ?thesis
@@ -2659,7 +2655,7 @@ begin
         apply auto
       by blast
 
-    no_notation B.in_hom  ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>B _\<guillemotright>")
+    no_notation B.in_hom  (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>B _\<guillemotright>\<close>)
 
     lemma cmp\<^sub>D\<^sub>N_in_hom [intro]:
     assumes "arr (fst \<mu>\<nu>)" and "arr (snd \<mu>\<nu>)" and "src (fst \<mu>\<nu>) = trg (snd \<mu>\<nu>)"
@@ -2803,7 +2799,7 @@ begin
                   using f arr_char Cod_ide by auto
                 show "src\<^sub>B (Map f) = trg\<^sub>B \<lbrace>Dom g \<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor> Dom h\<rbrace>"
                   using f g h fg gh 1 2 src_def trg_def B.arrI B.hseqE B.not_arr_null
-                        B.trg.is_extensional B.trg.preserves_hom B.vconn_implies_hpar(2)
+                        B.trg.extensionality B.trg.preserves_hom B.vconn_implies_hpar(2)
                         B.vconn_implies_hpar(4) E.eval.simps(3)
                   by (metis (no_types, lifting) Map_ide(1))
               qed
@@ -3082,7 +3078,7 @@ begin
       apply unfold_locales
       by (metis (no_types, lifting) Cod_dom Dom_cod MkArr_Map)
 
-    no_notation B.in_hom  ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>B _\<guillemotright>")
+    no_notation B.in_hom  (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>B _\<guillemotright>\<close>)
 
     lemma DN_UP:
     assumes "B.arr \<mu>"
@@ -3732,10 +3728,10 @@ begin
 
     interpretation S: strictified_bicategory V H \<a> \<i> src trg ..
 
-    notation S.vcomp  (infixr "\<cdot>\<^sub>S" 55)
-    notation S.hcomp  (infixr "\<star>\<^sub>S" 53)
-    notation S.in_hom  ("\<guillemotleft>_ : _ \<Rightarrow>\<^sub>S _\<guillemotright>")
-    notation S.in_hhom  ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>S _\<guillemotright>")
+    notation S.vcomp  (infixr \<open>\<cdot>\<^sub>S\<close> 55)
+    notation S.hcomp  (infixr \<open>\<star>\<^sub>S\<close> 53)
+    notation S.in_hom  (\<open>\<guillemotleft>_ : _ \<Rightarrow>\<^sub>S _\<guillemotright>\<close>)
+    notation S.in_hhom  (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>S _\<guillemotright>\<close>)
 
     interpretation UP: equivalence_pseudofunctor V H \<a> \<i> src trg
                           S.vcomp S.hcomp S.\<a> S.\<i> S.src S.trg S.UP S.cmp\<^sub>U\<^sub>P
@@ -3978,7 +3974,7 @@ begin
                   have "S.mono (S.cmp\<^sub>U\<^sub>P (g, src g))"
                     using antipar S.iso_is_section S.section_is_mono by simp
                   thus ?thesis
-                    using 2 8 7 S.monoE S.comp_assoc by presburger
+                    using 2 8 7 S.mono_cancel S.comp_assoc by presburger
                 qed
                 moreover have "S.epi (S.inv (S.cmp\<^sub>U\<^sub>P (trg g, g)))"
                   using antipar S.iso_is_retraction S.retraction_is_epi by simp
@@ -3992,7 +3988,7 @@ begin
                          (S.inv (S.cmp\<^sub>U\<^sub>P (trg g, g)))"
                   using antipar calculation(1,3) by presburger
                 ultimately show ?thesis
-                  using 2 S.epiE by blast
+                  using 2 S.epi_cancel by blast
               qed
               have 6: "S.seq (S.UP g \<star>\<^sub>S S.UP \<epsilon> \<cdot>\<^sub>S S.cmp\<^sub>U\<^sub>P (f, g))
                              (S.inv (S.cmp\<^sub>U\<^sub>P (g, f)) \<cdot>\<^sub>S S.UP \<eta> \<star>\<^sub>S S.UP g)"

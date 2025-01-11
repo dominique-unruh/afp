@@ -52,7 +52,10 @@ definition coerce::"'a::mem_type \<Rightarrow> 'b::mem_type" where
   "coerce v = from_bytes (to_bytes_p v)"
 
 syntax
-  "_coerce" :: "type \<Rightarrow> type \<Rightarrow> logic" ("(1COERCE/(1'(_ \<rightarrow> _')))")
+  "_coerce" :: "type \<Rightarrow> type \<Rightarrow> logic"
+    (\<open>(\<open>indent=1 notation=\<open>mixfix COERCE\<close>\<close>COERCE/(\<open>indent=1 notation=\<open>infix coerce\<close>\<close>'(_ \<rightarrow> _')))\<close>)
+syntax_consts
+  "_coerce" == coerce
 translations
   "COERCE('a \<rightarrow> 'b)" => "CONST coerce :: ('a  \<Rightarrow> 'b)"
 typed_print_translation
@@ -107,6 +110,11 @@ We integrate mllex and mlyacc directly into Isabelle:
   @{command mllex}, @{command mlyacc}.
 \<close>
 
+SML_import \<open>
+  infix 1 |> val op |> = Basics.|>
+  structure File_Stream = File_Stream
+  val make_path = Path.explode o ML_System.standard_path
+\<close>
 SML_file \<open>tools/mllex/mllex.ML\<close>
 SML_export \<open>structure LexGen = LexGen\<close>
 
@@ -212,8 +220,8 @@ fun file_command qualify_ref tag exts f files thy =
         val err_file = (Utils.sanitized_path thy tmp_dir (Path.ext "err" src_path))
         val dir = Path.dir out_file
         val _ = Isabelle_System.make_directory dir
-        val stdOut = TextIO.openOut (File.standard_path out_file)
-        val stdErr = TextIO.openOut (File.standard_path err_file)
+        val stdOut = TextIO.openOut (File.platform_path out_file)
+        val stdErr = TextIO.openOut (File.platform_path err_file)
 
         val _ = TextIO.setOutstream (TextIO.stdOut, TextIO.getOutstream stdOut)
         val _ = TextIO.setOutstream (TextIO.stdErr, TextIO.getOutstream stdErr)
@@ -221,28 +229,27 @@ fun file_command qualify_ref tag exts f files thy =
         val tmp_file = Utils.sanitized_path thy tmp_dir src_path
 
         val _ = File.write tmp_file (cat_lines lines)
-        val res = try f (File.standard_path tmp_file)
+        val res = Exn.result f (File.platform_path tmp_file)
 
 
         val _ = TextIO.setOutstream (TextIO.stdOut, orig_stdOut)
         val _ = TextIO.setOutstream (TextIO.stdErr, orig_stdErr)
         val _ = TextIO.closeOut stdOut
         val _ = TextIO.closeOut stdErr
-        val out = File.read_lines out_file
-        val err = File.read_lines err_file
-         
-        val msg = Pretty.string_of (Pretty.strs (out @ err))
-
+        val lines = filter (fn s => s <> "") (File.read_lines out_file @ File.read_lines err_file)
+        val msg = if null lines then "" else ":\n" ^ (prefix_lines "  " (cat_lines lines))
       in 
         case res of
-           SOME () => 
+           Exn.Res () =>
             let 
               val result_files = map (fn ext => (Path.ext ext tmp_file, 
                       Path.ext ext full_src_path)) exts
               val _ = app (fn (src, dst) => copy_file qualify_ref src dst) result_files
-              val _ = tracing (quote (tag ^ " " ^ filename) ^ " succeeded:\n" ^ msg)
+              val _ = tracing (Markup.markup Markup.keyword1 tag ^ " " ^ quote filename ^ " succeeded" ^ msg)
             in () end 
-        |  NONE => (error (quote (tag ^ " " ^ filename) ^ " failed:\n" ^ msg); ())
+        |  Exn.Exn exn =>
+            error (Markup.markup Markup.keyword1 tag ^ " " ^ quote filename ^ " failed" ^ msg ^
+              "\n" ^ Runtime.exn_message exn)
       end))
     
   in 

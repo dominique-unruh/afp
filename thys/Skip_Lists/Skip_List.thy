@@ -11,7 +11,7 @@ theory Skip_List
 begin
 
 text \<open>Conflicting notation from \<^theory>\<open>HOL-Analysis.Infinite_Sum\<close>\<close>
-no_notation Infinite_Sum.abs_summable_on (infixr "abs'_summable'_on" 46)
+no_notation Infinite_Sum.abs_summable_on (infixr \<open>abs'_summable'_on\<close> 46)
 
 subsection \<open>Preliminaries\<close>
 
@@ -304,7 +304,7 @@ proof -
   show "set_integrable lborel {0::real..1} (\<lambda>x. (1 - x ^ n) / (1 - x))"
   proof -
     have "AE x\<in>{0::real..1} in lborel. (1 - x ^ n) / (1 - x) = sum ((^) x) {..<n}"
-      by (auto intro!: eventually_mono[OF AE_lborel_singleton[of 1]] simp add: sum_gp_strict)
+      by (smt (verit, best) AE_lborel_singleton eventually_mono sum_gp_strict)
     with harm_integral_x_raised_n show ?thesis
       by (subst set_integrable_cong_AE) auto
   qed
@@ -363,10 +363,10 @@ proof -
                     and g'="(\<lambda>x. - 1 / (ln q * (1 - x)))" and a = 0 and b = 1]
   show "set_integrable lborel (einterval 0 \<infinity>) (\<lambda>x. (1 - (1 - q powr x) ^ n))"
     using assms 1 2 3 4
-    by (intro sub) (auto intro!: derivative_eq_intros mult_nonneg_nonpos2 tendsto_intros power_le_one)
+    by (intro sub) (auto intro!: sub derivative_eq_intros continuous_intros mult_nonneg_nonpos2 power_le_one)
   show "(LBINT x=0..\<infinity>. 1 - (1 - q powr x) ^ n) = - harm n / ln q"
     using assms 1 2 3 4
-    by (subst sub) (auto intro!: derivative_eq_intros mult_nonneg_nonpos2 tendsto_intros power_le_one)
+    by (subst sub) (auto intro!: derivative_eq_intros continuous_intros mult_nonneg_nonpos2 power_le_one)
 qed
 
 lemma one_minus_one_minus_q_x_n_nn_integral:

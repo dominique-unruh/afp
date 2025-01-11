@@ -387,7 +387,7 @@ lemma topology_eq_iff: "t = s \<longleftrightarrow> (topspace t = topspace s \<a
 
 subsection \<open>Finer topologies\<close>
 
-definition finer_than (infix "(finer'_than)" 50)
+definition finer_than (infix \<open>(finer'_than)\<close> 50)
   where "T1 finer_than T2 \<longleftrightarrow> continuous_map T1 T2 (\<lambda>x. x)"
 
 lemma finer_than_iff_nhds:
@@ -842,7 +842,7 @@ qed
 
 subsection \<open>Refinement of cover\<close>
 
-definition refines :: "'a set set \<Rightarrow> 'a set set \<Rightarrow> bool" (infix "refines" 50)
+definition refines :: "'a set set \<Rightarrow> 'a set set \<Rightarrow> bool" (infix \<open>refines\<close> 50)
   where "A refines B \<longleftrightarrow> (\<forall>s\<in>A. (\<exists>t. t \<in> B \<and> s \<subseteq> t))"
 
 lemma refines_subset: "x refines y" if "z refines y" "x \<subseteq> z"
@@ -1232,12 +1232,13 @@ lemma (in bounded_linear) frechet_derivative:
    apply (rule has_derivative)
   by (auto intro!: derivative_eq_intros)
 
-bundle no_matrix_mult begin
-no_notation matrix_matrix_mult (infixl "**" 70)
+bundle matrix_mult
+begin
+notation matrix_matrix_mult (infixl \<open>**\<close> 70)
 end
 
 lemma (in bounded_bilinear) frechet_derivative:
-  includes no_matrix_mult
+  includes no matrix_mult
   shows
     "x differentiable at a \<Longrightarrow> y differentiable at a \<Longrightarrow>
       frechet_derivative (\<lambda>a. x a ** y a) (at a) =

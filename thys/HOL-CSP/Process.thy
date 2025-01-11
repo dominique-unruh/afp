@@ -447,19 +447,19 @@ setup_lifting type_definition_process
 text \<open>This is where we differ from previous versions: we lift definitions 
       using Isabelle's machinery instead of doing it by hand.\<close>
 
-lift_definition Failures :: "'\<alpha> process \<Rightarrow> ('\<alpha> failure set)" ("\<F>")
+lift_definition Failures :: "'\<alpha> process \<Rightarrow> ('\<alpha> failure set)" (\<open>\<F>\<close>)
   is "\<lambda>P. FAILURES P" .
 
 
-lift_definition Traces :: "'\<alpha> process \<Rightarrow>  ('\<alpha> trace set)"   ("\<T>")
+lift_definition Traces :: "'\<alpha> process \<Rightarrow>  ('\<alpha> trace set)"   (\<open>\<T>\<close>)
   is "\<lambda>P. TRACES P" .
 
 
-lift_definition Divergences :: "'\<alpha> process \<Rightarrow> '\<alpha> divergence"     ("\<D>")
+lift_definition Divergences :: "'\<alpha> process \<Rightarrow> '\<alpha> divergence"     (\<open>\<D>\<close>)
   is "\<lambda>P. DIVERGENCES P" .
 
 
-lift_definition Refusals :: "'\<alpha> process \<Rightarrow> ('\<alpha> refusal set)"  ("\<R>")
+lift_definition Refusals :: "'\<alpha> process \<Rightarrow> ('\<alpha> refusal set)"  (\<open>\<R>\<close>)
   is "\<lambda>P. REFUSALS P" .
 
 
@@ -808,7 +808,7 @@ text\<open> \ldots while the second returns the set of possible
 refusal sets after a given trace $s$ and a given process
 $P$: \<close>
 
-definition Ra :: "['\<alpha> process, '\<alpha> trace] \<Rightarrow> ('\<alpha> refusal set)" ("\<R>\<^sub>a")
+definition Ra :: "['\<alpha> process, '\<alpha> trace] \<Rightarrow> ('\<alpha> refusal set)" (\<open>\<R>\<^sub>a\<close>)
   where   "\<R>\<^sub>a P s = {X. (s, X) \<in> \<F> P}"
 
 text\<open> In the following, we link the process theory to the underlying 
@@ -913,20 +913,20 @@ HOLCF theory, which comprises a library of facts such as \verb+chain+,
 text\<open>
 Some facts from the theory of complete partial orders:
 \begin{itemize}
-\item \verb+Porder.chainE+ : @{thm "Porder.chainE"}
-\item \verb+Porder.chain_mono+ : @{thm "Porder.chain_mono"}
-\item \verb+Porder.is_ubD+ : @{thm "Porder.is_ubD"}
-\item \verb+Porder.ub_rangeI+ : \\ @{thm "Porder.ub_rangeI"}
-\item \verb+Porder.ub_imageD+ : @{thm "Porder.ub_imageD"}
-\item \verb+Porder.is_ub_upward+ : @{thm "Porder.is_ub_upward"}
-\item \verb+Porder.is_lubD1+ : @{thm "Porder.is_lubD1"}
-\item \verb+Porder.is_lubI+ : @{thm "Porder.is_lubI"}
-\item \verb+Porder.is_lub_maximal+ : @{thm "Porder.is_lub_maximal"}
-\item \verb+Porder.is_lub_lub+ : @{thm "Porder.is_lub_lub"}
-\item \verb+Porder.is_lub_range_shift+: \\ @{thm "Porder.is_lub_range_shift"}
-\item \verb+Porder.is_lub_rangeD1+: @{thm "Porder.is_lub_rangeD1"}
-\item \verb+Porder.lub_eqI+: @{thm "Porder.lub_eqI"}
-\item \verb+Porder.is_lub_unique+:@{thm "Porder.is_lub_unique"}
+\item \verb+Cpo.chainE+ : @{thm "Cpo.chainE"}
+\item \verb+Cpo.chain_mono+ : @{thm "Cpo.chain_mono"}
+\item \verb+Cpo.is_ubD+ : @{thm "Cpo.is_ubD"}
+\item \verb+Cpo.ub_rangeI+ : \\ @{thm "Cpo.ub_rangeI"}
+\item \verb+Cpo.ub_imageD+ : @{thm "Cpo.ub_imageD"}
+\item \verb+Cpo.is_ub_upward+ : @{thm "Cpo.is_ub_upward"}
+\item \verb+Cpo.is_lubD1+ : @{thm "Cpo.is_lubD1"}
+\item \verb+Cpo.is_lubI+ : @{thm "Cpo.is_lubI"}
+\item \verb+Cpo.is_lub_maximal+ : @{thm "Cpo.is_lub_maximal"}
+\item \verb+Cpo.is_lub_lub+ : @{thm "Cpo.is_lub_lub"}
+\item \verb+Cpo.is_lub_range_shift+: \\ @{thm "Cpo.is_lub_range_shift"}
+\item \verb+Cpo.is_lub_rangeD1+: @{thm "Cpo.is_lub_rangeD1"}
+\item \verb+Cpo.lub_eqI+: @{thm "Cpo.lub_eqI"}
+\item \verb+Cpo.is_lub_unique+:@{thm "Cpo.is_lub_unique"}
 \end{itemize}
 \<close>
 
@@ -1169,7 +1169,7 @@ lemma lim_proc_is_ub:"chain S \<Longrightarrow> range S <| lim_proc (range S)"
   using D_T chain_lemma le_approx2T le_approx_def by blast
 
 lemma lim_proc_is_lub1: "chain S \<Longrightarrow> \<forall> u . (range S <| u \<longrightarrow>  \<D> u \<subseteq> \<D> (lim_proc (range S)))"
-  by(auto simp: D_LUB, frule_tac i=a in Porder.ub_rangeD, auto dest: le_approx1)
+  by(auto simp: D_LUB, frule_tac i=a in ub_rangeD, auto dest: le_approx1)
 
 lemma lim_proc_is_lub2: 
   "chain S \<Longrightarrow> \<forall> u . range S <| u \<longrightarrow> (\<forall> s.  s \<notin> \<D> (lim_proc (range S))
@@ -1225,7 +1225,7 @@ apply (simp add: le_approx_def is_lub_def lim_proc_is_ub)
 by (simp add: lim_proc_is_lub1 lim_proc_is_lub2 lim_proc_is_lub3c)
 
 lemma limproc_is_thelub: "chain S \<Longrightarrow> Lub S = lim_proc (range S)"
-by (frule limproc_is_lub,frule Porder.po_class.lub_eqI, simp)
+by (frule limproc_is_lub,frule po_class.lub_eqI, simp)
 
 
 instance

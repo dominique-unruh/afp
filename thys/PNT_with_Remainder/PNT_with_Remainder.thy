@@ -4,11 +4,11 @@ imports
   "Zeta_Zerofree"
   "Perron_Formula"
 begin
-unbundle pnt_notation
+unbundle pnt_syntax
 
 section \<open>Estimation of the order of $\frac{\zeta'(s)}{\zeta(s)}$\<close>
 
-notation primes_psi ("\<psi>")
+notation primes_psi (\<open>\<psi>\<close>)
 
 lemma zeta_div_bound':
   assumes "1 + exp (- 4 * ln (14 + 4 * t)) \<le> \<sigma>"
@@ -422,7 +422,7 @@ locale prime_number_theorem =
   fixes c \<epsilon> :: real
   assumes Hc: "0 < c" and Hc': "c * c < 2 * C\<^sub>4" and H\<epsilon>: "0 < \<epsilon>" "2 * \<epsilon> < c"
 begin
-notation primes_psi ("\<psi>")
+notation primes_psi (\<open>\<psi>\<close>)
 definition H where "H x \<equiv> exp (c / 2 * (ln x) powr (1 / 2))" for x :: real
 definition T where "T x \<equiv> exp (c * (ln x) powr (1 / 2))" for x :: real
 definition a where "a x \<equiv> 1 - C\<^sub>4 / (c * (ln x) powr (1 / 2))" for x :: real
@@ -998,9 +998,9 @@ proof -
                simp add: le_ereal_less one_ereal_def)
     thus ?thesis using Hb by (rule eventually_mp)
   qed
-  moreover have "\<forall>\<^sub>F x in at_top. 2 \<le> H x" unfolding H_def using Hc by real_asymp
+  moreover have "\<forall>\<^sub>F x in at_top. 1 < H x" unfolding H_def using Hc by real_asymp
   moreover have "\<forall>\<^sub>F x in at_top. b x + 1 \<le> H x" unfolding b_def H_def using Hc by real_asymp
-  moreover have "\<forall>\<^sub>F x :: real in at_top. 2 \<le> x" by auto
+  moreover have "\<forall>\<^sub>F x :: real in at_top. 0 < x" by auto
   moreover have "\<forall>\<^sub>F x in at_top.
     (\<Sum>`n\<ge>1. \<parallel>fds_nth (fds mangoldt_complex) n\<parallel> / n nat_powr b x) \<le> B x"
     (is "eventually ?P ?F")
@@ -1100,10 +1100,10 @@ proof -
        (rule landau_o.big_trans)
 qed
 
-no_notation primes_psi ("\<psi>")
+no_notation primes_psi (\<open>\<psi>\<close>)
 end
 
-unbundle prime_counting_notation
+unbundle prime_counting_syntax
 
 theorem prime_number_theorem:
   shows "(\<lambda>x. \<pi> x - Li x) \<in> O(\<lambda>x. x * exp (- 1 / 3653 * (ln x) powr (1 / 2)))"
@@ -1121,6 +1121,6 @@ proof -
 qed
 
 hide_const (open) C\<^sub>3 C\<^sub>4 C\<^sub>5
-unbundle no_prime_counting_notation
-unbundle no_pnt_notation
+unbundle no prime_counting_syntax and no pnt_syntax
+
 end

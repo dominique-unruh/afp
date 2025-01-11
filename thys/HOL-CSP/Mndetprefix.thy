@@ -67,7 +67,10 @@ lift_definition Mndetprefix   :: "['\<alpha> set, '\<alpha> \<Rightarrow> '\<alp
 
 syntax
   "_Mndetprefix"       :: "pttrn \<Rightarrow> 'a set \<Rightarrow> 'a process \<Rightarrow> 'a process" 
-                          ("(3\<sqinter>_\<in>_ \<rightarrow> / _)" [0, 0, 70] 70)
+                          (\<open>(3\<sqinter>_\<in>_ \<rightarrow> / _)\<close> [0, 0, 70] 70)
+
+syntax_consts
+  "_Mndetprefix" \<rightleftharpoons> Mndetprefix
 
 translations
   "\<sqinter>x\<in>A\<rightarrow> P" \<rightleftharpoons> "CONST Mndetprefix A (\<lambda>x. P)"
@@ -229,7 +232,7 @@ next
 qed
 
 lemma Mndetprefix_cont[simp]: "(\<And>x. cont (f x)) \<Longrightarrow> cont (\<lambda>y. (\<sqinter> z \<in> A \<rightarrow> (f z y)))"
-  apply(rule_tac f = "\<lambda>z y. (f y z)" in Cont.cont_compose, rule monocontlub2cont) 
-  by (auto intro: mono_Mndetprefix contlub_Mndetprefix Fun_Cpo.cont2cont_lambda)
+  apply(rule_tac f = "\<lambda>z y. (f y z)" in cont_compose, rule monocontlub2cont) 
+  by (auto intro: mono_Mndetprefix contlub_Mndetprefix cont2cont_lambda)
 
 end

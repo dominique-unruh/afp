@@ -58,8 +58,12 @@ fun err_unresolved_overloading ctxt0 (c, T) t instances =
 
 (* generic data *)
 
+fun type_eq pT =
+  let val matches = can (fn pT => Type.raw_match pT Vartab.empty)
+  in matches pT andalso matches (swap pT) end;
+
 fun variants_eq ((v1, T1), (v2, T2)) =
-  Term.aconv_untyped (v1, v2) andalso T1 = T2;
+  Term.aconv_untyped (v1, v2) andalso type_eq (T1, T2);
 
 structure Overload_Data = Generic_Data
 (
@@ -175,7 +179,7 @@ fun insert_overloaded ctxt =
       |> get_overloaded ctxt
       |> Option.map (Const o rpair (Term.type_of t));
   in
-    Pattern.rewrite_term_top (Proof_Context.theory_of ctxt) [] [proc]
+    Pattern.rewrite_term_yoyo (Proof_Context.theory_of ctxt) [] [proc]
   end;
 
 fun check ctxt =

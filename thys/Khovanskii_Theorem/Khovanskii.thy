@@ -124,10 +124,10 @@ subsection \<open>The pointwise ordering on two equal-length lists of natural nu
 text \<open>Gowers uses the usual symbol ($\le$) for his pointwise ordering.
    In our development, $\le$ is the lexicographic ordering and $\unlhd$ is the pointwise ordering.\<close>
 
-definition pointwise_le :: "[nat list, nat list] \<Rightarrow> bool" (infixr "\<unlhd>" 50 )
+definition pointwise_le :: "[nat list, nat list] \<Rightarrow> bool" (infixr \<open>\<unlhd>\<close> 50 )
   where "x \<unlhd> y \<equiv> list_all2 (\<le>) x y"
 
-definition pointwise_less :: "[nat list, nat list] \<Rightarrow> bool" (infixr "\<lhd>" 50 )
+definition pointwise_less :: "[nat list, nat list] \<Rightarrow> bool" (infixr \<open>\<lhd>\<close> 50 )
   where "x \<lhd> y \<equiv> x \<unlhd> y \<and> x \<noteq> y"
 
 lemma pointwise_le_iff_nth:
@@ -464,7 +464,8 @@ next
   proof -
     have "(\<Sum>x\<le>k-1. p (k-x)) = (\<Sum>j\<le>n. a j * ((\<Sum>x\<le>k. real x ^ j) - 0^j))"
       using that
-      by (simp add: p_eq sum.swap flip: sum_distrib_left sum_diff_split[where f="\<lambda>i. real i ^ _"])
+      by (simp add: p_eq sum.swap 
+          flip: sum_distrib_left of_nat_diff sum_diff_split[where f="\<lambda>i. real i ^ _"])
     also have "\<dots> = q k"
       by (simp add: sum_of_powers add.commute q_def)
     finally show ?thesis .
@@ -637,7 +638,7 @@ lemma wf_measure_\<sigma>: "wf (inv_image less_than \<sigma>)"
   by blast
 
 lemma WFP: "wfP (\<lhd>)"
-  by (auto simp: wfP_def pointwise_less_imp_\<sigma> intro: wf_subset [OF wf_measure_\<sigma>])
+  by (auto simp: wfp_def pointwise_less_imp_\<sigma> intro: wf_subset [OF wf_measure_\<sigma>])
 
 text\<open>The following is a direct corollary of the above lemma, i.e. a corollary of
  Lemma 2.7 in Gowers's notes.\<close>

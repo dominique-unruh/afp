@@ -36,6 +36,7 @@ definition dg_prod :: "V \<Rightarrow> (V \<Rightarrow> V) \<Rightarrow> V"
 
 syntax "_PDIGRAPH" :: "pttrn \<Rightarrow> V \<Rightarrow> (V \<Rightarrow> V) \<Rightarrow> V"
   (\<open>(3\<Prod>\<^sub>D\<^sub>G_\<in>\<^sub>\<circ>_./ _)\<close> [0, 0, 10] 10)
+syntax_consts "_PDIGRAPH" \<rightleftharpoons> dg_prod
 translations "\<Prod>\<^sub>D\<^sub>Gi\<in>\<^sub>\<circ>I. \<AA>" \<rightleftharpoons> "CONST dg_prod I (\<lambda>i. \<AA>)"
 
 
@@ -2102,7 +2103,7 @@ end
 subsection\<open>Product of three digraphs\<close>
 (*TODO: find a way to generalize to the product of n digraphs*)
 
-definition dg_prod_3 :: "V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> V" ("(_ \<times>\<^sub>D\<^sub>G\<^sub>3 _ \<times>\<^sub>D\<^sub>G\<^sub>3 _)" [81, 81, 81] 80)
+definition dg_prod_3 :: "V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> V" (\<open>(_ \<times>\<^sub>D\<^sub>G\<^sub>3 _ \<times>\<^sub>D\<^sub>G\<^sub>3 _)\<close> [81, 81, 81] 80)
   where "\<AA> \<times>\<^sub>D\<^sub>G\<^sub>3 \<BB> \<times>\<^sub>D\<^sub>G\<^sub>3 \<CC> = (\<Prod>\<^sub>D\<^sub>Gi\<in>\<^sub>\<circ>3\<^sub>\<nat>. if3 \<AA> \<BB> \<CC> i)"
 
 

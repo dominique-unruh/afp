@@ -71,6 +71,7 @@ locale is_ntsmcf =
 
 syntax "_is_ntsmcf" :: "V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> bool"
   (\<open>(_ :/ _ \<mapsto>\<^sub>S\<^sub>M\<^sub>C\<^sub>F _ :/ _ \<mapsto>\<mapsto>\<^sub>S\<^sub>M\<^sub>C\<index> _)\<close> [51, 51, 51, 51, 51] 51)
+syntax_consts "_is_ntsmcf" \<rightleftharpoons> is_ntsmcf
 translations "\<NN> : \<FF> \<mapsto>\<^sub>S\<^sub>M\<^sub>C\<^sub>F \<GG> : \<AA> \<mapsto>\<mapsto>\<^sub>S\<^sub>M\<^sub>C\<^bsub>\<alpha>\<^esub> \<BB>" \<rightleftharpoons> 
   "CONST is_ntsmcf \<alpha> \<AA> \<BB> \<FF> \<GG> \<NN>"
 
@@ -1038,7 +1039,7 @@ Composition of a natural transformation of semifunctors and a semifunctor
 
 subsubsection\<open>Definition and elementary properties\<close>
 
-abbreviation (input) ntsmcf_smcf_comp :: "V \<Rightarrow> V \<Rightarrow> V" (infixl "\<circ>\<^sub>N\<^sub>T\<^sub>S\<^sub>M\<^sub>C\<^sub>F\<^sub>-\<^sub>S\<^sub>M\<^sub>C\<^sub>F" 55)
+abbreviation (input) ntsmcf_smcf_comp :: "V \<Rightarrow> V \<Rightarrow> V" (infixl \<open>\<circ>\<^sub>N\<^sub>T\<^sub>S\<^sub>M\<^sub>C\<^sub>F\<^sub>-\<^sub>S\<^sub>M\<^sub>C\<^sub>F\<close> 55)
   where "ntsmcf_smcf_comp \<equiv> tdghm_dghm_comp"
 
 
@@ -1240,7 +1241,7 @@ Composition of a semifunctor and a natural transformation of semifunctors
 
 subsubsection\<open>Definition and elementary properties\<close>
 
-abbreviation (input) smcf_ntsmcf_comp :: "V \<Rightarrow> V \<Rightarrow> V" (infixl "\<circ>\<^sub>S\<^sub>M\<^sub>C\<^sub>F\<^sub>-\<^sub>N\<^sub>T\<^sub>S\<^sub>M\<^sub>C\<^sub>F" 55)
+abbreviation (input) smcf_ntsmcf_comp :: "V \<Rightarrow> V \<Rightarrow> V" (infixl \<open>\<circ>\<^sub>S\<^sub>M\<^sub>C\<^sub>F\<^sub>-\<^sub>N\<^sub>T\<^sub>S\<^sub>M\<^sub>C\<^sub>F\<close> 55)
   where "smcf_ntsmcf_comp \<equiv> dghm_tdghm_comp"
 
 

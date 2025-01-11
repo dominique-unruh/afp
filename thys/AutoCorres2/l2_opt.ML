@@ -186,7 +186,9 @@ let
   val is_unit = case varTs of [(_, @{typ unit})] => true | _ => false;
   val _ = if is_unit orelse List.null (Simplifier.prems_of ctxt) then raise Match else ();
 
-  val (vs, ctxt1) = Variable.variant_fixes (map fst (Term.variant_frees t varTs)) ctxt
+  val (vs, ctxt1) = ctxt
+    |> Variable.declare_term t
+    |> Variable.variant_fixes (map fst varTs);
   val frees = map Free (vs ~~ map snd varTs)
   val defs = map (Thm.cterm_of ctxt1 o Logic.mk_equals) (frees ~~ rets) 
 
@@ -218,9 +220,9 @@ local
 structure  Enabled = Proof_Data(type T = bool val init = K true);
 in
 val c_fnptr_guard_simproc =
- Simplifier.make_simproc @{context} {name = "c_fnptr_guard_simproc", identifier=[],
+ Simplifier.make_simproc @{context} {name = "c_fnptr_guard_simproc", kind = Simproc, identifier = [],
     lhss = [Proof_Context.read_term_pattern @{context} "c_fnptr_guard ?P"],
-     proc = fn phi => fn ctxt => fn ct =>
+    proc = fn phi => fn ctxt => fn ct =>
   if Enabled.get ctxt then
     let
       val prems = Simplifier.prems_of ctxt
@@ -250,7 +252,7 @@ val c_fnptr_guard_simproc =
 end
 
 fun L2_guarded_local_simproc orig_ctxt =
- Simplifier.make_simproc orig_ctxt {name = "L2_guarded_simproc", identifier = [],
+ Simplifier.make_simproc orig_ctxt {name = "L2_guarded_simproc", kind = Simproc, identifier = [],
    lhss =  [Proof_Context.read_term_pattern orig_ctxt "L2_guarded ?g ?c", 
             Proof_Context.read_term_pattern orig_ctxt "L2_seq_guard ?g (%_. ?c)"],
    proc = fn phi => fn ctxt => fn ct =>

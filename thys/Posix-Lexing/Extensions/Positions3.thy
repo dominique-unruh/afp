@@ -83,15 +83,15 @@ using assms by (simp add: pflat_len_def)
 section \<open>Orderings\<close>
 
 
-definition prefix_list:: "'a list \<Rightarrow> 'a list \<Rightarrow> bool" ("_ \<sqsubseteq>pre _" [60,59] 60)
+definition prefix_list:: "'a list \<Rightarrow> 'a list \<Rightarrow> bool" (\<open>_ \<sqsubseteq>pre _\<close> [60,59] 60)
 where
   "ps1 \<sqsubseteq>pre ps2 \<equiv> \<exists>ps'. ps1 @ps' = ps2"
 
-definition sprefix_list:: "'a list \<Rightarrow> 'a list \<Rightarrow> bool" ("_ \<sqsubset>spre _" [60,59] 60)
+definition sprefix_list:: "'a list \<Rightarrow> 'a list \<Rightarrow> bool" (\<open>_ \<sqsubset>spre _\<close> [60,59] 60)
 where
   "ps1 \<sqsubset>spre ps2 \<equiv> ps1 \<sqsubseteq>pre ps2 \<and> ps1 \<noteq> ps2"
 
-inductive lex_list :: "nat list \<Rightarrow> nat list \<Rightarrow> bool" ("_ \<sqsubset>lex _" [60,59] 60)
+inductive lex_list :: "nat list \<Rightarrow> nat list \<Rightarrow> bool" (\<open>_ \<sqsubset>lex _\<close> [60,59] 60)
 where
   "[] \<sqsubset>lex (p#ps)"
 | "ps1 \<sqsubset>lex ps2 \<Longrightarrow> (p#ps1) \<sqsubset>lex (p#ps2)"
@@ -135,7 +135,7 @@ done
 section \<open>POSIX Ordering of Values According to Okui \& Suzuki\<close>
 
 
-definition PosOrd:: "'a val \<Rightarrow> nat list \<Rightarrow> 'a val \<Rightarrow> bool" ("_ \<sqsubset>val _ _" [60, 60, 59] 60)
+definition PosOrd:: "'a val \<Rightarrow> nat list \<Rightarrow> 'a val \<Rightarrow> bool" (\<open>_ \<sqsubset>val _ _\<close> [60, 60, 59] 60)
 where
   "v1 \<sqsubset>val p v2 \<equiv> pflat_len v1 p > pflat_len v2 p \<and>
                    (\<forall>q \<in> Pos v1 \<union> Pos v2. q \<sqsubset>lex p \<longrightarrow> pflat_len v1 q = pflat_len v2 q)"
@@ -150,11 +150,11 @@ apply(auto)
 done
 
 
-definition PosOrd_ex:: "'a val \<Rightarrow> 'a val \<Rightarrow> bool" ("_ :\<sqsubset>val _" [60, 59] 60)
+definition PosOrd_ex:: "'a val \<Rightarrow> 'a val \<Rightarrow> bool" (\<open>_ :\<sqsubset>val _\<close> [60, 59] 60)
 where
   "v1 :\<sqsubset>val v2 \<equiv> \<exists>p. v1 \<sqsubset>val p v2"
 
-definition PosOrd_ex_eq:: "'a val \<Rightarrow> 'a val \<Rightarrow> bool" ("_ :\<sqsubseteq>val _" [60, 59] 60)
+definition PosOrd_ex_eq:: "'a val \<Rightarrow> 'a val \<Rightarrow> bool" (\<open>_ :\<sqsubseteq>val _\<close> [60, 59] 60)
 where
   "v1 :\<sqsubseteq>val v2 \<equiv> v1 :\<sqsubset>val v2 \<or> v1 = v2"
 
@@ -166,25 +166,26 @@ proof -
   from assms obtain p p'
     where as: "v1 \<sqsubset>val p v2" "v2 \<sqsubset>val p' v3" unfolding PosOrd_ex_def by blast
   then have pos: "p \<in> Pos v1" "p' \<in> Pos v2" unfolding PosOrd_def pflat_len_def
-    by (smt not_int_zless_negative)+
+    by (metis (full_types) int_ops(2) not_int_zless_negative verit_comp_simplify1(1))
+       (metis PosOrd_def2 as(2) int_ops(2) not_int_zless_negative order_less_irrefl pflat_len_def)
   have "p = p' \<or> p \<sqsubset>lex p' \<or> p' \<sqsubset>lex p"
     by (rule lex_trichotomous)
   moreover
     { assume "p = p'"
       with as have "v1 \<sqsubset>val p v3" unfolding PosOrd_def pflat_len_def
-      by (smt Un_iff)
+        by (smt (verit, best) UnCI)
       then have " v1 :\<sqsubset>val v3" unfolding PosOrd_ex_def by blast
     }   
   moreover
     { assume "p \<sqsubset>lex p'"
       with as have "v1 \<sqsubset>val p v3" unfolding PosOrd_def pflat_len_def
-      by (smt Un_iff lex_trans)
+      by (smt (verit, best) UnCI lex_trans)
       then have " v1 :\<sqsubset>val v3" unfolding PosOrd_ex_def by blast
     }
   moreover
     { assume "p' \<sqsubset>lex p"
       with as have "v1 \<sqsubset>val p' v3" unfolding PosOrd_def
-      by (smt Un_iff lex_trans pflat_len_def)
+        by (smt (verit, best) Un_iff lex_trans pflat_len_def)
       then have "v1 :\<sqsubset>val v3" unfolding PosOrd_ex_def by blast
     }
   ultimately show "v1 :\<sqsubset>val v3" by blast
@@ -410,8 +411,8 @@ prefer 2
 apply(simp add: PosOrd_def pflat_len_simps pflat_len_outside)
 apply(rule_tac x="list" in exI)
 apply(auto simp add: PosOrd_def2 pflat_len_simps)
-apply(smt Collect_disj_eq lex_list.intros(2) mem_Collect_eq pflat_len_simps(2))
-apply(smt Collect_disj_eq lex_list.intros(2) mem_Collect_eq pflat_len_simps(2))
+apply(smt (verit) Collect_disj_eq lex_list.intros(2) mem_Collect_eq pflat_len_simps(2))
+apply(smt (verit) Collect_disj_eq lex_list.intros(2) mem_Collect_eq pflat_len_simps(2))
 done
 
 
@@ -635,7 +636,7 @@ next
     "flat v3a @ flat v3b = s1 @ s2" 
     by (force simp add: prefix_list_def LV_def elim: Prf.cases)
   with cond have "flat v3a \<sqsubseteq>pre s1" unfolding prefix_list_def
-    by (smt Prf_flat_lang append_eq_append_conv2 append_self_conv)
+    by (smt (verit, ccfv_SIG) Prf_flat_lang append.right_neutral append_eq_append_conv2)
   then have "flat v3a \<sqsubset>spre s1 \<or> (flat v3a = s1 \<and> flat v3b = s2)" using eqs
     by (simp add: sprefix_list_def append_eq_conv_conj)
   then have q2: "v1 :\<sqsubset>val v3a \<or> (flat v3a = s1 \<and> flat v3b = s2)" 
@@ -670,7 +671,7 @@ next
       have "flat (Stars (v3a # vs3)) = s1 @ s2" using NonEmpty(4) . 
       with cond have "flat v3a \<sqsubseteq>pre s1" using NonEmpty(2,3)
         unfolding prefix_list_def
-        by (smt Prf_flat_lang append_Nil2 append_eq_append_conv2 flat.simps(7)) 
+        by (smt (verit) Prf_flat_lang append.right_neutral append_eq_append_conv2 flat.simps(7))
       then have "flat v3a \<sqsubset>spre s1 \<or> (flat v3a = s1 \<and> flat (Stars vs3) = s2)" using NonEmpty(4)
         by (simp add: sprefix_list_def append_eq_conv_conj)
       then have q2: "v :\<sqsubset>val v3a \<or> (flat v3a = s1 \<and> flat (Stars vs3) = s2)" 
@@ -744,7 +745,7 @@ next
       have "flat (Stars (v3a # vs3)) = s1 @ s2" using NonEmpty(4) . 
       with cond have "flat v3a \<sqsubseteq>pre s1" using NonEmpty(2,3)
         unfolding prefix_list_def
-        by (smt Prf_flat_lang append_Nil2 append_eq_append_conv2 flat.simps(7)) 
+        by (smt (verit) Prf_flat_lang append.right_neutral append_eq_append_conv2 flat.simps(7))
       then have "flat v3a \<sqsubset>spre s1 \<or> (flat v3a = s1 \<and> flat (Stars vs3) = s2)" using NonEmpty(4)
         by (simp add: sprefix_list_def append_eq_conv_conj)
       then have q2: "v :\<sqsubset>val v3a \<or> (flat v3a = s1 \<and> flat (Stars vs3) = s2)" 
@@ -792,7 +793,7 @@ next
       have "flat (Stars (v3a # vs3)) = s1 @ s2" using NonEmpty(4) . 
       with cond have "flat v3a \<sqsubseteq>pre s1" using NonEmpty(2,3)
         unfolding prefix_list_def
-        by (smt Prf_flat_lang append_Nil2 append_eq_append_conv2 flat.simps(7)) 
+        by (smt (verit) Prf_flat_lang append.right_neutral append_eq_append_conv2 flat.simps(7))
       then have "flat v3a \<sqsubset>spre s1 \<or> (flat v3a = s1 \<and> flat (Stars vs3) = s2)" using NonEmpty(4)
         by (simp add: sprefix_list_def append_eq_conv_conj)
       then have q2: "v :\<sqsubset>val v3a \<or> (flat v3a = s1 \<and> flat (Stars vs3) = s2)" 
@@ -868,7 +869,8 @@ next
       have "flats (v3a # vs3) = s1 @ s2" using NonEmpty(4) . 
       with cond have "flat v3a \<sqsubseteq>pre s1" using NonEmpty(2,3)
         unfolding prefix_list_def
-        by (smt (z3) Prf_flat_lang append.right_neutral append_eq_append_conv2 flat.simps(7) flat_Stars)
+        by (smt (verit) Prf_flat_lang append.right_neutral append_eq_append_conv2 flat.simps(7)
+            flat_Stars)
       then have "flat v3a \<sqsubset>spre s1 \<or> (flat v3a = s1 \<and> flat (Stars vs3) = s2)" using NonEmpty(4)
         by (simp add: sprefix_list_def append_eq_conv_conj)
       then have q2: "v :\<sqsubset>val v3a \<or> (flat v3a = s1 \<and> flat (Stars vs3) = s2)" 
@@ -916,7 +918,8 @@ next
       have "flat (Stars (v3a # vs3)) = s1 @ s2" using NonEmpty(4) . 
       with cond have "flat v3a \<sqsubseteq>pre s1" using NonEmpty(2,3)
         unfolding prefix_list_def
-        by (smt (z3) Prf_flat_lang append.right_neutral append_eq_append_conv2 flat.simps(7))
+        by (smt (verit) Prf_flat_lang append.right_neutral append_eq_append_conv2
+            flat.simps(7))
       then have "flat v3a \<sqsubset>spre s1 \<or> (flat v3a = s1 \<and> flat (Stars vs3) = s2)" using NonEmpty(4)
         by (simp add: sprefix_list_def append_eq_conv_conj)
       then have q2: "v :\<sqsubset>val v3a \<or> (flat v3a = s1 \<and> flat (Stars vs3) = s2)" 

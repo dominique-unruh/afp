@@ -34,7 +34,7 @@ definition length :: "heap \<Rightarrow> 'a::heap array \<Rightarrow> nat" where
 definition update :: "'a::heap array \<Rightarrow> nat \<Rightarrow> 'a \<Rightarrow> heap \<Rightarrow> heap" where
   "update a i x h = set a ((get h a)[i:=x]) h"
 
-definition noteq :: "'a::heap array \<Rightarrow> 'b::heap array \<Rightarrow> bool" (infix "=!!=" 70) where
+definition noteq :: "'a::heap array \<Rightarrow> 'b::heap array \<Rightarrow> bool" (infix \<open>=!!=\<close> 70) where
   "r =!!= s \<longleftrightarrow> TYPEREP('a) \<noteq> TYPEREP('b) \<or> addr_of_array r \<noteq> addr_of_array s"
 
 
@@ -460,7 +460,7 @@ code_printing constant Array_Time.nth' \<rightharpoonup> (SML) "(fn/ ()/ =>/ Arr
 code_printing constant Array_Time.upd' \<rightharpoonup> (SML) "(fn/ ()/ =>/ Array.update/ ((_),/ (_),/ (_)))"
 code_printing constant "HOL.equal :: 'a array \<Rightarrow> 'a array \<Rightarrow> bool" \<rightharpoonup> (SML) infixl 6 "="
 
-code_reserved SML Array
+code_reserved (SML) Array
 
 
 text \<open>OCaml\<close>
@@ -476,7 +476,7 @@ code_printing constant Array_Time.nth' \<rightharpoonup> (OCaml) "(fun/ ()/ ->/ 
 code_printing constant Array_Time.upd' \<rightharpoonup> (OCaml) "(fun/ ()/ ->/ Array.set/ _/ (Big'_int.int'_of'_big'_int/ _)/ _)"
 code_printing constant "HOL.equal :: 'a array \<Rightarrow> 'a array \<Rightarrow> bool" \<rightharpoonup> (OCaml) infixl 4 "="
 
-code_reserved OCaml Array
+code_reserved (OCaml) Array
 
 
 text \<open>Haskell\<close>

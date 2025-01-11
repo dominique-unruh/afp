@@ -79,7 +79,7 @@ lemma map_index'_Suc[simp]: "map_index' (Suc i) f xs = map_index' i (\<lambda>i.
 abbreviation (input) "zero n \<equiv> replicate n False"
 abbreviation (input) "SUC \<equiv> \<lambda>_::unit. Suc"
 definition "test_bit m n \<equiv> (m :: nat) div 2 ^ n mod 2 = 1"
-lemma test_bit_eq_iff: \<open>test_bit = bit\<close>
+lemma test_bit_eq_bit: \<open>test_bit = bit\<close>
   by (simp add: fun_eq_iff test_bit_def bit_iff_odd_drop_bit mod_2_eq_odd flip: drop_bit_eq_div)
 definition "downshift m \<equiv> (m :: nat) div 2"
 definition "upshift m \<equiv> (m :: nat) * 2"
@@ -87,9 +87,11 @@ lemma set_bit_def: "set_bit n m \<equiv> m + (if \<not> test_bit m n then 2 ^ n 
   apply (rule eq_reflection)
   apply (rule bit_eqI)
   apply (subst disjunctive_add)
-   apply (auto simp add: bit_simps test_bit_eq_iff)
+   apply (auto simp add: bit_simps test_bit_eq_bit)
   done
 definition "cut_bits n m \<equiv> (m :: nat) mod 2 ^ n"
+lemma cut_bits_eq_take_bit: \<open>cut_bits = take_bit\<close>
+  by (simp add: fun_eq_iff cut_bits_def take_bit_eq_mod)
 
 typedef interp = "{(n :: nat, xs :: nat list). \<forall>x \<in> set xs. len x \<le> n}"
   by (force intro: exI[of _ "[]"])
@@ -102,10 +104,10 @@ derive linorder list
 derive linorder presb
 type_synonym formula = "(presb, unit) aformula"
 
-lift_definition assigns :: "nat \<Rightarrow> interp \<Rightarrow> unit \<Rightarrow> value" ("_\<^bsup>_\<^esup>_" [900, 999, 999] 999) is
+lift_definition assigns :: "nat \<Rightarrow> interp \<Rightarrow> unit \<Rightarrow> value" (\<open>_\<^bsup>_\<^esup>_\<close> [900, 999, 999] 999) is
   "\<lambda>n (_, I) _. if n < length I then I ! n else 0" .
 
-lift_definition nvars :: "interp \<Rightarrow> nat" ("#\<^sub>V _" [1000] 900) is
+lift_definition nvars :: "interp \<Rightarrow> nat" (\<open>#\<^sub>V _\<close> [1000] 900) is
   "\<lambda>(_, I). length I" .
 
 lift_definition Length :: "interp \<Rightarrow> nat" is "\<lambda>(n, _). n" .
@@ -264,8 +266,9 @@ lemma [Presb_simps]:
   "len P \<le> n \<Longrightarrow> cut_bits n P = P"
   "len (upshift P) = (case len P of 0 \<Rightarrow> 0 | Suc n \<Rightarrow> Suc (Suc n))"
   "len (downshift P) = (case len P of 0 \<Rightarrow> 0 | Suc n \<Rightarrow> n)"
-  by (auto simp: extend_def set_bit_def cut_bits_def upshift_def downshift_def test_bit_def
-    len_le_iff len_eq0_iff div_add_self2 split: nat.split)
+  by (simp_all add: downshift_def upshift_def test_bit_eq_bit extend_def cut_bits_def
+    bit_simps mult.commute [of _ 2] len_le_iff len_eq0_iff split: nat.split)
+    (simp add: bit_iff_odd)
 
 lemma Suc0_div_pow2_eq: "Suc 0 div 2 ^ i = (if i = 0 then 1 else 0)"
   by (induct i) (auto simp: div_mult2_eq)
@@ -342,11 +345,11 @@ lemma wf0_decr0[Presb_simps]:
 lemma lformula0_decr0[Presb_simps]: "lformula0 a \<Longrightarrow> lformula0 (decr0 k l a)"
   by (induct a) (auto elim: lformula0.cases intro: lformula0.intros)
 
-abbreviation sat0_syn (infix "\<Turnstile>0" 65) where
+abbreviation sat0_syn (infix \<open>\<Turnstile>0\<close> 65) where
  "sat0_syn \<equiv> satisfies0"
-abbreviation sat_syn (infix "\<Turnstile>" 65) where
+abbreviation sat_syn (infix \<open>\<Turnstile>\<close> 65) where
  "sat_syn \<equiv> Formula_Operations.satisfies Extend Length satisfies0"
-abbreviation sat_bounded_syn (infix "\<Turnstile>\<^sub>b" 65) where
+abbreviation sat_bounded_syn (infix \<open>\<Turnstile>\<^sub>b\<close> 65) where
  "sat_bounded_syn \<equiv> Formula_Operations.satisfies_bounded Extend Length len satisfies0"
 
 lemma scalar_product_Nil[simp]: "scalar_product [] xs = 0"

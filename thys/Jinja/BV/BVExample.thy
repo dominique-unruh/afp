@@ -237,7 +237,7 @@ text \<open>
 lemmas eff_simps [simp] = eff_def norm_eff_def xcpt_eff_def
 (*declare app'Invoke [simp del]*)
 
-definition phi_append :: ty\<^sub>m ("\<phi>\<^sub>a")
+definition phi_append :: ty\<^sub>m (\<open>\<phi>\<^sub>a\<close>)
 where
   "\<phi>\<^sub>a \<equiv> map (\<lambda>(x,y). Some (x, map OK y)) [ 
    (                                    [], [Class list_name, Class list_name]),
@@ -272,7 +272,7 @@ text \<open>
 
   @{prop [display] "P n"} 
 \<close>
-definition intervall :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> bool" ("_ \<in> [_, _')")
+definition intervall :: "nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> bool" (\<open>_ \<in> [_, _')\<close>)
 where
   "x \<in> [a, b) \<equiv> a \<le> x \<and> x < b"
 
@@ -336,7 +336,7 @@ text \<open>Some abbreviations for readability\<close>
 abbreviation "Clist == Class list_name"
 abbreviation "Ctest == Class test_name"
 
-definition phi_makelist :: ty\<^sub>m ("\<phi>\<^sub>m")
+definition phi_makelist :: ty\<^sub>m (\<open>\<phi>\<^sub>m\<close>)
 where
   "\<phi>\<^sub>m \<equiv> map (\<lambda>(x,y). Some (x, y)) [ 
     (                                   [], [OK Ctest, Err     , Err     ]),
@@ -431,7 +431,7 @@ lemma wf_md'E:
 (*>*)
 
 text \<open>The whole program is welltyped:\<close>
-definition Phi :: ty\<^sub>P ("\<Phi>")
+definition Phi :: ty\<^sub>P (\<open>\<Phi>\<close>)
 where
   "\<Phi> C mn \<equiv> if C = test_name \<and> mn = makelist_name then \<phi>\<^sub>m else 
              if C = list_name \<and> mn = append_name then \<phi>\<^sub>a else []"
@@ -480,19 +480,7 @@ lemma [code]:
    fold (\<lambda>p A. if \<not>stable r step ss p then insert p A else A) [0..<size ss] {}"
 proof -
   have "unstables r step ss = (UN p:{..<size ss}. if \<not>stable r step ss p then {p} else {})"
-    apply (unfold unstables_def)
-    apply (rule equalityI)
-    apply (rule subsetI)
-    apply (erule CollectE)
-    apply (erule conjE)
-    apply (rule UN_I)
-    apply simp
-    apply simp
-    apply (rule subsetI)
-    apply (erule UN_E)
-    apply (case_tac "\<not> stable r step ss p")
-    apply simp+
-    done
+    by (auto simp: unstables_def)
   also have "\<And>f. (UN p:{..<size ss}. f p) = Union (set (map f [0..<size ss]))" by auto
   also note Sup_set_fold also note fold_map
   also have "(\<union>) \<circ> (\<lambda>p. if \<not> stable r step ss p then {p} else {}) = 
@@ -501,8 +489,7 @@ proof -
   finally show ?thesis .
 qed
 
-definition some_elem :: "'a set \<Rightarrow> 'a" where [code del]:
-  "some_elem = (%S. SOME x. x : S)"
+declare some_elem_def [code del]
 code_printing
   constant some_elem \<rightharpoonup> (SML) "(case/ _ of/ Set/ xs/ =>/ hd/ xs)"
 
@@ -524,10 +511,9 @@ lemma JVM_sup_unfold [code]:
  "JVM_SemiType.sup S m n = lift2 (Opt.sup
        (Product.sup (Listn.sup (SemiType.sup S))
          (\<lambda>x y. OK (map2 (lift2 (SemiType.sup S)) x y))))" 
-  apply (unfold JVM_SemiType.sup_def JVM_SemiType.sl_def Opt.esl_def Err.sl_def
+  by (auto simp: JVM_SemiType.sup_def JVM_SemiType.sl_def Opt.esl_def Err.sl_def
          stk_esl_def loc_sl_def Product.esl_def  
          Listn.sl_def upto_esl_def SemiType.esl_def Err.esl_def)
-  by simp
 
 lemmas [code] = SemiType.sup_def [unfolded exec_lub_def] JVM_le_unfold
 

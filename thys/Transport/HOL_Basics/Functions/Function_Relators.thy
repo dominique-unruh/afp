@@ -16,33 +16,22 @@ relators is "related functions map related inputs to related outputs".\<close>
 consts Dep_Fun_Rel :: "'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> bool"
 consts Fun_Rel :: "'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> bool"
 
-bundle Dep_Fun_Rel_syntax begin
+open_bundle Dep_Fun_Rel_syntax
+begin
+notation "Fun_Rel" (infixr \<open>\<Rrightarrow>\<close> 50)
 syntax
-  "_Fun_Rel" :: "'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> bool" ("(_) \<Rrightarrow> (_)" [41, 40] 40)
   "_Dep_Fun_Rel_rel" :: "idt \<Rightarrow> idt \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> bool"
-    ("'(_/ _/ \<Colon>/ _') \<Rrightarrow> (_)" [41, 41, 41, 40] 40)
+    (\<open>'(_/ _/ \<Colon>/ _') \<Rrightarrow> (_)\<close> [51, 51, 50, 50] 50)
   "_Dep_Fun_Rel_rel_if" :: "idt \<Rightarrow> idt \<Rightarrow> 'a \<Rightarrow> bool \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> bool"
-    ("'(_/ _/ \<Colon>/ _/ |/ _') \<Rrightarrow> (_)" [41, 41, 41, 40, 40] 40)
+    (\<open>'(_/ _/ \<Colon>/ _/ |/ _') \<Rrightarrow> (_)\<close> [51, 51, 50, 50, 50] 50)
   "_Dep_Fun_Rel_pred" :: "idt \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> bool"
-    ("'(_/ :/ _') \<Rrightarrow> (_)" [41, 41, 40] 40)
+    (\<open>'(_/ :/ _') \<Rrightarrow> (_)\<close> [51, 50, 50] 50)
   "_Dep_Fun_Rel_pred_if" :: "idt \<Rightarrow> 'a \<Rightarrow> bool \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> bool"
-    ("'(_/ :/ _/ |/ _') \<Rrightarrow> (_)" [41, 41, 40, 40] 40)
+    (\<open>'(_/ :/ _/ |/ _') \<Rrightarrow> (_)\<close> [51, 50, 50, 50] 50)
 end
-bundle no_Dep_Fun_Rel_syntax begin
-no_syntax
-  "_Fun_Rel" :: "'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> bool" ("(_) \<Rrightarrow> (_)" [41, 40] 40)
-  "_Dep_Fun_Rel_rel" :: "idt \<Rightarrow> idt \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> bool"
-    ("'(_/ _/ \<Colon>/ _') \<Rrightarrow> (_)" [41, 41, 41, 40] 40)
-  "_Dep_Fun_Rel_rel_if" :: "idt \<Rightarrow> idt \<Rightarrow> 'a \<Rightarrow> bool \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> bool"
-    ("'(_/ _/ \<Colon>/ _/ |/ _') \<Rrightarrow> (_)" [41, 41, 41, 40, 40] 40)
-  "_Dep_Fun_Rel_pred" :: "idt \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> bool"
-    ("'(_/ :/ _') \<Rrightarrow> (_)" [41, 41, 40] 40)
-  "_Dep_Fun_Rel_pred_if" :: "idt \<Rightarrow> 'a \<Rightarrow> bool \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> 'd \<Rightarrow> bool"
-    ("'(_/ :/ _/ |/ _') \<Rrightarrow> (_)" [41, 41, 40, 40] 40)
-end
-unbundle Dep_Fun_Rel_syntax
+syntax_consts
+  "_Dep_Fun_Rel_rel" "_Dep_Fun_Rel_rel_if" "_Dep_Fun_Rel_pred" "_Dep_Fun_Rel_pred_if" \<rightleftharpoons> Dep_Fun_Rel
 translations
-  "R \<Rrightarrow> S" \<rightleftharpoons> "CONST Fun_Rel R S"
   "(x y \<Colon> R) \<Rrightarrow> S" \<rightleftharpoons> "CONST Dep_Fun_Rel R (\<lambda>x y. S)"
   "(x y \<Colon> R | B) \<Rrightarrow> S" \<rightleftharpoons> "CONST Dep_Fun_Rel R (\<lambda>x y. CONST rel_if B S)"
   "(x : P) \<Rrightarrow> R" \<rightleftharpoons> "CONST Dep_Fun_Rel P (\<lambda>x. R)"
@@ -106,6 +95,12 @@ lemma Dep_Fun_Rel_relE:
   obtains "\<And>x y. R x y \<Longrightarrow> S x y (f x) (g y)"
   using assms unfolding Dep_Fun_Rel_rel_def by blast
 
+lemma Dep_Fun_Rel_rel_cong [cong]:
+  assumes "R = R'"
+  and "\<And>x y. R' x y \<Longrightarrow> S x y = S' x y"
+  shows "((x y \<Colon> R) \<Rrightarrow> S x y) = ((x y \<Colon> R') \<Rrightarrow> S' x y)"
+  using assms by force
+
 lemma Fun_Rel_relI [intro]:
   assumes "\<And>x y. R x y \<Longrightarrow> S (f x) (g y)"
   shows "(R \<Rrightarrow> S) f g"
@@ -138,6 +133,12 @@ lemma Dep_Fun_Rel_predE:
   obtains "\<And>x. P x \<Longrightarrow> R x (f x) (g x)"
   using assms unfolding Dep_Fun_Rel_pred_def by blast
 
+lemma Dep_Fun_Rel_pred_cong [cong]:
+  assumes "P = P'"
+  and "\<And>x. P' x \<Longrightarrow> R x = R' x"
+  shows "((x : P) \<Rrightarrow> R x) = ((x : P') \<Rrightarrow> R' x)"
+  using assms by force
+
 lemma Fun_Rel_predI [intro]:
   assumes "\<And>x. P x \<Longrightarrow> R (f x) (g x)"
   shows "(P \<Rrightarrow> R) f g"
@@ -159,10 +160,18 @@ lemma rel_inv_Dep_Fun_Rel_rel_eq [simp]:
   shows "((x y \<Colon> R) \<Rrightarrow> S x y)\<inverse> = ((y x \<Colon> R\<inverse>) \<Rrightarrow> (S x y)\<inverse>)"
   by (intro ext) auto
 
+lemma rel_inv_rel_inv_Dep_Fun_Rel_rel_iff_Dep_Fun_Rel_rel [iff]:
+  "((x y \<Colon> R\<inverse>) \<Rrightarrow> (S x y)\<inverse>) f g \<longleftrightarrow> ((x y \<Colon> R) \<Rrightarrow> (S y x)) g f"
+  by (simp flip: rel_inv_Dep_Fun_Rel_rel_eq)
+
 lemma rel_inv_Dep_Fun_Rel_pred_eq [simp]:
   fixes P :: "'a \<Rightarrow> bool" and R :: "'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> bool"
   shows "((x : P) \<Rrightarrow> R x)\<inverse> = ((x : P) \<Rrightarrow> (R x)\<inverse>)"
   by (intro ext) auto
+
+lemma rel_inv_Dep_Fun_Rel_pred_iff_Dep_Fun_Rel_pred [iff]:
+  "((x : P) \<Rrightarrow> (R x)\<inverse>) f g \<longleftrightarrow> ((x : P) \<Rrightarrow> (R x)) g f"
+  by (simp flip: rel_inv_Dep_Fun_Rel_pred_eq)
 
 lemma Dep_Fun_Rel_pred_eq_Dep_Fun_Rel_rel:
   fixes P :: "'a \<Rightarrow> bool" and R :: "'a \<Rightarrow> 'b \<Rightarrow> 'c \<Rightarrow> bool"
@@ -204,17 +213,18 @@ corollary Dep_Fun_Rel_pred_comp_Dep_Fun_Rel_rel_compI':
 
 paragraph \<open>Restrictions\<close>
 
-lemma restrict_left_Dep_Fun_Rel_rel_restrict_left_eq:
+lemma Dep_Fun_Rel_restrict_left_restrict_left_eq:
   assumes "\<And>f x y. Q f \<Longrightarrow> R x y \<Longrightarrow> P x y (f x)"
   shows "((x y \<Colon> R) \<Rrightarrow> (S x y)\<restriction>\<^bsub>P x y\<^esub>)\<restriction>\<^bsub>Q\<^esub> = ((x y \<Colon> R) \<Rrightarrow> S x y)\<restriction>\<^bsub>Q\<^esub>"
   using assms by (intro ext iffI rel_restrict_leftI Dep_Fun_Rel_relI)
   (auto dest!: Dep_Fun_Rel_relD)
 
-lemma restrict_right_Dep_Fun_Rel_rel_restrict_right_eq:
+lemma Dep_Fun_Rel_restrict_right_restrict_right_eq:
   assumes "\<And>f x y. Q f \<Longrightarrow> R x y \<Longrightarrow> P x y (f y)"
   shows "((x y \<Colon> R) \<Rrightarrow> (S x y)\<upharpoonleft>\<^bsub>P x y\<^esub>)\<upharpoonleft>\<^bsub>Q\<^esub> = (((x y \<Colon> R) \<Rrightarrow> S x y)\<upharpoonleft>\<^bsub>Q\<^esub>)"
   unfolding rel_restrict_right_eq
-  using assms restrict_left_Dep_Fun_Rel_rel_restrict_left_eq[where ?R="R\<inverse>" and ?S="\<lambda>y x. (S x y)\<inverse>"]
+  using assms
+    Dep_Fun_Rel_restrict_left_restrict_left_eq[where ?R="R\<inverse>" and ?S="\<lambda>y x. (S x y)\<inverse>"]
   by simp
 
 

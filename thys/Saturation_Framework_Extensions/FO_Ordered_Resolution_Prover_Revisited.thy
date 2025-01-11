@@ -20,10 +20,10 @@ here using the saturation framework of Waldmann et al.\<close>
 
 subsection \<open>Setup\<close>
 
-no_notation true_lit (infix "\<Turnstile>l" 50)
-no_notation true_cls (infix "\<Turnstile>" 50)
-no_notation true_clss (infix "\<Turnstile>s" 50)
-no_notation true_cls_mset (infix "\<Turnstile>m" 50)
+no_notation true_lit (infix \<open>\<Turnstile>l\<close> 50)
+no_notation true_cls (infix \<open>\<Turnstile>\<close> 50)
+no_notation true_clss (infix \<open>\<Turnstile>s\<close> 50)
+no_notation true_cls_mset (infix \<open>\<Turnstile>m\<close> 50)
 
 hide_type (open) Inference_System.inference
 
@@ -56,8 +56,8 @@ subsection \<open>Ground Layer\<close>
 context FO_resolution_prover
 begin
 
-no_notation RP (infix "\<leadsto>" 50)
-notation RP (infix "\<leadsto>RP" 50)
+no_notation RP (infix \<open>\<leadsto>\<close> 50)
+notation RP (infix \<open>\<leadsto>RP\<close> 50)
 
 interpretation gr: ground_resolution_with_selection "S_M S M"
   using selection_axioms by unfold_locales (fact S_M_selects_subseteq S_M_selects_neg_lits)+
@@ -199,7 +199,7 @@ next
   qed (auto simp: \<G>_F_def ex_ground_subst)
 qed
 
-notation F.entails_\<G> (infix "\<TTurnstile>\<G>e" 50)
+notation F.entails_\<G> (infix \<open>\<TTurnstile>\<G>e\<close> 50)
 
 lemma F_entails_\<G>_iff: "N1 \<TTurnstile>\<G>e N2 \<longleftrightarrow> \<Union> (\<G>_F ` N1) \<TTurnstile>e \<Union> (\<G>_F ` N2)"
   unfolding F.entails_\<G>_def by simp
@@ -273,7 +273,7 @@ proof -
     len_CAs0: "length CAs0 = length CAs" and
     len_ns: "length \<eta>s = length CAs"
     using ord_resolve_rename_lifting[OF _ grounded_res selection_axioms prems_ground] sel_stable
-    by smt
+    by (smt (verit, best))
 
   have "length CAs0 = length \<eta>s"
     using len_CAs0 len_ns by simp
@@ -315,13 +315,13 @@ subsection \<open>Labeled First-Order or Given Clause Layer\<close>
 
 datatype label = New | Processed | Old
 
-abbreviation F_Equiv :: "'a clause \<Rightarrow> 'a clause \<Rightarrow> bool" (infix "\<doteq>" 50) where
+abbreviation F_Equiv :: "'a clause \<Rightarrow> 'a clause \<Rightarrow> bool" (infix \<open>\<doteq>\<close> 50) where
   "C \<doteq> D \<equiv> generalizes C D \<and> generalizes D C"
 
-abbreviation F_Prec :: "'a clause \<Rightarrow> 'a clause \<Rightarrow> bool" (infix "\<prec>\<cdot>" 50) where
+abbreviation F_Prec :: "'a clause \<Rightarrow> 'a clause \<Rightarrow> bool" (infix \<open>\<prec>\<cdot>\<close> 50) where
   "C \<prec>\<cdot> D \<equiv> strictly_generalizes C D"
 
-fun L_Prec :: "label \<Rightarrow> label \<Rightarrow> bool" (infix "\<sqsubset>l" 50) where
+fun L_Prec :: "label \<Rightarrow> label \<Rightarrow> bool" (infix \<open>\<sqsubset>l\<close> 50) where
   "Old \<sqsubset>l l \<longleftrightarrow> l \<noteq> Old"
 | "Processed \<sqsubset>l l \<longleftrightarrow> l = New"
 | "New \<sqsubset>l l \<longleftrightarrow> False"
@@ -333,7 +333,7 @@ lemma trans_L_Prec: "l1 \<sqsubset>l l2 \<Longrightarrow> l2 \<sqsubset>l l3 \<L
   by (cases l1; cases l2; cases l3) auto
 
 lemma wf_L_Prec: "wfP (\<sqsubset>l)"
-  by (metis L_Prec.elims(2) L_Prec.simps(3) not_accp_down wfP_accp_iff)
+  by (metis L_Prec.elims(2) L_Prec.simps(3) not_accp_down wfp_iff_accp)
 
 interpretation FL: given_clause "{{#}}" F_Inf "{{#}}" UNIV "\<lambda>N. (\<TTurnstile>e)" G_Inf G.Red_I
   "\<lambda>N. G.Red_F" "\<lambda>N. \<G>_F" \<G>_I_opt "(\<doteq>)" "(\<prec>\<cdot>)" "(\<sqsubset>l)" Old
@@ -360,8 +360,7 @@ next
     "C2 \<doteq> D2"
     "C1 \<prec>\<cdot> C2"
   then show "D1 \<prec>\<cdot> D2"
-    by (smt antisym size_mset_mono size_subst strictly_generalizes_def generalizes_def
-        generalizes_trans)
+    by (metis generalizes_trans strictly_generalizes_def)
 next
   fix N C1 C2
   assume "C1 \<doteq> C2"
@@ -378,10 +377,10 @@ next
     using L_Prec.simps(1) by blast
 qed (auto simp: F_Inf_have_prems)
 
-notation FL.Prec_FL (infix "\<sqsubset>" 50)
-notation FL.entails_\<G>_L (infix "\<TTurnstile>\<G>Le" 50)
-notation FL.derive (infix "\<rhd>L" 50)
-notation FL.step (infix "\<leadsto>GC" 50)
+notation FL.Prec_FL (infix \<open>\<sqsubset>\<close> 50)
+notation FL.entails_\<G>_L (infix \<open>\<TTurnstile>\<G>Le\<close> 50)
+notation FL.derive (infix \<open>\<rhd>L\<close> 50)
+notation FL.step (infix \<open>\<leadsto>GC\<close> 50)
 
 lemma FL_Red_F_eq:
   "FL.Red_F N =
@@ -545,7 +544,8 @@ proof -
         by (metis (no_types, lifting) G.Red_F_of_subset SUP_upper d_in subset_iff)
       moreover have \<open>\<And>D. D \<in> \<G>_F (fst Cl) \<Longrightarrow> \<forall>E \<in> N. E \<sqsubset> Cl \<longrightarrow> D \<notin> \<G>_F (fst E) \<Longrightarrow> Dl \<sqsubset> Cl \<Longrightarrow>
         D \<in> G.Red_F (\<Union>a \<in> N. \<G>_F (fst a))\<close>
-        by (smt FL.Prec_FL_def FL.equiv_F_grounding FL.prec_F_grounding UNIV_witness d_in in_mono)
+        by (metis (no_types, lifting) FL.Prec_FL_def d_in generalizes_def grounding_of_subst_cls_subset in_mono
+            substitution_ops.strictly_generalizes_def)
       ultimately show \<open>Cl \<in> {C. \<forall>D \<in> \<G>_F (fst C). D \<in> G.Red_F (\<Union> (\<G>_F ` fst ` {Dl})) \<or>
         (\<exists>E \<in> {Dl}. E \<sqsubset> C \<and> D \<in> \<G>_F (fst E))} \<or> Dl \<sqsubset> Cl \<Longrightarrow>
         Cl \<in> {C. \<forall>D \<in> \<G>_F (fst C). D \<in> G.Red_F (\<Union> (\<G>_F ` fst ` N)) \<or>
@@ -612,7 +612,8 @@ proof (intro set_eqI iffI)
       using e_res cd_sub c_in F_Inf_def by auto
     then show \<open>E \<in> concl_of ` {\<iota> \<in> F_Inf. \<iota> \<in> {\<iota> \<in> F_Inf. set (prems_of \<iota>) \<subseteq> N \<union> {C}} \<and>
       set (prems_of \<iota>) \<inter> {C} \<noteq> {}}\<close>
-      by (smt Un_insert_right boolean_algebra_cancel.sup0 disjoint_insert mem_Collect_eq image_def)
+      by (smt (verit, del_insts) Calculus.inference.sel(1) cd_sub disjoint_insert(1) image_eqI list.set(1) list.simps(15)
+          mem_Collect_eq set_append)
   qed
 next
   fix E
@@ -755,7 +756,7 @@ proof -
     moreover have \<open>chain (\<rhd>L) (lmap lclss_of_state Sts)\<close>
       using deriv RP_derivation_imp_derive_derivation by simp
     moreover have \<open>chain FL.entails_\<G> (lmap lclss_of_state Sts)\<close>
-      by (smt F_entails_\<G>_iff FL.labeled_entailment_lifting RP_model chain_lmap deriv \<G>_Fset_def
+      by (smt (verit) F_entails_\<G>_iff FL.labeled_entailment_lifting RP_model chain_lmap deriv \<G>_Fset_def
         image_hd_lclss_of_state)
     ultimately show \<open>FL.entails_\<G> (lhd (lmap lclss_of_state Sts)) ({{#}} \<times> UNIV)\<close>
       using FL.unsat_limit_iff by blast
@@ -949,7 +950,7 @@ proof -
   qed
   then show ?thesis
     unfolding G_def clst_eq src.saturated_upto_def
-    by clarsimp (smt Diff_subset gd.inferences_from_mono subset_eq \<G>_Fset_def)
+    by clarsimp (smt (verit) Diff_subset gd.inferences_from_mono subset_eq \<G>_Fset_def)
 qed
 
 theorem RP_sound_old_statement:

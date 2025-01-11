@@ -8,8 +8,8 @@ begin
 section \<open>Classes\<close>
 
 notation
-  bot ("\<bottom>") and
-  top ("\<top>")
+  bot (\<open>\<bottom>\<close>) and
+  top (\<open>\<top>\<close>)
 
 class bounded_linorder = linorder + order_top + order_bot
 begin
@@ -292,10 +292,18 @@ abbreviation
  "knuth (a::_::linorder) b x y ==
   ((y \<le> a \<longrightarrow> x \<le> a) \<and> (a < y \<and> y < b \<longrightarrow> y = x) \<and> (b \<le> y \<longrightarrow> b \<le> x))"
 
+abbreviation knuth2 :: "('a::linorder) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" (\<open>(_ \<cong>/ _/ '(mod _,_'))\<close> [51,51,0,0])
+where "knuth2 x y a b \<equiv> knuth a b x y"
+
+notation (latex output) knuth2 (\<open>(_ \<cong>/ _/ '(\<^latex>\<open>\textup{mod}\<close> _,_'))\<close> [51,51,0,0])
+
 lemma knuth_bot_top: "knuth \<bottom> \<top> x y \<Longrightarrow> x = (y::_::bounded_linorder)"
 by (metis bot.extremum_uniqueI linorder_le_less_linear top.extremum_uniqueI)
 
 text \<open>The equational version of @{const knuth}. First, automatically:\<close>
+
+lemma knuth_iff_max_min: "a < b \<Longrightarrow> knuth a b x y \<longleftrightarrow> max a (min x b) = max a (min y b)"
+by (smt (verit) linorder_not_le max.absorb4 max_min_distrib2 max_min_same(1) min.absorb_iff2)
 
 text \<open>Needs \<open>a < b\<close>: take everything = \<open>\<infinity>\<close>, x = 0\<close>
 lemma knuth_if_mm: "a < b \<Longrightarrow> mm a y b = mm a x b \<Longrightarrow> knuth a b x y"
@@ -370,6 +378,11 @@ text \<open>Specification of fail-soft: \<open>v\<close> is the actual value, \<
 abbreviation
  "fishburn (a::_::linorder) b v ab ==
   ((ab \<le> a \<longrightarrow> v \<le> ab) \<and> (a < ab \<and> ab < b \<longrightarrow> ab = v) \<and> (b \<le> ab \<longrightarrow> ab \<le> v))"
+
+abbreviation fishburn2 :: "('a::linorder) \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> bool" (\<open>(_ \<le>/ _/ '(mod _,_'))\<close> [51,51,0,0])
+where "fishburn2 ab v a b \<equiv> fishburn a b v ab"
+
+notation (latex output) fishburn2 (\<open>(_ \<le>/ _/ '(\<^latex>\<open>\textup{mod}\<close> _,_'))\<close> [51,51,0,0])
 
 lemma fishburn_iff_min_max: "a < b \<Longrightarrow> fishburn a b v ab \<longleftrightarrow> min v b \<le> ab \<and> ab \<le> max v a"
 by (metis (full_types) le_max_iff_disj linorder_not_le min_le_iff_disj nle_le)
@@ -972,7 +985,7 @@ next
   case (8 a b m t ts)
   then show ?case
     apply (simp add: Let_def)
-    by (smt (z3) ab_mins'_le_a linorder_not_le min.absorb_iff2 min.coboundedI1 min_def)
+    by (smt (verit) ab_mins'_le_a linorder_not_le min.absorb_iff2 min.coboundedI1 min_def)
 qed auto
 
 theorem fishburn_ab'_ab:
@@ -1290,13 +1303,13 @@ TODO: ab function with cache.
 *)
 
 lemma ab_twice_lb:
- "\<lbrakk> \<forall>a b. fishburn a b (maxmin t) (ab a b t); b \<le> ab a b t; max a' (ab a b t) < b' \<rbrakk> \<Longrightarrow>
-  fishburn a' b' (maxmin t) (ab (max a' (ab a b t)) b' t)"
+ "\<lbrakk> \<forall>a b. fishburn a b (maxmin t) (abf a b t); b \<le> abf a b t; max a' (abf a b t) < b' \<rbrakk> \<Longrightarrow>
+  fishburn a' b' (maxmin t) (abf (max a' (abf a b t)) b' t)"
 by (smt (verit, del_insts) order.eq_iff order.strict_trans leI max_less_iff_conj)
 
 lemma ab_twice_ub:
- "\<lbrakk> \<forall>a b. fishburn a b (maxmin t) (ab a b t); ab a b t \<le> a; min b' (ab a b t) > a' \<rbrakk> \<Longrightarrow>
-  fishburn a' b' (maxmin t) (ab a' (min b' (ab a b t)) t)"
+ "\<lbrakk> \<forall>a b. fishburn a b (maxmin t) (abf a b t); abf a b t \<le> a; min b' (abf a b t) > a' \<rbrakk> \<Longrightarrow>
+  fishburn a' b' (maxmin t) (abf a' (min b' (abf a b t)) t)"
 by (smt (verit, best) linorder_not_le min.absorb1 min.absorb2 min.strict_boundedE nless_le)
 
 text \<open>But what does a narrower window achieve?
@@ -1374,7 +1387,8 @@ next
   show ?case
     using "4.prems" apply (simp add: Let_def)
     using "4.IH" ab_maxs'_ge_a
-    by (smt (z3) le_max_iff_disj linorder_not_le max.cobounded2 max.commute max_def)
+    by (smt (verit) knuth_comm linorder_le_cases max.absorb1 max.absorb2 max.absorb4
+        max.bounded_iff)
 next
   case (6 a b ts)
   show ?case
@@ -1385,7 +1399,7 @@ next
   show ?case
     using "8.prems" apply (simp add: Let_def)
     using "8.IH" ab_mins'_le_a
-    by (smt (z3) leD linorder_linear min.absorb1 min.absorb2 min.bounded_iff not_le_imp_less)
+    by (smt (verit) leD linorder_linear min.absorb1 min.absorb2 min.bounded_iff not_le_imp_less)
 qed auto
 
 text \<open>Example of reduced search space:\<close>
@@ -1767,7 +1781,7 @@ proof(induction t a b and i ts a b and t a b and i ts a b rule: abir0'_abirs0'_a
 next
   case (4 i t ts a b)
   thus ?case apply (simp add: Let_def)
-    by (smt (z3) linorder_not_le max.coboundedI2 max_def nle_le)
+    by (smt (verit, ccfv_SIG) linorder_not_le max.coboundedI2 max_def nle_le)
 next
   case (6 ts a b)
   thus ?case
@@ -1834,7 +1848,7 @@ proof(induction i0 i1 t a b and i0 i1 i ts a b and i0 i1 t a b and i0 i1 i ts a 
 next
   case (4 i t ts a b)
   thus ?case apply (simp add: Let_def)
-    by (smt (z3) linorder_not_le max.coboundedI2 max_def nle_le)
+    by (smt (verit, ccfv_SIG) linorder_not_le max.coboundedI2 max_def nle_le)
 next
   case (6 ts a b)
   thus ?case
@@ -1885,7 +1899,8 @@ next
   case (4 i0 i1 i t ts a b)
   show ?case
     using "4.prems" "4.IH"(2)[OF refl, of i0' i1'] "4.IH"(1)[OF \<open>a<b\<close>, of i0' i1' "ts0 @ [t]"]
-    by (smt (z3) Cons_eq_appendI abirs0'.simps(2) append_eq_append_conv2 append_self_conv linorder_not_less max_def_raw nless_le order.strict_trans1)
+    by (smt (verit) abirs0'.simps(2) append_Cons append_eq_append_conv2 linorder_not_less max.absorb4
+        max.absorb_iff2 max.coboundedI2 max.order_iff self_append_conv)
 next
   case 5
   then show ?case by simp
@@ -2172,7 +2187,8 @@ proof(induction a b t and a b ts rule: ab_negmax2_ab_negmaxs2.induct)
 next
   case 4 thus ?case
     apply (simp add: Let_def)
-    by (smt (z3) de_morgan_max le_max_iff_disj linorder_not_le max.commute max_def neg_neg uminus_less_reorder)
+    by (smt (verit) less_le_not_le linorder_less_linear max.absorb3 max.cobounded1 max.commute max_min_commute2
+        min.absorb2 min.commute minus_le_minus neg_neg)
 qed auto
 
 corollary ab_negmax2_bot_top: "ab_negmax2 \<bottom> \<top> t = negmax t"

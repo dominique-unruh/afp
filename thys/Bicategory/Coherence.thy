@@ -91,7 +91,7 @@ begin
   locale bicategorical_language =
     category V +
     horizontal_homs V src trg
-    for V :: "'a comp"                       (infixr "\<cdot>" 55)
+    for V :: "'a comp"                       (infixr \<open>\<cdot>\<close> 55)
     and src :: "'a \<Rightarrow> 'a"
     and trg :: "'a \<Rightarrow> 'a"
   begin
@@ -102,16 +102,16 @@ begin
     \<close>
 
     datatype (discs_sels) 't "term" =
-      Prim\<^sub>0 't                             ("\<^bold>\<langle>_\<^bold>\<rangle>\<^sub>0")
-    | Prim 't                              ("\<^bold>\<langle>_\<^bold>\<rangle>")
-    | Hcomp "'t term" "'t term"            (infixr "\<^bold>\<star>" 53)
-    | Vcomp "'t term" "'t term"            (infixr "\<^bold>\<cdot>" 55)
-    | Lunit "'t term"                      ("\<^bold>\<l>\<^bold>[_\<^bold>]")
-    | Lunit' "'t term"                     ("\<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[_\<^bold>]")
-    | Runit "'t term"                      ("\<^bold>\<r>\<^bold>[_\<^bold>]")
-    | Runit' "'t term"                     ("\<^bold>\<r>\<^sup>-\<^sup>1\<^bold>[_\<^bold>]")
-    | Assoc "'t term" "'t term" "'t term"  ("\<^bold>\<a>\<^bold>[_, _, _\<^bold>]")
-    | Assoc' "'t term" "'t term" "'t term" ("\<^bold>\<a>\<^sup>-\<^sup>1\<^bold>[_, _, _\<^bold>]")
+      Prim\<^sub>0 't                             (\<open>\<^bold>\<langle>_\<^bold>\<rangle>\<^sub>0\<close>)
+    | Prim 't                              (\<open>\<^bold>\<langle>_\<^bold>\<rangle>\<close>)
+    | Hcomp "'t term" "'t term"            (infixr \<open>\<^bold>\<star>\<close> 53)
+    | Vcomp "'t term" "'t term"            (infixr \<open>\<^bold>\<cdot>\<close> 55)
+    | Lunit "'t term"                      (\<open>\<^bold>\<l>\<^bold>[_\<^bold>]\<close>)
+    | Lunit' "'t term"                     (\<open>\<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[_\<^bold>]\<close>)
+    | Runit "'t term"                      (\<open>\<^bold>\<r>\<^bold>[_\<^bold>]\<close>)
+    | Runit' "'t term"                     (\<open>\<^bold>\<r>\<^sup>-\<^sup>1\<^bold>[_\<^bold>]\<close>)
+    | Assoc "'t term" "'t term" "'t term"  (\<open>\<^bold>\<a>\<^bold>[_, _, _\<^bold>]\<close>)
+    | Assoc' "'t term" "'t term" "'t term" (\<open>\<^bold>\<a>\<^sup>-\<^sup>1\<^bold>[_, _, _\<^bold>]\<close>)
 
     text \<open>
       We define formal domain, codomain, source, and target functions on terms.
@@ -606,7 +606,7 @@ begin
       If such terms are regarded as lists, this is just (typed) list concatenation.
     \<close>
 
-    fun HcompNml  (infixr "\<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor>" 53)
+    fun HcompNml  (infixr \<open>\<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor>\<close> 53)
     where "\<^bold>\<langle>\<nu>\<^bold>\<rangle>\<^sub>0 \<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor> u = u"
         | "t \<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor> \<^bold>\<langle>\<mu>\<^bold>\<rangle>\<^sub>0 = t"
         | "\<^bold>\<langle>\<nu>\<^bold>\<rangle> \<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor> u = \<^bold>\<langle>\<nu>\<^bold>\<rangle> \<^bold>\<star> u"
@@ -1038,7 +1038,7 @@ begin
        by ``pushing the composition down'' to arrows of @{text V}.
     \<close>
 
-    fun VcompNml :: "'a term \<Rightarrow> 'a term \<Rightarrow> 'a term"  (infixr "\<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor>" 55)
+    fun VcompNml :: "'a term \<Rightarrow> 'a term \<Rightarrow> 'a term"  (infixr \<open>\<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor>\<close> 55)
     where "\<^bold>\<langle>\<nu>\<^bold>\<rangle>\<^sub>0 \<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor> u = u"
         | "\<^bold>\<langle>\<nu>\<^bold>\<rangle> \<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor> \<^bold>\<langle>\<mu>\<^bold>\<rangle> = \<^bold>\<langle>\<nu> \<cdot> \<mu>\<^bold>\<rangle>"
         | "(u \<^bold>\<star> v) \<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor> (w \<^bold>\<star> x) = (u \<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor> w \<^bold>\<star> v \<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor> x)"
@@ -1108,7 +1108,7 @@ begin
               by (metis Cod.simps(1) Cod.simps(3))
             moreover have "\<^bold>\<langle>src (un_Prim v \<cdot> un_Prim x)\<^bold>\<rangle>\<^sub>0 = Trg (w \<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor> y)"
               using vw 4 5 6 I2 Nml_HcompD(6) Nml_implies_Arr
-                    src.as_nat_trans.is_natural_1 src.as_nat_trans.preserves_comp_2
+                    src.as_nat_trans.naturality1 src.as_nat_trans.preserves_comp_2
                     Trg_Cod src_cod
               by (metis seqI)
             ultimately show ?thesis
@@ -1521,7 +1521,7 @@ begin
       The following function reduces a formal arrow to normal form.
     \<close>
 
-    fun Nmlize :: "'a term \<Rightarrow> 'a term"   ("\<^bold>\<lfloor>_\<^bold>\<rfloor>")
+    fun Nmlize :: "'a term \<Rightarrow> 'a term"   (\<open>\<^bold>\<lfloor>_\<^bold>\<rfloor>\<close>)
     where "\<^bold>\<lfloor>\<^bold>\<langle>\<mu>\<^bold>\<rangle>\<^sub>0\<^bold>\<rfloor> = \<^bold>\<langle>\<mu>\<^bold>\<rangle>\<^sub>0"
         | "\<^bold>\<lfloor>\<^bold>\<langle>\<mu>\<^bold>\<rangle>\<^bold>\<rfloor> = \<^bold>\<langle>\<mu>\<^bold>\<rangle>"
         | "\<^bold>\<lfloor>t \<^bold>\<star> u\<^bold>\<rfloor> = \<^bold>\<lfloor>t\<^bold>\<rfloor> \<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor> \<^bold>\<lfloor>u\<^bold>\<rfloor>"
@@ -1850,7 +1850,7 @@ begin
       \<open>f \<^bold>\<Down> g \<in> Hom (f \<^bold>\<star> g) \<^bold>\<lfloor>f \<^bold>\<star> g\<^bold>\<rfloor>\<close>.
     \<close>
 
-    fun red2                       (infixr "\<^bold>\<Down>" 53)
+    fun red2                       (infixr \<open>\<^bold>\<Down>\<close> 53)
     where "\<^bold>\<langle>b\<^bold>\<rangle>\<^sub>0 \<^bold>\<Down> u = \<^bold>\<l>\<^bold>[u\<^bold>]"
         | "\<^bold>\<langle>f\<^bold>\<rangle> \<^bold>\<Down> \<^bold>\<langle>a\<^bold>\<rangle>\<^sub>0 = \<^bold>\<r>\<^bold>[\<^bold>\<langle>f\<^bold>\<rangle>\<^bold>]"
         | "\<^bold>\<langle>f\<^bold>\<rangle> \<^bold>\<Down> u = \<^bold>\<langle>f\<^bold>\<rangle> \<^bold>\<star> u"
@@ -1858,7 +1858,7 @@ begin
         | "(t \<^bold>\<star> u) \<^bold>\<Down> v = (t \<^bold>\<Down> \<^bold>\<lfloor>u \<^bold>\<star> v\<^bold>\<rfloor>) \<^bold>\<cdot> (t \<^bold>\<star> (u \<^bold>\<Down> v)) \<^bold>\<cdot> \<^bold>\<a>\<^bold>[t, u, v\<^bold>]"
         | "t \<^bold>\<Down> u = undefined"
 
-    fun red                         ("_\<^bold>\<down>" [56] 56)
+    fun red                         (\<open>_\<^bold>\<down>\<close> [56] 56)
     where "\<^bold>\<langle>f\<^bold>\<rangle>\<^sub>0\<^bold>\<down> = \<^bold>\<langle>f\<^bold>\<rangle>\<^sub>0"
         | "\<^bold>\<langle>f\<^bold>\<rangle>\<^bold>\<down> = \<^bold>\<langle>f\<^bold>\<rangle>"
         | "(t \<^bold>\<star> u)\<^bold>\<down> = (if Nml (t \<^bold>\<star> u) then t \<^bold>\<star> u else (\<^bold>\<lfloor>t\<^bold>\<rfloor> \<^bold>\<Down> \<^bold>\<lfloor>u\<^bold>\<rfloor>) \<^bold>\<cdot> (t\<^bold>\<down> \<^bold>\<star> u\<^bold>\<down>))"
@@ -2121,13 +2121,13 @@ begin
     bicategorical_language C src\<^sub>C trg\<^sub>C +
     bicategory V H \<a> \<i> src trg +
     E: "functor" C V E
-    for C :: "'c comp"                   (infixr "\<cdot>\<^sub>C" 55)
+    for C :: "'c comp"                   (infixr \<open>\<cdot>\<^sub>C\<close> 55)
     and src\<^sub>C :: "'c \<Rightarrow> 'c"
     and trg\<^sub>C :: "'c \<Rightarrow> 'c"
-    and V :: "'b comp"                   (infixr "\<cdot>" 55)
-    and H :: "'b comp"                   (infixr "\<star>" 53)
-    and \<a> :: "'b \<Rightarrow> 'b \<Rightarrow> 'b \<Rightarrow> 'b"       ("\<a>[_, _, _]")
-    and \<i> :: "'b \<Rightarrow> 'b"                   ("\<i>[_]")
+    and V :: "'b comp"                   (infixr \<open>\<cdot>\<close> 55)
+    and H :: "'b comp"                   (infixr \<open>\<star>\<close> 53)
+    and \<a> :: "'b \<Rightarrow> 'b \<Rightarrow> 'b \<Rightarrow> 'b"       (\<open>\<a>[_, _, _]\<close>)
+    and \<i> :: "'b \<Rightarrow> 'b"                   (\<open>\<i>[_]\<close>)
     and src :: "'b \<Rightarrow> 'b"
     and trg :: "'b \<Rightarrow> 'b"
     and E :: "'c \<Rightarrow> 'b" +
@@ -2136,13 +2136,13 @@ begin
   begin
 
     (* TODO: Figure out why this notation has to be reinstated. *)
-    notation Nmlize  ("\<^bold>\<lfloor>_\<^bold>\<rfloor>")
-    notation HcompNml    (infixr "\<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor>" 53)
-    notation VcompNml    (infixr "\<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor>" 55)
-    notation red          ("_\<^bold>\<down>" [56] 56)
-    notation red2         (infixr "\<^bold>\<Down>" 53)
+    notation Nmlize  (\<open>\<^bold>\<lfloor>_\<^bold>\<rfloor>\<close>)
+    notation HcompNml    (infixr \<open>\<^bold>\<lfloor>\<^bold>\<star>\<^bold>\<rfloor>\<close> 53)
+    notation VcompNml    (infixr \<open>\<^bold>\<lfloor>\<^bold>\<cdot>\<^bold>\<rfloor>\<close> 55)
+    notation red          (\<open>_\<^bold>\<down>\<close> [56] 56)
+    notation red2         (infixr \<open>\<^bold>\<Down>\<close> 53)
 
-    primrec eval :: "'c term \<Rightarrow> 'b"    ("\<lbrace>_\<rbrace>")
+    primrec eval :: "'c term \<Rightarrow> 'b"    (\<open>\<lbrace>_\<rbrace>\<close>)
     where "\<lbrace>\<^bold>\<langle>f\<^bold>\<rangle>\<^sub>0\<rbrace> = E f"
         | "\<lbrace>\<^bold>\<langle>f\<^bold>\<rangle>\<rbrace> = E f"
         | "\<lbrace>t \<^bold>\<star> u\<rbrace> = \<lbrace>t\<rbrace> \<star> \<lbrace>u\<rbrace>"
@@ -2472,22 +2472,22 @@ begin
     lemma eval_Lunit [simp]:
     assumes "Arr t"
     shows "\<lbrace>\<^bold>\<l>\<^bold>[t\<^bold>]\<rbrace> = \<l>[\<lbrace>Cod t\<rbrace>] \<cdot> (trg \<lbrace>t\<rbrace> \<star> \<lbrace>t\<rbrace>)"
-      using assms \<ll>.is_natural_2 \<ll>_ide_simp by (simp add: eval_simps)
+      using assms \<ll>.naturality2 \<ll>_ide_simp by (simp add: eval_simps)
 
     lemma eval_Lunit' [simp]:
     assumes "Arr t"
     shows "\<lbrace>\<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]\<rbrace> = \<l>\<^sup>-\<^sup>1[\<lbrace>Cod t\<rbrace>] \<cdot> \<lbrace>t\<rbrace>"
-      using assms \<ll>'.is_natural_2 \<ll>_ide_simp by (simp add: eval_simps)
+      using assms \<ll>'.naturality2 \<ll>_ide_simp by (simp add: eval_simps)
 
     lemma eval_Runit [simp]:
     assumes "Arr t"
     shows "\<lbrace>\<^bold>\<r>\<^bold>[t\<^bold>]\<rbrace> = \<r>[\<lbrace>Cod t\<rbrace>] \<cdot> (\<lbrace>t\<rbrace> \<star> src \<lbrace>t\<rbrace>)"
-      using assms \<rr>.is_natural_2 \<rr>_ide_simp by (simp add: eval_simps)
+      using assms \<rr>.naturality2 \<rr>_ide_simp by (simp add: eval_simps)
 
     lemma eval_Runit' [simp]:
     assumes "Arr t"
     shows "\<lbrace>\<^bold>\<r>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]\<rbrace> = \<r>\<^sup>-\<^sup>1[\<lbrace>Cod t\<rbrace>] \<cdot> \<lbrace>t\<rbrace>"
-      using assms \<rr>'.is_natural_2 \<rr>_ide_simp by (simp add: eval_simps)
+      using assms \<rr>'.naturality2 \<rr>_ide_simp by (simp add: eval_simps)
 
     lemma eval_Assoc [simp]:
     assumes "Arr t" and "Arr u" and "Arr v" and "Src t = Trg u" and "Src u = Trg v"
@@ -2495,12 +2495,12 @@ begin
     proof -
       have "\<lbrace>\<^bold>\<a>\<^bold>[t, u, v\<^bold>]\<rbrace> = \<alpha> (\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)" by simp
       also have "... = \<alpha> (VVV.cod (\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)) \<cdot> HoHV (\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)"
-        using assms \<alpha>.is_natural_2 [of "(\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)"] VVV.arr_char\<^sub>S\<^sub>b\<^sub>C VVV.cod_char\<^sub>S\<^sub>b\<^sub>C
-              \<alpha>.is_extensional \<alpha>_def
+        using assms \<alpha>.naturality2 [of "(\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)"] VVV.arr_char\<^sub>S\<^sub>b\<^sub>C VVV.cod_char\<^sub>S\<^sub>b\<^sub>C
+              \<alpha>.extensionality \<alpha>_def
         by auto
       also have "... = \<alpha> (cod \<lbrace>t\<rbrace>, cod \<lbrace>u\<rbrace>, cod \<lbrace>v\<rbrace>) \<cdot> ((\<lbrace>t\<rbrace> \<star> \<lbrace>u\<rbrace>) \<star> \<lbrace>v\<rbrace>)"
         unfolding HoHV_def \<alpha>_def
-        using assms VVV.arr_char\<^sub>S\<^sub>b\<^sub>C VV.arr_char\<^sub>S\<^sub>b\<^sub>C VVV.cod_char\<^sub>S\<^sub>b\<^sub>C \<alpha>.is_extensional
+        using assms VVV.arr_char\<^sub>S\<^sub>b\<^sub>C VV.arr_char\<^sub>S\<^sub>b\<^sub>C VVV.cod_char\<^sub>S\<^sub>b\<^sub>C \<alpha>.extensionality
         by auto
       finally show ?thesis by simp
     qed
@@ -2511,12 +2511,12 @@ begin
     proof -
       have "\<lbrace>\<^bold>\<a>\<^sup>-\<^sup>1\<^bold>[t, u, v\<^bold>]\<rbrace> = \<alpha>'.map (\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)" by simp
       also have "... = \<alpha>'.map (VVV.cod (\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)) \<cdot> HoVH (\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)"
-        using assms \<alpha>'.is_natural_2 [of "(\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)"] VVV.arr_char\<^sub>S\<^sub>b\<^sub>C VVV.cod_char\<^sub>S\<^sub>b\<^sub>C
-              \<alpha>'.is_extensional
+        using assms \<alpha>'.naturality2 [of "(\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)"] VVV.arr_char\<^sub>S\<^sub>b\<^sub>C VVV.cod_char\<^sub>S\<^sub>b\<^sub>C
+              \<alpha>'.extensionality
         by simp
       also have "... = \<alpha>'.map (cod \<lbrace>t\<rbrace>, cod \<lbrace>u\<rbrace>, cod \<lbrace>v\<rbrace>) \<cdot> (\<lbrace>t\<rbrace> \<star> \<lbrace>u\<rbrace> \<star> \<lbrace>v\<rbrace>)"
         unfolding HoVH_def
-        using assms VVV.arr_char\<^sub>S\<^sub>b\<^sub>C VV.arr_char\<^sub>S\<^sub>b\<^sub>C VVV.cod_char\<^sub>S\<^sub>b\<^sub>C \<alpha>'.is_extensional
+        using assms VVV.arr_char\<^sub>S\<^sub>b\<^sub>C VV.arr_char\<^sub>S\<^sub>b\<^sub>C VVV.cod_char\<^sub>S\<^sub>b\<^sub>C \<alpha>'.extensionality
         apply simp
         using eval_simps'(2) eval_simps'(3) by presburger
       finally show ?thesis
@@ -2620,7 +2620,7 @@ begin
         also have "... = \<ll>'.map (inv \<lbrace>t\<rbrace>)"
           using t I by simp
         also have "... = \<ll>'.map (cod (inv \<lbrace>t\<rbrace>)) \<cdot> inv \<lbrace>t\<rbrace>"
-          using t \<ll>'.is_natural_2 iso_inv_iso iso_eval_Can iso_is_arr
+          using t \<ll>'.naturality2 iso_inv_iso iso_eval_Can iso_is_arr
           by (metis (no_types, lifting) Can.simps(5) map_simp)
         also have "... = inv (\<lbrace>t\<rbrace> \<cdot> \<ll> (dom \<lbrace>t\<rbrace>))"
         proof -
@@ -2644,7 +2644,7 @@ begin
         also have "... = \<ll> (inv \<lbrace>t\<rbrace>)"
           using t I by simp
         also have "... = inv \<lbrace>t\<rbrace> \<cdot> \<ll> (dom (inv \<lbrace>t\<rbrace>))"
-          using t \<ll>.is_natural_1 iso_inv_iso iso_eval_Can iso_is_arr
+          using t \<ll>.naturality1 iso_inv_iso iso_eval_Can iso_is_arr
           by (metis (no_types, lifting) Can.simps(6) map_simp)
         also have "... = inv (\<ll>'.map (cod \<lbrace>t\<rbrace>) \<cdot> \<lbrace>t\<rbrace>)"
         proof -
@@ -2657,7 +2657,7 @@ begin
             using t 1 inv_comp by auto
         qed
         also have "... = inv \<lbrace>\<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]\<rbrace>"
-          using t \<ll>'.is_natural_2 iso_eval_Can iso_is_arr by force
+          using t \<ll>'.naturality2 iso_eval_Can iso_is_arr by force
         finally show ?thesis by auto
       qed
       show "Can \<^bold>\<r>\<^bold>[t\<^bold>] \<Longrightarrow> \<lbrace>Inv \<^bold>\<r>\<^bold>[t\<^bold>]\<rbrace> = inv \<lbrace>\<^bold>\<r>\<^bold>[t\<^bold>]\<rbrace>"
@@ -2667,7 +2667,7 @@ begin
         also have "... = \<rr>'.map (inv \<lbrace>t\<rbrace>)"
           using t I by simp
         also have "... = \<rr>'.map (cod (inv \<lbrace>t\<rbrace>)) \<cdot> inv \<lbrace>t\<rbrace>"
-          using t \<rr>'.is_natural_2 map_simp iso_inv_iso iso_eval_Can iso_is_arr
+          using t \<rr>'.naturality2 map_simp iso_inv_iso iso_eval_Can iso_is_arr
           by (metis (no_types, lifting) Can.simps(7))
         also have "... = inv (\<lbrace>t\<rbrace> \<cdot> \<rr> (dom \<lbrace>t\<rbrace>))"
         proof -
@@ -2692,7 +2692,7 @@ begin
         also have "... = \<rr> (inv \<lbrace>t\<rbrace>)"
           using t I by simp
         also have "... = inv \<lbrace>t\<rbrace> \<cdot> \<rr> (dom (inv \<lbrace>t\<rbrace>))"
-          using t \<rr>.is_natural_1 map_simp iso_inv_iso iso_eval_Can iso_is_arr
+          using t \<rr>.naturality1 map_simp iso_inv_iso iso_eval_Can iso_is_arr
           by (metis (no_types, lifting) Can.simps(8))
         also have "... = inv (\<rr>'.map (cod \<lbrace>t\<rbrace>) \<cdot> \<lbrace>t\<rbrace>)"
         proof -
@@ -2705,7 +2705,7 @@ begin
             using t 1 inv_comp by auto
         qed
         also have "... = inv \<lbrace>\<^bold>\<r>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]\<rbrace>"
-          using t \<rr>'.is_natural_2 iso_eval_Can iso_is_arr by auto
+          using t \<rr>'.naturality2 iso_eval_Can iso_is_arr by auto
         finally show ?thesis by auto
       qed
       next
@@ -2727,7 +2727,7 @@ begin
           by (simp add: inv_comp)
         also have "... = inv (\<alpha> (\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>))"
           using tuv Can_implies_Arr \<alpha>_def
-          by (metis assoc_is_natural_1 arr_eval_Arr eval_simps'(2) eval_simps'(3) fst_conv snd_conv)
+          by (metis assoc_naturality1 arr_eval_Arr eval_simps'(2) eval_simps'(3) fst_conv snd_conv)
         also have "... = inv \<lbrace>\<^bold>\<a>\<^bold>[t, u, v\<^bold>]\<rbrace>" by simp
         finally show ?thesis by blast
       qed
@@ -2741,7 +2741,7 @@ begin
         also have "... = (inv \<lbrace>t\<rbrace> \<star> inv \<lbrace>u\<rbrace> \<star> inv \<lbrace>v\<rbrace>) \<cdot> \<alpha> (cod \<lbrace>t\<rbrace>, cod \<lbrace>u\<rbrace>, cod \<lbrace>v\<rbrace>)"
           using \<alpha>_def tuv I1 I2 I3 iso_eval_Can Can_implies_Arr eval_simps'(2) eval_simps'(3)
           apply simp
-          using assoc_is_natural_1 arr_inv dom_inv src_inv trg_inv by presburger
+          using assoc_naturality1 arr_inv dom_inv src_inv trg_inv by presburger
         also have "... = inv (\<a>\<^sup>-\<^sup>1[cod \<lbrace>t\<rbrace>, cod \<lbrace>u\<rbrace>, cod \<lbrace>v\<rbrace>] \<cdot> (\<lbrace>t\<rbrace> \<star> \<lbrace>u\<rbrace> \<star> \<lbrace>v\<rbrace>))"
           using tuv inv_comp [of "\<lbrace>t\<rbrace> \<star> \<lbrace>u\<rbrace> \<star> \<lbrace>v\<rbrace>" "\<a>\<^sup>-\<^sup>1[cod \<lbrace>t\<rbrace>, cod \<lbrace>u\<rbrace>, cod \<lbrace>v\<rbrace>]"]
                 Can_implies_Arr iso_assoc \<alpha>_def
@@ -2864,11 +2864,11 @@ begin
     sublocale bicategorical_language V src trg ..
 
     sublocale evaluation_map V src trg V H \<a> \<i> src trg \<open>\<lambda>\<mu>. if arr \<mu> then \<mu> else null\<close>
-      using src.is_extensional trg.is_extensional
+      using src.extensionality trg.extensionality
       by (unfold_locales, auto)
 
-    notation eval ("\<lbrace>_\<rbrace>")
-    notation Nmlize ("\<^bold>\<lfloor>_\<^bold>\<rfloor>")
+    notation eval (\<open>\<lbrace>_\<rbrace>\<close>)
+    notation Nmlize (\<open>\<^bold>\<lfloor>_\<^bold>\<rfloor>\<close>)
 
   end
 
@@ -3763,12 +3763,12 @@ begin
         show Lunit: "Arr \<^bold>\<l>\<^bold>[t\<^bold>] \<Longrightarrow> coherent \<^bold>\<l>\<^bold>[t\<^bold>]"
           using I Ide_Dom coherent_Lunit_Ide Ide_in_Hom
                 coherent_Vcomp [of t "\<^bold>\<l>\<^bold>[Dom t\<^bold>]"] Nmlize_Vcomp_Arr_Dom
-                eval_in_hom \<ll>.is_natural_1 [of "\<lbrace>t\<rbrace>"]
+                eval_in_hom \<ll>.naturality1 [of "\<lbrace>t\<rbrace>"]
           by force
         show Runit: "Arr \<^bold>\<r>\<^bold>[t\<^bold>] \<Longrightarrow> coherent \<^bold>\<r>\<^bold>[t\<^bold>]"
           using I Ide_Dom coherent_Runit_Ide Ide_in_Hom ide_eval_Ide
                 coherent_Vcomp [of t "\<^bold>\<r>\<^bold>[Dom t\<^bold>]"] Nmlize_Vcomp_Arr_Dom \<rr>_ide_simp
-                eval_in_hom \<rr>.is_natural_1 [of "\<lbrace>t\<rbrace>"]
+                eval_in_hom \<rr>.naturality1 [of "\<lbrace>t\<rbrace>"]
           by force
         show "Arr \<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[t\<^bold>] \<Longrightarrow> coherent \<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]"
         proof -
@@ -3779,7 +3779,7 @@ begin
                   Arr.simps(6) Dom.simps(6) Dom_Cod Ide_implies_Arr
             by presburger
           moreover have "\<lbrace>\<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]\<rbrace> = \<lbrace>\<^bold>\<l>\<^sup>-\<^sup>1\<^bold>[Cod t\<^bold>] \<^bold>\<cdot> t\<rbrace>"
-            using t \<ll>'.is_natural_2 [of "\<lbrace>t\<rbrace>"]
+            using t \<ll>'.naturality2 [of "\<lbrace>t\<rbrace>"]
             by (simp add: eval_simps(5))
           ultimately show ?thesis
             using t Nmlize_Vcomp_Cod_Arr by simp
@@ -3793,7 +3793,7 @@ begin
                   Arr.simps(8) Dom.simps(8) Dom_Cod Ide_implies_Arr
             by presburger
           moreover have "\<lbrace>\<^bold>\<r>\<^sup>-\<^sup>1\<^bold>[t\<^bold>]\<rbrace> = \<lbrace>\<^bold>\<r>\<^sup>-\<^sup>1\<^bold>[Cod t\<^bold>] \<^bold>\<cdot> t\<rbrace>"
-            using t \<rr>'.is_natural_2 [of "\<lbrace>t\<rbrace>"]
+            using t \<rr>'.naturality2 [of "\<lbrace>t\<rbrace>"]
             by (simp add: eval_simps(5))
           ultimately show ?thesis
             using t Nmlize_Vcomp_Cod_Arr by simp
@@ -3854,7 +3854,7 @@ begin
           moreover have "\<lbrace>\<^bold>\<a>\<^bold>[t, u, v\<^bold>]\<rbrace> = \<lbrace>(t \<^bold>\<star> u \<^bold>\<star> v) \<^bold>\<cdot> \<^bold>\<a>\<^bold>[Dom t, Dom u, Dom v\<^bold>]\<rbrace>"
             using t u v tu uv Ide_Dom comp_cod_arr ide_eval_Ide \<alpha>_def
             apply (simp add: eval_simps')
-            using assoc_is_natural_1 arr_eval_Arr eval_simps'(2-4) by presburger
+            using assoc_naturality1 arr_eval_Arr eval_simps'(2-4) by presburger
           ultimately show "coherent \<^bold>\<a>\<^bold>[t, u, v\<^bold>]" by argo
         qed
         show "Arr \<^bold>\<a>\<^sup>-\<^sup>1\<^bold>[t, u, v\<^bold>] \<Longrightarrow> coherent \<^bold>\<a>\<^sup>-\<^sup>1\<^bold>[t, u, v\<^bold>]"
@@ -3898,7 +3898,7 @@ begin
                 using tuv \<alpha>'.preserves_reflects_arr arr_eval_Arr eval.simps(10)
                 by (metis (no_types, lifting))
               thus ?thesis
-                using t u v \<alpha>'.is_natural_1 [of "(\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)"] HoHV_def \<a>'_def
+                using t u v \<alpha>'.naturality1 [of "(\<lbrace>t\<rbrace>, \<lbrace>u\<rbrace>, \<lbrace>v\<rbrace>)"] HoHV_def \<a>'_def
                       VVV.dom_simp
                 by simp
             qed

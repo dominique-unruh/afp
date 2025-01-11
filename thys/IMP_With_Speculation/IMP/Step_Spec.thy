@@ -55,7 +55,6 @@ apply (cases "prog!pc")
   subgoal by (auto elim: stepM.cases) 
   subgoal by (auto elim: stepM.cases) 
   subgoal by (auto elim: stepM.cases) 
-  subgoal by (auto elim: stepM.cases) 
   subgoal by (auto elim: stepM.cases,meson IfFalse IfTrue) . .
 
 lemma finalM_iff: 

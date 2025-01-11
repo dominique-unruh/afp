@@ -12,7 +12,7 @@ imports
   "HOL-Library.Word"
 begin
 
-no_notation floor ("\<lfloor>_\<rfloor>")
+unbundle no floor_ceiling_syntax
 
 type_synonym word32 = "32 word"
 

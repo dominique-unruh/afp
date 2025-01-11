@@ -217,8 +217,8 @@ ML \<open> structure IMP_Annotations
 subsection \<open>Hoare Triple Syntax\<close>
   
 (* In-Term notation for Hoare Triples*)   
-syntax "_Htriple" :: "cartouche_position \<Rightarrow> cartouche_position \<Rightarrow> cartouche_position \<Rightarrow> logic" ("\<^htriple>_ _ _")
-syntax "_Htriple_Partial" :: "cartouche_position \<Rightarrow> cartouche_position \<Rightarrow> cartouche_position \<Rightarrow> logic" ("\<^htriple_partial>_ _ _")
+syntax "_Htriple" :: "cartouche_position \<Rightarrow> cartouche_position \<Rightarrow> cartouche_position \<Rightarrow> logic" (\<open>\<^htriple>_ _ _\<close>)
+syntax "_Htriple_Partial" :: "cartouche_position \<Rightarrow> cartouche_position \<Rightarrow> cartouche_position \<Rightarrow> logic" (\<open>\<^htriple_partial>_ _ _\<close>)
 
 
 ML \<open> structure VCG_Htriple_Syntax 
@@ -233,8 +233,8 @@ ML \<open> structure VCG_Htriple_Syntax
     end
     
     fun decon_cartouche_ast ((c as Const (@{syntax_const "_constrain"}, _)) $ Free (s, _) $ p) = (
-      case Term_Position.decode_position p of 
-        SOME (pos, _) => ((s,pos) (*, fn t => c$t$p*))
+      case Term_Position.decode_position1 p of 
+        SOME {pos, ...} => ((s,pos) (*, fn t => c$t$p*))
       | NONE => raise TERM ("cartouche with invalid pos",[c,p])  
     )
     | decon_cartouche_ast t = raise TERM ("decon_cartouche_ast",[t])  

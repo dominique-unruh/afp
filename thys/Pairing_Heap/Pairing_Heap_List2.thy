@@ -24,29 +24,28 @@ fun get_min  :: "'a heap \<Rightarrow> 'a" where
 
 
 fun link :: "('a::linorder) hp \<Rightarrow> 'a hp \<Rightarrow> 'a hp" where
-"link (Hp x lx) (Hp y ly) = 
-    (if x < y then Hp x (Hp y ly # lx) else Hp y (Hp x lx # ly))"
+"link (Hp x1 hs1) (Hp x2 hs2) = 
+    (if x1 < x2 then Hp x1 (Hp x2 hs2 # hs1) else Hp x2 (Hp x1 hs1 # hs2))"
 
 fun merge :: "('a::linorder) heap \<Rightarrow> 'a heap \<Rightarrow> 'a heap" where
-"merge h None = h" |
-"merge None h = h" |
+"merge ho None = ho" |
+"merge None ho = ho" |
 "merge (Some h1) (Some h2) = Some(link h1 h2)"
 
-lemma merge_None[simp]: "merge None h = h"
-by(cases h)auto
+lemma merge_None[simp]: "merge None ho = ho"
+by(cases ho)auto
 
 fun insert :: "('a::linorder) \<Rightarrow> 'a heap \<Rightarrow> 'a heap" where
 "insert x None = Some(Hp x [])" |
 "insert x (Some h) = Some(link (Hp x []) h)"
 
 fun pass\<^sub>1 :: "('a::linorder) hp list \<Rightarrow> 'a hp list" where
-  "pass\<^sub>1 [] = []"
-| "pass\<^sub>1 [h] = [h]" 
-| "pass\<^sub>1 (h1#h2#hs) = link h1 h2 # pass\<^sub>1 hs"
+"pass\<^sub>1 (h1#h2#hs) = link h1 h2 # pass\<^sub>1 hs" |
+"pass\<^sub>1 hs = hs"
 
 fun pass\<^sub>2 :: "('a::linorder) hp list \<Rightarrow> 'a heap" where
-  "pass\<^sub>2 [] = None"
-| "pass\<^sub>2 (h#hs) = Some(case pass\<^sub>2 hs of None \<Rightarrow> h | Some h' \<Rightarrow> link h h')"
+"pass\<^sub>2 [] = None" |
+"pass\<^sub>2 (h#hs) = Some(case pass\<^sub>2 hs of None \<Rightarrow> h | Some h' \<Rightarrow> link h h')"
 
 fun merge_pairs :: "('a::linorder) hp list \<Rightarrow> 'a heap" where
   "merge_pairs [] = None"
@@ -68,23 +67,31 @@ by (induction hs rule: merge_pairs.induct) (auto split: option.split)
 
 declare pass12_merge_pairs[code_unfold]
 
+text \<open>Abstraction functions:\<close>
+
+fun mset_hp :: "'a hp \<Rightarrow>'a multiset" where
+"mset_hp (Hp x hs) = {#x#} + sum_list(map mset_hp hs)"
+
+definition mset_heap :: "'a heap \<Rightarrow>'a multiset" where
+"mset_heap ho = (case ho of None \<Rightarrow> {#} | Some h \<Rightarrow> mset_hp h)"
+
 
 subsubsection \<open>Invariants\<close>
 
 fun php :: "('a::linorder) hp \<Rightarrow> bool" where
-"php (Hp x hs) = (\<forall>h \<in> set hs. (\<forall>y \<in> set_hp h. x \<le> y) \<and> php h)"
+"php (Hp x hs) = (\<forall>h \<in> set hs. (\<forall>y \<in># mset_hp h. x \<le> y) \<and> php h)"
 
 definition invar :: "('a::linorder) heap \<Rightarrow> bool" where
 "invar ho = (case ho of None \<Rightarrow> True | Some h \<Rightarrow> php h)"
 
 lemma php_link: "php h1 \<Longrightarrow> php h2 \<Longrightarrow> php (link h1 h2)"
-by (induction h1 h2 rule: link.induct) fastforce+
+by (induction h1 h2 rule: link.induct) (fastforce simp flip: sum_mset_sum_list)+
 
 lemma invar_merge:
-  "\<lbrakk> invar h1; invar h2 \<rbrakk> \<Longrightarrow> invar (merge h1 h2)"
+  "\<lbrakk> invar ho1; invar ho2 \<rbrakk> \<Longrightarrow> invar (merge ho1 ho2)"
 by (auto simp: php_link invar_def split: option.splits)
 
-lemma invar_insert: "invar h \<Longrightarrow> invar (insert x h)"
+lemma invar_insert: "invar ho \<Longrightarrow> invar (insert x ho)"
 by (auto simp: php_link invar_def split: option.splits)
 
 lemma invar_pass1: "\<forall>h \<in> set hs. php h \<Longrightarrow> \<forall>h \<in> set (pass\<^sub>1 hs). php h"
@@ -96,57 +103,51 @@ by (induction hs)(auto simp: php_link invar_def split: option.splits)
 lemma invar_Some: "invar(Some h) = php h"
 by(simp add: invar_def)
 
-lemma invar_del_min: "invar h \<Longrightarrow> invar (del_min h)"
-by(induction h rule: del_min.induct)
+lemma invar_del_min: "invar ho \<Longrightarrow> invar (del_min ho)"
+by(induction ho rule: del_min.induct)
   (auto simp: invar_Some intro!: invar_pass1 invar_pass2)
 
 
 subsubsection \<open>Functional Correctness\<close>
 
-fun mset_hp :: "'a hp \<Rightarrow>'a multiset" where
-"mset_hp (Hp x hs) = {#x#} + sum_mset(mset(map mset_hp hs))"
+lemma mset_hp_empty[simp]: "mset_hp h \<noteq> {#}"
+by (cases h) auto
 
-definition mset_heap :: "'a heap \<Rightarrow>'a multiset" where
-"mset_heap ho = (case ho of None \<Rightarrow> {#} | Some h \<Rightarrow> mset_hp h)"
-
-lemma set_mset_mset_hp: "set_mset (mset_hp h) = set_hp h"
-by(induction h) auto
-
-lemma mset_hp_empty[simp]: "mset_hp hp \<noteq> {#}"
-by (cases hp) auto
-
-lemma mset_heap_Some: "mset_heap(Some hp) = mset_hp hp"
+lemma mset_heap_Some: "mset_heap(Some h) = mset_hp h"
 by(simp add: mset_heap_def)
 
 lemma mset_heap_empty: "mset_heap h = {#} \<longleftrightarrow> h = None"
 by (cases h) (auto simp add: mset_heap_def)
 
 lemma get_min_in:
-  "h \<noteq> None \<Longrightarrow> get_min h \<in> set_hp(the h)"
+  "ho \<noteq> None \<Longrightarrow> get_min ho \<in># mset_hp(the ho)"
 by(induction rule: get_min.induct)(auto)
 
-lemma get_min_min: "\<lbrakk> h \<noteq> None; invar h; x \<in> set_hp(the h) \<rbrakk> \<Longrightarrow> get_min h \<le> x"
-by(induction h rule: get_min.induct)(auto simp: invar_def)
-
+lemma get_min_min: "\<lbrakk> ho \<noteq> None; invar ho; x \<in># mset_hp(the ho) \<rbrakk> \<Longrightarrow> get_min ho \<le> x"
+by(induction ho rule: get_min.induct)(auto simp: invar_def simp flip: sum_mset_sum_list)
 
 lemma mset_link: "mset_hp (link h1 h2) = mset_hp h1 + mset_hp h2"
 by(induction h1 h2 rule: link.induct)(auto simp: add_ac)
 
-lemma mset_merge: "mset_heap (merge h1 h2) = mset_heap h1 + mset_heap h2"
-by (induction h1 h2 rule: merge.induct)
+lemma mset_merge: "mset_heap (merge ho1 ho2) = mset_heap ho1 + mset_heap ho2"
+by (induction ho1 ho2 rule: merge.induct)
    (auto simp add: mset_heap_def mset_link ac_simps)
 
-lemma mset_insert: "mset_heap (insert a h) = {#a#} + mset_heap h"
-by(cases h) (auto simp add: mset_link mset_heap_def insert_def)
+lemma mset_insert: "mset_heap (insert a ho) = {#a#} + mset_heap ho"
+by(cases ho) (auto simp add: mset_link mset_heap_def insert_def)
 
-lemma mset_merge_pairs: "mset_heap (merge_pairs hs) = sum_mset(image_mset mset_hp (mset hs))"
+lemma mset_pass\<^sub>1: "sum_list(map mset_hp (pass\<^sub>1 hs)) = sum_list(map mset_hp hs)"
+by(induction hs rule: pass\<^sub>1.induct)
+  (auto simp: mset_link split: option.split)
+
+lemma mset_pass\<^sub>2: "mset_heap (pass\<^sub>2 hs) = sum_list(map mset_hp hs)"
 by(induction hs rule: merge_pairs.induct)
-  (auto simp: mset_merge mset_link mset_heap_def Let_def split: option.split)
+  (auto simp: mset_link mset_heap_def split: option.split)
 
-lemma mset_del_min: "h \<noteq> None \<Longrightarrow>
-  mset_heap (del_min h) = mset_heap h - {#get_min h#}"
-by(induction h rule: del_min.induct)
-  (auto simp: mset_heap_Some pass12_merge_pairs mset_merge_pairs)
+lemma mset_del_min: "ho \<noteq> None \<Longrightarrow>
+  mset_heap (del_min ho) = mset_heap ho - {#get_min ho#}"
+by(induction ho rule: del_min.induct)
+  (auto simp: mset_heap_Some mset_pass\<^sub>1 mset_pass\<^sub>2)
 
 
 text \<open>Last step: prove all axioms of the priority queue specification:\<close>
@@ -166,7 +167,7 @@ next
   case 4 thus ?case by(simp add: mset_del_min mset_heap_empty)
 next
   case (5 q) thus ?case using get_min_in[of q]
-    by(auto simp add: eq_Min_iff get_min_min mset_heap_empty mset_heap_Some set_mset_mset_hp)
+    by(auto simp add: eq_Min_iff get_min_min mset_heap_empty mset_heap_Some)
 next
   case 6 thus ?case by (simp add: invar_def)
 next

@@ -33,7 +33,7 @@ text \<open>Nonces\<close>
 typedecl fid_t
 
 datatype fresh_t = 
-  mk_fresh "fid_t" "nat"      (infixr "$" 65) 
+  mk_fresh "fid_t" "nat"      (infixr \<open>$\<close> 65) 
 
 fun fid :: "fresh_t \<Rightarrow> fid_t" where
   "fid (f $ n) = f"
@@ -468,7 +468,9 @@ abbreviation
 text\<open>Concrete syntax: messages appear as <A,B,NA>, etc...\<close>
 
 syntax
-  "_MTuple"      :: "['a, args] \<Rightarrow> 'a * 'b"       ("(2\<langle>_,/ _\<rangle>)")
+  "_MTuple"      :: "['a, args] \<Rightarrow> 'a * 'b"  (\<open>(\<open>indent=2 notation=\<open>mixfix message tuple\<close>\<close>\<langle>_,/ _\<rangle>)\<close>)
+syntax_consts
+  "_MTuple" \<rightleftharpoons> Pair
 translations
   "\<langle>x, y, z\<rangle>" \<rightleftharpoons> "\<langle>x, \<langle>y, z\<rangle>\<rangle>"
   "\<langle>x, y\<rangle>"    \<rightleftharpoons> "CONST Pair x y"

@@ -52,7 +52,7 @@ type_synonym cap = "block capability"
 
 text \<open>Because \texttt{sizeof} depends on the architecture, it shall be given via the memory model. We also
       use uncompressed capabilities.\<close>
-definition sizeof :: "cctype \<Rightarrow> nat" ("|_|\<^sub>\<tau>")
+definition sizeof :: "cctype \<Rightarrow> nat" (\<open>|_|\<^sub>\<tau>\<close>)
   where
   "sizeof \<tau> \<equiv> case \<tau> of
      Uint8  \<Rightarrow> 1
@@ -416,7 +416,7 @@ instance ..
 end
 
 text \<open>Section 4.5 of CHERI C/C++ Programming Guide defines what a \texttt{NULL} capability is~\cite{watson_cc_2019}.\<close>
-definition null_capability :: "cap" ("NULL")
+definition null_capability :: "cap" (\<open>NULL\<close>)
   where
   "NULL \<equiv> 0"
 
@@ -476,7 +476,7 @@ abbreviation cap_offset :: "nat \<Rightarrow> nat"
   "cap_offset p \<equiv> if p mod |Cap|\<^sub>\<tau> = 0 then p else p - p mod |Cap|\<^sub>\<tau>"
 
 text \<open>We state the well-formedness property $\mathcal{W}^\mathcal{C}_f$ stated in the paper~\cite{park_2022}.\<close>
-definition wellformed :: "(block, t) mapping \<Rightarrow> bool" ("\<W>\<^sub>\<ff>/(_/)")
+definition wellformed :: "(block, t) mapping \<Rightarrow> bool" (\<open>\<W>\<^sub>\<ff>/(_/)\<close>)
   where
   "\<W>\<^sub>\<ff>(h) \<equiv> 
      \<forall> b obj. Mapping.lookup h b = Some (Map obj) 
@@ -2813,8 +2813,13 @@ proof (cases ret)
   case (Cap_v ca)
   show ?thesis
     using assms load_cond_hard_cap[where ?h=h and ?c=c and ?t=t and ?ret=ret]
-    by (clarsimp, simp only: load_def retrieve_tval_def Let_def, clarsimp split: option.split_asm, clarsimp split: t.split_asm, rename_tac x nth map, subgoal_tac "int (fst (bounds map)) \<le> int |t|\<^sub>\<tau> * nth \<and> int |t|\<^sub>\<tau> * nth + int |t|\<^sub>\<tau> \<le> int (snd (bounds map))", clarsimp split: cctype.split_asm, safe; force?)
-      (metis ccval.distinct(105) ccval.distinct(107) ccval.inject(9) is_cap.elims(2) linorder_not_le result.distinct(1))+
+    apply auto
+    apply (simp only: load_def retrieve_tval_def Let_def)
+    apply (clarsimp split: option.split_asm)
+    apply (clarsimp split: t.split_asm)
+    apply (cases t)
+    apply (auto split: if_splits)
+    done
 qed blast+
 
 lemma load_cond_cap_frag:
@@ -2839,7 +2844,10 @@ proof (cases ret)
   case (Cap_v_frag x101 x102)
   show ?thesis 
     using assms load_cond_hard_cap[where ?h=h and ?c=c and ?t=t and ?ret=ret]
-    by (clarsimp, simp only: load_def retrieve_tval_def Let_def, clarsimp split: option.split_asm, clarsimp split: t.split_asm if_split_asm cctype.split_asm)
+    apply auto
+    apply (simp only: load_def retrieve_tval_def Let_def)
+    apply (clarsimp split: option.split_asm t.split_asm if_split_asm cctype.split_asm)
+    done
 qed (simp add: type_uniq assms(2))+ 
 
 
@@ -3629,23 +3637,30 @@ lemma store_wellformed:
   assumes "\<W>\<^sub>\<ff>(heap_map h)"
     and "store h c v = Success h'"
   shows "\<W>\<^sub>\<ff>(heap_map h')"
- using store_cond_hard_cap(1)[where ?h=h and ?c=c and ?v=v and ?ret=h', OF assms(2)]
-   store_cond_hard_cap(2)[where ?h=h and ?c=c and ?v=v and ?ret=h', OF assms(2)]
-   store_cond_hard_cap(4)[where ?h=h and ?c=c and ?v=v and ?ret=h', OF assms(2)]
-   store_cond_hard_cap(5)[where ?h=h and ?c=c and ?v=v and ?ret=h', OF assms(2)]
-   store_cond_hard_cap(6)[where ?h=h and ?c=c and ?v=v and ?ret=h', OF assms(2)]
-   assms
-  apply (simp add: store_def wellformed_def split: option.split_asm t.split_asm if_split_asm del: memval_type.simps)
-  apply safe
-  apply (clarsimp simp del: memval_type.simps)
-  apply (erule_tac x="block_id c" in allE)
-  apply (rename_tac map nth block obj x)
-  apply (erule_tac x=map in allE) 
-  apply (clarsimp simp del: memval_type.simps)
-  apply (subgoal_tac "Set.filter (\<lambda>x. 0 < x mod |Cap|\<^sub>\<tau>) (Mapping.keys (tags (store_tval map (nat (int |memval_type v|\<^sub>\<tau> * nth)) v))) = {}")
-   apply (smt (verit, best) Mapping.lookup_update Mapping.lookup_update_neq Set.member_filter assms(1) emptyE option.sel rel_simps(70) t.sel wellformed_def)
-  apply (simp add: store_tval_def del: memval_type.simps split: ccval.split_asm; fastforce)
-  done (* WARNING: The last line takes a VERY LONG TIME to process, at least 30s *)
+proof -
+  from store_cond_hard_cap(6)[where ?h=h and ?c=c and ?v=v and ?ret=h', OF assms(2)]
+  obtain nth where \<open>offset c = int |memval_type v|\<^sub>\<tau> * nth\<close>
+    by blast
+  with store_cond_hard_cap(1)[where ?h=h and ?c=c and ?v=v and ?ret=h', OF assms(2)]
+    store_cond_hard_cap(2)[where ?h=h and ?c=c and ?v=v and ?ret=h', OF assms(2)]
+    store_cond_hard_cap(4)[where ?h=h and ?c=c and ?v=v and ?ret=h', OF assms(2)]
+    store_cond_hard_cap(5)[where ?h=h and ?c=c and ?v=v and ?ret=h', OF assms(2)]
+    assms
+  show ?thesis
+    apply (simp add: store_def wellformed_def split: option.split_asm t.split_asm if_split_asm del: memval_type.simps)
+    apply safe
+    apply (clarsimp simp del: memval_type.simps)
+    subgoal for map block obj n
+      apply (erule_tac x="block_id c" in allE)
+      apply (erule_tac x=map in allE)
+      apply (clarsimp simp del: memval_type.simps)
+      apply (subgoal_tac "Set.filter (\<lambda>x. 0 < x mod |Cap|\<^sub>\<tau>) (Mapping.keys (tags (store_tval map (nat (int |memval_type v|\<^sub>\<tau> * nth)) v))) = {}")
+       apply (smt (verit, best) Mapping.lookup_update Mapping.lookup_update_neq Set.member_filter assms(1) emptyE option.sel rel_simps(70) t.sel wellformed_def)
+      apply (simp add: store_tval_def del: memval_type.simps split: ccval.split_asm; fastforce) (* WARNING: The last line takes a VERY LONG TIME to process, at least 30s *)
+      done
+    done
+qed
+
 
 subsection \<open>memcpy formalisation\<close>
 text \<open>We also formalise memcpy in Isabelle/HOL. While other higher level operations are defined

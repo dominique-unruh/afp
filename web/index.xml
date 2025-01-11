@@ -11,8 +11,15 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-gb</language>
     
-      <lastBuildDate>Tue, 26 Nov 2024 00:00:00 +0000</lastBuildDate>
+      <lastBuildDate>Tue, 07 Jan 2025 00:00:00 +0000</lastBuildDate>
       <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+        <item>
+          <title>Notes on Gödel’s and Scott’s Variants of the Ontological Argument (Isabelle/HOL dataset)</title>
+          <link>/entries/Notes_On_Goedels_Ontological_Argument.html</link>
+          <pubDate>Tue, 07 Jan 2025 00:00:00 +0000</pubDate>
+          <guid>/entries/Notes_On_Goedels_Ontological_Argument.html</guid>
+          <description></description>
+        </item>
         <item>
           <title>The Sum-of-Squares Function and Jacobi&#39;s Two-Square Theorem</title>
           <link>/entries/Sum_Of_Squares_Count.html</link>
@@ -32,6 +39,13 @@
           <link>/entries/ProcessComposition.html</link>
           <pubDate>Mon, 25 Nov 2024 00:00:00 +0000</pubDate>
           <guid>/entries/ProcessComposition.html</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>A Generalization of the Cauchy–Davenport theorem</title>
+          <link>/entries/Generalized_Cauchy_Davenport.html</link>
+          <pubDate>Sat, 23 Nov 2024 00:00:00 +0000</pubDate>
+          <guid>/entries/Generalized_Cauchy_Davenport.html</guid>
           <description></description>
         </item>
         <item>
@@ -8288,6 +8302,13 @@
           <description></description>
         </item>
         <item>
+          <title>Generalized_Cauchy_Davenport</title>
+          <link>/sessions/generalized_cauchy_davenport/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/generalized_cauchy_davenport/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Generalized_Counting_Sort</title>
           <link>/sessions/generalized_counting_sort/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -10056,6 +10077,13 @@
           <link>/sessions/normbyeval/</link>
           <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
           <guid>/sessions/normbyeval/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Notes_On_Goedels_Ontological_Argument</title>
+          <link>/sessions/notes_on_goedels_ontological_argument/</link>
+          <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+          <guid>/sessions/notes_on_goedels_ontological_argument/</guid>
           <description></description>
         </item>
         <item>

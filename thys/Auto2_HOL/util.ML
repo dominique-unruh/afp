@@ -545,7 +545,7 @@ fun list_meta_horn (vars, (As, B)) =
 fun to_internal_vars ctxt (vars, body) =
     let
       val vars' = vars |> map Term.dest_Free
-                       |> Variable.variant_frees ctxt []
+                       |> Variable.variant_names ctxt
                        |> map (apfst Name.internal)
                        |> map Free
       val subst = vars ~~ vars'
@@ -603,13 +603,13 @@ fun comb_equiv (cf, arg_equivs) =
     Library.foldl (uncurry Thm.combination) (Thm.reflexive cf, arg_equivs)
 
 (* Retrive name of theorem. *)
-fun name_of_thm th = if Thm.has_name_hint th then Thm.get_name_hint th
+fun name_of_thm th = if Thm.has_name_hint th then Thm_Name.short (Thm.get_name_hint th)
                      else raise Fail "name_of_thm: not found"
 
 (* Set the name of th to the name of ori_th, followed by suffix. *)
 fun update_name_of_thm ori_th suffix th =
     if Thm.has_name_hint ori_th then
-      th |> Thm.put_name_hint (Thm.get_name_hint ori_th ^ suffix)
+      th |> Thm.put_name_hint (Thm_Name.short (Thm.get_name_hint ori_th) ^ suffix, 0)
     else th
 
 val lhs_of = Thm.term_of o Thm.lhs_of

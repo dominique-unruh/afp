@@ -557,9 +557,9 @@ proof -
   then have poly_is_2: "poly (smult (int (M ^ (h - 1 - j))) (p ^ j * monom 1 i)) x0
     = int (M ^ (h - 1 - j))*poly (p ^ j * monom 1 i) x0"
     by simp
-  obtain k::"int" where "poly p x0 = k * M"
-    using p_zero_mod_M
-    by (metis mult.commute Divides.zmod_eq_0D)
+  from p_zero_mod_M have \<open>int M dvd poly p x0\<close>
+    by presburger
+  then obtain k where \<open>poly p x0 = int M * k\<close> ..
   then have "poly (p ^ j * monom 1 i) x0 = M^j*(k)^j*(poly (monom 1 i) x0)"
     using poly_is
     by (simp add: power_mult_distrib) 
@@ -1081,8 +1081,10 @@ proof -
   have "eps*d \<le> (0.18*(d-1)/d)*d"
     using d_gt eps_le
     by (metis le_simps(1) of_nat_0_le_iff of_nat_1 of_nat_diff times_left_mono) 
+  then have "9 + eps * real d * 50 \<le> real d * 9" 
+    using d_gt by force
   then have "1/((d-1)/(d*eps) - 1 + 1) \<le> 0.18"
-    using d_gt by (auto simp add: field_simps)
+    using d_gt by (simp add: field_simps) 
   then have helper_ineq:"1/(d*((d-1)/(d*eps) + 1)/d - 1) \<le> 0.18"
     using d_gt by auto
   have "h = \<lceil>((real d - 1) / (real d * eps) + 1) / real d\<rceil>"
@@ -1106,8 +1108,7 @@ proof -
   then have "(d-1)/(d*eps) > d-1"
     using d_gt eps_gt inequality_helper[of "d-1" "d*eps"] by auto
   then have gteq: "d*((d-1)/(d*eps) + 1)/d - 1 > 0"
-    using d_gt 
-    by (auto simp add: field_simps)
+    using d_gt by simp
   have "1/(d*h - 1) \<le> 0.18"
     using h_gteq_helper2 gteq helper_ineq 
     by (smt (verit, ccfv_SIG) frac_le)
@@ -1120,10 +1121,7 @@ proof -
     apply (clarsimp simp add: field_simps)
     by (metis Num.of_nat_simps(3) Num.of_nat_simps(5) Suc_pred' dh_gt_0 numeral_nat(7))
   then have "root (d*h - 1) (d*h) \<le> sqrt 2"
-    using root_powr_inverse
-    using pos2 real_root_gt_0_iff  zero_less_diff
-    by (metis d_gt dh_gt_0 h_gt less_1_mult of_nat_0_less_iff)
-
+    using gteq h_gteq_helper2 root_powr_inverse by force
   then have "root (d*h - 1) (d*h)*(root 2 2) \<le> sqrt 2 *(root 2 2)"
     by simp
   then have "?cdh \<le> 2"
@@ -1133,10 +1131,9 @@ proof -
   then have "
     root (d*h - 1) (d*h)*(root 2 2)* X < M powr (1/d - eps)"
     using X_lt unfolding root_bound_def by simp
-  then have arith: "
-    (root (d*h - 1) (d*h)*(root 2 2)* X) ^ (d * h * (d*h - 1)) <
-    (M powr (1/d - eps))  ^ (d * h * (d*h - 1)) "
-    by (smt (verit, del_insts) d_gt dh_gt_0 h_gt less_1_mult linordered_semidom_class.power_strict_mono mult_nonneg_nonneg nat_0_less_mult_iff of_nat_0_le_iff real_root_ge_zero zero_less_diff)
+  then have arith: "(root (d*h - 1) (d*h)*(root 2 2)* X) ^ (d * h * (d*h - 1)) 
+                  < (M powr (1/d - eps))  ^ (d * h * (d*h - 1))"
+    by (smt (verit, del_insts) d_gt dh_gt_0 h_gt less_1_mult power_strict_mono mult_nonneg_nonneg nat_0_less_mult_iff of_nat_0_le_iff real_root_ge_zero zero_less_diff)
   have "2 ^ (d * h *  (d * h - 1) div 2) *
     X ^ ((d * h - 1) * d * h)  * (d * h) ^ (d * h)
     <  (M ^ ((h - 1)  *  (d * h)))"
@@ -1160,8 +1157,8 @@ proof -
       by (metis eps_gt bot_nat_0.not_eq_extremum div_by_0 h_def less_eq_real_def nat_0_less_mult_iff semiring_1_class.of_nat_0) 
 
     then have "(1/d - eps) * (d*h - 1)\<le> h - 1"
-      using d_gt apply (clarsimp simp add: field_simps)
-      by (smt (verit) One_nat_def diff_mult_distrib2 divide_le_eq h_gt less_or_eq_imp_le mult_le_mono2 mult_sign_intros(5) nat_mult_1_right of_nat_diff of_nat_less_iff of_nat_mult semiring_1_class.of_nat_0 zero_less_one_class.zero_less_one)
+      using d_gt apply (simp add: field_simps)
+      by (smt (verit, ccfv_threshold) One_nat_def diff_mult_distrib2 h_gt le_eq_less_or_eq linordered_semiring_strict_class.mult_pos_pos nat_SN.gt_trans nat_mult_1_right nonzero_eq_divide_eq of_nat_0_less_iff of_nat_1 of_nat_diff of_nat_mult pos_divide_less_eq zero_less_diff)
     then have "(d * h) * ((1/d - eps) * (d*h - 1)) \<le> (d * h) * (h - 1)"
       by (simp add: mult_left_mono)
     then have "(1/d - eps) * (d * h * (d*h - 1)) \<le> ((h - 1)  *  (d * h))"

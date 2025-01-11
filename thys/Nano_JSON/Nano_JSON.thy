@@ -256,7 +256,7 @@ subsubsection\<open>Isar Setup: Cartouche and Isar-Top-level Binding\<close>
 paragraph\<open>The JSON Cartouche.\<close>
 text\<open>First, we define a cartouche that allows using JSON syntax within HOL expressions:\<close>
 
-syntax "_cartouche_nano_json" :: "cartouche_position \<Rightarrow> 'a"  ("JSON _")
+syntax "_cartouche_nano_json" :: "cartouche_position \<Rightarrow> 'a"  (\<open>JSON _\<close>)
 parse_translation\<open> 
 let
   fun translation u args = let
@@ -270,8 +270,8 @@ let
     in
       case args of
         [(c as Const (@{syntax_const "_constrain"}, _)) $ Free (s, _) $ p] =>
-          (case Term_Position.decode_position p of
-            SOME (pos, _) => c 
+          (case Term_Position.decode_position1 p of
+            SOME {pos, ...} => c 
                           $ Nano_Json_Parser.term_of_json_string verbose strT numT (input s pos) 
                           $ p
           | NONE => err ())
@@ -457,8 +457,7 @@ structure Nano_Json_Serialize_Isar = struct
                       | _ $ (_ $ json_term) => json_term
                       | _ => error ("Term structure not supported.")
         val json_string  = Nano_Json_Serializer.serialize_term_pretty json_term 
-        val json_bytes = (XML.add_content (YXML.parse json_string) Buffer.empty)
-                           |> Bytes.buffer
+        val json_bytes = Bytes.string (Protocol_Message.clean_output json_string)
     in
         case filename of 
              SOME filename => let 

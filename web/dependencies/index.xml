@@ -49,6 +49,13 @@
           <description></description>
         </item>
         <item>
+          <title>Jacobson_Basic_Algebra</title>
+          <link>/dependencies/jacobson_basic_algebra/</link>
+          <pubDate>Sat, 23 Nov 2024 00:00:00 +0000</pubDate>
+          <guid>/dependencies/jacobson_basic_algebra/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>BenOr_Kozen_Reif</title>
           <link>/dependencies/benor_kozen_reif/</link>
           <pubDate>Sat, 16 Nov 2024 00:00:00 +0000</pubDate>
@@ -371,13 +378,6 @@
           <description></description>
         </item>
         <item>
-          <title>Jacobson_Basic_Algebra</title>
-          <link>/dependencies/jacobson_basic_algebra/</link>
-          <pubDate>Wed, 31 Jul 2024 00:00:00 +0000</pubDate>
-          <guid>/dependencies/jacobson_basic_algebra/</guid>
-          <description></description>
-        </item>
-        <item>
           <title>Smooth_Manifolds</title>
           <link>/dependencies/smooth_manifolds/</link>
           <pubDate>Wed, 31 Jul 2024 00:00:00 +0000</pubDate>
@@ -459,6 +459,13 @@
           <link>/dependencies/complete_non_orders/</link>
           <pubDate>Mon, 27 May 2024 00:00:00 +0000</pubDate>
           <guid>/dependencies/complete_non_orders/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>FinFun</title>
+          <link>/dependencies/finfun/</link>
+          <pubDate>Mon, 27 May 2024 00:00:00 +0000</pubDate>
+          <guid>/dependencies/finfun/</guid>
           <description></description>
         </item>
         <item>
@@ -623,10 +630,10 @@
           <description></description>
         </item>
         <item>
-          <title>Frequency_Moments</title>
-          <link>/dependencies/frequency_moments/</link>
+          <title>Median_Method</title>
+          <link>/dependencies/median_method/</link>
           <pubDate>Fri, 15 Mar 2024 00:00:00 +0000</pubDate>
-          <guid>/dependencies/frequency_moments/</guid>
+          <guid>/dependencies/median_method/</guid>
           <description></description>
         </item>
         <item>
@@ -959,6 +966,13 @@
           <description></description>
         </item>
         <item>
+          <title>Frequency_Moments</title>
+          <link>/dependencies/frequency_moments/</link>
+          <pubDate>Mon, 03 Apr 2023 00:00:00 +0000</pubDate>
+          <guid>/dependencies/frequency_moments/</guid>
+          <description></description>
+        </item>
+        <item>
           <title>Perron_Frobenius</title>
           <link>/dependencies/perron_frobenius/</link>
           <pubDate>Fri, 03 Mar 2023 00:00:00 +0000</pubDate>
@@ -1173,13 +1187,6 @@
           <link>/dependencies/interpolation_polynomials_hol_algebra/</link>
           <pubDate>Fri, 08 Apr 2022 00:00:00 +0000</pubDate>
           <guid>/dependencies/interpolation_polynomials_hol_algebra/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>Median_Method</title>
-          <link>/dependencies/median_method/</link>
-          <pubDate>Fri, 08 Apr 2022 00:00:00 +0000</pubDate>
-          <guid>/dependencies/median_method/</guid>
           <description></description>
         </item>
         <item>
@@ -1579,13 +1586,6 @@
           <link>/dependencies/extended_finite_state_machines/</link>
           <pubDate>Mon, 07 Sep 2020 00:00:00 +0000</pubDate>
           <guid>/dependencies/extended_finite_state_machines/</guid>
-          <description></description>
-        </item>
-        <item>
-          <title>FinFun</title>
-          <link>/dependencies/finfun/</link>
-          <pubDate>Mon, 07 Sep 2020 00:00:00 +0000</pubDate>
-          <guid>/dependencies/finfun/</guid>
           <description></description>
         </item>
         <item>
@@ -2146,6 +2146,13 @@
           <link>/dependencies/noninterference_ipurge_unwinding/</link>
           <pubDate>Tue, 26 Apr 2016 00:00:00 +0000</pubDate>
           <guid>/dependencies/noninterference_ipurge_unwinding/</guid>
+          <description></description>
+        </item>
+        <item>
+          <title>Difference_Bound_Matrices</title>
+          <link>/dependencies/difference_bound_matrices/</link>
+          <pubDate>Tue, 08 Mar 2016 00:00:00 +0000</pubDate>
+          <guid>/dependencies/difference_bound_matrices/</guid>
           <description></description>
         </item>
         <item>

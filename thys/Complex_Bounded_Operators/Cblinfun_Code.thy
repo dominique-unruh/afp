@@ -19,15 +19,15 @@ theory Cblinfun_Code
     Cblinfun_Matrix Containers.Set_Impl Jordan_Normal_Form.Matrix_Kernel
 begin
 
-no_notation "Lattice.meet" (infixl "\<sqinter>\<index>" 70)
-no_notation "Lattice.join" (infixl "\<squnion>\<index>" 65)
+no_notation "Lattice.meet" (infixl \<open>\<sqinter>\<index>\<close> 70)
+no_notation "Lattice.join" (infixl \<open>\<squnion>\<index>\<close> 65)
 hide_const (open) Coset.kernel
 hide_const (open) Matrix_Kernel.kernel
 hide_const (open) Order.bottom Order.top
 
 unbundle lattice_syntax
-unbundle jnf_notation
-unbundle cblinfun_notation
+unbundle jnf_syntax
+unbundle cblinfun_syntax
 
 
 
@@ -662,9 +662,6 @@ derive (eq) ceq ell2
 derive (no) ccompare ell2
 derive (monad) set_impl ell2
 
-
-unbundle no_lattice_syntax
-unbundle no_jnf_notation
-unbundle no_cblinfun_notation
+unbundle no lattice_syntax and no jnf_syntax and no cblinfun_syntax
 
 end

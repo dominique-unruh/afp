@@ -6,12 +6,7 @@ begin
 
 bundle HOL_function_syntax
 begin
-notation comp (infixl "\<circ>" 55)
+notation comp (infixl \<open>\<circ>\<close> 55)
 end
-bundle no_HOL_function_syntax
-begin
-no_notation comp (infixl "\<circ>" 55)
-end
-
 
 end

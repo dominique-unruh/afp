@@ -85,11 +85,11 @@ begin
 \<close>
 
   locale set_category_data = category S
-  for S :: "'s comp"      (infixr "\<cdot>" 55)
+  for S :: "'s comp"      (infixr \<open>\<cdot>\<close> 55)
   and img :: "'s \<Rightarrow> 's"
   begin
 
-    notation in_hom       ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
+    notation in_hom       (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
 
     text\<open>
       Call the set of all terminal objects of S the ``universe''.
@@ -141,7 +141,7 @@ begin
 \<close>
     
   locale set_category_given_img = set_category_data S img
-  for S :: "'s comp"      (infixr "\<cdot>" 55)
+  for S :: "'s comp"      (infixr \<open>\<cdot>\<close> 55)
   and img :: "'s \<Rightarrow> 's"
   and setp :: "'s set \<Rightarrow> bool" +
   assumes setp_imp_subset_Univ: "setp A \<Longrightarrow> A \<subseteq> Univ"
@@ -657,12 +657,12 @@ begin
 \<close>
 
   locale set_category = category S
-  for S :: "'s comp"      (infixr "\<cdot>" 55)
+  for S :: "'s comp"      (infixr \<open>\<cdot>\<close> 55)
   and setp :: "'s set \<Rightarrow> bool" +
   assumes ex_img: "\<exists>img. set_category_given_img S img setp"
   begin
 
-    notation in_hom ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
+    notation in_hom (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
   
     definition some_img
     where "some_img = (SOME img. set_category_given_img S img setp)"
@@ -684,7 +684,7 @@ begin
   locale replete_set_category =
     category S +
     set_category S \<open>\<lambda>A. A \<subseteq> Collect terminal\<close>
-  for S :: "'s comp"      (infixr "\<cdot>" 55)
+  for S :: "'s comp"      (infixr \<open>\<cdot>\<close> 55)
   begin
 
     abbreviation setp
@@ -748,17 +748,17 @@ begin
   locale two_set_categories_bij_betw_Univ =
     S: set_category S setp +
     S': set_category S' setp'
-  for S :: "'s comp"      (infixr "\<cdot>" 55)
+  for S :: "'s comp"      (infixr \<open>\<cdot>\<close> 55)
   and setp :: "'s set \<Rightarrow> bool"
-  and S' :: "'t comp"     (infixr "\<cdot>\<acute>" 55)
+  and S' :: "'t comp"     (infixr \<open>\<cdot>\<acute>\<close> 55)
   and setp' :: "'t set \<Rightarrow> bool"
   and \<phi> :: "'s \<Rightarrow> 't" +
   assumes bij_\<phi>: "bij_betw \<phi> S.Univ S'.Univ"
   and \<phi>_respects_setp: "A \<subseteq> S.Univ \<Longrightarrow> setp' (\<phi> ` A) \<longleftrightarrow> setp A"
   begin
 
-    notation S.in_hom     ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
-    notation S'.in_hom    ("\<guillemotleft>_ : _ \<rightarrow>'' _\<guillemotright>")
+    notation S.in_hom     (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
+    notation S'.in_hom    (\<open>\<guillemotleft>_ : _ \<rightarrow>'' _\<guillemotright>\<close>)
 
     abbreviation \<psi>
     where "\<psi> \<equiv> inv_into S.Univ \<phi>"
@@ -1251,11 +1251,11 @@ begin
     proof -
       interpret \<Phi>\<Psi>: composite_functor S S' S \<Phi> \<Psi> ..
       have inv: "\<Psi> o \<Phi> = S.map"
-        using \<Phi>\<Psi> S.map_def \<Phi>\<Psi>.is_extensional by auto
+        using \<Phi>\<Psi> S.map_def \<Phi>\<Psi>.extensionality by auto
     
       interpret \<Psi>\<Phi>: composite_functor S' S S' \<Psi> \<Phi> ..
       have inv': "\<Phi> o \<Psi> = S'.map"
-        using \<Psi>\<Phi> S'.map_def \<Psi>\<Phi>.is_extensional by auto
+        using \<Psi>\<Phi> S'.map_def \<Psi>\<Phi>.extensionality by auto
     
       show ?thesis
         using inv inv' by (unfold_locales, auto)
@@ -2149,17 +2149,17 @@ begin
       show "mono f"
       proof
         show "arr f" using f by auto
-        show "\<And>g g'. \<lbrakk>seq f g; seq f g'; f \<cdot> g = f \<cdot> g'\<rbrakk> \<Longrightarrow> g = g'"
+        show "\<And>g g'. \<lbrakk>seq f g; f \<cdot> g = f \<cdot> g'\<rbrakk> \<Longrightarrow> g = g'"
         proof -
           fix g g'
-          assume fg: "seq f g" and fg': "seq f g'" and eq: "f \<cdot> g = f \<cdot> g'"
+          assume fg: "seq f g" and eq: "f \<cdot> g = f \<cdot> g'"
           show "g = g'"
           proof (intro arr_eqI\<^sub>S\<^sub>C)
             show par: "par g g'"
-              using fg' eq dom_comp by (metis seqE)
+              using fg eq dom_comp by (metis seqE)
             show "Fun g = Fun g'"
-              by (metis empty_is_image eq f fg' ide_dom incl_in_def incl_in_img_cod
-                  initial_arr_unique initial_empty empty_def monoE mkIde_set
+              by (metis empty_is_image eq f fg ide_dom incl_in_def incl_in_img_cod
+                  initial_arr_unique initial_empty empty_def mono_cancel mkIde_set
                   section_if_inj(1) section_is_mono seqE set_img subset_empty)
           qed
         qed
@@ -2228,7 +2228,7 @@ begin
                   using f g g' Fun_comp comp_mkArr by fastforce
               qed
               hence gg': "?g = ?g'"
-                by (metis (no_types, lifting) epiE epi f g in_homE seqI)
+                by (metis (no_types, lifting) epi_cancel epi f g in_homE seqI)
               fix y
               assume y: "y \<in> Cod f"
               have "Fun ?g' y = tt" using gg' g y by simp
@@ -2329,7 +2329,7 @@ begin
 \<close>
 
   locale concrete_set_category = set_category S setp
-    for S :: "'s comp"      (infixr "\<cdot>\<^sub>S" 55)
+    for S :: "'s comp"      (infixr \<open>\<cdot>\<^sub>S\<close> 55)
     and setp :: "'s set \<Rightarrow> bool"
     and U :: "'a set"
     and \<iota> :: "'a \<Rightarrow> 's" +
@@ -2370,7 +2370,7 @@ begin
   locale replete_concrete_set_category =
     replete_set_category S +
     concrete_set_category S \<open>\<lambda>A. A \<subseteq> Univ\<close> U UP
-    for S :: "'s comp"      (infixr "\<cdot>\<^sub>S" 55)
+    for S :: "'s comp"      (infixr \<open>\<cdot>\<^sub>S\<close> 55)
     and U :: "'a set"
     and UP :: "'a \<Rightarrow> 's"
 

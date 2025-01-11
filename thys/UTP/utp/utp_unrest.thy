@@ -26,8 +26,11 @@ consts
   unrest :: "'a \<Rightarrow> 'b \<Rightarrow> bool"
 
 syntax
-  "_unrest" :: "salpha \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" (infix "\<sharp>" 20)
-  
+  "_unrest" :: "salpha \<Rightarrow> logic \<Rightarrow> logic \<Rightarrow> logic" (infix \<open>\<sharp>\<close> 20)
+
+syntax_consts
+  "_unrest" == unrest
+
 translations
   "_unrest x p" == "CONST unrest x p"                                           
   "_unrest (_salphaset (_salphamk (x +\<^sub>L y))) P"  <= "_unrest (x +\<^sub>L y) P"

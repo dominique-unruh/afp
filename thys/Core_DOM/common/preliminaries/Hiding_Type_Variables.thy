@@ -223,7 +223,7 @@ structure Hide_Tvar : HIDE_TVAR = struct
 
   fun normalize_typvar_term' t = snd(normalize_typvar_term [] t) 
 
-  fun key_of_term (Const(s,_)) = if String.isPrefix "\<^type>" s
+  fun key_of_term (Const(s,_)) = if Lexicon.is_type s
                                  then Lexicon.unmark_type s
                                  else ""
     | key_of_term (Free(s,_))  = s
@@ -408,11 +408,11 @@ end
 
 
 subsection\<open>Register Parse Translations\<close>
-syntax "_tvars_wildcard" :: "type \<Rightarrow> type" ("'('_') _") 
-syntax "_tvars_wildcard_retval" :: "type \<Rightarrow> type \<Rightarrow> type" ("'('_, _') _")
-syntax "_tvars_wildcard_sort" :: "sort \<Rightarrow> type \<Rightarrow> type" ("'('_::_') _")
-syntax "_tvars_wildcard_right" :: "type \<Rightarrow> type" ("_ '_..")
-syntax "_tvars_wildcard_left" :: "type \<Rightarrow> type" ("_ ..'_")
+syntax "_tvars_wildcard" :: "type \<Rightarrow> type" (\<open>'('_') _\<close>) 
+syntax "_tvars_wildcard_retval" :: "type \<Rightarrow> type \<Rightarrow> type" (\<open>'('_, _') _\<close>)
+syntax "_tvars_wildcard_sort" :: "sort \<Rightarrow> type \<Rightarrow> type" (\<open>'('_::_') _\<close>)
+syntax "_tvars_wildcard_right" :: "type \<Rightarrow> type" (\<open>_ '_..\<close>)
+syntax "_tvars_wildcard_left" :: "type \<Rightarrow> type" (\<open>_ ..'_\<close>)
 
 parse_ast_translation\<open>
   [

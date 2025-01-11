@@ -74,12 +74,12 @@ fun AOT_print_item_number (name:string) = case (AOT_get_item_number name)
 
 fun add_AOT_print_rule AOTsyntax raw_rules thy = let
   val rules = map (fn (r, s) => let
-    val head = Ast.head_of_rule (s,r)
+    val head = Ast.rule_index (s,r)
   in (head, fn ctxt => fn asts =>
     if Config.get ctxt print_AOT_syntax = AOTsyntax then 
       let
         val orig = (Ast.mk_appl (Ast.Constant head) asts)
-        val normalized = Ast.normalize ctxt
+        val normalized = Ast.normalize ctxt {permissive_constraints = true}
           (fn head' => if head = head' then [(s,r)] else []) orig
       in
         if orig = normalized then raise Match else normalized
@@ -107,13 +107,10 @@ val trans_line =
 
 fun add_trans_rule AOTsyntax raw_rules thy =
 let
-  fun mapPair f (x, y) = (f x, f y)
-  val ctxt = Proof_Context.init_global thy;
-  val read_root = #1 o dest_Type o
-    Proof_Context.read_type_name {proper = true, strict = false} ctxt;
-  val raw_rules = map (mapPair (fn (r, s) =>
-    (Syntax_Phases.parse_ast_pattern ctxt (read_root r, s)))) raw_rules
-in add_AOT_print_rule AOTsyntax raw_rules thy end
+  val thy_ctxt = Proof_Context.init_global thy;
+  val rules = raw_rules
+    |> map (Syntax.Print_Rule #> Syntax.parse_trrule thy_ctxt #> (fn Syntax.Print_Rule r => r))
+in add_AOT_print_rule AOTsyntax rules thy end
 
 val _ =
   Outer_Syntax.command
@@ -234,7 +231,7 @@ let
   val oldctxt = ctxt
   val (thm, ctxt) = Local_Theory.background_theory_result (fn lthy => let
      val lthy = lthy |> Sign.add_consts [(bnd,const_typ,Mixfix.NoSyn)] |>
-        Sign.syntax true Syntax.mode_default [(bnd_str,syn_typ,mx)] |>
+        Sign.syntax_global true Syntax.mode_default [(bnd_str,syn_typ,mx)] |>
         add_AOT_print_rule true [
           (Ast.Constant bnd_str, Ast.Constant (Lexicon.mark_const const_name))
         ]
@@ -261,8 +258,7 @@ let
   (* Construct a witness for the choice specification theorem. *)
   val frees = Term.add_frees trm []
   val witness = let
-    val w = case Term.variant_frees trm [("w", @{typ w})] of [w] => w
-                | _ => raise Fail "Unexpected."
+    val w = singleton (Term.variant_bounds trm) ("w", @{typ w})
   in
     \<^const>\<open>AOT_model_proposition_choice\<close> $
     Term.absfree w (\<^const>\<open>AOT_model_valid_in\<close> $ Free w $ rhs)
@@ -305,7 +301,7 @@ let
        in thm RS spec' end
      fun remove_alls frees (thy, thm) = (thy, fold (inst_all thy) frees thm)
      val lthy = lthy |> Sign.add_consts [(bnd,const_typ,Mixfix.NoSyn)] |>
-        Sign.syntax true Syntax.mode_default [(bnd_str,syn_typ,mx)] |>
+        Sign.syntax_global true Syntax.mode_default [(bnd_str,syn_typ,mx)] |>
         add_AOT_print_rule true [
           (Ast.Constant bnd_str, Ast.Constant (Lexicon.mark_const const_name))
         ]
@@ -325,7 +321,7 @@ fun AOT_define (((bnd,str,mx),(thmbind,thmattrs)),defprop) ctxt =
     (* Add a generic constant and the requested syntax to a temporary context. *)
     val thy = Proof_Context.theory_of ctxt
     val thy' = Sign.add_consts [(bnd, @{typ 'a}, Mixfix.NoSyn)] thy
-    val thy' = Sign.syntax true Syntax.mode_default [(bnd_str,syn_typ,mx)] thy'
+    val thy' = Sign.syntax_global true Syntax.mode_default [(bnd_str,syn_typ,mx)] thy'
     (* Try to parse the definition using the temporary context. *)
     val trm = AOT_check_prop @{nonterminal AOT_prop}
       (Proof_Context.init_global thy') defprop
@@ -625,7 +621,7 @@ val _ =
   Outer_Syntax.command \<^command_keyword>\<open>AOT_modally_strict {\<close>
     "begin explicit AOT modally-strict proof block"
     (Scan.succeed (Toplevel.proof (fn state => (Proof.map_context (fn ctxt => let
-        val v = singleton (Variable.variant_frees ctxt []) ("ws", @{typ w}) |> fst
+        val v = singleton (Variable.variant_names ctxt) ("ws", @{typ w}) |> fst
         val (_,ctxt) = Proof_Context.add_fixes
           [(Binding.make (v, Position.none), SOME @{typ w}, Mixfix.NoSyn)] ctxt
         val ctxt = AOT_ProofData.put (SOME (Free (v, @{typ w}))) ctxt
@@ -766,26 +762,22 @@ datatype query = Criterion of (bool*string Find_Theorems.criterion) list |
 
 fun pretty_theorems ctxt opt_lim rem_dups raw_spec =
 let
-  fun pretty_ref ctxt thmref =
+  fun pretty_name ctxt (name, i) =
     let
-      val (name, sel) =
-        (case thmref of
-          Facts.Named ((name, _), sel) => (name, sel)
-        | Facts.Fact _ => raise Fail "Illegal literal fact");
       val item = case
-        AOT_get_item_number (Binding.name_of (Binding.qualified_name name))
+        AOT_get_item_number (Long_Name.base_name name)
         of SOME str => [Pretty.str ("("^str^")"), Pretty.str ":", Pretty.brk 1]
         | _ => []
     in
       item @ [Pretty.marks_str (#1 (Proof_Context.markup_extern_fact ctxt name), name),
-        Pretty.str (Facts.string_of_selection sel), Pretty.str ":", Pretty.brk 1]
+        Pretty.str (Thm_Name.print_suffix (name, i)), Pretty.str ":", Pretty.brk 1]
     end;
   fun tailToStr delim tail = (fold (fn field => fn str => str^delim^field) tail "")
   fun pretty_item (id, sub) = Pretty.str (
     "item: "^quote (Int.toString id^tailToStr "." sub)^
     " (name: "^quote ((the (AOT_name_of_item id))^tailToStr ":" sub)^")")
-  fun pretty_thm ctxt (thmref, thm) =
-    Pretty.block (pretty_ref ctxt thmref @ [Thm.pretty_thm ctxt thm])
+  fun pretty_thm ctxt (thm_name, thm) =
+    Pretty.block (pretty_name ctxt thm_name @ [Thm.pretty_thm ctxt thm])
   val (spec, prefix) = (case raw_spec of Item (item, tail) =>
       (case AOT_name_of_item item of SOME name =>
           let val fullName = name^tailToStr ":" tail
@@ -799,8 +791,8 @@ let
     (Options.default_int \<^system_option>\<open>find_theorems_limit\<close>) opt_lim;
   val theorems = filter (fn (_,thm) => AOT_Theorems.member ctxt thm) theorems
   val theorems = case prefix of SOME prefix =>
-    filter (fn (Facts.Named ((name, _), _), _) =>
-      let val unqualified = (Binding.name_of (Binding.qualified_name name))
+    filter (fn ((name, _), _) =>
+      let val unqualified = Long_Name.base_name name
       in
       String.isPrefix prefix unqualified
       andalso (String.size unqualified <= String.size prefix orelse
@@ -819,7 +811,7 @@ let
             (if returned < found
              then " (" ^ string_of_int returned ^ " displayed)"
              else ""));
-    val position_markup = Position.markup (Position.thread_data ()) Markup.position;
+    val position_markup = Position.markup (Position.thread_data ());
   val pretty = Pretty.block
         (Pretty.fbreaks
           (Pretty.mark position_markup (Pretty.keyword1 "AOT_find_theorems") ::

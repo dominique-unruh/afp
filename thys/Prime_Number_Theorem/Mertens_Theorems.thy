@@ -11,7 +11,7 @@ imports
 begin
 
 (*<*)
-unbundle prime_counting_notation
+unbundle prime_counting_syntax
 (*>*)
 
 text \<open>
@@ -393,7 +393,7 @@ proof -
     using assms frac_lt_1[of x] by (intro frac_le) auto
   ultimately have *: "frac x / real (nat \<lfloor>x\<rfloor>) \<in> {0..1}" by auto
   have "ln x - ln (real (nat \<lfloor>x\<rfloor>)) = ln (x / real (nat \<lfloor>x\<rfloor>))"
-    using assms by (subst ln_div) auto
+    using assms ln_div pos by force
   also have "x / real (nat \<lfloor>x\<rfloor>) = 1 + frac x / real (nat \<lfloor>x\<rfloor>)"
     using assms pos by (simp add: frac_def field_simps)
   finally have "\<MM> x - ln x > -1-9/pi^2-ln (1 + frac x / real (nat \<lfloor>x\<rfloor>))"
@@ -749,7 +749,7 @@ corollary prime_harmonic_diverges: "filterlim (prime_sum_upto (\<lambda>p. 1 / p
   by (rule asymp_equiv_at_top_transfer) real_asymp
 
 (*<*)
-unbundle no_prime_counting_notation
+unbundle no prime_counting_syntax
 (*>*)
 
 end

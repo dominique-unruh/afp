@@ -9,10 +9,10 @@ definition set_of :: "('a \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('a
 "set_of P = {(x, y). P x y}"
 
 lemma wfP_implies_wf_set_of: "wfP P \<Longrightarrow> wf (set_of P)"
-unfolding wfP_def set_of_def .
+unfolding wfp_def set_of_def .
 
 lemma wf_set_of_implies_wfP: "wf (set_of P) \<Longrightarrow> wfP P"
-unfolding wfP_def set_of_def .
+unfolding wfp_def set_of_def .
 
 lemma wf_simulate_simple:
   assumes "wf r"
@@ -39,7 +39,7 @@ using assms(2) by (auto intro: set_ofI dest: set_ofD)
 
 lemma wf_implies_dom: "wf (set_of R) \<Longrightarrow> All (Wellfounded.accp R)"
 apply (rule allI)
-apply (rule accp_wfPD)
+apply (rule accp_wfpD)
 apply (rule wf_set_of_implies_wfP) .
 
 lemma wfP_implies_dom: "wfP R \<Longrightarrow> All (Wellfounded.accp R)"

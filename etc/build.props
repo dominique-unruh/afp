@@ -3,10 +3,9 @@ module = $AFP_BASE/tools/lib/classes/afp_tools.jar
 requirements = \
   env:ISABELLE_SCALA_JAR
 sources = \
-  tools/afp_build.scala \
+  tools/afp_build_ci.scala \
   tools/afp_check_metadata.scala \
   tools/afp_check_roots.scala \
-  tools/afp_dependencies.scala \
   tools/afp_release.scala \
   tools/afp_site_gen.scala \
   tools/afp_submit.scala \
@@ -20,4 +19,4 @@ resources = \
   tools/SmartStoplist.txt:SmartStoplist.txt
 services = \
   afp.Tools \
-  afp.CI_Builds
+  afp.CI_Jobs

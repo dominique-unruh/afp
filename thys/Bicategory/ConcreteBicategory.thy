@@ -1145,7 +1145,7 @@ begin
         by (cases fgh) simp
     qed
 
-    definition \<a>  ("\<a>[_,_,_]")
+    definition \<a>  (\<open>\<a>[_,_,_]\<close>)
     where "\<a> f g h == \<alpha>\<^sub>0.map (f, g, h)"
 
     lemma \<a>_simp_ide:
@@ -1413,7 +1413,7 @@ begin
       The unit isomorphisms are defined in terms of the specified function \<open>Unit\<close>.
     \<close>
 
-    definition \<i>  ("\<i>[_]")
+    definition \<i>  (\<open>\<i>[_]\<close>)
     where "\<i>[a] \<equiv> MkCell (Src a) (Src a) (Unit (Src a))"
 
     lemma \<i>_simps [simp]:
@@ -1691,7 +1691,7 @@ begin
         proof
           fix \<mu>
           have "\<mu> \<notin> hhom a b \<Longrightarrow> (?MkCell o ?Map) \<mu> = hom.map \<mu>"
-            using o_apply hom.is_extensional hom.arr_char\<^sub>S\<^sub>b\<^sub>C by simp
+            using o_apply hom.extensionality hom.arr_char\<^sub>S\<^sub>b\<^sub>C by simp
           moreover have "\<mu> \<in> hhom a b \<Longrightarrow> (?MkCell o ?Map) \<mu> = hom.map \<mu>"
           proof -
             assume \<mu>: "\<mu> \<in> hhom a b"
@@ -1711,7 +1711,7 @@ begin
         proof
           fix \<mu>
           have "\<not> Hom.arr \<mu> \<Longrightarrow> (?Map o ?MkCell) \<mu> = Hom.map \<mu>"
-            using Hom.is_extensional hom.null_char by auto
+            using Hom.extensionality hom.null_char by auto
           moreover have "Hom.arr \<mu> \<Longrightarrow> (?Map o ?MkCell) \<mu> = Hom.map \<mu>"
           proof -
             assume \<mu>: "Hom.arr \<mu>"

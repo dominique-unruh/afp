@@ -2,7 +2,7 @@ theory Zeta_Zerofree
 imports
   "PNT_Complex_Analysis_Lemmas"
 begin
-unbundle pnt_notation
+unbundle pnt_syntax
 
 section \<open>Zero-free region of zeta function\<close>
 
@@ -630,8 +630,8 @@ proof -
         rule cball_in_region zeta_analytic_on_region)
   have 5: "z \<in> cball s r \<Longrightarrow> \<parallel>zeta z / zeta s\<parallel> \<le> exp (3 * \<phi> (2 * \<gamma> + 1))"
     for z by (rule zeta_div_bound)
-  have 6: "{} \<subseteq> {z \<in> cball s (r / 2). zeta z = 0 \<and> Re z \<le> Re s}" by auto
-  have 7: "{Complex \<beta> \<delta>} \<subseteq> {z \<in> cball s (r / 2). zeta z = 0 \<and> Re z \<le> Re s}"
+  have 6: "{} \<subseteq> {z \<in> cball s (r / 2). zeta z = 0}" by auto
+  have 7: "{Complex \<beta> \<delta>} \<subseteq> {z \<in> cball s (r / 2). zeta z = 0}"
     if "\<sigma> - r / 2 \<le> \<beta>" "zeta (Complex \<beta> \<delta>) = 0" for \<beta>
   proof -
     have "\<beta> \<le> \<sigma>"
@@ -809,7 +809,8 @@ proof -
     also have "\<dots> \<le> 8 * (5 / 2 + t)"
     proof -
       have "ln (12 + 2 * t) = ln (12 * (1 + t / 6))" by auto
-      also have "\<dots> = ln 12 + ln (1 + t / 6)" by (rule ln_mult) (use * in auto)
+      also have "\<dots> = ln 12 + ln (1 + t / 6)"
+        unfolding ln_mult using * by simp
       also have "\<dots> \<le> 5 / 2 + t / 6"
       proof (rule add_mono)
         have "(144 :: real) < (271 / 100) ^ 5"
@@ -886,5 +887,6 @@ proof -
   finally show ?thesis unfolding PNT_const_C\<^sub>1_def by auto
 qed
 
-unbundle no_pnt_notation
+unbundle no pnt_syntax
+
 end

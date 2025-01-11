@@ -202,7 +202,7 @@ lemma of_comp_times:
 
 text\<open>Hyperdual scaling is multiplying each component by a factor from the component type.\<close>
 (* Named scaleH for hyperdual like scaleR is for real *)
-primcorec scaleH :: "('a :: times) \<Rightarrow> 'a hyperdual \<Rightarrow> 'a hyperdual"  (infixr "*\<^sub>H" 75)
+primcorec scaleH :: "('a :: times) \<Rightarrow> 'a hyperdual \<Rightarrow> 'a hyperdual"  (infixr \<open>*\<^sub>H\<close> 75)
   where
     "Base (f *\<^sub>H x) = f * Base x"
   | "Eps1 (f *\<^sub>H x) = f * Eps1 x"
@@ -289,7 +289,7 @@ next
          Eps12 x * Base x ^ n =
          2 * Eps1 x * Eps2 x * of_nat n * Base x ^ (n - Suc 0) +
          Eps12 x * of_nat (n + 1) * Base x ^ n + Eps1 x * Eps2 x * of_nat n * of_nat (n - Suc 0) * Base x ^ (n - Suc 0)"
-        by (simp add: field_simps power_eq_if)
+        by (simp add: field_simps power_eq_if le_Suc_eq)
       also have "... = Eps12 x * of_nat (n + 1) * Base x ^ n + of_nat (n - 1 + 2) * Eps1 x * Eps2 x * of_nat n * Base x ^ (n - Suc 0)"
         by (simp add: distrib_left mult.commute)
       finally show ?thesis

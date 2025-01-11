@@ -226,7 +226,7 @@ qed
 text \<open>The following describes polynomials of a given maximal degree as a subset of the functions,
 similar to the subsets @{term "\<int>"} or @{term "\<rat>"} as subsets of larger number classes.\<close>
 
-definition Polynomials ("\<bbbP>")
+definition Polynomials (\<open>\<bbbP>\<close>)
   where "Polynomials k = {f. \<exists>p. f = poly p \<and> degree p \<le> k}"
 
 lemma Polynomials_mono:
@@ -1110,9 +1110,9 @@ proof -
     also have "... < 4 * (x powr (1/2)/4)"
       using x_ge_450 by (intro mult_strict_left_mono ln_less_self) auto
     also have "... = x powr (1/2)" by simp
-    finally have "2* exp 1/ 5 * ln x \<le> x powr (1/2)" by simp
+    finally have \<section>: "2 * exp 1/ 5 * ln x \<le> x powr (1/2)" by simp
     hence "ln(2* exp 1/ 5 * ln x) \<le> ln (x powr (1/2))"
-      using x_ge_450 ln_le_cancel_iff by simp
+      using x_ge_450 by (intro ln_mono; simp)
     hence 0:"ln(2* exp 1/ 5 * ln x) / ln x \<le> 1/2"
       using x_ge_450 by (subst (asm) ln_powr, auto)
     have "ln 8 \<le> 3 * x - 5 * x * (1/2)"
@@ -1129,7 +1129,7 @@ proof -
   also have "... = 5 * x * (ln x + ln(5 / (2*exp 1*ln x))) / ln x"
     using assms(1) by (simp add:algebra_simps add_divide_distrib)
   also have "... = 5 * x * (ln (5 * x / (2 * exp 1 * ln x))) / ln x"
-    using assms(1) by (subst ln_mult[symmetric], auto)
+    using assms(1) by (simp add: ln_mult ln_div)
   also have "... = (5 * x / ln x) * ln ((5 * x / ln x) / (2 * exp 1))"
     by (simp add:algebra_simps)
   also have "... \<le> k * ln (k / (2*exp 1))"
@@ -1921,6 +1921,6 @@ qed
 
 end
 
-unbundle no_intro_cong_syntax
+unbundle no intro_cong_syntax
 
 end

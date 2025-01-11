@@ -16,7 +16,7 @@ section "Symmetric Monoidal Category"
     S: symmetry_functor C C +
     ToS: composite_functor CC.comp CC.comp C S.map T +
     \<sigma>: natural_isomorphism CC.comp C T ToS.map \<sigma>
-  for C :: "'a comp"                            (infixr "\<cdot>" 55)
+  for C :: "'a comp"                            (infixr \<open>\<cdot>\<close> 55)
   and T :: "'a * 'a \<Rightarrow> 'a"
   and \<alpha> :: "'a * 'a * 'a \<Rightarrow> 'a"
   and \<iota> :: 'a
@@ -28,20 +28,20 @@ section "Symmetric Monoidal Category"
                              = (b \<otimes> \<sigma> (a, c)) \<cdot> \<alpha> (b, a, c) \<cdot> (\<sigma> (a, b) \<otimes> c)"
   begin
 
-    abbreviation sym                  ("\<s>[_, _]")
+    abbreviation sym                  (\<open>\<s>[_, _]\<close>)
     where "sym a b \<equiv> \<sigma> (a, b)"
 
   end
 
   locale elementary_symmetric_monoidal_category =
     elementary_monoidal_category C tensor unity lunit runit assoc
-  for C :: "'a comp"                  (infixr "\<cdot>" 55)
-  and tensor :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"       (infixr "\<otimes>" 53)
-  and unity :: 'a                      ("\<I>")
-  and lunit :: "'a \<Rightarrow> 'a"              ("\<l>[_]")
-  and runit :: "'a \<Rightarrow> 'a"              ("\<r>[_]")
-  and assoc :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"  ("\<a>[_, _, _]")
-  and sym :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"          ("\<s>[_, _]") +
+  for C :: "'a comp"                  (infixr \<open>\<cdot>\<close> 55)
+  and tensor :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"       (infixr \<open>\<otimes>\<close> 53)
+  and unity :: 'a                      (\<open>\<I>\<close>)
+  and lunit :: "'a \<Rightarrow> 'a"              (\<open>\<l>[_]\<close>)
+  and runit :: "'a \<Rightarrow> 'a"              (\<open>\<r>[_]\<close>)
+  and assoc :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"  (\<open>\<a>[_, _, _]\<close>)
+  and sym :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"          (\<open>\<s>[_, _]\<close>) +
   assumes sym_in_hom: "\<lbrakk> ide a; ide b \<rbrakk> \<Longrightarrow> \<guillemotleft>\<s>[a, b] : a \<otimes> b \<rightarrow> b \<otimes> a\<guillemotright>"
   and sym_naturality: "\<lbrakk> arr f; arr g \<rbrakk> \<Longrightarrow> \<s>[cod f, cod g] \<cdot> (f \<otimes> g) = (g \<otimes> f) \<cdot> \<s>[dom f, dom g]"
   and sym_inverse: "\<lbrakk> ide a; ide b \<rbrakk> \<Longrightarrow> inverse_arrows \<s>[a, b] \<s>[b, a]"
@@ -127,7 +127,7 @@ section "Symmetric Monoidal Category"
     interpretation ToS: composite_functor MM.comp MM.comp comp S.map T ..
     sublocale \<sigma>': inverse_transformation M.CC.comp C T M.ToS.map \<sigma> ..
     interpretation \<sigma>: natural_transformation MM.comp comp T ToS.map \<sigma>'.map
-      using \<sigma>'.is_extensional \<sigma>'.is_natural_1 \<sigma>'.is_natural_2
+      using \<sigma>'.extensionality \<sigma>'.naturality1 \<sigma>'.naturality2
       by unfold_locales auto
     interpretation \<sigma>: natural_isomorphism MM.comp comp T ToS.map \<sigma>'.map
       by unfold_locales auto
@@ -196,7 +196,7 @@ section "Cartesian Monoidal Category"
 
   locale cartesian_monoidal_category =
     monoidal_category C T \<alpha> \<iota>
-  for C :: "'a comp"                            (infixr "\<cdot>" 55)
+  for C :: "'a comp"                            (infixr \<open>\<cdot>\<close> 55)
   and T :: "'a * 'a \<Rightarrow> 'a"
   and \<alpha> :: "'a * 'a * 'a \<Rightarrow> 'a"
   and \<iota> :: 'a +
@@ -213,7 +213,7 @@ section "Cartesian Monoidal Category"
     shows "category_with_terminal_object C"
       ..
 
-    definition the_trm  ("\<t>[_]")
+    definition the_trm  (\<open>\<t>[_]\<close>)
     where "the_trm \<equiv> \<lambda>f. THE t. \<guillemotleft>t : dom f \<rightarrow> \<I>\<guillemotright>"
 
     lemma trm_in_hom [intro]:
@@ -244,10 +244,10 @@ section "Cartesian Monoidal Category"
     shows "elementary_category_with_terminal_object C \<I> the_trm"
       ..
 
-    definition pr\<^sub>0  ("\<pp>\<^sub>0[_, _]")
+    definition pr\<^sub>0  (\<open>\<pp>\<^sub>0[_, _]\<close>)
     where "pr\<^sub>0 a b \<equiv> \<l>[b] \<cdot> (\<t>[a] \<otimes> b)"
 
-    definition pr\<^sub>1  ("\<pp>\<^sub>1[_, _]")
+    definition pr\<^sub>1  (\<open>\<pp>\<^sub>1[_, _]\<close>)
     where "pr\<^sub>1 a b \<equiv> \<r>[a] \<cdot> (a \<otimes> \<t>[b])"
 
     (* TODO: Must use qualified name to avoid clash between definitions of assoc. *)
@@ -287,10 +287,10 @@ section "Cartesian Monoidal Category"
     sublocale cartesian_category C
       using is_cartesian_category by blast
 
-    abbreviation dup  ("\<d>[_]")
+    abbreviation dup  (\<open>\<d>[_]\<close>)
     where "dup \<equiv> ECC.dup"
 
-    abbreviation tuple  ("\<langle>_, _\<rangle>")
+    abbreviation tuple  (\<open>\<langle>_, _\<rangle>\<close>)
     where "\<langle>f, g\<rangle> \<equiv> ECC.tuple f g"
 
     lemma prod_eq_tensor:
@@ -302,7 +302,7 @@ section "Cartesian Monoidal Category"
         show "ECC.prod f g = f \<otimes> g"
         proof (cases "arr f \<and> arr g")
           show "\<not> (arr f \<and> arr g) \<Longrightarrow> ?thesis"
-            by (metis CC.arrE ECC.prod_def ECC.tuple_ext T.is_extensional fst_conv seqE snd_conv)
+            by (metis CC.arrE ECC.prod_def ECC.tuple_ext T.extensionality fst_conv seqE snd_conv)
           assume 0: "arr f \<and> arr g"
           have 1: "span (f \<cdot> \<pp>\<^sub>1[dom f, dom g]) (g \<cdot> \<pp>\<^sub>0[dom f, dom g])"
             using 0 by simp
@@ -535,10 +535,10 @@ section "Cartesian Monoidal Category"
         fix fg
         show "ECC.Prod' fg = ToS.map fg"
           using prod_eq_tensor
-          by (metis CC.arr_char ECC.prod_def ECC.tuple_ext S.map_def ToS.is_extensional o_apply seqE)
+          by (metis CC.arr_char ECC.prod_def ECC.tuple_ext S.map_def ToS.extensionality o_apply seqE)
       qed
       thus "natural_transformation CC.comp C T ToS.map ECC.\<sigma>"
-        using Prod_eq_T ECC.\<sigma>_is_natural_transformation by simp
+        using Prod_eq_T ECC.\<sigma>_naturalitytransformation by simp
     qed
 
     interpretation \<sigma>: natural_isomorphism CC.comp C T ToS.map ECC.\<sigma>
@@ -574,14 +574,14 @@ section "Elementary Cartesian Monoidal Category"
 
   locale elementary_cartesian_monoidal_category =
     elementary_monoidal_category C tensor unity lunit runit assoc
-  for C :: "'a comp"                   (infixr "\<cdot>" 55)
-  and tensor :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"       (infixr "\<otimes>" 53)
-  and unity :: 'a                      ("\<I>")
-  and lunit :: "'a \<Rightarrow> 'a"              ("\<l>[_]")
-  and runit :: "'a \<Rightarrow> 'a"              ("\<r>[_]")
-  and assoc :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"  ("\<a>[_, _, _]")
-  and trm :: "'a \<Rightarrow> 'a"                ("\<t>[_]")
-  and dup :: "'a \<Rightarrow> 'a"                ("\<d>[_]") +
+  for C :: "'a comp"                   (infixr \<open>\<cdot>\<close> 55)
+  and tensor :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"       (infixr \<open>\<otimes>\<close> 53)
+  and unity :: 'a                      (\<open>\<I>\<close>)
+  and lunit :: "'a \<Rightarrow> 'a"              (\<open>\<l>[_]\<close>)
+  and runit :: "'a \<Rightarrow> 'a"              (\<open>\<r>[_]\<close>)
+  and assoc :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"  (\<open>\<a>[_, _, _]\<close>)
+  and trm :: "'a \<Rightarrow> 'a"                (\<open>\<t>[_]\<close>)
+  and dup :: "'a \<Rightarrow> 'a"                (\<open>\<d>[_]\<close>) +
   assumes trm_in_hom: "ide a \<Longrightarrow> \<guillemotleft>\<t>[a] : a \<rightarrow> \<I>\<guillemotright>"
   and trm_unity: "\<t>[\<I>] = \<I>"
   and trm_naturality: "arr f \<Longrightarrow> \<t>[cod f] \<cdot> f = \<t>[dom f]"
@@ -777,10 +777,8 @@ section "Elementary Cartesian Monoidal Category"
     proof
       show "\<And>f. \<not> arr f \<Longrightarrow> \<d>[f] = null"
         using ECC.tuple_ext by blast
-      show "\<And>f. arr f \<Longrightarrow> dom \<d>[f] = map (dom f)"
+      show "\<And>f. arr f \<Longrightarrow> arr \<d>[f]"
         using dup_def by simp
-      show "\<And>f. arr f \<Longrightarrow> cod \<d>[f] = To\<Delta>.map (cod f)"
-        by (simp add: prod_eq_tensor)
       show "\<And>f. arr f \<Longrightarrow> To\<Delta>.map f \<cdot> \<d>[dom f] = \<d>[f]"
         using ECC.tuple_expansion prod_eq_tensor by force
       show "\<And>f. arr f \<Longrightarrow> \<d>[cod f] \<cdot> map f = \<d>[f]"
@@ -810,7 +808,7 @@ section "Cartesian Monoidal Category from Cartesian Category"
       using T.functor_ToCT by auto
 
     interpretation \<alpha>: natural_isomorphism CCC.comp C T.ToTC T.ToCT \<alpha>
-      using \<alpha>_is_natural_isomorphism by blast
+      using \<alpha>_naturalityisomorphism by blast
 
     interpretation L: "functor" C C \<open>\<lambda>f. Prod (cod \<iota>, f)\<close>
       using unit_is_terminal_arr T.fixing_ide_gives_functor_1 by simp

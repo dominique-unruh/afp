@@ -17,17 +17,17 @@ locale orders =
   and R :: "'c \<Rightarrow> 'd \<Rightarrow> bool"
 begin
 
-notation L (infix "\<le>\<^bsub>L\<^esub>" 50)
-notation R (infix "\<le>\<^bsub>R\<^esub>" 50)
+notation L (infix \<open>\<le>\<^bsub>L\<^esub>\<close> 50)
+notation R (infix \<open>\<le>\<^bsub>R\<^esub>\<close> 50)
 
 text\<open>We call @{term "(\<le>\<^bsub>L\<^esub>)"} the \<^emph>\<open>left relation\<close> and @{term "(\<le>\<^bsub>R\<^esub>)"} the
 \<^emph>\<open>right relation\<close>.\<close>
 
 abbreviation (input) "ge_left \<equiv> (\<le>\<^bsub>L\<^esub>)\<inverse>"
-notation ge_left (infix "\<ge>\<^bsub>L\<^esub>" 50)
+notation ge_left (infix \<open>\<ge>\<^bsub>L\<^esub>\<close> 50)
 
 abbreviation (input) "ge_right \<equiv> (\<le>\<^bsub>R\<^esub>)\<inverse>"
-notation ge_right (infix "\<ge>\<^bsub>R\<^esub>" 50)
+notation ge_right (infix \<open>\<ge>\<^bsub>R\<^esub>\<close> 50)
 
 end
 
@@ -43,38 +43,38 @@ locale order_functor = hom_orders L R
 begin
 
 lemma left_right_rel_left_self_if_reflexive_on_left_if_mono_left:
-  assumes "((\<le>\<^bsub>L\<^esub>) \<Rrightarrow>\<^sub>m (\<le>\<^bsub>R\<^esub>)) l"
+  assumes "((\<le>\<^bsub>L\<^esub>) \<Rightarrow> (\<le>\<^bsub>R\<^esub>)) l"
   and "reflexive_on P (\<le>\<^bsub>L\<^esub>)"
   and "P x"
   shows "l x \<le>\<^bsub>R\<^esub> l x"
   using assms by blast
 
 lemma left_right_rel_left_self_if_reflexive_on_in_dom_right_if_mono_left:
-  assumes "((\<le>\<^bsub>L\<^esub>) \<Rrightarrow>\<^sub>m (\<le>\<^bsub>R\<^esub>)) l"
+  assumes "((\<le>\<^bsub>L\<^esub>) \<Rightarrow> (\<le>\<^bsub>R\<^esub>)) l"
   and "reflexive_on (in_dom (\<le>\<^bsub>R\<^esub>)) (\<le>\<^bsub>R\<^esub>)"
   and "in_dom (\<le>\<^bsub>L\<^esub>) x"
   shows "l x \<le>\<^bsub>R\<^esub> l x"
   using assms by blast
 
 lemma left_right_rel_left_self_if_reflexive_on_in_codom_right_if_mono_left:
-  assumes "((\<le>\<^bsub>L\<^esub>) \<Rrightarrow>\<^sub>m (\<le>\<^bsub>R\<^esub>)) l"
+  assumes "((\<le>\<^bsub>L\<^esub>) \<Rightarrow> (\<le>\<^bsub>R\<^esub>)) l"
   and "reflexive_on (in_codom (\<le>\<^bsub>R\<^esub>)) (\<le>\<^bsub>R\<^esub>)"
   and "in_codom (\<le>\<^bsub>L\<^esub>) x"
   shows "l x \<le>\<^bsub>R\<^esub> l x"
   using assms by blast
 
 lemma left_right_rel_left_self_if_reflexive_on_in_field_right_if_mono_left:
-  assumes "((\<le>\<^bsub>L\<^esub>) \<Rrightarrow>\<^sub>m (\<le>\<^bsub>R\<^esub>)) l"
+  assumes "((\<le>\<^bsub>L\<^esub>) \<Rightarrow> (\<le>\<^bsub>R\<^esub>)) l"
   and "reflexive_on (in_field (\<le>\<^bsub>R\<^esub>)) (\<le>\<^bsub>R\<^esub>)"
   and "in_field (\<le>\<^bsub>L\<^esub>) x"
   shows "l x \<le>\<^bsub>R\<^esub> l x"
   using assms by blast
 
 lemma mono_wrt_rel_left_if_reflexive_on_if_le_eq_if_mono_wrt_in_field:
-  assumes "(in_field (\<le>\<^bsub>L\<^esub>) \<Rrightarrow>\<^sub>m P) l"
+  assumes "(in_field (\<le>\<^bsub>L\<^esub>) \<Rightarrow> P) l"
   and "(\<le>\<^bsub>L\<^esub>) \<le> (=)"
   and "reflexive_on P (\<le>\<^bsub>R\<^esub>)"
-  shows "((\<le>\<^bsub>L\<^esub>) \<Rrightarrow>\<^sub>m (\<le>\<^bsub>R\<^esub>)) l"
+  shows "((\<le>\<^bsub>L\<^esub>) \<Rightarrow> (\<le>\<^bsub>R\<^esub>)) l"
   using assms by (intro mono_wrt_relI) auto
 
 end
@@ -91,7 +91,7 @@ are an \<^emph>\<open>adjoint\<close>.\<close>
 
 definition "unit \<equiv> r \<circ> l"
 
-notation unit ("\<eta>")
+notation unit (\<open>\<eta>\<close>)
 
 lemma unit_eq_comp: "\<eta> = r \<circ> l" unfolding unit_def by simp
 
@@ -110,7 +110,7 @@ interpretation flip : order_functors R L r l .
 
 definition "counit \<equiv> flip.unit"
 
-notation counit ("\<epsilon>")
+notation counit (\<open>\<epsilon>\<close>)
 
 lemma counit_eq_comp: "\<epsilon> = l \<circ> r" unfolding counit_def flip.unit_def by simp
 
@@ -130,14 +130,14 @@ lemma flip_unit_eq_counit: "flip.unit = \<epsilon>"
   by (intro ext) simp
 
 lemma inflationary_on_unit_if_left_rel_right_if_left_right_relI:
-  assumes "((\<le>\<^bsub>L\<^esub>) \<Rrightarrow>\<^sub>m (\<le>\<^bsub>R\<^esub>)) l"
+  assumes "((\<le>\<^bsub>L\<^esub>) \<Rightarrow> (\<le>\<^bsub>R\<^esub>)) l"
   and "reflexive_on P (\<le>\<^bsub>L\<^esub>)"
   and "\<And>x y. P x \<Longrightarrow> l x \<le>\<^bsub>R\<^esub> y \<Longrightarrow> x \<le>\<^bsub>L\<^esub> r y"
   shows "inflationary_on P (\<le>\<^bsub>L\<^esub>) \<eta>"
   using assms by (intro inflationary_onI) fastforce
 
 lemma deflationary_on_unit_if_right_left_rel_if_right_rel_leftI:
-  assumes "((\<le>\<^bsub>L\<^esub>) \<Rrightarrow>\<^sub>m (\<le>\<^bsub>R\<^esub>)) l"
+  assumes "((\<le>\<^bsub>L\<^esub>) \<Rightarrow> (\<le>\<^bsub>R\<^esub>)) l"
   and "reflexive_on P (\<le>\<^bsub>L\<^esub>)"
   and "\<And>x y. P x \<Longrightarrow> y \<le>\<^bsub>R\<^esub> l x \<Longrightarrow> r y \<le>\<^bsub>L\<^esub> x"
   shows "deflationary_on P (\<le>\<^bsub>L\<^esub>) \<eta>"
@@ -157,14 +157,13 @@ lemma reflexive_on_left_if_inflationary_on_unit_if_inverse_on:
   assumes "inverse_on P l r"
   and "inflationary_on P (\<le>\<^bsub>L\<^esub>) \<eta>"
   shows "reflexive_on P (\<le>\<^bsub>L\<^esub>)"
-  using assms by (intro reflexive_onI) (auto dest!: inverse_onD)
+  using assms by (intro reflexive_onI) (force dest: inverse_onD)
 
 lemma rel_equivalence_on_unit_if_reflexive_on_if_inverse_on:
   assumes "inverse_on P l r"
   and "reflexive_on P (\<le>\<^bsub>L\<^esub>)"
   shows "rel_equivalence_on P (\<le>\<^bsub>L\<^esub>) \<eta>"
-  using assms by (intro rel_equivalence_onI inflationary_onI deflationary_onI)
-  (auto dest!: inverse_onD)
+  using assms by (intro rel_equivalence_onI inflationary_onI deflationary_onI) (force dest: inverse_onD)+
 
 end
 
@@ -185,7 +184,7 @@ notepad
 begin
   interpret flip : order_functors R L r l
     rewrites "flip.unit \<equiv> \<epsilon>" by (simp only: flip_unit_eq_counit)
-  have "\<lbrakk>((\<le>\<^bsub>R\<^esub>) \<Rrightarrow>\<^sub>m (\<le>\<^bsub>L\<^esub>)) r; reflexive_on P (\<le>\<^bsub>R\<^esub>); \<And>x y. \<lbrakk>P x; r x \<le>\<^bsub>L\<^esub> y\<rbrakk> \<Longrightarrow> x \<le>\<^bsub>R\<^esub> l y\<rbrakk>
+  have "\<lbrakk>((\<le>\<^bsub>R\<^esub>) \<Rightarrow> (\<le>\<^bsub>L\<^esub>)) r; reflexive_on P (\<le>\<^bsub>R\<^esub>); \<And>x y. \<lbrakk>P x; r x \<le>\<^bsub>L\<^esub> y\<rbrakk> \<Longrightarrow> x \<le>\<^bsub>R\<^esub> l y\<rbrakk>
       \<Longrightarrow> inflationary_on P (\<le>\<^bsub>R\<^esub>) \<epsilon>" for P
     by (fact flip.inflationary_on_unit_if_left_rel_right_if_left_right_relI)
 end

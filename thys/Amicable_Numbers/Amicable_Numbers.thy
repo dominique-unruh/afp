@@ -65,7 +65,7 @@ section\<open>Amicable Numbers\<close>
 
 subsection\<open>Preliminaries\<close>
 
-definition divisor :: "nat \<Rightarrow>nat \<Rightarrow> bool"  (infixr "divisor" 80)
+definition divisor :: "nat \<Rightarrow>nat \<Rightarrow> bool"  (infixr \<open>divisor\<close> 80)
   where "n divisor m \<equiv>(n \<ge> 1 \<and> n \<le> m \<and> n dvd m)"
 
 definition divisor_set: "divisor_set m = {n. n divisor m}"
@@ -73,7 +73,7 @@ definition divisor_set: "divisor_set m = {n. n divisor m}"
 lemma def_equiv_divisor_set: "divisor_set (n::nat) = set(divisors_nat n)"
   using  divisors_nat_def divisors_nat divisor_set divisor_def by auto
 
-definition proper_divisor :: "nat \<Rightarrow>nat \<Rightarrow> bool"  (infixr "properdiv" 80)
+definition proper_divisor :: "nat \<Rightarrow>nat \<Rightarrow> bool"  (infixr \<open>properdiv\<close> 80)
   where "n properdiv m \<equiv>(n \<ge> 1 \<and> n < m \<and> n dvd m)"
 
 definition properdiv_set: "properdiv_set m = {n. n properdiv m}"
@@ -303,7 +303,7 @@ lemma perfect_Esigma:
 
 subsection\<open>Amicable Numbers; definitions, some lemmas and examples\<close>
 
-definition Amicable_pair :: "nat \<Rightarrow>nat \<Rightarrow> bool"  (infixr "Amic" 80)
+definition Amicable_pair :: "nat \<Rightarrow>nat \<Rightarrow> bool"  (infixr \<open>Amic\<close> 80)
   where "m Amic n \<equiv> ((m = aliquot_sum n) \<and> (n = aliquot_sum m)) "
 
 lemma Amicable_pair_sym: fixes m::nat and n ::nat
@@ -627,7 +627,7 @@ subsubsection\<open>Betrothed (Quasi-Amicable) Pairs\<close>
 
 text\<open>We refer to the definition in \<^cite>\<open>"betrothedwiki"\<close>:\<close>
 
-definition QuasiAmicable_pair :: "nat \<Rightarrow> nat \<Rightarrow> bool"  (infixr "QAmic" 80)
+definition QuasiAmicable_pair :: "nat \<Rightarrow> nat \<Rightarrow> bool"  (infixr \<open>QAmic\<close> 80)
   where "m QAmic n \<longleftrightarrow> (m + 1 = aliquot_sum n) \<and> (n + 1 = aliquot_sum m)"
 
 lemma QuasiAmicable_pair_sym :
@@ -658,7 +658,7 @@ qed
 
 subsubsection\<open>Breeders\<close>
 
-definition breeder_pair :: "nat \<Rightarrow>nat \<Rightarrow> bool"  (infixr "breeder" 80)
+definition breeder_pair :: "nat \<Rightarrow>nat \<Rightarrow> bool"  (infixr \<open>breeder\<close> 80)
   where "m breeder n \<equiv> (\<exists>x\<in>\<nat>. x > 0 \<and> Esigma m = m + n*x \<and> Esigma m = (Esigma n)*(x+1))"
 
 lemma breederAmic:
@@ -892,11 +892,11 @@ proof-
     have "prime (2::nat)" by simp
     have s: "Esigma (2^k) =((2::nat)^(k+1)-1)/(2-1)"
       using  \<open>prime (2::nat)\<close> assms Esigma_prime_sum  by auto
-    have ss: "Esigma (2^k) =(2^(k+1)-1)" using s by simp
+    have ss: "Esigma (2^k) =(2^(k+1)-1)" 
+      by (smt (verit, best) s divide_numeral_1 of_nat_eq_iff)
     have J: "(k+1+k-l+k)= 3*k +1-l" using assms by linarith
     have JJ: "(2^(k-l))*(2^k) = (2::nat)^(2*k-l)"
-      apply (simp add: algebra_simps)
-      by (metis Nat.add_diff_assoc assms(1) less_imp_le_nat mult_2_right power_add)
+      by (metis Nat.add_diff_assoc2 assms(1) less_le_not_le mult_2 power_add)
     have "Esigma((2^k)*p*q)= (Esigma(2^k))*(Esigma p)*(Esigma q)" using A5 by simp
     also have "\<dots> = (2^(k+1)-1)*(p+1)*(q+1)" using assms ss aa bb by metis
    also have "\<dots> = (2^(k+1)-1)*((2^(k-l))*f)*((2^k)*f)" using assms by simp
@@ -914,7 +914,6 @@ proof-
   have YY:" Esigma((2^k)*p*q)= (2^(3*k+1-l))*f^2-(2^(2*k-l))*f^2" .
 
     have auxicalc: "(2^(2*k-l))*(f^2)=(2^(2*k-l))*f +(2^(2*k))*f"
-
     proof-
       have i: "(2^(2*k-l))*f = (2^(2*k-l))*(2^l+1)"
         using assms \<open>f = 2^l+1\<close> by simp
@@ -925,9 +924,8 @@ proof-
        have iv: "( 2^(2*k-l))*f*f =(((2^(2*k))+(2^(2*k-l))))*f"
         using iii assms by simp
        have v:  "(2^(2*k-l))*f *f =((2^(2*k)))*f+((2^(2*k-l)))*f"
-        using iv assms comm_monoid_mult_axioms  power2_eq_square semiring_normalization_rules(18)
-          semiring_normalization_rules by (simp add: add_mult_distrib assms) (*slow*)
-      show ?thesis using v by (simp add: power2_eq_square semiring_normalization_rules(18))
+         by (simp add: distrib_right iv)
+      show ?thesis using v by (simp add: power2_eq_square)
     qed
 
     have W1: "2^k*p*q + 2^k*r = 2^k *(p*q +r) "
@@ -1489,7 +1487,7 @@ proof-
     using Amicable_pair_equiv_def_conv prime_ge_1_nat by force 
 qed
 
-no_notation divisor (infixr "divisor" 80)
+no_notation divisor (infixr \<open>divisor\<close> 80)
 
 
 section\<open>Acknowledgements\<close>

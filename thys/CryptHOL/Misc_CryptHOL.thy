@@ -97,7 +97,7 @@ proof -
 qed
 
 definition restrict_relp :: "('a \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> ('a \<Rightarrow> bool) \<Rightarrow> ('b \<Rightarrow> bool) \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> bool"
-  ("_ \<upharpoonleft> (_ \<otimes> _)" [53, 54, 54] 53)
+  (\<open>_ \<upharpoonleft> (_ \<otimes> _)\<close> [53, 54, 54] 53)
 where "restrict_relp R P Q = (\<lambda>x y. R x y \<and> P x \<and> Q y)"
 
 lemma restrict_relp_apply [simp]: "(R \<upharpoonleft> P \<otimes> Q) x y \<longleftrightarrow> R x y \<and> P x \<and> Q y"
@@ -1384,7 +1384,7 @@ lemma wf_strict_prefix: "wfP strict_prefix"
 proof -
   from wf have "wf (inv_image {(x, y). x < y} length)" by(rule wf_inv_image)
   moreover have "{(x, y). strict_prefix x y} \<subseteq> inv_image {(x, y). x < y} length" by(auto intro: prefix_length_less)
-  ultimately show ?thesis unfolding wfP_def by(rule wf_subset)
+  ultimately show ?thesis unfolding wfp_def by(rule wf_subset)
 qed
 
 lemma strict_prefix_setD:

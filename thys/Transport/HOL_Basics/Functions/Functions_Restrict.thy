@@ -7,11 +7,7 @@ consts fun_restrict :: "'a \<Rightarrow> 'b \<Rightarrow> 'a"
 
 bundle fun_restrict_syntax
 begin
-notation fun_restrict ("(_)\<restriction>(\<^bsub>_\<^esub>)" [1000])
-end
-bundle no_fun_restrict_syntax
-begin
-no_notation fun_restrict ("(_)\<restriction>(\<^bsub>_\<^esub>)" [1000])
+notation fun_restrict (\<open>(_)\<restriction>(\<^bsub>_\<^esub>)\<close> [1000])
 end
 
 definition "fun_restrict_pred f P x \<equiv> if P x then f x else undefined"
@@ -35,7 +31,7 @@ lemma fun_restrict_eq_if: "f\<restriction>\<^bsub>P\<^esub> x = (if P x then f x
   by auto
 
 lemma fun_restrict_cong [cong]:
-  assumes "\<And>x. P x \<longleftrightarrow> P' x"
+  assumes "P = P'"
   and "\<And>x. P' x \<Longrightarrow> f x = g x"
   shows "f\<restriction>\<^bsub>P\<^esub> = g\<restriction>\<^bsub>P'\<^esub>"
   using assms by (intro ext) (auto simp: fun_restrict_eq_if)

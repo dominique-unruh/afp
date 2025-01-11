@@ -5,7 +5,7 @@ imports
   Constructor_Funs.Constructor_Funs
   "../Utils/Code_Utils"
   Eval_Class
-keywords "embed" :: thy_decl
+keywords "embed" :: thy_goal
 begin
 
 fun non_overlapping' :: "term \<Rightarrow> term \<Rightarrow> bool" where
@@ -76,7 +76,7 @@ by auto
 
 ML_file "embed.ML"
 
-consts "lift_term" :: "'a \<Rightarrow> term" ("\<langle>_\<rangle>")
+consts "lift_term" :: "'a \<Rightarrow> term" (\<open>\<langle>_\<rangle>\<close>)
 
 setup\<open>
   let

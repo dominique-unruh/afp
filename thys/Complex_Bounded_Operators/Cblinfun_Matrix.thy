@@ -17,10 +17,10 @@ hide_const (open) Finite_Cartesian_Product.vec
 hide_fact (open) Finite_Cartesian_Product.vec_def
 hide_const (open) Finite_Cartesian_Product.row
 hide_fact (open) Finite_Cartesian_Product.row_def
-no_notation Finite_Cartesian_Product.vec_nth (infixl "$" 90)
+no_notation Finite_Cartesian_Product.vec_nth (infixl \<open>$\<close> 90)
 
-unbundle jnf_notation
-unbundle cblinfun_notation
+unbundle jnf_syntax
+unbundle cblinfun_syntax
 
 subsection \<open>Isomorphism between vectors\<close>
 
@@ -1579,7 +1579,6 @@ proof-
     by (simp add: d_def gs_def mk_projector_def)
 qed
 
-unbundle no_jnf_notation
-unbundle no_cblinfun_notation
+unbundle no jnf_syntax and no cblinfun_syntax
 
 end

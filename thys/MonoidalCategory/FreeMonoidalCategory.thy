@@ -43,8 +43,8 @@ begin
     for C :: "'c comp"
   begin
 
-    no_notation C.in_hom ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
-    notation C.in_hom ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>C _\<guillemotright>")
+    no_notation C.in_hom (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
+    notation C.in_hom (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>C _\<guillemotright>\<close>)
 
     text \<open>
       Two terms of the monoidal language of @{term C} are defined to be equivalent if
@@ -85,7 +85,7 @@ begin
       three we have just stated.
 \<close>
 
-    definition norm  ("\<^bold>\<parallel>_\<^bold>\<parallel>")
+    definition norm  (\<open>\<^bold>\<parallel>_\<^bold>\<parallel>\<close>)
     where "\<^bold>\<parallel>t\<^bold>\<parallel> = Inv (Cod t\<^bold>\<down>) \<^bold>\<cdot> \<^bold>\<lfloor>t\<^bold>\<rfloor> \<^bold>\<cdot> Dom t\<^bold>\<down>"
 
     text \<open>
@@ -306,7 +306,7 @@ begin
       using the syntactic constructor \<open>Comp\<close>.
 \<close>
 
-    definition comp      (infixr "\<cdot>" 55)
+    definition comp      (infixr \<open>\<cdot>\<close> 55)
       where "comp f g \<equiv> (if ARR f \<and> ARR g \<and> DOM f = COD g
                          then mkarr ((rep f) \<^bold>\<cdot> (rep g)) else {})"
 
@@ -319,7 +319,7 @@ begin
       apply unfold_locales
       using comp_def not_ARR_empty by metis
 
-    notation in_hom ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
+    notation in_hom (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
 
     text \<open>
       The empty set serves as the null for the composition.
@@ -1254,7 +1254,7 @@ begin
       We define tensor product of arrows via the constructor @{term Tensor} on terms.
 \<close>
 
-    definition tensor\<^sub>F\<^sub>M\<^sub>C      (infixr "\<otimes>" 53)
+    definition tensor\<^sub>F\<^sub>M\<^sub>C      (infixr \<open>\<otimes>\<close> 53)
       where "f \<otimes> g \<equiv> (if arr f \<and> arr g then mkarr (rep f \<^bold>\<otimes> rep g) else null)"
 
     lemma arr_tensor [simp]:
@@ -1371,16 +1371,16 @@ begin
       The remaining structure required of a monoidal category is also defined syntactically.
 \<close>
 
-    definition unity\<^sub>F\<^sub>M\<^sub>C :: "'c arr"                                  ("\<I>")
+    definition unity\<^sub>F\<^sub>M\<^sub>C :: "'c arr"                                  (\<open>\<I>\<close>)
       where "\<I> = mkarr \<^bold>\<I>" 
 
-    definition lunit\<^sub>F\<^sub>M\<^sub>C :: "'c arr \<Rightarrow> 'c arr"                         ("\<l>[_]")
+    definition lunit\<^sub>F\<^sub>M\<^sub>C :: "'c arr \<Rightarrow> 'c arr"                         (\<open>\<l>[_]\<close>)
     where "\<l>[a] = mkarr \<^bold>\<l>\<^bold>[rep a\<^bold>]"
 
-    definition runit\<^sub>F\<^sub>M\<^sub>C :: "'c arr \<Rightarrow> 'c arr"                         ("\<r>[_]")
+    definition runit\<^sub>F\<^sub>M\<^sub>C :: "'c arr \<Rightarrow> 'c arr"                         (\<open>\<r>[_]\<close>)
     where "\<r>[a] = mkarr \<^bold>\<r>\<^bold>[rep a\<^bold>]"
 
-    definition assoc\<^sub>F\<^sub>M\<^sub>C :: "'c arr \<Rightarrow> 'c arr \<Rightarrow> 'c arr \<Rightarrow> 'c arr"     ("\<a>[_, _, _]")
+    definition assoc\<^sub>F\<^sub>M\<^sub>C :: "'c arr \<Rightarrow> 'c arr \<Rightarrow> 'c arr \<Rightarrow> 'c arr"     (\<open>\<a>[_, _, _]\<close>)
     where "\<a>[a, b, c] = mkarr \<^bold>\<a>\<^bold>[rep a, rep b, rep c\<^bold>]"
 
     lemma can_lunit:
@@ -1914,7 +1914,7 @@ begin
         finally show ?thesis by blast
       qed
       also have "... = \<ll>' (mkarr t)"
-        using assms \<ll>'.is_natural_2 [of "mkarr t"] by simp
+        using assms \<ll>'.naturality2 [of "mkarr t"] by simp
       finally show ?thesis by blast
     qed
 
@@ -1989,7 +1989,7 @@ begin
         finally show ?thesis by blast
       qed
       also have "... = \<rho>' (mkarr t)"
-        using assms \<rho>'.is_natural_2 [of "mkarr t"] by simp
+        using assms \<rho>'.naturality2 [of "mkarr t"] by simp
       finally show ?thesis by blast
     qed
 
@@ -2074,15 +2074,15 @@ begin
     D: monoidal_category D T\<^sub>D \<alpha>\<^sub>D \<iota>\<^sub>D +
     evaluation_map C D T\<^sub>D \<alpha>\<^sub>D \<iota>\<^sub>D V +
     \<F>C: free_monoidal_category C
-  for C :: "'c comp"      (infixr "\<cdot>\<^sub>C" 55)
-  and D :: "'d comp"      (infixr "\<cdot>\<^sub>D" 55)
+  for C :: "'c comp"      (infixr \<open>\<cdot>\<^sub>C\<close> 55)
+  and D :: "'d comp"      (infixr \<open>\<cdot>\<^sub>D\<close> 55)
   and T\<^sub>D :: "'d * 'd \<Rightarrow> 'd"
   and \<alpha>\<^sub>D :: "'d * 'd * 'd \<Rightarrow> 'd"
   and \<iota>\<^sub>D :: "'d"
   and V :: "'c \<Rightarrow> 'd"
   begin
 
-    notation eval         ("\<lbrace>_\<rbrace>")
+    notation eval         (\<open>\<lbrace>_\<rbrace>\<close>)
 
     definition map
     where "map f \<equiv> if \<F>C.arr f then \<lbrace>\<F>C.rep f\<rbrace> else D.null"
@@ -2170,11 +2170,11 @@ begin
     V: "functor" C\<^sub>0 D V +
     strict_monoidal_functor C T\<^sub>C \<alpha>\<^sub>C \<iota>\<^sub>C D T\<^sub>D \<alpha>\<^sub>D \<iota>\<^sub>D F
   for C\<^sub>0 :: "'c\<^sub>0 comp"
-  and C :: "'c comp"      (infixr "\<cdot>\<^sub>C" 55)
+  and C :: "'c comp"      (infixr \<open>\<cdot>\<^sub>C\<close> 55)
   and T\<^sub>C :: "'c * 'c \<Rightarrow> 'c"
   and \<alpha>\<^sub>C :: "'c * 'c * 'c \<Rightarrow> 'c"
   and \<iota>\<^sub>C :: "'c"
-  and D :: "'d comp"      (infixr "\<cdot>\<^sub>D" 55)
+  and D :: "'d comp"      (infixr \<open>\<cdot>\<^sub>D\<close> 55)
   and T\<^sub>D :: "'d * 'd \<Rightarrow> 'd"
   and \<alpha>\<^sub>D :: "'d * 'd * 'd \<Rightarrow> 'd"
   and \<iota>\<^sub>D :: "'d"
@@ -2208,8 +2208,8 @@ begin
     \<F>C: free_monoidal_category C +
     strict_monoidal_extension C \<F>C.comp \<F>C.T\<^sub>F\<^sub>M\<^sub>C \<F>C.\<alpha> \<F>C.\<iota> D T\<^sub>D \<alpha>\<^sub>D \<iota>\<^sub>D
                               \<F>C.inclusion_of_generators V F
-  for C :: "'c comp"      (infixr "\<cdot>\<^sub>C" 55)
-  and D :: "'d comp"      (infixr "\<cdot>\<^sub>D" 55)
+  for C :: "'c comp"      (infixr \<open>\<cdot>\<^sub>C\<close> 55)
+  and D :: "'d comp"      (infixr \<open>\<cdot>\<^sub>D\<close> 55)
   and T\<^sub>D :: "'d * 'd \<Rightarrow> 'd"
   and \<alpha>\<^sub>D :: "'d * 'd * 'd \<Rightarrow> 'd"
   and \<iota>\<^sub>D :: "'d"
@@ -2361,7 +2361,7 @@ begin
       proof
         fix f
         have "\<not>arr f \<Longrightarrow> F f = E.map f"
-          using E.is_extensional F.is_extensional by simp
+          using E.extensionality F.extensionality by simp
         moreover have "arr f \<Longrightarrow> F f = E.map f"
         proof -
           assume f: "arr f"
@@ -2542,7 +2542,7 @@ begin
     lemma diagonalize_is_idempotent:
     shows "D o D = D"
       unfolding D_def
-      using D.is_extensional \<F>\<^sub>SC.null_char Arr_rep Diagonalize_in_Hom mkarr_Diagonalize_rep
+      using D.extensionality \<F>\<^sub>SC.null_char Arr_rep Diagonalize_in_Hom mkarr_Diagonalize_rep
             strict_arr_char rep_mkarr
       by fastforce
 
@@ -2644,7 +2644,7 @@ begin
     proof
       fix f
       have "\<not> \<F>\<^sub>SC.arr f \<Longrightarrow> DoS.map f = \<F>\<^sub>SC.map f"
-        using DoS.is_extensional \<F>\<^sub>SC.map_def by simp
+        using DoS.extensionality \<F>\<^sub>SC.map_def by simp
       moreover have "\<F>\<^sub>SC.arr f \<Longrightarrow> DoS.map f = \<F>\<^sub>SC.map f"
         using \<F>\<^sub>SC.map_simp strict_arr_char Diagonalize_Diag D_def mkarr_Diagonalize_rep
         by simp
@@ -2677,7 +2677,7 @@ begin
 
     lemma \<mu>_char:
     shows "\<mu>.map = \<mu>"
-    proof (intro NaturalTransformation.eqI)
+    proof (intro natural_transformation_eqI)
       show "natural_transformation \<F>\<^sub>SC.comp \<F>\<^sub>SC.comp DoS.map \<F>\<^sub>SC.map \<mu>.map" ..
       have "natural_transformation \<F>\<^sub>SC.comp \<F>\<^sub>SC.comp \<F>\<^sub>SC.map \<F>\<^sub>SC.map \<F>\<^sub>SC.map"
         using DoS.as_nat_trans.natural_transformation_axioms DoS_eq_\<F>\<^sub>SC by simp
@@ -2714,7 +2714,7 @@ begin
     proof
       fix f
       have "\<not> C.arr f \<Longrightarrow> DoI.map f = inclusion_of_generators f"
-        using DoI.is_extensional I.is_extensional \<F>\<^sub>SC.null_char by blast
+        using DoI.extensionality I.extensionality \<F>\<^sub>SC.null_char by blast
       moreover have "C.arr f \<Longrightarrow> DoI.map f = inclusion_of_generators f"
       proof -
         assume f: "C.arr f"
@@ -2749,12 +2749,12 @@ begin
     interpretation D: "functor" \<F>C.comp comp \<F>C.D
       using \<F>C.diagonalize_is_functor by auto
 
-    notation comp           (infixr "\<cdot>\<^sub>S" 55)
+    notation comp           (infixr \<open>\<cdot>\<^sub>S\<close> 55)
 
-    definition tensor\<^sub>S      (infixr "\<otimes>\<^sub>S" 53)
+    definition tensor\<^sub>S      (infixr \<open>\<otimes>\<^sub>S\<close> 53)
     where "f \<otimes>\<^sub>S g \<equiv> \<F>C.D (\<F>C.tensor f g)"
 
-    definition assoc\<^sub>S       ("\<a>\<^sub>S[_, _, _]")
+    definition assoc\<^sub>S       (\<open>\<a>\<^sub>S[_, _, _]\<close>)
     where "assoc\<^sub>S a b c \<equiv> a \<otimes>\<^sub>S b \<otimes>\<^sub>S c"
 
     lemma tensor_char:
@@ -3076,7 +3076,7 @@ begin
 
     interpretation \<phi>: natural_isomorphism
                         \<F>C.CC.comp comp D.T\<^sub>DoFF.map D.FoT\<^sub>C.map D.\<phi>
-      using D.structure_is_natural_isomorphism by simp
+      using D.structure_naturalityisomorphism by simp
 
     text \<open>
       The diagonalization functor is part of a monoidal equivalence between the
@@ -3122,16 +3122,16 @@ begin
     \<F>C: free_monoidal_category C +
     E: evaluation_functor C D T\<^sub>D \<alpha>\<^sub>D \<iota>\<^sub>D V +
     \<F>\<^sub>SC: free_strict_monoidal_category C
-  for C :: "'c comp"      (infixr "\<cdot>\<^sub>C" 55)
-  and D :: "'d comp"      (infixr "\<cdot>\<^sub>D" 55)
+  for C :: "'c comp"      (infixr \<open>\<cdot>\<^sub>C\<close> 55)
+  and D :: "'d comp"      (infixr \<open>\<cdot>\<^sub>D\<close> 55)
   and T\<^sub>D :: "'d * 'd \<Rightarrow> 'd"
   and \<alpha>\<^sub>D :: "'d * 'd * 'd \<Rightarrow> 'd"
   and \<iota>\<^sub>D :: "'d"
   and V :: "'c \<Rightarrow> 'd"
   begin
 
-    notation \<F>C.in_hom   ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
-    notation \<F>\<^sub>SC.in_hom  ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>S _\<guillemotright>")
+    notation \<F>C.in_hom   (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
+    notation \<F>\<^sub>SC.in_hom  (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>S _\<guillemotright>\<close>)
 
     (* TODO: This is just the restriction of the evaluation functor to a subcategory.
        It would be useful to define a restriction_of_functor locale that does this in general
@@ -3289,7 +3289,7 @@ begin
       moreover have "D.dom (E.map (\<F>C.D f)) = D.cod (E.map (\<F>C.\<nu> (\<F>C.dom f)))"
           using f 1 E.preserves_seq EQ.F.preserves_arr \<F>\<^sub>SC.map_simp by auto
       ultimately show ?thesis
-        using f D.comp_arr_dom D.ideD D.arr_dom_iff_arr E.as_nat_trans.is_natural_2
+        using f D.comp_arr_dom D.ideD D.arr_dom_iff_arr E.as_nat_trans.naturality2
         by (metis E.preserves_cod \<F>C.ide_cod \<F>C.ide_dom)
     qed
 
@@ -3354,8 +3354,8 @@ begin
     \<F>\<^sub>SC: free_strict_monoidal_category C +
     strict_monoidal_extension C \<F>\<^sub>SC.comp \<F>\<^sub>SC.T\<^sub>F\<^sub>S\<^sub>M\<^sub>C \<F>\<^sub>SC.\<alpha> \<F>\<^sub>SC.\<iota> D T\<^sub>D \<alpha>\<^sub>D \<iota>\<^sub>D
                                 \<F>\<^sub>SC.inclusion_of_generators V F
-  for C :: "'c comp"      (infixr "\<cdot>\<^sub>C" 55)
-  and D :: "'d comp"      (infixr "\<cdot>\<^sub>D" 55)
+  for C :: "'c comp"      (infixr \<open>\<cdot>\<^sub>C\<close> 55)
+  and D :: "'d comp"      (infixr \<open>\<cdot>\<^sub>D\<close> 55)
   and T\<^sub>D :: "'d * 'd \<Rightarrow> 'd"
   and \<alpha>\<^sub>D :: "'d * 'd * 'd \<Rightarrow> 'd"
   and \<iota>\<^sub>D :: "'d"
@@ -3464,7 +3464,7 @@ begin
               FoD.strict_monoidal_extension_to_free_monoidal_category_axioms E\<^sub>S.map_def
         by simp
       moreover have "\<And>f. \<not>arr f \<Longrightarrow> F f = E\<^sub>S.map f"
-        using F.is_extensional E\<^sub>S.is_extensional arr_char\<^sub>S\<^sub>b\<^sub>C by auto
+        using F.extensionality E\<^sub>S.extensionality arr_char\<^sub>S\<^sub>b\<^sub>C by auto
       ultimately show "F = E\<^sub>S.map" by blast
     qed
 

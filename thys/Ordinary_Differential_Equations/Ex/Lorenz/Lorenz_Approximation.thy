@@ -153,7 +153,7 @@ text \<open>This should prove that the expansion estimates are sufficient.\<clos
 lemma expansion_main: "expansion_main (coarse_results) = Some True"
   by eval
 
-context includes floatarith_notation begin
+context includes floatarith_syntax begin
 
 definition "matrix_of_degrees2\<^sub>e =
   (let
@@ -209,7 +209,7 @@ value [code] "length (slp_of_fas lorenz_fas)"
 
 definition "mig_aform p x = mig_componentwise (Inf_aform' p x) (Sup_aform' p x)"
 
-context includes floatarith_notation begin
+context includes floatarith_syntax begin
 
 definition "mig_aforms p x = real_of_float ((lower o the) ((approx p (Norm (map (Num o float_of o (mig_aform p)) x))) []))"
 
@@ -860,7 +860,7 @@ definition "DR x = frechet_derivative (lorenz.poincare_map \<Sigma>) (at x withi
 definition "\<E> x = Min (expansion ` results_at x)"
 definition "\<E>\<^sub>p x = Min (preexpansion ` results_at x)"
 
-abbreviation returns_to (infixl "returns'_to" 50) where
+abbreviation returns_to (infixl \<open>returns'_to\<close> 50) where
   "(x returns_to P) \<equiv> lorenz.returns_to P x"
 
 lemma closed_\<Sigma>[intro, simp]: "closed \<Sigma>"
@@ -1110,7 +1110,7 @@ lemma \<Sigma>\<^sub>l\<^sub>e_impl[autoref_rules]: "(Sctn [0, 0, 1] 27, \<Sigma
 lemma [autoref_rules]: "((), \<Gamma>\<^sub>v) \<in> ghost_rel"
   by (auto intro!: ghost_relI)
 
-no_notation vec_nth (infixl "$" 90) and vec_lambda (binder "\<chi>" 10)
+no_notation vec_nth (infixl \<open>$\<close> 90) and vec_lambda (binder \<open>\<chi>\<close> 10)
 
 abbreviation "guards_rel \<equiv> \<langle>clw_rel (\<langle>\<langle>lv_rel\<rangle>ivl_rel, \<langle>lv_rel\<rangle>plane_rel\<rangle>inter_rel) \<times>\<^sub>r aform.reach_optns_rel\<rangle>list_rel"
 
@@ -1294,7 +1294,7 @@ lemma lorenz_poincare[le, refine_vcg]:
   qed
   done
 
-context includes floatarith_notation begin
+context includes floatarith_syntax begin
 
 definition "mat1\<^sub>e =
   [Var 0, Var 1, Var 2,   Var 3, 0, 0,

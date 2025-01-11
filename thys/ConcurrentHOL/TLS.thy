@@ -43,9 +43,9 @@ Observations:
 
 Source materials:
  \<^item> \<^file>\<open>$ISABELLE_HOME/src/HOL/Corec_Examples/LFilter.thy\<close>.
- \<^item> \<^file>\<open>$AFP/Coinductive/Coinductive_List.thy\<close>
- \<^item> \<^file>\<open>$AFP/Coinductive/TLList.thy\<close>
- \<^item> \<^file>\<open>$AFP/TLA/Sequence.thy\<close>.
+ \<^item> \<^verbatim>\<open>$AFP/Coinductive/Coinductive_List.thy\<close>
+ \<^item> \<^verbatim>\<open>$AFP/Coinductive/TLList.thy\<close>
+ \<^item> \<^verbatim>\<open>$AFP/TLA/Sequence.thy\<close>.
 
 \<close>
 
@@ -480,7 +480,7 @@ setup \<open>Sign.parent_path\<close>
 
 setup \<open>Sign.mandatory_path "behavior"\<close>
 
-definition natural :: "('a, 's, 'v) behavior.t \<Rightarrow> ('a, 's, 'v) behavior.t" ("\<natural>\<^sub>T") where
+definition natural :: "('a, 's, 'v) behavior.t \<Rightarrow> ('a, 's, 'v) behavior.t" (\<open>\<natural>\<^sub>T\<close>) where
   "\<natural>\<^sub>T\<omega> = behavior.B (behavior.init \<omega>) (collapse (behavior.init \<omega>) (behavior.rest \<omega>))"
 
 setup \<open>Sign.mandatory_path "sset"\<close>
@@ -550,7 +550,7 @@ setup \<open>Sign.mandatory_path "stuttering"\<close>
 
 setup \<open>Sign.mandatory_path "equiv"\<close>
 
-abbreviation syn :: "('a, 's, 'v) behavior.t \<Rightarrow> ('a, 's, 'v) behavior.t \<Rightarrow> bool" (infix "\<simeq>\<^sub>T" 50) where
+abbreviation syn :: "('a, 's, 'v) behavior.t \<Rightarrow> ('a, 's, 'v) behavior.t \<Rightarrow> bool" (infix \<open>\<simeq>\<^sub>T\<close> 50) where
   "\<omega>\<^sub>1 \<simeq>\<^sub>T \<omega>\<^sub>2 \<equiv> behavior.stuttering.equivalent \<omega>\<^sub>1 \<omega>\<^sub>2"
 
 lemma map:
@@ -714,10 +714,10 @@ setup \<open>Sign.parent_path\<close>
 
 setup \<open>Sign.mandatory_path "tls"\<close>
 
-lift_definition singleton :: "('a, 's, 'v) behavior.t \<Rightarrow> ('a, 's, 'v) tls" ("\<lblot>_\<rblot>\<^sub>T" [0]) is raw.singleton
+lift_definition singleton :: "('a, 's, 'v) behavior.t \<Rightarrow> ('a, 's, 'v) tls" (\<open>\<lblot>_\<rblot>\<^sub>T\<close> [0]) is raw.singleton
 by (simp add: raw.singleton_def)
 
-abbreviation singleton_behavior_syn :: "'s \<Rightarrow> ('a \<times> 's, 'v) tllist \<Rightarrow> ('a, 's, 'v) tls" ("\<lblot>_, _\<rblot>\<^sub>T" [0, 0]) where
+abbreviation singleton_behavior_syn :: "'s \<Rightarrow> ('a \<times> 's, 'v) tllist \<Rightarrow> ('a, 's, 'v) tls" (\<open>\<lblot>_, _\<rblot>\<^sub>T\<close> [0, 0]) where
   "\<lblot>s, xs\<rblot>\<^sub>T \<equiv> \<lblot>behavior.B s xs\<rblot>\<^sub>T"
 
 setup \<open>Sign.mandatory_path "singleton"\<close>
@@ -883,7 +883,7 @@ The following is a straightforward shallow embedding of the
 now-traditional anchored semantics of LTL \<^citet>\<open>"MannaPnueli:1988"\<close>.
 
 References:
- \<^item> \<^file>\<open>$AFP/TLA/Liveness.thy\<close>
+ \<^item> \<^verbatim>\<open>$AFP/TLA/Liveness.thy\<close>
  \<^item> \<^file>\<open>$ISABELLE_HOME/src/HOL/TLA/TLA.thy\<close>
  \<^item> \<^url>\<open>https://en.wikipedia.org/wiki/Linear_temporal_logic\<close>
  \<^item> \<^citet>\<open>"KroegerMerz:2008"\<close>
@@ -1286,37 +1286,31 @@ abbreviation (input) always_imp_syn :: "('a, 's, 'v) tls \<Rightarrow> ('a, 's, 
 abbreviation (input) leads_to :: "('a, 's, 'v) tls \<Rightarrow> ('a, 's, 'v) tls \<Rightarrow> ('a, 's, 'v) tls" where
   "leads_to P Q \<equiv> tls.always_imp_syn P (tls.eventually Q)"
 
-bundle "notation"
+open_bundle "syntax"
 begin
-
-notation tls.valid ("\<Turnstile> _" [30] 30)
-notation tls.state_prop ("\<llangle>_\<rrangle>" [0])
-notation tls.until (infix "\<U>" 85)
-notation tls.eventually ("\<diamond>_" [87] 87)
-notation tls.always ("\<box>_" [87] 87)
-notation tls.release (infixr "\<R>" 85)
-notation tls.unless (infixr "\<W>" 85)
-notation tls.always_imp_syn (infixr "\<^bold>\<longrightarrow>\<^sub>\<box>" 75)
-notation tls.leads_to (infixr "\<^bold>\<leadsto>" 75)
-
+notation tls.valid (\<open>\<Turnstile> _\<close> [30] 30)
+notation tls.state_prop (\<open>\<llangle>_\<rrangle>\<close> [0])
+notation tls.until (infix \<open>\<U>\<close> 85)
+notation tls.eventually (\<open>\<diamond>_\<close> [87] 87)
+notation tls.always (\<open>\<box>_\<close> [87] 87)
+notation tls.release (infixr \<open>\<R>\<close> 85)
+notation tls.unless (infixr \<open>\<W>\<close> 85)
+notation tls.always_imp_syn (infixr \<open>\<^bold>\<longrightarrow>\<^sub>\<box>\<close> 75)
+notation tls.leads_to (infixr \<open>\<^bold>\<leadsto>\<close> 75)
 end
 
-bundle "no_notation"
+bundle "no_syntax"
 begin
-
-no_notation tls.valid ("\<Turnstile> _" [30] 30)
-no_notation tls.state_prop ("\<llangle>_\<rrangle>" [0])
-no_notation tls.until (infixr "\<U>" 85)
-no_notation tls.eventually ("\<diamond>_" [87] 87)
-no_notation tls.always ("\<box>_" [87] 87)
-no_notation tls.release (infixr "\<R>" 85)
-no_notation tls.unless (infixr "\<W>" 85)
-no_notation tls.always_imp_syn (infixr "\<^bold>\<longrightarrow>\<^sub>\<box>" 75)
-no_notation tls.leads_to (infixr "\<^bold>\<leadsto>" 75)
-
+no_notation tls.valid (\<open>\<Turnstile> _\<close> [30] 30)
+no_notation tls.state_prop (\<open>\<llangle>_\<rrangle>\<close> [0])
+no_notation tls.until (infixr \<open>\<U>\<close> 85)
+no_notation tls.eventually (\<open>\<diamond>_\<close> [87] 87)
+no_notation tls.always (\<open>\<box>_\<close> [87] 87)
+no_notation tls.release (infixr \<open>\<R>\<close> 85)
+no_notation tls.unless (infixr \<open>\<W>\<close> 85)
+no_notation tls.always_imp_syn (infixr \<open>\<^bold>\<longrightarrow>\<^sub>\<box>\<close> 75)
+no_notation tls.leads_to (infixr \<open>\<^bold>\<leadsto>\<close> 75)
 end
-
-unbundle tls.notation
 
 lemma validI:
   assumes "\<top> \<le> P"
@@ -3058,25 +3052,15 @@ setup \<open>Sign.parent_path\<close>
 
 subsection\<open> Tweak syntax \<close>
 
-unbundle tls.no_notation
-no_notation tls.singleton ("\<lblot>_\<rblot>\<^sub>T")
+unbundle tls.no_syntax
+no_notation tls.singleton (\<open>\<lblot>_\<rblot>\<^sub>T\<close>)
 
 setup \<open>Sign.mandatory_path "tls"\<close>
 
-bundle extra_notation
+bundle extra_syntax
 begin
-
-notation tls.singleton ("\<lblot>_\<rblot>\<^sub>T" [0])
-notation tls.from_spec ("\<lparr>_\<rparr>" [0])
-
-end
-
-bundle no_extra_notation
-begin
-
-no_notation tls.singleton ("\<lblot>_\<rblot>\<^sub>T" [0])
-no_notation tls.from_spec ("\<lparr>_\<rparr>" [0])
-
+notation tls.singleton (\<open>\<lblot>_\<rblot>\<^sub>T\<close> [0])
+notation tls.from_spec (\<open>\<lparr>_\<rparr>\<close> [0])
 end
 
 setup \<open>Sign.parent_path\<close>

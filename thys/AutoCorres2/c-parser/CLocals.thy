@@ -108,7 +108,7 @@ fun add_simproc pos named_thms (intervals: Facts.interval list) thm context =
     val named_thms = if fst (named_thms) = "" then "" else (check context named_thms )
     val _ = is_eq (Thm.concl_of thm) orelse error ("Code_Simproc.add_simproc: conclusion is not an equality")
     val _ = Thm.has_name_hint thm orelse error ("Code_Simproc.add_simproc: theorem has no name")
-    val name_hint = Thm.get_name_hint thm
+    val name_hint = Thm_Name.short (Thm.get_name_hint thm)
     val base_name = Long_Name.base_name name_hint
     val thm1 = safe_mk_meta_eq thm
     val nprems = Thm.nprems_of thm1
@@ -120,7 +120,8 @@ fun add_simproc pos named_thms (intervals: Facts.interval list) thm context =
     if Local_Theory.level ctxt = 0 then context
     else
       context 
-      |> Context.map_proof_result (Simplifier.define_simproc {name = Binding.make (base_name, pos), passive=false, identifier=[],
+      |> Context.map_proof_result (Simplifier.define_simproc
+          {name = Binding.make (base_name, pos), passive=false, kind = Simproc, identifier=[],
            lhss = patterns, proc = fn _ => code_simp_prems thm2 positions})
       |-> (fn simproc => Context.map_proof (
             Local_Theory.declaration {pervasive=false, syntax=false, pos = \<^here>} (fn _ =>
@@ -245,7 +246,7 @@ definition "global_exn_var_clocal = clocals_string_embedding ''global_exn_var''"
 
 bundle clocals_string_embedding
 begin
-notation clocals_string_embedding ("\<S>")
+notation clocals_string_embedding (\<open>\<S>\<close>)
 end
 
 ML \<open>
@@ -507,7 +508,7 @@ fun define_locals qualifier decls thy =
       end
     val lthy = lthy
       |> fold define (tag_list 0 decls)
-      |> Bundle.bundle (Binding.make (suffix "_scope" fname, \<^here>),
+      |> Bundle.bundle {open_bundle = false} (Binding.make (suffix "_scope" fname, \<^here>),
            Attrib.internal_declaration \<^here> (Morphism.entity (fn _ => scope_map (K (qualifier))))) []
   in
     lthy |> Local_Theory.exit_global
@@ -578,25 +579,33 @@ Attrib.setup \<^binding>\<open>unfold_locals\<close>
 nonterminal localsupdbinds and localsupdbind
 
 syntax
-  "_localsupdbind" :: "'a \<Rightarrow> 'a \<Rightarrow> localsupdbind"             ("(2_ :=\<^sub>\<L>/ _)")
-  ""         :: "localsupdbind \<Rightarrow> localsupdbinds"             ("_")
-  "_localsupdbinds":: "localsupdbind \<Rightarrow> localsupdbinds \<Rightarrow> localsupdbinds" ("_,/ _")
-
+  "_localsupdbind" :: "'a \<Rightarrow> 'a \<Rightarrow> localsupdbind"
+    (\<open>(\<open>indent=2 notation=\<open>infix localsupdbind\<close>\<close>_ :=\<^sub>\<L>/ _)\<close>)
+  ""         :: "localsupdbind \<Rightarrow> localsupdbinds"  (\<open>_\<close>)
+  "_localsupdbinds":: "localsupdbind \<Rightarrow> localsupdbinds \<Rightarrow> localsupdbinds"
+    (\<open>(\<open>open_block notation=\<open>mixfix localsupdbinds\<close>\<close>_,/ _)\<close>)
 
 syntax
-  "_statespace_lookup" :: "locals \<Rightarrow> 'name \<Rightarrow> 'c"  ("_ \<cdot> _" [60, 60] 60)
+  "_statespace_lookup" :: "locals \<Rightarrow> 'name \<Rightarrow> 'c"
+    (\<open>(\<open>open_block notation=\<open>infix statespace_lookup\<close>\<close>_ \<cdot> _)\<close> [60, 60] 60)
   "_statespace_locals_lookup" :: "('g, locals, 'e, 'x) state_scheme \<Rightarrow> 'name \<Rightarrow> 'c"
-    ("_ \<cdot>\<^sub>\<L> _" [60, 60] 60)
+    (\<open>(\<open>open_block notation=\<open>infix statespace_locals_lookup\<close>\<close>_ \<cdot>\<^sub>\<L> _)\<close> [60, 60] 60)
 
   "_statespace_update" :: "locals \<Rightarrow> 'name \<Rightarrow> ('c \<Rightarrow> 'c) \<Rightarrow> locals"
-  "_statespace_updates" :: "locals \<Rightarrow> updbinds \<Rightarrow> locals"  ("_\<langle>_\<rangle>" [900, 0] 900)
+  "_statespace_updates" :: "locals \<Rightarrow> updbinds \<Rightarrow> locals"
+    (\<open>(\<open>open_block notation=\<open>mixfix statespace_updates\<close>\<close>_\<langle>_\<rangle>)\<close> [900, 0] 900)
 
   "_statespace_locals_update" :: "('g, locals, 'e, 'x) state_scheme \<Rightarrow> 'name \<Rightarrow> ('c \<Rightarrow> 'c) \<Rightarrow> ('g, locals, 'e, 'x) state_scheme"
-  "_statespace_locals_updates" :: "locals \<Rightarrow> localsupdbinds \<Rightarrow> locals"  ("_\<langle>_\<rangle>" [900, 0] 900)
+  "_statespace_locals_updates" :: "locals \<Rightarrow> localsupdbinds \<Rightarrow> locals"
+    (\<open>(\<open>open_block notation=\<open>mixfix statespace_locals_updates\<close>\<close>_\<langle>_\<rangle>)\<close> [900, 0] 900)
 
   "_statespace_locals_map" ::
   "'name \<Rightarrow> ('c \<Rightarrow> 'c) \<Rightarrow> ('g, locals, 'e, 'x) state_scheme \<Rightarrow> ('g, locals, 'e, 'x) state_scheme"
-  ("(2_:=\<^sub>\<L>/ _)" [1000, 1000] 1000)
+    (\<open>(\<open>indent=2 notation=\<open>infix statespace_locals_map\<close>\<close>_:=\<^sub>\<L>/ _)\<close> [1000, 1000] 1000)
+
+syntax_consts
+  "_statespace_updates" \<rightleftharpoons> fun_upd and
+  "_statespace_locals_updates" \<rightleftharpoons> locals_update
 
 translations
   "_statespace_updates f (_updbinds b bs)" ==

@@ -362,7 +362,7 @@ begin
     definition some_quasi_inverse
     where "some_quasi_inverse f = (SOME g. quasi_inverses f g)"
 
-    notation some_quasi_inverse  ("_\<^sup>~" [1000] 1000)
+    notation some_quasi_inverse  (\<open>_\<^sup>~\<close> [1000] 1000)
 
     lemma quasi_inverses_some_quasi_inverse:
     assumes "equivalence_map f"
@@ -394,7 +394,7 @@ begin
       using assms equivalence_mapE
       apply (intro in_homI in_hhomI)
          apply (metis equivalence_map_is_ide ideD(1) not_arr_null quasi_inverse_antipar(2)
-                      src.preserves_ide trg.is_extensional)
+                      src.preserves_ide trg.extensionality)
         apply (simp_all add: quasi_inverse_antipar)
       using assms quasi_inversesE quasi_inverses_some_quasi_inverse(2) by blast
 
@@ -495,10 +495,10 @@ begin
     bicategory V H \<a> \<i> src trg +
     fg: equivalence_in_bicategory V H \<a> \<i> src trg f g \<zeta> \<xi> +
     hk: equivalence_in_bicategory V H \<a> \<i> src trg h k \<sigma> \<tau>
-  for V :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"        (infixr "\<cdot>" 55)
-  and H :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"        (infixr "\<star>" 53)
-  and \<a> :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"  ("\<a>[_, _, _]")
-  and \<i> :: "'a \<Rightarrow> 'a"              ("\<i>[_]")
+  for V :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"        (infixr \<open>\<cdot>\<close> 55)
+  and H :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"        (infixr \<open>\<star>\<close> 53)
+  and \<a> :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a"  (\<open>\<a>[_, _, _]\<close>)
+  and \<i> :: "'a \<Rightarrow> 'a"              (\<open>\<i>[_]\<close>)
   and src :: "'a \<Rightarrow> 'a"
   and trg :: "'a \<Rightarrow> 'a"
   and f :: "'a"
@@ -692,10 +692,10 @@ begin
     bicategory V H \<a> \<i> src trg +
     e\<^sub>0: equivalence_in_bicategory V H \<a> \<i> src trg e\<^sub>0 d\<^sub>0 \<eta>\<^sub>0 \<epsilon>\<^sub>0 +
     e\<^sub>1: equivalence_in_bicategory V H \<a> \<i> src trg e\<^sub>1 d\<^sub>1 \<eta>\<^sub>1 \<epsilon>\<^sub>1
-  for V :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"       (infixr "\<cdot>" 55)
-  and H :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"       (infixr "\<star>" 53)
-  and \<a> :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" ("\<a>[_, _, _]")
-  and \<i> :: "'a \<Rightarrow> 'a"             ("\<i>[_]")
+  for V :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"       (infixr \<open>\<cdot>\<close> 55)
+  and H :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"       (infixr \<open>\<star>\<close> 53)
+  and \<a> :: "'a \<Rightarrow> 'a \<Rightarrow> 'a \<Rightarrow> 'a" (\<open>\<a>[_, _, _]\<close>)
+  and \<i> :: "'a \<Rightarrow> 'a"             (\<open>\<i>[_]\<close>)
   and src :: "'a \<Rightarrow> 'a"
   and trg :: "'a \<Rightarrow> 'a"
   and e\<^sub>0 :: "'a"
@@ -712,12 +712,12 @@ begin
       using hhom_is_subcategory by simp
 
     (* TODO: The preceding interpretation somehow brings in unwanted notation. *)
-    no_notation in_hom        ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
+    no_notation in_hom        (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
 
     interpretation hom': subcategory V \<open>\<lambda>\<mu>. \<guillemotleft>\<mu> : trg e\<^sub>0 \<rightarrow> trg e\<^sub>1\<guillemotright>\<close>
       using hhom_is_subcategory by simp
 
-    no_notation in_hom        ("\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>")
+    no_notation in_hom        (\<open>\<guillemotleft>_ : _ \<rightarrow> _\<guillemotright>\<close>)
 
     abbreviation (input) F
     where "F \<equiv> \<lambda>\<mu>. e\<^sub>1 \<star> \<mu> \<star> d\<^sub>0"
@@ -988,7 +988,7 @@ begin
       fix \<mu>
       have "\<not> \<guillemotleft>\<mu> : src e\<^sub>0 \<rightarrow> src e\<^sub>1\<guillemotright> \<Longrightarrow> \<phi>.map \<mu> = null"
         using hom.comp_char hom.null_char hom.arr_char\<^sub>S\<^sub>b\<^sub>C
-        by (simp add: \<phi>.is_extensional)
+        by (simp add: \<phi>.extensionality)
       moreover have "\<guillemotleft>\<mu> : src e\<^sub>0 \<rightarrow> src e\<^sub>1\<guillemotright> \<Longrightarrow> \<phi>.map \<mu> = \<phi>\<^sub>0 (cod \<mu>) \<cdot> \<mu>"
         unfolding \<phi>.map_def
         apply auto
@@ -1155,7 +1155,7 @@ begin
     proof
       fix \<mu>'
       have "\<not> \<guillemotleft>\<mu>': trg e\<^sub>0 \<rightarrow> trg e\<^sub>1\<guillemotright> \<Longrightarrow> \<psi>.map \<mu>' = null"
-        using \<psi>.is_extensional hom'.arr_char\<^sub>S\<^sub>b\<^sub>C hom'.null_char by simp
+        using \<psi>.extensionality hom'.arr_char\<^sub>S\<^sub>b\<^sub>C hom'.null_char by simp
       moreover have "\<guillemotleft>\<mu>': trg e\<^sub>0 \<rightarrow> trg e\<^sub>1\<guillemotright> \<Longrightarrow>
                      \<psi>.map \<mu>' = \<mu>' \<cdot> \<r>[dom \<mu>'] \<cdot> \<l>[dom \<mu>' \<star> trg e\<^sub>0] \<cdot> (\<epsilon>\<^sub>1 \<star> dom \<mu>' \<star> \<epsilon>\<^sub>0) \<cdot>
                                   ((e\<^sub>1 \<star> d\<^sub>1) \<star> \<a>[dom \<mu>', e\<^sub>0, d\<^sub>0]) \<cdot> \<a>\<^sup>-\<^sup>1[e\<^sub>1, d\<^sub>1, (dom \<mu>' \<star> e\<^sub>0) \<star> d\<^sub>0] \<cdot>
@@ -1173,7 +1173,7 @@ begin
             using hom'.seq_char\<^sub>S\<^sub>b\<^sub>C by blast
         qed
         ultimately show ?thesis
-          using \<mu>' \<psi>.is_natural_1 [of \<mu>'] hom'.comp_char hom'.arr_char\<^sub>S\<^sub>b\<^sub>C hom'.dom_closed
+          using \<mu>' \<psi>.naturality1 [of \<mu>'] hom'.comp_char hom'.arr_char\<^sub>S\<^sub>b\<^sub>C hom'.dom_closed
                 \<psi>_ide_simp [of "dom \<mu>'"] hom'.dom_simp hom'.cod_simp
           apply auto
           by (metis \<psi>_def hom'.inclusion ide_dom)

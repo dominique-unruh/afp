@@ -425,7 +425,6 @@ fun add_mk_patterns rules_name (mk_patterns: (binding * (Proof.context -> int ->
 fun rule_ord (rule1, rule2) =  rev_order (int_ord (#priority (rule1:rule), #priority (rule2:rule)))
 
 (* pretty printing *)
-fun pretty_binding b = Pretty.str (More_Binding.here b)
 
 fun prt_term ctxt =
       singleton (Syntax.uncheck_terms ctxt) #>
@@ -451,7 +450,7 @@ fun markup_name ctxt rules_name =
 
 fun pretty_rule ctxt (rule: rule) =
   Pretty.item (
-   [pretty_entry "rule" (pretty_binding (#name rule)), Pretty.brk 1,
+   [pretty_entry "rule" (More_Binding.here_pretty (#name rule)), Pretty.brk 1,
     Pretty.indent 2 (Thm.pretty_thm ctxt (#rule rule) |> Pretty.cartouche), Pretty.brk 1,
     pretty_entry "priority" (Pretty.str (string_of_int (#priority rule))), Pretty.brk 1,
     pretty_entry "pattern" (prt_term ctxt (#pattern rule) |> Pretty.cartouche), Pretty.brk 1,
@@ -893,7 +892,7 @@ val atom = enclose "(" ")"
 fun app x y = atom x ^ " $ " ^ atom y
 
 fun as_pat skeleton n t =
-  if skeleton then n else atom (space_implode " " [n, "as", t])
+  if skeleton then n else atom (implode_space [n, "as", t])
 
 fun abs skeleton T x bdy = enclose "Abs (" ")" (x ^ ", " ^ as_pat skeleton (x ^ "T") (typ_pat T) ^ ", " ^ bdy)
 
@@ -946,17 +945,17 @@ fun let_expr bindings expr =
         map (indent 2) bindings @
      ["in", indent 2 expr, "end"])
 
-fun val_binding v t = space_implode " " ["val", v, "=", t]
+fun val_binding v t = implode_space ["val", v, "=", t]
 
 fun lam_pat args bdy =
   let
-    val heading = map (fn n => space_implode " " ["fn", n, "=>"]) args |> space_implode " "
+    val heading = map (fn n => implode_space ["fn", n, "=>"]) args |> implode_space
     val match_default = "| _ => raise Match"
   in
     atom (cat_lines [heading,  indents 4 (atom bdy), indent 4 match_default])
   end
 
-fun apply f args = space_implode " " (f :: map atom args)
+fun apply f args = implode_space (f :: map atom args)
 
 
 in

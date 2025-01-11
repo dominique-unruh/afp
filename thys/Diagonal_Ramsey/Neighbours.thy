@@ -2,11 +2,11 @@ section \<open>Background material: the neighbours of vertices\<close>
 
 text \<open>Preliminaries for the Book Algorithm\<close>
 
-theory Neighbours imports General_Extras "Ramsey_Bounds.Ramsey_Bounds"
+theory Neighbours imports "Ramsey_Bounds.Ramsey_Bounds"
 
 begin
 
-abbreviation set_difference :: "['a set,'a set] \<Rightarrow> 'a set" (infixl "\<setminus>" 65)
+abbreviation set_difference :: "['a set,'a set] \<Rightarrow> 'a set" (infixl \<open>\<setminus>\<close> 65)
   where "A \<setminus> B \<equiv> A-B"
 
 subsection \<open>Preliminaries on graphs\<close>

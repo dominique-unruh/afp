@@ -8,7 +8,7 @@ begin
 
 subsection \<open>Tree automaton definition and functionality\<close>
 
-datatype ('q, 'f) ta_rule = TA_rule (r_root: 'f) (r_lhs_states: "'q list") (r_rhs: 'q) ("_ _ \<rightarrow> _" [51, 51, 51] 52)
+datatype ('q, 'f) ta_rule = TA_rule (r_root: 'f) (r_lhs_states: "'q list") (r_rhs: 'q) (\<open>_ _ \<rightarrow> _\<close> [51, 51, 51] 52)
 datatype ('q, 'f) ta = TA (rules: "('q, 'f) ta_rule fset") (eps: "('q \<times> 'q) fset")
 
 text \<open>In many application we are interested in specific subset of all terms. If these
@@ -1188,7 +1188,7 @@ proof -
     by (auto simp: ta_productive_def) fastforce
   moreover have "?RS |\<subseteq>| ?LS" using ta_der_only_prod
     by (auto elim!: ta_productiveE)
-       (smt (z3) ta_der_only_prod ta_productiveI ta_productive_setI)
+       (smt (verit) ta_der_only_prod ta_productiveI ta_productive_setI)
   ultimately show ?thesis by blast
 qed
 

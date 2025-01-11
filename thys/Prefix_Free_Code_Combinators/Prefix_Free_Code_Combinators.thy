@@ -131,7 +131,7 @@ section \<open>(Dependent) Products\label{sec:dep_enc}\<close>
 
 definition encode_dependent_prod ::
   "'a encoding \<Rightarrow> ('a \<Rightarrow> 'b encoding) \<Rightarrow> ('a \<times> 'b) encoding"
-  (infixr "\<Join>\<^sub>e" 65)
+  (infixr \<open>\<Join>\<^sub>e\<close> 65)
   where
     "encode_dependent_prod e f x =
       opt_append (e (fst x)) (f (fst x) (snd x))"
@@ -172,7 +172,7 @@ text \<open>This abbreviation is for non-dependent products.\<close>
 
 abbreviation encode_prod ::
   "'a encoding \<Rightarrow> 'b encoding \<Rightarrow> ('a \<times> 'b) encoding"
-  (infixr "\<times>\<^sub>e" 65)
+  (infixr \<open>\<times>\<^sub>e\<close> 65)
   where
     "encode_prod e1 e2 \<equiv> e1 \<Join>\<^sub>e (\<lambda>_. e2)"
 
@@ -599,7 +599,7 @@ qed
 section \<open>Functions\<close>
 
 definition encode_fun :: "'a list \<Rightarrow> 'b encoding \<Rightarrow> ('a \<Rightarrow> 'b) encoding"
-  (infixr "\<rightarrow>\<^sub>e" 65)  where
+  (infixr \<open>\<rightarrow>\<^sub>e\<close> 65)  where
   "encode_fun xs e f =
     (if f \<in> extensional (set xs)
       then (Lf\<^sub>e e (length xs) (map f xs))
@@ -866,7 +866,7 @@ proof -
       (\<bar>of_int m\<bar>+2)*(\<bar>of_int e\<bar>+1)"
       by (simp flip:of_int_abs) (metis (mono_tags, opaque_lifting) numeral_One
           of_int_add of_int_le_iff of_int_mult of_int_numeral)
-    then show ?thesis by (simp add:log_mult[symmetric])
+    then show ?thesis by (simp flip: log_mult_pos)
   qed
   have "bit_count (F\<^sub>e f) \<le>
     6 + 2 * (log 2 (\<bar>mantissa f\<bar> + 1) + log 2 (\<bar>exponent f\<bar> + 1))"

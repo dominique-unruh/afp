@@ -14,11 +14,11 @@ text \<open>This theory formalizes a general algorithm schema for computing Gr\"
 
 subsection \<open>@{term processed}\<close>
 
-definition minus_pairs (infixl "-\<^sub>p" 65) where "minus_pairs A B = A - (B \<union> prod.swap ` B)"
-definition Int_pairs (infixl "\<inter>\<^sub>p" 65) where "Int_pairs A B = A \<inter> (B \<union> prod.swap ` B)"
-definition in_pair (infix "\<in>\<^sub>p" 50) where "in_pair p A \<longleftrightarrow> (p \<in> A \<union> prod.swap ` A)"
-definition subset_pairs (infix "\<subseteq>\<^sub>p" 50) where "subset_pairs A B \<longleftrightarrow> (\<forall>x. x \<in>\<^sub>p A \<longrightarrow> x \<in>\<^sub>p B)"
-abbreviation not_in_pair (infix "\<notin>\<^sub>p" 50) where "not_in_pair p A \<equiv> \<not> p \<in>\<^sub>p A"
+definition minus_pairs (infixl \<open>-\<^sub>p\<close> 65) where "minus_pairs A B = A - (B \<union> prod.swap ` B)"
+definition Int_pairs (infixl \<open>\<inter>\<^sub>p\<close> 65) where "Int_pairs A B = A \<inter> (B \<union> prod.swap ` B)"
+definition in_pair (infix \<open>\<in>\<^sub>p\<close> 50) where "in_pair p A \<longleftrightarrow> (p \<in> A \<union> prod.swap ` A)"
+definition subset_pairs (infix \<open>\<subseteq>\<^sub>p\<close> 50) where "subset_pairs A B \<longleftrightarrow> (\<forall>x. x \<in>\<^sub>p A \<longrightarrow> x \<in>\<^sub>p B)"
+abbreviation not_in_pair (infix \<open>\<notin>\<^sub>p\<close> 50) where "not_in_pair p A \<equiv> \<not> p \<in>\<^sub>p A"
 
 lemma in_pair_alt: "p \<in>\<^sub>p A \<longleftrightarrow> (p \<in> A \<or> prod.swap p \<in> A)"
   by (metis (mono_tags, lifting) UnCI UnE image_iff in_pair_def prod.collapse swap_simp)
@@ -3069,7 +3069,7 @@ proof -
     "\<exists>r \<in> set gs \<union> set bs \<union> set hs. let k = fst (snd r) in
           k \<noteq> ?i \<and> k \<noteq> ?j \<and> lt (fst r) adds\<^sub>t ?l \<and> pair_in_list ps ?i k \<and>
          ((r \<in> set gs \<union> set bs \<and> q_in_bs) \<or> pair_in_list ps ?j k) \<and> fst r \<noteq> 0"
-    by (smt UnI1 chain_ncrit_def sup_commute)
+    by (smt (verit) Un_iff chain_ncrit_def)
 
   then obtain r where r_in: "r \<in> set gs \<union> set bs \<union> set hs" and "fst r \<noteq> 0" and rp: "fst (snd r) \<noteq> ?i"
     and rq: "fst (snd r) \<noteq> ?j" and "lt (fst r) adds\<^sub>t ?l"

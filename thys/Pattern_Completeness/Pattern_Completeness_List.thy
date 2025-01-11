@@ -213,7 +213,25 @@ qed auto
 
 lemma mp_step_mset_vars: assumes "mp \<rightarrow>\<^sub>m mp'"
   shows "tvars_mp (mp_mset mp) \<supseteq> tvars_mp (mp_mset mp')" 
-  using assms by induct (auto simp: tvars_mp_def set_zip)
+  using assms 
+proof induct 
+  case *: (match_decompose' mp y f n mp' ys)
+  {
+    fix x
+    assume "x \<in> tvars_mp (mp_mset ((\<Sum>(t, l)\<in>#mp. mp_list (zip (args t) (map Var ys)))))" 
+    from this[unfolded tvars_mp_def, simplified]
+    obtain t l ti yi where tl: "(t,l) \<in># mp" and tiyi: "(ti,yi) \<in># mp_list (zip (args t) (map Var ys))" 
+      and x: "x \<in> vars ti" 
+      by auto
+    from *(1)[OF tl] obtain ts where l: "l = Var y" and t: "t = Fun f ts" and lts: "length ts = n"
+      by (cases t, auto)
+    from tiyi[unfolded t] have "ti \<in> set ts"
+      using set_zip_leftD by fastforce
+    with x t have "x \<in> vars t" by auto
+    hence "x \<in> tvars_mp (mp_mset mp)" using tl unfolding tvars_mp_def by auto
+  }
+  thus ?case unfolding tvars_mp_def by force
+qed (auto simp: tvars_mp_def set_zip)
 
 lemma mp_step_mset_steps_vars: assumes "(\<rightarrow>\<^sub>m)\<^sup>*\<^sup>* mp mp'"
   shows "tvars_mp (mp_mset mp) \<supseteq> tvars_mp (mp_mset mp')" 
@@ -614,6 +632,10 @@ qed
 lemma pat_mset_list: "pat_mset (pat_mset_list p) = pat_list p" 
   unfolding pat_list_def pat_mset_list_def by (auto simp: image_comp)
 
+context
+  assumes non_improved: "\<not> improved" 
+begin
+
 text \<open>Main simulation lemma for a single @{const pat_impl} step.\<close>
 lemma pat_impl: assumes "pat_impl n p = res" 
     and vars: "fst ` tvars_pp (pat_list p) \<subseteq> {..<n}" 
@@ -644,20 +666,26 @@ proof (atomize(full), goal_cases)
     proof (cases "\<forall>mp\<in>set p'. snd (snd mp)")
       case True
       with res have res: "res = None" by auto
-      have "pat_fail (pat_lr p')" 
-      proof (intro pat_failure' ballI)
-        fix mps
-        assume "mps \<in> pat_mset (pat_lr p')" 
-        then obtain mp where mem: "mp \<in> set p'" and mps: "mps = mp_mset (mp_lr mp)" by (auto simp: pat_lr_def)
-        obtain lx rx b where mp: "mp = (lx,rx,b)" by (cases mp, auto)
-        from mp mem True have b by auto
-        with wf[unfolded wf_pat_lr_def, rule_format, OF mem, unfolded wf_lr2_def mp split]
-        have "inf_var_conflict (set_mset (mp_rx (rx,b)))" unfolding wf_rx_def wf_rx2_def by (auto split: if_splits)
-        thus "inf_var_conflict mps" unfolding mps mp_lr_def mp split
-          unfolding inf_var_conflict_def by fastforce
-      qed
-      with steps res
-      show ?thesis by auto
+      have "(add_mset (pat_lr p') P, add_mset {#} P) \<in> \<Rrightarrow>\<^sup>*" 
+      proof (cases "pat_lr p' = {#}")
+        case False
+        have "add_mset (pat_lr p' + {#}) P \<Rrightarrow>\<^sub>m {# {#} #} + P" 
+        proof (intro P_simp_pp[OF pat_inf_var_conflict[OF _ False]] ballI)
+          fix mps
+          assume "mps \<in> pat_mset (pat_lr p')" 
+          then obtain mp where mem: "mp \<in> set p'" and mps: "mps = mp_mset (mp_lr mp)" by (auto simp: pat_lr_def)
+          obtain lx rx b where mp: "mp = (lx,rx,b)" by (cases mp, auto)
+          from mp mem True have b by auto
+          with wf[unfolded wf_pat_lr_def, rule_format, OF mem, unfolded wf_lr2_def mp split]
+          have "inf_var_conflict (set_mset (mp_rx (rx,b)))" unfolding wf_rx_def wf_rx2_def by (auto split: if_splits)
+          thus "inf_var_conflict mps" unfolding mps mp_lr_def mp split
+            unfolding inf_var_conflict_def by fastforce
+        qed (auto simp: tvars_pp_def)
+        thus ?thesis unfolding P_step_def by auto
+      qed auto
+      with steps have "(add_mset (pat_mset_list p) P, add_mset {#} P) \<in> \<Rrightarrow>\<^sup>*" by auto
+      moreover have "pat_fail {#}" by (intro pat_empty)
+      ultimately show ?thesis using res by auto 
     next
       case False
       define p'l where "p'l = map mp_lr_list p'" 
@@ -724,7 +752,8 @@ proof (atomize(full), goal_cases)
           from ts rx have sty: "(s, Var y) \<in># mp_rx (rx, False)" "(t, Var y) \<in># mp_rx (rx,False)" 
             by (auto simp: mp_rx_def List.maps_def)
           with confl ninf have "\<not> inf_sort (snd x)" unfolding inf_var_conflict_def by blast
-          with sty confl rx have main: "(s, Var y) \<in># mp_lr mp \<and> (t, Var y) \<in># mp_lr mp \<and> Conflict_Var s t x \<and> \<not> inf_sort (snd x)" 
+          with sty confl rx have main: "(s, Var y) \<in># mp_lr mp \<and> (t, Var y) \<in># mp_lr mp \<and> Conflict_Var s t x \<and> \<not> inf_sort (snd x)
+            \<and> (improved \<longrightarrow> b)" for b using non_improved
             unfolding mp by (auto simp: mp_lr_def)
           from mpp obtain p'' where pat: "pat_lr p' = add_mset (mp_lr mp) p''" 
             unfolding pat_lr_def by simp (metis in_map_mset mset_add set_mset_mset)
@@ -895,7 +924,8 @@ proof -
   from pats_impl[OF wf n, folded this]
   show ?thesis .
 qed
-end 
+end
+end
 
 subsection \<open>Getting the result outside the locale with assumptions\<close>
 
@@ -913,6 +943,7 @@ lemma pat_complete_impl_wrapper: assumes C_Cs: "C = map_of Cs"
   and C: "\<And> f \<sigma>s \<sigma>. ((f,\<sigma>s),\<sigma>) \<in> set Cs \<Longrightarrow> length \<sigma>s \<le> m \<and> set (\<sigma> # \<sigma>s) \<subseteq> S" 
   and Cl: "\<And> s. Cl s = map fst (filter ((=) s o snd) Cs)" 
   and P: "snd ` \<Union> (vars ` fst ` set (concat (concat P))) \<subseteq> S" 
+  and impr: "\<not> improved" 
   shows "pat_complete_impl P = pats_complete (pat_list ` set P)" 
 proof -
   from decide_nonempty_sorts(1)[OF dist C_Cs[symmetric] inhabited, folded S_Sl]
@@ -921,7 +952,7 @@ proof -
   {
     fix f ss s
     assume "f : ss \<rightarrow> s in C"
-    hence "((f,ss),s) \<in> set Cs" unfolding C_Cs by (auto dest!: hastype_in_ssigD map_of_SomeD)
+    hence "((f,ss),s) \<in> set Cs" unfolding C_Cs by (auto dest!: fun_hastypeD map_of_SomeD)
     from C[OF this] have "insert s (set ss) \<subseteq> S" "length ss \<le> m" by auto
   } note Cons = this
   {
@@ -936,14 +967,14 @@ proof -
   proof (intro allI impI)
     fix f ss s s'
     assume "f : ss \<rightarrow> s in C" and "s' \<in> set ss" 
-    hence "s' \<in> S" using Cons(1)[of f ss s] by (auto simp: hastype_in_ssig_def)
+    hence "s' \<in> S" using Cons(1)[of f ss s] by auto
     from S[OF this] show "\<exists>t. t : s' in \<T>(C,EMPTYn)" by auto
   qed
   from compute_inf_sorts[OF En C_Cs this dist] inf_sort
   have inf_sort: "inf_sort s = (\<not> bdd_above (size ` {t. t : s in \<T>(C,EMPTYn)}))" for s unfolding inf_sort by auto
   have Cl: "set (Cl s) = {(f,ss). f : ss \<rightarrow> s in C}" for s
     unfolding Cl set_map o_def C_Cs using dist
-    by (force simp: hastype_in_ssig_def)
+    by (force simp: fun_hastype_def)
   interpret pattern_completeness_context_with_assms
     apply unfold_locales
     subgoal by (rule S(1))
@@ -953,7 +984,7 @@ proof -
     subgoal by (rule Cl)
     subgoal by (rule m)
     done
-  show ?thesis by (rule pat_complete_impl[OF P])
+  show ?thesis by (rule pat_complete_impl[OF impr P])
 qed
 end
 
@@ -986,13 +1017,13 @@ theorem decide_pat_complete: assumes C_Cs: "C = map_of Cs"
   and P: "snd ` \<Union> (vars ` fst ` set (concat (concat P))) \<subseteq> S"
 shows "decide_pat_complete Cs P = pats_complete S C  (pat_list ` set P)" 
   unfolding decide_pat_complete_def Let_def
-proof (rule pattern_completeness_context.pat_complete_impl_wrapper[OF C_Cs dist non_empty_sorts S refl _ refl P])
+proof (rule pattern_completeness_context.pat_complete_impl_wrapper[OF C_Cs dist non_empty_sorts S refl _ refl P, of _ False])
   fix f \<sigma>s \<sigma>
   assume mem: "((f, \<sigma>s), \<sigma>) \<in> set Cs" 
   hence "length \<sigma>s \<in> set (map (length \<circ> snd \<circ> fst) Cs)" by force
   from max_list[OF this] mem
   show "length \<sigma>s \<le> max_list (map (length \<circ> snd \<circ> fst) Cs) \<and> set (\<sigma> # \<sigma>s) \<subseteq> S" 
     unfolding S sorts_of_ssig_list_def List.maps_def by force
-qed
+qed simp
 
 end

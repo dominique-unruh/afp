@@ -68,7 +68,9 @@ end
 \<close>
 
 syntax
-  "_Ptr" :: "type \<Rightarrow> logic" ("(1PTR/(1'(_')))")
+  "_Ptr" :: "type \<Rightarrow> logic" (\<open>(\<open>indent=1 notation=\<open>mixfix PTR\<close>\<close>PTR/(1'(_')))\<close>)
+syntax_consts
+  "_Ptr" == Ptr
 translations
   "PTR('a)" => "CONST Ptr :: (addr \<Rightarrow> 'a ptr)"
 typed_print_translation
@@ -84,7 +86,10 @@ primrec
   "ptr_coerce (Ptr a) = Ptr a"
 
 syntax
-  "_Ptr_coerce" :: "type \<Rightarrow> type \<Rightarrow> logic" ("(1PTR'_COERCE/(1'(_ \<rightarrow> _')))")
+  "_Ptr_coerce" :: "type \<Rightarrow> type \<Rightarrow> logic"
+    (\<open>(\<open>indent=1 notation=\<open>mixfix PTR_COERCE\<close>\<close>PTR'_COERCE/(\<open>indent=1 notation=\<open>infix coerce\<close>\<close>'(_ \<rightarrow> _')))\<close>)
+syntax_consts
+  "_Ptr_coerce" == ptr_coerce
 translations
   "PTR_COERCE('a \<rightarrow> 'b)" => "CONST ptr_coerce :: ('a ptr \<Rightarrow> 'b ptr)"
 typed_print_translation
@@ -93,11 +98,11 @@ typed_print_translation
 definition
   (* no ctype/memtype-class constraints on these so as to allow comparison of
      void * pointers, which are represented as Isabelle type unit ptr *)
-  ptr_less :: "'a ptr \<Rightarrow> 'a ptr \<Rightarrow> bool" (infixl "<\<^sub>p" 50) where
+  ptr_less :: "'a ptr \<Rightarrow> 'a ptr \<Rightarrow> bool" (infixl \<open><\<^sub>p\<close> 50) where
   "p <\<^sub>p q \<equiv> ptr_val p < ptr_val q"
 
 definition
-  ptr_le :: "'a ptr \<Rightarrow> 'a ptr \<Rightarrow> bool" (infixl "\<le>\<^sub>p" 50) where
+  ptr_le :: "'a ptr \<Rightarrow> 'a ptr \<Rightarrow> bool" (infixl \<open>\<le>\<^sub>p\<close> 50) where
   "p \<le>\<^sub>p q \<equiv> ptr_val p \<le> ptr_val q"
 
 instantiation ptr :: (type) ord
@@ -150,8 +155,9 @@ definition
   "intvl x \<equiv> {z. \<exists>k. z = fst x + of_nat k \<and> k < snd x}"
 
 abbreviation
-  "intvl_abbr" :: "'a::len word \<Rightarrow> nat \<Rightarrow> 'a word set" ("{_..+_}") where
-  "{a..+b} \<equiv> intvl (a,b)"
+  "intvl_abbr" :: "'a::len word \<Rightarrow> nat \<Rightarrow> 'a word set"
+    (\<open>(\<open>open_block notation=\<open>mixfix intvl\<close>\<close>{_..+_})\<close>)
+  where "{a..+b} \<equiv> intvl (a,b)"
 
 
 section "\<open>dt_tuple\<close>: a reimplementation of 3 item tuples"

@@ -214,14 +214,14 @@ text \<open>
   locale cospan_diagram =
     J: cospan_shape +
     C: category C
-  for C :: "'c comp"      (infixr "\<cdot>" 55)
+  for C :: "'c comp"      (infixr \<open>\<cdot>\<close> 55)
   and f0 :: 'c
   and f1 :: 'c +
   assumes is_cospan: "C.cospan f0 f1"
   begin
 
-    no_notation J.comp   (infixr "\<cdot>" 55)
-    notation J.comp      (infixr "\<cdot>\<^sub>J" 55)
+    no_notation J.comp   (infixr \<open>\<cdot>\<close> 55)
+    notation J.comp      (infixr \<open>\<cdot>\<^sub>J\<close> 55)
 
     fun map
     where "map J.AA = C.dom f0"
@@ -289,13 +289,9 @@ text \<open>
         show "\<not> J.arr f \<Longrightarrow> mkCone p0 p1 f = C.null"
           using mkCone_def J.arr_char by simp
         assume f: "J.arr f"
-        show "C.dom (mkCone p0 p1 f) = E.map (J.dom f)"
-          using assms f mkCone_def J.arr_char J.dom_char
-          apply (cases f, simp_all)
-          by (metis C.dom_comp)+
-        show "C.cod (mkCone p0 p1 f) = map (J.cod f)"
-          using assms f mkCone_def J.arr_char J.cod_char is_cospan
-          by (cases f, auto)
+        show "C.arr (mkCone p0 p1 f)"
+          using assms f mkCone_def J.arr_char
+          by (cases f, simp_all) blast+
         show "map f \<cdot> mkCone p0 p1 (J.dom f) = mkCone p0 p1 f"
           using assms f mkCone_def J.arr_char J.dom_char C.comp_ide_arr is_cospan
           by (cases f, auto)
@@ -337,18 +333,18 @@ text \<open>
       show ?thesis
       proof -
         have "\<And>j. j = J.AA \<Longrightarrow> mkCone (\<chi> J.AA) (\<chi> J.BB) j = \<chi> j"
-          using mkCone_def \<chi>.is_extensional by simp
+          using mkCone_def \<chi>.extensionality by simp
         moreover have "\<And>j. j = J.BB \<Longrightarrow> mkCone (\<chi> J.AA) (\<chi> J.BB) j = \<chi> j"
-          using mkCone_def \<chi>.is_extensional by simp
+          using mkCone_def \<chi>.extensionality by simp
         moreover have "\<And>j. j = J.TT \<Longrightarrow> mkCone (\<chi> J.AA) (\<chi> J.BB) j = \<chi> j"
-          using 1 mkCone_def \<chi>.is_extensional \<chi>.A.map_simp \<chi>.preserves_comp_1
-                cospan_shape.seq_char \<chi>.is_natural_2
+          using 1 mkCone_def \<chi>.extensionality \<chi>.A.map_simp \<chi>.preserves_comp_1
+                cospan_shape.seq_char \<chi>.naturality2
           apply simp
           by (metis J.seqE J.comp.simps(5) map.simps(5))
         ultimately have "\<And>j. J.ide j \<Longrightarrow> mkCone (\<chi> J.AA) (\<chi> J.BB) j = \<chi> j"
           using J.ide_char by auto
         thus "mkCone (\<chi> J.AA) (\<chi> J.BB) = \<chi>"
-          using mkCone_def NaturalTransformation.eqI [of J.comp C]
+          using mkCone_def natural_transformation_eqI [of J.comp C]
                 \<chi>.natural_transformation_axioms mkCone_\<chi>.natural_transformation_axioms
                 J.ide_char
           by simp
@@ -421,7 +417,7 @@ text \<open>
     C: category C +
     D: cospan_diagram C f0 f1 +
     limit_cone J.comp C D.map \<open>C.dom p0\<close> \<open>D.mkCone p0 p1\<close>
-  for C :: "'c comp"      (infixr "\<cdot>" 55)
+  for C :: "'c comp"      (infixr \<open>\<cdot>\<close> 55)
   and f0 :: 'c
   and f1 :: 'c
   and p0 :: 'c
@@ -549,7 +545,7 @@ text \<open>
             using 3 by blast
           have "\<guillemotleft>l : x \<rightarrow> ?a\<guillemotright>"
             using l 2 \<chi>'.preserves_hom J.arr_char J.ide_char \<chi>'.component_in_hom
-                  \<chi>'.is_extensional \<chi>'.preserves_reflects_arr comp_in_homE null_is_zero(2) in_homE
+                  \<chi>'.extensionality \<chi>'.preserves_reflects_arr comp_in_homE null_is_zero(2) in_homE
             by metis
           moreover have "D.cones_map l (D.mkCone p q) = \<chi>'"
             using l D.cones_map_mkCone_eq_iff [of p q "\<chi>' J.AA" "\<chi>' J.BB" l]
@@ -665,9 +661,9 @@ text \<open>
 
   locale elementary_category_with_pullbacks =
     category C
-  for C :: "'a comp"                              (infixr "\<cdot>" 55)
-  and prj0 :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"                    ("\<p>\<^sub>0[_, _]")
-  and prj1 :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"                    ("\<p>\<^sub>1[_, _]") +
+  for C :: "'a comp"                              (infixr \<open>\<cdot>\<close> 55)
+  and prj0 :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"                    (\<open>\<p>\<^sub>0[_, _]\<close>)
+  and prj1 :: "'a \<Rightarrow> 'a \<Rightarrow> 'a"                    (\<open>\<p>\<^sub>1[_, _]\<close>) +
   assumes prj0_ext: "\<not> cospan f g \<Longrightarrow> \<p>\<^sub>0[f, g] = null"
   and prj1_ext: "\<not> cospan f g \<Longrightarrow> \<p>\<^sub>1[f, g] = null"
   and pullback_commutes [intro]: "cospan f g \<Longrightarrow> commutative_square f g \<p>\<^sub>1[f, g] \<p>\<^sub>0[f, g]"
@@ -696,7 +692,7 @@ text \<open>
       of a pullback.
     \<close>
 
-    definition pbdom        (infix "\<down>\<down>" 51)
+    definition pbdom        (infix \<open>\<down>\<down>\<close> 51)
     where "f \<down>\<down> g \<equiv> dom \<p>\<^sub>0[f, g]"
 
     lemma pbdom_in_hom [intro]:
@@ -762,7 +758,7 @@ text \<open>
       and the ``$1$-side'', which we regard as the output, occurs on the left.
     \<close>
 
-    definition tuple         ("\<langle>_ \<lbrakk>_, _\<rbrakk> _\<rangle>")
+    definition tuple         (\<open>\<langle>_ \<lbrakk>_, _\<rbrakk> _\<rangle>\<close>)
     where "\<langle>h \<lbrakk>f, g\<rbrakk> k\<rangle> \<equiv> if commutative_square f g h k then
                            THE l. \<p>\<^sub>0[f, g] \<cdot> l = k \<and> \<p>\<^sub>1[f, g] \<cdot> l = h
                          else null"
@@ -791,7 +787,7 @@ text \<open>
         by (metis seqE)
     qed
 
-    lemma tuple_is_extensional:
+    lemma tuple_extensionality:
     assumes "\<not> commutative_square f g h k"
     shows "\<langle>h \<lbrakk>f, g\<rbrakk> k\<rangle> = null"
       unfolding tuple_def
@@ -1030,7 +1026,7 @@ text \<open>
         using assms pullback_commutes [of f f]
         by (metis commutative_squareE mono_implies_arr)
       thus ?thesis
-        using assms monoE [of f "\<p>\<^sub>1[f, f]" "\<p>\<^sub>0[f, f]"]
+        using assms mono_cancel [of f "\<p>\<^sub>1[f, f]" "\<p>\<^sub>0[f, f]"]
         by (metis mono_implies_arr prj0_simps(1,3) seqI)
     qed
 
@@ -1060,12 +1056,12 @@ text \<open>
   context category_with_pullbacks
   begin
 
-    definition some_prj1  ("\<p>\<^sub>1\<^sup>?[_, _]")
+    definition some_prj1  (\<open>\<p>\<^sub>1\<^sup>?[_, _]\<close>)
     where "\<p>\<^sub>1\<^sup>?[f, g] \<equiv> if cospan f g then
                          fst (SOME x. cospan_diagram.has_as_pullback C f g (fst x) (snd x))
                        else null"
 
-    definition some_prj0  ("\<p>\<^sub>0\<^sup>?[_, _]")
+    definition some_prj0  (\<open>\<p>\<^sub>0\<^sup>?[_, _]\<close>)
     where "\<p>\<^sub>0\<^sup>?[f, g] \<equiv> if cospan f g then
                          snd (SOME x. cospan_diagram.has_as_pullback C f g (fst x) (snd x))
                        else null"

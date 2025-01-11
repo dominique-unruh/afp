@@ -30,13 +30,16 @@ definition vsplit :: "[[V, V] \<Rightarrow> 'a, V] \<Rightarrow> 'a::{}"  \<comm
 
 nonterminal Vs
 syntax (ASCII)
-  "_Tuple"    :: "[V, Vs] \<Rightarrow> V"              ("<(_,/ _)>")
-  "_hpattern" :: "[pttrn, patterns] \<Rightarrow> pttrn"   ("<_,/ _>")
+  "_Tuple"    :: "[V, Vs] \<Rightarrow> V"              (\<open><(_,/ _)>\<close>)
+  "_hpattern" :: "[pttrn, patterns] \<Rightarrow> pttrn"   (\<open><_,/ _>\<close>)
 syntax
-  ""          :: "V \<Rightarrow> Vs"                    ("_")
-  "_Enum"     :: "[V, Vs] \<Rightarrow> Vs"             ("_,/ _")
-  "_Tuple"    :: "[V, Vs] \<Rightarrow> V"              ("\<langle>(_,/ _)\<rangle>")
-  "_hpattern" :: "[pttrn, patterns] \<Rightarrow> pttrn"   ("\<langle>_,/ _\<rangle>")
+  ""          :: "V \<Rightarrow> Vs"                    (\<open>_\<close>)
+  "_Enum"     :: "[V, Vs] \<Rightarrow> Vs"             (\<open>_,/ _\<close>)
+  "_Tuple"    :: "[V, Vs] \<Rightarrow> V"              (\<open>\<langle>(_,/ _)\<rangle>\<close>)
+  "_hpattern" :: "[pttrn, patterns] \<Rightarrow> pttrn"   (\<open>\<langle>_,/ _\<rangle>\<close>)
+syntax_consts
+  "_Enum" "_Tuple" \<rightleftharpoons> vpair and
+  "_hpattern" \<rightleftharpoons> vsplit
 translations
   "<x, y, z>"    \<rightleftharpoons> "<x, <y, z>>"
   "<x, y>"       \<rightleftharpoons> "CONST vpair x y"
@@ -170,7 +173,7 @@ qed
 
 subsection \<open>Disjoint Sum\<close>
 
-definition vsum :: "V \<Rightarrow> V \<Rightarrow> V" (infixl "\<Uplus>" 65) where
+definition vsum :: "V \<Rightarrow> V \<Rightarrow> V" (infixl \<open>\<Uplus>\<close> 65) where
  "A \<Uplus> B \<equiv> (VSigma (set {0}) (\<lambda>x. A)) \<squnion> (VSigma (set {1}) (\<lambda>x. B))"
 
 definition Inl :: "V\<Rightarrow>V" where
@@ -454,10 +457,10 @@ proof (induction a rule: eps_induct)
   qed
 qed
 
-definition less_TC (infix "\<sqsubset>" 50)
+definition less_TC (infix \<open>\<sqsubset>\<close> 50)
   where "x \<sqsubset> y \<equiv> x \<in> elts (TC y)"
 
-definition le_TC (infix "\<sqsubseteq>" 50)
+definition le_TC (infix \<open>\<sqsubseteq>\<close> 50)
   where "x \<sqsubseteq> y \<equiv> x \<sqsubset> y \<or> x=y"
 
 lemma less_TC_imp_not_le: "x \<sqsubset> a \<Longrightarrow> \<not> a \<le> x"
@@ -784,7 +787,7 @@ lemma wf_VWO: "wf(VWO - Id)"
   using VWO well_order_on_def by blast
 
 lemma wf_Ord_less: "wf {(x, y). Ord y \<and> x < y}"
-  by (metis (no_types, lifting) Ord_mem_iff_lt eps_induct wfPUNIVI wfP_def)
+  by (metis (no_types, lifting) Ord_mem_iff_lt eps_induct wfpUNIVI wfp_def)
 
 lemma refl_VWO: "refl VWO"
   using VWO order_on_defs by fastforce

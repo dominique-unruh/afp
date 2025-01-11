@@ -26,7 +26,7 @@ abbreviation value_to_sterm_rules :: "vrule list \<Rightarrow> srule list" where
 "value_to_sterm_rules \<equiv> map (map_prod id value_to_sterm)"
 
 inductive (in special_constants)
-  veval :: "(name \<times> value) list \<Rightarrow> (name, value) fmap \<Rightarrow> sterm \<Rightarrow> value \<Rightarrow> bool"  ("_, _/ \<turnstile>\<^sub>v/ _ \<down>/ _" [50,0,50] 50) for rs where
+  veval :: "(name \<times> value) list \<Rightarrow> (name, value) fmap \<Rightarrow> sterm \<Rightarrow> value \<Rightarrow> bool"  (\<open>_, _/ \<turnstile>\<^sub>v/ _ \<down>/ _\<close> [50,0,50] 50) for rs where
 const: "(name, rhs) \<in> set rs \<Longrightarrow> rs, \<Gamma> \<turnstile>\<^sub>v Sconst name \<down> rhs" |
 var: "fmlookup \<Gamma> name = Some val \<Longrightarrow> rs, \<Gamma> \<turnstile>\<^sub>v Svar name \<down> val" |
 abs: "rs, \<Gamma> \<turnstile>\<^sub>v Sabs cs \<down> Vabs cs \<Gamma>" |
@@ -540,7 +540,7 @@ next
         qed
     next
       have "fmdrop_fset (fmdom venv) \<Gamma>' \<subseteq>\<^sub>f \<Gamma>' ++\<^sub>f venv"
-        including fmap.lifting fset.lifting
+        including fmap.lifting and fset.lifting
         by transfer'
            (auto simp: map_drop_set_def map_filter_def map_le_def map_add_def split: if_splits)
       thus "fmdrop_fset (frees pat) (fmmap value_to_sterm \<Gamma>') \<subseteq>\<^sub>f fmmap value_to_sterm (\<Gamma>' ++\<^sub>f venv)"
@@ -723,7 +723,7 @@ next
         qed
     next
       have "fmdrop_fset (fmdom venv) \<Gamma>' \<subseteq>\<^sub>f \<Gamma>' ++\<^sub>f venv"
-        including fmap.lifting fset.lifting
+        including fmap.lifting and fset.lifting
         by transfer'
            (auto simp: map_drop_set_def map_filter_def map_le_def map_add_def split: if_splits)
       thus "fmdrop_fset (frees pat) (fmmap value_to_sterm \<Gamma>') \<subseteq>\<^sub>f fmmap value_to_sterm (\<Gamma>' ++\<^sub>f venv)"

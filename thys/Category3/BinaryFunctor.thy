@@ -20,14 +20,14 @@ begin
     B: category B +
     A1xA2: product_category A1 A2 +
     "functor" A1xA2.comp B F
-  for A1 :: "'a1 comp"     (infixr "\<cdot>\<^sub>A\<^sub>1" 55)
-  and A2 :: "'a2 comp"     (infixr "\<cdot>\<^sub>A\<^sub>2" 55)
-  and B :: "'b comp"       (infixr "\<cdot>\<^sub>B" 55)
+  for A1 :: "'a1 comp"     (infixr \<open>\<cdot>\<^sub>A\<^sub>1\<close> 55)
+  and A2 :: "'a2 comp"     (infixr \<open>\<cdot>\<^sub>A\<^sub>2\<close> 55)
+  and B :: "'b comp"       (infixr \<open>\<cdot>\<^sub>B\<close> 55)
   and F :: "'a1 * 'a2 \<Rightarrow> 'b"
   begin
 
-    notation A1.in_hom     ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>1 _\<guillemotright>")
-    notation A2.in_hom     ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>2 _\<guillemotright>")
+    notation A1.in_hom     (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>1 _\<guillemotright>\<close>)
+    notation A2.in_hom     (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>2 _\<guillemotright>\<close>)
 
   end
 
@@ -44,22 +44,22 @@ begin
     F2: "functor" A2 B2 F2 +
     A1xA2: product_category A1 A2 +
     B1xB2: product_category B1 B2
-  for A1 :: "'a1 comp"     (infixr "\<cdot>\<^sub>A\<^sub>1" 55)
-  and A2 :: "'a2 comp"     (infixr "\<cdot>\<^sub>A\<^sub>2" 55)
-  and B1 :: "'b1 comp"     (infixr "\<cdot>\<^sub>B\<^sub>1" 55)
-  and B2 :: "'b2 comp"     (infixr "\<cdot>\<^sub>B\<^sub>2" 55)
+  for A1 :: "'a1 comp"     (infixr \<open>\<cdot>\<^sub>A\<^sub>1\<close> 55)
+  and A2 :: "'a2 comp"     (infixr \<open>\<cdot>\<^sub>A\<^sub>2\<close> 55)
+  and B1 :: "'b1 comp"     (infixr \<open>\<cdot>\<^sub>B\<^sub>1\<close> 55)
+  and B2 :: "'b2 comp"     (infixr \<open>\<cdot>\<^sub>B\<^sub>2\<close> 55)
   and F1 :: "'a1 \<Rightarrow> 'b1"
   and F2 :: "'a2 \<Rightarrow> 'b2"
   begin
 
-    notation A1xA2.comp    (infixr "\<cdot>\<^sub>A\<^sub>1\<^sub>x\<^sub>A\<^sub>2" 55)
-    notation B1xB2.comp    (infixr "\<cdot>\<^sub>B\<^sub>1\<^sub>x\<^sub>B\<^sub>2" 55)
-    notation A1.in_hom     ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>1 _\<guillemotright>")
-    notation A2.in_hom     ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>2 _\<guillemotright>")
-    notation B1.in_hom     ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>B\<^sub>1 _\<guillemotright>")
-    notation B2.in_hom     ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>B\<^sub>2 _\<guillemotright>")
-    notation A1xA2.in_hom  ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>1\<^sub>x\<^sub>A\<^sub>2 _\<guillemotright>")
-    notation B1xB2.in_hom  ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>B\<^sub>1\<^sub>x\<^sub>B\<^sub>2 _\<guillemotright>")
+    notation A1xA2.comp    (infixr \<open>\<cdot>\<^sub>A\<^sub>1\<^sub>x\<^sub>A\<^sub>2\<close> 55)
+    notation B1xB2.comp    (infixr \<open>\<cdot>\<^sub>B\<^sub>1\<^sub>x\<^sub>B\<^sub>2\<close> 55)
+    notation A1.in_hom     (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>1 _\<guillemotright>\<close>)
+    notation A2.in_hom     (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>2 _\<guillemotright>\<close>)
+    notation B1.in_hom     (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>B\<^sub>1 _\<guillemotright>\<close>)
+    notation B2.in_hom     (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>B\<^sub>2 _\<guillemotright>\<close>)
+    notation A1xA2.in_hom  (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>1\<^sub>x\<^sub>A\<^sub>2 _\<guillemotright>\<close>)
+    notation B1xB2.in_hom  (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>B\<^sub>1\<^sub>x\<^sub>B\<^sub>2 _\<guillemotright>\<close>)
 
     definition map
     where "map f = (if A1.arr (fst f) \<and> A2.arr (snd f)
@@ -72,7 +72,7 @@ begin
 
     lemma is_functor:
     shows "functor A1xA2.comp B1xB2.comp map"
-      using B1xB2.dom_char B1xB2.cod_char F1.is_extensional F2.is_extensional
+      using B1xB2.dom_char B1xB2.cod_char F1.extensionality F2.extensionality
       apply (unfold_locales)
       using map_def A1.arr_dom_iff_arr A1.arr_cod_iff_arr A2.arr_dom_iff_arr A2.arr_cod_iff_arr
           apply auto[4]
@@ -95,7 +95,7 @@ begin
     CC: product_category C C +
     CCC: product_category C CC.comp +
     binary_functor C C C T
-  for C :: "'a comp"      (infixr "\<cdot>" 55)
+  for C :: "'a comp"      (infixr \<open>\<cdot>\<close> 55)
   and T :: "'a * 'a \<Rightarrow> 'a"
   begin
 
@@ -153,14 +153,14 @@ begin
   A2: category A2 +
   A1xA2: product_category A1 A2 +
   A2xA1: product_category A2 A1
-  for A1 :: "'a1 comp"     (infixr "\<cdot>\<^sub>A\<^sub>1" 55)
-  and A2 :: "'a2 comp"     (infixr "\<cdot>\<^sub>A\<^sub>2" 55)
+  for A1 :: "'a1 comp"     (infixr \<open>\<cdot>\<^sub>A\<^sub>1\<close> 55)
+  and A2 :: "'a2 comp"     (infixr \<open>\<cdot>\<^sub>A\<^sub>2\<close> 55)
   begin
 
-    notation A1xA2.comp    (infixr "\<cdot>\<^sub>A\<^sub>1\<^sub>x\<^sub>A\<^sub>2" 55)
-    notation A2xA1.comp    (infixr "\<cdot>\<^sub>A\<^sub>2\<^sub>x\<^sub>A\<^sub>1" 55)
-    notation A1xA2.in_hom  ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>1\<^sub>x\<^sub>A\<^sub>2 _\<guillemotright>")
-    notation A2xA1.in_hom  ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>2\<^sub>x\<^sub>A\<^sub>1 _\<guillemotright>")
+    notation A1xA2.comp    (infixr \<open>\<cdot>\<^sub>A\<^sub>1\<^sub>x\<^sub>A\<^sub>2\<close> 55)
+    notation A2xA1.comp    (infixr \<open>\<cdot>\<^sub>A\<^sub>2\<^sub>x\<^sub>A\<^sub>1\<close> 55)
+    notation A1xA2.in_hom  (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>1\<^sub>x\<^sub>A\<^sub>2 _\<guillemotright>\<close>)
+    notation A2xA1.in_hom  (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>2\<^sub>x\<^sub>A\<^sub>1 _\<guillemotright>\<close>)
 
     definition map :: "'a1 * 'a2 \<Rightarrow> 'a2 * 'a1"
     where "map f = (if A1xA2.arr f then (snd f, fst f) else A2xA1.null)"
@@ -197,7 +197,7 @@ begin
       interpret SF: composite_functor A2xA1.comp A1xA2.comp B S.map F ..
       have "binary_functor A2 A1 B (F o S.map)" ..
       moreover have "F o S.map = (\<lambda>f. F (snd f, fst f))"
-        using is_extensional SF.is_extensional S.map_def by fastforce
+        using extensionality SF.extensionality S.map_def by fastforce
       ultimately show ?thesis using sym_def by auto
     qed
 
@@ -211,7 +211,7 @@ begin
     shows "functor A2 B (\<lambda>f2. F (a1, f2))"
       using assms
       apply unfold_locales
-      using is_extensional
+      using extensionality
           apply auto[4]
       by (metis A1.ideD(1) A1.comp_ide_self A1xA2.comp_simp A1xA2.seq_char fst_conv
           as_nat_trans.preserves_comp_2 snd_conv)
@@ -221,7 +221,7 @@ begin
     shows "functor A1 B (\<lambda>f1. F (f1, a2))"
       using assms
       apply (unfold_locales)
-      using is_extensional
+      using extensionality
           apply auto[4]
       by (metis A1xA2.comp_simp A1xA2.seq_char A2.ideD(1) A2.comp_ide_self fst_conv
           as_nat_trans.preserves_comp_2 snd_conv)
@@ -244,7 +244,7 @@ begin
       show "natural_transformation A2 B ?Fdom ?Fcod ?\<tau>"
         using assms
         apply unfold_locales
-        using is_extensional
+        using extensionality
             apply auto[3]
         using A1xA2.arr_char preserves_comp A1.comp_cod_arr A1xA2.comp_char A2.comp_arr_dom
          apply (metis fst_conv snd_conv)
@@ -288,7 +288,7 @@ begin
       proof
         fix f2
         have "\<not>A2.arr f2 \<Longrightarrow> F (f1' \<cdot>\<^sub>A\<^sub>1 f1, f2) = \<tau>'o\<tau>.map f2"
-          using \<tau>'o\<tau>.is_extensional is_extensional by simp
+          using \<tau>'o\<tau>.extensionality extensionality by simp
         moreover have "A2.arr f2 \<Longrightarrow> F (f1' \<cdot>\<^sub>A\<^sub>1 f1, f2) = \<tau>'o\<tau>.map f2"
           using \<tau>'o\<tau>.map_simp_1 assms fixing_arr_gives_natural_transformation_2
                 natural_transformation.preserves_comp_1
@@ -326,16 +326,16 @@ begin
     F: binary_functor A1 A2 B F +
     G: binary_functor A1 A2 B G +
     natural_transformation A1xA2.comp B F G \<tau>
-  for A1 :: "'a1 comp"     (infixr "\<cdot>\<^sub>A\<^sub>1" 55)
-  and A2 :: "'a2 comp"     (infixr "\<cdot>\<^sub>A\<^sub>2" 55)
-  and B :: "'b comp"       (infixr "\<cdot>\<^sub>B" 55)
+  for A1 :: "'a1 comp"     (infixr \<open>\<cdot>\<^sub>A\<^sub>1\<close> 55)
+  and A2 :: "'a2 comp"     (infixr \<open>\<cdot>\<^sub>A\<^sub>2\<close> 55)
+  and B :: "'b comp"       (infixr \<open>\<cdot>\<^sub>B\<close> 55)
   and F :: "'a1 * 'a2 \<Rightarrow> 'b"
   and G :: "'a1 * 'a2 \<Rightarrow> 'b"
   and \<tau> :: "'a1 * 'a2 \<Rightarrow> 'b"
   begin
 
-    notation A1xA2.comp    (infixr "\<cdot>\<^sub>A\<^sub>1\<^sub>x\<^sub>A\<^sub>2" 55)
-    notation A1xA2.in_hom  ("\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>1\<^sub>x\<^sub>A\<^sub>2 _\<guillemotright>")
+    notation A1xA2.comp    (infixr \<open>\<cdot>\<^sub>A\<^sub>1\<^sub>x\<^sub>A\<^sub>2\<close> 55)
+    notation A1xA2.in_hom  (\<open>\<guillemotleft>_ : _ \<rightarrow>\<^sub>A\<^sub>1\<^sub>x\<^sub>A\<^sub>2 _\<guillemotright>\<close>)
 
     lemma fixing_ide_gives_natural_transformation_1:
     assumes "A1.ide a1"
@@ -346,7 +346,7 @@ begin
       interpret Ga1: "functor" A2 B \<open>\<lambda>f2. G (a1, f2)\<close>
         using assms "G.fixing_ide_gives_functor_1" by simp
       show ?thesis
-        using assms is_extensional is_natural_1 is_natural_2
+        using assms extensionality naturality1 naturality2
         apply (unfold_locales, auto)
          apply (metis A1.ide_char)
         by (metis A1.ide_char)
@@ -361,7 +361,7 @@ begin
       interpret Ga2: "functor" A1 B \<open>\<lambda>f1. G (f1, a2)\<close>
         using assms "G.fixing_ide_gives_functor_2" by simp
       show ?thesis
-        using assms is_extensional is_natural_1 is_natural_2
+        using assms extensionality naturality1 naturality2
         apply (unfold_locales, auto)
          apply (metis A2.ide_char)
         by (metis A2.ide_char)

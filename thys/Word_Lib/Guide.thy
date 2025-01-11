@@ -240,8 +240,7 @@ text \<open>
 
       \<^descr>[\<^theory>\<open>Word_Lib.Least_significant_bit\<close>]
 
-        The least significant bit as an alias:
-        @{thm [mode=iff] lsb_odd [where ?'a = int, no_vars]}
+        The least significant bit as abbreviation \<^abbrev>\<open>lsb\<close>.
 
       \<^descr>[\<^theory>\<open>Word_Lib.Most_significant_bit\<close>]
 
@@ -393,12 +392,23 @@ text \<open>
 section \<open>Changelog\<close>
 
 text \<open>
+  \<^descr>[Changes since AFP 2024] ~
+
+    \<^item> Theory \<^text>\<open>Strict_part_mono\<close> is not part of text\<open>Word_Lib_Sumo\<close> any longer.
+
+    \<^item> Session \<^text>\<open>Native_Word\<close>: Fact aliases \<^text>\<open>word_sdiv_def\<close> and \<^text>\<open>word_smod_def\<close>
+      are gone, use \<^text>\<open>sdiv_word_def\<close> and \<^text>\<open>smod_word_def\<close> instead.
+
+    \<^item> Session \<^text>\<open>Native_Word\<close>: Removed abbreviation \<^text>\<open>word_of_integer\<close>.
+
   \<^descr>[Changes since AFP 2022] ~
 
     \<^item> Theory \<^text>\<open>Word_Lib.Ancient_Numeral\<close> has been removed from session.
 
     \<^item> Bit comprehension syntax for \<^typ>\<open>int\<close> moved to separate theory
       \<^theory>\<open>Word_Lib.Bit_Comprehension_Int\<close>.
+
+    \<^item> Operation \<^abbrev>\<open>lsb\<close> turned into abbreviation or \<^text>\<open>bit _ 0\<close>.
 
   \<^descr>[Changes since AFP 2021] ~
 

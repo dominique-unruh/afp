@@ -8,7 +8,7 @@ begin
 
 subsection \<open>Big-step semantics evaluating to irreducible @{typ sterm}s\<close>
 
-inductive (in constructors) seval :: "srule list \<Rightarrow> (name, sterm) fmap \<Rightarrow> sterm \<Rightarrow> sterm \<Rightarrow> bool"  ("_, _/ \<turnstile>\<^sub>s/ _ \<down>/ _" [50,0,50] 50) for rs where
+inductive (in constructors) seval :: "srule list \<Rightarrow> (name, sterm) fmap \<Rightarrow> sterm \<Rightarrow> sterm \<Rightarrow> bool"  (\<open>_, _/ \<turnstile>\<^sub>s/ _ \<down>/ _\<close> [50,0,50] 50) for rs where
 const: "(name, rhs) \<in> set rs \<Longrightarrow> rs, \<Gamma> \<turnstile>\<^sub>s Sconst name \<down> rhs" |
 var: "fmlookup \<Gamma> name = Some val \<Longrightarrow> rs, \<Gamma> \<turnstile>\<^sub>s Svar name \<down> val" |
 abs: "rs, \<Gamma> \<turnstile>\<^sub>s Sabs cs \<down> Sabs (map (\<lambda>(pat, t). (pat, subst t (fmdrop_fset (frees pat) \<Gamma>))) cs)" |
@@ -347,7 +347,7 @@ next
           have "fmrestrict_fset (S |\<union>| fmdom env) (\<Gamma> ++\<^sub>f env) = fmrestrict_fset (S |\<union>| fmdom env) (\<Gamma>' ++\<^sub>f env)"
             using comb(8)
             unfolding fmfilter_alt_defs
-            including fmap.lifting fset.lifting
+            including fmap.lifting and fset.lifting
             by transfer' (auto simp: map_filter_def fun_eq_iff map_add_def split: option.splits if_splits)
 
           thus "fmrestrict_fset (S |\<union>| frees pat) (\<Gamma> ++\<^sub>f env) = fmrestrict_fset (S |\<union>| frees pat) (\<Gamma>' ++\<^sub>f env)"

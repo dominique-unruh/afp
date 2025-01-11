@@ -65,7 +65,7 @@ end
 subsection \<open>Resolvable Design Locale\<close>
 text \<open>A resolvable design is one with a resolution P\<close>
 locale resolvable_design = design + 
-  fixes partition :: "'a set multiset multiset" ("\<P>")
+  fixes partition :: "'a set multiset multiset" (\<open>\<P>\<close>)
   assumes resolvable: "resolution \<P>"
 begin
 
@@ -214,7 +214,7 @@ proof -
     by (simp add:  mult.assoc int_distrib(4)) 
   finally have "(b \<ge> v + r - 1) \<longleftrightarrow> (r \<ge> k + l)"
     using index_lt_replication mult_right_le_imp_le r_gzero mult_cancel_right k_non_zero intdefs
-    by (smt (z3) of_nat_0_less_iff of_nat_1 of_nat_le_iff of_nat_less_iff)
+    by (smt (verit) of_nat_0_less_iff of_nat_1 of_nat_le_iff of_nat_less_iff)
   then have "\<b> \<ge> \<v> + \<r> - 1 \<longleftrightarrow> \<r> \<ge> \<k> + \<Lambda>"
     using k_non_zero le_add_diff_inverse of_nat_1 of_nat_le_iff intdefs by linarith 
   thus ?thesis by simp

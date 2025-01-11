@@ -120,9 +120,12 @@ next
 
 
 syntax
-  "_Mprefix" :: "[pttrn,'a set,'a process] \<Rightarrow> 'a process"	("(3\<box>(_/\<in>_)/ \<rightarrow> (_))"[0,0,64]64)
+  "_Mprefix" :: "[pttrn,'a set,'a process] \<Rightarrow> 'a process"	(\<open>(3\<box>(_/\<in>_)/ \<rightarrow> (_))\<close>[0,0,64]64)
 
 term "Ball A (\<lambda>x. P)"
+
+syntax_consts
+  "_Mprefix" \<rightleftharpoons> Mprefix
 
 translations
   "\<box>x\<in>A \<rightarrow> P" \<rightleftharpoons> "CONST Mprefix A (\<lambda>x. P)"
@@ -264,7 +267,7 @@ by (simp add: contlub_def)
 
 lemma cont2contlub: "cont f \<Longrightarrow> contlub f"
 apply (rule contlubI)
-apply (rule Porder.po_class.lub_eqI [symmetric])
+apply (rule po_class.lub_eqI [symmetric])
 apply (erule (1) contE)
 done
 
@@ -301,7 +304,7 @@ done
 
 
 lemma mono_Mprefix[simp]: "monofun(Mprefix A)"
-by(auto simp: Fun_Cpo.below_fun_def monofun_def mono_Mprefix0)
+by(auto simp: below_fun_def monofun_def mono_Mprefix0)
 
 
 lemma proc_ord2_set: 
@@ -353,9 +356,9 @@ qed
 
 lemma Mprefix_cont [simp]: 
 "(\<And>x. cont (f x)) \<Longrightarrow> cont (\<lambda>y. \<box> z \<in>  A \<rightarrow> f z y)"
-apply(rule_tac f = "\<lambda>z y. (f y z)" in Cont.cont_compose)
+apply(rule_tac f = "\<lambda>z y. (f y z)" in cont_compose)
 apply(rule monocontlub2cont)
-apply(auto intro: mono_Mprefix contlub_Mprefix Fun_Cpo.cont2cont_lambda)
+apply(auto intro: mono_Mprefix contlub_Mprefix cont2cont_lambda)
 done
 
 
@@ -376,15 +379,20 @@ where      "write0 a P \<equiv> Mprefix {a} (\<lambda> x. P)"
 
 syntax
   "_read"   :: "[id, pttrn, 'a process] => 'a process"
-                                        ("(3(_\<^bold>?_) /\<rightarrow> _)" [0,0,78] 78)
+                                        (\<open>(3(_\<^bold>?_) /\<rightarrow> _)\<close> [0,0,78] 78)
   "_readX"  :: "[id, pttrn, bool,'a process] => 'a process"
-                                        ("(3(_\<^bold>?_)\<^bold>|_ /\<rightarrow> _)" [0,0,78] 78)
+                                        (\<open>(3(_\<^bold>?_)\<^bold>|_ /\<rightarrow> _)\<close> [0,0,78] 78)
   "_readS"  :: "[id, pttrn, 'b set,'a process] => 'a process"
-                                        ("(3(_\<^bold>?_)\<in>_ /\<rightarrow> _)" [0,0,78] 78)
+                                        (\<open>(3(_\<^bold>?_)\<in>_ /\<rightarrow> _)\<close> [0,0,78] 78)
   "_write"  :: "[id, 'b, 'a process] => 'a process"
-                                        ("(3(_\<^bold>!_) /\<rightarrow> _)" [0,0,78] 78)
+                                        (\<open>(3(_\<^bold>!_) /\<rightarrow> _)\<close> [0,0,78] 78)
   "_writeS" :: "['a, 'a process] => 'a process"
-                                        ("(3_ /\<rightarrow> _)" [0,78]78)
+                                        (\<open>(3_ /\<rightarrow> _)\<close> [0,78]78)
+
+syntax_consts
+  "_read" "_readX" "_readS" \<rightleftharpoons> read and
+  "_write" \<rightleftharpoons> "write" and
+  "_writeS" \<rightleftharpoons> write0
 
 subsection\<open>CSP$_M$-Style Syntax for Communication Primitives\<close>
 translations

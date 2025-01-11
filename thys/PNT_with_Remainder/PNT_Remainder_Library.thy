@@ -2,7 +2,7 @@ theory PNT_Remainder_Library
 imports
   "PNT_Notation"
 begin
-unbundle pnt_notation
+unbundle pnt_syntax
 section \<open>Auxiliary library for prime number theorem\<close>
 
 subsection \<open>Zeta function\<close>
@@ -64,7 +64,7 @@ subsection \<open>Logarithm derivatives\<close>
 
 definition "logderiv f x \<equiv> deriv f x / f x"
 definition log_differentiable
-  (infixr "(log'_differentiable)" 50)
+  (infixr \<open>(log'_differentiable)\<close> 50)
 where
   "f log_differentiable x \<equiv> (f field_differentiable (at x)) \<and> f x \<noteq> 0"
 
@@ -332,26 +332,25 @@ lemma integral_bigo:
     and Hg': "\<And>x. a \<le> x \<Longrightarrow> (\<lambda>x. \<bar>g x\<bar>) integrable_on {a..x}"
   shows "(\<lambda>x. integral{a..x} f) \<in> O(\<lambda>x. 1 + integral{a..x} (\<lambda>x. \<bar>g x\<bar>))"
 proof -
-  from \<open>f \<in> O(g)\<close> obtain c where "\<forall>\<^sub>F x in at_top. \<bar>f x\<bar> \<le> c * \<bar>g x\<bar>"
+  from \<open>f \<in> O(g)\<close> obtain c where
+    "\<forall>\<^sub>F x in at_top. \<bar>f x\<bar> \<le> c * \<bar>g x\<bar>" and Hc: "c \<ge> 0"
     unfolding bigo_def by auto
-  then obtain N' :: real where asymp: "\<And>n. n\<ge>N' \<Longrightarrow> \<bar>f n\<bar> \<le> c * \<bar>g n\<bar>"
+  then obtain N' :: real where asymp: "\<And>n. n \<ge> N' \<Longrightarrow> \<bar>f n\<bar> \<le> c * \<bar>g n\<bar>"
     by (subst (asm) eventually_at_top_linorder) (blast)
   define N where "N \<equiv> max a N'"
   define I where "I \<equiv> \<bar>integral {a..N} f\<bar>"
-  define J where "J \<equiv> integral {a..N} (\<lambda>x. \<bar>g x\<bar>)"
-  define c' where "c' \<equiv> max (I + J * \<bar>c\<bar>) \<bar>c\<bar>"
+  define c' where "c' \<equiv> max I c"
   have "\<And>x. N \<le> x \<Longrightarrow> \<bar>integral {a..x} f\<bar>
       \<le> c' * \<bar>1 + integral {a..x} (\<lambda>x. \<bar>g x\<bar>)\<bar>"
   proof -
     fix x :: real
     assume 1: "N \<le> x"
-    define K where "K \<equiv> integral {a..x} (\<lambda>x. \<bar>g x\<bar>)"
+    define J where "J \<equiv> integral {a..x} (\<lambda>x. \<bar>g x\<bar>)"
     have 2: "a \<le> N" unfolding N_def by linarith
     hence 3: "a \<le> x" using 1 by linarith
-    have nnegs: "0 \<le> I" "0 \<le> J" "0 \<le> K"
-      unfolding I_def J_def K_def using 1 2 Hg'
-      by (auto intro!: integral_nonneg)
-    hence abs_eq: "\<bar>I\<bar> = I" "\<bar>J\<bar> = J" "\<bar>K\<bar> = K"
+    have nnegs: "0 \<le> I" "0 \<le> J"
+      unfolding I_def J_def using 1 2 Hg' by (auto intro!: integral_nonneg)
+    hence abs_eq: "\<bar>I\<bar> = I" "\<bar>J\<bar> = J"
       using nnegs by simp+
     have "int\<bar>f\<bar>": "(\<lambda>x. \<bar>f x\<bar>) integrable_on {N..x}"
       using 2 1 Hf' by (rule integrable_cut')
@@ -386,27 +385,17 @@ proof -
         by (rule integral_le [OF "int\<bar>f\<bar>" "intc\<bar>g\<bar>"]) simp
       thus ?thesis by simp
     qed
-    also have "\<dots> \<le> I + \<bar>c\<bar> * (J + integral {a..x} (\<lambda>x. \<parallel>g x\<parallel>))"
+    also have "\<dots> \<le> I + c * integral {a..x} (\<lambda>x. \<bar>g x\<bar>)"
     proof -
-      note Henstock_Kurzweil_Integration.integral_combine [OF 2 1 Hg' [of x]]
-      hence K_min_J: "integral {N..x} (\<lambda>x. \<bar>g x\<bar>) = K - J"
-        unfolding J_def K_def using 3 by auto
-      have "c * (K - J) \<le> \<bar>c\<bar> * (J + K)" proof -
-        have "c * (K - J) \<le> \<bar>c * (K - J)\<bar>" by simp
-        also have "\<dots> = \<bar>c\<bar> * \<bar>K - J\<bar>" by (simp add: abs_mult)
-        also have "\<dots> \<le> \<bar>c\<bar> * (\<bar>J\<bar> + \<bar>K\<bar>)" by (simp add: mult_left_mono)
-        finally show ?thesis by (simp add: abs_eq)
-      qed
-      thus ?thesis by simp (subst K_min_J, fold K_def)
+      note Henstock_Kurzweil_Integration.integral_combine [OF 2 1 Hg' [OF 3]]
+      moreover have "0 \<le> integral {a..N} (\<lambda>x. \<bar>g x\<bar>)"
+        by (metis abs_ge_zero Hg' 2 integral_nonneg)
+      ultimately show ?thesis
+        using Hc by (simp add: landau_omega.R_mult_left_mono)
     qed
-    also have "\<dots> = (I + J * \<bar>c\<bar>) + \<bar>c\<bar> * integral {a..x} (\<lambda>x. \<bar>g x\<bar>)"
-      by (simp add: field_simps)
     also have "\<dots> \<le> c' + c' * integral {a..x} (\<lambda>x. \<bar>g x\<bar>)"
-    proof -
-      have "I + J * \<bar>c\<bar> \<le> c'" unfolding c'_def by auto
-      thus ?thesis unfolding c'_def
-        by (auto intro!: add_mono mult_mono integral_nonneg Hg' 3)
-    qed
+      unfolding c'_def using Hc
+      by (auto intro!: add_mono mult_mono integral_nonneg Hg' 3)
     finally show "\<bar>integral {a..x} f\<bar>
       \<le> c' * \<bar>1 + integral {a..x} (\<lambda>x. \<bar>g x\<bar>)\<bar>"
       by (simp add: integral_nonneg Hg' 3 field_simps)
@@ -414,8 +403,9 @@ proof -
   note 0 = this
   show ?thesis proof (rule eventually_mono [THEN bigoI])
     show "\<forall>\<^sub>Fx in at_top. N \<le> x" by simp
-    show "\<And>x. N \<le> x \<Longrightarrow> \<parallel>integral {a..x} f\<parallel> \<le> c' * 
-      \<parallel>1 + integral {a..x} (\<lambda>x. \<bar>g x\<bar>)\<parallel>" by (simp, rule 0)
+    show "\<And>x. N \<le> x \<Longrightarrow>
+      \<parallel>integral {a..x} f\<parallel> \<le> c' * \<parallel>1 + integral {a..x} (\<lambda>x. \<bar>g x\<bar>)\<parallel>"
+      by (auto intro: 0)
   qed
 qed
 
@@ -620,12 +610,7 @@ lemma powr_mono_lt_1_cancel:
   fixes x a b :: real
   assumes Hx: "0 < x \<and> x < 1"
   shows "(x powr a \<le> x powr b) = (b \<le> a)"
-proof -
-  have "(x powr a \<le> x powr b) = ((x powr -1) powr -a \<le> (x powr -1) powr -b)" by (simp add: powr_powr)
-  also have "\<dots> = (-a \<le> -b)" using Hx by (intro powr_le_cancel_iff) (auto simp add: powr_neg_one)
-  also have "\<dots> = (b \<le> a)" by auto
-  finally show ?thesis .
-qed
+  by (smt (verit, best) Hx powr_less_mono')
 
 abbreviation "mangoldt_real :: _ \<Rightarrow> real \<equiv> mangoldt"
 abbreviation "mangoldt_complex :: _ \<Rightarrow> complex \<equiv> mangoldt"
@@ -650,5 +635,6 @@ qed
 
 lemma C\<^sub>1_gt_zero: "0 < C\<^sub>1" unfolding PNT_const_C\<^sub>1_def by auto
 
-unbundle no_pnt_notation
+unbundle no pnt_syntax
+
 end

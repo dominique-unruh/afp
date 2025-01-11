@@ -12,41 +12,24 @@ begin
 
 text \<open>We define bundles to activate/deactivate the notation from \<^session>\<open>Jordan_Normal_Form\<close>.
                                                                          
-Reactivate the notation locally via "@{theory_text \<open>includes jnf_notation\<close>}" in a lemma statement.
-(Or sandwich a declaration using that notation between "@{theory_text \<open>unbundle jnf_notation ... unbundle no_jnf_notation\<close>}.)
+Reactivate the notation locally via "@{theory_text \<open>includes jnf_syntax\<close>}" in a lemma statement.
+(Or sandwich a declaration using that notation between "@{theory_text \<open>unbundle jnf_syntax ... unbundle no jnf_syntax\<close>}.)
 \<close>
 
-bundle jnf_notation begin
-notation transpose_mat ("(_\<^sup>T)" [1000])
-notation cscalar_prod (infix "\<bullet>c" 70)
-notation vec_index (infixl "$" 100)
-notation smult_vec (infixl "\<cdot>\<^sub>v" 70)
-notation scalar_prod (infix "\<bullet>" 70)
-notation index_mat (infixl "$$" 100)
-notation smult_mat (infixl "\<cdot>\<^sub>m" 70)
-notation mult_mat_vec (infixl "*\<^sub>v" 70)
-notation pow_mat (infixr "^\<^sub>m" 75)
-notation append_vec (infixr "@\<^sub>v" 65)
-notation append_rows (infixr "@\<^sub>r" 65)
+open_bundle jnf_syntax
+begin
+notation transpose_mat (\<open>(_\<^sup>T)\<close> [1000])
+notation cscalar_prod (infix \<open>\<bullet>c\<close> 70)
+notation vec_index (infixl \<open>$\<close> 100)
+notation smult_vec (infixl \<open>\<cdot>\<^sub>v\<close> 70)
+notation scalar_prod (infix \<open>\<bullet>\<close> 70)
+notation index_mat (infixl \<open>$$\<close> 100)
+notation smult_mat (infixl \<open>\<cdot>\<^sub>m\<close> 70)
+notation mult_mat_vec (infixl \<open>*\<^sub>v\<close> 70)
+notation pow_mat (infixr \<open>^\<^sub>m\<close> 75)
+notation append_vec (infixr \<open>@\<^sub>v\<close> 65)
+notation append_rows (infixr \<open>@\<^sub>r\<close> 65)
 end
-
-
-bundle no_jnf_notation begin
-no_notation transpose_mat ("(_\<^sup>T)" [1000])
-no_notation cscalar_prod (infix "\<bullet>c" 70)
-no_notation vec_index (infixl "$" 100)
-no_notation smult_vec (infixl "\<cdot>\<^sub>v" 70)
-no_notation scalar_prod (infix "\<bullet>" 70)
-no_notation index_mat (infixl "$$" 100)
-no_notation smult_mat (infixl "\<cdot>\<^sub>m" 70)
-no_notation mult_mat_vec (infixl "*\<^sub>v" 70)
-no_notation pow_mat (infixr "^\<^sub>m" 75)
-no_notation append_vec (infixr "@\<^sub>v" 65)
-no_notation append_rows (infixr "@\<^sub>r" 65)
-end
-
-unbundle jnf_notation
-
 
 lemma mat_entry_explicit:
   fixes M :: "'a::field mat"
@@ -413,7 +396,6 @@ lemma map_map_vec_cols: \<open>map (map_vec f) (cols m) = cols (map_mat f m)\<cl
 lemma map_vec_conjugate: \<open>map_vec conjugate v = conjugate v\<close>
   by fastforce
 
-unbundle no_jnf_notation
-
+unbundle no jnf_syntax
 
 end

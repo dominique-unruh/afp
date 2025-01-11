@@ -26,7 +26,7 @@ begin
 
 subsection \<open>Basic Definition\<close>
 
-inductive fair_IL :: "('p, 'f) OLf_state \<Rightarrow> ('p, 'f) OLf_state \<Rightarrow> bool" (infix "\<leadsto>ILf" 50) where
+inductive fair_IL :: "('p, 'f) OLf_state \<Rightarrow> ('p, 'f) OLf_state \<Rightarrow> bool" (infix \<open>\<leadsto>ILf\<close> 50) where
   ol: "St \<leadsto>OLf St' \<Longrightarrow> St \<leadsto>ILf St'"
 | red_by_children: "C \<in> no_labels.Red_F (fset A \<union> fset M) \<or> fset M = {C'} \<and> C' \<prec>\<cdot> C \<Longrightarrow>
   ({||}, None, P, Some C, A) \<leadsto>ILf (M, None, P, None, A)"
@@ -153,13 +153,13 @@ fun mset_of_fstate :: "('p, 'f) OLf_state \<Rightarrow> 'f multiset" where
    mset_set (fset N) + mset_set (set_option X) + mset_set (elems P) + mset_set (set_option Y) +
    mset_set (fset A)"
 
-abbreviation Precprec_S :: "'f multiset \<Rightarrow> 'f multiset \<Rightarrow> bool" (infix "\<prec>\<prec>S" 50) where
+abbreviation Precprec_S :: "'f multiset \<Rightarrow> 'f multiset \<Rightarrow> bool" (infix \<open>\<prec>\<prec>S\<close> 50) where
   "(\<prec>\<prec>S) \<equiv> multp (\<prec>S)"
 
 lemma wfP_Precprec_S: "wfP (\<prec>\<prec>S)"
-  using minimal_element_def wfP_multp wf_Prec_S wfp_on_UNIV by blast
+  using minimal_element_def wfp_multp wf_Prec_S wfp_on_UNIV by blast
 
-definition Less1_state :: "('p, 'f) OLf_state \<Rightarrow> ('p, 'f) OLf_state \<Rightarrow> bool" (infix "\<sqsubset>1" 50) where
+definition Less1_state :: "('p, 'f) OLf_state \<Rightarrow> ('p, 'f) OLf_state \<Rightarrow> bool" (infix \<open>\<sqsubset>1\<close> 50) where
   "St' \<sqsubset>1 St \<longleftrightarrow>
    mset_of_fstate St' \<prec>\<prec>S mset_of_fstate St
    \<or> (mset_of_fstate St' = mset_of_fstate St
@@ -174,7 +174,7 @@ proof -
     "\<lambda>St. (mset_of_fstate St, mset_set (fset (new_of St)), mset_set (set_option (xx_of St)))"
 
   have wf_msetset: "wf ?msetset"
-    using wfP_Precprec_S wfP_def by auto
+    using wfP_Precprec_S wfp_def by auto
   have wf_lex_prod: "wf (?msetset <*lex*> ?msetset <*lex*> ?msetset)"
     by (rule wf_lex_prod[OF wf_msetset wf_lex_prod[OF wf_msetset wf_msetset]])
 
@@ -183,10 +183,10 @@ proof -
     unfolding Less1_state_def by simp
 
   show ?thesis
-    unfolding wfP_def Less1_state_alt_def using wf_app[of _ ?triple_of] wf_lex_prod by blast
+    unfolding wfp_def Less1_state_alt_def using wf_app[of _ ?triple_of] wf_lex_prod by blast
 qed
 
-definition Less2_state :: "('p, 'f) OLf_state \<Rightarrow> ('p, 'f) OLf_state \<Rightarrow> bool" (infix "\<sqsubset>2" 50) where
+definition Less2_state :: "('p, 'f) OLf_state \<Rightarrow> ('p, 'f) OLf_state \<Rightarrow> bool" (infix \<open>\<sqsubset>2\<close> 50) where
   "St' \<sqsubset>2 St \<equiv>
    mset_set (set_option (yy_of St')) \<prec>\<prec>S mset_set (set_option (yy_of St))
    \<or> (mset_set (set_option (yy_of St')) = mset_set (set_option (yy_of St))
@@ -199,9 +199,9 @@ proof -
   let ?pair_of = "\<lambda>St. (mset_set (set_option (yy_of St)), St)"
 
   have wf_msetset: "wf ?msetset"
-    using wfP_Precprec_S wfP_def by auto
+    using wfP_Precprec_S wfp_def by auto
   have wf_stateset: "wf ?stateset"
-    using wfP_Less1_state wfP_def by auto
+    using wfP_Less1_state wfp_def by auto
   have wf_lex_prod: "wf (?msetset <*lex*> ?stateset)"
     by (rule wf_lex_prod[OF wf_msetset wf_stateset])
 
@@ -210,7 +210,7 @@ proof -
     unfolding Less2_state_def by simp
 
   show ?thesis
-    unfolding wfP_def Less2_state_alt_def using wf_app[of _ ?pair_of] wf_lex_prod by blast
+    unfolding wfp_def Less2_state_alt_def using wf_app[of _ ?pair_of] wf_lex_prod by blast
 qed
 
 lemma fair_IL_Liminf_yy_empty:

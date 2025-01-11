@@ -57,6 +57,7 @@ locale is_functor =
 
 syntax "_is_functor" :: "V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> bool"
   (\<open>(_ :/ _ \<mapsto>\<mapsto>\<^sub>C\<index> _)\<close> [51, 51, 51] 51)
+syntax_consts "_is_functor" \<rightleftharpoons> is_functor
 translations "\<FF> : \<AA> \<mapsto>\<mapsto>\<^sub>C\<^bsub>\<alpha>\<^esub> \<BB>" \<rightleftharpoons> "CONST is_functor \<alpha> \<AA> \<BB> \<FF>"
 
 abbreviation (input) is_cn_cf :: "V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> bool"
@@ -64,6 +65,7 @@ abbreviation (input) is_cn_cf :: "V \<Rightarrow> V \<Rightarrow> V \<Rightarrow
 
 syntax "_is_cn_cf" :: "V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> bool"
   (\<open>(_ :/ _ \<^sub>C\<mapsto>\<mapsto>\<index> _)\<close> [51, 51, 51] 51)
+syntax_consts "_is_cn_cf" \<rightleftharpoons> is_cn_cf
 translations "\<FF> : \<AA> \<^sub>C\<mapsto>\<mapsto>\<^bsub>\<alpha>\<^esub> \<BB>" \<rightharpoonup> "CONST is_cn_cf \<alpha> \<AA> \<BB> \<FF>"
 
 abbreviation all_cfs :: "V \<Rightarrow> V"
@@ -576,7 +578,7 @@ subsection\<open>Composition of covariant functors\<close>
 
 subsubsection\<open>Definition and elementary properties\<close>
 
-abbreviation (input) cf_comp :: "V \<Rightarrow> V \<Rightarrow> V" (infixl "\<circ>\<^sub>C\<^sub>F" 55)
+abbreviation (input) cf_comp :: "V \<Rightarrow> V \<Rightarrow> V" (infixl \<open>\<circ>\<^sub>C\<^sub>F\<close> 55)
   where "cf_comp \<equiv> dghm_comp"
 
 
@@ -805,7 +807,7 @@ subsubsection\<open>Definition and elementary properties\<close>
 
 text\<open>See section 1.2 in \<^cite>\<open>"bodo_categories_1970"\<close>.\<close>
 
-definition cf_cn_comp :: "V \<Rightarrow> V \<Rightarrow> V" (infixl "\<^sub>C\<^sub>F\<circ>" 55)
+definition cf_cn_comp :: "V \<Rightarrow> V \<Rightarrow> V" (infixl \<open>\<^sub>C\<^sub>F\<circ>\<close> 55)
   where "\<GG> \<^sub>C\<^sub>F\<circ> \<FF> =
     [
       \<GG>\<lparr>ObjMap\<rparr> \<circ>\<^sub>\<circ> \<FF>\<lparr>ObjMap\<rparr>,
@@ -1519,6 +1521,7 @@ locale is_ft_functor = is_functor \<alpha> \<AA> \<BB> \<FF> for \<alpha> \<AA> 
 
 syntax "_is_ft_functor" :: "V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> bool"
   (\<open>(_ :/ _ \<mapsto>\<mapsto>\<^sub>C\<^sub>.\<^sub>f\<^sub>a\<^sub>i\<^sub>t\<^sub>h\<^sub>f\<^sub>u\<^sub>l\<index> _)\<close> [51, 51, 51] 51)
+syntax_consts "_is_ft_functor" \<rightleftharpoons> is_ft_functor
 translations "\<FF> : \<AA> \<mapsto>\<mapsto>\<^sub>C\<^sub>.\<^sub>f\<^sub>a\<^sub>i\<^sub>t\<^sub>h\<^sub>f\<^sub>u\<^sub>l\<^bsub>\<alpha>\<^esub> \<BB>" \<rightleftharpoons> "CONST is_ft_functor \<alpha> \<AA> \<BB> \<FF>"
 
 lemma (in is_ft_functor) ft_cf_is_ft_functor':
@@ -1661,6 +1664,7 @@ locale is_fl_functor = is_functor \<alpha> \<AA> \<BB> \<FF> for \<alpha> \<AA> 
 
 syntax "_is_fl_functor" :: "V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> bool"
   (\<open>(_ :/ _ \<mapsto>\<mapsto>\<^sub>C\<^sub>.\<^sub>f\<^sub>u\<^sub>l\<^sub>l\<index> _)\<close> [51, 51, 51] 51)
+syntax_consts "_is_fl_functor" \<rightleftharpoons> is_fl_functor
 translations "\<FF> : \<AA> \<mapsto>\<mapsto>\<^sub>C\<^sub>.\<^sub>f\<^sub>u\<^sub>l\<^sub>l\<^bsub>\<alpha>\<^esub> \<BB>" \<rightleftharpoons> "CONST is_fl_functor \<alpha> \<AA> \<BB> \<FF>"
 
 lemma (in is_fl_functor) fl_cf_is_fl_functor'[slicing_intros]:
@@ -1780,6 +1784,7 @@ locale is_ff_functor = is_ft_functor \<alpha> \<AA> \<BB> \<FF> + is_fl_functor 
 
 syntax "_is_ff_functor" :: "V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> bool"
   (\<open>(_ :/ _ \<mapsto>\<mapsto>\<^sub>C\<^sub>.\<^sub>f\<^sub>f\<index> _)\<close> [51, 51, 51] 51)
+syntax_consts "_is_ff_functor" \<rightleftharpoons> is_ff_functor
 translations "\<FF> : \<AA> \<mapsto>\<mapsto>\<^sub>C\<^sub>.\<^sub>f\<^sub>f\<^bsub>\<alpha>\<^esub> \<BB>" \<rightleftharpoons> "CONST is_ff_functor \<alpha> \<AA> \<BB> \<FF>"
 
 
@@ -1847,6 +1852,7 @@ locale is_iso_functor = is_functor \<alpha> \<AA> \<BB> \<FF> for \<alpha> \<AA>
 
 syntax "_is_iso_functor" :: "V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> V \<Rightarrow> bool"
   (\<open>(_ :/ _ \<mapsto>\<mapsto>\<^sub>C\<^sub>.\<^sub>i\<^sub>s\<^sub>o\<index> _)\<close> [51, 51, 51] 51)
+syntax_consts "_is_iso_functor" \<rightleftharpoons> is_iso_functor
 translations "\<FF> : \<AA> \<mapsto>\<mapsto>\<^sub>C\<^sub>.\<^sub>i\<^sub>s\<^sub>o\<^bsub>\<alpha>\<^esub> \<BB>" \<rightleftharpoons> "CONST is_iso_functor \<alpha> \<AA> \<BB> \<FF>"
 
 lemma (in is_iso_functor) iso_cf_is_iso_semifunctor'[slicing_intros]:
@@ -2170,7 +2176,7 @@ text\<open>See Chapter I-3 in \<^cite>\<open>"mac_lane_categories_2010"\<close>)
 locale iso_category = L: category \<alpha> \<AA> + R: category \<alpha> \<BB> for \<alpha> \<AA> \<BB> +
   assumes iso_cat_is_iso_functor: "\<exists>\<FF>. \<FF> : \<AA> \<mapsto>\<mapsto>\<^sub>C\<^sub>.\<^sub>i\<^sub>s\<^sub>o\<^bsub>\<alpha>\<^esub> \<BB>"
 
-notation iso_category (infixl "\<approx>\<^sub>C\<index>" 50)
+notation iso_category (infixl \<open>\<approx>\<^sub>C\<index>\<close> 50)
 
 
 text\<open>Rules.\<close>

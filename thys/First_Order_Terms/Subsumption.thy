@@ -17,35 +17,35 @@ theory Subsumption
 begin
 
 consts
-  SUBSUMESEQ :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infix "\<le>\<cdot>" 50) 
-  SUBSUMES :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infix "<\<cdot>" 50)
-  LITSIM :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infix "\<doteq>" 50)
+  SUBSUMESEQ :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infix \<open>\<le>\<cdot>\<close> 50) 
+  SUBSUMES :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infix \<open><\<cdot>\<close> 50)
+  LITSIM :: "'a \<Rightarrow> 'a \<Rightarrow> bool" (infix \<open>\<doteq>\<close> 50)
 
-abbreviation (input) INSTANCEQ (infix "\<cdot>\<ge>" 50)
+abbreviation (input) INSTANCEQ (infix \<open>\<cdot>\<ge>\<close> 50)
   where
     "x \<cdot>\<ge> y \<equiv> y \<le>\<cdot> x"
 
-abbreviation (input) INSTANCE (infix "\<cdot>>" 50)
+abbreviation (input) INSTANCE (infix \<open>\<cdot>>\<close> 50)
   where
     "x \<cdot>> y \<equiv> y <\<cdot> x"
 
-abbreviation INSTANCEEQ_SET ("{\<cdot>\<ge>}")
+abbreviation INSTANCEEQ_SET (\<open>{\<cdot>\<ge>}\<close>)
   where
     "{\<cdot>\<ge>} \<equiv> {(x, y). y \<le>\<cdot> x}"
 
-abbreviation INSTANCE_SET ("{\<cdot>>}")
+abbreviation INSTANCE_SET (\<open>{\<cdot>>}\<close>)
   where
     "{\<cdot>>} \<equiv> {(x, y). y <\<cdot> x}"
 
-abbreviation SUBSUMESEQ_SET ("{\<le>\<cdot>}")
+abbreviation SUBSUMESEQ_SET (\<open>{\<le>\<cdot>}\<close>)
   where
     "{\<le>\<cdot>} \<equiv> {(x, y). x \<le>\<cdot> y}"
 
-abbreviation SUBSUMES_SET ("{<\<cdot>}")
+abbreviation SUBSUMES_SET (\<open>{<\<cdot>}\<close>)
   where
     "{<\<cdot>} \<equiv> {(x, y). x <\<cdot> y}"
 
-abbreviation LITSIM_SET ("{\<doteq>}")
+abbreviation LITSIM_SET (\<open>{\<doteq>}\<close>)
   where
     "{\<doteq>} \<equiv> {(x, y). x \<doteq> y}"
 
@@ -301,7 +301,7 @@ proof
   fix x
   show "((Var \<circ> g) \<circ>\<^sub>s (Var \<circ> inv g)) x = Var x"
     using assms
-    apply (auto simp: subst_compose_def)
+    apply (auto simp: eval_subst_def)
     by (metis UNIV_I bij_is_inj inv_into_f_f)
 qed
 

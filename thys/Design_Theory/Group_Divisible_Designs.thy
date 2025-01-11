@@ -13,7 +13,7 @@ text \<open>We define a group design to have an additional paramater $G$ which i
 set $V$. This is not defined in the handbook, but is a precursor to GDD's without index constraints\<close>
 
 locale group_design = proper_design + 
-  fixes groups :: "'a set set" ("\<G>")
+  fixes groups :: "'a set set" (\<open>\<G>\<close>)
   assumes group_partitions: "partition_on \<V> \<G>"
   assumes groups_size: "card \<G> > 1" 
 begin
@@ -229,7 +229,7 @@ end
 subsubsection \<open>Uniform Group designs\<close>
 text \<open>A group design requiring all groups are the same size\<close>
 locale uniform_group_design = group_design + 
-  fixes u_group_size :: nat ("\<m>")
+  fixes u_group_size :: nat (\<open>\<m>\<close>)
   assumes uniform_groups: "G \<in> \<G> \<Longrightarrow> card G = \<m>"
 
 begin
@@ -270,7 +270,7 @@ Each pair of elements must occur either \Lambda times if in diff groups, or 0 ti
 group\<close>
 
 locale GDD = group_design + 
-  fixes index :: int ("\<Lambda>")
+  fixes index :: int (\<open>\<Lambda>\<close>)
   assumes index_ge_1: "\<Lambda> \<ge> 1"
   assumes index_together: "G \<in> \<G> \<Longrightarrow> x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> x \<noteq> y \<Longrightarrow> \<B> index {x, y} = 0"
   assumes index_distinct: "G1 \<in> \<G> \<Longrightarrow> G2 \<in> \<G> \<Longrightarrow> G1 \<noteq> G2 \<Longrightarrow> x \<in> G1 \<Longrightarrow> y \<in> G2 \<Longrightarrow> 
@@ -317,8 +317,7 @@ proof -
     by (simp add: groups_finite) 
   then have eq_mset: "{#b \<in>#  mset_set \<G> . ps \<subseteq> b#} = mset_set {b \<in> \<G> . ps \<subseteq> b}"
     using filter_mset_mset_set groups_finite by blast 
-  then have "{b \<in> \<G> . ps \<subseteq> b} = {G}" using unique psin
-    by (smt Collect_cong ging singleton_conv)
+  then have "{b \<in> \<G> . ps \<subseteq> b} = {G}" using ging unique psin by blast
   thus ?thesis by (simp add: eq_mset) 
 qed
 
@@ -390,10 +389,10 @@ sublocale k_\<Lambda>_GDD \<subseteq> K_\<Lambda>_GDD \<V> \<B> "{\<k>}" \<G> \<
   by (unfold_locales)
 
 locale K_GDD = K_\<Lambda>_GDD \<V> \<B> \<K> \<G> 1 
-  for point_set ("\<V>") and block_collection ("\<B>") and sizes ("\<K>") and groups ("\<G>")
+  for point_set (\<open>\<V>\<close>) and block_collection (\<open>\<B>\<close>) and sizes (\<open>\<K>\<close>) and groups (\<open>\<G>\<close>)
 
 locale k_GDD = k_\<Lambda>_GDD \<V> \<B> \<k> \<G> 1 
-  for point_set ("\<V>") and block_collection ("\<B>") and u_block_size ("\<k>") and groups ("\<G>")
+  for point_set (\<open>\<V>\<close>) and block_collection (\<open>\<B>\<close>) and u_block_size (\<open>\<k>\<close>) and groups (\<open>\<G>\<close>)
 
 sublocale k_GDD \<subseteq> K_GDD \<V> \<B> "{\<k>}" \<G>
   by (unfold_locales)
@@ -517,7 +516,7 @@ proof -
     by (simp add: points_index_def)
   thus ?thesis using index1 groups1 gdd_index_non_zero_iff gdd_index_zero_iff assms 
       gdd_index_options points_index_def filter_union_mset union_commute
-    by (smt (z3) empty_neutral(1) less_irrefl_nat nonempty_has_size of_nat_1_eq_iff) 
+    by (metis add_cancel_right_left index_together_alt_ss point_index_distrib)
 qed
 
 text \<open>Combining blocks and the group set forms a PBD\<close>
@@ -666,7 +665,7 @@ proof -
     qed
     then show "\<And>bl. bl \<in># \<B> + mset_set {insert x g |g. g \<in> \<G>} \<Longrightarrow> 
         (card bl) \<in> \<K> \<union> {(card g + 1) |g. g \<in> \<G>}"
-      using UnI1 UnI2 block_sizes union_iff by (smt (z3) mem_Collect_eq)
+      using UnI1 UnI2 block_sizes union_iff by auto
     show "\<And>x. x \<in> \<K> \<union> {card g + 1 |g. g \<in> \<G>} \<Longrightarrow> 0 < x" 
       using min_group_size positive_ints by auto
     show "\<And>k.  k \<in> \<K> \<union> {card g + 1 |g. g \<in> \<G>} \<Longrightarrow> 2 \<le> k" 
@@ -890,7 +889,7 @@ proof -
   have "\<And> g . g \<in> \<G> \<Longrightarrow> card g + 1 = \<k>" using assms k_non_zero by auto 
   then have s: "({\<k>} \<union> {(card g) + 1 | g . g \<in> \<G>}) = {\<k>}" by auto
   then interpret pbd: PBD "(add_point x)" "\<B> + mset_set { insert x g | g. g \<in> \<G>}" "{\<k>}"
-    using PBD_by_adjoining_point[of "x"] kge assms by (smt (z3) Collect_cong)
+    using PBD_by_adjoining_point[of "x"] kge assms by argo
   show ?thesis using assms pbd.block_sizes block_size_lt_v finite_sets add_point_def
     by (unfold_locales) (simp_all)
 qed
@@ -974,12 +973,12 @@ lemma blocks_with_x_partition:
   shows "partition_on (\<V> - {x}) {b - {x} |b. b \<in># \<B> \<and> x \<in> b}"
 proof (intro partition_onI )
   have gtt: "\<And> bl. bl \<in># \<B> \<Longrightarrow> card bl \<ge> 2" using block_size_gt_t
-    by (simp add: block_sizes nat_int_comparison(3)) 
+    using block_sizes by blast
   show "\<And>p. p \<in> {b - {x} |b. b \<in># \<B> \<and> x \<in> b} \<Longrightarrow> p \<noteq> {}"
   proof -
     fix p assume "p \<in> {b - {x} |b. b \<in># \<B> \<and> x \<in> b}"
     then obtain b where ptx: "p = b - {x}" and "b \<in># \<B>" and xinb: "x \<in> b" by blast
-    then have ge2: "card b \<ge> 2" using gtt by (simp add: nat_int_comparison(3)) 
+    then have ge2: "card b \<ge> 2" using gtt by simp 
     then have "finite b" by (metis card.infinite not_numeral_le_zero) 
     then have "card p = card b - 1" using xinb ptx by simp
     then have "card p \<ge> 1" using ge2 by linarith
@@ -1030,7 +1029,7 @@ lemma KGDD_by_deleting_point:
   shows "K_GDD (del_point x) (str_del_point_blocks x) \<K> { b - {x} | b . b \<in># \<B> \<and> x \<in> b}"
 proof -
   have "\<And> bl. bl \<in># \<B> \<Longrightarrow> card bl \<ge> 2" using block_size_gt_t 
-    by (simp add: block_sizes nat_int_comparison(3))
+    by (simp add: block_sizes)
   then interpret des: proper_design "(del_point x)" "(str_del_point_blocks x)" 
     using strong_delete_point_proper assms by blast
   show ?thesis using blocks_with_x_partition strong_delete_point_groups_index_zero 

@@ -123,29 +123,13 @@ text \<open>
   Next, we define some nice optional notation for these functions.
 \<close>
 
-bundle prime_counting_notation
+open_bundle prime_counting_syntax
 begin
-
-notation primes_pi    ("\<pi>")
-notation primes_theta ("\<theta>")
-notation primes_psi   ("\<psi>")
-notation primes_M     ("\<MM>")
-
+notation primes_pi    (\<open>\<pi>\<close>)
+notation primes_theta (\<open>\<theta>\<close>)
+notation primes_psi   (\<open>\<psi>\<close>)
+notation primes_M     (\<open>\<MM>\<close>)
 end
-
-bundle no_prime_counting_notation
-begin
-
-no_notation primes_pi    ("\<pi>")
-no_notation primes_theta ("\<theta>")
-no_notation primes_psi   ("\<psi>")
-no_notation primes_M     ("\<MM>")
-
-end
-
-(*<*)
-unbundle prime_counting_notation
-(*>*)
 
 lemmas \<pi>_def = primes_pi_def
 lemmas \<theta>_def = primes_theta_def
@@ -1090,7 +1074,7 @@ proof -
     by (rule tendsto_ln) auto
   also have "?this \<longleftrightarrow> ((\<lambda>x. ln (\<pi> x) - ln x + ln (ln x)) \<longlongrightarrow> 0) at_top"
     by (intro filterlim_cong eventually_mono[OF eventually_gt_at_top[of 2]])
-       (auto simp: ln_div field_simps ln_mult \<pi>_pos)
+       (auto simp: ln_divide_pos field_simps \<pi>_pos_iff ln_mult_pos)
   finally have "(\<lambda>x. ln (\<pi> x) - ln x + ln (ln x)) \<in> o(\<lambda>_. 1)"
     by (intro smalloI_tendsto) auto
   also have "(\<lambda>_::real. 1 :: real) \<in> o(\<lambda>x. ln x)"
@@ -1524,7 +1508,7 @@ proof -
 qed
 
 (*<*)
-unbundle no_prime_counting_notation
+unbundle no prime_counting_syntax
 (*>*)
 
 end

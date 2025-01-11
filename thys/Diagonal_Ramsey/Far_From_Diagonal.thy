@@ -173,7 +173,7 @@ proof -
     by (simp add: \<gamma>_def powr_minus powr_add powr_divide divide_simps)
   also have "\<dots> \<le> (2 powr (logstir (k+l)) / (2 powr (logstir k)  * 2 powr (logstir l)))
                  * (k+l) powr (k+l) / (k powr k * l powr l)"
-    by (smt (verit, del_insts) * divide_right_mono mult_less_0_iff mult_right_mono powr_add powr_diff powr_ge_pzero powr_mono)
+    by (smt (verit, del_insts) * divide_right_mono mult_less_0_iff mult_right_mono powr_add powr_diff powr_ge_zero powr_mono)
   also have "\<dots> = fact(k+l) / (fact k * fact l)"
     using l by (simp add: logfact_eq_stir_times powr_add divide_simps flip: powr_realpow)
   also have "\<dots> = real (k+l choose l)"
@@ -447,7 +447,7 @@ proof -
     unfolding l34_def 
   proof (intro powr_mono powr_mono2 mult_mono ceiling_mono of_nat_mono nat_mono \<open>l \<le> k\<close>)
     show "0 \<le> real_of_int \<lceil>k powr (3/4)\<rceil>"
-      by (meson le_of_int_ceiling order.trans powr_ge_pzero)
+      by (meson le_of_int_ceiling order.trans powr_ge_zero)
   qed (use assms \<section> in auto)
   finally show ?thesis .
 qed
@@ -501,11 +501,11 @@ proof -
     by (intro X_7_1) (auto simp: Big_Far_9_3_def)
   also have "\<dots> \<le> RN k l34"
   proof -
-    have "p0 - 3 * eps k > 1/k" and "pee halted_point \<ge> p0 - 3 * eps k"
+    have "p0 - 3 * \<epsilon> > 1/k" and "pseq halted_point \<ge> p0 - 3 * \<epsilon>"
       using l_le_k big p0_ge Y_6_2_halted by (auto simp: Big_Far_9_3_def \<gamma>_def)
     then show ?thesis
       using halted_point_halted \<gamma>01
-      by (fastforce simp: step_terminating_iff termination_condition_def pee_def l34_def)
+      by (fastforce simp: step_terminating_iff termination_condition_def pseq_def l34_def)
   qed
   also have "\<dots> \<le> 2 powr (\<lceil>k powr (3/4)\<rceil> * log 2 k)"
     using RN34_le_2powr_ok l34_def l_le_k ln0 by blast
@@ -574,11 +574,11 @@ proof -
     using \<open>t < k\<close> \<gamma>01 mult_right_mono [OF ln_add_one_self_le_self2 [of "-\<gamma>"], of "real k - t"] 
     by (simp add: algebra_simps)
   also have "\<dots> = ln (exp (-\<delta>*k) * (1-\<gamma>) powr (- real k + t) * (bigbeta/\<gamma>) ^ card \<S>)"
-    using \<gamma>01 bigbeta01 by (simp add: ln_mult ln_div ln_realpow ln_powr)
+    using \<gamma>01 bigbeta01 by (simp add: ln_mult ln_div ln_realpow)
   also have "\<dots> \<le> ln (2 powr ok_fun_93g \<gamma> k)"
-    using le_2_powr_g \<gamma>01 bigbeta01 by simp
+    using le_2_powr_g \<gamma>01 bigbeta01 by (simp del: ln_powr)
   also have "\<dots> = ok_fun_93g \<gamma> k * ln 2"
-    by (auto simp: ln_powr)
+    by auto
   finally have "\<gamma> * (real k - t) - \<delta>*k - ?\<xi> * ln (\<gamma>/bigbeta) \<le> ok_fun_93g \<gamma> k * ln 2" .
   then have "\<gamma> * (real k - t) \<le> ?\<xi> * ln (\<gamma>/bigbeta) + \<delta>*k + ok_fun_93g \<gamma> k * ln 2"
     by simp
@@ -588,7 +588,7 @@ proof -
       using kn0 bigbeta_le bigbeta_ge \<open>bigbeta>0\<close> by (simp add: field_simps)
     then have X: "ln (\<gamma>/bigbeta) \<le> ln \<gamma> + 2 * ln k"
       using \<open>bigbeta>0\<close> \<open>\<gamma>>0\<close> kn0 
-      by (metis divide_pos_pos ln_mono ln_mult mult_2 mult_pos_pos of_nat_0_less_iff power2_eq_square)
+      by (metis ln_mult_pos ln_realpow of_nat_numeral of_nat_zero_less_power_iff divide_pos_pos ln_mono)
     show ?thesis
       using mult_right_mono [OF X, of "2 * k powr (19/20) / (1-\<gamma>)"] \<open>\<gamma><1\<close>
       by (simp add: ok_fun_93h_def algebra_simps)
@@ -838,7 +838,7 @@ proof -
   finally show ?thesis .
 qed
 
-subsection \<open>Lemma 9.2 actual proof\<close>
+subsection \<open>Lemma 9.2\<close>
 
 context P0_min
 begin
@@ -874,7 +874,8 @@ qed
 
 end
 
-lemma (in Book') Far_9_2_conclusion:
+text \<open>Used for both 9.2 and 10.2\<close>
+lemma (in Book') Off_diagonal_conclusion:
   defines "\<R> \<equiv> Step_class {red_step}"
   defines "t \<equiv> card \<R>"
   assumes Y: "(k-t+l choose l) \<le> card (Yseq halted_point)"
@@ -1027,7 +1028,7 @@ proof -
   have D: "exp (- 3*\<gamma>*t\<^sup>2 / (20*k)) \<le> ((1-\<gamma>-\<eta>) / (1-\<gamma>))^t"
     by (simp add: eval_nat_numeral powr_powr exp_powr_real mult_ac flip: powr_realpow)
 
-  have "(k-t+l choose l) \<le> card (Yseq halted_point)"
+  have Y: "(k-t+l choose l) \<le> card (Yseq halted_point)"
   proof -
     have "1 * real(k-t+l choose l) 
             \<le> exp (ok_fun_95b k + \<gamma>*k/60) * (k-t+l choose l)"
@@ -1058,12 +1059,12 @@ proof -
     finally show ?thesis by simp
   qed
   then show False
-    using Far_9_2_conclusion by (simp flip: \<R>_def t_def)
+    using Off_diagonal_conclusion by (simp flip: \<R>_def t_def)
 qed
 
 text \<open>Mediation of 9.2 (and 10.2) from locale @{term Book_Basis} to the book locales
    with the starting sets of equal size\<close>
-lemma (in No_Cliques) Basis_imp_Book:
+lemma (in No_Cliques) to_Book:
   assumes gd: "p0_min \<le> graph_density Red"
   assumes \<mu>01: "0 < \<mu>" "\<mu> < 1"
   obtains X0 Y0 where "l\<ge>2" "card X0 \<ge> real nV / 2" "card Y0 = gorder div 2" 
@@ -1107,7 +1108,7 @@ qed
 text \<open>Material that needs to be proved \textbf{outside} the book locales\<close>
 
 text \<open>As above, for @{term Book'}\<close>
-lemma (in No_Cliques) Basis_imp_Book':
+lemma (in No_Cliques) to_Book':
   assumes gd: "p0_min \<le> graph_density Red"
   assumes l: "0<l" "l\<le>k"
   obtains X0 Y0 where "l\<ge>2" "card X0 \<ge> real nV / 2" "card Y0 = gorder div 2" and "X0 = V \<setminus> Y0" "Y0\<subseteq>V" 
@@ -1117,7 +1118,7 @@ proof -
   define \<gamma> where "\<gamma> \<equiv> real l / (real k + real l)"
   have "0 < \<gamma>" "\<gamma> < 1"
     using l by (auto simp: \<gamma>_def)
-  with assms Basis_imp_Book [of  \<gamma>]
+  with assms to_Book [of  \<gamma>]
   obtain X0 Y0 where *: "l\<ge>2" "card X0 \<ge> real nV / 2" "card Y0 = gorder div 2" "X0 = V \<setminus> Y0" "Y0\<subseteq>V" 
     "graph_density Red \<le> gen_density Red X0 Y0" "Book V E p0_min Red Blue l k \<gamma> X0 Y0"
     by blast
@@ -1133,10 +1134,10 @@ lemma (in No_Cliques) Far_9_2:
   fixes \<delta> \<gamma> \<eta>::real
   defines "\<gamma> \<equiv> l / (real k + real l)"
   defines "\<delta> \<equiv> \<gamma>/20"
-  assumes nV: "real nV \<ge> exp (-\<delta> * k) * (k+l choose l)" 
   assumes gd: "graph_density Red \<ge> 1-\<gamma>-\<eta>" and p0_min_OK: "p0_min \<le> 1-\<gamma>-\<eta>"  
-  assumes big: "Big_Far_9_2 \<gamma> l" 
   assumes "\<gamma> \<le> 1/10" and \<eta>: "0\<le>\<eta>" "\<eta> \<le> \<gamma>/15"
+  assumes nV: "real nV \<ge> exp (-\<delta> * k) * (k+l choose l)" 
+  assumes big: "Big_Far_9_2 \<gamma> l" 
   shows False
 proof -
   obtain X0 Y0 where "l\<ge>2" and card_X0: "card X0 \<ge> real nV / 2" 
@@ -1144,7 +1145,7 @@ proof -
     and X0_def: "X0 = V \<setminus> Y0" and "Y0\<subseteq>V" 
     and gd_le: "graph_density Red \<le> gen_density Red X0 Y0"
     and "Book' V E p0_min Red Blue l k \<gamma> X0 Y0" 
-    using Basis_imp_Book' assms p0_min no_Red_clique no_Blue_clique ln0 by auto
+    using to_Book' assms p0_min no_Red_clique no_Blue_clique ln0 by auto
   then interpret Book' V E p0_min Red Blue l k \<gamma> X0 Y0
     by blast 
   show False
@@ -1602,10 +1603,10 @@ proof (rule ccontr)
   next
     case False 
     have YMK: "\<gamma>-\<gamma>' \<le> m/k"
-      using ln0 \<open>m<l\<close> 
+      using \<open>m<l\<close> 
       apply (simp add: \<gamma>_def \<gamma>'_def divide_simps)
       apply (simp add: algebra_simps)
-      by (smt (verit, best) mult_left_mono mult_right_mono nat_less_real_le of_nat_0_le_iff)
+      by (smt (verit) mult_left_mono mult_right_mono nat_less_real_le of_nat_0_le_iff)
 
     define \<delta>' where "\<delta>' \<equiv> \<gamma>'/20"
     have no_RedU_K: "\<not> (\<exists>K. UBB.size_clique k K RedU)"

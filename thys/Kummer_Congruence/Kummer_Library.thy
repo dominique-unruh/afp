@@ -451,14 +451,9 @@ subsection \<open>Facts about Bernoulli numbers\<close>
 definition bernoulli_rat :: "nat \<Rightarrow> rat"
   where "bernoulli_rat n = of_int (bernoulli_num n) / of_int (bernoulli_denom n)"
 
-bundle bernoulli_notation
+bundle bernoulli_syntax
 begin
-notation bernoulli_rat ("\<B>")
-end
-
-bundle no_bernoulli_notation
-begin
-no_notation bernoulli_rat ("\<B>")
+notation bernoulli_rat (\<open>\<B>\<close>)
 end
 
 lemma bernoulli_num_eq_0_iff: "bernoulli_num n = 0 \<longleftrightarrow> odd n \<and> n \<noteq> 1"

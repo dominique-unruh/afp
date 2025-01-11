@@ -119,15 +119,15 @@ proof -
     using X_7_1 assms big71 by blast
   also have "\<dots> \<le> 2 powr (g k)"
   proof -
-    have "1/k < p0 - 3 * eps k"
+    have "1/k < p0 - 3 * \<epsilon>"
     using big \<open>p0 \<ge> 1/2\<close> by (auto simp: Big_From_11_2_def)
-    also have "\<dots> \<le> pee halted_point"
+    also have "\<dots> \<le> pseq halted_point"
       using Y_6_2_halted big62 assms by blast
-    finally have "pee halted_point > 1/k" .
+    finally have "pseq halted_point > 1/k" .
     moreover have "termination_condition (Xseq halted_point) (Yseq halted_point)"
       using halted_point_halted step_terminating_iff by blast
     ultimately have "card (Xseq halted_point) \<le> RN k (nat \<lceil>real k powr (3/4)\<rceil>)"
-      using \<open>l=k\<close> pee_def termination_condition_def by auto
+      using \<open>l=k\<close> pseq_def termination_condition_def by auto
     then show ?thesis
       unfolding g_def by (smt (verit) RN34_le_2powr_ok kn0 of_nat_le_iff)
   qed
@@ -167,8 +167,10 @@ proof -
           finally have "inverse (\<mu> * (1 + t/s)) \<le> \<mu> * k" .
           moreover have "0 < \<mu> * (1 + real t / real s)"
             using \<mu>01 \<open>0 < s\<close> by (simp add: zero_less_mult_iff add_num_frac)
-          ultimately show "- log 2 (\<mu> * (1 + real t / real s)) \<le> log 2 \<mu> + log 2 (real k)"
+          ultimately have "- log 2 (\<mu> * (1 + real t / real s)) \<le> log 2 (\<mu> * k)"
             using \<mu>01 kn0 by (simp add: zero_less_mult_iff flip: log_inverse log_mult)
+          then show "- log 2 (\<mu> * (1 + real t / real s)) \<le> log 2 \<mu> + log 2 (real k)"
+            using \<open>\<mu>>0\<close> kn0 log_mult by fastforce
         qed (use True \<mu>eq in auto)
         with \<open>s>0\<close> big\<mu>1 True show ?thesis
           by (simp add: \<mu>eq h_def mult_le_0_iff)
@@ -257,8 +259,11 @@ proof -
       have le_ok_fun: "g712 k - h k \<le> ok_fun_11_2 \<mu> k"
         by (simp add: g712_def h_def ok_fun_11_2_def g_def ok_fun_11_2a_def a_def ok_fun_11_2c_def)
       have "log 2 nV' \<le> s * log 2 (\<mu> / bigbeta) + k * log 2 (1/\<mu>) + t * log 2 (1 / (1-\<mu>)) + (g712 k)"
-        using \<mu>01 \<open>nV' \<ge> 2\<close> 
-        by (simp add: bb_gt0 log_mult log_nat_power order.trans [OF Transcendental.log_mono [OF _ _ 59]])
+      proof (intro order.trans [OF Transcendental.log_mono [OF _ _ 59]])
+        show "log 2 (2 powr g712 k * (1/\<mu>) ^ k * (1 / (1-\<mu>)) ^ t * (\<mu> / bigbeta) ^ s)
+            \<le> s * log 2 (\<mu> / bigbeta) + k * log 2 (1/\<mu>) + t * log 2 (1 / (1-\<mu>)) + g712 k"
+          using bb_gt0 \<mu>01 by (simp add: log_mult log_nat_power)
+      qed (use \<open>nV' \<ge> 2\<close> in auto)
       with \<dagger> le_ok_fun show "log 2 nV' \<le> k * log 2 (1/\<mu>) + t * log 2 (1 / (1-\<mu>)) + s * log 2 (ratio \<mu> s t) + ok_fun_11_2 \<mu> k"
         by simp
     qed
@@ -381,7 +386,7 @@ lemma le_FF_bound:
 proof (cases "\<lfloor>k - x*k\<rfloor> = 0")
   case True  \<comment>\<open>to handle the singularity\<close>
   with assms log2_RN_ge0[of k] show ?thesis
-    by (simp add: True FF_def FF_bound_def) 
+    by (simp add: True FF_def FF_bound_def log_def)
 next
   case False
   with gr0I have "k>0" by fastforce
