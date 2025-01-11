@@ -38,8 +38,8 @@ theory Axioms_Quantum
 begin
 
 
-unbundle cblinfun_notation
-no_notation m_inv ("inv\<index> _" [81] 80)
+unbundle cblinfun_syntax
+unbundle no m_inv_syntax
 
 
 type_synonym 'a update = \<open>('a ell2, 'a ell2) cblinfun\<close>
@@ -745,5 +745,7 @@ proof -
   then show \<open>(register_pair F G) (tensor_op a b) = F a o\<^sub>C\<^sub>L G b\<close> and \<open>register (register_pair F G)\<close>
     by auto
 qed
+
+unbundle no cblinfun_syntax
 
 end

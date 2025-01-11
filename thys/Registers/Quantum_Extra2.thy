@@ -9,6 +9,8 @@ theory Quantum_Extra2
     Quantum
 begin
 
+unbundle register_syntax
+
 definition empty_var :: \<open>'a::{CARD_1,enum} update \<Rightarrow> 'b update\<close> where
   "empty_var a = one_dim_iso a *\<^sub>C id_cblinfun"
 
@@ -38,5 +40,7 @@ proof -
 qed
 
 instance complement_domain_simple :: (type, type) default ..
+
+unbundle no register_syntax
 
 end

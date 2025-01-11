@@ -2,6 +2,9 @@ theory Pure_States
   imports Quantum_Extra2 "HOL-Eisbach.Eisbach"
 begin
 
+unbundle cblinfun_syntax
+unbundle register_syntax
+
 definition \<open>pure_state_target_vector F \<eta>\<^sub>F = (if ket default \<in> range (cblinfun_apply (F (butterfly \<eta>\<^sub>F \<eta>\<^sub>F)))
    then ket default
    else (SOME \<eta>'. norm \<eta>' = 1 \<and> \<eta>' \<in> range (cblinfun_apply (F (butterfly \<eta>\<^sub>F \<eta>\<^sub>F)))))\<close>
@@ -574,5 +577,8 @@ proof -
   ultimately show ?thesis
     using cblinfun_eq_on_UNIV_span by blast
 qed
+
+unbundle no cblinfun_syntax
+unbundle no register_syntax
 
 end

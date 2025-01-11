@@ -4,6 +4,7 @@ theory Laws_Complement
   imports Laws Axioms_Complement
 begin
 
+unbundle register_syntax
 notation comp_update (infixl "*\<^sub>u" 55)
 notation tensor_update (infixr "\<otimes>\<^sub>u" 70)
 
@@ -453,5 +454,7 @@ lemmas [register_attribute_rule_immediate] = asm_rl[of \<open>is_unit_register _
 
 no_notation comp_update (infixl "*\<^sub>u" 55)
 no_notation tensor_update (infixr "\<otimes>\<^sub>u" 70)
+unbundle no register_syntax
+
 
 end

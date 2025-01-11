@@ -820,14 +820,9 @@ subsection \<open>Notation\<close>
 no_notation comp_update (infixl "*\<^sub>u" 55)
 no_notation tensor_update (infixr "\<otimes>\<^sub>u" 70)
 
-bundle register_notation begin
+bundle register_syntax begin
 notation register_tensor (infixr "\<otimes>\<^sub>r" 70)
 notation register_pair ("'(_;_')")
-end
-
-bundle no_register_notation begin
-no_notation register_tensor (infixr "\<otimes>\<^sub>r" 70)
-no_notation register_pair ("'(_;_')")
 end
 
 end

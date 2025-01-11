@@ -13,13 +13,13 @@ begin
 
 \<comment> \<open>Remove notation that collides with the notation we use\<close>
 no_notation Order.top ("\<top>\<index>")
-no_notation m_inv ("inv\<index> _" [81] 80)
-unbundle no_vec_syntax
-unbundle no_inner_syntax
+unbundle no m_inv_syntax
+unbundle no vec_syntax
+unbundle no inner_syntax
 
 \<comment> \<open>Import notation from Bounded Operator and Jordan Normal Form libraries\<close>
-unbundle cblinfun_notation
-unbundle jnf_notation
+unbundle cblinfun_syntax
+unbundle jnf_syntax
 
 (* abbreviation "butterfly (ket i) (ket j) \<equiv> butterfly (ket i) (ket j)" *)
 (* abbreviation "butterfly (ket i) (ket i) \<equiv> butterfly (ket i) (ket i)" *)
@@ -179,5 +179,8 @@ lemma lift_cblinfun_comp2:
   shows \<open>(d o\<^sub>C\<^sub>L a) o\<^sub>C\<^sub>L b = d o\<^sub>C\<^sub>L c\<close>
   by (simp add: assms cblinfun_assoc_right)
 lemmas lift_cblinfun_comp = lift_cblinfun_comp lift_cblinfun_comp2
+
+unbundle no cblinfun_syntax
+unbundle no jnf_syntax
 
 end

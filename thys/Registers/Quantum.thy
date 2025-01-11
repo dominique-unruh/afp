@@ -10,6 +10,8 @@ theory Quantum
     "HOL-Library.Code_Target_Numeral"
 begin
 
+unbundle cblinfun_syntax
+
 type_synonym ('a,'b) matrix = \<open>('a ell2, 'b ell2) cblinfun\<close>
 
 subsection \<open>Basic quantum states\<close>
@@ -131,5 +133,7 @@ lemma Uswap_apply[simp]: \<open>Uswap *\<^sub>V s \<otimes>\<^sub>s t = t \<otim
   apply (rule basis_enum_eq_vec_of_basis_enumI)
   apply (simp add: mat_of_cblinfun_cblinfun_apply vec_of_basis_enum_ket tensor_ell2_ket)
   by (case_tac i; case_tac ia; hypsubst_thin; normalization)
+
+unbundle no cblinfun_syntax
 
 end

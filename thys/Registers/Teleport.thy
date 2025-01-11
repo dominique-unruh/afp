@@ -16,8 +16,10 @@ hide_const (open) Finite_Cartesian_Product.row
 hide_const (open) Finite_Cartesian_Product.column
 no_notation Group.mult (infixl "\<otimes>\<index>" 70)
 no_notation Order.top ("\<top>\<index>")
-unbundle no_vec_syntax
-unbundle no_inner_syntax
+unbundle no vec_syntax
+unbundle no inner_syntax
+unbundle register_syntax
+unbundle cblinfun_syntax
 
 locale teleport_locale = qhoare "TYPE('mem)" +
   fixes X :: "bit update \<Rightarrow> 'mem update"
@@ -226,5 +228,8 @@ interpretation teleport_concrete:
 (* Observe the resulting theorems: *)
 thm teleport
 thm teleport_def
+
+unbundle no register_syntax
+unbundle no cblinfun_syntax
 
 end

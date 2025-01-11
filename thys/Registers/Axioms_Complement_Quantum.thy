@@ -10,7 +10,10 @@ theory Axioms_Complement_Quantum
     Hilbert_Space_Tensor_Product.Misc_Tensor_Product_TTS
 begin
 
-no_notation m_inv ("inv\<index> _" [81] 80)
+unbundle no m_inv_syntax
+unbundle cblinfun_syntax
+unbundle lattice_syntax
+unbundle register_syntax
 no_notation Lattice.join (infixl "\<squnion>\<index>" 65)
 no_notation elt_set_eq (infix "=o" 50)
 no_notation eq_closure_of ("closure'_of\<index>")
@@ -942,5 +945,9 @@ proof -
   ultimately show ?thesis
     apply (rule_tac exI[of _ G]) by (auto)
 qed
+
+unbundle no cblinfun_syntax
+unbundle no lattice_syntax
+unbundle no register_syntax
 
 end

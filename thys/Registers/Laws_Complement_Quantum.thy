@@ -9,6 +9,7 @@ theory Laws_Complement_Quantum
   imports Laws_Quantum Axioms_Complement_Quantum
 begin
 
+unbundle register_syntax
 notation cblinfun_compose (infixl "*\<^sub>u" 55)
 notation tensor_op (infixr "\<otimes>\<^sub>u" 70)
 
@@ -458,5 +459,7 @@ lemmas [register_attribute_rule_immediate] = asm_rl[of \<open>is_unit_register _
 
 no_notation cblinfun_compose (infixl "*\<^sub>u" 55)
 no_notation tensor_op (infixr "\<otimes>\<^sub>u" 70)
+unbundle no register_syntax
+
 
 end

@@ -4,6 +4,9 @@ theory QHoare
   imports Quantum_Extra
 begin
 
+unbundle register_syntax
+unbundle cblinfun_syntax
+unbundle lattice_syntax
 no_notation Order.top ("\<top>\<index>")
 
 locale qhoare =
@@ -64,5 +67,9 @@ proof -
     by (auto simp: hoare_def program_def ifthen_def butterfly_def)
 qed
 end
+
+unbundle no register_syntax
+unbundle no cblinfun_syntax
+unbundle no lattice_syntax
 
 end

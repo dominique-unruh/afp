@@ -10,8 +10,8 @@ no_notation meet (infixl "\<sqinter>\<index>" 70)
 no_notation Group.mult (infixl "\<otimes>\<index>" 70)
 no_notation Order.top ("\<top>\<index>")
 unbundle lattice_syntax
-unbundle register_notation
-unbundle cblinfun_notation
+unbundle register_syntax
+unbundle cblinfun_syntax
 
 lemma zero_not_register[simp]: \<open>~ register (\<lambda>_. 0)\<close>
   unfolding register_def by simp
@@ -169,6 +169,10 @@ next
   show \<open>register F\<close>
     unfolding register_def by simp
 qed
+
+unbundle no lattice_syntax
+unbundle no register_syntax
+unbundle no cblinfun_syntax
 
 end
 

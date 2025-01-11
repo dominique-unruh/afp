@@ -93,9 +93,9 @@ proof -
     have [simp]: \<open>unitary u\<close>
       by (auto intro!: unitary_def[THEN iffD2] simp: * ** u_def cblinfun_compose_add_right
           cblinfun_compose_add_left adj_plus cblinfun_compose_minus_left cblinfun_compose_minus_right
-          positive_hermitianI sqrt_op_pos scaleC_diff_right scaleC_add_right)
+          positive_selfadjointI sqrt_op_pos scaleC_diff_right scaleC_add_right)
     have [simp]: \<open>u + u* = h' + h'\<close>
-      by (simp add: * u_def adj_plus positive_hermitianI[symmetric] sqrt_op_pos)
+      by (simp add: * u_def adj_plus positive_selfadjointI[symmetric] sqrt_op_pos)
     show ?thesis
       apply (rule exI[of _ u]; rule exI[of _ \<open>u*\<close>])
       apply (rule exI[of _ \<open>of_real (norm h) / 2\<close>]; rule exI[of _ \<open>of_real (norm h) / 2\<close>])
