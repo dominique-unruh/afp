@@ -1553,9 +1553,8 @@ qed
 
 lemma classical_operator_exists_finite[simp]: "classical_operator_exists (\<pi> :: _::finite \<Rightarrow> _)"
   unfolding classical_operator_exists_def
-  apply (rule cblinfun_extension_exists_finite_dim)
-  using cindependent_ket apply blast
-  using finite_class.finite_UNIV finite_imageI closed_cspan_range_ket closure_finite_cspan by blast
+  using cindependent_ket cspan_range_ket_finite
+  by (rule cblinfun_extension_exists_finite_dim)
 
 lemma classical_operator_ket:
   assumes "classical_operator_exists \<pi>"

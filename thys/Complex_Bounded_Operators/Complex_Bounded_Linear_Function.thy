@@ -1369,7 +1369,7 @@ lemma has_sum_adj:
 lemma adj_minus: \<open>(A - B)* = (A*) - (B*)\<close>
   by (metis add_implies_diff adj_plus diff_add_cancel)
 
-lemma cinner_hermitian_real: \<open>x \<bullet>\<^sub>C (A *\<^sub>V x) \<in> \<real>\<close> if \<open>selfadjoint A\<close>
+lemma cinner_selfadjoint_real: \<open>x \<bullet>\<^sub>C (A *\<^sub>V x) \<in> \<real>\<close> if \<open>selfadjoint A\<close>
   by (metis Reals_cnj_iff cinner_adj_right cinner_commute' that selfadjoint_def)
 
 lemma adj_inject: \<open>adj a = adj b \<longleftrightarrow> a = b\<close>
@@ -3573,7 +3573,7 @@ proof -
     finally have \<open>norm (x \<bullet>\<^sub>C (A *\<^sub>V x)) \<le> c\<close>
       by -
     moreover have \<open>x \<bullet>\<^sub>C (A *\<^sub>V x) \<in> \<real>\<close>
-      by (metis assms(2) cinner_hermitian_real)
+      by (metis assms(2) cinner_selfadjoint_real)
     ultimately show ?thesis
       by (smt (verit) Re_complex_of_real Reals_cases complex_of_real_nn_iff less_eq_complex_def norm_of_real reals_zero_comparable)
   qed
@@ -3617,17 +3617,17 @@ proof (rule cblinfun_eq_0_on_UNIV_span[where basis=UNIV]; simp)
     by simp
 qed
 
-lemma comparable_hermitean:
+lemma comparable_selfadjoint:
   assumes \<open>a \<le> b\<close>
   assumes \<open>selfadjoint a\<close>
   shows \<open>selfadjoint b\<close>
-  by (smt (verit, best) assms(1) assms(2) cinner_hermitian_real cinner_real_selfadjointI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def selfadjoint_def)
+  by (smt (verit, best) assms(1) assms(2) cinner_selfadjoint_real cinner_real_selfadjointI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def selfadjoint_def)
 
-lemma comparable_hermitean':
+lemma comparable_selfadjoint':
   assumes \<open>a \<le> b\<close>
   assumes \<open>selfadjoint b\<close>
   shows \<open>selfadjoint a\<close>
-  by (smt (verit, best) assms(1) assms(2) cinner_hermitian_real cinner_real_selfadjointI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def selfadjoint_def)
+  by (smt (verit, best) assms(1) assms(2) cinner_selfadjoint_real cinner_real_selfadjointI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def selfadjoint_def)
 
 lemma Proj_mono: \<open>Proj S \<le> Proj T \<longleftrightarrow> S \<le> T\<close>
 proof (rule iffI)
