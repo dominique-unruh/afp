@@ -1,6 +1,8 @@
 set -ex
 
-for VERSION in devel 2024 2023 2022 2021-1 2021 2020 2019; do
+VERSIONS="devel 2024" # 2023 2022 2021-1 2021 2020 2019
+
+for VERSION in $VERSIONS; do
     if ! git remote get-url mirror-afp-$VERSION; then
 	git remote add mirror-afp-$VERSION https://github.com/isabelle-prover/mirror-afp-$VERSION.git
     fi
