@@ -3394,8 +3394,55 @@ proof -
     by (metis (mono_tags, lifting) assms(2) norm_tc_pos_Re summable_on_cong)
 qed
 
+lemma sandwich_tc_eq0_D:
+  assumes eq0: \<open>\<And>\<rho>. \<rho> \<ge> 0 \<Longrightarrow> norm \<rho> \<le> B \<Longrightarrow> sandwich_tc a \<rho> = 0\<close>
+  assumes Bpos: \<open>B > 0\<close>
+  shows \<open>a = 0\<close>
+proof (rule ccontr)
+  assume \<open>a \<noteq> 0\<close>
+  obtain h where \<open>a h \<noteq> 0\<close>
+  proof (atomize_elim, rule ccontr)
+    assume \<open>\<nexists>h. a *\<^sub>V h \<noteq> 0\<close>
+    then have \<open>a h = 0\<close> for h
+      by blast
+    then have \<open>a = 0\<close>
+      by (auto intro!: cblinfun_eqI)
+    with \<open>a \<noteq> 0\<close>
+    show False
+      by simp
+  qed
+  then have \<open>h \<noteq> 0\<close>
+    by force
 
+  define k where \<open>k = sqrt B *\<^sub>R sgn h\<close>
+  from \<open>a h \<noteq> 0\<close> Bpos have \<open>a k \<noteq> 0\<close>
+    by (smt (verit, best) cblinfun.scaleR_right k_def linordered_field_class.inverse_positive_iff_positive real_sqrt_gt_zero scaleR_simps(7) sgn_div_norm zero_less_norm_iff)
+  have \<open>norm (from_trace_class (sandwich_tc a (tc_butterfly k k))) = norm (butterfly (a k) (a k))\<close>
+    by (simp add: from_trace_class_sandwich_tc tc_butterfly.rep_eq sandwich_butterfly)
+  also have \<open>\<dots> = (norm (a k))\<^sup>2\<close>
+    by (simp add: norm_butterfly power2_eq_square)
+  also from \<open>a k \<noteq> 0\<close>
+  have \<open>\<dots> \<noteq> 0\<close>
+    by simp
+  finally have sand_neq0: \<open>sandwich_tc a (tc_butterfly k k) \<noteq> 0\<close>
+    by fastforce
 
+  have \<open>norm (tc_butterfly k k) = B\<close>
+    using \<open>h \<noteq> 0\<close> Bpos
+    by (simp add: norm_tc_butterfly k_def norm_sgn)
+  with sand_neq0 assms
+  show False
+    by simp
+qed
+
+lemma sandwich_tc_butterfly: \<open>sandwich_tc c (tc_butterfly a b) = tc_butterfly (c a) (c b)\<close>
+  by (metis from_trace_class_inverse from_trace_class_sandwich_tc sandwich_butterfly tc_butterfly.rep_eq)
+
+lemma tc_butterfly_0_left[simp]: \<open>tc_butterfly 0 t = 0\<close>
+  by (metis mult_eq_0_iff norm_eq_zero norm_tc_butterfly)
+
+lemma tc_butterfly_0_right[simp]: \<open>tc_butterfly t 0 = 0\<close>
+  by (metis mult_eq_0_iff norm_eq_zero norm_tc_butterfly)
 
 subsection \<open>More Hilbert-Schmidt\<close>
 

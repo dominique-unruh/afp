@@ -705,6 +705,8 @@ lemma abs_summable_on_scaleC_right [intro]:
    apply simp
   by (auto intro!: summable_on_cmult_right assms simp: norm_scaleC)
 
+lemma clinear_of_complex[iff]: \<open>clinear of_complex\<close>
+  by (simp add: clinearI)
 
 subsection \<open>Antilinear maps and friends\<close>
 

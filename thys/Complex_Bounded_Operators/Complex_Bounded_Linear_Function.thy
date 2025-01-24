@@ -3629,6 +3629,9 @@ lemma comparable_selfadjoint':
   shows \<open>selfadjoint a\<close>
   by (smt (verit, best) assms(1) assms(2) cinner_selfadjoint_real cinner_real_selfadjointI comparable complex_is_real_iff_compare0 less_eq_cblinfun_def selfadjoint_def)
 
+lemma is_Proj_leq_id: \<open>is_Proj P \<Longrightarrow> P \<le> id_cblinfun\<close>
+  by (metis diff_ge_0_iff_ge is_Proj_algebraic is_Proj_complement positive_cblinfun_squareI)
+
 lemma Proj_mono: \<open>Proj S \<le> Proj T \<longleftrightarrow> S \<le> T\<close>
 proof (rule iffI)
   assume \<open>S \<le> T\<close>
@@ -4290,6 +4293,20 @@ lemma butterfly_sum_left: \<open>butterfly (\<Sum>i\<in>M. \<psi> i) \<phi> = (\
 lemma butterfly_sum_right: \<open>butterfly \<psi> (\<Sum>i\<in>M. \<phi> i) = (\<Sum>i\<in>M. butterfly \<psi> (\<phi> i))\<close>
   apply (induction M rule:infinite_finite_induct)
   by (auto simp add: butterfly_add_right)
+
+lemma sum_butterfly_leq_id: 
+  assumes \<open>is_ortho_set E\<close>
+  assumes \<open>\<And>e. e\<in>E \<Longrightarrow> norm e = 1\<close>
+  shows \<open>(\<Sum>i\<in>E. butterfly i i) \<le> id_cblinfun\<close>
+proof -
+  have \<open>is_Proj (\<Sum>\<psi>\<in>E. butterfly \<psi> \<psi>)\<close>
+    using assms by (rule sum_butterfly_is_Proj)
+  then show ?thesis
+    by (auto intro!: is_Proj_leq_id)
+qed
+
+lemma sandwich_butterfly: \<open>sandwich a (butterfly x y) = butterfly (a x) (a y)\<close>
+  by (simp add: sandwich_apply butterfly_comp_cblinfun cblinfun_comp_butterfly)
 
 subsection \<open>Banach-Steinhaus\<close>
 

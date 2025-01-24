@@ -3530,7 +3530,7 @@ proof -
     apply (subst infsum_reindex)
     by (auto intro!: inj_onI simp: o_def case_prod_unfold)
   also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>a\<in>A. \<Sum>\<^sub>\<infinity>(E, x)\<in>Rep_kraus_family (f a). compose_wot (adj_wot (Abs_cblinfun_wot E)) (Abs_cblinfun_wot E))\<close>
-    apply (subst infsum_Sigma)
+    apply (subst infsum_Sigma_topological_monoid)
     using sum1 sum2 by auto
   also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>a\<in>A. Abs_cblinfun_wot (kraus_family_bound (f a)))\<close>
     by (simp add: kraus_family_bound_def' Rep_cblinfun_wot_inverse)

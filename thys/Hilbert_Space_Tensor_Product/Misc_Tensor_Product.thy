@@ -374,6 +374,14 @@ lemma has_sum_in_infsum_in:
   by (meson summable_on_in_def)
 
 
+lemma infsum_in_finite:
+  assumes "finite F"
+  assumes \<open>Hausdorff_space T\<close>
+  assumes \<open>sum f F \<in> topspace T\<close>
+  shows "infsum_in T f F = sum f F"
+  using has_sum_in_finite[OF assms(1,3)]
+  using assms(2) has_sum_in_infsum_in has_sum_in_unique summable_on_in_def by blast
+
 lemma nhdsin_mono:
   assumes [simp]: \<open>\<And>x. openin T' x \<Longrightarrow> openin T x\<close>
   assumes [simp]: \<open>topspace T = topspace T'\<close>
