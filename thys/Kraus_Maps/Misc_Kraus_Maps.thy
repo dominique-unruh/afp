@@ -117,5 +117,17 @@ lemma ballI2 [intro!]: "(\<And>x y. (x,y) \<in> A \<Longrightarrow> P x y) \<Lon
 lemma flip_eq_const: \<open>(\<lambda>y. y = x) = ((=) x)\<close>
   by auto
 
+(* TODO To BO library *)
+lemma vector_to_cblinfun_inj: \<open>inj_on (vector_to_cblinfun :: 'a::complex_normed_vector \<Rightarrow> 'b::one_dim \<Rightarrow>\<^sub>C\<^sub>L _) X\<close>
+proof (rule inj_onI)
+  fix x y :: 'a
+  assume \<open>vector_to_cblinfun x = (vector_to_cblinfun y :: 'b \<Rightarrow>\<^sub>C\<^sub>L _)\<close>
+  then have \<open>vector_to_cblinfun x (1::'b) = vector_to_cblinfun y (1::'b)\<close>
+    by simp
+  then show \<open>x = y\<close>
+    by simp
+qed
+
+
 
 end
