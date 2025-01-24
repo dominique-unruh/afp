@@ -4095,28 +4095,183 @@ qed
 
 subsection \<open>Reconstruction\<close>
 
+lemma kraus_family_reconstruct_is_bounded_clinear:
+  assumes \<open>\<And>\<rho>. ((\<lambda>a. sandwich_tc (f a) \<rho>) has_sum \<EE> \<rho>) A\<close>
+  shows \<open>bounded_clinear \<EE>\<close>
+proof -
+  have linear: \<open>clinear \<EE>\<close>
+  proof (rule clinearI)
+    fix \<rho> \<sigma> c
+    have \<open>((\<lambda>a. sandwich_tc (f a) \<rho> + sandwich_tc (f a) \<sigma>) has_sum (\<EE> \<rho> + \<EE> \<sigma>)) A\<close>
+      by (intro has_sum_add assms)
+    then have \<open>((\<lambda>a. sandwich_tc (f a) (\<rho> + \<sigma>)) has_sum (\<EE> \<rho> + \<EE> \<sigma>)) A\<close>
+      by (meson has_sum_cong sandwich_tc_plus)
+    with assms[of \<open>\<rho> + \<sigma>\<close>]
+    show \<open>\<EE> (\<rho> + \<sigma>) = \<EE> \<rho> + \<EE> \<sigma>\<close>
+      by (rule has_sum_unique)
+    from assms[of \<rho>]
+    have \<open>((\<lambda>a. sandwich_tc (f a) (c *\<^sub>C \<rho>)) has_sum c *\<^sub>C \<EE> \<rho>) A\<close>
+      using has_sum_scaleC_right[where A=A and s=\<open>\<EE> \<rho>\<close>]
+      by (auto intro!: has_sum_scaleC_right simp: sandwich_tc_scaleC_right)
+    with assms[of \<open>c *\<^sub>C \<rho>\<close>]
+    show \<open>\<EE> (c *\<^sub>C \<rho>) = c *\<^sub>C \<EE> \<rho>\<close>
+      by (rule has_sum_unique)
+  qed
+  have pos: \<open>\<EE> \<rho> \<ge> 0\<close> if \<open>\<rho> \<ge> 0\<close> for \<rho>
+    apply (rule has_sum_mono_traceclass[where f=\<open>\<lambda>_.0\<close> and g=\<open>(\<lambda>a. sandwich_tc (f a) \<rho>)\<close>])
+    using assms
+    by (auto intro!: sandwich_tc_pos simp: that)
+  have mono: \<open>\<EE> \<rho> \<le> \<EE> \<sigma>\<close> if \<open>\<rho> \<le> \<sigma>\<close> for \<rho> \<sigma>
+  proof -
+    have \<open>\<EE> (\<sigma> - \<rho>) \<ge> 0\<close>
+      apply (rule pos)
+      using that
+      by auto
+    then show ?thesis
+      by (simp add: linear complex_vector.linear_diff)
+  qed
+  have bounded_pos: \<open>\<exists>B\<ge>0. \<forall>\<rho>\<ge>0. norm (\<EE> \<rho>) \<le> B * norm \<rho>\<close>
+  proof (rule ccontr)
+    assume asm: \<open>\<not> (\<exists>B\<ge>0. \<forall>\<rho>\<ge>0. norm (\<EE> \<rho>) \<le> B * norm \<rho>)\<close>
+    obtain \<rho>0 where \<EE>_big0: \<open>norm (\<EE> (\<rho>0 i)) > 2^i * norm (\<rho>0 i)\<close> and \<rho>0_pos: \<open>\<rho>0 i \<ge> 0\<close> for i :: nat
+    proof (atomize_elim, rule choice2, rule allI, rule ccontr)
+      fix i
+      define B :: real where \<open>B = 2^i\<close>
+      have \<open>B \<ge> 0\<close>
+        by (simp add: B_def)
+      assume \<open>\<nexists>\<rho>0. B * norm \<rho>0 < norm (\<EE> \<rho>0) \<and> 0 \<le> \<rho>0\<close>
+      then have \<open>\<forall>\<rho>\<ge>0. norm (\<EE> \<rho>) \<le> B * norm \<rho>\<close>
+        by force
+      with asm \<open>B \<ge> 0\<close> show False
+        by blast
+    qed
+    have \<rho>0_neq0: \<open>\<rho>0 i \<noteq> 0\<close> for i
+      using \<EE>_big0[of i] linear complex_vector.linear_0 by force
+    define \<rho> where \<open>\<rho> i = \<rho>0 i /\<^sub>R norm (\<rho>0 i)\<close> for i
+    have \<rho>_pos: \<open>\<rho> i \<ge> 0\<close> for i
+      by (simp add: \<rho>_def \<rho>0_pos scaleR_nonneg_nonneg)
+    have norm_\<rho>: \<open>norm (\<rho> i) = 1\<close> for i
+      by (simp add: \<rho>0_neq0 \<rho>_def)
+    from \<EE>_big0 have \<EE>_big: \<open>trace_tc (\<EE> (\<rho> i)) \<ge> 2^i\<close> for i :: nat
+    proof -
+      have \<open>trace_tc (\<EE> (\<rho> i)) = trace_tc (\<EE> (\<rho>0 i) /\<^sub>R norm (\<rho>0 i))\<close>
+        by (simp add: \<rho>_def linear scaleR_scaleC clinear.scaleC 
+          bounded_clinear_trace_tc[THEN bounded_clinear.clinear])
+      also have \<open>\<dots> = norm (\<EE> (\<rho>0 i) /\<^sub>R norm (\<rho>0 i))\<close>
+        using \<rho>0_pos pos
+        by (metis linordered_field_class.inverse_nonnegative_iff_nonnegative norm_ge_zero norm_tc_pos scaleR_nonneg_nonneg)
+      also have \<open>\<dots> = norm (\<EE> (\<rho>0 i)) / norm (\<rho>0 i)\<close>
+        by (simp add: divide_inverse_commute)
+      also have \<open>\<dots> > (2^i * norm (\<rho>0 i)) / norm (\<rho>0 i)\<close> (is \<open>_ > \<dots>\<close>)
+        using \<EE>_big0 \<rho>0_neq0
+        by (smt (verit, best) complex_of_real_strict_mono_iff divide_le_eq norm_le_zero_iff)
+      thm calculation this
+      also have \<open>\<dots> = 2^i\<close>
+        using \<rho>0_neq0 by force
+      finally show ?thesis
+        by simp
+    qed
+    define \<sigma> \<tau> where \<open>\<sigma> n = (\<Sum>i<n. \<rho> i /\<^sub>R 2^i)\<close> and \<open>\<tau> = (\<Sum>\<^sub>\<infinity>i. \<rho> i /\<^sub>R 2^i)\<close> for n :: nat
+    have \<open>(\<lambda>i. \<rho> i /\<^sub>R 2^i) abs_summable_on UNIV\<close>
+    proof (rule infsum_tc_norm_bounded_abs_summable)
+      from \<rho>_pos show \<open>\<rho> i /\<^sub>R 2^i \<ge> 0\<close> for i
+        by (simp add: scaleR_nonneg_nonneg)
+      show \<open>norm (\<Sum>i\<in>F. \<rho> i /\<^sub>R 2^i) \<le> 2\<close> if \<open>finite F\<close> for F
+      proof -
+        from finite_nat_bounded[OF that]
+        obtain n where i_leq_n: \<open>i \<le> n\<close> if \<open>i \<in> F\<close> for i
+          apply atomize_elim
+          by (auto intro!: order.strict_implies_order simp: lessThan_def Ball_def simp flip: Ball_Collect)
+        have \<open>norm (\<Sum>i\<in>F. \<rho> i /\<^sub>R 2^i) \<le> (\<Sum>i\<in>F. norm (\<rho> i /\<^sub>R 2^i))\<close>
+          by (simp add: sum_norm_le)
+        also have \<open>\<dots> = (\<Sum>i\<in>F. (1/2)^i)\<close>
+          using norm_\<rho> 
+          by (smt (verit, del_insts) Extra_Ordered_Fields.sign_simps(23) divide_inverse_commute linordered_field_class.inverse_nonnegative_iff_nonnegative
+              norm_scaleR power_inverse power_one sum.cong zero_le_power)
+        also have \<open>\<dots> \<le> (\<Sum>i\<le>n. (1/2)^i)\<close>
+          apply (rule sum_mono2)
+          using i_leq_n
+          by auto
+        also have \<open>\<dots> \<le> (\<Sum>i. (1/2)^i)\<close>
+          apply (rule sum_le_suminf)
+          by auto
+        also have \<open>... = 2\<close>
+          using suminf_geometric[of \<open>1/2 :: real\<close>]
+          by simp
+        finally show ?thesis
+          by -
+      qed
+    qed
+    then have summable: \<open>(\<lambda>i. \<rho> i /\<^sub>R 2^i) summable_on UNIV\<close>
+      by (simp add: abs_summable_summable)
+    have \<open>trace_tc (\<EE> \<tau>) \<ge> n\<close> for n :: nat
+    proof -
+      have \<open>trace_tc (\<EE> \<tau>) \<ge> trace_tc (\<EE> (\<sigma> n))\<close> (is \<open>_ \<ge> \<dots>\<close>)
+        by (auto intro!: trace_tc_mono mono infsum_mono_neutral_traceclass
+            simp: \<tau>_def \<sigma>_def summable \<rho>_pos scaleR_nonneg_nonneg simp flip: infsum_finite)
+      moreover have \<open>\<dots> = (\<Sum>i<n. trace_tc (\<EE> (\<rho> i)) / 2^i)\<close>
+        by (simp add: \<sigma>_def complex_vector.linear_sum linear scaleR_scaleC trace_scaleC
+            bounded_clinear_trace_tc[THEN bounded_clinear.clinear] clinear.scaleC
+            add.commute mult.commute divide_inverse)
+      moreover have \<open>\<dots> \<ge> (\<Sum>i<n. 2^i / 2^i)\<close> (is \<open>_ \<ge> \<dots>\<close>)
+        apply (intro sum_mono divide_right_mono)
+        using \<EE>_big
+        by (simp_all add: less_eq_complex_def)
+      moreover have \<open>\<dots> = (\<Sum>i<n. 1)\<close>
+        by fastforce
+      moreover have \<open>\<dots> = n\<close>
+        by simp
+      ultimately show ?thesis
+        by order
+    qed
+    then have Re: \<open>Re (trace_tc (\<EE> \<tau>)) \<ge> n\<close> for n :: nat
+      using Re_mono by fastforce
+    obtain n :: nat where \<open>n > Re (trace_tc (\<EE> \<tau>))\<close>
+      apply atomize_elim
+      by (rule reals_Archimedean2)
+    with Re show False
+      by (smt (verit, ccfv_threshold))
+  qed
+  then obtain B where bounded_B: \<open>norm (\<EE> \<rho>) \<le> B * norm \<rho>\<close> and B_pos: \<open>B \<ge> 0\<close> if \<open>\<rho> \<ge> 0\<close> for \<rho>
+    by auto
+  have bounded: \<open>norm (\<EE> \<rho>) \<le> (4*B) * norm \<rho>\<close> for \<rho>
+  proof -
+    obtain \<rho>1 \<rho>2 \<rho>3 \<rho>4 where \<rho>_decomp: \<open>\<rho> = \<rho>1 - \<rho>2 + \<i> *\<^sub>C \<rho>3 - \<i> *\<^sub>C \<rho>4\<close>
+      and pos: \<open>\<rho>1 \<ge> 0\<close> \<open>\<rho>2 \<ge> 0\<close> \<open>\<rho>3 \<ge> 0\<close> \<open>\<rho>4 \<ge> 0\<close>
+      and norm: \<open>norm \<rho>1 \<le> norm \<rho>\<close> \<open>norm \<rho>2 \<le> norm \<rho>\<close> \<open>norm \<rho>3 \<le> norm \<rho>\<close> \<open>norm \<rho>4 \<le> norm \<rho>\<close>
+      apply atomize_elim using trace_class_decomp_4pos'[of \<rho>] by blast
+    have \<open>norm (\<EE> \<rho>) \<le> norm (\<EE> \<rho>1) + norm (\<EE> \<rho>2) + norm (\<EE> \<rho>3) + norm (\<EE> \<rho>4)\<close>
+      using linear
+      by (auto intro!: norm_triangle_le norm_triangle_le_diff
+          simp add: \<rho>_decomp kraus_family_map_plus_right kraus_family_map_minus_right
+          kraus_family_map_scaleC complex_vector.linear_diff complex_vector.linear_add clinear.scaleC)
+    also have \<open>\<dots> \<le> B * norm \<rho>1 + B * norm \<rho>2 + B * norm \<rho>3 + B * norm \<rho>4\<close>
+      using pos by (auto intro!: add_mono simp add: pos bounded_B)
+    also have \<open>\<dots> = B * (norm \<rho>1 + norm \<rho>2 + norm \<rho>3 + norm \<rho>4)\<close>
+      by argo
+    also have \<open>\<dots> \<le> B * (norm \<rho> + norm \<rho> + norm \<rho> + norm \<rho>)\<close>
+      by (auto intro!: mult_left_mono add_mono pos B_pos
+          simp only: norm)
+    also have \<open>\<dots> = (4 * B) * norm \<rho>\<close>
+      by argo
+    finally show ?thesis
+      by -
+  qed
+  show ?thesis
+    apply (rule bounded_clinearI[where K=\<open>4*B\<close>])
+      apply (simp add: complex_vector.linear_add linear) 
+     apply (simp add: complex_vector.linear_scale linear) 
+    using bounded by (metis Groups.mult_ac)
+qed
+
 lemma kraus_family_reconstruct_is_family:
-  assumes \<open>bounded_clinear \<EE>\<close> (* Is this necessary?
-No. Follows from `sum`:
-
-1. \<EE> linear follows
-2. \<EE> positive follows.
-3. Assume \<EE> not bounded.
-Then ex unit \<rho>i \<ge> 0 s.t. tr \<rho>i \<ge> (i+1)^2.
-Then \<sigma> := \<Sum>i. \<rho>i exists.
-Let \<sigma>n be the partial sums.
-Then \<sigma>n mono and \<le> \<sigma>.
-
-tr \<EE>(\<sigma>) \<ge> tr \<EE>(\<sigma>n) = \<Sum>i<n. tr \<EE>(\<rho>i)/(i+1)^2
-\<ge> \<Sum>i<n. (i+1)^2/(i+1)^2 = n
-
-Contradiction.
- *)
   assumes sum: \<open>\<And>\<rho>. ((\<lambda>a. sandwich_tc (f a) \<rho>) has_sum \<EE> \<rho>) A\<close>
   defines \<open>F \<equiv> (\<lambda>a. (f a,a)) ` A\<close>
   shows \<open>kraus_family F\<close>
 proof -
-  from \<open>bounded_clinear \<EE>\<close> obtain B where B: \<open>norm (\<EE> \<rho>) \<le> B * norm \<rho>\<close> for \<rho>
+  from sum have \<open>bounded_clinear \<EE>\<close>
+    by (rule kraus_family_reconstruct_is_bounded_clinear)
+  then obtain B where B: \<open>norm (\<EE> \<rho>) \<le> B * norm \<rho>\<close> for \<rho>
     apply atomize_elim
     by (simp add: bounded_clinear_axioms_def bounded_clinear_def mult.commute)
   show ?thesis
@@ -4164,7 +4319,6 @@ proof -
 qed
 
 lemma kraus_family_reconstruct:
-  assumes \<open>bounded_clinear \<EE>\<close> (* Is this necessary? *)
   assumes sum: \<open>\<And>\<rho>. ((\<lambda>a. sandwich_tc (f a) \<rho>) has_sum \<EE> \<rho>) A\<close>
   defines \<open>F \<equiv> Abs_kraus_family ((\<lambda>a. (f a,a)) ` A)\<close>
   shows \<open>kraus_family_map F = \<EE>\<close>
@@ -4173,7 +4327,7 @@ proof (rule ext)
   have Rep_F: \<open>Rep_kraus_family F = (\<lambda>a. (f a,a)) ` A\<close>
     unfolding F_def
     apply (rule Abs_kraus_family_inverse)
-    by (auto intro!: kraus_family_reconstruct_is_family[of \<EE>] assms simp: F_def)
+    by (auto intro!: kraus_family_reconstruct_is_family[of _ _ \<EE>] assms simp: F_def)
   have \<open>((\<lambda>(E,x). sandwich_tc E \<rho>) has_sum kraus_family_map F \<rho>) (Rep_kraus_family F)\<close>
     by (auto intro!: kraus_family_map_has_sum)
   then have \<open>((\<lambda>a. sandwich_tc (f a) \<rho>) has_sum kraus_family_map F \<rho>) A\<close>

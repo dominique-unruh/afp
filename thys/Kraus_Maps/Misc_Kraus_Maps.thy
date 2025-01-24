@@ -128,6 +128,21 @@ proof (rule inj_onI)
     by simp
 qed
 
+(* TODO move to BO *)
+lemma has_sum_bounded_clinear:
+  assumes "bounded_clinear h" and "(f has_sum S) A"
+  shows "((\<lambda>x. h (f x)) has_sum h S) A"
+  apply (rule has_sum_bounded_linear[where h=h])
+  by (auto intro!: bounded_clinear.bounded_linear assms)
+
+(* TODO move to BO, after *) thm infsum_scaleC_right
+lemma has_sum_scaleC_right:
+  fixes f :: \<open>'a \<Rightarrow> 'b :: complex_normed_vector\<close>
+  assumes \<open>(f has_sum s) A\<close>
+  shows \<open>((\<lambda>x. c *\<^sub>C f x) has_sum c *\<^sub>C s) A\<close>
+  apply (rule has_sum_bounded_clinear[where h=\<open>(*\<^sub>C) c\<close>])
+  using bounded_clinear_scaleC_right assms by auto
+
 
 
 end
