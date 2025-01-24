@@ -1,15 +1,15 @@
 theory Kraus_Maps
   imports Hilbert_Space_Tensor_Product.Trace_Class Wlog.Wlog "HOL-Library.Rewrite"
-    Kraus_Maps_Misc Hilbert_Space_Tensor_Product.Hilbert_Space_Tensor_Product
+    Misc_Kraus_Maps Hilbert_Space_Tensor_Product.Hilbert_Space_Tensor_Product
     Hilbert_Space_Tensor_Product.Partial_Trace
   abbrevs "=kr" = "=\<^sub>k\<^sub>r" and "==kr" = "\<equiv>\<^sub>k\<^sub>r"
 begin
 
-no_notation Order.top ("\<top>\<index>")
-no_notation eq_closure_of ("closure'_of\<index>")
+(* no_notation Order.top ("\<top>\<index>") *)
+(* no_notation eq_closure_of ("closure'_of\<index>") *)
 
 unbundle cblinfun_syntax
-unbundle no m_inv_syntax
+(* unbundle no m_inv_syntax *)
 
 definition \<open>kraus_family \<EE> \<longleftrightarrow> bdd_above ((\<lambda>F. \<Sum>(E,x)\<in>F. E* o\<^sub>C\<^sub>L E) ` {F. finite F \<and> F \<subseteq> \<EE>})\<close>
   for \<EE> :: \<open>((_::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L _::chilbert_space) \<times> _) set\<close>
@@ -299,8 +299,8 @@ next
     then have \<open>\<psi> \<bullet>\<^sub>C ((B - A) *\<^sub>V \<psi>) \<ge> 0\<close>
       by (simp add: cinner_pos_if_pos)
     then have \<open>\<psi> \<bullet>\<^sub>C ((B - A) *\<^sub>V \<phi>) \<ge> 0\<close>
-      by (auto intro!: mult_nonneg_nonneg square_nneg_complex
-          simp: \<phi>_def cblinfun.scaleC_right divide_inverse cinner_adj_right)
+      by (auto intro!: mult_nonneg_nonneg
+          simp: \<phi>_def cblinfun.scaleC_right divide_inverse cinner_adj_right power2_eq_square)
     then show \<open>\<psi> \<bullet>\<^sub>C (A *\<^sub>V \<phi>) \<le> \<psi> \<bullet>\<^sub>C (B *\<^sub>V \<phi>)\<close>
       by (simp add: cblinfun.diff_left cinner_diff_right)
   qed
@@ -578,7 +578,7 @@ proof -
     show ?thesis
       unfolding case_prod_unfold
       apply (rule abs_summable_on_comparison_test[OF _ *])
-      apply (intro abs_summable_on_add abs_summable_norm abs_summable_on_scaleC_right  pos)
+      apply (intro Misc_Kraus_Maps.abs_summable_on_add abs_summable_norm abs_summable_on_scaleC_right pos)
       using hypothesis
       by (simp_all add: case_prod_unfold pos)
   qed
@@ -4314,7 +4314,8 @@ proof -
     proof -
       from that
       obtain F' where \<open>finite F'\<close> and F_def: \<open>F = (\<lambda>x. (sqrt (p x) *\<^sub>R id_cblinfun, x)) ` F'\<close>
-        using finite_subset_image by blast
+        using finite_subset_image
+        by meson
       then have \<open>(\<Sum>(E,x)\<in>F. E* o\<^sub>C\<^sub>L E) = (\<Sum>x\<in>F'. (sqrt (p x) *\<^sub>R id_cblinfun)* o\<^sub>C\<^sub>L (sqrt (p x) *\<^sub>R id_cblinfun))\<close>
         by (simp add: sum.reindex inj_on_def)
       also have \<open>\<dots> = (\<Sum>x\<in>F'. p x *\<^sub>R id_cblinfun)\<close>
