@@ -43,6 +43,8 @@ lemma trace_is_kraus_map: \<open>kraus_map (one_dim_iso o trace_tc)\<close>
 lemma id_is_kraus_map[iff]: \<open>kraus_map id\<close>
   by (auto intro!: ext kraus_mapI[of _ kraus_family_id])
 
+definition \<open>trace_preserving_map \<EE> \<longleftrightarrow> clinear \<EE> \<and> (\<forall>\<rho>. trace_tc (\<EE> \<rho>) = trace_tc \<rho>)\<close>
+
 lemma trace_preserving_id[iff]: \<open>trace_preserving_map id\<close>
   by (simp add: trace_preserving_map_def complex_vector.linear_id)
 

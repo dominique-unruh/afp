@@ -672,6 +672,7 @@ lemma separating_set_clinear_cspan:
   using assms
   by (auto intro: complex_vector.linear_eq_on simp: separating_set_def)
 
+(* TODO remove. Exists. *) thm Complex_Bounded_Linear_Function.cblinfun_leI
 lemma less_eq_cblinfunI:
   fixes a b :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a::chilbert_space\<close>
   assumes \<open>\<And>h. h \<bullet>\<^sub>C a h \<le> h \<bullet>\<^sub>C b h\<close>

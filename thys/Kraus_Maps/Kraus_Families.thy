@@ -1100,7 +1100,6 @@ lemma kraus_map_eqI:
   using assms by (simp add: kraus_equivalent_def)
 
 
-(* TODO equivalent using map=map *)
 lemma kraus_equivalent'_imp_equivalent:
   assumes \<open>\<EE> \<equiv>\<^sub>k\<^sub>r \<FF>\<close>
   shows \<open>\<EE> =\<^sub>k\<^sub>r \<FF>\<close>
@@ -3236,8 +3235,79 @@ qed
 
 subsection \<open>Trace-preserving maps\<close>
 
-(* TODO formulate for families instead? *)
-definition \<open>trace_preserving_map \<EE> \<longleftrightarrow> clinear \<EE> \<and> (\<forall>\<rho>. trace_tc (\<EE> \<rho>) = trace_tc \<rho>)\<close>
+definition \<open>trace_preserving \<EE> \<longleftrightarrow> (\<forall>\<rho>. trace_tc (kraus_family_map \<EE> \<rho>) = trace_tc \<rho>)\<close>
+
+(* TODO name, TODO comment trace reducing *)
+lemma kraus_family_norm_trace_reducing: \<open>kraus_family_norm \<EE> \<le> 1 \<longleftrightarrow> (\<forall>\<rho>\<ge>0. trace_tc (kraus_family_map \<EE> \<rho>) \<le> trace_tc \<rho>)\<close>
+proof (intro iffI allI impI)
+  assume assm: \<open>kraus_family_norm \<EE> \<le> 1\<close>
+  fix \<rho> :: \<open>('a, 'a) trace_class\<close>
+  assume \<open>\<rho> \<ge> 0\<close>
+  have \<open>trace_tc (kraus_family_map \<EE> \<rho>) = norm (kraus_family_map \<EE> \<rho>)\<close>
+    by (simp add: \<open>0 \<le> \<rho>\<close> kraus_family_map_pos norm_tc_pos)
+  also have \<open>\<dots> \<le> kraus_family_norm \<EE> * norm \<rho>\<close>
+    using \<open>0 \<le> \<rho>\<close> complex_of_real_mono kraus_family_map_bounded_pos by blast
+  also have \<open>\<dots> \<le> norm \<rho>\<close>
+    by (metis assm complex_of_real_mono kraus_family_norm_geq0 mult_left_le_one_le norm_ge_zero)
+  also have \<open>\<dots> = trace_tc \<rho>\<close>
+    by (simp add: \<open>0 \<le> \<rho>\<close> norm_tc_pos)
+  finally show \<open>trace_tc (kraus_family_map \<EE> \<rho>) \<le> trace_tc \<rho>\<close>
+    by -
+next
+  assume assm[rule_format]: \<open>\<forall>\<rho>\<ge>0. trace_tc (kraus_family_map \<EE> \<rho>) \<le> trace_tc \<rho>\<close>
+  have \<open>kraus_family_bound \<EE> \<le> id_cblinfun\<close>
+  proof (rule cblinfun_leI)
+    fix x
+    have \<open>x \<bullet>\<^sub>C kraus_family_bound \<EE> x = trace_tc (kraus_family_map \<EE> (tc_butterfly x x))\<close>
+      by (simp add: kraus_family_bound_from_map)
+    also have \<open>\<dots> \<le> trace_tc (tc_butterfly x x)\<close>
+      apply (rule assm)
+      by simp
+    also have \<open>\<dots> = x \<bullet>\<^sub>C id_cblinfun x\<close>
+      by (simp add: tc_butterfly.rep_eq trace_butterfly trace_tc.rep_eq)
+  finally show \<open>x \<bullet>\<^sub>C kraus_family_bound \<EE> x \<le> x \<bullet>\<^sub>C id_cblinfun x\<close>
+      by -
+  qed
+  then show \<open>kraus_family_norm \<EE> \<le> 1\<close>
+    by (smt (verit, best) kraus_family_norm_def kraus_family_bound_pos norm_cblinfun_id_le norm_cblinfun_mono)
+qed
+
+lemma kraus_family_norm_trace_preserving: \<open>kraus_family_norm \<EE> \<le> 1\<close> if \<open>trace_preserving \<EE>\<close>
+  apply (rule kraus_family_norm_trace_reducing[THEN iffD2])
+  using that
+  by (simp add: trace_preserving_def)
+
+lemma kraus_family_norm_trace_preserving_eq: 
+  fixes \<EE> :: \<open>('a::{chilbert_space,not_singleton}, 'b::chilbert_space, 'c) kraus_family\<close>
+  assumes \<open>trace_preserving \<EE>\<close>
+  shows \<open>kraus_family_norm \<EE> = 1\<close>
+proof (rule order_antisym)
+  show \<open>kraus_family_norm \<EE> \<le> 1\<close>
+    using assms kraus_family_norm_trace_preserving by blast
+  obtain h :: 'a where \<open>norm h = 1\<close>
+    using ex_norm1_not_singleton by blast
+  have \<open>h \<bullet>\<^sub>C kraus_family_bound \<EE> h \<ge> 1\<close>
+  proof -
+    have \<open>h \<bullet>\<^sub>C kraus_family_bound \<EE> h = trace_tc (kraus_family_map \<EE> (tc_butterfly h h))\<close>
+      by (simp add: kraus_family_bound_from_map)
+    also have \<open>\<dots> = trace_tc (tc_butterfly h h)\<close>
+      using assms trace_preserving_def by blast
+    also have \<open>\<dots> = 1\<close>
+      by (metis \<open>norm h = 1\<close> cnorm_eq_1 tc_butterfly.rep_eq trace_butterfly trace_tc.rep_eq)
+    finally show ?thesis
+      by simp
+  qed
+  then have \<open>norm (kraus_family_bound \<EE> h) \<ge> 1\<close>
+    by (smt (verit, del_insts) \<open>norm h = 1\<close> cmod_mono complex_inner_class.Cauchy_Schwarz_ineq2
+        mult_cancel_right1 norm_one zero_less_one_class.zero_le_one)
+  then
+  have \<open>norm (kraus_family_bound \<EE>) \<ge> 1\<close>
+    using cblinfun_norm_geqI[where x=h and K=1 and f=\<open>kraus_family_bound \<EE>\<close>] \<open>norm h = 1\<close>
+    by simp
+  then show \<open>kraus_family_norm \<EE> \<ge> 1\<close>
+    by (simp add: kraus_family_norm_def)
+qed
+
 
 subsection \<open>Tensor products\<close>
 
@@ -3740,7 +3810,7 @@ proof -
 qed
 
 lemma partial_trace_ignore_trace_preserving_map:
-  assumes \<open>trace_preserving_map (kraus_family_map \<EE>)\<close>
+  assumes \<open>trace_preserving \<EE>\<close>
   shows \<open>partial_trace (kraus_family_map (kraus_family_tensor kraus_family_id \<EE>) \<rho>) = partial_trace \<rho>\<close>
 proof (rule fun_cong[where x=\<rho>], rule eq_from_separatingI2[OF separating_set_bounded_clinear_tc_tensor])
   show \<open>bounded_clinear (\<lambda>a. partial_trace (kraus_family_map (kraus_family_tensor kraus_family_id \<EE>) a))\<close>
@@ -3751,7 +3821,7 @@ proof (rule fun_cong[where x=\<rho>], rule eq_from_separatingI2[OF separating_se
   from assms
   show \<open>partial_trace (kraus_family_map (kraus_family_tensor kraus_family_id \<EE>) (tc_tensor \<rho> \<sigma>)) =
            partial_trace (tc_tensor \<rho> \<sigma>)\<close>
-    by (auto intro!: simp: kraus_family_map_tensor partial_trace_tensor trace_preserving_map_def)
+    by (auto intro!: simp: kraus_family_map_tensor partial_trace_tensor trace_preserving_def)
 qed
 
 lemma kraus_family_bound_trace:
