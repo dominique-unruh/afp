@@ -656,6 +656,9 @@ lemma Cblinfun_comp_bounded_cbilinear: \<open>bounded_clinear (CBlinfun o p)\<cl
 lemma Cblinfun_comp_bounded_sesquilinear: \<open>bounded_antilinear (CBlinfun o p)\<close> if \<open>bounded_sesquilinear p\<close>
   by (metis (mono_tags, opaque_lifting) bounded_clinear_CBlinfun_apply bounded_sesquilinear.bounded_clinear_right comp_apply that transfer_bounded_sesquilinear_bounded_antilinearI)
 
+declare (in bounded_cbilinear) bounded_cbilinear_axioms[bounded_cbilinear]
+declare (in bounded_clinear) bounded_clinear_axioms[bounded_clinear]
+
 subsection \<open>Relationship to real bounded operators (\<^typ>\<open>_ \<Rightarrow>\<^sub>L _\<close>)\<close>
 
 instantiation blinfun :: (real_normed_vector, complex_normed_vector) "complex_normed_vector"

@@ -3906,6 +3906,15 @@ qed
 
 hide_fact finite_rank_tc_dense_aux
 
+lemma ccspan_finite_rank_tc[simp]: \<open>ccspan (Collect finite_rank_tc) = \<top>\<close>
+  apply transfer'
+  apply (rule order_top_class.top_le)
+  by (metis complex_vector.span_eq_iff csubspace_finite_rank_tc finite_rank_tc_dense order.refl)
+
+lemma ccspan_rank1_tc[simp]: \<open>ccspan (Collect rank1_tc) = \<top>\<close>
+  by (smt (verit, ccfv_SIG) basic_trans_rules(31) ccspan.rep_eq ccspan_finite_rank_tc ccspan_leqI ccspan_mono closure_subset
+      complex_vector.span_superset cspan_eqI finite_rank_tc_def' mem_Collect_eq order_trans_rules(24))
+
 
 lemma onb_butterflies_span_trace_class:
   fixes A :: \<open>'a::chilbert_space set\<close> and B :: \<open>'b::chilbert_space set\<close>
