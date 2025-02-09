@@ -1000,8 +1000,8 @@ proof -
     using has_sum_unique by blast
 qed
 
-lemma kf_apply_on_UNIV[simp]: \<open>(\<lambda>\<EE>. kf_apply_on \<EE> UNIV) = kf_apply\<close>
-  by (auto intro!: ext simp: kf_apply_on_def)
+lemma kf_apply_on_UNIV[simp]: \<open>kf_apply_on \<EE> UNIV = kf_apply \<EE>\<close>
+  by (auto simp: kf_apply_on_def)
 
 lemma kf_apply_on_CARD_1[simp]: \<open>(\<lambda>\<EE>. kf_apply_on \<EE> {x::_::CARD_1}) = kf_apply\<close>
   apply (subst asm_rl[of \<open>{x} = UNIV\<close>])
@@ -1060,12 +1060,15 @@ lemma kf_filter_remove0:
   apply (transfer' fixing: f)
   by auto
 
-lemma kf_apply_on_0_right[simp]: \<open>kf_apply_on \<EE> X 0 = 0\<close>
-  by (simp add: kf_apply_on_def)
-
 lemma kf_filter_0_right[simp]: \<open>kf_filter P 0 = 0\<close>
   apply (transfer' fixing: P)
   by auto
+
+lemma kf_apply_on_0_right[simp]: \<open>kf_apply_on \<EE> X 0 = 0\<close>
+  by (simp add: kf_apply_on_def)
+
+lemma kf_apply_on_0_left[simp]: \<open>kf_apply_on 0 X \<rho> = 0\<close>
+  by (simp add: kf_apply_on_def)
 
 subsection \<open>Equivalence\<close>
 
@@ -1132,18 +1135,13 @@ lemma kf_eq_imp_eq_weak:
   apply (rule kf_apply_on_union_eqI[where F=\<open>range (\<lambda>x. ({x},{x}))\<close> and \<EE>=\<EE> and \<FF>=\<FF>])
   using assms by (auto simp: kf_eq_def)
 
-(* TODO rename stuff from here *)
-
-
-
-lemma kf_filter_cong'':
-  fixes \<EE> \<FF> :: \<open>('a::chilbert_space, 'b::chilbert_space, 'c) kraus_family\<close>
+lemma kf_filter_cong:
   assumes \<open>\<EE> \<equiv>\<^sub>k\<^sub>r \<FF>\<close>
-  assumes \<open>x \<in> kf_domain \<EE> \<Longrightarrow> P x = Q x\<close>
-  shows \<open>kf_apply_on (kf_filter P \<EE>) {x} = kf_apply_on (kf_filter Q \<FF>) {x}\<close>
+  assumes \<open>\<And>x. x \<in> kf_domain \<EE> \<Longrightarrow> P x = Q x\<close>
+  shows \<open>kf_filter P \<EE> \<equiv>\<^sub>k\<^sub>r kf_filter Q \<FF>\<close>
 proof -
   have \<open>kf_apply (kf_filter (\<lambda>xa. xa = x \<and> P xa) \<EE>)
-      = kf_apply (kf_filter (\<lambda>xa. xa = x \<and> Q xa) \<EE>)\<close>
+      = kf_apply (kf_filter (\<lambda>xa. xa = x \<and> Q xa) \<EE>)\<close> for x
   proof (cases \<open>x \<in> kf_domain \<EE>\<close>)
     case True
     with assms have \<open>P x = Q x\<close>
@@ -1168,7 +1166,7 @@ proof -
       by simp
   qed
   also have \<open>kf_apply (kf_filter (\<lambda>xa. xa = x \<and> Q xa) \<EE>)
-      = kf_apply (kf_filter (\<lambda>xa. xa = x \<and> Q xa) \<FF>)\<close>
+           = kf_apply (kf_filter (\<lambda>xa. xa = x \<and> Q xa) \<FF>)\<close> for x
   proof (cases \<open>Q x\<close>)
     case True
     then have \<open>(z = x \<and> Q z) \<longleftrightarrow> (z = x)\<close> for z
@@ -1182,23 +1180,16 @@ proof -
     show ?thesis
       by (simp add: kf_eq_def kf_apply_on_def)
   qed
-  finally show \<open>kf_apply_on (kf_filter P \<EE>) {x} = kf_apply_on (kf_filter Q \<FF>) {x}\<close>
-    by (simp add: kf_apply_on_def kf_filter_twice)
+  finally show ?thesis
+    by (simp add: kf_eq_def kf_apply_on_def kf_filter_twice)
 qed
 
-lemma kf_filter_cong':
-  assumes \<open>\<EE> \<equiv>\<^sub>k\<^sub>r \<FF>\<close>
-  assumes \<open>\<And>x. x \<in> kf_domain \<EE> \<Longrightarrow> P x = Q x\<close>
-  shows \<open>kf_filter P \<EE> \<equiv>\<^sub>k\<^sub>r kf_filter Q \<FF>\<close>
-  using assms
-  by (auto intro!: kf_filter_cong'' simp: kf_eq_def)
 
-
-lemma kf_filter_cong:
+lemma kf_filter_cong_weak:
   assumes \<open>\<EE> \<equiv>\<^sub>k\<^sub>r \<FF>\<close>
   assumes \<open>\<And>x. x \<in> kf_domain \<EE> \<Longrightarrow> P x = Q x\<close>
   shows \<open>kf_filter P \<EE> =\<^sub>k\<^sub>r kf_filter Q \<FF>\<close>
-  by (simp add: assms kf_eq_imp_eq_weak kf_filter_cong')
+  by (simp add: assms kf_eq_imp_eq_weak kf_filter_cong)
 
 lemma kf_eq_refl[iff]: \<open>\<EE> \<equiv>\<^sub>k\<^sub>r \<EE>\<close>
   using kf_eq_def by blast
@@ -1214,11 +1205,44 @@ lemma kf_eq_sym[sym]:
   shows \<open>\<FF> \<equiv>\<^sub>k\<^sub>r \<EE>\<close>
   by (metis assms kf_eq_def)
 
-lemma kf_eq_weak_imp_equivalent'_CARD_1:
+lemma kf_eq_weak_imp_eq_CARD_1:
   fixes \<EE> \<FF> :: \<open>('a::chilbert_space, 'b::chilbert_space, 'x::CARD_1) kraus_family\<close>
   assumes \<open>\<EE> =\<^sub>k\<^sub>r \<FF>\<close>
   shows \<open>\<EE> \<equiv>\<^sub>k\<^sub>r \<FF>\<close>
   by (metis CARD_1_UNIV assms kf_eqI kf_eq_weak_def kf_apply_on_UNIV)
+
+lemma kf_apply_on_eqI_filter:
+  assumes \<open>kf_filter (\<lambda>x. x \<in> X) \<EE> \<equiv>\<^sub>k\<^sub>r kf_filter (\<lambda>x. x \<in> X) \<FF>\<close>
+  shows \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> = \<FF> *\<^sub>k\<^sub>r @X \<rho>\<close>
+proof (rule kf_apply_on_union_eqI[where F=\<open>(\<lambda>x.({x},{x})) ` X\<close>])
+  show \<open>(A, B) \<in> (\<lambda>x. ({x}, {x})) ` X \<Longrightarrow>
+       (A', B') \<in> (\<lambda>x. ({x}, {x})) ` X \<Longrightarrow> (A, B) \<noteq> (A', B') \<Longrightarrow> disjnt A A'\<close>
+    for A B A' B'
+    by force
+  show \<open>(A, B) \<in> (\<lambda>x. ({x}, {x})) ` X \<Longrightarrow>
+       (A', B') \<in> (\<lambda>x. ({x}, {x})) ` X \<Longrightarrow> (A, B) \<noteq> (A', B') \<Longrightarrow> disjnt B B'\<close>
+    for A B A' B'
+    by force
+  show \<open>X = \<Union> (fst ` (\<lambda>x. ({x}, {x})) ` X)\<close>
+    by simp
+  show \<open>X = \<Union> (snd ` (\<lambda>x. ({x}, {x})) ` X)\<close>
+    by simp
+  show \<open>\<EE> *\<^sub>k\<^sub>r @A \<rho> = \<FF> *\<^sub>k\<^sub>r @B \<rho>\<close> if \<open>(A, B) \<in> (\<lambda>x. ({x}, {x})) ` X\<close> for A B
+  proof -
+    from that obtain x where \<open>x \<in> X\<close> and A: \<open>A = {x}\<close> and B: \<open>B = {x}\<close>
+      by blast
+    from \<open>x \<in> X\<close> have *: \<open>(\<lambda>x'. x = x' \<and> x' \<in> X) = (\<lambda>x'. x' = x)\<close>
+      by blast
+    from assms have \<open>kf_filter ((=)x) (kf_filter (\<lambda>x. x \<in> X) \<EE>) =\<^sub>k\<^sub>r kf_filter ((=)x) (kf_filter (\<lambda>x. x \<in> X) \<FF>)\<close>
+      by (simp add: kf_filter_cong_weak)
+    then have \<open>kf_filter (\<lambda>x'. x'=x) \<EE> =\<^sub>k\<^sub>r kf_filter (\<lambda>x'. x'=x) \<FF>\<close>
+      by (simp add: kf_filter_twice * )
+    then have \<open>\<EE> *\<^sub>k\<^sub>r @{x} \<rho> = \<FF> *\<^sub>k\<^sub>r @{x} \<rho>\<close>
+      by (simp add: kf_apply_on_def kf_eq_weak_def)
+    then show ?thesis
+      by (simp add: A B)
+  qed
+qed
 
 lemma kf_apply_on_eqI:
   assumes \<open>\<EE> \<equiv>\<^sub>k\<^sub>r \<FF>\<close>
@@ -1226,11 +1250,68 @@ lemma kf_apply_on_eqI:
   apply (rule kf_apply_on_union_eqI[where F=\<open>(\<lambda>x.({x},{x})) ` X\<close>])
   using assms by (auto simp: kf_eq_def)
 
-
-lemma kraus_map_eq0I:
+lemma kf_apply_eq0I:
   assumes \<open>\<EE> =\<^sub>k\<^sub>r 0\<close>
   shows \<open>\<EE> *\<^sub>k\<^sub>r \<rho> = 0\<close>
   using assms kf_eq_weak_def by force
+
+(* TODO move up *)
+lemma kf_apply_on_mono_set:
+  assumes \<open>X \<subseteq> Y\<close> and \<open>\<rho> \<ge> 0\<close>
+  shows \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> \<le> \<EE> *\<^sub>k\<^sub>r @Y \<rho>\<close>
+proof -
+  wlog \<open>Y \<noteq> {}\<close>
+    using assms(1) negation by auto
+  have [simp]: \<open>X \<union> Y = Y\<close>
+    using assms(1) by blast
+  from kf_apply_on_union_infsum[where F=\<open>{X, Y-X}\<close> and \<EE>=\<EE> and \<rho>=\<rho>]
+  have \<open>(\<Sum>X\<in>{X, Y - X}. \<EE> *\<^sub>k\<^sub>r @X \<rho>) = \<EE> *\<^sub>k\<^sub>r @Y \<rho>\<close>
+    by (auto simp: disjnt_iff sum.insert)
+  then have \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> + \<EE> *\<^sub>k\<^sub>r @(Y-X) \<rho> = \<EE> *\<^sub>k\<^sub>r @Y \<rho>\<close> 
+    apply (subst (asm) sum.insert)
+    using \<open>Y \<noteq> {}\<close>     
+    by auto
+  moreover have \<open>\<EE> *\<^sub>k\<^sub>r @(Y-X) \<rho> \<ge> 0\<close>
+    by (simp add: assms(2) kf_apply_on_pos)
+  ultimately show \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> \<le> \<EE> *\<^sub>k\<^sub>r @Y \<rho>\<close>
+    by (metis le_add_same_cancel1)
+qed
+
+lemma kf_eq_weak0_imp_kf_eq0:
+  assumes \<open>\<EE> =\<^sub>k\<^sub>r 0\<close>
+  shows \<open>\<EE> \<equiv>\<^sub>k\<^sub>r 0\<close>
+proof -
+  have \<open>\<EE> *\<^sub>k\<^sub>r @{x} \<rho> = 0\<close> if \<open>\<rho> \<ge> 0\<close> for \<rho> x
+  proof -
+    from assms have \<open>\<EE> *\<^sub>k\<^sub>r @UNIV \<rho> = 0\<close>
+      by (simp add: kf_eq_weak_def)
+    moreover have \<open>\<EE> *\<^sub>k\<^sub>r @{x} \<rho> \<le> \<EE> *\<^sub>k\<^sub>r @UNIV \<rho>\<close>
+      apply (rule kf_apply_on_mono_set)
+      using that by auto
+    moreover have \<open>\<EE> *\<^sub>k\<^sub>r @{x} \<rho> \<ge> 0\<close>
+      using that
+      by (simp add: kf_apply_on_pos)
+    ultimately show ?thesis
+      by (simp add: basic_trans_rules(24))
+  qed
+  then show ?thesis
+    by (simp add: kf_eqI)
+qed
+
+lemma kf_apply_on_eq0I:
+  assumes \<open>\<EE> =\<^sub>k\<^sub>r 0\<close>
+  shows \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> = 0\<close>
+proof -
+  from assms
+  have \<open>\<EE> \<equiv>\<^sub>k\<^sub>r 0\<close>
+    by (rule kf_eq_weak0_imp_kf_eq0)
+  then have \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> = 0 *\<^sub>k\<^sub>r @X \<rho>\<close>
+    by (intro kf_apply_on_eqI_filter kf_filter_cong refl)
+  then show ?thesis
+    by simp
+qed
+
+(* TODO rename stuff from here *)
 
 lemma kf_remove_0_equivalent: \<open>kf_remove_0 \<EE> =\<^sub>k\<^sub>r \<EE>\<close>
   by (simp add: kf_eq_weak_def)
@@ -1885,7 +1966,7 @@ lemma kf_flatten_cong:
 lemma kf_flatten_cong':
   assumes \<open>\<EE> =\<^sub>k\<^sub>r \<FF>\<close>
   shows \<open>kf_flatten \<EE> \<equiv>\<^sub>k\<^sub>r kf_flatten \<FF>\<close>
-  by (simp add: assms kf_eq_weak_imp_equivalent'_CARD_1 kf_flatten_cong)
+  by (simp add: assms kf_eq_weak_imp_eq_CARD_1 kf_flatten_cong)
 
 lemma kf_map_outcome_twice:
   \<open>kf_map_outcome f (kf_map_outcome g \<EE>) \<equiv>\<^sub>k\<^sub>r kf_map_outcome (f \<circ> g) \<EE>\<close>
@@ -2645,9 +2726,7 @@ proof (rule ext)
 
     have \<open>kf_filter (\<lambda>f'. f' = f) \<FF> \<equiv>\<^sub>k\<^sub>r
              kf_filter (\<lambda>f'. f' = f) (kf_filter (\<lambda>x. x \<in> kf_domain \<FF>) \<FF>)\<close>
-      by (auto intro!: kf_filter_cong' 
-          intro: kf_eq_sym
-          simp: kf_filter_domain)
+      by (auto intro!: kf_filter_cong intro: kf_eq_sym simp: kf_filter_domain)
     also have \<open>\<dots> \<equiv>\<^sub>k\<^sub>r (kf_filter (\<lambda>_. False) \<FF>)\<close>
       using that by (simp add: kf_filter_twice * del: kf_filter_false)
     also have \<open>\<dots> \<equiv>\<^sub>k\<^sub>r 0\<close>
@@ -3605,7 +3684,7 @@ proof (rule kf_eqI)
     apply (rule ext)
     apply (rule kf_apply_eqI)
     apply (rule kraus_tensor_cong)
-    by (auto intro!: kf_filter_cong assms)
+    by (auto intro!: kf_filter_cong_weak assms)
   also have \<open>\<dots> = kf_apply_on (kf_tensor \<EE>' \<FF>') {xy}\<close>
     by (simp add: kf_apply_on_def aux1 kf_filter_tensor)
   finally show \<open>kf_tensor \<EE> \<FF> *\<^sub>k\<^sub>r @{xy} \<rho> = kf_tensor \<EE>' \<FF>' *\<^sub>k\<^sub>r @{xy} \<rho>\<close>
