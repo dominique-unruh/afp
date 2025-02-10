@@ -10,18 +10,18 @@ proof (rule iffI)
   assume \<open>kraus_map \<EE>\<close>
   then obtain EE :: \<open>('a,'b,unit) kraus_family\<close> where EE: \<open>\<EE> = kf_apply EE\<close>
     using kraus_map_def by blast
-  define EE' :: \<open>('a,'b,'x) kraus_family\<close> where \<open>EE' = kf_map_outcome (\<lambda>_. undefined) EE\<close>
+  define EE' :: \<open>('a,'b,'x) kraus_family\<close> where \<open>EE' = kf_map (\<lambda>_. undefined) EE\<close>
   have \<open>kf_apply EE' = kf_apply EE\<close>
-    by (simp add: EE'_def kf_map_outcome_same_map)
+    by (simp add: EE'_def kf_apply_map)
   with EE show \<open>\<exists>EE :: ('a,'b,'x) kraus_family. \<EE> = kf_apply EE\<close>
     by metis
 next
   assume \<open>\<exists>EE :: ('a,'b,'x) kraus_family. \<EE> = kf_apply EE\<close>
   then obtain EE :: \<open>('a,'b,'x) kraus_family\<close> where EE: \<open>\<EE> = kf_apply EE\<close>
     using kraus_map_def by blast
-  define EE' :: \<open>('a,'b,unit) kraus_family\<close> where \<open>EE' = kf_map_outcome (\<lambda>_. ()) EE\<close>
+  define EE' :: \<open>('a,'b,unit) kraus_family\<close> where \<open>EE' = kf_map (\<lambda>_. ()) EE\<close>
   have \<open>kf_apply EE' = kf_apply EE\<close>
-    by (simp add: EE'_def kf_map_outcome_same_map)
+    by (simp add: EE'_def kf_apply_map)
   with EE show \<open>kraus_map \<EE>\<close>
     apply (simp add: kraus_map_def)
     by metis
@@ -37,8 +37,8 @@ lemma kraus_map_kf_apply[iff]: \<open>kraus_map (kf_apply \<EE>)\<close>
   by blast
 
 lemma trace_is_kraus_map: \<open>kraus_map (one_dim_iso o trace_tc)\<close>
-  by (auto intro!: ext kraus_mapI[of _ \<open>trace_kraus_family some_chilbert_basis\<close>]
-      simp: trace_kf_is_trace)
+  by (auto intro!: ext kraus_mapI[of _ \<open>kf_trace some_chilbert_basis\<close>]
+      simp: kf_trace_is_trace)
 
 lemma id_is_kraus_map[iff]: \<open>kraus_map id\<close>
   by (auto intro!: ext kraus_mapI[of _ kf_id])
