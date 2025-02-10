@@ -152,7 +152,7 @@ lemma kf_apply_pos:
   by (auto intro!: infsum_nonneg_traceclass scaleC_nonneg_nonneg of_nat_0_le_iff
       sandwich_tc_pos assms simp: kf_apply_def)
 
-lemma kf_apply_mono:
+lemma kf_apply_mono_right:
   assumes \<open>\<rho> \<ge> \<tau>\<close>
   shows \<open>kf_apply \<EE> \<rho> \<ge> kf_apply \<EE> \<tau>\<close>
   apply (subst diff_ge_0_iff_ge[symmetric])
@@ -1070,6 +1070,33 @@ lemma kf_apply_on_0_right[simp]: \<open>kf_apply_on \<EE> X 0 = 0\<close>
 lemma kf_apply_on_0_left[simp]: \<open>kf_apply_on 0 X \<rho> = 0\<close>
   by (simp add: kf_apply_on_def)
 
+lemma kf_apply_on_mono3:
+  assumes \<open>\<rho> \<le> \<sigma>\<close>
+  shows \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> \<le> \<EE> *\<^sub>k\<^sub>r @X \<sigma>\<close>
+  by (simp add: assms kf_apply_mono_right kf_apply_on_def)
+
+lemma kf_apply_on_mono2:
+  assumes \<open>X \<subseteq> Y\<close> and \<open>\<rho> \<ge> 0\<close>
+  shows \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> \<le> \<EE> *\<^sub>k\<^sub>r @Y \<rho>\<close>
+proof -
+  wlog \<open>Y \<noteq> {}\<close>
+    using assms(1) negation by auto
+  have [simp]: \<open>X \<union> Y = Y\<close>
+    using assms(1) by blast
+  from kf_apply_on_union_infsum[where F=\<open>{X, Y-X}\<close> and \<EE>=\<EE> and \<rho>=\<rho>]
+  have \<open>(\<Sum>X\<in>{X, Y - X}. \<EE> *\<^sub>k\<^sub>r @X \<rho>) = \<EE> *\<^sub>k\<^sub>r @Y \<rho>\<close>
+    by (auto simp: disjnt_iff sum.insert)
+  then have \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> + \<EE> *\<^sub>k\<^sub>r @(Y-X) \<rho> = \<EE> *\<^sub>k\<^sub>r @Y \<rho>\<close> 
+    apply (subst (asm) sum.insert)
+    using \<open>Y \<noteq> {}\<close>     
+    by auto
+  moreover have \<open>\<EE> *\<^sub>k\<^sub>r @(Y-X) \<rho> \<ge> 0\<close>
+    by (simp add: assms(2) kf_apply_on_pos)
+  ultimately show \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> \<le> \<EE> *\<^sub>k\<^sub>r @Y \<rho>\<close>
+    by (metis le_add_same_cancel1)
+qed
+
+
 subsection \<open>Equivalence\<close>
 
 definition \<open>kf_eq_weak \<EE> \<FF> \<longleftrightarrow> kf_apply \<EE> = kf_apply \<FF>\<close>
@@ -1255,28 +1282,6 @@ lemma kf_apply_eq0I:
   shows \<open>\<EE> *\<^sub>k\<^sub>r \<rho> = 0\<close>
   using assms kf_eq_weak_def by force
 
-(* TODO move up *)
-lemma kf_apply_on_mono_set:
-  assumes \<open>X \<subseteq> Y\<close> and \<open>\<rho> \<ge> 0\<close>
-  shows \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> \<le> \<EE> *\<^sub>k\<^sub>r @Y \<rho>\<close>
-proof -
-  wlog \<open>Y \<noteq> {}\<close>
-    using assms(1) negation by auto
-  have [simp]: \<open>X \<union> Y = Y\<close>
-    using assms(1) by blast
-  from kf_apply_on_union_infsum[where F=\<open>{X, Y-X}\<close> and \<EE>=\<EE> and \<rho>=\<rho>]
-  have \<open>(\<Sum>X\<in>{X, Y - X}. \<EE> *\<^sub>k\<^sub>r @X \<rho>) = \<EE> *\<^sub>k\<^sub>r @Y \<rho>\<close>
-    by (auto simp: disjnt_iff sum.insert)
-  then have \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> + \<EE> *\<^sub>k\<^sub>r @(Y-X) \<rho> = \<EE> *\<^sub>k\<^sub>r @Y \<rho>\<close> 
-    apply (subst (asm) sum.insert)
-    using \<open>Y \<noteq> {}\<close>     
-    by auto
-  moreover have \<open>\<EE> *\<^sub>k\<^sub>r @(Y-X) \<rho> \<ge> 0\<close>
-    by (simp add: assms(2) kf_apply_on_pos)
-  ultimately show \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> \<le> \<EE> *\<^sub>k\<^sub>r @Y \<rho>\<close>
-    by (metis le_add_same_cancel1)
-qed
-
 lemma kf_eq_weak0_imp_kf_eq0:
   assumes \<open>\<EE> =\<^sub>k\<^sub>r 0\<close>
   shows \<open>\<EE> \<equiv>\<^sub>k\<^sub>r 0\<close>
@@ -1286,7 +1291,7 @@ proof -
     from assms have \<open>\<EE> *\<^sub>k\<^sub>r @UNIV \<rho> = 0\<close>
       by (simp add: kf_eq_weak_def)
     moreover have \<open>\<EE> *\<^sub>k\<^sub>r @{x} \<rho> \<le> \<EE> *\<^sub>k\<^sub>r @UNIV \<rho>\<close>
-      apply (rule kf_apply_on_mono_set)
+      apply (rule kf_apply_on_mono2)
       using that by auto
     moreover have \<open>\<EE> *\<^sub>k\<^sub>r @{x} \<rho> \<ge> 0\<close>
       using that
@@ -1311,32 +1316,30 @@ proof -
     by simp
 qed
 
-(* TODO rename stuff from here *)
-
-lemma kf_remove_0_equivalent: \<open>kf_remove_0 \<EE> =\<^sub>k\<^sub>r \<EE>\<close>
+lemma kf_remove_0_eq_weak[iff]: \<open>kf_remove_0 \<EE> =\<^sub>k\<^sub>r \<EE>\<close>
   by (simp add: kf_eq_weak_def)
 
-lemma kf_remove_0_equivalent': \<open>kf_remove_0 \<EE> \<equiv>\<^sub>k\<^sub>r \<EE>\<close>
+lemma kf_remove_0_eq[iff]: \<open>kf_remove_0 \<EE> \<equiv>\<^sub>k\<^sub>r \<EE>\<close>
   by (simp add: kf_eq_def kf_apply_on_def kf_filter_remove0)
 
-lemma kf_filter_domain[simp]:
+lemma kf_filter_to_domain[simp]:
   \<open>kf_filter (\<lambda>x. x \<in> kf_domain \<EE>) \<EE> \<equiv>\<^sub>k\<^sub>r \<EE>\<close>
 proof -
   have \<open>kf_filter (\<lambda>x. x \<in> kf_domain \<EE>) \<EE> \<equiv>\<^sub>k\<^sub>r
             kf_remove_0 (kf_filter (\<lambda>x. x \<in> kf_domain \<EE>) \<EE>)\<close>
-    using kf_eq_sym kf_remove_0_equivalent' by blast
+    using kf_eq_sym kf_remove_0_eq by blast
   also have \<open>\<dots> = kf_filter (\<lambda>x. x \<in> kf_domain \<EE>) (kf_remove_0 \<EE>)\<close>
     by (simp add: kf_filter_remove0)
   also have \<open>\<dots> = kf_remove_0 \<EE>\<close>
     apply transfer'
     by (auto simp: image_iff Bex_def)
   also have \<open>\<dots> \<equiv>\<^sub>k\<^sub>r \<EE>\<close>
-    by (simp add: kf_remove_0_equivalent')
+    by (simp add: kf_remove_0_eq)
   finally show ?thesis
     by simp
 qed
 
-lemma kf_remove_0_0_is_0: \<open>E =\<^sub>k\<^sub>r 0 \<longleftrightarrow> kf_remove_0 E = 0\<close>
+lemma kf_eq_0_iff_kf_remove_0_is_0: \<open>E =\<^sub>k\<^sub>r 0 \<longleftrightarrow> kf_remove_0 E = 0\<close>
 proof (rule iffI)
   assume asm: \<open>E =\<^sub>k\<^sub>r 0\<close>
   show \<open>kf_remove_0 E = 0\<close>
@@ -1389,7 +1392,7 @@ next
     by (metis kf_eq_weak_def kf_apply_0 kf_apply_remove_0)
 qed
 
-lemma kf_domain_member_iff:
+lemma in_kf_domain_iff_apply_nonzero:
   \<open>x \<in> kf_domain \<EE> \<longleftrightarrow> kf_apply_on \<EE> {x} \<noteq> 0\<close>
 proof -
   define \<EE>' where \<open>\<EE>' = Rep_kraus_family \<EE>\<close>
@@ -1402,7 +1405,7 @@ proof -
   also have \<open>\<dots> \<longleftrightarrow> kf_remove_0 (kf_filter (\<lambda>y. y=x) \<EE>) = 0\<close>
     using Rep_kraus_family_inject zero_kraus_family.rep_eq by auto
   also have \<open>\<dots> \<longleftrightarrow> kf_apply (kf_filter (\<lambda>y. y=x) \<EE>) = 0\<close>
-    apply (subst kf_remove_0_0_is_0[symmetric])
+    apply (subst kf_eq_0_iff_kf_remove_0_is_0[symmetric])
     by (simp add: kf_eq_weak_def)
   also have \<open>\<dots> \<longleftrightarrow> kf_apply_on \<EE> {x} = 0\<close>
     by (simp add: kf_apply_on_def)
@@ -1410,20 +1413,20 @@ proof -
     by auto
 qed
 
+
 lemma kf_domain_cong:
   assumes \<open>\<EE> \<equiv>\<^sub>k\<^sub>r \<FF>\<close>
   shows \<open>kf_domain \<EE> = kf_domain \<FF>\<close>
   apply (rule Set.set_eqI)
   using assms
-  by (simp add: kf_eq_def kf_domain_member_iff)
-
+  by (simp add: kf_eq_def in_kf_domain_iff_apply_nonzero)
 
 lemma kf_eq_weak_sym:
   assumes \<open>\<EE> =\<^sub>k\<^sub>r \<FF>\<close>
   shows \<open>\<FF> =\<^sub>k\<^sub>r \<EE>\<close>
   by (metis assms kf_eq_weak_def)
 
-lemma kf_eqI_from_equivalent:
+lemma kf_eqI_from_filter_eq_weak:
   assumes \<open>\<And>x. kf_filter ((=) x) E =\<^sub>k\<^sub>r kf_filter ((=) x) F\<close>
   shows \<open>E \<equiv>\<^sub>k\<^sub>r F\<close>
   using assms by (simp add: kf_eq_weak_def kf_eq_def kf_apply_on_def flip_eq_const)
@@ -1440,14 +1443,74 @@ proof -
     by (simp add: kf_eq_weakI)
 qed
 
-
-lemma kf_eq_weak_equivalent'_trans[trans]: \<open>a =\<^sub>k\<^sub>r b \<Longrightarrow> b \<equiv>\<^sub>k\<^sub>r c \<Longrightarrow> a =\<^sub>k\<^sub>r c\<close>
+lemma kf_eq_weak_eq_trans[trans]: \<open>a =\<^sub>k\<^sub>r b \<Longrightarrow> b \<equiv>\<^sub>k\<^sub>r c \<Longrightarrow> a =\<^sub>k\<^sub>r c\<close>
   by (metis kf_eq_imp_eq_weak kf_eq_weak_def)
 
-lemma kf_eq_equivalent_trans[trans]: \<open>a \<equiv>\<^sub>k\<^sub>r b \<Longrightarrow> b =\<^sub>k\<^sub>r c \<Longrightarrow> a =\<^sub>k\<^sub>r c\<close>
+lemma kf_eq_eq_weak_trans[trans]: \<open>a \<equiv>\<^sub>k\<^sub>r b \<Longrightarrow> b =\<^sub>k\<^sub>r c \<Longrightarrow> a =\<^sub>k\<^sub>r c\<close>
   by (metis kf_eq_imp_eq_weak kf_eq_weak_def)
+
+instantiation kraus_family :: (chilbert_space,chilbert_space,type) preorder begin
+definition less_eq_kraus_family where \<open>\<EE> \<le> \<FF> \<longleftrightarrow> (\<forall>x. \<forall>\<rho>\<ge>0. kf_apply_on \<EE> {x} \<rho> \<le> kf_apply_on \<FF> {x} \<rho>)\<close>
+definition less_kraus_family where \<open>\<EE> < \<FF> \<longleftrightarrow> \<EE> \<le> \<FF> \<and> \<not> \<EE> \<equiv>\<^sub>k\<^sub>r \<FF>\<close>
+lemma kf_antisym: \<open>\<EE> \<equiv>\<^sub>k\<^sub>r \<FF> \<longleftrightarrow> \<EE> \<le> \<FF> \<and> \<FF> \<le> \<EE>\<close>
+  for \<EE> \<FF> :: \<open>('a, 'b, 'c) kraus_family\<close>
+  by (smt (verit, ccfv_SIG) kf_apply_on_eqI kf_eqI less_eq_kraus_family_def order.refl
+      order_antisym_conv)
+instance
+proof (intro_classes)
+  fix \<EE> \<FF> \<GG> :: \<open>('a, 'b, 'c) kraus_family\<close>
+  show \<open>(\<EE> < \<FF>) = (\<EE> \<le> \<FF> \<and> \<not> \<FF> \<le> \<EE>)\<close>
+    using kf_antisym less_kraus_family_def by auto
+  show \<open>\<EE> \<le> \<EE>\<close>
+    using less_eq_kraus_family_def by auto
+  show \<open>\<EE> \<le> \<FF> \<Longrightarrow> \<FF> \<le> \<GG> \<Longrightarrow> \<EE> \<le> \<GG>\<close>
+    by (meson basic_trans_rules(23) less_eq_kraus_family_def)
+qed
+end
+
+lemma kf_apply_on_mono1: 
+  assumes \<open>\<EE> \<le> \<FF>\<close> and \<open>\<rho> \<ge> 0\<close> 
+  shows \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> \<le> \<FF> *\<^sub>k\<^sub>r @X \<rho>\<close>
+proof -
+  have [simp]: \<open>\<Union>((\<lambda>x. {x}) ` X) = X\<close> for X :: \<open>'c set\<close>
+    by auto
+  have \<open>((\<lambda>X. \<EE> *\<^sub>k\<^sub>r @X \<rho>) has_sum \<EE> *\<^sub>k\<^sub>r @(\<Union>((\<lambda>x. {x}) ` X)) \<rho>) ((\<lambda>x. {x}) ` X)\<close>
+    for \<EE> :: \<open>('a, 'b, 'c) kraus_family\<close> and X
+    apply (rule kf_apply_on_union_has_sum)
+    by auto
+  then have sum: \<open>((\<lambda>X. \<EE> *\<^sub>k\<^sub>r @X \<rho>) has_sum \<EE> *\<^sub>k\<^sub>r @X \<rho>) ((\<lambda>x. {x}) ` X)\<close>
+    for \<EE> :: \<open>('a, 'b, 'c) kraus_family\<close> and X
+    by simp
+  from assms
+  have leq: \<open>\<EE> *\<^sub>k\<^sub>r @{x} \<rho> \<le> \<FF> *\<^sub>k\<^sub>r @{x} \<rho>\<close> for x
+    by (simp add: less_eq_kraus_family_def)
+  show ?thesis
+    using sum sum apply (rule has_sum_mono_traceclass)
+    using leq by fast
+qed
+
+lemma kf_apply_mono_left: \<open>\<EE> \<le> \<FF> \<Longrightarrow> \<rho> \<ge> 0 \<Longrightarrow> \<EE> *\<^sub>k\<^sub>r \<rho> \<le> \<FF> *\<^sub>k\<^sub>r \<rho>\<close>
+  by (metis kf_apply_on_UNIV kf_apply_on_mono1)
+
+lemma kf_apply_mono:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  assumes \<open>\<EE> \<le> \<FF>\<close> and \<open>\<rho> \<le> \<sigma>\<close>
+  shows \<open>\<EE> *\<^sub>k\<^sub>r \<rho> \<le> \<FF> *\<^sub>k\<^sub>r \<sigma>\<close>
+  by (meson assms(1,2,3) basic_trans_rules(23) kf_apply_mono_left kf_apply_mono_right)
+
+lemma kf_apply_on_mono:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  assumes \<open>\<EE> \<le> \<FF>\<close> and \<open>X \<subseteq> Y\<close> and \<open>\<rho> \<le> \<sigma>\<close>
+  shows \<open>\<EE> *\<^sub>k\<^sub>r @X \<rho> \<le> \<FF> *\<^sub>k\<^sub>r @Y \<sigma>\<close>
+  apply (rule order.trans)
+  using assms(2,1) apply (rule kf_apply_on_mono1)
+  apply (rule order.trans)
+  using assms(3,1) apply (rule kf_apply_on_mono2)
+  using assms(4) by (rule kf_apply_on_mono3)
 
 subsection \<open>Mapping and flattening\<close>
+
+(* TODO rename stuff from here *)
 
 definition kf_related_ops :: \<open>('a::chilbert_space, 'b::chilbert_space, 'x) kraus_family \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) \<Rightarrow> _\<close> where
   \<open>kf_related_ops \<EE> E = {(F,x) \<in> Rep_kraus_family \<EE>. (\<exists>r>0. E = r *\<^sub>R F)}\<close>
@@ -2726,7 +2789,7 @@ proof (rule ext)
 
     have \<open>kf_filter (\<lambda>f'. f' = f) \<FF> \<equiv>\<^sub>k\<^sub>r
              kf_filter (\<lambda>f'. f' = f) (kf_filter (\<lambda>x. x \<in> kf_domain \<FF>) \<FF>)\<close>
-      by (auto intro!: kf_filter_cong intro: kf_eq_sym simp: kf_filter_domain)
+      by (auto intro!: kf_filter_cong intro: kf_eq_sym simp: kf_filter_to_domain)
     also have \<open>\<dots> \<equiv>\<^sub>k\<^sub>r (kf_filter (\<lambda>_. False) \<FF>)\<close>
       using that by (simp add: kf_filter_twice * del: kf_filter_false)
     also have \<open>\<dots> \<equiv>\<^sub>k\<^sub>r 0\<close>
@@ -2941,7 +3004,7 @@ proof -
   then have \<open>kf_comp_dependent 0 E =\<^sub>k\<^sub>r 0\<close>
     by (auto intro!: ext simp: kf_eq_weak_def kf_comp_dependent_apply split_def)
   then have \<open>kf_remove_0 (kf_comp_dependent 0 E) = 0\<close>
-    using kf_remove_0_0_is_0 by auto
+    using kf_eq_0_iff_kf_remove_0_is_0 by auto
   then show \<open>kf_comp_dependent 0 E = 0\<close>
     by (simp add: kf_comp_dependent_def kf_map_outcome_remove_0)
 qed
@@ -2951,7 +3014,7 @@ proof -
   have \<open>kf_comp_dependent E 0 =\<^sub>k\<^sub>r 0\<close>
     by (smt (verit, del_insts) kf_comp_dependent_def kf_eq_weak_def kf_comp_dependent_raw_0R kf_map_outcome_same_map)
   then have \<open>kf_remove_0 (kf_comp_dependent E 0) = 0\<close>
-    using kf_remove_0_0_is_0 by auto
+    using kf_eq_0_iff_kf_remove_0_is_0 by auto
   then show \<open>kf_comp_dependent E 0 = 0\<close>
     by (simp add: kf_comp_dependent_def kf_map_outcome_remove_0)
 qed
@@ -4055,7 +4118,7 @@ proof (intro Set.set_eqI iffI UNIV_I)
  finally have \<open>kf_apply_on (kraus_map_partial_trace :: (('b\<times>'a) ell2, 'b ell2, 'a) kraus_family) {x} \<noteq> 0\<close>
     by auto
   then show \<open>x \<in> kf_domain (kraus_map_partial_trace :: (('b\<times>'a) ell2, 'b ell2, 'a) kraus_family)\<close>
-    by (rule kf_domain_member_iff[THEN iffD2])
+    by (rule in_kf_domain_iff_apply_nonzero[THEN iffD2])
 qed
 
 
@@ -4077,7 +4140,7 @@ proof (intro Set.set_eqI iffI UNIV_I)
  finally have \<open>kf_apply_on (kraus_map_partial_trace' :: (('a\<times>'b) ell2, 'b ell2, 'a) kraus_family) {x} \<noteq> 0\<close>
     by auto
   then show \<open>x \<in> kf_domain (kraus_map_partial_trace' :: (('a\<times>'b) ell2, 'b ell2, 'a) kraus_family)\<close>
-    by (rule kf_domain_member_iff[THEN iffD2])
+    by (rule in_kf_domain_iff_apply_nonzero[THEN iffD2])
 qed
 
 subsection \<open>Complete measurement\<close>
