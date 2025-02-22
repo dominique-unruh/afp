@@ -1,5 +1,6 @@
 theory Misc_Kraus_Maps
   imports Hilbert_Space_Tensor_Product.Trace_Class
+    Hilbert_Space_Tensor_Product.Hilbert_Space_Tensor_Product
 begin
 
 (* TODO: move to BO and Tensor as suitable. *)
@@ -142,6 +143,104 @@ lemma has_sum_scaleC_right:
   shows \<open>((\<lambda>x. c *\<^sub>C f x) has_sum c *\<^sub>C s) A\<close>
   apply (rule has_sum_bounded_clinear[where h=\<open>(*\<^sub>C) c\<close>])
   using bounded_clinear_scaleC_right assms by auto
+
+lemma norm_cblinfun_bound_both_sides:
+  fixes a :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner\<close>
+  assumes \<open>b \<ge> 0\<close>
+  assumes leq: \<open>\<And>\<psi> \<phi>. norm \<psi> = 1 \<Longrightarrow> norm \<phi> = 1 \<Longrightarrow> norm (\<psi> \<bullet>\<^sub>C a \<phi>) \<le> b\<close>
+  shows \<open>norm a \<le> b\<close>
+proof -
+  wlog not_singleton: \<open>class.not_singleton TYPE('a)\<close>
+    apply (subst not_not_singleton_cblinfun_zero)
+    by (simp_all add: negation assms)
+  have \<open>norm a = (\<Squnion>(\<psi>, \<phi>). cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<phi>)) / (norm \<psi> * norm \<phi>))\<close>
+    apply (rule cinner_sup_norm_cblinfun[internalize_sort' 'a])
+     apply (rule complex_normed_vector_axioms)
+    by (fact not_singleton)
+  also have \<open>\<dots> \<le> b\<close>
+  proof (rule cSUP_least)
+    show \<open>UNIV \<noteq> {}\<close>
+      by simp
+    fix x :: \<open>'b \<times> 'a\<close>
+    obtain \<psi> \<phi> where x: \<open>x = (\<psi>, \<phi>)\<close>
+      by fastforce
+    have \<open>(case x of (\<psi>, \<phi>) \<Rightarrow> cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<phi>)) / (norm \<psi> * norm \<phi>)) = cmod (\<psi> \<bullet>\<^sub>C a \<phi>) / (norm \<psi> * norm \<phi>)\<close>
+      using x by force
+    also have \<open>\<dots> = cmod (sgn \<psi> \<bullet>\<^sub>C a (sgn \<phi>))\<close>
+      by (simp add: sgn_div_norm cblinfun.scaleR_right divide_inverse_commute norm_inverse norm_mult)
+    also have \<open>\<dots> \<le> b\<close>
+      apply (cases \<open>\<psi> = 0\<close>, simp add: assms)
+      apply (cases \<open>\<phi> = 0\<close>, simp add: assms)
+      apply (rule leq)
+      by (simp_all add: norm_sgn)
+    finally show \<open>(case x of (\<psi>, \<phi>) \<Rightarrow> cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<phi>)) / (norm \<psi> * norm \<phi>)) \<le> b\<close>
+      by -
+  qed
+  finally show ?thesis
+    by -
+qed
+
+lemma has_sum_in_weaker_topology:
+  assumes \<open>continuous_map T U (\<lambda>f. f)\<close>
+  assumes \<open>has_sum_in T f A l\<close>
+  shows \<open>has_sum_in U f A l\<close>
+  using continuous_map_limit[OF assms(1)]
+  using assms(2)
+  by (auto simp: has_sum_in_def o_def)
+
+lemma summable_on_in_weaker_topology:
+  assumes \<open>continuous_map T U (\<lambda>f. f)\<close>
+  assumes \<open>summable_on_in T f A\<close>
+  shows \<open>summable_on_in U f A\<close>
+  by (meson assms(1,2) has_sum_in_weaker_topology summable_on_in_def)
+
+lemma summable_imp_wot_summable: 
+  assumes \<open>f summable_on A\<close>
+  shows \<open>summable_on_in cweak_operator_topology f A\<close>
+  apply (rule summable_on_in_weaker_topology)
+   apply (rule cweak_operator_topology_weaker_than_euclidean)
+  by (simp add: assms summable_on_euclidean_eq)
+
+lemma triangle_ineq_wot:
+  assumes \<open>f abs_summable_on A\<close>
+  shows \<open>norm (infsum_in cweak_operator_topology f A) \<le> (\<Sum>\<^sub>\<infinity>x\<in>A. norm (f x))\<close>
+proof -
+  wlog summable: \<open>summable_on_in cweak_operator_topology f A\<close>
+    by (simp add: infsum_nonneg negation not_summable_infsum_in_0)
+  have \<open>cmod (\<psi> \<bullet>\<^sub>C (infsum_in cweak_operator_topology f A *\<^sub>V \<phi>)) \<le> (\<Sum>\<^sub>\<infinity>x\<in>A. norm (f x))\<close>
+    if \<open>norm \<psi> = 1\<close> and \<open>norm \<phi> = 1\<close> for \<psi> \<phi>
+  proof -
+    have sum1: \<open>(\<lambda>a. \<psi> \<bullet>\<^sub>C (f a *\<^sub>V \<phi>)) abs_summable_on A\<close>
+      by (metis local.summable summable_on_iff_abs_summable_on_complex summable_on_in_cweak_operator_topology_pointwise)
+    have \<open>\<psi> \<bullet>\<^sub>C infsum_in cweak_operator_topology f A \<phi> = (\<Sum>\<^sub>\<infinity>a\<in>A. \<psi> \<bullet>\<^sub>C f a \<phi>)\<close>
+      using summable by (rule infsum_in_cweak_operator_topology_pointwise)
+    then have \<open>cmod (\<psi> \<bullet>\<^sub>C (infsum_in cweak_operator_topology f A *\<^sub>V \<phi>)) = norm (\<Sum>\<^sub>\<infinity>a\<in>A. \<psi> \<bullet>\<^sub>C f a \<phi>)\<close>
+      by presburger
+    also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>a\<in>A. norm (\<psi> \<bullet>\<^sub>C f a \<phi>))\<close>
+      apply (rule norm_infsum_bound)
+      by (metis summable summable_on_iff_abs_summable_on_complex
+          summable_on_in_cweak_operator_topology_pointwise)
+    also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>a\<in>A. norm (f a))\<close>
+      using sum1 assms apply (rule infsum_mono)
+      by (smt (verit) complex_inner_class.Cauchy_Schwarz_ineq2 mult_cancel_left1 mult_cancel_right1 norm_cblinfun that(1,2))
+    finally show ?thesis
+      by -
+  qed
+  then show ?thesis
+    apply (rule_tac norm_cblinfun_bound_both_sides)
+    by (auto simp: infsum_nonneg)
+qed
+
+lemma trace_tc_butterfly: \<open>trace_tc (tc_butterfly x y) = y \<bullet>\<^sub>C x\<close>
+  apply (transfer fixing: x y)
+  by (rule trace_butterfly)
+
+lemma sandwich_tensor_ell2_right': \<open>sandwich (tensor_ell2_right \<psi>) *\<^sub>V a = a \<otimes>\<^sub>o selfbutter \<psi>\<close>
+  apply (rule cblinfun_cinner_tensor_eqI)
+  by (simp add: sandwich_apply tensor_op_ell2 cblinfun.scaleC_right)
+lemma sandwich_tensor_ell2_left': \<open>sandwich (tensor_ell2_left \<psi>) *\<^sub>V a = selfbutter \<psi> \<otimes>\<^sub>o a\<close>
+  apply (rule cblinfun_cinner_tensor_eqI)
+  by (simp add: sandwich_apply tensor_op_ell2 cblinfun.scaleC_right)
 
 
 

@@ -333,7 +333,7 @@ lemma kf_bound_leqI:
   using kf_bound_is_Sup[of \<EE>]
   by (simp add: assms is_Sup_def)
 
-lemma kf_bound_pos[simp]: \<open>kf_bound \<EE> \<ge> 0\<close>
+lemma kf_bound_pos[iff]: \<open>kf_bound \<EE> \<ge> 0\<close>
   using kf_bound_is_Sup[of \<EE>]
   by (metis (no_types, lifting) empty_subsetI finite.emptyI image_iff is_Sup_def mem_Collect_eq sum.empty)
 
@@ -575,9 +575,11 @@ end
 lemma kf_apply_0[simp]: \<open>kf_apply 0 = 0\<close>
   by (auto simp: kf_apply_def zero_kraus_family.rep_eq)
 
-lemma kf_norm_0[simp]: \<open>kf_norm 0 = 0\<close>
-  apply (simp add: kf_norm_def zero_kraus_family.rep_eq)
+lemma kf_bound_0[simp]: \<open>kf_bound 0 = 0\<close>
   by (metis (mono_tags, lifting) finite.intros(1) kf_bound.rep_eq kf_bound_finite sum_clauses(1) zero_kraus_family.rep_eq)
+
+lemma kf_norm_0[simp]: \<open>kf_norm 0 = 0\<close>
+  by (simp add: kf_norm_def zero_kraus_family.rep_eq)
 
 lift_definition kf_of_op :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) \<Rightarrow> ('a, 'b, unit) kraus_family\<close> is
   \<open>\<lambda>E::'a\<Rightarrow>\<^sub>C\<^sub>L'b. {(E, ())}\<close>
@@ -598,47 +600,6 @@ lemma kf_norm_id_leq1: \<open>kf_norm kf_id \<le> 1\<close>
 
 lemma kf_norm_id_eq1[simp]: \<open>kf_norm (kf_id :: ('a :: {chilbert_space, not_singleton},'a,unit) kraus_family) = 1\<close>
   by (auto intro!: antisym kf_norm_id_leq1 simp: kf_id_def simp del: kf_of_op_id)
-
-lift_definition kf_plus :: \<open>('a::chilbert_space, 'b::chilbert_space, 'x) kraus_family \<Rightarrow> ('a,'b,'y) kraus_family \<Rightarrow> ('a,'b,'x+'y) kraus_family\<close> is
-  \<open>\<lambda>\<EE> \<FF>. (\<lambda>(E,x). (E, Inl x)) ` \<EE> \<union> (\<lambda>(F,y). (F, Inr y)) ` \<FF>\<close>
-proof (rename_tac \<EE> \<FF>)
-  fix \<EE> :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b \<times> 'x) set\<close> and \<FF> :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b \<times> 'y) set\<close>
-  assume \<open>\<EE> \<in> Collect kraus_family\<close> and \<open>\<FF> \<in> Collect kraus_family\<close>
-  then have \<open>kraus_family \<EE>\<close> and \<open>kraus_family \<FF>\<close>
-    by auto
-  then have \<open>kraus_family ((\<lambda>(E, x). (E, Inl x)) ` \<EE> \<union> (\<lambda>(F, y). (F, Inr y)) ` \<FF>)\<close>
-    by (auto intro!: summable_on_Un_disjoint
-      summable_on_reindex[THEN iffD2] inj_onI
-      simp: kraus_family_iff_summable' o_def case_prod_unfold conj_commute)
-  then show \<open>(\<lambda>(E, x). (E, Inl x)) ` \<EE> \<union> (\<lambda>(F, y). (F, Inr y)) ` \<FF> \<in> Collect kraus_family\<close>
-    by simp
-qed
-
-lemma kf_apply_plus:
-  fixes \<EE> :: \<open>('a::chilbert_space, 'b::chilbert_space, 'x) kraus_family\<close>
-    and \<FF> :: \<open>('a, 'b, 'y) kraus_family\<close>
-  shows \<open>kf_apply (kf_plus \<EE> \<FF>) \<rho> = kf_apply \<EE> \<rho> + kf_apply \<FF> \<rho>\<close>
-proof -
-  have \<open>kf_apply (kf_plus \<EE> \<FF>) \<rho> = 
-    (\<Sum>\<^sub>\<infinity>EF\<in>(\<lambda>(E,x). (E, Inl x)) ` Rep_kraus_family \<EE> \<union> (\<lambda>(F,y). (F, Inr y)) ` Rep_kraus_family \<FF>. sandwich_tc (fst EF) \<rho>)\<close>
-    by (simp add: kf_plus.rep_eq kf_apply_def case_prod_unfold)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>EF\<in>(\<lambda>(E,x). (E, Inl x :: 'x+'y)) ` Rep_kraus_family \<EE>. sandwich_tc (fst EF) \<rho>)
-                + (\<Sum>\<^sub>\<infinity>EF\<in>(\<lambda>(F,y). (F, Inr y :: 'x+'y)) ` Rep_kraus_family \<FF>. sandwich_tc (fst EF) \<rho>)\<close>
-    apply (subst infsum_Un_disjoint)
-    using kf_apply_summable
-    by (auto intro!: summable_on_reindex[THEN iffD2] inj_onI
-        simp: o_def case_prod_unfold kf_apply_summable)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>E\<in>Rep_kraus_family \<EE>. sandwich_tc (fst E) \<rho>) + (\<Sum>\<^sub>\<infinity>F\<in>Rep_kraus_family \<FF>. sandwich_tc (fst F) \<rho>)\<close>
-    apply (subst infsum_reindex)
-     apply (auto intro!: inj_onI)[1]
-    apply (subst infsum_reindex)
-     apply (auto intro!: inj_onI)[1]
-    by (simp add:  o_def case_prod_unfold)
-  also have \<open>\<dots> = kf_apply \<EE> \<rho> + kf_apply \<FF> \<rho>\<close>
-    by (simp add: kf_apply_def)
-  finally show ?thesis
-    by -
-qed
 
 instantiation kraus_family :: (chilbert_space, chilbert_space, type) scaleR begin
 lift_definition scaleR_kraus_family :: \<open>real \<Rightarrow> ('a::chilbert_space,'b::chilbert_space,'x) kraus_family \<Rightarrow> ('a,'b,'x) kraus_family\<close> is
@@ -702,6 +663,14 @@ next
     by (simp add: kf_apply.rep_eq scaleR_kraus_family.rep_eq)
 qed
 
+lemma kf_bound_scale[simp]: \<open>kf_bound (c *\<^sub>R \<EE>) = c *\<^sub>R kf_bound \<EE>\<close> if \<open>c \<ge> 0\<close>
+  apply (rule cblinfun_cinner_eqI)
+  using that
+  by (simp add: kf_bound_from_map cblinfun.scaleR_left kf_scale_apply scaleR_scaleC trace_tc_scaleC)
+
+lemma kf_norm_scale[simp]: \<open>kf_norm (c *\<^sub>R \<EE>) = c * kf_norm \<EE>\<close> if \<open>c \<ge> 0\<close>
+  by (simp add: kf_norm_def that)
+
 lemma kf_of_op_apply: \<open>kf_apply (kf_of_op E) \<rho> = sandwich_tc E \<rho>\<close>
   by (simp add: kf_apply_def kf_of_op.rep_eq)
 
@@ -718,124 +687,6 @@ lemma kf_scale_apply_neg:
 lemma kf_apply_0_left[iff]: \<open>kf_apply 0 \<rho> = 0\<close>
   apply (transfer' fixing: \<rho>)
   by simp
-
-lift_definition kf_constant :: \<open>('b,'b) trace_class \<Rightarrow> ('a::one_dim, 'b::chilbert_space, unit) kraus_family\<close> is
-  \<open>\<lambda>t::('b,'b) trace_class. if t \<ge> 0 then
-    (\<lambda>v. (vector_to_cblinfun v,())) ` spectral_dec_vecs_tc t
-  else {}\<close>
-proof (rule CollectI, rename_tac t)
-  fix t :: \<open>('b,'b) trace_class\<close>
-  show \<open>kraus_family (if t \<ge> 0 then (\<lambda>v. (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b,())) ` spectral_dec_vecs_tc t else {})\<close>
-  proof (cases \<open>t \<ge> 0\<close>)
-    case True
-    have \<open>kraus_family ((\<lambda>v. (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b,())) ` spectral_dec_vecs_tc t)\<close>
-    proof (intro kraus_familyI bdd_aboveI, rename_tac E)
-      fix E :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
-      assume \<open>E \<in> (\<lambda>F. \<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E) ` {F. finite F \<and> F \<subseteq> (\<lambda>v. (vector_to_cblinfun v, ())) ` spectral_dec_vecs_tc t}\<close>
-      then obtain F where E_def: \<open>E = (\<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E)\<close> and \<open>finite F\<close> and \<open>F \<subseteq> (\<lambda>v. (vector_to_cblinfun v, ())) ` spectral_dec_vecs_tc t\<close>
-        by blast
-      then obtain F' where F_def: \<open>F = (\<lambda>v. (vector_to_cblinfun v, ())) ` F'\<close> and \<open>finite F'\<close> and F'_subset: \<open>F' \<subseteq> spectral_dec_vecs_tc t\<close>
-        by (meson finite_subset_image)
-      have inj: \<open>inj_on (\<lambda>v. (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b, ())) F'\<close>
-      proof (rule inj_onI, rule ccontr)
-        fix x y
-        assume \<open>x \<in> F'\<close> and \<open>y \<in> F'\<close>
-        assume eq: \<open>(vector_to_cblinfun x :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b, ()) = (vector_to_cblinfun y, ())\<close>
-        assume \<open>x \<noteq> y\<close>
-        have ortho: \<open>is_ortho_set (spectral_dec_vecs (from_trace_class t))\<close>
-          using True
-          by (auto intro!: spectral_dec_vecs_ortho trace_class_compact pos_selfadjoint
-              simp: selfadjoint_tc.rep_eq from_trace_class_pos)
-        with \<open>x \<noteq> y\<close> F'_subset \<open>x \<in> F'\<close> \<open>y \<in> F'\<close>
-        have \<open>x \<bullet>\<^sub>C y = 0\<close>
-          by (auto simp: spectral_dec_vecs_tc.rep_eq is_ortho_set_def)
-        then have \<open>(vector_to_cblinfun x :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b)* o\<^sub>C\<^sub>L (vector_to_cblinfun y :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b) = 0\<close>
-          by simp
-        with eq have \<open>(vector_to_cblinfun x :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b)= 0\<close>
-          by force
-        then have \<open>norm x = 0\<close>
-          by (smt (verit, del_insts) norm_vector_to_cblinfun norm_zero)
-        with ortho F'_subset \<open>x \<in> F'\<close> show False
-          by (auto simp: spectral_dec_vecs_tc.rep_eq is_ortho_set_def)
-      qed
-      have \<open>E = (\<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E)\<close>
-        by (simp add: E_def)
-      also have \<open>\<dots> = (\<Sum>v\<in>F'. (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b)* o\<^sub>C\<^sub>L vector_to_cblinfun v)\<close>
-        unfolding F_def
-        apply (subst sum.reindex)
-        by (auto intro!: inj)
-      also have \<open>\<dots> = (\<Sum>v\<in>F'. ((norm (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b))\<^sup>2) *\<^sub>R 1)\<close>
-        by (auto intro!: sum.cong simp: power2_norm_eq_cinner scaleR_scaleC)
-      also have \<open>\<dots> = (\<Sum>v\<in>F'. (norm (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b))\<^sup>2) *\<^sub>R 1\<close>
-        by (metis scaleR_left.sum)
-      also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>v\<in>F'. (norm (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b))\<^sup>2) *\<^sub>R 1\<close>
-        using \<open>finite F'\<close> by force
-      also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>v\<in>spectral_dec_vecs_tc t. (norm (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b))\<^sup>2) *\<^sub>R 1\<close>
-        apply (intro scaleR_right_mono infsum_mono_neutral)
-        using F'_subset
-        by (auto intro!: one_dim_cblinfun_one_pos spectral_dec_vec_tc_norm_summable True
-            simp: \<open>finite F'\<close> )
-      finally show \<open>E \<le> (\<Sum>\<^sub>\<infinity>v\<in>spectral_dec_vecs_tc t. (norm (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b))\<^sup>2) *\<^sub>R 1\<close>
-        by -
-    qed
-    with True show ?thesis
-      by simp
-  next
-    case False
-    then show ?thesis
-      by simp
-  qed
-qed
-
-lemma kf_constant_apply: 
-  assumes \<open>\<rho> \<ge> 0\<close>
-  shows \<open>kf_apply (kf_constant \<rho>) \<sigma> = one_dim_iso \<sigma> *\<^sub>C \<rho>\<close>
-proof -
-  have \<open>kf_apply (kf_constant \<rho>) \<sigma>
-         = (\<Sum>\<^sub>\<infinity>(E,x)\<in>(\<lambda>v. (vector_to_cblinfun v, ())) ` spectral_dec_vecs_tc \<rho>. sandwich_tc E \<sigma>)\<close>
-    by (simp add: assms kf_apply.rep_eq kf_constant.rep_eq case_prod_unfold)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>v \<in> spectral_dec_vecs_tc \<rho>. sandwich_tc (vector_to_cblinfun v) \<sigma>)\<close>
-    apply (subst infsum_reindex)
-    using vector_to_cblinfun_inj[of UNIV]
-    by (auto simp: o_def inj_on_def)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>v \<in> spectral_dec_vecs_tc \<rho>. one_dim_iso \<sigma> *\<^sub>C tc_butterfly v v)\<close>
-    apply (rule infsum_cong)
-    apply (subst one_dim_scaleC_1[symmetric])
-    apply (rule from_trace_class_inject[THEN iffD1])
-    apply (simp only: sandwich_tc_def compose_tcl.rep_eq compose_tcr.rep_eq scaleC_trace_class.rep_eq
-        tc_butterfly.rep_eq cblinfun_compose_scaleC_right cblinfun_compose_scaleC_left)
-    by (simp flip: butterfly_def_one_dim)
-  also have \<open>\<dots> = one_dim_iso \<sigma> *\<^sub>C (\<Sum>\<^sub>\<infinity>v \<in> spectral_dec_vecs_tc \<rho>. tc_butterfly v v)\<close>
-    using infsum_scaleC_right by fastforce
-  also have \<open>\<dots> = one_dim_iso \<sigma> *\<^sub>C \<rho>\<close>
-    by (simp add: assms butterfly_spectral_dec_vec_tc_has_sum infsumI)
-  finally show ?thesis
-    by -
-qed
-
-lemma kf_bound_constant: 
-  fixes \<rho> :: \<open>('a::chilbert_space, 'a) trace_class\<close>
-  assumes \<open>\<rho> \<ge> 0\<close>
-  shows \<open>kf_bound (kf_constant \<rho>) = trace_tc \<rho> *\<^sub>C id_cblinfun\<close>
-proof (rule cblinfun_cinner_eqI)
-  fix \<psi> :: 'b assume \<open>norm \<psi> = 1\<close>
-  have \<open>\<psi> \<bullet>\<^sub>C kf_bound (kf_constant \<rho>) \<psi> = trace_tc (kf_apply (kf_constant \<rho>) (tc_butterfly \<psi> \<psi>))\<close>
-    by (rule kf_bound_from_map)
-  also have \<open>\<dots> = trace_tc (trace_tc (tc_butterfly \<psi> \<psi>) *\<^sub>C \<rho>)\<close>
-    by (simp add: kf_constant_apply assms)
-  also have \<open>\<dots> = trace_tc \<rho>\<close>
-    by (metis \<open>norm \<psi> = 1\<close> cinner_complex_def complex_cnj_one complex_vector.vector_space_assms(4) norm_mult norm_one norm_tc_butterfly norm_tc_pos of_real_hom.hom_one one_cinner_one tc_butterfly_pos)
-  also have \<open>\<dots> = \<psi> \<bullet>\<^sub>C (trace_tc \<rho> *\<^sub>C id_cblinfun) \<psi>\<close>
-    by (metis \<open>norm \<psi> = 1\<close> cblinfun.scaleC_left cinner_scaleC_right cnorm_eq_1 id_apply id_cblinfun.rep_eq of_complex_def one_dim_iso_id one_dim_iso_is_of_complex scaleC_conv_of_complex)
-  finally show \<open>\<psi> \<bullet>\<^sub>C kf_bound (kf_constant \<rho>) \<psi> = \<psi> \<bullet>\<^sub>C (trace_tc \<rho> *\<^sub>C id_cblinfun) \<psi>\<close>
-    by -
-qed
-
-lemma kf_norm_constant:
-  assumes \<open>\<rho> \<ge> 0\<close>
-  shows \<open>kf_norm (kf_constant \<rho>) = norm \<rho>\<close>
-  using assms
-  by (simp add: kf_norm_def kf_bound_constant cmod_Re norm_tc_pos_Re trace_tc_pos)
 
 lemma kf_bound_of_op[simp]: \<open>kf_bound (kf_of_op A) = A* o\<^sub>C\<^sub>L A\<close>
   by (simp add: kf_bound_def kf_of_op.rep_eq infsum_in_finite)
@@ -1510,7 +1361,7 @@ lemma kf_apply_on_mono:
 
 subsection \<open>Mapping and flattening\<close>
 
-definition kf_similar_elements :: \<open>('a::chilbert_space, 'b::chilbert_space, 'x) kraus_family \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) \<Rightarrow> _\<close> where
+definition kf_similar_elements :: \<open>('a::chilbert_space, 'b::chilbert_space, 'x) kraus_family \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'b \<times> 'x) set\<close> where
   \<comment> \<open>All elements of the Kraus family that are equal up to rescaling (and belong to the same output)\<close>
   \<open>kf_similar_elements \<EE> E = {(F,x) \<in> Rep_kraus_family \<EE>. (\<exists>r>0. E = r *\<^sub>R F)}\<close>
 
@@ -2003,6 +1854,12 @@ proof (rule kf_eqI)
     by -
 qed
 
+lemma kf_map_inj_id[simp]: \<open>kf_map_inj id \<EE> = \<EE>\<close>
+  apply transfer' by simp
+
+lemma kf_map_id: \<open>kf_map id \<EE> \<equiv>\<^sub>k\<^sub>r \<EE>\<close>
+  by (metis inj_on_id kf_eq_sym kf_map_inj_eq_kf_map kf_map_inj_id)
+
 lemma kf_map_inj_bound[simp]:
   fixes \<EE> :: \<open>('a::chilbert_space,'b::chilbert_space,'x) kraus_family\<close>
   assumes \<open>inj_on f (kf_domain \<EE>)\<close>
@@ -2151,6 +2008,131 @@ lemma kf_apply_on_map[simp]:
 lemma kf_map0[simp]: \<open>kf_map f 0 = 0\<close>
   apply transfer'
   by auto
+
+subsection \<open>Addition\<close>
+
+lift_definition kf_plus :: \<open>('a::chilbert_space, 'b::chilbert_space, 'x) kraus_family \<Rightarrow> ('a,'b,'y) kraus_family \<Rightarrow> ('a,'b,'x+'y) kraus_family\<close> is
+  \<open>\<lambda>\<EE> \<FF>. (\<lambda>(E,x). (E, Inl x)) ` \<EE> \<union> (\<lambda>(F,y). (F, Inr y)) ` \<FF>\<close>
+proof (rename_tac \<EE> \<FF>)
+  fix \<EE> :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b \<times> 'x) set\<close> and \<FF> :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b \<times> 'y) set\<close>
+  assume \<open>\<EE> \<in> Collect kraus_family\<close> and \<open>\<FF> \<in> Collect kraus_family\<close>
+  then have \<open>kraus_family \<EE>\<close> and \<open>kraus_family \<FF>\<close>
+    by auto
+  then have \<open>kraus_family ((\<lambda>(E, x). (E, Inl x)) ` \<EE> \<union> (\<lambda>(F, y). (F, Inr y)) ` \<FF>)\<close>
+    by (auto intro!: summable_on_Un_disjoint
+      summable_on_reindex[THEN iffD2] inj_onI
+      simp: kraus_family_iff_summable' o_def case_prod_unfold conj_commute)
+  then show \<open>(\<lambda>(E, x). (E, Inl x)) ` \<EE> \<union> (\<lambda>(F, y). (F, Inr y)) ` \<FF> \<in> Collect kraus_family\<close>
+    by simp
+qed
+
+instantiation kraus_family :: (chilbert_space, chilbert_space, type) plus begin
+definition plus_kraus_family where \<open>\<EE> + \<FF> = kf_map (\<lambda>xy. case xy of Inl x \<Rightarrow> x | Inr y \<Rightarrow> y) (kf_plus \<EE> \<FF>)\<close>
+instance..
+end
+
+lemma kf_plus_apply:
+  fixes \<EE> :: \<open>('a::chilbert_space, 'b::chilbert_space, 'x) kraus_family\<close>
+    and \<FF> :: \<open>('a, 'b, 'y) kraus_family\<close>
+  shows \<open>kf_apply (kf_plus \<EE> \<FF>) \<rho> = kf_apply \<EE> \<rho> + kf_apply \<FF> \<rho>\<close>
+proof -
+  have \<open>kf_apply (kf_plus \<EE> \<FF>) \<rho> = 
+    (\<Sum>\<^sub>\<infinity>EF\<in>(\<lambda>(E,x). (E, Inl x)) ` Rep_kraus_family \<EE> \<union> (\<lambda>(F,y). (F, Inr y)) ` Rep_kraus_family \<FF>. sandwich_tc (fst EF) \<rho>)\<close>
+    by (simp add: kf_plus.rep_eq kf_apply_def case_prod_unfold)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>EF\<in>(\<lambda>(E,x). (E, Inl x :: 'x+'y)) ` Rep_kraus_family \<EE>. sandwich_tc (fst EF) \<rho>)
+                + (\<Sum>\<^sub>\<infinity>EF\<in>(\<lambda>(F,y). (F, Inr y :: 'x+'y)) ` Rep_kraus_family \<FF>. sandwich_tc (fst EF) \<rho>)\<close>
+    apply (subst infsum_Un_disjoint)
+    using kf_apply_summable
+    by (auto intro!: summable_on_reindex[THEN iffD2] inj_onI
+        simp: o_def case_prod_unfold kf_apply_summable)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>E\<in>Rep_kraus_family \<EE>. sandwich_tc (fst E) \<rho>) + (\<Sum>\<^sub>\<infinity>F\<in>Rep_kraus_family \<FF>. sandwich_tc (fst F) \<rho>)\<close>
+    apply (subst infsum_reindex)
+     apply (auto intro!: inj_onI)[1]
+    apply (subst infsum_reindex)
+     apply (auto intro!: inj_onI)[1]
+    by (simp add:  o_def case_prod_unfold)
+  also have \<open>\<dots> = kf_apply \<EE> \<rho> + kf_apply \<FF> \<rho>\<close>
+    by (simp add: kf_apply_def)
+  finally show ?thesis
+    by -
+qed
+
+lemma kf_plus_apply': \<open>(\<EE> + \<FF>) *\<^sub>k\<^sub>r \<rho> = \<EE> *\<^sub>k\<^sub>r \<rho> + \<FF> *\<^sub>k\<^sub>r \<rho>\<close>
+  by (simp add: kf_plus_apply plus_kraus_family_def)
+
+lemma kf_plus_0_left[simp]: \<open>kf_plus 0 \<EE> = kf_map_inj Inr \<EE>\<close>
+  apply transfer' by auto
+
+lemma kf_plus_0_right[simp]: \<open>kf_plus \<EE> 0 = kf_map_inj Inl \<EE>\<close>
+  apply transfer' by auto
+
+lemma kf_plus_0_left'[simp]: \<open>0 + \<EE> \<equiv>\<^sub>k\<^sub>r \<EE>\<close>
+proof -
+  define merge where \<open>merge xy = (case xy of Inl x \<Rightarrow> x | Inr y \<Rightarrow> y)\<close> for xy :: \<open>'c + 'c\<close>
+  have \<open>0 + \<EE> = kf_map merge (kf_map_inj Inr \<EE>)\<close>
+    by (simp add: plus_kraus_family_def merge_def[abs_def])
+  also have \<open>\<dots> \<equiv>\<^sub>k\<^sub>r kf_map merge (kf_map Inr \<EE>)\<close>
+    by (auto intro!: kf_map_cong kf_map_inj_eq_kf_map)
+  also have \<open>\<dots> \<equiv>\<^sub>k\<^sub>r kf_map (merge o Inr) \<EE>\<close>
+  by (simp add: kf_map_twice)
+  also have \<open>\<dots> = kf_map id \<EE>\<close>
+    apply (rule arg_cong2[where f=kf_map])
+    by (auto simp: merge_def)
+  also have \<open>\<dots> \<equiv>\<^sub>k\<^sub>r \<EE>\<close>
+    by (simp add: kf_map_id)
+  finally show ?thesis
+    by -
+qed
+
+lemma kf_plus_0_right': \<open>\<EE> + 0 \<equiv>\<^sub>k\<^sub>r \<EE>\<close>
+proof -
+  define merge where \<open>merge xy = (case xy of Inl x \<Rightarrow> x | Inr y \<Rightarrow> y)\<close> for xy :: \<open>'c + 'c\<close>
+  have \<open>\<EE> + 0 = kf_map merge (kf_map_inj Inl \<EE>)\<close>
+    by (simp add: plus_kraus_family_def merge_def[abs_def])
+  also have \<open>\<dots> \<equiv>\<^sub>k\<^sub>r kf_map merge (kf_map Inl \<EE>)\<close>
+    by (auto intro!: kf_map_cong kf_map_inj_eq_kf_map)
+  also have \<open>\<dots> \<equiv>\<^sub>k\<^sub>r kf_map (merge o Inl) \<EE>\<close>
+  by (simp add: kf_map_twice)
+  also have \<open>\<dots> = kf_map id \<EE>\<close>
+    apply (rule arg_cong2[where f=kf_map])
+    by (auto simp: merge_def)
+  also have \<open>\<dots> \<equiv>\<^sub>k\<^sub>r \<EE>\<close>
+    by (simp add: kf_map_id)
+  finally show ?thesis
+    by -
+qed
+
+lemma kf_plus_bound: \<open>kf_bound (kf_plus \<EE> \<FF>) = kf_bound \<EE> + kf_bound \<FF>\<close>
+proof -
+  define l r where \<open>l = (\<lambda>(E::'a\<Rightarrow>\<^sub>C\<^sub>L'b, x) \<Rightarrow> (E, Inl x :: 'c+'d))\<close>
+    and \<open>r = (\<lambda>(F::'a\<Rightarrow>\<^sub>C\<^sub>L'b, y) \<Rightarrow> (F, Inr y :: 'c+'d))\<close>
+  have \<open>Abs_cblinfun_wot (kf_bound (kf_plus \<EE> \<FF>)) 
+    = (\<Sum>\<^sub>\<infinity>(E, x)\<in>l ` Rep_kraus_family \<EE> \<union> r ` Rep_kraus_family \<FF>. compose_wot (adj_wot (Abs_cblinfun_wot E)) (Abs_cblinfun_wot E))\<close>
+    by (simp add: kf_bound_def' kf_plus.rep_eq Rep_cblinfun_wot_inverse flip: l_def r_def)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(E, x)\<in>l ` Rep_kraus_family \<EE>. compose_wot (adj_wot (Abs_cblinfun_wot E)) (Abs_cblinfun_wot E))
+                + (\<Sum>\<^sub>\<infinity>(E, x)\<in>r ` Rep_kraus_family \<FF>. compose_wot (adj_wot (Abs_cblinfun_wot E)) (Abs_cblinfun_wot E))\<close>
+    apply (rule infsum_Un_disjoint)
+      apply (metis (no_types, lifting) ext Un_empty_right l_def image_empty kf_bound_summable' kf_plus.rep_eq
+        zero_kraus_family.rep_eq) 
+     apply (metis (no_types, lifting) ext r_def empty_subsetI image_empty kf_bound_summable' kf_plus.rep_eq
+        sup.absorb_iff2 zero_kraus_family.rep_eq) 
+    by (auto intro!: simp: l_def r_def)
+  also have \<open>\<dots> = Abs_cblinfun_wot (kf_bound (kf_map_inj Inl \<EE> :: (_,_,'c+'d) kraus_family)) + Abs_cblinfun_wot (kf_bound (kf_map_inj Inr \<FF> :: (_,_,'c+'d) kraus_family))\<close>
+    by (simp add: kf_bound_def' Rep_cblinfun_wot_inverse l_def r_def kf_map_inj.rep_eq case_prod_unfold)
+  also have \<open>\<dots> = Abs_cblinfun_wot (kf_bound \<EE> + kf_bound \<FF>)\<close>
+    by (simp add: kf_map_inj_bound plus_cblinfun_wot.abs_eq)
+  finally show ?thesis
+    by (metis (no_types, lifting) Rep_cblinfun_wot_inverse kf_bound_def' plus_cblinfun_wot.rep_eq)
+qed
+
+lemma kf_plus_bound': \<open>kf_bound (\<EE> + \<FF>) = kf_bound \<EE> + kf_bound \<FF>\<close>
+  by (simp add: kf_map_bound kf_plus_bound plus_kraus_family_def)
+
+lemma kf_norm_triangle: \<open>kf_norm (kf_plus \<EE> \<FF>) \<le> kf_norm \<EE> + kf_norm \<FF>\<close>
+  by (simp add: kf_norm_def kf_plus_bound norm_triangle_ineq)
+
+lemma kf_norm_triangle': \<open>kf_norm (\<EE> + \<FF>) \<le> kf_norm \<EE> + kf_norm \<FF>\<close>
+  by (simp add: kf_norm_def kf_plus_bound' norm_triangle_ineq)
 
 subsection \<open>Composition\<close>
 
@@ -2871,7 +2853,7 @@ proof -
     by (metis kf_eq_weak_def kf_apply_on_UNIV)
 qed
 
-lemma kf_bound_comp_dependent_raw:
+lemma kf_bound_comp_dependent_raw_of_op:
   shows \<open>kf_bound (kf_comp_dependent_raw \<EE> (kf_of_op U))
        = sandwich (U*) (kf_bound (\<EE> ()))\<close>
 proof -
@@ -2905,26 +2887,26 @@ proof -
 qed
 
 
-lemma kf_bound_comp_dependent:
+lemma kf_bound_comp_dependent_of_op:
   shows \<open>kf_bound (kf_comp_dependent \<EE> (kf_of_op U)) = sandwich (U*) (kf_bound (\<EE> ()))\<close>
-  by (simp add: kf_comp_dependent_def kf_map_bound kf_bound_comp_dependent_raw)
+  by (simp add: kf_comp_dependent_def kf_map_bound kf_bound_comp_dependent_raw_of_op)
 
-lemma kf_bound_comp:
+lemma kf_bound_comp_of_op:
   shows \<open>kf_bound (kf_comp \<EE> (kf_of_op U)) = sandwich (U*) (kf_bound \<EE>)\<close>
-  by (simp add: kf_bound_comp_dependent kf_comp_def)
+  by (simp add: kf_bound_comp_dependent_of_op kf_comp_def)
 
 lemma kf_norm_comp_dependent_of_op_coiso:
   assumes \<open>isometry (U*)\<close>
   shows \<open>kf_norm (kf_comp_dependent \<EE> (kf_of_op U)) = kf_norm (\<EE> ())\<close>
   using assms
-  by (simp add: kf_bound_comp_dependent kf_norm_def sandwich_apply
+  by (simp add: kf_bound_comp_dependent_of_op kf_norm_def sandwich_apply
       norm_isometry_compose norm_isometry_compose')
 
 lemma kf_norm_comp_of_op_coiso:
   assumes \<open>isometry (U*)\<close>
   shows \<open>kf_norm (kf_comp \<EE> (kf_of_op U)) = kf_norm \<EE>\<close>
   using assms
-  by (simp add: kf_bound_comp kf_norm_def sandwich_apply
+  by (simp add: kf_bound_comp_of_op kf_norm_def sandwich_apply
       norm_isometry_compose norm_isometry_compose')
 
 lemma kf_bound_comp_dependend_raw_iso:
@@ -3162,6 +3144,7 @@ lemma kf_comp_map_right:
   by (simp add: kf_comp_def)
 
 subsection \<open>Infinite sums\<close>
+
 lift_definition kf_infsum :: \<open>('a \<Rightarrow> ('b::chilbert_space,'c::chilbert_space,'x) kraus_family) \<Rightarrow> 'a set \<Rightarrow> ('b,'c,'a\<times>'x) kraus_family\<close> is
   \<open>\<lambda>\<EE> A. if summable_on_in cweak_operator_topology (\<lambda>a. kf_bound (\<EE> a)) A
          then (\<lambda>(a,(E,x)). (E,(a,x))) ` Sigma A (\<lambda>a. Rep_kraus_family (\<EE> a)) else {}\<close>
@@ -3254,6 +3237,37 @@ qed
 definition kf_summable :: \<open>('a \<Rightarrow> ('b::chilbert_space,'c::chilbert_space,'x) kraus_family) \<Rightarrow> 'a set \<Rightarrow> bool\<close> where
   \<open>kf_summable \<EE> A \<longleftrightarrow> summable_on_in cweak_operator_topology (\<lambda>a. kf_bound (\<EE> a)) A\<close>
 
+lemma kf_summable_from_abs_summable:
+  assumes sum: \<open>(\<lambda>a. kf_norm (\<EE> a)) summable_on A\<close>
+  shows \<open>kf_summable \<EE> A\<close>
+  using assms
+  by (simp add: summable_imp_wot_summable abs_summable_summable kf_summable_def kf_norm_def)
+
+lemma kf_infsum_apply:
+  assumes \<open>kf_summable \<EE> A\<close>
+  shows \<open>kf_infsum \<EE> A *\<^sub>k\<^sub>r \<rho> = (\<Sum>\<^sub>\<infinity>a\<in>A. \<EE> a *\<^sub>k\<^sub>r \<rho>)\<close>
+proof -
+  from kf_apply_summable[of \<rho> \<open>kf_infsum \<EE> A\<close>]
+  have summable: \<open>(\<lambda>(a, E, x). sandwich_tc E \<rho>) summable_on (SIGMA a:A. Rep_kraus_family (\<EE> a))\<close>
+    using assms
+    by (simp add: kf_summable_def kf_infsum.rep_eq case_prod_unfold summable_on_reindex inj_on_def prod.expand o_def)
+  have \<open>kf_infsum \<EE> A *\<^sub>k\<^sub>r \<rho> = (\<Sum>\<^sub>\<infinity>(E,ax)\<in>(\<lambda>(a, E, x) \<Rightarrow> (E, a, x)) ` (SIGMA a:A. Rep_kraus_family (\<EE> a)). sandwich_tc E \<rho>)\<close>
+    using assms unfolding kf_summable_def
+    apply (transfer' fixing: \<EE>)
+    by (simp add: case_prod_unfold)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(a, E, x) \<in> (SIGMA a:A. Rep_kraus_family (\<EE> a)). sandwich_tc E \<rho>)\<close>
+    apply (subst infsum_reindex)
+    by (auto intro!: inj_onI simp: o_def case_prod_unfold)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>a\<in>A. \<Sum>\<^sub>\<infinity>(E, b)\<in>Rep_kraus_family (\<EE> a). sandwich_tc E \<rho>)\<close>
+    apply (subst infsum_Sigma'_banach[symmetric])
+    using summable by auto
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>a\<in>A. \<EE> a *\<^sub>k\<^sub>r \<rho>)\<close>
+    by (metis (no_types, lifting) infsum_cong kf_apply.rep_eq split_def)
+  finally show ?thesis
+    by -
+qed
+
+
 lemma kf_bound_infsum:
   fixes f :: \<open>'a \<Rightarrow> ('b::chilbert_space,'c::chilbert_space,'x) kraus_family\<close>
   assumes \<open>kf_summable f A\<close>
@@ -3304,6 +3318,23 @@ proof -
   finally show ?thesis
     apply (rule Abs_cblinfun_wot_inject[THEN iffD1, rotated -1])
     by simp_all
+qed
+
+lemma kf_norm_infsum:
+  assumes sum: \<open>(\<lambda>a. kf_norm (\<EE> a)) summable_on A\<close>
+  shows \<open>kf_norm (kf_infsum \<EE> A) \<le> (\<Sum>\<^sub>\<infinity>a\<in>A. kf_norm (\<EE> a))\<close>
+proof -
+  have \<open>kf_norm (kf_infsum \<EE> A) = norm (infsum_in cweak_operator_topology (\<lambda>a. kf_bound (\<EE> a)) A)\<close>
+    unfolding kf_norm_def
+    apply (subst kf_bound_infsum)
+    by (simp_all add: kf_summable_from_abs_summable assms)
+  also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>a\<in>A. norm (kf_bound (\<EE> a)))\<close>
+    apply (rule triangle_ineq_wot)
+    using sum by (simp add: kf_norm_def)
+  also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>a\<in>A. kf_norm (\<EE> a))\<close>
+    by (smt (verit, del_insts) infsum_cong kf_norm_def)
+  finally show ?thesis
+    by -
 qed
 
 lemma kf_filter_infsum:
@@ -3472,6 +3503,347 @@ lemma kf_trace_norm_preserving_eq:
   shows \<open>kf_norm \<EE> = 1\<close>
   using assms by (simp add: kf_trace_preserving_iff_bound_id kf_norm_def)
 
+subsection \<open>Sampling\<close>
+
+lift_definition kf_sample :: \<open>('x \<Rightarrow> real) \<Rightarrow> ('a::chilbert_space, 'a, 'x) kraus_family\<close> is
+  \<open>\<lambda>p. if (\<forall>x. p x \<ge> 0) \<and> p summable_on UNIV then range (\<lambda>x. (sqrt (p x) *\<^sub>R id_cblinfun, x)) else {}\<close>
+proof -
+  fix p :: \<open>'x \<Rightarrow> real\<close>
+  show \<open>?thesis p\<close>
+  proof (cases \<open>(\<forall>x. p x \<ge> 0) \<and> p summable_on UNIV\<close>)
+    case True
+    then have \<open>p abs_summable_on UNIV\<close>
+      by simp
+    from abs_summable_iff_bdd_above[THEN iffD1, OF this]
+    obtain B where F_B: \<open>finite F \<Longrightarrow> (\<Sum>x\<in>F. p x) \<le> B\<close> for F
+      apply atomize_elim
+      using True by (auto simp: bdd_above_def)
+    have \<open>(\<Sum>(E,x)\<in>F. E* o\<^sub>C\<^sub>L E) \<le> B *\<^sub>R id_cblinfun\<close>
+      if \<open>finite F\<close> and \<open>F \<subseteq> range (\<lambda>x. (sqrt (p x) *\<^sub>R id_cblinfun, x))\<close>
+      for F :: \<open>('a\<Rightarrow>\<^sub>C\<^sub>L'a \<times> 'x) set\<close>
+    proof -
+      from that
+      obtain F' where \<open>finite F'\<close> and F_def: \<open>F = (\<lambda>x. (sqrt (p x) *\<^sub>R id_cblinfun, x)) ` F'\<close>
+        using finite_subset_image
+        by meson
+      then have \<open>(\<Sum>(E,x)\<in>F. E* o\<^sub>C\<^sub>L E) = (\<Sum>x\<in>F'. (sqrt (p x) *\<^sub>R id_cblinfun)* o\<^sub>C\<^sub>L (sqrt (p x) *\<^sub>R id_cblinfun))\<close>
+        by (simp add: sum.reindex inj_on_def)
+      also have \<open>\<dots> = (\<Sum>x\<in>F'. p x *\<^sub>R id_cblinfun)\<close>
+        using True by simp
+      also have \<open>\<dots> = (\<Sum>x\<in>F'. p x) *\<^sub>R id_cblinfun\<close>
+        by (metis scaleR_left.sum)
+      also have \<open>\<dots> \<le> B *\<^sub>R id_cblinfun\<close>
+        using \<open>\<And>F. finite F \<Longrightarrow> (\<Sum>x\<in>F. p x) \<le> B\<close> \<open>finite F'\<close> positive_id_cblinfun scaleR_right_mono by blast
+      finally show ?thesis
+        by -
+    qed
+    then have \<open>kraus_family (range (\<lambda>x. (sqrt (p x) *\<^sub>R (id_cblinfun ::'a\<Rightarrow>\<^sub>C\<^sub>L_), x)))\<close>
+      by (auto intro!: bdd_aboveI[where M=\<open>B *\<^sub>R id_cblinfun\<close>] simp: kraus_family_def case_prod_unfold)
+    then show ?thesis
+      using True by simp
+  next
+    case False
+    then show ?thesis
+      by auto
+  qed
+qed
+
+lemma kf_sample_norm:
+  fixes p :: \<open>'x \<Rightarrow> real\<close>
+  assumes \<open>\<And>x. p x \<ge> 0\<close>
+  assumes \<open>p summable_on UNIV\<close>
+  shows \<open>kf_norm (kf_sample p :: ('a::{chilbert_space,not_singleton},'a,'x) kraus_family)
+             = (\<Sum>\<^sub>\<infinity>x. p x)\<close>
+proof -
+  define B :: \<open>'a\<Rightarrow>\<^sub>C\<^sub>L'a\<close> where \<open>B = kf_bound (kf_sample p)\<close>
+  obtain \<psi> :: 'a where \<open>norm \<psi> = 1\<close>
+    using ex_norm1_not_singleton by blast
+
+  have \<open>\<psi> \<bullet>\<^sub>C (B *\<^sub>V \<psi>) = \<psi> \<bullet>\<^sub>C ((\<Sum>\<^sub>\<infinity>x. p x) *\<^sub>R id_cblinfun *\<^sub>V \<psi>)\<close> 
+    if \<open>norm \<psi> = 1\<close> for \<psi>
+  proof -
+    have \<open>has_sum_in cweak_operator_topology (\<lambda>(E, x). E* o\<^sub>C\<^sub>L E) (Rep_kraus_family (kf_sample p)) B\<close>
+      using B_def kf_bound_has_sum by blast
+    then have \<open>has_sum_in cweak_operator_topology (\<lambda>(E, x). E* o\<^sub>C\<^sub>L E) (range (\<lambda>x. (sqrt (p x) *\<^sub>R id_cblinfun, x))) B\<close>
+      by (simp add: kf_sample.rep_eq assms)
+    then have \<open>has_sum_in cweak_operator_topology (\<lambda>x. norm (p x) *\<^sub>R id_cblinfun) UNIV B\<close>
+      by (simp add: has_sum_in_reindex inj_on_def o_def)
+    then have \<open>has_sum_in cweak_operator_topology (\<lambda>x. p x *\<^sub>R id_cblinfun) UNIV B\<close>
+      apply (rule has_sum_in_cong[THEN iffD1, rotated])
+      by (simp add: assms(1))
+    then have \<open>has_sum_in euclidean (\<lambda>x. \<psi> \<bullet>\<^sub>C (p x *\<^sub>R id_cblinfun) \<psi>) UNIV (\<psi> \<bullet>\<^sub>C B \<psi>)\<close>
+      apply (rule has_sum_in_comm_additive[rotated 3, OF cweak_operator_topology_cinner_continuous, unfolded o_def])
+      by (simp_all add: Modules.additive_def cblinfun.add_left cinner_simps)
+    then have \<open>((\<lambda>x. of_real (p x)) has_sum (\<psi> \<bullet>\<^sub>C B \<psi>)) UNIV\<close>
+      apply (simp add: scaleR_scaleC has_sum_euclidean_iff)
+      using \<open>norm \<psi> = 1\<close> cnorm_eq_1 by force
+    then have \<open>\<psi> \<bullet>\<^sub>C B \<psi> = (\<Sum>\<^sub>\<infinity>x. of_real (p x))\<close>
+      by (simp add: infsumI)
+    also have \<open>\<dots> = of_real (\<Sum>\<^sub>\<infinity>x. p x)\<close>
+      by (metis infsum_of_real)
+    also have \<open>\<dots> = \<psi> \<bullet>\<^sub>C ((\<Sum>\<^sub>\<infinity>x. p x) *\<^sub>R id_cblinfun) \<psi>\<close>
+      using \<open>norm \<psi> = 1\<close> by (simp add: scaleR_scaleC cnorm_eq_1)
+    finally show ?thesis
+      by -
+  qed
+  then have \<open>B = (\<Sum>\<^sub>\<infinity>x. p x) *\<^sub>R id_cblinfun\<close>
+    by (rule cblinfun_cinner_eqI)
+  then have \<open>norm B = norm (\<Sum>\<^sub>\<infinity>x. p x)\<close>
+    by simp
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>x. p x)\<close>
+    by (simp add: abs_of_nonneg assms infsum_nonneg)
+  finally show ?thesis
+    by (simp add: kf_norm_def B_def)
+qed
+
+subsection \<open>Trace\<close>
+
+lift_definition kf_trace :: \<open>'a set \<Rightarrow> ('a::chilbert_space, 'b::one_dim, 'a) kraus_family\<close> is
+  \<open>\<lambda>B. if is_onb B then (\<lambda>x. (vector_to_cblinfun x*, x)) ` B else {}\<close>
+proof (rename_tac B)
+  fix B :: \<open>'a set\<close>
+  define family :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b \<times> 'a) set\<close> where \<open>family = (\<lambda>x. (vector_to_cblinfun x*, x)) ` B\<close>
+  have \<open>kraus_family family\<close> if \<open>is_onb B\<close>
+  proof -
+    have \<open>(\<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E) \<le> id_cblinfun\<close> if \<open>finite F\<close> and FB: \<open>F \<subseteq> family\<close> for F :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b \<times> 'a) set\<close>
+    proof -
+      obtain G where \<open>finite G\<close> and \<open>G \<subseteq> B\<close> and FG: \<open>F = (\<lambda>x. (vector_to_cblinfun x*, x)) ` G\<close>
+        apply atomize_elim
+        using \<open>finite F\<close> and FB
+        apply (simp add: family_def)
+        by (meson finite_subset_image)
+      from \<open>G \<subseteq> B\<close> have [simp]: \<open>is_ortho_set G\<close>
+        by (meson \<open>is_onb B\<close> is_onb_def is_ortho_set_antimono)
+      from \<open>G \<subseteq> B\<close> have [simp]: \<open>e \<in> G \<Longrightarrow> norm e = 1\<close> for e
+        by (meson Set.basic_monos(7) \<open>is_onb B\<close> is_onb_def)
+      have [simp]: \<open>inj_on (\<lambda>x. (vector_to_cblinfun x*, x)) G\<close>
+        by (meson inj_onI prod.inject)
+      have \<open>(\<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E) = (\<Sum>x\<in>G. selfbutter x)\<close>
+        by (simp add: FG sum.reindex flip: butterfly_def_one_dim)
+      also have \<open>(\<Sum>x\<in>G. selfbutter x) \<le> id_cblinfun\<close>
+        apply (rule sum_butterfly_leq_id)
+        by auto
+      finally show ?thesis
+        by -
+    qed
+    then show ?thesis
+      by (auto intro!: bdd_aboveI[where M=id_cblinfun] kraus_familyI)
+  qed
+  then
+  show \<open>(if is_onb B then family else {}) \<in> Collect kraus_family\<close>
+    by auto
+qed
+
+lemma kf_trace_is_trace: 
+  assumes \<open>is_onb B\<close>
+  shows \<open>kf_trace B *\<^sub>k\<^sub>r \<rho> = one_dim_iso (trace_tc \<rho>)\<close>
+proof -
+  define \<rho>' where \<open>\<rho>' = from_trace_class \<rho>\<close>
+  have \<open>kf_apply (kf_trace B) \<rho> = (\<Sum>\<^sub>\<infinity>x\<in>B. sandwich_tc (vector_to_cblinfun x*) \<rho>)\<close>
+    apply (simp add: kf_apply.rep_eq kf_trace.rep_eq assms)
+    apply (subst infsum_reindex)
+     apply (meson inj_onI prod.simps(1))
+    by (simp add: o_def)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>x\<in>B. one_dim_iso (x \<bullet>\<^sub>C (\<rho>' x)))\<close>
+    apply (intro infsum_cong from_trace_class_inject[THEN iffD1])
+    apply (subst from_trace_class_sandwich_tc)
+    by (simp add: sandwich_apply flip: \<rho>'_def)
+  also have \<open>\<dots> = one_dim_iso (\<Sum>\<^sub>\<infinity>x\<in>B. (x \<bullet>\<^sub>C (\<rho>' x)))\<close>
+    by (metis (mono_tags, lifting) \<rho>'_def infsum_cblinfun_apply infsum_cong assms one_cblinfun.rep_eq trace_class_from_trace_class trace_exists)
+  also have \<open>\<dots> = one_dim_iso (trace \<rho>')\<close>
+    by (metis \<rho>'_def trace_class_from_trace_class trace_alt_def[OF assms])
+  also have \<open>\<dots> = one_dim_iso (trace_tc \<rho>)\<close>
+    by (simp add: \<rho>'_def trace_tc.rep_eq)
+  finally show ?thesis
+    by -
+qed
+
+lemma kf_eq_weak_kf_trace:
+  assumes \<open>is_onb A\<close> and \<open>is_onb B\<close>
+  shows \<open>kf_trace A =\<^sub>k\<^sub>r kf_trace B\<close>
+  by (auto simp: kf_eq_weak_def kf_trace_is_trace assms)
+
+lemma trace_is_kf_trace:
+  assumes \<open>is_onb B\<close>
+  shows \<open>trace_tc t = one_dim_iso (kf_trace B *\<^sub>k\<^sub>r t)\<close>
+  by (simp add: kf_trace_is_trace assms)
+
+lemma kf_trace_bound[simp]:
+  assumes \<open>is_onb B\<close>
+  shows \<open>kf_bound (kf_trace B) = id_cblinfun\<close>
+  using assms
+  apply (auto intro!: cblinfun_cinner_eqI simp: kf_bound_from_map kf_trace_is_trace)
+  by (metis cinner_complex_def cnorm_eq_1 complex_cnj_one norm_tc_butterfly norm_tc_pos of_real_1 of_real_mult one_cinner_one tc_butterfly_pos)
+
+lemma kf_trace_norm_eq1[simp]:
+  fixes B :: \<open>'a::{chilbert_space, not_singleton} set\<close>
+  assumes \<open>is_onb B\<close>
+  shows \<open>kf_norm (kf_trace B) = 1\<close>
+  using assms by (simp add: kf_trace_bound kf_norm_def)
+
+lemma kf_trace_norm_leq1[simp]:
+  fixes B :: \<open>'a::chilbert_space set\<close>
+  assumes \<open>is_onb B\<close>
+  shows \<open>kf_norm (kf_trace B) \<le> 1\<close>
+  by (simp add: assms kf_norm_def norm_cblinfun_id_le)
+
+subsection \<open>Constant maps\<close>
+
+
+lift_definition kf_constant_onedim :: \<open>('b,'b) trace_class \<Rightarrow> ('a::one_dim, 'b::chilbert_space, unit) kraus_family\<close> is
+  \<open>\<lambda>t::('b,'b) trace_class. if t \<ge> 0 then
+    (\<lambda>v. (vector_to_cblinfun v,())) ` spectral_dec_vecs_tc t
+  else {}\<close>
+proof (rule CollectI, rename_tac t)
+  fix t :: \<open>('b,'b) trace_class\<close>
+  show \<open>kraus_family (if t \<ge> 0 then (\<lambda>v. (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b,())) ` spectral_dec_vecs_tc t else {})\<close>
+  proof (cases \<open>t \<ge> 0\<close>)
+    case True
+    have \<open>kraus_family ((\<lambda>v. (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b,())) ` spectral_dec_vecs_tc t)\<close>
+    proof (intro kraus_familyI bdd_aboveI, rename_tac E)
+      fix E :: \<open>'a \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
+      assume \<open>E \<in> (\<lambda>F. \<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E) ` {F. finite F \<and> F \<subseteq> (\<lambda>v. (vector_to_cblinfun v, ())) ` spectral_dec_vecs_tc t}\<close>
+      then obtain F where E_def: \<open>E = (\<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E)\<close> and \<open>finite F\<close> and \<open>F \<subseteq> (\<lambda>v. (vector_to_cblinfun v, ())) ` spectral_dec_vecs_tc t\<close>
+        by blast
+      then obtain F' where F_def: \<open>F = (\<lambda>v. (vector_to_cblinfun v, ())) ` F'\<close> and \<open>finite F'\<close> and F'_subset: \<open>F' \<subseteq> spectral_dec_vecs_tc t\<close>
+        by (meson finite_subset_image)
+      have inj: \<open>inj_on (\<lambda>v. (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b, ())) F'\<close>
+      proof (rule inj_onI, rule ccontr)
+        fix x y
+        assume \<open>x \<in> F'\<close> and \<open>y \<in> F'\<close>
+        assume eq: \<open>(vector_to_cblinfun x :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b, ()) = (vector_to_cblinfun y, ())\<close>
+        assume \<open>x \<noteq> y\<close>
+        have ortho: \<open>is_ortho_set (spectral_dec_vecs (from_trace_class t))\<close>
+          using True
+          by (auto intro!: spectral_dec_vecs_ortho trace_class_compact pos_selfadjoint
+              simp: selfadjoint_tc.rep_eq from_trace_class_pos)
+        with \<open>x \<noteq> y\<close> F'_subset \<open>x \<in> F'\<close> \<open>y \<in> F'\<close>
+        have \<open>x \<bullet>\<^sub>C y = 0\<close>
+          by (auto simp: spectral_dec_vecs_tc.rep_eq is_ortho_set_def)
+        then have \<open>(vector_to_cblinfun x :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b)* o\<^sub>C\<^sub>L (vector_to_cblinfun y :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b) = 0\<close>
+          by simp
+        with eq have \<open>(vector_to_cblinfun x :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b)= 0\<close>
+          by force
+        then have \<open>norm x = 0\<close>
+          by (smt (verit, del_insts) norm_vector_to_cblinfun norm_zero)
+        with ortho F'_subset \<open>x \<in> F'\<close> show False
+          by (auto simp: spectral_dec_vecs_tc.rep_eq is_ortho_set_def)
+      qed
+      have \<open>E = (\<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E)\<close>
+        by (simp add: E_def)
+      also have \<open>\<dots> = (\<Sum>v\<in>F'. (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b)* o\<^sub>C\<^sub>L vector_to_cblinfun v)\<close>
+        unfolding F_def
+        apply (subst sum.reindex)
+        by (auto intro!: inj)
+      also have \<open>\<dots> = (\<Sum>v\<in>F'. ((norm (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b))\<^sup>2) *\<^sub>R 1)\<close>
+        by (auto intro!: sum.cong simp: power2_norm_eq_cinner scaleR_scaleC)
+      also have \<open>\<dots> = (\<Sum>v\<in>F'. (norm (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b))\<^sup>2) *\<^sub>R 1\<close>
+        by (metis scaleR_left.sum)
+      also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>v\<in>F'. (norm (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b))\<^sup>2) *\<^sub>R 1\<close>
+        using \<open>finite F'\<close> by force
+      also have \<open>\<dots> \<le> (\<Sum>\<^sub>\<infinity>v\<in>spectral_dec_vecs_tc t. (norm (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b))\<^sup>2) *\<^sub>R 1\<close>
+        apply (intro scaleR_right_mono infsum_mono_neutral)
+        using F'_subset
+        by (auto intro!: one_dim_cblinfun_one_pos spectral_dec_vec_tc_norm_summable True
+            simp: \<open>finite F'\<close> )
+      finally show \<open>E \<le> (\<Sum>\<^sub>\<infinity>v\<in>spectral_dec_vecs_tc t. (norm (vector_to_cblinfun v :: 'a\<Rightarrow>\<^sub>C\<^sub>L'b))\<^sup>2) *\<^sub>R 1\<close>
+        by -
+    qed
+    with True show ?thesis
+      by simp
+  next
+    case False
+    then show ?thesis
+      by simp
+  qed
+qed
+
+definition kf_constant :: \<open>('b,'b) trace_class \<Rightarrow> ('a::chilbert_space, 'b::chilbert_space, unit) kraus_family\<close> where
+  \<open>kf_constant \<rho> = kf_flatten (kf_comp (kf_constant_onedim \<rho> :: (complex,_,_) kraus_family) (kf_trace some_chilbert_basis))\<close>
+
+lemma kf_constant_onedim_invalid: \<open>\<not> \<rho> \<ge> 0 \<Longrightarrow> kf_constant_onedim \<rho> = 0\<close>
+  apply transfer'
+  by simp
+
+lemma kf_constant_invalid: \<open>\<not> \<rho> \<ge> 0 \<Longrightarrow> kf_constant \<rho> = 0\<close>
+  by (simp add: kf_constant_def kf_constant_onedim_invalid)
+
+lemma kf_constant_onedim_apply: 
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>kf_apply (kf_constant_onedim \<rho>) \<sigma> = one_dim_iso \<sigma> *\<^sub>C \<rho>\<close>
+proof -
+  have \<open>kf_apply (kf_constant_onedim \<rho>) \<sigma>
+         = (\<Sum>\<^sub>\<infinity>(E,x)\<in>(\<lambda>v. (vector_to_cblinfun v, ())) ` spectral_dec_vecs_tc \<rho>. sandwich_tc E \<sigma>)\<close>
+    by (simp add: assms kf_apply.rep_eq kf_constant_onedim.rep_eq case_prod_unfold)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>v \<in> spectral_dec_vecs_tc \<rho>. sandwich_tc (vector_to_cblinfun v) \<sigma>)\<close>
+    apply (subst infsum_reindex)
+    using vector_to_cblinfun_inj[of UNIV]
+    by (auto simp: o_def inj_on_def)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>v \<in> spectral_dec_vecs_tc \<rho>. one_dim_iso \<sigma> *\<^sub>C tc_butterfly v v)\<close>
+    apply (rule infsum_cong)
+    apply (subst one_dim_scaleC_1[symmetric])
+    apply (rule from_trace_class_inject[THEN iffD1])
+    apply (simp only: sandwich_tc_def compose_tcl.rep_eq compose_tcr.rep_eq scaleC_trace_class.rep_eq
+        tc_butterfly.rep_eq cblinfun_compose_scaleC_right cblinfun_compose_scaleC_left)
+    by (simp flip: butterfly_def_one_dim)
+  also have \<open>\<dots> = one_dim_iso \<sigma> *\<^sub>C (\<Sum>\<^sub>\<infinity>v \<in> spectral_dec_vecs_tc \<rho>. tc_butterfly v v)\<close>
+    using infsum_scaleC_right by fastforce
+  also have \<open>\<dots> = one_dim_iso \<sigma> *\<^sub>C \<rho>\<close>
+    by (simp add: assms butterfly_spectral_dec_vec_tc_has_sum infsumI)
+  finally show ?thesis
+    by -
+qed
+
+lemma kf_constant_apply: 
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>kf_apply (kf_constant \<rho>) \<sigma> = trace_tc \<sigma> *\<^sub>C \<rho>\<close>
+  using assms by (simp add: kf_constant_def kf_comp_apply kf_trace_is_trace kf_constant_onedim_apply)
+
+lemma kf_bound_constant_onedim[simp]: 
+  fixes \<rho> :: \<open>('a::chilbert_space, 'a) trace_class\<close>
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>kf_bound (kf_constant_onedim \<rho>) = norm \<rho> *\<^sub>R id_cblinfun\<close>
+proof (rule cblinfun_cinner_eqI)
+  fix \<psi> :: 'b assume \<open>norm \<psi> = 1\<close>
+  have \<open>\<psi> \<bullet>\<^sub>C kf_bound (kf_constant_onedim \<rho>) \<psi> = trace_tc (kf_apply (kf_constant_onedim \<rho>) (tc_butterfly \<psi> \<psi>))\<close>
+    by (rule kf_bound_from_map)
+  also have \<open>\<dots> = trace_tc (trace_tc (tc_butterfly \<psi> \<psi>) *\<^sub>C \<rho>)\<close>
+    by (simp add: kf_constant_onedim_apply assms)
+  also have \<open>\<dots> = trace_tc \<rho>\<close>
+    by (metis \<open>norm \<psi> = 1\<close> cinner_complex_def complex_cnj_one complex_vector.vector_space_assms(4) norm_mult norm_one norm_tc_butterfly norm_tc_pos of_real_hom.hom_one one_cinner_one tc_butterfly_pos)
+  also have \<open>\<dots> = \<psi> \<bullet>\<^sub>C (trace_tc \<rho> *\<^sub>C id_cblinfun) \<psi>\<close>
+    by (metis \<open>norm \<psi> = 1\<close> cblinfun.scaleC_left cinner_scaleC_right cnorm_eq_1 id_apply id_cblinfun.rep_eq of_complex_def one_dim_iso_id one_dim_iso_is_of_complex scaleC_conv_of_complex)
+  also have \<open>\<dots> = \<psi> \<bullet>\<^sub>C (norm \<rho> *\<^sub>R id_cblinfun) \<psi>\<close>
+    by (simp add: assms norm_tc_pos scaleR_scaleC)
+  finally show \<open>\<psi> \<bullet>\<^sub>C kf_bound (kf_constant_onedim \<rho>) \<psi> = \<psi> \<bullet>\<^sub>C (norm \<rho> *\<^sub>R id_cblinfun) \<psi>\<close>
+    by -
+qed
+
+lemma kf_bound_constant[simp]: 
+  fixes \<rho> :: \<open>('a::chilbert_space, 'a) trace_class\<close>
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>kf_bound (kf_constant \<rho>) = norm \<rho> *\<^sub>R id_cblinfun\<close>
+  apply (rule cblinfun_cinner_eqI)
+  using assms
+  by (simp add: kf_bound_from_map kf_constant_apply trace_tc_butterfly norm_tc_pos scaleR_scaleC trace_tc_scaleC)
+  
+lemma kf_norm_constant_onedim[simp]:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>kf_norm (kf_constant_onedim \<rho>) = norm \<rho>\<close>
+  using assms
+  by (simp add: kf_bound_constant kf_norm_def)
+
+lemma kf_norm_constant:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>kf_norm (kf_constant \<rho> :: ('a::{chilbert_space,not_singleton},'b::chilbert_space,_) kraus_family) = norm \<rho>\<close>
+  using assms by (simp add: kf_norm_def norm_cblinfun_id)
+
+lemma kf_norm_constant_leq:
+  shows \<open>kf_norm (kf_constant \<rho>) \<le> norm \<rho>\<close>
+  apply (cases \<open>\<rho> \<ge> 0\<close>)
+   apply (simp add: kf_norm_def)
+   apply (metis Groups.mult_ac(2) mult_cancel_right1 mult_left_mono norm_cblinfun_id_le norm_ge_zero)
+  by (simp add: kf_constant_invalid)
 
 subsection \<open>Tensor products\<close>
 
@@ -3752,186 +4124,85 @@ lemma kf_tensor_compose_distrib:
 
 definition kf_tensor_right :: \<open>('extra ell2, 'extra ell2) trace_class \<Rightarrow> ('qu ell2, ('qu\<times>'extra) ell2, unit) kraus_family\<close> where
   \<comment> \<open>\<^term>\<open>kf_tensor_right \<rho>\<close> maps \<^term>\<open>\<sigma>\<close> to \<^term>\<open>\<sigma> \<otimes>\<^sub>o \<rho>\<close>\<close>
-  \<open>kf_tensor_right \<rho> = kf_map_inj (\<lambda>_. ()) (kf_comp (kf_tensor kf_id (kf_constant \<rho>)) (kf_of_op (tensor_ell2_right (ket ()))))\<close>
+  \<open>kf_tensor_right \<rho> = kf_map_inj (\<lambda>_. ()) (kf_comp (kf_tensor kf_id (kf_constant_onedim \<rho>)) (kf_of_op (tensor_ell2_right (ket ()))))\<close>
+definition kf_tensor_left :: \<open>('extra ell2, 'extra ell2) trace_class \<Rightarrow> ('qu ell2, ('extra\<times>'qu) ell2, unit) kraus_family\<close> where
+  \<comment> \<open>\<^term>\<open>kf_tensor_right \<rho>\<close> maps \<^term>\<open>\<sigma>\<close> to \<^term>\<open>\<rho> \<otimes>\<^sub>o \<sigma>\<close>\<close>
+  \<open>kf_tensor_left \<rho> = kf_map_inj (\<lambda>_. ()) (kf_comp (kf_tensor (kf_constant_onedim \<rho>) kf_id) (kf_of_op (tensor_ell2_left (ket ()))))\<close>
+
+lemma kf_apply_tensor_right[simp]:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>kf_tensor_right \<rho> *\<^sub>k\<^sub>r \<sigma> = tc_tensor \<sigma> \<rho>\<close>
+proof -
+  have *: \<open>sandwich_tc (tensor_ell2_right (ket ())) \<sigma> = tc_tensor \<sigma> (tc_butterfly (ket()) (ket()))\<close>
+    apply transfer'
+    using sandwich_tensor_ell2_right' by blast
+  show ?thesis
+    by (simp add: kf_tensor_right_def kf_apply_map_inj inj_on_def kf_comp_apply
+        kf_of_op_apply * kf_apply_tensor kf_constant_onedim_apply assms trace_tc_butterfly
+        flip: trace_tc_one_dim_iso)
+qed
+lemma kf_apply_tensor_left[simp]:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>kf_tensor_left \<rho> *\<^sub>k\<^sub>r \<sigma> = tc_tensor \<rho> \<sigma>\<close>
+proof -
+  have *: \<open>sandwich_tc (tensor_ell2_left (ket ())) \<sigma> = tc_tensor (tc_butterfly (ket()) (ket())) \<sigma>\<close>
+    apply transfer'
+    using sandwich_tensor_ell2_left' by blast
+  show ?thesis
+    by (simp add: kf_tensor_left_def kf_apply_map_inj inj_on_def kf_comp_apply
+        kf_of_op_apply * kf_apply_tensor kf_constant_onedim_apply assms trace_tc_butterfly
+        flip: trace_tc_one_dim_iso)
+qed
+
+lemma kf_bound_tensor_right[simp]:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>kf_bound (kf_tensor_right \<rho>) = norm \<rho> *\<^sub>C id_cblinfun\<close>
+proof (rule cblinfun_cinner_eqI)
+  fix \<psi> :: \<open>'b ell2\<close>
+  have \<open>\<psi> \<bullet>\<^sub>C kf_bound (kf_tensor_right \<rho>) \<psi> = trace_tc (kf_tensor_right \<rho> *\<^sub>k\<^sub>r tc_butterfly \<psi> \<psi>)\<close>
+    by (simp add: kf_bound_from_map)
+  also have \<open>\<dots> = trace_tc (tc_tensor (tc_butterfly \<psi> \<psi>) \<rho>)\<close>
+    using assms by (simp add: kf_apply_tensor_right)
+  also have \<open>\<dots> = trace_tc (tc_butterfly \<psi> \<psi>) * trace_tc \<rho>\<close>
+    by (metis (no_types, lifting) assms norm_tc_pos norm_tc_tensor of_real_mult tc_butterfly_pos tc_tensor_pos)
+  also have \<open>\<dots> = norm \<rho> * trace_tc (tc_butterfly \<psi> \<psi>)\<close>
+    by (simp add: assms norm_tc_pos)
+  also have \<open>\<dots> = \<psi> \<bullet>\<^sub>C (norm \<rho> *\<^sub>C id_cblinfun) \<psi>\<close>
+    by (simp add: trace_tc_butterfly)
+  finally show \<open>\<psi> \<bullet>\<^sub>C (kf_bound (kf_tensor_right \<rho>)) \<psi> = \<psi> \<bullet>\<^sub>C (norm \<rho> *\<^sub>C id_cblinfun) \<psi>\<close>
+    by -
+qed
+lemma kf_bound_tensor_left[simp]:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>kf_bound (kf_tensor_left \<rho>) = norm \<rho> *\<^sub>C id_cblinfun\<close>
+proof (rule cblinfun_cinner_eqI)
+  fix \<psi> :: \<open>'b ell2\<close>
+  have \<open>\<psi> \<bullet>\<^sub>C kf_bound (kf_tensor_left \<rho>) \<psi> = trace_tc (kf_tensor_left \<rho> *\<^sub>k\<^sub>r tc_butterfly \<psi> \<psi>)\<close>
+    by (simp add: kf_bound_from_map)
+  also have \<open>\<dots> = trace_tc (tc_tensor \<rho> (tc_butterfly \<psi> \<psi>))\<close>
+    using assms by (simp add: kf_apply_tensor_left)
+  also have \<open>\<dots> = trace_tc \<rho> * trace_tc (tc_butterfly \<psi> \<psi>)\<close>
+    by (metis (no_types, lifting) assms norm_tc_pos norm_tc_tensor of_real_mult tc_butterfly_pos tc_tensor_pos)
+  also have \<open>\<dots> = norm \<rho> * trace_tc (tc_butterfly \<psi> \<psi>)\<close>
+    by (simp add: assms norm_tc_pos)
+  also have \<open>\<dots> = \<psi> \<bullet>\<^sub>C (norm \<rho> *\<^sub>C id_cblinfun) \<psi>\<close>
+    by (simp add: trace_tc_butterfly)
+  finally show \<open>\<psi> \<bullet>\<^sub>C (kf_bound (kf_tensor_left \<rho>)) \<psi> = \<psi> \<bullet>\<^sub>C (norm \<rho> *\<^sub>C id_cblinfun) \<psi>\<close>
+    by -
+qed
+
 
 lemma kf_norm_tensor_right[simp]:
   assumes \<open>\<rho> \<ge> 0\<close>
   shows \<open>kf_norm (kf_tensor_right \<rho>) = norm \<rho>\<close>
-proof -
-  have [simp]: \<open>isometry (tensor_ell2_right (ket ())*)\<close>
-    by (simp add: unitary_tensor_ell2_right_CARD_1)
-  show ?thesis
-    using assms by (auto intro!: simp: kf_tensor_right_def
-        kf_map_inj_norm kf_norm_constant
-        inj_on_def kf_norm_comp_of_op_coiso
-        kf_norm_tensor)
-qed
+  using assms by (simp add: kf_norm_def)
+lemma kf_norm_tensor_left[simp]:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>kf_norm (kf_tensor_left \<rho>) = norm \<rho>\<close>
+  using assms by (simp add: kf_norm_def)
 
-subsection \<open>Sampling\<close>
 
-lift_definition kf_sample :: \<open>('x \<Rightarrow> real) \<Rightarrow> ('a::chilbert_space, 'a, 'x) kraus_family\<close> is
-  \<open>\<lambda>p. if (\<forall>x. p x \<ge> 0) \<and> p summable_on UNIV then range (\<lambda>x. (sqrt (p x) *\<^sub>R id_cblinfun, x)) else {}\<close>
-proof -
-  fix p :: \<open>'x \<Rightarrow> real\<close>
-  show \<open>?thesis p\<close>
-  proof (cases \<open>(\<forall>x. p x \<ge> 0) \<and> p summable_on UNIV\<close>)
-    case True
-    then have \<open>p abs_summable_on UNIV\<close>
-      by simp
-    from abs_summable_iff_bdd_above[THEN iffD1, OF this]
-    obtain B where F_B: \<open>finite F \<Longrightarrow> (\<Sum>x\<in>F. p x) \<le> B\<close> for F
-      apply atomize_elim
-      using True by (auto simp: bdd_above_def)
-    have \<open>(\<Sum>(E,x)\<in>F. E* o\<^sub>C\<^sub>L E) \<le> B *\<^sub>R id_cblinfun\<close>
-      if \<open>finite F\<close> and \<open>F \<subseteq> range (\<lambda>x. (sqrt (p x) *\<^sub>R id_cblinfun, x))\<close>
-      for F :: \<open>('a\<Rightarrow>\<^sub>C\<^sub>L'a \<times> 'x) set\<close>
-    proof -
-      from that
-      obtain F' where \<open>finite F'\<close> and F_def: \<open>F = (\<lambda>x. (sqrt (p x) *\<^sub>R id_cblinfun, x)) ` F'\<close>
-        using finite_subset_image
-        by meson
-      then have \<open>(\<Sum>(E,x)\<in>F. E* o\<^sub>C\<^sub>L E) = (\<Sum>x\<in>F'. (sqrt (p x) *\<^sub>R id_cblinfun)* o\<^sub>C\<^sub>L (sqrt (p x) *\<^sub>R id_cblinfun))\<close>
-        by (simp add: sum.reindex inj_on_def)
-      also have \<open>\<dots> = (\<Sum>x\<in>F'. p x *\<^sub>R id_cblinfun)\<close>
-        using True by simp
-      also have \<open>\<dots> = (\<Sum>x\<in>F'. p x) *\<^sub>R id_cblinfun\<close>
-        by (metis scaleR_left.sum)
-      also have \<open>\<dots> \<le> B *\<^sub>R id_cblinfun\<close>
-        using \<open>\<And>F. finite F \<Longrightarrow> (\<Sum>x\<in>F. p x) \<le> B\<close> \<open>finite F'\<close> positive_id_cblinfun scaleR_right_mono by blast
-      finally show ?thesis
-        by -
-    qed
-    then have \<open>kraus_family (range (\<lambda>x. (sqrt (p x) *\<^sub>R (id_cblinfun ::'a\<Rightarrow>\<^sub>C\<^sub>L_), x)))\<close>
-      by (auto intro!: bdd_aboveI[where M=\<open>B *\<^sub>R id_cblinfun\<close>] simp: kraus_family_def case_prod_unfold)
-    then show ?thesis
-      using True by simp
-  next
-    case False
-    then show ?thesis
-      by auto
-  qed
-qed
-
-lemma kf_sample_norm:
-  fixes p :: \<open>'x \<Rightarrow> real\<close>
-  assumes \<open>\<And>x. p x \<ge> 0\<close>
-  assumes \<open>p summable_on UNIV\<close>
-  shows \<open>kf_norm (kf_sample p :: ('a::{chilbert_space,not_singleton},'a,'x) kraus_family)
-             = (\<Sum>\<^sub>\<infinity>x. p x)\<close>
-proof -
-  define B :: \<open>'a\<Rightarrow>\<^sub>C\<^sub>L'a\<close> where \<open>B = kf_bound (kf_sample p)\<close>
-  obtain \<psi> :: 'a where \<open>norm \<psi> = 1\<close>
-    using ex_norm1_not_singleton by blast
-
-  have \<open>\<psi> \<bullet>\<^sub>C (B *\<^sub>V \<psi>) = \<psi> \<bullet>\<^sub>C ((\<Sum>\<^sub>\<infinity>x. p x) *\<^sub>R id_cblinfun *\<^sub>V \<psi>)\<close> 
-    if \<open>norm \<psi> = 1\<close> for \<psi>
-  proof -
-    have \<open>has_sum_in cweak_operator_topology (\<lambda>(E, x). E* o\<^sub>C\<^sub>L E) (Rep_kraus_family (kf_sample p)) B\<close>
-      using B_def kf_bound_has_sum by blast
-    then have \<open>has_sum_in cweak_operator_topology (\<lambda>(E, x). E* o\<^sub>C\<^sub>L E) (range (\<lambda>x. (sqrt (p x) *\<^sub>R id_cblinfun, x))) B\<close>
-      by (simp add: kf_sample.rep_eq assms)
-    then have \<open>has_sum_in cweak_operator_topology (\<lambda>x. norm (p x) *\<^sub>R id_cblinfun) UNIV B\<close>
-      by (simp add: has_sum_in_reindex inj_on_def o_def)
-    then have \<open>has_sum_in cweak_operator_topology (\<lambda>x. p x *\<^sub>R id_cblinfun) UNIV B\<close>
-      apply (rule has_sum_in_cong[THEN iffD1, rotated])
-      by (simp add: assms(1))
-    then have \<open>has_sum_in euclidean (\<lambda>x. \<psi> \<bullet>\<^sub>C (p x *\<^sub>R id_cblinfun) \<psi>) UNIV (\<psi> \<bullet>\<^sub>C B \<psi>)\<close>
-      apply (rule has_sum_in_comm_additive[rotated 3, OF cweak_operator_topology_cinner_continuous, unfolded o_def])
-      by (simp_all add: Modules.additive_def cblinfun.add_left cinner_simps)
-    then have \<open>((\<lambda>x. of_real (p x)) has_sum (\<psi> \<bullet>\<^sub>C B \<psi>)) UNIV\<close>
-      apply (simp add: scaleR_scaleC has_sum_euclidean_iff)
-      using \<open>norm \<psi> = 1\<close> cnorm_eq_1 by force
-    then have \<open>\<psi> \<bullet>\<^sub>C B \<psi> = (\<Sum>\<^sub>\<infinity>x. of_real (p x))\<close>
-      by (simp add: infsumI)
-    also have \<open>\<dots> = of_real (\<Sum>\<^sub>\<infinity>x. p x)\<close>
-      by (metis infsum_of_real)
-    also have \<open>\<dots> = \<psi> \<bullet>\<^sub>C ((\<Sum>\<^sub>\<infinity>x. p x) *\<^sub>R id_cblinfun) \<psi>\<close>
-      using \<open>norm \<psi> = 1\<close> by (simp add: scaleR_scaleC cnorm_eq_1)
-    finally show ?thesis
-      by -
-  qed
-  then have \<open>B = (\<Sum>\<^sub>\<infinity>x. p x) *\<^sub>R id_cblinfun\<close>
-    by (rule cblinfun_cinner_eqI)
-  then have \<open>norm B = norm (\<Sum>\<^sub>\<infinity>x. p x)\<close>
-    by simp
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>x. p x)\<close>
-    by (simp add: abs_of_nonneg assms infsum_nonneg)
-  finally show ?thesis
-    by (simp add: kf_norm_def B_def)
-qed
-
-subsection \<open>Trace and partial trace\<close>
-
-lift_definition kf_trace :: \<open>'a set \<Rightarrow> ('a::chilbert_space, 'b::one_dim, 'a) kraus_family\<close> is
-  \<open>\<lambda>B. if is_onb B then (\<lambda>x. (vector_to_cblinfun x*, x)) ` B else {}\<close>
-proof (rename_tac B)
-  fix B :: \<open>'a set\<close>
-  define family :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b \<times> 'a) set\<close> where \<open>family = (\<lambda>x. (vector_to_cblinfun x*, x)) ` B\<close>
-  have \<open>kraus_family family\<close> if \<open>is_onb B\<close>
-  proof -
-    have \<open>(\<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E) \<le> id_cblinfun\<close> if \<open>finite F\<close> and FB: \<open>F \<subseteq> family\<close> for F :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'b \<times> 'a) set\<close>
-    proof -
-      obtain G where \<open>finite G\<close> and \<open>G \<subseteq> B\<close> and FG: \<open>F = (\<lambda>x. (vector_to_cblinfun x*, x)) ` G\<close>
-        apply atomize_elim
-        using \<open>finite F\<close> and FB
-        apply (simp add: family_def)
-        by (meson finite_subset_image)
-      from \<open>G \<subseteq> B\<close> have [simp]: \<open>is_ortho_set G\<close>
-        by (meson \<open>is_onb B\<close> is_onb_def is_ortho_set_antimono)
-      from \<open>G \<subseteq> B\<close> have [simp]: \<open>e \<in> G \<Longrightarrow> norm e = 1\<close> for e
-        by (meson Set.basic_monos(7) \<open>is_onb B\<close> is_onb_def)
-      have [simp]: \<open>inj_on (\<lambda>x. (vector_to_cblinfun x*, x)) G\<close>
-        by (meson inj_onI prod.inject)
-      have \<open>(\<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E) = (\<Sum>x\<in>G. selfbutter x)\<close>
-        by (simp add: FG sum.reindex flip: butterfly_def_one_dim)
-      also have \<open>(\<Sum>x\<in>G. selfbutter x) \<le> id_cblinfun\<close>
-        apply (rule sum_butterfly_leq_id)
-        by auto
-      finally show ?thesis
-        by -
-    qed
-    then show ?thesis
-      by (auto intro!: bdd_aboveI[where M=id_cblinfun] kraus_familyI)
-  qed
-  then
-  show \<open>(if is_onb B then family else {}) \<in> Collect kraus_family\<close>
-    by auto
-qed
-
-lemma kf_trace_is_trace: 
-  assumes \<open>is_onb B\<close>
-  shows \<open>kf_trace B *\<^sub>k\<^sub>r \<rho> = one_dim_iso (trace_tc \<rho>)\<close>
-proof -
-  define \<rho>' where \<open>\<rho>' = from_trace_class \<rho>\<close>
-  have \<open>kf_apply (kf_trace B) \<rho> = (\<Sum>\<^sub>\<infinity>x\<in>B. sandwich_tc (vector_to_cblinfun x*) \<rho>)\<close>
-    apply (simp add: kf_apply.rep_eq kf_trace.rep_eq assms)
-    apply (subst infsum_reindex)
-     apply (meson inj_onI prod.simps(1))
-    by (simp add: o_def)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>x\<in>B. one_dim_iso (x \<bullet>\<^sub>C (\<rho>' x)))\<close>
-    apply (intro infsum_cong from_trace_class_inject[THEN iffD1])
-    apply (subst from_trace_class_sandwich_tc)
-    by (simp add: sandwich_apply flip: \<rho>'_def)
-  also have \<open>\<dots> = one_dim_iso (\<Sum>\<^sub>\<infinity>x\<in>B. (x \<bullet>\<^sub>C (\<rho>' x)))\<close>
-    by (metis (mono_tags, lifting) \<rho>'_def infsum_cblinfun_apply infsum_cong assms one_cblinfun.rep_eq trace_class_from_trace_class trace_exists)
-  also have \<open>\<dots> = one_dim_iso (trace \<rho>')\<close>
-    by (metis \<rho>'_def trace_class_from_trace_class trace_alt_def[OF assms])
-  also have \<open>\<dots> = one_dim_iso (trace_tc \<rho>)\<close>
-    by (simp add: \<rho>'_def trace_tc.rep_eq)
-  finally show ?thesis
-    by -
-qed
-
-lemma kf_eq_weak_kf_trace:
-  assumes \<open>is_onb A\<close> and \<open>is_onb B\<close>
-  shows \<open>kf_trace A =\<^sub>k\<^sub>r kf_trace B\<close>
-  by (auto simp: kf_eq_weak_def kf_trace_is_trace assms)
-
-lemma trace_is_kf_trace:
-  assumes \<open>is_onb B\<close>
-  shows \<open>trace_tc t = one_dim_iso (kf_trace B *\<^sub>k\<^sub>r t)\<close>
-  by (simp add: kf_trace_is_trace assms)
-
+subsection \<open>Partial trace\<close>
 
 definition kf_partial_trace_right :: \<open>(('a\<times>'b) ell2, 'a ell2, 'b) kraus_family\<close> where
   \<open>kf_partial_trace_right = kf_map (\<lambda>((_,b),_). inv ket b)
@@ -3982,31 +4253,15 @@ proof (rule fun_cong[where x=\<rho>], rule eq_from_separatingI2[OF separating_se
     by (auto intro!: simp: kf_apply_tensor partial_trace_tensor kf_trace_preserving_def)
 qed
 
-lemma kf_trace_bound:
-  assumes \<open>is_onb B\<close>
-  shows \<open>kf_bound (kf_trace B) = id_cblinfun\<close>
-  using assms
-  apply (auto intro!: cblinfun_cinner_eqI simp: kf_bound_from_map kf_trace_is_trace)
-  by (metis cinner_complex_def cnorm_eq_1 complex_cnj_one norm_tc_butterfly norm_tc_pos of_real_1 of_real_mult one_cinner_one tc_butterfly_pos)
-
-lemma kf_trace_norm:
-  fixes B :: \<open>'a::{chilbert_space, not_singleton} set\<close>
-  assumes \<open>is_onb B\<close>
-  shows \<open>kf_norm (kf_trace B) = 1\<close>
-  using assms by (simp add: kf_trace_bound kf_norm_def)
-
 lemma kf_partial_trace_bound[simp]:
-  assumes \<open>is_onb B\<close>
   shows \<open>kf_bound kf_partial_trace_right = id_cblinfun\<close>
-  using assms
   by (simp add: kf_partial_trace_right_def kf_map_bound
       unitary_tensor_ell2_right_CARD_1 kf_bound_comp_iso kf_bound_tensor
       kf_trace_bound)
 
 lemma kf_partial_trace_norm[simp]:
-  assumes \<open>is_onb B\<close>
   shows \<open>kf_norm kf_partial_trace_right = 1\<close>
-  using assms by (simp add: kf_norm_def)
+  by (simp add: kf_norm_def)
 
 lemma kf_partial_trace_right_apply_singleton:
     \<open>kf_partial_trace_right *\<^sub>k\<^sub>r @{x} \<rho> = sandwich_tc (tensor_ell2_right (ket x)*) \<rho>\<close>
@@ -4127,60 +4382,70 @@ proof (intro Set.set_eqI iffI UNIV_I)
     by (rule in_kf_domain_iff_apply_nonzero[THEN iffD2])
 qed
 
+
 subsection \<open>Complete measurement\<close>
 
-lemma complete_measurement_is_kraus_family: 
-  assumes \<open>is_ortho_set B\<close>
-  shows \<open>kraus_family ((\<lambda>x. (selfbutter (sgn x), x)) ` B)\<close>
+lemma complete_measurement_aux:
+  fixes B and F :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'a \<times> 'a) set\<close>
+  defines \<open>family \<equiv> (\<lambda>x. (selfbutter (sgn x), x)) ` B\<close>
+  assumes \<open>finite F\<close> and FB: \<open>F \<subseteq> family\<close> and \<open>is_ortho_set B\<close>
+  shows \<open>(\<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E) \<le> id_cblinfun\<close>
 proof -
-  define family :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'a \<times> 'a) set\<close> where \<open>family = (\<lambda>x. (selfbutter (sgn x), x)) ` B\<close>
-  show \<open>kraus_family family\<close>
-  proof -
-    have \<open>(\<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E) \<le> id_cblinfun\<close> if \<open>finite F\<close> and FB: \<open>F \<subseteq> family\<close> for F :: \<open>('a \<Rightarrow>\<^sub>C\<^sub>L 'a \<times> 'a) set\<close>
-    proof -
-      obtain G where \<open>finite G\<close> and \<open>G \<subseteq> B\<close> and FG: \<open>F = (\<lambda>x. (selfbutter (sgn x), x)) ` G\<close>
-        apply atomize_elim
-        using \<open>finite F\<close> and FB
-        apply (simp add: family_def)
-        by (meson finite_subset_image)
-      from \<open>G \<subseteq> B\<close> have [simp]: \<open>is_ortho_set G\<close>
-        by (simp add: \<open>is_ortho_set B\<close> is_ortho_set_antimono)
-      then have [simp]: \<open>e \<in> G \<Longrightarrow> norm (sgn e) = 1\<close> for e
-        apply (simp add: is_ortho_set_def)
-        by (metis norm_sgn)
-      have [simp]: \<open>inj_on (\<lambda>x. (selfbutter (sgn x), x)) G\<close>
-        by (meson inj_onI prod.inject)
-      have [simp]: \<open>inj_on sgn G\<close>
-      proof (rule inj_onI, rule ccontr)
-        fix x y assume \<open>x \<in> G\<close> and \<open>y \<in> G\<close> and sgn_eq: \<open>sgn x = sgn y\<close> and \<open>x \<noteq> y\<close>
-        with \<open>is_ortho_set G\<close> have \<open>is_orthogonal x y\<close>
-          by (meson is_ortho_set_def)
-        then have \<open>is_orthogonal (sgn x) (sgn y)\<close>
-          by fastforce
-        with sgn_eq have \<open>sgn x = 0\<close>
-          by force
-        with \<open>x \<in> G\<close> \<open>is_ortho_set G\<close> show False
-          by (metis \<open>x \<noteq> y\<close> local.sgn_eq sgn_zero_iff)
-      qed
-      have \<open>(\<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E) = (\<Sum>x\<in>G. selfbutter (sgn x))\<close>
-        by (simp add: FG sum.reindex cdot_square_norm)
-      also have \<open>(\<Sum>x\<in>G. selfbutter (sgn x)) \<le> id_cblinfun\<close>
-        apply (subst sum.reindex[where h=sgn, unfolded o_def, symmetric])
-        using \<open>is_ortho_set G\<close>
-         apply (auto intro!: sum_butterfly_leq_id simp: is_ortho_set_def sgn_zero_iff)
-        by fast
-      finally show ?thesis
-        by -
-    qed
-    then show ?thesis
-      by (auto intro!: bdd_aboveI[where M=id_cblinfun] kraus_familyI)
+  obtain G where \<open>finite G\<close> and \<open>G \<subseteq> B\<close> and FG: \<open>F = (\<lambda>x. (selfbutter (sgn x), x)) ` G\<close>
+    apply atomize_elim
+    using \<open>finite F\<close> and FB
+    apply (simp add: family_def)
+    by (meson finite_subset_image)
+  from \<open>G \<subseteq> B\<close> have [simp]: \<open>is_ortho_set G\<close>
+    by (simp add: \<open>is_ortho_set B\<close> is_ortho_set_antimono)
+  then have [simp]: \<open>e \<in> G \<Longrightarrow> norm (sgn e) = 1\<close> for e
+    apply (simp add: is_ortho_set_def)
+    by (metis norm_sgn)
+  have [simp]: \<open>inj_on (\<lambda>x. (selfbutter (sgn x), x)) G\<close>
+    by (meson inj_onI prod.inject)
+  have [simp]: \<open>inj_on sgn G\<close>
+  proof (rule inj_onI, rule ccontr)
+    fix x y assume \<open>x \<in> G\<close> and \<open>y \<in> G\<close> and sgn_eq: \<open>sgn x = sgn y\<close> and \<open>x \<noteq> y\<close>
+    with \<open>is_ortho_set G\<close> have \<open>is_orthogonal x y\<close>
+      by (meson is_ortho_set_def)
+    then have \<open>is_orthogonal (sgn x) (sgn y)\<close>
+      by fastforce
+    with sgn_eq have \<open>sgn x = 0\<close>
+      by force
+    with \<open>x \<in> G\<close> \<open>is_ortho_set G\<close> show False
+      by (metis \<open>x \<noteq> y\<close> local.sgn_eq sgn_zero_iff)
   qed
+  have \<open>(\<Sum>(E, x)\<in>F. E* o\<^sub>C\<^sub>L E) = (\<Sum>x\<in>G. selfbutter (sgn x))\<close>
+    by (simp add: FG sum.reindex cdot_square_norm)
+  also have \<open>(\<Sum>x\<in>G. selfbutter (sgn x)) \<le> id_cblinfun\<close>
+    apply (subst sum.reindex[where h=sgn, unfolded o_def, symmetric])
+    using \<open>is_ortho_set G\<close>
+     apply (auto intro!: sum_butterfly_leq_id simp: is_ortho_set_def sgn_zero_iff)
+    by fast
+  finally show ?thesis
+    by -
 qed
 
+lemma complete_measurement_is_kraus_family:
+  assumes \<open>is_ortho_set B\<close>
+  shows \<open>kraus_family ((\<lambda>x. (selfbutter (sgn x), x)) ` B)\<close>
+  using complete_measurement_aux[OF _ _ assms]
+  by (auto intro!: bdd_aboveI[where M=id_cblinfun] kraus_familyI)
 
 lift_definition kf_complete_measurement :: \<open>'a set \<Rightarrow> ('a::chilbert_space, 'a, 'a) kraus_family\<close> is
   \<open>\<lambda>B. if is_ortho_set B then (\<lambda>x. (selfbutter (sgn x), x)) ` B else {}\<close>
   by (auto intro!: complete_measurement_is_kraus_family)
+
+lemma kf_bound_complete_measurement:
+  assumes \<open>is_ortho_set B\<close>
+  shows \<open>kf_bound (kf_complete_measurement B) \<le> id_cblinfun\<close>
+  apply (rule kf_bound_leqI)
+  by (simp add: assms complete_measurement_aux kf_complete_measurement.rep_eq)
+
+lemma kf_norm_complete_measurement:
+  assumes \<open>is_ortho_set B\<close>
+  shows \<open>kf_norm (kf_complete_measurement B) \<le> 1\<close>
+  by (smt (verit, ccfv_SIG) assms kf_norm_def kf_bound_complete_measurement kf_bound_pos norm_cblinfun_id_le norm_cblinfun_mono)
 
 
 lemma kf_complete_measurement_idem[simp]:
@@ -4254,23 +4519,132 @@ proof -
     by -
 qed
 
+lemma kf_complete_measurement_has_sum:
+  assumes \<open>is_ortho_set B\<close>
+  shows \<open>((\<lambda>x. sandwich_tc (selfbutter (sgn x)) \<rho>) has_sum kf_complete_measurement B *\<^sub>k\<^sub>r \<rho>) B\<close>
+  using kf_apply_has_sum[of _ \<open>kf_complete_measurement B\<close>] assms
+  by (simp add: kf_complete_measurement_apply kf_complete_measurement.rep_eq
+      has_sum_reindex inj_on_def o_def)
+
+lemma kf_complete_measurement_has_sum_onb:
+  assumes \<open>is_onb B\<close>
+  shows \<open>((\<lambda>x. sandwich_tc (selfbutter x) \<rho>) has_sum kf_complete_measurement B *\<^sub>k\<^sub>r \<rho>) B\<close>
+proof -
+  have \<open>is_ortho_set B\<close>
+    using assms by (simp add: is_onb_def)
+  have sgnx: \<open>sgn x = x\<close> if \<open>x \<in> B\<close> for x
+    using assms that
+    by (simp add: is_onb_def sgn_div_norm)
+  from kf_complete_measurement_has_sum[OF \<open>is_ortho_set B\<close>]
+  show ?thesis
+    apply (rule has_sum_cong[THEN iffD1, rotated])
+    by (simp add: sgnx)
+qed
+
 lemma kf_complete_measurement_apply_onb:
   assumes \<open>is_onb B\<close>
   shows \<open>kf_complete_measurement B *\<^sub>k\<^sub>r t = (\<Sum>\<^sub>\<infinity>x\<in>B. sandwich_tc (selfbutter x) t)\<close>
-proof -
-  have [simp]: \<open>is_ortho_set B\<close>
-    using assms by (simp add: is_onb_def)
-  have [simp]: \<open>sgn x = x\<close> if \<open>x \<in> B\<close> for x
-    using assms that
-    by (simp add: is_onb_def sgn_div_norm)
-  have \<open>kf_complete_measurement B *\<^sub>k\<^sub>r t = (\<Sum>\<^sub>\<infinity>x\<in>B. sandwich_tc (selfbutter (sgn x)) t)\<close>
-    by (simp add: kf_complete_measurement_apply)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>x\<in>B. sandwich_tc (selfbutter x) t)\<close>
-    apply (rule infsum_cong)
+  using kf_complete_measurement_has_sum_onb[OF assms]
+  by (metis (lifting) infsumI)
+
+(* TODO move *)
+lemma antilinear_eq_0_on_span:
+  assumes \<open>antilinear f\<close>
+    and \<open>\<And>x. x \<in> b \<Longrightarrow> f x = 0\<close>
+    and \<open>x \<in> cspan b\<close>
+  shows \<open>f x = 0\<close>
+  by x
+
+
+(* TODO move *)
+lemma antilinear_diff:
+  assumes \<open>antilinear f\<close> and \<open>antilinear g\<close>
+  shows \<open>antilinear (\<lambda>x. f x - g x)\<close>
+  apply (rule antilinearI)
+   apply (metis add_diff_add additive.add antilinear_def assms(1,2))
+  by (simp add: antilinear.scaleC assms(1,2) scaleC_right.diff)
+
+(* TODO move *)
+lemma antilinear_cinner:
+  shows \<open>antilinear (\<lambda>x. x \<bullet>\<^sub>C y)\<close>
+  by (simp add: antilinearI cinner_add_left)
+
+
+(* TODO move *)
+lemma cinner_extensionality_basis:
+  fixes g h :: \<open>'a::complex_inner\<close>
+  assumes \<open>ccspan B = \<top>\<close>
+  assumes \<open>\<And>x. x \<in> B \<Longrightarrow> x \<bullet>\<^sub>C g = x \<bullet>\<^sub>C h\<close>
+  shows \<open>g = h\<close>
+proof (rule cinner_extensionality)
+  fix y :: 'a
+  have \<open>y \<in> closure (cspan B)\<close>
+    using assms(1) ccspan.rep_eq by fastforce
+  then obtain x where \<open>x \<longlonglongrightarrow> y\<close> and xB: \<open>x i \<in> cspan B\<close> for i
+    using closure_sequential by blast
+  have lin: \<open>antilinear (\<lambda>a. a \<bullet>\<^sub>C g - a \<bullet>\<^sub>C h)\<close>
+    by (intro antilinear_diff antilinear_cinner)
+  from lin have \<open>x i \<bullet>\<^sub>C g - x i \<bullet>\<^sub>C h = 0\<close> for i
+    apply (rule antilinear_eq_0_on_span[of _ B])
+    using xB assms by auto
+  then have \<open>(\<lambda>i. x i \<bullet>\<^sub>C g - x i \<bullet>\<^sub>C h) \<longlonglongrightarrow> 0\<close> for i
     by simp
-  finally show ?thesis
+  moreover have \<open>(\<lambda>i. x i \<bullet>\<^sub>C g - x i \<bullet>\<^sub>C h) \<longlonglongrightarrow> y \<bullet>\<^sub>C g - y \<bullet>\<^sub>C h\<close>
+    apply (rule_tac continuous_imp_tendsto[unfolded o_def, OF _ \<open>x \<longlonglongrightarrow> y\<close>])
+    by simp
+  ultimately have \<open>y \<bullet>\<^sub>C g - y \<bullet>\<^sub>C h = 0\<close>
+    using LIMSEQ_unique by blast
+  then show \<open>y \<bullet>\<^sub>C g = y \<bullet>\<^sub>C h\<close>
+    by simp
+qed
+
+lemma kf_bound_complete_measurement_onb[simp]:
+  assumes \<open>is_onb B\<close>
+  shows \<open>kf_bound (kf_complete_measurement B) = id_cblinfun\<close>
+  apply (rule cblinfun_eq_gen_eqI[where G=B])
+   apply (rule cinner_extensionality_basis[where B=B])
+proof -
+  show \<open>ccspan B = \<top>\<close>
+    using assms is_onb_def by blast
+  then show \<open>ccspan B = \<top>\<close>
+    by -
+  fix x y assume \<open>x \<in> B\<close> and \<open>y \<in> B\<close>
+  have aux1: \<open>j \<noteq> x \<Longrightarrow> j \<in> B \<Longrightarrow> sandwich_tc (selfbutter j) (tc_butterfly y x) = 0\<close> for j
+    apply (transfer' fixing: x B j y)
+    by (smt (z3) \<open>x \<in> B\<close> apply_id_cblinfun assms butterfly_0_right butterfly_adjoint butterfly_def cblinfun_apply_cblinfun_compose
+        cblinfun_comp_butterfly is_onb_def is_ortho_setD of_complex_eq_id sandwich_apply vector_to_cblinfun_adj_apply)
+  have aux2: \<open>trace_tc (sandwich_tc (selfbutter y) (tc_butterfly y y)) = 1\<close>
+    apply (transfer' fixing: y)
+    by (metis (no_types, lifting) ext \<open>y \<in> B\<close> assms butterfly_adjoint butterfly_comp_butterfly cblinfun_comp_butterfly cinner_simps(6)
+        is_onb_def norm_one one_cinner_a_scaleC_one one_cinner_one sandwich_apply selfbutter_pos trace_butterfly trace_norm_butterfly
+        trace_norm_pos trace_scaleC)
+  have aux3: \<open>x \<noteq> y \<Longrightarrow> trace_tc (sandwich_tc (selfbutter x) (tc_butterfly y x)) = 0\<close>
+    apply (transfer' fixing: x y)
+    by (metis (no_types, lifting) ext Trace_Class.trace_0 \<open>x \<in> B\<close> \<open>y \<in> B\<close> apply_id_cblinfun assms butterfly_0_left butterfly_def
+        cblinfun.zero_right cblinfun_apply_cblinfun_compose cblinfun_comp_butterfly is_onb_def is_ortho_setD of_complex_eq_id
+        sandwich_apply vector_to_cblinfun_adj_apply)
+
+  have \<open>x \<bullet>\<^sub>C (kf_bound (kf_complete_measurement B) *\<^sub>V y) = trace_tc (kf_complete_measurement B *\<^sub>k\<^sub>r tc_butterfly y x)\<close>
+    by (simp add: kf_bound_from_map)
+  also have \<open>\<dots> = trace_tc (\<Sum>\<^sub>\<infinity>xa\<in>B. sandwich_tc (selfbutter xa) (tc_butterfly y x))\<close>
+    by (simp add: kf_complete_measurement_apply_onb assms)
+  also have \<open>\<dots> = trace_tc (if x \<in> B then sandwich_tc (selfbutter x) (tc_butterfly y x) else 0)\<close>
+    apply (subst infsum_single[where i=x])
+    using aux1 by auto
+  also have \<open>\<dots> = of_bool (x = y)\<close>
+    using \<open>y \<in> B\<close> aux2 aux3 by (auto intro!: simp: )
+  also have \<open>\<dots> = x \<bullet>\<^sub>C (id_cblinfun *\<^sub>V y)\<close>
+    using \<open>x \<in> B\<close> \<open>y \<in> B\<close> assms cnorm_eq_1 is_onb_def is_ortho_setD by fastforce
+  finally show \<open>x \<bullet>\<^sub>C (kf_bound (kf_complete_measurement B) *\<^sub>V y) = x \<bullet>\<^sub>C (id_cblinfun *\<^sub>V y)\<close>
     by -
 qed
+
+lemma kf_norm_complete_measurement_onb[simp]:
+  fixes B :: \<open>'a::{not_singleton, chilbert_space} set\<close>
+  assumes \<open>is_onb B\<close>
+  shows \<open>kf_norm (kf_complete_measurement B) = 1\<close>
+  by (simp add: kf_norm_def assms)
+
 
 lemma kf_complete_measurement_apply_ket:
   \<open>kf_complete_measurement (range ket) *\<^sub>k\<^sub>r t = (\<Sum>\<^sub>\<infinity>x. sandwich_tc (selfbutter (ket x)) t)\<close>

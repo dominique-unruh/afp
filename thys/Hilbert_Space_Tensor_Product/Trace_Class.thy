@@ -1542,6 +1542,11 @@ end
 lemma from_trace_class_0[simp]: \<open>from_trace_class 0 = 0\<close>
   by (simp add: zero_trace_class.rep_eq)
 
+lemma not_not_singleton_tc_zero:
+  \<open>x = 0\<close> if \<open>\<not> class.not_singleton TYPE('a)\<close> for x :: \<open>('a::chilbert_space,'b::chilbert_space) trace_class\<close>
+  apply transfer'
+  using that by (rule not_not_singleton_cblinfun_zero)
+
 instantiation trace_class :: (chilbert_space, chilbert_space) "{complex_normed_vector}" begin
 (* Definitions related to the trace norm *)
 lift_definition norm_trace_class :: \<open>('a,'b) trace_class \<Rightarrow> real\<close> is trace_norm .
