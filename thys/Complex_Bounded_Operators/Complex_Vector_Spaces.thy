@@ -708,6 +708,19 @@ lemma abs_summable_on_scaleC_right [intro]:
 lemma clinear_of_complex[iff]: \<open>clinear of_complex\<close>
   by (simp add: clinearI)
 
+lemma infsum_of_bool_scaleC: \<open>(\<Sum>\<^sub>\<infinity>x\<in>X. of_bool (x=y) *\<^sub>C f x) = of_bool (y\<in>X) *\<^sub>C f y\<close> for f :: \<open>_ \<Rightarrow> _::complex_vector\<close>
+  apply (cases \<open>y\<in>X\<close>)
+   apply (subst infsum_cong_neutral[where T=\<open>{y}\<close> and g=f])
+      apply auto[4]
+  apply (subst infsum_cong_neutral[where T=\<open>{}\<close> and g=f])
+  by auto
+
+lemma has_sum_bounded_clinear:
+  assumes "bounded_clinear h" and "(f has_sum S) A"
+  shows "((\<lambda>x. h (f x)) has_sum h S) A"
+  apply (rule has_sum_bounded_linear[where h=h])
+  by (auto intro!: bounded_clinear.bounded_linear assms)
+
 subsection \<open>Antilinear maps and friends\<close>
 
 locale antilinear = additive f for f :: "'a::complex_vector \<Rightarrow> 'b::complex_vector" +
@@ -1080,6 +1093,13 @@ proof -
         simp add: f.add_right f.scaleC_right mult.commute mult.left_commute)
 qed
 
+lemma antilinear_diff:
+  assumes \<open>antilinear f\<close> and \<open>antilinear g\<close>
+  shows \<open>antilinear (\<lambda>x. f x - g x)\<close>
+  apply (rule antilinearI)
+   apply (metis add_diff_add additive.add antilinear_def assms(1,2))
+  by (simp add: antilinear.scaleC assms(1,2) scaleC_right.diff)
+
 subsection \<open>Misc 2\<close>
 
 lemma summable_on_scaleC_left [intro]:
@@ -1142,6 +1162,12 @@ proof -
   qed
 qed
 
+lemma has_sum_scaleC_right:
+  fixes f :: \<open>'a \<Rightarrow> 'b :: complex_normed_vector\<close>
+  assumes \<open>(f has_sum s) A\<close>
+  shows \<open>((\<lambda>x. c *\<^sub>C f x) has_sum c *\<^sub>C s) A\<close>
+  apply (rule has_sum_bounded_clinear[where h=\<open>(*\<^sub>C) c\<close>])
+  using bounded_clinear_scaleC_right assms by auto
 
 
 lemmas sums_of_complex = bounded_linear.sums [OF bounded_clinear_of_complex[THEN bounded_clinear.bounded_linear]]
@@ -3076,6 +3102,31 @@ proof -
   ultimately have \<open>?A ?t = ?B ?t\<close>
     by (rule bounded_clinear_eq_on_closure)
   then show \<open>A t = B t\<close>
+    by (simp add: to_conjugate_space_inverse)
+qed
+
+lemma to_conjugate_space_0[simp]: \<open>to_conjugate_space 0 = 0\<close>
+  by (simp add: zero_conjugate_space.abs_eq)
+
+lemma from_conjugate_space_0[simp]: \<open>from_conjugate_space 0 = 0\<close>
+  using zero_conjugate_space.rep_eq by blast
+
+lemma antilinear_eq_0_on_span:
+  assumes \<open>antilinear f\<close>
+    and \<open>\<And>x. x \<in> b \<Longrightarrow> f x = 0\<close>
+    and \<open>x \<in> cspan b\<close>
+  shows \<open>f x = 0\<close>
+proof -
+  from assms(1)
+  have \<open>clinear (\<lambda>x. to_conjugate_space (f x))\<close>
+    apply (rule antilinear_o_antilinear[unfolded o_def])
+    by simp
+  then have \<open>to_conjugate_space (f x) = 0\<close>
+    apply (rule complex_vector.linear_eq_0_on_span)
+    using assms by auto
+  then have \<open>from_conjugate_space (to_conjugate_space (f x)) = 0\<close>
+    by simp
+  then show ?thesis
     by (simp add: to_conjugate_space_inverse)
 qed
 

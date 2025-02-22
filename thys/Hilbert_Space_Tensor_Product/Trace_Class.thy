@@ -2535,6 +2535,10 @@ lemma norm_tc_butterfly: \<open>norm (tc_butterfly \<psi> \<phi>) = norm \<psi> 
   apply (transfer fixing: \<psi> \<phi>)
   by (simp add: trace_norm_butterfly)
 
+lemma trace_tc_butterfly: \<open>trace_tc (tc_butterfly x y) = y \<bullet>\<^sub>C x\<close>
+  apply (transfer fixing: x y)
+  by (rule trace_butterfly)
+
 lemma comp_tc_butterfly[simp]: \<open>tc_compose (tc_butterfly a b) (tc_butterfly c d) = (b \<bullet>\<^sub>C c) *\<^sub>C tc_butterfly a d\<close>
   apply transfer'
   by simp

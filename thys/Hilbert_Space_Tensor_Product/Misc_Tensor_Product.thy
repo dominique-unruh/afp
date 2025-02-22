@@ -1291,6 +1291,30 @@ proof -
     using assms by simp
 qed
 
+lemma summable_on_in_cong:
+  assumes "\<And>x. x\<in>A \<Longrightarrow> f x = g x"
+  shows "summable_on_in T f A \<longleftrightarrow> summable_on_in T g A"
+  by (simp add: summable_on_in_def has_sum_in_cong[OF assms])
+
+lemma infsum_in_0:
+  assumes \<open>Hausdorff_space T\<close> and \<open>0 \<in> topspace T\<close>
+  assumes \<open>\<And>x. x\<in>M \<Longrightarrow> f x = 0\<close>
+  shows \<open>infsum_in T f M = 0\<close>
+proof -
+  have \<open>has_sum_in T f M 0\<close>
+    using assms
+    by (auto intro!: has_sum_in_0 Hausdorff_imp_t1_space)
+  then show ?thesis
+    by (meson assms(1) has_sum_in_infsum_in has_sum_in_unique not_summable_infsum_in_0)
+qed
+
+lemma summable_on_in_finite:
+  fixes f :: \<open>'a \<Rightarrow> 'b::{comm_monoid_add,topological_space}\<close>
+  assumes "finite F"
+  assumes \<open>sum f F \<in> topspace T\<close>
+  shows "summable_on_in T f F"
+  using assms summable_on_in_def has_sum_in_finite by blast
+
 lemma has_sum_diff:
   fixes f g :: "'a \<Rightarrow> 'b::{topological_ab_group_add}"
   assumes \<open>(f has_sum a) A\<close>
@@ -1311,6 +1335,20 @@ lemma summable_on_cdivide:
   shows "(\<lambda>x. f x / c) summable_on A"
   apply (subst division_ring_class.divide_inverse)
   using assms summable_on_cmult_left by blast
+
+lemma has_sum_in_weaker_topology:
+  assumes \<open>continuous_map T U (\<lambda>f. f)\<close>
+  assumes \<open>has_sum_in T f A l\<close>
+  shows \<open>has_sum_in U f A l\<close>
+  using continuous_map_limit[OF assms(1)]
+  using assms(2)
+  by (auto simp: has_sum_in_def o_def)
+
+lemma summable_on_in_weaker_topology:
+  assumes \<open>continuous_map T U (\<lambda>f. f)\<close>
+  assumes \<open>summable_on_in T f A\<close>
+  shows \<open>summable_on_in U f A\<close>
+  by (meson assms(1,2) has_sum_in_weaker_topology summable_on_in_def)
 
 lemma norm_abs[simp]: \<open>norm (abs x) = norm x\<close> for x :: \<open>'a :: {idom_abs_sgn, real_normed_div_algebra}\<close>
 proof -

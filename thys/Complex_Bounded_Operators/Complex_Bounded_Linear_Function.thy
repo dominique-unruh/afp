@@ -11,11 +11,13 @@ Authors:
 theory Complex_Bounded_Linear_Function
   imports
     "HOL-Types_To_Sets.Types_To_Sets"
+    "HOL-Library.Function_Algebras"
     Banach_Steinhaus.Banach_Steinhaus
+    Wlog.Wlog
+
     Complex_Inner_Product
     One_Dimensional_Spaces
     Complex_Bounded_Linear_Function0
-    "HOL-Library.Function_Algebras"
 begin
 
 unbundle lattice_syntax
@@ -658,6 +660,43 @@ lemma Cblinfun_comp_bounded_sesquilinear: \<open>bounded_antilinear (CBlinfun o 
 
 declare (in bounded_cbilinear) bounded_cbilinear_axioms[bounded_cbilinear]
 declare (in bounded_clinear) bounded_clinear_axioms[bounded_clinear]
+
+lemma norm_cblinfun_bound_both_sides:
+  fixes a :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_inner\<close>
+  assumes \<open>b \<ge> 0\<close>
+  assumes leq: \<open>\<And>\<psi> \<phi>. norm \<psi> = 1 \<Longrightarrow> norm \<phi> = 1 \<Longrightarrow> norm (\<psi> \<bullet>\<^sub>C a \<phi>) \<le> b\<close>
+  shows \<open>norm a \<le> b\<close>
+proof -
+  wlog not_singleton: \<open>class.not_singleton TYPE('a)\<close>
+    apply (subst not_not_singleton_cblinfun_zero)
+    by (simp_all add: negation assms)
+  have \<open>norm a = (\<Squnion>(\<psi>, \<phi>). cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<phi>)) / (norm \<psi> * norm \<phi>))\<close>
+    apply (rule cinner_sup_norm_cblinfun[internalize_sort' 'a])
+     apply (rule complex_normed_vector_axioms)
+    by (fact not_singleton)
+  also have \<open>\<dots> \<le> b\<close>
+  proof (rule cSUP_least)
+    show \<open>UNIV \<noteq> {}\<close>
+      by simp
+    fix x :: \<open>'b \<times> 'a\<close>
+    obtain \<psi> \<phi> where x: \<open>x = (\<psi>, \<phi>)\<close>
+      by fastforce
+    have \<open>(case x of (\<psi>, \<phi>) \<Rightarrow> cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<phi>)) / (norm \<psi> * norm \<phi>)) = cmod (\<psi> \<bullet>\<^sub>C a \<phi>) / (norm \<psi> * norm \<phi>)\<close>
+      using x by force
+    also have \<open>\<dots> = cmod (sgn \<psi> \<bullet>\<^sub>C a (sgn \<phi>))\<close>
+      by (simp add: sgn_div_norm cblinfun.scaleR_right divide_inverse_commute norm_inverse norm_mult)
+    also have \<open>\<dots> \<le> b\<close>
+      apply (cases \<open>\<psi> = 0\<close>, simp add: assms)
+      apply (cases \<open>\<phi> = 0\<close>, simp add: assms)
+      apply (rule leq)
+      by (simp_all add: norm_sgn)
+    finally show \<open>(case x of (\<psi>, \<phi>) \<Rightarrow> cmod (\<psi> \<bullet>\<^sub>C (a *\<^sub>V \<phi>)) / (norm \<psi> * norm \<phi>)) \<le> b\<close>
+      by -
+  qed
+  finally show ?thesis
+    by -
+qed
+
 
 subsection \<open>Relationship to real bounded operators (\<^typ>\<open>_ \<Rightarrow>\<^sub>L _\<close>)\<close>
 
@@ -3793,6 +3832,16 @@ lemma image_vector_to_cblinfun_adj':
   shows \<open>(vector_to_cblinfun \<psi>)* *\<^sub>S \<top> = \<top>\<close>
   apply (rule image_vector_to_cblinfun_adj)
   using assms by simp
+
+lemma vector_to_cblinfun_inj: \<open>inj_on (vector_to_cblinfun :: 'a::complex_normed_vector \<Rightarrow> 'b::one_dim \<Rightarrow>\<^sub>C\<^sub>L _) X\<close>
+proof (rule inj_onI)
+  fix x y :: 'a
+  assume \<open>vector_to_cblinfun x = (vector_to_cblinfun y :: 'b \<Rightarrow>\<^sub>C\<^sub>L _)\<close>
+  then have \<open>vector_to_cblinfun x (1::'b) = vector_to_cblinfun y (1::'b)\<close>
+    by simp
+  then show \<open>x = y\<close>
+    by simp
+qed
 
 subsection \<open>Rank-1 operators / butterflies\<close>
 

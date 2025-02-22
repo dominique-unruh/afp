@@ -2583,4 +2583,36 @@ proof -
     by (simp add: orthogonal_complement_orthogonal_complement_closure_cspan)
 qed
 
+lemma antilinear_cinner:
+  shows \<open>antilinear (\<lambda>x. x \<bullet>\<^sub>C y)\<close>
+  by (simp add: antilinearI cinner_add_left)
+
+lemma cinner_extensionality_basis:
+  fixes g h :: \<open>'a::complex_inner\<close>
+  assumes \<open>ccspan B = top\<close>
+  assumes \<open>\<And>x. x \<in> B \<Longrightarrow> x \<bullet>\<^sub>C g = x \<bullet>\<^sub>C h\<close>
+  shows \<open>g = h\<close>
+proof (rule cinner_extensionality)
+  fix y :: 'a
+  have \<open>y \<in> closure (cspan B)\<close>
+    using assms(1) ccspan.rep_eq by fastforce
+  then obtain x where \<open>x \<longlonglongrightarrow> y\<close> and xB: \<open>x i \<in> cspan B\<close> for i
+    using closure_sequential by blast
+  have lin: \<open>antilinear (\<lambda>a. a \<bullet>\<^sub>C g - a \<bullet>\<^sub>C h)\<close>
+    by (intro antilinear_diff antilinear_cinner)
+  from lin have \<open>x i \<bullet>\<^sub>C g - x i \<bullet>\<^sub>C h = 0\<close> for i
+    apply (rule antilinear_eq_0_on_span[of _ B])
+    using xB assms by auto
+  then have \<open>(\<lambda>i. x i \<bullet>\<^sub>C g - x i \<bullet>\<^sub>C h) \<longlonglongrightarrow> 0\<close> for i
+    by simp
+  moreover have \<open>(\<lambda>i. x i \<bullet>\<^sub>C g - x i \<bullet>\<^sub>C h) \<longlonglongrightarrow> y \<bullet>\<^sub>C g - y \<bullet>\<^sub>C h\<close>
+    apply (rule_tac continuous_imp_tendsto[unfolded o_def, OF _ \<open>x \<longlonglongrightarrow> y\<close>])
+    by simp
+  ultimately have \<open>y \<bullet>\<^sub>C g - y \<bullet>\<^sub>C h = 0\<close>
+    using LIMSEQ_unique by blast
+  then show \<open>y \<bullet>\<^sub>C g = y \<bullet>\<^sub>C h\<close>
+    by simp
+qed
+
+
 end
