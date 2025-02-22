@@ -671,7 +671,168 @@ qed
 
 subsection \<open>Tensor products\<close>
 
-subsection \<open>Trace and trace class\<close>
+
+definition km_tensor :: \<open>(('a ell2, 'c ell2) trace_class \<Rightarrow> ('e ell2, 'g ell2) trace_class)
+                      \<Rightarrow> (('b ell2, 'd ell2) trace_class \<Rightarrow> ('f ell2, 'h ell2) trace_class)
+                      \<Rightarrow> (('a \<times> 'b) ell2, ('c \<times> 'd) ell2) trace_class \<Rightarrow> (('e \<times> 'f) ell2, ('g \<times> 'h) ell2) trace_class\<close> where
+  \<open>km_tensor \<EE> \<FF> = (SOME \<EE>\<FF>. bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>)))\<close>
+
+definition km_tensor_exists :: \<open>(('a ell2, 'b ell2) trace_class \<Rightarrow> ('c ell2, 'd ell2) trace_class)
+                             \<Rightarrow> (('e ell2, 'f ell2) trace_class \<Rightarrow> ('g ell2, 'h ell2) trace_class) \<Rightarrow> bool\<close> where
+  \<open>km_tensor_exists \<EE> \<FF> \<longleftrightarrow> (\<exists>\<EE>\<FF>. bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>)))\<close>
+
+lemma km_tensor_exists_bounded_clinear[iff]:
+  assumes \<open>km_tensor_exists \<EE> \<FF>\<close>
+  shows \<open>bounded_clinear (km_tensor \<EE> \<FF>)\<close>
+  unfolding km_tensor_def
+  apply (rule someI2_ex[where P=\<open>\<lambda>\<EE>\<FF>. bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>))\<close>])
+  using assms
+  by (simp_all add: km_tensor_exists_def)
+
+lemma km_tensor_exists_apply[simp]:
+  assumes \<open>km_tensor_exists \<EE> \<FF>\<close>
+  shows \<open>km_tensor \<EE> \<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>)\<close>
+  unfolding km_tensor_def
+  apply (rule someI2_ex[where P=\<open>\<lambda>\<EE>\<FF>. bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>))\<close>])
+  using assms
+  by (simp_all add: km_tensor_exists_def)
+
+lemma km_tensor_unique:
+  assumes \<open>bounded_clinear \<EE>\<FF>\<close>
+  assumes \<open>\<And>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>)\<close>
+  shows \<open>\<EE>\<FF> = km_tensor \<EE> \<FF>\<close>
+proof -
+  define P where \<open>P \<EE>\<FF> \<longleftrightarrow> bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>))\<close> for \<EE>\<FF>
+  have \<open>P \<EE>\<FF>\<close>
+    using P_def assms by presburger
+  then have Ptensor: \<open>P (km_tensor \<EE> \<FF>)\<close>
+    by (smt (verit, del_insts) P_def km_tensor_def someI_ex)
+  show ?thesis
+    apply (rule eq_from_separatingI2)
+       apply (rule separating_set_bounded_clinear_tc_tensor)
+    using assms Ptensor by (simp_all add: P_def)
+qed
+
+lemma km_tensor_kf_tensor: \<open>km_tensor (kf_apply \<EE>) (kf_apply \<FF>) = kf_apply (kf_tensor \<EE> \<FF>)\<close>
+  by (metis kf_apply_bounded_clinear kf_apply_tensor km_tensor_unique)
+
+lemma km_tensor_kraus_map:
+  assumes \<open>kraus_map \<EE>\<close> and \<open>kraus_map \<FF>\<close>
+  shows \<open>kraus_map (km_tensor \<EE> \<FF>)\<close>
+proof -
+  from assms obtain EE :: \<open>(_,_,unit) kraus_family\<close> where EE: \<open>\<EE> = kf_apply EE\<close>
+    using kraus_map_def_raw by blast
+  from assms obtain FF :: \<open>(_,_,unit) kraus_family\<close> where FF: \<open>\<FF> = kf_apply FF\<close>
+    using kraus_map_def_raw by blast
+  show ?thesis
+    by (simp add: EE FF km_tensor_kf_tensor)
+qed
+
+lemma km_tensor_kraus_map_exists: 
+  assumes \<open>kraus_map \<EE>\<close> and \<open>kraus_map \<FF>\<close>
+  shows \<open>km_tensor_exists \<EE> \<FF>\<close>
+proof -
+  from assms obtain EE :: \<open>(_,_,unit) kraus_family\<close> where EE: \<open>\<EE> = kf_apply EE\<close>
+    using kraus_map_def_raw by blast
+  from assms obtain FF :: \<open>(_,_,unit) kraus_family\<close> where FF: \<open>\<FF> = kf_apply FF\<close>
+    using kraus_map_def_raw by blast
+  show ?thesis
+    using EE FF kf_apply_bounded_clinear kf_apply_tensor km_tensor_exists_def by blast
+qed
+
+lemma km_tensor_as_infsum:
+  assumes \<open>\<And>\<rho>. ((\<lambda>i. sandwich_tc (E i) \<rho>) has_sum \<EE> \<rho>) I\<close>
+  assumes \<open>\<And>\<rho>. ((\<lambda>j. sandwich_tc (F j) \<rho>) has_sum \<FF> \<rho>) J\<close>
+  shows \<open>km_tensor \<EE> \<FF> \<rho> = (\<Sum>\<^sub>\<infinity>(i,j)\<in>I\<times>J. sandwich_tc (E i \<otimes>\<^sub>o F j) \<rho>)\<close>
+proof -
+  define EE FF where \<open>EE = (\<lambda>a. (E a, a)) ` I\<close> and \<open>FF = (\<lambda>a. (F a, a)) ` J\<close>
+  then have [simp]: \<open>kraus_family EE\<close>  \<open>kraus_family FF\<close>
+    using assms kraus_map_sum_kraus_family
+    by blast+
+  have \<open>\<EE> = kf_apply (Abs_kraus_family EE)\<close> and \<open>\<FF> = kf_apply (Abs_kraus_family FF)\<close>
+    using assms kraus_map_sum_kf_apply EE_def FF_def
+    by blast+
+  then have \<open>km_tensor \<EE> \<FF> \<rho> = kf_apply (kf_tensor (Abs_kraus_family EE) (Abs_kraus_family FF)) \<rho>\<close>
+    by (simp add: km_tensor_kf_tensor)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>((E, x), (F, y))\<in>EE \<times> FF. sandwich_tc (E \<otimes>\<^sub>o F) \<rho>)\<close>
+    by (simp add: kf_apply_tensor_as_infsum Abs_kraus_family_inverse)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>((E, x), (F, y))\<in>(\<lambda>(i,j). ((E i, i), (F j, j)))`(I\<times>J). sandwich_tc (E \<otimes>\<^sub>o F) \<rho>)\<close>
+    apply (rule arg_cong[where f=\<open>infsum _\<close>])
+    by (auto simp: EE_def FF_def)
+  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(i,j)\<in>I\<times>J. sandwich_tc (E i \<otimes>\<^sub>o F j) \<rho>)\<close>
+    by (simp add: infsum_reindex inj_on_def o_def case_prod_unfold)
+  finally show ?thesis
+    by -
+qed
+
+lemma km_bound_tensor:
+  assumes \<open>kraus_map \<EE>\<close> and \<open>kraus_map \<FF>\<close>
+  shows \<open>km_bound (km_tensor \<EE> \<FF>) = km_bound \<EE> \<otimes>\<^sub>o km_bound \<FF>\<close>
+proof -
+  from assms obtain EE :: \<open>(_,_,unit) kraus_family\<close> where EE: \<open>\<EE> = kf_apply EE\<close>
+    using kraus_map_def_raw by blast
+  from assms obtain FF :: \<open>(_,_,unit) kraus_family\<close> where FF: \<open>\<FF> = kf_apply FF\<close>
+    using kraus_map_def_raw by blast
+  show ?thesis
+    by (simp add: EE FF km_tensor_kf_tensor kf_bound_tensor km_bound_kf_bound)
+qed
+
+lemma km_norm_tensor:
+  assumes \<open>kraus_map \<EE>\<close> and \<open>kraus_map \<FF>\<close>
+  shows \<open>km_norm (km_tensor \<EE> \<FF>) = km_norm \<EE> * km_norm \<FF>\<close>
+proof -
+  from assms obtain EE :: \<open>(_,_,unit) kraus_family\<close> where EE: \<open>\<EE> = kf_apply EE\<close>
+    using kraus_map_def_raw by blast
+  from assms obtain FF :: \<open>(_,_,unit) kraus_family\<close> where FF: \<open>\<FF> = kf_apply FF\<close>
+    using kraus_map_def_raw by blast
+  show ?thesis
+    by (simp add: EE FF km_tensor_kf_tensor kf_norm_tensor km_norm_kf_norm)
+qed
+
+lemma km_tensor_compose_distrib:
+  assumes \<open>km_tensor_exists \<EE> \<GG>\<close> and \<open>km_tensor_exists \<FF> \<HH>\<close>
+  shows \<open>km_tensor (\<EE> o \<FF>) (\<GG> o \<HH>) = km_tensor \<EE> \<GG> o km_tensor \<FF> \<HH>\<close>
+  by (smt (verit, del_insts) assms(1,2) comp_bounded_clinear km_tensor_exists_def km_tensor_unique o_apply)
+
+lemma kraus_map_tensor_right[simp]:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>kraus_map (\<lambda>\<sigma>. tc_tensor \<sigma> \<rho>)\<close>
+  apply (rule kraus_mapI[of _ \<open>kf_tensor_right \<rho>\<close>])
+  by (auto intro!: ext simp: kf_apply_tensor_right assms)
+lemma kraus_map_tensor_left[simp]:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>kraus_map (\<lambda>\<sigma>. tc_tensor \<rho> \<sigma>)\<close>
+  apply (rule kraus_mapI[of _ \<open>kf_tensor_left \<rho>\<close>])
+  by (auto intro!: ext simp: kf_apply_tensor_left assms)
+
+
+lemma km_bound_tensor_right[simp]:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>km_bound (\<lambda>\<sigma>. tc_tensor \<sigma> \<rho>) = norm \<rho> *\<^sub>C id_cblinfun\<close>
+  apply (subst km_bound_kf_bound)
+   apply (rule ext)
+   apply (subst kf_apply_tensor_right[OF assms])
+  by (auto intro!: simp: kf_bound_tensor_right assms)
+lemma km_bound_tensor_left[simp]:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>km_bound (\<lambda>\<sigma>. tc_tensor \<rho> \<sigma>) = norm \<rho> *\<^sub>C id_cblinfun\<close>
+  apply (subst km_bound_kf_bound)
+   apply (rule ext)
+   apply (subst kf_apply_tensor_left[OF assms])
+  by (auto intro!: simp: kf_bound_tensor_left assms)
+
+lemma kf_norm_tensor_right[simp]:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>km_norm (\<lambda>\<sigma>. tc_tensor \<sigma> \<rho>) = norm \<rho>\<close>
+  by (simp add: km_norm_def km_bound_tensor_right assms)
+
+lemma kf_norm_tensor_left[simp]:
+  assumes \<open>\<rho> \<ge> 0\<close>
+  shows \<open>km_norm (\<lambda>\<sigma>. tc_tensor \<rho> \<sigma>) = norm \<rho>\<close>
+  by (simp add: km_norm_def km_bound_tensor_left assms)
+
+
+subsection \<open>Trace and partial trace\<close>
 
 
 definition \<open>km_trace_preserving \<EE> \<longleftrightarrow> (\<exists>\<FF>::(_,_,unit) kraus_family. \<EE> = kf_apply \<FF> \<and> kf_trace_preserving \<FF>)\<close>
@@ -869,173 +1030,6 @@ lemma km_trace_norm_eq1[simp]: \<open>km_norm (one_dim_iso o trace_tc :: ('a::{c
 lemma km_trace_norm_leq1[simp]: \<open>km_norm (one_dim_iso o trace_tc) \<le> 1\<close>
   using km_trace_norm_preserving by blast
 
-
-subsection \<open>Complete measurements\<close>
-
-subsection \<open>Unsorted\<close>
-
-(* TODO sort stuff *)
-
-
-definition km_tensor :: \<open>(('a ell2, 'c ell2) trace_class \<Rightarrow> ('e ell2, 'g ell2) trace_class)
-                      \<Rightarrow> (('b ell2, 'd ell2) trace_class \<Rightarrow> ('f ell2, 'h ell2) trace_class)
-                      \<Rightarrow> (('a \<times> 'b) ell2, ('c \<times> 'd) ell2) trace_class \<Rightarrow> (('e \<times> 'f) ell2, ('g \<times> 'h) ell2) trace_class\<close> where
-  \<open>km_tensor \<EE> \<FF> = (SOME \<EE>\<FF>. bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>)))\<close>
-
-definition km_tensor_exists :: \<open>(('a ell2, 'b ell2) trace_class \<Rightarrow> ('c ell2, 'd ell2) trace_class)
-                             \<Rightarrow> (('e ell2, 'f ell2) trace_class \<Rightarrow> ('g ell2, 'h ell2) trace_class) \<Rightarrow> bool\<close> where
-  \<open>km_tensor_exists \<EE> \<FF> \<longleftrightarrow> (\<exists>\<EE>\<FF>. bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>)))\<close>
-
-lemma km_tensor_exists_bounded_clinear[iff]:
-  assumes \<open>km_tensor_exists \<EE> \<FF>\<close>
-  shows \<open>bounded_clinear (km_tensor \<EE> \<FF>)\<close>
-  unfolding km_tensor_def
-  apply (rule someI2_ex[where P=\<open>\<lambda>\<EE>\<FF>. bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>))\<close>])
-  using assms
-  by (simp_all add: km_tensor_exists_def)
-
-lemma km_tensor_exists_apply[simp]:
-  assumes \<open>km_tensor_exists \<EE> \<FF>\<close>
-  shows \<open>km_tensor \<EE> \<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>)\<close>
-  unfolding km_tensor_def
-  apply (rule someI2_ex[where P=\<open>\<lambda>\<EE>\<FF>. bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>))\<close>])
-  using assms
-  by (simp_all add: km_tensor_exists_def)
-
-lemma km_tensor_unique:
-  assumes \<open>bounded_clinear \<EE>\<FF>\<close>
-  assumes \<open>\<And>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>)\<close>
-  shows \<open>\<EE>\<FF> = km_tensor \<EE> \<FF>\<close>
-proof -
-  define P where \<open>P \<EE>\<FF> \<longleftrightarrow> bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>))\<close> for \<EE>\<FF>
-  have \<open>P \<EE>\<FF>\<close>
-    using P_def assms by presburger
-  then have Ptensor: \<open>P (km_tensor \<EE> \<FF>)\<close>
-    by (smt (verit, del_insts) P_def km_tensor_def someI_ex)
-  show ?thesis
-    apply (rule eq_from_separatingI2)
-       apply (rule separating_set_bounded_clinear_tc_tensor)
-    using assms Ptensor by (simp_all add: P_def)
-qed
-
-lemma km_tensor_kf_tensor: \<open>km_tensor (kf_apply \<EE>) (kf_apply \<FF>) = kf_apply (kf_tensor \<EE> \<FF>)\<close>
-  by (metis kf_apply_bounded_clinear kf_apply_tensor km_tensor_unique)
-
-lemma km_tensor_kraus_map:
-  assumes \<open>kraus_map \<EE>\<close> and \<open>kraus_map \<FF>\<close>
-  shows \<open>kraus_map (km_tensor \<EE> \<FF>)\<close>
-proof -
-  from assms obtain EE :: \<open>(_,_,unit) kraus_family\<close> where EE: \<open>\<EE> = kf_apply EE\<close>
-    using kraus_map_def_raw by blast
-  from assms obtain FF :: \<open>(_,_,unit) kraus_family\<close> where FF: \<open>\<FF> = kf_apply FF\<close>
-    using kraus_map_def_raw by blast
-  show ?thesis
-    by (simp add: EE FF km_tensor_kf_tensor)
-qed
-
-lemma km_tensor_kraus_map_exists: 
-  assumes \<open>kraus_map \<EE>\<close> and \<open>kraus_map \<FF>\<close>
-  shows \<open>km_tensor_exists \<EE> \<FF>\<close>
-proof -
-  from assms obtain EE :: \<open>(_,_,unit) kraus_family\<close> where EE: \<open>\<EE> = kf_apply EE\<close>
-    using kraus_map_def_raw by blast
-  from assms obtain FF :: \<open>(_,_,unit) kraus_family\<close> where FF: \<open>\<FF> = kf_apply FF\<close>
-    using kraus_map_def_raw by blast
-  show ?thesis
-    using EE FF kf_apply_bounded_clinear kf_apply_tensor km_tensor_exists_def by blast
-qed
-
-lemma km_tensor_as_infsum:
-  assumes \<open>\<And>\<rho>. ((\<lambda>i. sandwich_tc (E i) \<rho>) has_sum \<EE> \<rho>) I\<close>
-  assumes \<open>\<And>\<rho>. ((\<lambda>j. sandwich_tc (F j) \<rho>) has_sum \<FF> \<rho>) J\<close>
-  shows \<open>km_tensor \<EE> \<FF> \<rho> = (\<Sum>\<^sub>\<infinity>(i,j)\<in>I\<times>J. sandwich_tc (E i \<otimes>\<^sub>o F j) \<rho>)\<close>
-proof -
-  define EE FF where \<open>EE = (\<lambda>a. (E a, a)) ` I\<close> and \<open>FF = (\<lambda>a. (F a, a)) ` J\<close>
-  then have [simp]: \<open>kraus_family EE\<close>  \<open>kraus_family FF\<close>
-    using assms kraus_map_sum_kraus_family
-    by blast+
-  have \<open>\<EE> = kf_apply (Abs_kraus_family EE)\<close> and \<open>\<FF> = kf_apply (Abs_kraus_family FF)\<close>
-    using assms kraus_map_sum_kf_apply EE_def FF_def
-    by blast+
-  then have \<open>km_tensor \<EE> \<FF> \<rho> = kf_apply (kf_tensor (Abs_kraus_family EE) (Abs_kraus_family FF)) \<rho>\<close>
-    by (simp add: km_tensor_kf_tensor)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>((E, x), (F, y))\<in>EE \<times> FF. sandwich_tc (E \<otimes>\<^sub>o F) \<rho>)\<close>
-    by (simp add: kf_apply_tensor_as_infsum Abs_kraus_family_inverse)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>((E, x), (F, y))\<in>(\<lambda>(i,j). ((E i, i), (F j, j)))`(I\<times>J). sandwich_tc (E \<otimes>\<^sub>o F) \<rho>)\<close>
-    apply (rule arg_cong[where f=\<open>infsum _\<close>])
-    by (auto simp: EE_def FF_def)
-  also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(i,j)\<in>I\<times>J. sandwich_tc (E i \<otimes>\<^sub>o F j) \<rho>)\<close>
-    by (simp add: infsum_reindex inj_on_def o_def case_prod_unfold)
-  finally show ?thesis
-    by -
-qed
-
-lemma km_bound_tensor:
-  assumes \<open>kraus_map \<EE>\<close> and \<open>kraus_map \<FF>\<close>
-  shows \<open>km_bound (km_tensor \<EE> \<FF>) = km_bound \<EE> \<otimes>\<^sub>o km_bound \<FF>\<close>
-proof -
-  from assms obtain EE :: \<open>(_,_,unit) kraus_family\<close> where EE: \<open>\<EE> = kf_apply EE\<close>
-    using kraus_map_def_raw by blast
-  from assms obtain FF :: \<open>(_,_,unit) kraus_family\<close> where FF: \<open>\<FF> = kf_apply FF\<close>
-    using kraus_map_def_raw by blast
-  show ?thesis
-    by (simp add: EE FF km_tensor_kf_tensor kf_bound_tensor km_bound_kf_bound)
-qed
-
-lemma km_norm_tensor:
-  assumes \<open>kraus_map \<EE>\<close> and \<open>kraus_map \<FF>\<close>
-  shows \<open>km_norm (km_tensor \<EE> \<FF>) = km_norm \<EE> * km_norm \<FF>\<close>
-proof -
-  from assms obtain EE :: \<open>(_,_,unit) kraus_family\<close> where EE: \<open>\<EE> = kf_apply EE\<close>
-    using kraus_map_def_raw by blast
-  from assms obtain FF :: \<open>(_,_,unit) kraus_family\<close> where FF: \<open>\<FF> = kf_apply FF\<close>
-    using kraus_map_def_raw by blast
-  show ?thesis
-    by (simp add: EE FF km_tensor_kf_tensor kf_norm_tensor km_norm_kf_norm)
-qed
-
-lemma km_tensor_compose_distrib:
-  assumes \<open>km_tensor_exists \<EE> \<GG>\<close> and \<open>km_tensor_exists \<FF> \<HH>\<close>
-  shows \<open>km_tensor (\<EE> o \<FF>) (\<GG> o \<HH>) = km_tensor \<EE> \<GG> o km_tensor \<FF> \<HH>\<close>
-  by (smt (verit, del_insts) assms(1,2) comp_bounded_clinear km_tensor_exists_def km_tensor_unique o_apply)
-
-lemma kraus_map_tensor_right[simp]:
-  assumes \<open>\<rho> \<ge> 0\<close>
-  shows \<open>kraus_map (\<lambda>\<sigma>. tc_tensor \<sigma> \<rho>)\<close>
-  apply (rule kraus_mapI[of _ \<open>kf_tensor_right \<rho>\<close>])
-  by (auto intro!: ext simp: kf_apply_tensor_right assms)
-lemma kraus_map_tensor_left[simp]:
-  assumes \<open>\<rho> \<ge> 0\<close>
-  shows \<open>kraus_map (\<lambda>\<sigma>. tc_tensor \<rho> \<sigma>)\<close>
-  apply (rule kraus_mapI[of _ \<open>kf_tensor_left \<rho>\<close>])
-  by (auto intro!: ext simp: kf_apply_tensor_left assms)
-
-
-lemma km_bound_tensor_right[simp]:
-  assumes \<open>\<rho> \<ge> 0\<close>
-  shows \<open>km_bound (\<lambda>\<sigma>. tc_tensor \<sigma> \<rho>) = norm \<rho> *\<^sub>C id_cblinfun\<close>
-  apply (subst km_bound_kf_bound)
-   apply (rule ext)
-   apply (subst kf_apply_tensor_right[OF assms])
-  by (auto intro!: simp: kf_bound_tensor_right assms)
-lemma km_bound_tensor_left[simp]:
-  assumes \<open>\<rho> \<ge> 0\<close>
-  shows \<open>km_bound (\<lambda>\<sigma>. tc_tensor \<rho> \<sigma>) = norm \<rho> *\<^sub>C id_cblinfun\<close>
-  apply (subst km_bound_kf_bound)
-   apply (rule ext)
-   apply (subst kf_apply_tensor_left[OF assms])
-  by (auto intro!: simp: kf_bound_tensor_left assms)
-
-lemma kf_norm_tensor_right[simp]:
-  assumes \<open>\<rho> \<ge> 0\<close>
-  shows \<open>km_norm (\<lambda>\<sigma>. tc_tensor \<sigma> \<rho>) = norm \<rho>\<close>
-  by (simp add: km_norm_def km_bound_tensor_right assms)
-lemma kf_norm_tensor_left[simp]:
-  assumes \<open>\<rho> \<ge> 0\<close>
-  shows \<open>km_norm (\<lambda>\<sigma>. tc_tensor \<rho> \<sigma>) = norm \<rho>\<close>
-  by (simp add: km_norm_def km_bound_tensor_left assms)
-
-
 lemma kraus_map_partial_trace[iff]: \<open>kraus_map partial_trace\<close>
   by (auto intro!: ext kraus_mapI[of _ \<open>kf_partial_trace_right\<close>] simp flip: partial_trace_is_kf_partial_trace)
 
@@ -1065,6 +1059,28 @@ lemma km_partial_trace_bound[simp]: \<open>km_bound partial_trace = id_cblinfun\
 lemma km_partial_trace_norm[simp]:
   shows \<open>km_norm partial_trace = 1\<close>
   by (simp add: km_norm_def)
+
+
+lemma km_trace_preserving_tensor:
+  assumes \<open>km_trace_preserving \<EE>\<close> and \<open>km_trace_preserving \<FF>\<close>
+  shows \<open>km_trace_preserving (km_tensor \<EE> \<FF>)\<close>
+proof -
+  from assms obtain EE :: \<open>('a ell2, 'b ell2, unit) kraus_family\<close> where EE: \<open>\<EE> = kf_apply EE\<close> and tE: \<open>kf_trace_preserving EE\<close>
+    using km_trace_preserving_def by blast
+  from assms obtain FF :: \<open>('c ell2, 'd ell2, unit) kraus_family\<close> where FF: \<open>\<FF> = kf_apply FF\<close> and tF: \<open>kf_trace_preserving FF\<close>
+    using km_trace_preserving_def by blast
+  show ?thesis
+    by (auto intro!: kf_trace_preserving_tensor simp: EE FF km_tensor_kf_tensor tE tF)
+qed
+
+lemma km_trace_reducing_tensor:
+  assumes \<open>km_trace_reducing \<EE>\<close> and \<open>km_trace_reducing \<FF>\<close>
+  shows \<open>km_trace_reducing (km_tensor \<EE> \<FF>)\<close>
+  by (smt (z3) assms(1,2) km_norm_geq0 km_norm_tensor km_tensor_kraus_map km_trace_reducing_iff_norm_leq1
+      mult_left_le_one_le)
+
+subsection \<open>Complete measurements\<close>
+
 
 definition \<open>km_complete_measurement B \<rho> = (\<Sum>\<^sub>\<infinity>x\<in>B. sandwich_tc (selfbutter (sgn x)) \<rho>)\<close>
 
@@ -1129,25 +1145,6 @@ lemma km_complete_measurement_diagonal_operator[simp]:
   \<open>km_complete_measurement (range ket) (diagonal_operator_tc f) = diagonal_operator_tc f\<close>
   using kf_complete_measurement_diagonal_operator[of f]
   by (simp add: kf_complete_measurement_apply km_complete_measurement_def del: kf_complete_measurement_diagonal_operator)
-
-
-lemma km_trace_preserving_tensor:
-  assumes \<open>km_trace_preserving \<EE>\<close> and \<open>km_trace_preserving \<FF>\<close>
-  shows \<open>km_trace_preserving (km_tensor \<EE> \<FF>)\<close>
-proof -
-  from assms obtain EE :: \<open>('a ell2, 'b ell2, unit) kraus_family\<close> where EE: \<open>\<EE> = kf_apply EE\<close> and tE: \<open>kf_trace_preserving EE\<close>
-    using km_trace_preserving_def by blast
-  from assms obtain FF :: \<open>('c ell2, 'd ell2, unit) kraus_family\<close> where FF: \<open>\<FF> = kf_apply FF\<close> and tF: \<open>kf_trace_preserving FF\<close>
-    using km_trace_preserving_def by blast
-  show ?thesis
-    by (auto intro!: kf_trace_preserving_tensor simp: EE FF km_tensor_kf_tensor tE tF)
-qed
-
-lemma km_trace_reducing_tensor:
-  assumes \<open>km_trace_reducing \<EE>\<close> and \<open>km_trace_reducing \<FF>\<close>
-  shows \<open>km_trace_reducing (km_tensor \<EE> \<FF>)\<close>
-  by (smt (z3) assms(1,2) km_norm_geq0 km_norm_tensor km_tensor_kraus_map km_trace_reducing_iff_norm_leq1
-      mult_left_le_one_le)
 
 
 unbundle no kraus_map_syntax
