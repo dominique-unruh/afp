@@ -267,7 +267,7 @@ val measureT = @{typ nat};
 fun split_Ball_attr phase = Thm.declaration_attribute (fn thm => fn context =>
   let
     val ctxt = Context.proof_of context
-    val derived_thms = thm |> Conv.fconv_rule (Simplifier.rewrite ctxt) |> HOLogic.conj_elims ctxt
+    val derived_thms = thm |> Conv.fconv_rule (Simplifier.rewrite ctxt) |> HOLogic.conj_elims
 
   in
     context |> fold (Named_Theorems.add_thm (AutoCorresData.corres_named_thms phase)) derived_thms
@@ -562,6 +562,7 @@ fun define_funcs_single_recursive_group
     val fn_def_thms = fn_def_thms |> map (safe_mk_meta_eq) 
     val induct_thms = map (FunctionInfo.get_induct_thms o the o (AutoCorresData.get_function_info (Context.Proof lthy) filename phase)) fn_names
         |> hd
+
     (*
      * Instantiate schematic function calls in our theorems with their
      * concrete definitions.
