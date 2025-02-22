@@ -1,9 +1,7 @@
 theory Misc_Kraus_Maps
-  imports Hilbert_Space_Tensor_Product.Trace_Class
+  imports
     Hilbert_Space_Tensor_Product.Hilbert_Space_Tensor_Product
 begin
-
-(* TODO: move to BO and Tensor as suitable. *)
 
 unbundle cblinfun_syntax
 
@@ -80,14 +78,7 @@ proof -
     using b_def[abs_def] infsumI by blast
 qed
 
-lemma ballI2 [intro!]: "(\<And>x y. (x,y) \<in> A \<Longrightarrow> P x y) \<Longrightarrow> \<forall>(x,y)\<in>A. P x y"
-  by auto
-
-
 lemma flip_eq_const: \<open>(\<lambda>y. y = x) = ((=) x)\<close>
   by auto
-
-
-
 
 end
