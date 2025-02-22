@@ -3503,6 +3503,18 @@ lemma kf_trace_norm_preserving_eq:
   shows \<open>kf_norm \<EE> = 1\<close>
   using assms by (simp add: kf_trace_preserving_iff_bound_id kf_norm_def)
 
+lemma kf_trace_preserving_map[simp]: \<open>kf_trace_preserving (kf_map f \<EE>) \<longleftrightarrow> kf_trace_preserving \<EE>\<close>
+  by (simp add: kf_map_bound kf_trace_preserving_iff_bound_id)
+
+lemma kf_trace_reducing_map[simp]: \<open>kf_trace_reducing (kf_map f \<EE>) \<longleftrightarrow> kf_trace_reducing \<EE>\<close>
+  by (simp add: kf_trace_reducing_iff_norm_leq1)
+
+lemma kf_trace_preserving_id[iff]: \<open>kf_trace_preserving kf_id\<close>
+  by (simp add: kf_trace_preserving_iff_bound_id)
+
+lemma kf_trace_reducing_id[iff]: \<open>kf_trace_reducing kf_id\<close>
+  by (simp add: kf_norm_id_leq1 kf_trace_reducing_iff_norm_leq1)
+
 subsection \<open>Sampling\<close>
 
 lift_definition kf_sample :: \<open>('x \<Rightarrow> real) \<Rightarrow> ('a::chilbert_space, 'a, 'x) kraus_family\<close> is
@@ -4202,6 +4214,17 @@ lemma kf_norm_tensor_left[simp]:
   using assms by (simp add: kf_norm_def)
 
 
+lemma kf_trace_preserving_tensor:
+  assumes \<open>kf_trace_preserving \<EE>\<close> and \<open>kf_trace_preserving \<FF>\<close>
+  shows \<open>kf_trace_preserving (kf_tensor \<EE> \<FF>)\<close>
+  by (metis assms(1,2) kf_bound_tensor kf_trace_preserving_iff_bound_id tensor_id)
+
+lemma kf_trace_reducing_tensor:
+  assumes \<open>kf_trace_reducing \<EE>\<close> and \<open>kf_trace_reducing \<FF>\<close>
+  shows \<open>kf_trace_reducing (kf_tensor \<EE> \<FF>)\<close>
+  using assms 
+  by (auto intro!: mult_le_one simp: kf_trace_reducing_iff_norm_leq1 kf_norm_tensor kf_norm_geq0)
+
 subsection \<open>Partial trace\<close>
 
 definition kf_partial_trace_right :: \<open>(('a\<times>'b) ell2, 'a ell2, 'b) kraus_family\<close> where
@@ -4547,56 +4570,6 @@ lemma kf_complete_measurement_apply_onb:
   using kf_complete_measurement_has_sum_onb[OF assms]
   by (metis (lifting) infsumI)
 
-(* TODO move *)
-lemma antilinear_eq_0_on_span:
-  assumes \<open>antilinear f\<close>
-    and \<open>\<And>x. x \<in> b \<Longrightarrow> f x = 0\<close>
-    and \<open>x \<in> cspan b\<close>
-  shows \<open>f x = 0\<close>
-  by x
-
-
-(* TODO move *)
-lemma antilinear_diff:
-  assumes \<open>antilinear f\<close> and \<open>antilinear g\<close>
-  shows \<open>antilinear (\<lambda>x. f x - g x)\<close>
-  apply (rule antilinearI)
-   apply (metis add_diff_add additive.add antilinear_def assms(1,2))
-  by (simp add: antilinear.scaleC assms(1,2) scaleC_right.diff)
-
-(* TODO move *)
-lemma antilinear_cinner:
-  shows \<open>antilinear (\<lambda>x. x \<bullet>\<^sub>C y)\<close>
-  by (simp add: antilinearI cinner_add_left)
-
-
-(* TODO move *)
-lemma cinner_extensionality_basis:
-  fixes g h :: \<open>'a::complex_inner\<close>
-  assumes \<open>ccspan B = \<top>\<close>
-  assumes \<open>\<And>x. x \<in> B \<Longrightarrow> x \<bullet>\<^sub>C g = x \<bullet>\<^sub>C h\<close>
-  shows \<open>g = h\<close>
-proof (rule cinner_extensionality)
-  fix y :: 'a
-  have \<open>y \<in> closure (cspan B)\<close>
-    using assms(1) ccspan.rep_eq by fastforce
-  then obtain x where \<open>x \<longlonglongrightarrow> y\<close> and xB: \<open>x i \<in> cspan B\<close> for i
-    using closure_sequential by blast
-  have lin: \<open>antilinear (\<lambda>a. a \<bullet>\<^sub>C g - a \<bullet>\<^sub>C h)\<close>
-    by (intro antilinear_diff antilinear_cinner)
-  from lin have \<open>x i \<bullet>\<^sub>C g - x i \<bullet>\<^sub>C h = 0\<close> for i
-    apply (rule antilinear_eq_0_on_span[of _ B])
-    using xB assms by auto
-  then have \<open>(\<lambda>i. x i \<bullet>\<^sub>C g - x i \<bullet>\<^sub>C h) \<longlonglongrightarrow> 0\<close> for i
-    by simp
-  moreover have \<open>(\<lambda>i. x i \<bullet>\<^sub>C g - x i \<bullet>\<^sub>C h) \<longlonglongrightarrow> y \<bullet>\<^sub>C g - y \<bullet>\<^sub>C h\<close>
-    apply (rule_tac continuous_imp_tendsto[unfolded o_def, OF _ \<open>x \<longlonglongrightarrow> y\<close>])
-    by simp
-  ultimately have \<open>y \<bullet>\<^sub>C g - y \<bullet>\<^sub>C h = 0\<close>
-    using LIMSEQ_unique by blast
-  then show \<open>y \<bullet>\<^sub>C g = y \<bullet>\<^sub>C h\<close>
-    by simp
-qed
 
 lemma kf_bound_complete_measurement_onb[simp]:
   assumes \<open>is_onb B\<close>

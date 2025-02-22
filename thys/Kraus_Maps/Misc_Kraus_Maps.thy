@@ -242,6 +242,76 @@ lemma sandwich_tensor_ell2_left': \<open>sandwich (tensor_ell2_left \<psi>) *\<^
   apply (rule cblinfun_cinner_tensor_eqI)
   by (simp add: sandwich_apply tensor_op_ell2 cblinfun.scaleC_right)
 
+(* TODO move *)
+lemma to_conjugate_space_0[simp]: \<open>to_conjugate_space 0 = 0\<close>
+  by (simp add: zero_conjugate_space.abs_eq)
+(* TODO move *)
+lemma from_conjugate_space_0[simp]: \<open>from_conjugate_space 0 = 0\<close>
+  using zero_conjugate_space.rep_eq by blast
+
+(* TODO move *)
+lemma antilinear_eq_0_on_span:
+  assumes \<open>antilinear f\<close>
+    and \<open>\<And>x. x \<in> b \<Longrightarrow> f x = 0\<close>
+    and \<open>x \<in> cspan b\<close>
+  shows \<open>f x = 0\<close>
+proof -
+  from assms(1)
+  have \<open>clinear (\<lambda>x. to_conjugate_space (f x))\<close>
+    apply (rule antilinear_o_antilinear[unfolded o_def])
+    by simp
+  then have \<open>to_conjugate_space (f x) = 0\<close>
+    apply (rule complex_vector.linear_eq_0_on_span)
+    using assms by auto
+  then have \<open>from_conjugate_space (to_conjugate_space (f x)) = 0\<close>
+    by simp
+  then show ?thesis
+    by (simp add: to_conjugate_space_inverse)
+qed
+
+(* TODO move *)
+lemma antilinear_diff:
+  assumes \<open>antilinear f\<close> and \<open>antilinear g\<close>
+  shows \<open>antilinear (\<lambda>x. f x - g x)\<close>
+  apply (rule antilinearI)
+   apply (metis add_diff_add additive.add antilinear_def assms(1,2))
+  by (simp add: antilinear.scaleC assms(1,2) scaleC_right.diff)
+
+(* TODO move *)
+lemma antilinear_cinner:
+  shows \<open>antilinear (\<lambda>x. x \<bullet>\<^sub>C y)\<close>
+  by (simp add: antilinearI cinner_add_left)
+
+
+(* TODO move *)
+lemma cinner_extensionality_basis:
+  fixes g h :: \<open>'a::complex_inner\<close>
+  assumes \<open>ccspan B = \<top>\<close>
+  assumes \<open>\<And>x. x \<in> B \<Longrightarrow> x \<bullet>\<^sub>C g = x \<bullet>\<^sub>C h\<close>
+  shows \<open>g = h\<close>
+proof (rule cinner_extensionality)
+  fix y :: 'a
+  have \<open>y \<in> closure (cspan B)\<close>
+    using assms(1) ccspan.rep_eq by fastforce
+  then obtain x where \<open>x \<longlonglongrightarrow> y\<close> and xB: \<open>x i \<in> cspan B\<close> for i
+    using closure_sequential by blast
+  have lin: \<open>antilinear (\<lambda>a. a \<bullet>\<^sub>C g - a \<bullet>\<^sub>C h)\<close>
+    by (intro antilinear_diff antilinear_cinner)
+  from lin have \<open>x i \<bullet>\<^sub>C g - x i \<bullet>\<^sub>C h = 0\<close> for i
+    apply (rule antilinear_eq_0_on_span[of _ B])
+    using xB assms by auto
+  then have \<open>(\<lambda>i. x i \<bullet>\<^sub>C g - x i \<bullet>\<^sub>C h) \<longlonglongrightarrow> 0\<close> for i
+    by simp
+  moreover have \<open>(\<lambda>i. x i \<bullet>\<^sub>C g - x i \<bullet>\<^sub>C h) \<longlonglongrightarrow> y \<bullet>\<^sub>C g - y \<bullet>\<^sub>C h\<close>
+    apply (rule_tac continuous_imp_tendsto[unfolded o_def, OF _ \<open>x \<longlonglongrightarrow> y\<close>])
+    by simp
+  ultimately have \<open>y \<bullet>\<^sub>C g - y \<bullet>\<^sub>C h = 0\<close>
+    using LIMSEQ_unique by blast
+  then show \<open>y \<bullet>\<^sub>C g = y \<bullet>\<^sub>C h\<close>
+    by simp
+qed
+
+
 
 
 end

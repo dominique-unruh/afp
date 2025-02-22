@@ -674,12 +674,13 @@ subsection \<open>Tensor products\<close>
 subsection \<open>Trace and trace class\<close>
 
 
-definition km_trace_preserving_def_raw: \<open>km_trace_preserving \<EE> \<longleftrightarrow> (\<exists>\<FF>::(_,_,unit) kraus_family. \<EE> = kf_apply \<FF> \<and> kf_trace_preserving \<FF>)\<close>
-lemma km_trace_preserving_def: \<open>km_trace_preserving \<EE> \<longleftrightarrow> (\<exists>\<FF>::(_, _, 'c) kraus_family. \<EE> = kf_apply \<FF> \<and> kf_trace_preserving \<FF>)\<close>
+definition \<open>km_trace_preserving \<EE> \<longleftrightarrow> (\<exists>\<FF>::(_,_,unit) kraus_family. \<EE> = kf_apply \<FF> \<and> kf_trace_preserving \<FF>)\<close>
+lemma km_trace_preserving_def': \<open>km_trace_preserving \<EE> \<longleftrightarrow> (\<exists>\<FF>::(_, _, 'c) kraus_family. \<EE> = kf_apply \<FF> \<and> kf_trace_preserving \<FF>)\<close>
+  \<comment> \<open>Has a more general type than @{thm [source] km_trace_preserving_def}}\<close>
 proof (rule iffI)
   assume \<open>km_trace_preserving \<EE>\<close>
   then obtain \<FF> :: \<open>(_,_,unit) kraus_family\<close> where \<EE>\<FF>: \<open>\<EE> = kf_apply \<FF>\<close> and tp\<FF>: \<open>kf_trace_preserving \<FF>\<close>
-    using km_trace_preserving_def_raw by blast
+    using km_trace_preserving_def by blast
   from \<EE>\<FF> have \<open>\<EE> = kf_apply (kf_map (\<lambda>_. undefined :: 'c) \<FF>)\<close>
     by simp
   moreover from tp\<FF> have \<open>kf_trace_preserving (kf_map (\<lambda>_. undefined :: 'c) \<FF>)\<close>
@@ -695,15 +696,15 @@ next
   moreover from tp\<FF> have \<open>kf_trace_preserving (kf_flatten \<FF>)\<close>
     by (metis \<EE>\<FF> calculation kf_trace_preserving_iff_bound_id km_bound_kf_bound)
   ultimately show \<open>km_trace_preserving \<EE>\<close>
-    using km_trace_preserving_def_raw by blast
+    using km_trace_preserving_def by blast
 qed
 
-definition km_trace_reducing_def_raw: \<open>km_trace_reducing \<EE> \<longleftrightarrow> (\<exists>\<FF>::(_,_,unit) kraus_family. \<EE> = kf_apply \<FF> \<and> kf_trace_reducing \<FF>)\<close>
-lemma km_trace_reducing_def: \<open>km_trace_reducing \<EE> \<longleftrightarrow> (\<exists>\<FF>::(_, _, 'c) kraus_family. \<EE> = kf_apply \<FF> \<and> kf_trace_reducing \<FF>)\<close>
+definition km_trace_reducing_def: \<open>km_trace_reducing \<EE> \<longleftrightarrow> (\<exists>\<FF>::(_,_,unit) kraus_family. \<EE> = kf_apply \<FF> \<and> kf_trace_reducing \<FF>)\<close>
+lemma km_trace_reducing_def': \<open>km_trace_reducing \<EE> \<longleftrightarrow> (\<exists>\<FF>::(_, _, 'c) kraus_family. \<EE> = kf_apply \<FF> \<and> kf_trace_reducing \<FF>)\<close>
 proof (rule iffI)
   assume \<open>km_trace_reducing \<EE>\<close>
   then obtain \<FF> :: \<open>(_,_,unit) kraus_family\<close> where \<EE>\<FF>: \<open>\<EE> = kf_apply \<FF>\<close> and tp\<FF>: \<open>kf_trace_reducing \<FF>\<close>
-    using km_trace_reducing_def_raw by blast
+    using km_trace_reducing_def by blast
   from \<EE>\<FF> have \<open>\<EE> = kf_apply (kf_map (\<lambda>_. undefined :: 'c) \<FF>)\<close>
     by simp
   moreover from tp\<FF> have \<open>kf_trace_reducing (kf_map (\<lambda>_. undefined :: 'c) \<FF>)\<close>
@@ -719,15 +720,20 @@ next
   moreover from tp\<FF> have \<open>kf_trace_reducing (kf_flatten \<FF>)\<close>
     by (simp add: kf_trace_reducing_iff_norm_leq1)
   ultimately show \<open>km_trace_reducing \<EE>\<close>
-    using km_trace_reducing_def_raw by blast
+    using km_trace_reducing_def by blast
 qed
 
+lemma km_trace_preserving_apply[simp]: \<open>km_trace_preserving (kf_apply \<EE>) = kf_trace_preserving \<EE>\<close>
+  using kf_trace_preserving_def km_trace_preserving_def' by auto
+
+lemma km_trace_reducing_apply[simp]: \<open>km_trace_reducing (kf_apply \<EE>) = kf_trace_reducing \<EE>\<close>
+  by (metis kf_trace_reducing_iff_norm_leq1 km_norm_kf_norm km_trace_reducing_def')
 
 lemma km_trace_preserving_iff: \<open>km_trace_preserving \<EE> \<longleftrightarrow> kraus_map \<EE> \<and> (\<forall>\<rho>. trace_tc (\<EE> \<rho>) = trace_tc \<rho>)\<close>
 proof (intro iffI conjI allI)
   assume tp: \<open>km_trace_preserving \<EE>\<close>
   then obtain \<FF> :: \<open>(_,_,unit) kraus_family\<close> where \<EE>\<FF>: \<open>\<EE> = kf_apply \<FF>\<close> and tp\<FF>: \<open>kf_trace_preserving \<FF>\<close>
-    by (metis kf_trace_preserving_def kf_trace_reducing_def km_trace_preserving_def_raw order.refl)
+    by (metis kf_trace_preserving_def kf_trace_reducing_def km_trace_preserving_def order.refl)
   then show \<open>kraus_map \<EE>\<close>
     by blast
   from tp\<FF> show \<open>trace_tc (\<EE> \<rho>) = trace_tc \<rho>\<close> for \<rho>
@@ -741,7 +747,7 @@ next
   then have \<open>kf_trace_preserving \<FF>\<close>
     using kf_trace_preserving_def by blast
   with \<EE>\<FF> show \<open>km_trace_preserving \<EE>\<close>
-    using km_trace_preserving_def_raw by blast
+    using km_trace_preserving_def by blast
 qed
 
 
@@ -749,7 +755,7 @@ lemma km_trace_reducing_iff: \<open>km_trace_reducing \<EE> \<longleftrightarrow
 proof (intro iffI conjI allI impI)
   assume tp: \<open>km_trace_reducing \<EE>\<close>
   then obtain \<FF> :: \<open>(_,_,unit) kraus_family\<close> where \<EE>\<FF>: \<open>\<EE> = kf_apply \<FF>\<close> and tp\<FF>: \<open>kf_trace_reducing \<FF>\<close>
-    by (metis kf_trace_reducing_def kf_trace_reducing_def km_trace_reducing_def_raw order.refl)
+    by (metis kf_trace_reducing_def kf_trace_reducing_def km_trace_reducing_def order.refl)
   then show \<open>kraus_map \<EE>\<close>
     by blast
   from tp\<FF> \<EE>\<FF> show \<open>trace_tc (\<EE> \<rho>) \<le> trace_tc \<rho>\<close> if \<open>\<rho> \<ge> 0\<close> for \<rho>
@@ -763,7 +769,7 @@ next
   then have \<open>kf_trace_reducing \<FF>\<close>
     using kf_trace_reducing_def by blast
   with \<EE>\<FF> show \<open>km_trace_reducing \<EE>\<close>
-    using km_trace_reducing_def_raw by blast
+    using km_trace_reducing_def by blast
 qed
 
 lemma km_trace_preserving_imp_reducing:
@@ -799,7 +805,7 @@ next
   then have \<open>kf_trace_reducing EE\<close>
     by (simp add: kf_trace_reducing_iff_norm_leq1)
   then show \<open>km_trace_reducing \<EE>\<close>
-    using EE km_trace_reducing_def_raw by blast
+    using EE km_trace_reducing_def by blast
 qed
 
 
@@ -828,7 +834,7 @@ next
   then have \<open>kf_trace_preserving EE\<close>
     by (simp add: kf_trace_preserving_iff_bound_id)
   then show \<open>km_trace_preserving \<EE>\<close>
-    using EE km_trace_preserving_def_raw by blast
+    using EE km_trace_preserving_def by blast
 qed
 
 lemma km_trace_preserving_iff_bound_id':
@@ -1039,10 +1045,10 @@ lemma partial_trace_ignores_kraus_map:
 proof -
   from assms
   obtain EE :: \<open>(_,_,unit) kraus_family\<close> where EE_def: \<open>\<EE> = kf_apply EE\<close> and tpEE: \<open>kf_trace_preserving EE\<close>
-    using km_trace_preserving_def_raw by blast
+    using km_trace_preserving_def by blast
   have \<open>partial_trace (km_tensor (id :: ('a ell2, 'a ell2) trace_class \<Rightarrow> _) \<EE> \<rho>) = partial_trace (kf_tensor kf_id EE *\<^sub>k\<^sub>r \<rho>)\<close>
     using assms
-    by (simp add: km_trace_preserving_def_raw partial_trace_ignores_kraus_family
+    by (simp add: km_trace_preserving_def partial_trace_ignores_kraus_family
         km_tensor_kf_tensor EE_def kf_id_apply[abs_def] id_def 
         flip: km_tensor_kf_tensor)
   also have \<open>\<dots> = partial_trace \<rho>\<close>
@@ -1124,6 +1130,24 @@ lemma km_complete_measurement_diagonal_operator[simp]:
   using kf_complete_measurement_diagonal_operator[of f]
   by (simp add: kf_complete_measurement_apply km_complete_measurement_def del: kf_complete_measurement_diagonal_operator)
 
+
+lemma km_trace_preserving_tensor:
+  assumes \<open>km_trace_preserving \<EE>\<close> and \<open>km_trace_preserving \<FF>\<close>
+  shows \<open>km_trace_preserving (km_tensor \<EE> \<FF>)\<close>
+proof -
+  from assms obtain EE :: \<open>('a ell2, 'b ell2, unit) kraus_family\<close> where EE: \<open>\<EE> = kf_apply EE\<close> and tE: \<open>kf_trace_preserving EE\<close>
+    using km_trace_preserving_def by blast
+  from assms obtain FF :: \<open>('c ell2, 'd ell2, unit) kraus_family\<close> where FF: \<open>\<FF> = kf_apply FF\<close> and tF: \<open>kf_trace_preserving FF\<close>
+    using km_trace_preserving_def by blast
+  show ?thesis
+    by (auto intro!: kf_trace_preserving_tensor simp: EE FF km_tensor_kf_tensor tE tF)
+qed
+
+lemma km_trace_reducing_tensor:
+  assumes \<open>km_trace_reducing \<EE>\<close> and \<open>km_trace_reducing \<FF>\<close>
+  shows \<open>km_trace_reducing (km_tensor \<EE> \<FF>)\<close>
+  by (smt (z3) assms(1,2) km_norm_geq0 km_norm_tensor km_tensor_kraus_map km_trace_reducing_iff_norm_leq1
+      mult_left_le_one_le)
 
 
 unbundle no kraus_map_syntax
