@@ -721,6 +721,26 @@ lemma has_sum_bounded_clinear:
   apply (rule has_sum_bounded_linear[where h=h])
   by (auto intro!: bounded_clinear.bounded_linear assms)
 
+lemma scaleC_scaleR_commute: \<open>a *\<^sub>C b *\<^sub>R x = b *\<^sub>R a *\<^sub>C x\<close> for x :: \<open>_::complex_normed_vector\<close>
+  by (simp add: scaleR_scaleC scaleC_left_commute)
+
+lemma csubspace_has_basis:
+  assumes \<open>csubspace S\<close>
+  shows \<open>\<exists>B. cindependent B \<and> cspan B = S\<close>
+proof -
+  obtain B where \<open>cindependent B\<close> and \<open>cspan B = S\<close>
+    by (rule complex_vector.maximal_independent_subset[where V=S])
+       (use assms complex_vector.span_subspace in blast)
+  then show ?thesis
+    by auto
+qed
+
+lemma inj_scaleC:
+  fixes A :: \<open>'a::complex_vector set\<close>
+  assumes \<open>c \<noteq> 0\<close>
+  shows \<open>inj_on (scaleC c) A\<close>
+  by (meson assms inj_onI scaleC_left_imp_eq)
+
 subsection \<open>Antilinear maps and friends\<close>
 
 locale antilinear = additive f for f :: "'a::complex_vector \<Rightarrow> 'b::complex_vector" +
@@ -1342,6 +1362,12 @@ proof (cases "f = 0")
       by (simp add: inverse_eq_divide pos_le_divide_eq mult.commute)
   qed
 qed (simp add: onorm_zero)
+
+lemma compact_scaleC:
+  fixes s :: "'a::complex_normed_vector set"
+  assumes "compact s"
+  shows "compact (scaleC c ` s)"
+  by (auto intro!: compact_continuous_image assms continuous_at_imp_continuous_on)
 
 subsection \<open>Finite dimension and canonical basis\<close>
 
@@ -2077,6 +2103,32 @@ lemma infsum_of_real:
   by (rule infsum_scaleR_left)
 
 
+definition \<open>cfinite_dim S \<longleftrightarrow> (\<exists>B. finite B \<and> S \<subseteq> cspan B)\<close>
+
+lemma cspan_finite_dim[intro]: \<open>cfinite_dim (cspan B)\<close> if \<open>finite B\<close>
+  using cfinite_dim_def that by auto
+
+lemma cfinite_dim_subspace_has_basis:
+  assumes \<open>cfinite_dim S\<close> and \<open>csubspace S\<close>
+  shows \<open>\<exists>B. finite B \<and> cindependent B \<and> cspan B = S\<close>
+proof -
+  obtain B where \<open>cindependent B\<close> and \<open>cspan B = S\<close>
+    by (rule complex_vector.maximal_independent_subset[where V=S])
+       (use \<open>csubspace S\<close> complex_vector.span_subspace in blast)
+  from \<open>cfinite_dim S\<close>
+  obtain C where \<open>finite C\<close> and \<open>S \<subseteq> cspan C\<close>
+    using cfinite_dim_def by auto
+  from \<open>cspan B = S\<close> and \<open>S \<subseteq> cspan C\<close>
+  have \<open>B \<subseteq> cspan C\<close>
+    using complex_vector.span_superset by force
+  from \<open>finite C\<close> \<open>cindependent B\<close> this
+  have \<open>finite B\<close>
+    by (rule complex_vector.independent_span_bound[THEN conjunct1])
+  from this and \<open>cindependent B\<close> and \<open>cspan B = S\<close>
+  show ?thesis
+    by auto
+qed
+
 
 subsection \<open>Closed subspaces\<close>
 
@@ -2214,7 +2266,6 @@ proof-
   ultimately show ?thesis
     by (simp add: closed_csubspace.intro)
 qed
-
 
 typedef (overloaded) ('a::"{complex_vector,topological_space}")
   ccsubspace = \<open>{S::'a set. closed_csubspace S}\<close>
@@ -2715,6 +2766,43 @@ qed
 lemma closed_csubspace_space_as_set[simp]: \<open>closed_csubspace (space_as_set X)\<close>
   using space_as_set by simp
 
+lift_definition finite_dim_ccsubspace :: \<open>'a::complex_normed_vector ccsubspace \<Rightarrow> bool\<close> is cfinite_dim.
+
+lemma ccspan_finite_dim[intro]: \<open>finite_dim_ccsubspace (ccspan B)\<close> if \<open>finite B\<close>
+  using ccspan_finite finite_dim_ccsubspace.rep_eq that by fastforce
+
+lemma finite_dim_ccsubspace_zero[iff]: \<open>finite_dim_ccsubspace 0\<close>
+proof -
+  have *: \<open>cfinite_dim (cspan {0})\<close>
+    by blast
+  show ?thesis
+    apply transfer
+    using * by simp
+qed
+
+lemma finite_dim_ccsubspace_bot[iff]: \<open>finite_dim_ccsubspace \<bottom>\<close>
+  using finite_dim_ccsubspace_zero by auto
+
+
+lemma ccsubspace_contains_unit:
+  assumes \<open>E \<noteq> \<bottom>\<close>
+  shows \<open>\<exists>h\<in>space_as_set E. norm h = 1\<close>
+proof -
+  from assms have \<open>space_as_set E \<noteq> {0}\<close>
+    by (metis bot_ccsubspace.rep_eq space_as_set_inject)
+  then obtain h\<^sub>0 where \<open>h\<^sub>0 \<in> space_as_set E\<close> and \<open>h\<^sub>0 \<noteq> 0\<close>
+    by auto
+  then have \<open>sgn h\<^sub>0 \<in> space_as_set E\<close>
+    using csubspace_space_as_set
+    by (auto intro!: complex_vector.subspace_scale
+        simp add: sgn_div_norm scaleR_scaleC)
+  moreover from \<open>h\<^sub>0 \<noteq> 0\<close> have \<open>norm (sgn h\<^sub>0) = 1\<close>
+    by (simp add: norm_sgn)
+  ultimately show ?thesis
+    by auto
+qed
+
+
 subsection \<open>Closed sums\<close>
 
 definition closed_sum:: \<open>'a::{semigroup_add,topological_space} set \<Rightarrow> 'a set \<Rightarrow> 'a set\<close> where
@@ -3129,6 +3217,129 @@ proof -
   then show ?thesis
     by (simp add: to_conjugate_space_inverse)
 qed
+
+subsection \<open>Separating sets\<close>
+
+lemma separating_set_bounded_clinear_dense:
+  assumes \<open>ccspan S = \<top>\<close>
+  shows \<open>separating_set bounded_clinear S\<close>
+  unfolding separating_set_def
+  apply (intro allI impI ext, rule bounded_clinear_eq_on_closure[where G=S])
+  by (use assms ccspan.rep_eq top_ccsubspace.rep_eq in force)+
+
+lemma separating_set_bounded_cbilinear_nested:
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector) \<Rightarrow> _) ((\<lambda>(x, y). h x y) ` (UNIV \<times> UNIV))\<close>
+  assumes \<open>bounded_cbilinear h\<close>
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) A\<close>
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) B\<close>
+  shows \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) ((\<lambda>(x,y). h x y) ` (A \<times> B))\<close>
+proof (rule separating_setI)
+  fix f g :: \<open>'a \<Rightarrow> 'e\<close>
+  assume [simp]: \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  have [simp]: \<open>bounded_clinear (\<lambda>x. f (h x y))\<close> for y
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear f\<close>])
+    using assms(2) by (rule bounded_cbilinear.bounded_clinear_left)
+  have [simp]: \<open>bounded_clinear (\<lambda>x. g (h x y))\<close> for y
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear g\<close>])
+    using assms(2) by (rule bounded_cbilinear.bounded_clinear_left)
+  have [simp]: \<open>bounded_clinear (\<lambda>y. f (h x y))\<close> for x
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear f\<close>])
+    using assms(2) by (rule bounded_cbilinear.bounded_clinear_right)
+  have [simp]: \<open>bounded_clinear (\<lambda>y. g (h x y))\<close> for x
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear g\<close>])
+    using assms(2) by (rule bounded_cbilinear.bounded_clinear_right)
+
+  assume \<open>z \<in> (\<lambda>(x, y). h x y) ` (A \<times> B) \<Longrightarrow> f z = g z\<close> for z
+  then have \<open>f (h x y) = g (h x y)\<close> if \<open>x \<in> A\<close> and \<open>y \<in> B\<close> for x y
+    using that by auto
+  then have \<open>(\<lambda>x. f (h x y)) = (\<lambda>x. g (h x y))\<close> if \<open>y \<in> B\<close> for y
+    by (intro eq_from_separatingI[OF assms(3)]) (use that in auto)
+  then have \<open>(\<lambda>y. f (h x y)) = (\<lambda>y. g (h x y))\<close> for x
+    apply (intro eq_from_separatingI[OF assms(4)])
+    subgoal by simp
+    subgoal by simp
+    subgoal by meson
+    done
+  then have \<open>f (h x y) = g (h x y)\<close> for x y
+    by meson
+  with \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  show \<open>f = g\<close>
+    by (rule eq_from_separatingI2[where f=f and g=g and P=bounded_clinear and S=UNIV and T=UNIV, rotated 1])
+       (fact assms(1))
+qed
+
+
+lemma separating_set_bounded_clinear_antilinear:
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector conjugate_space) \<Rightarrow> _) A\<close>
+  shows \<open>separating_set (bounded_antilinear :: (_ => 'e) \<Rightarrow> _) A\<close>
+proof (rule separating_setI)
+  fix f g :: \<open>'a \<Rightarrow> 'e\<close>
+  assume \<open>bounded_antilinear f\<close>
+  then have lin_f: \<open>bounded_clinear (to_conjugate_space o f)\<close>
+    by (simp add: bounded_antilinear_o_bounded_antilinear')
+  assume \<open>bounded_antilinear g\<close>
+  then have lin_g: \<open>bounded_clinear (to_conjugate_space o g)\<close>
+    by (simp add: bounded_antilinear_o_bounded_antilinear')
+  assume \<open>f x = g x\<close> if \<open>x \<in> A\<close> for x
+  then have \<open>(to_conjugate_space o f) x = (to_conjugate_space o g) x\<close> if \<open>x \<in> A\<close> for x
+    by (simp add: that)
+  with lin_f lin_g
+  have \<open>to_conjugate_space o f = to_conjugate_space o g\<close>
+    by (rule eq_from_separatingI[OF assms])
+  then show \<open>f = g\<close>
+    by (metis UNIV_I fun.inj_map_strong to_conjugate_space_inverse)
+qed
+
+lemma separating_set_bounded_sesquilinear_nested:
+  assumes \<open>separating_set (bounded_clinear :: (_ => 'e::complex_normed_vector) \<Rightarrow> _) ((\<lambda>(x, y). h x y) ` (UNIV \<times> UNIV))\<close>
+  assumes \<open>bounded_sesquilinear h\<close>
+  assumes sep_A: \<open>separating_set (bounded_clinear :: (_ => 'e conjugate_space) \<Rightarrow> _) A\<close>
+  assumes sep_B: \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) B\<close>
+  shows \<open>separating_set (bounded_clinear :: (_ => 'e) \<Rightarrow> _) ((\<lambda>(x,y). h x y) ` (A \<times> B))\<close>
+proof (rule separating_setI)
+  fix f g :: \<open>'a \<Rightarrow> 'e\<close>
+  assume [simp]: \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  have [simp]: \<open>bounded_antilinear (\<lambda>x. f (h x y))\<close> for y
+    apply (rule bounded_clinear_o_bounded_antilinear[OF \<open>bounded_clinear f\<close>])
+    using assms(2) by (rule bounded_sesquilinear.bounded_antilinear_left)
+  have [simp]: \<open>bounded_antilinear (\<lambda>x. g (h x y))\<close> for y
+    apply (rule bounded_clinear_o_bounded_antilinear[OF \<open>bounded_clinear g\<close>])
+    using assms(2) by (rule bounded_sesquilinear.bounded_antilinear_left)
+  have [simp]: \<open>bounded_clinear (\<lambda>y. f (h x y))\<close> for x
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear f\<close>])
+    using assms(2) by (rule bounded_sesquilinear.bounded_clinear_right)
+  have [simp]: \<open>bounded_clinear (\<lambda>y. g (h x y))\<close> for x
+    apply (rule bounded_clinear_compose[OF \<open>bounded_clinear g\<close>])
+    using assms(2) by (rule bounded_sesquilinear.bounded_clinear_right)
+
+  from sep_A have sep_A': \<open>separating_set (bounded_antilinear :: (_ => 'e) \<Rightarrow> _) A\<close>
+    by (rule separating_set_bounded_clinear_antilinear)
+  assume \<open>z \<in> (\<lambda>(x, y). h x y) ` (A \<times> B) \<Longrightarrow> f z = g z\<close> for z
+  then have \<open>f (h x y) = g (h x y)\<close> if \<open>x \<in> A\<close> and \<open>y \<in> B\<close> for x y
+    using that by auto
+  then have \<open>(\<lambda>x. f (h x y)) = (\<lambda>x. g (h x y))\<close> if \<open>y \<in> B\<close> for y
+    by (intro eq_from_separatingI[OF sep_A']) (use that in auto)
+  then have \<open>(\<lambda>y. f (h x y)) = (\<lambda>y. g (h x y))\<close> for x
+    apply (intro eq_from_separatingI[OF sep_B])
+    subgoal by simp
+    subgoal by simp
+    subgoal by meson
+    done
+  then have \<open>f (h x y) = g (h x y)\<close> for x y
+    by meson
+  with \<open>bounded_clinear f\<close> \<open>bounded_clinear g\<close>
+  show \<open>f = g\<close>
+    by (rule eq_from_separatingI2[where f=f and g=g and P=bounded_clinear and S=UNIV and T=UNIV, rotated 1])
+       (fact assms(1))
+qed
+
+
+lemma separating_set_clinear_cspan:
+  assumes \<open>cspan S = UNIV\<close>
+  shows \<open>separating_set clinear S\<close>
+  using assms
+  by (auto intro: complex_vector.linear_eq_on simp: separating_set_def)
+
 
 subsection \<open>Product is a Complex Vector Space\<close>
 

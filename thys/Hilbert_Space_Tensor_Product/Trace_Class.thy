@@ -3219,7 +3219,7 @@ proof -
       also from \<open>x \<le> z\<close> \<open>y \<le> z\<close> have \<open>\<dots> = (trace_tc z - trace_tc x) + (trace_tc z - trace_tc y)\<close>
         by (metis (no_types, lifting) cross3_simps(16) diff_left_mono diff_self norm_tc_pos of_real_add trace_tc_plus)
       also from \<open>x \<le> z\<close> \<open>y \<le> z\<close> have \<open>\<dots> = norm (trace_tc z - trace_tc x) + norm (trace_tc z - trace_tc y)\<close>                  
-        by (simp add: Extra_Ordered_Fields.complex_of_real_cmod trace_tc_mono abs_pos)
+        by (simp add: complex_of_real_cmod trace_tc_mono abs_pos)
       also have \<open>\<dots> = dist (trace_tc z) (trace_tc x) + dist (trace_tc z) (trace_tc y)\<close>
         using dist_complex_def by presburger
       also have \<open>\<dots> \<le> (dist (trace_tc z) l + dist (trace_tc x) l) + (dist (trace_tc z) l + dist (trace_tc y) l)\<close> 

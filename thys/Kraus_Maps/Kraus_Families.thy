@@ -4079,7 +4079,7 @@ lemma kf_tensor_cong_weak:
   shows \<open>kf_tensor \<EE> \<FF> =\<^sub>k\<^sub>r kf_tensor \<EE>' \<FF>'\<close>
 proof (rule kf_eq_weakI)
   show \<open>kf_apply (kf_tensor \<EE> \<FF>) \<rho> = kf_apply (kf_tensor \<EE>' \<FF>') \<rho>\<close> for \<rho>
-  proof (rule fun_cong[where x=\<rho>], rule eq_from_separatingI2[OF separating_set_bounded_clinear_tc_tensor])
+  proof (rule eq_from_separatingI2x[where x=\<rho>, OF separating_set_bounded_clinear_tc_tensor])
     show \<open>bounded_clinear (kf_apply (kf_tensor \<EE> \<FF>))\<close>
       by (simp add: kf_apply_bounded_clinear)
     show \<open>bounded_clinear (kf_apply (kf_tensor \<EE>' \<FF>'))\<close>
@@ -4241,7 +4241,7 @@ lemma partial_trace_is_kf_partial_trace:
 proof -
   have \<open>partial_trace t = kf_apply (kf_of_op (tensor_ell2_right (ket ())*))
     (kf_apply (kf_tensor kf_id (kf_trace (range ket))) t)\<close>
-  proof (rule fun_cong[where x=t], rule eq_from_separatingI2[OF separating_set_bounded_clinear_tc_tensor])
+  proof (rule eq_from_separatingI2x[where x=t, OF separating_set_bounded_clinear_tc_tensor])
     show \<open>bounded_clinear partial_trace\<close>
       by simp
     show \<open>bounded_clinear
@@ -4264,7 +4264,7 @@ qed
 lemma partial_trace_ignores_kraus_family:
   assumes \<open>kf_trace_preserving \<EE>\<close>
   shows \<open>partial_trace (kf_tensor kf_id \<EE> *\<^sub>k\<^sub>r \<rho>) = partial_trace \<rho>\<close>
-proof (rule fun_cong[where x=\<rho>], rule eq_from_separatingI2[OF separating_set_bounded_clinear_tc_tensor])
+proof (rule eq_from_separatingI2x[where x=\<rho>, OF separating_set_bounded_clinear_tc_tensor])
   show \<open>bounded_clinear (\<lambda>a. partial_trace (kf_apply (kf_tensor kf_id \<EE>) a))\<close>
     by (intro bounded_linear_intros)
   show \<open>bounded_clinear partial_trace\<close>
@@ -4323,8 +4323,7 @@ proof -
       by -
   qed
   then show ?thesis
-    apply (rule_tac fun_cong[where x=\<rho>])
-    apply (rule eq_from_separatingI2)
+    apply (rule_tac eq_from_separatingI2x[where x=\<rho>])
        apply (rule separating_set_bounded_clinear_tc_tensor_nested)
         apply (rule separating_set_tc_butterfly_nested)
          apply (rule separating_set_ket)

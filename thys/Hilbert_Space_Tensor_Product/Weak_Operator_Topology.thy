@@ -992,7 +992,7 @@ lemma infsum_wot_boundedI:
   assumes bounded: \<open>\<And>F. finite F \<Longrightarrow> F \<subseteq> X \<Longrightarrow> sum f F \<le> B\<close>
   assumes pos: \<open>\<And>x. x \<in> X \<Longrightarrow> f x \<ge> 0\<close>
   shows \<open>infsum_in cweak_operator_topology f X \<le> B\<close>
-proof (rule less_eq_cblinfunI)
+proof (rule cblinfun_leI)
   fix h
   have summ: \<open>summable_on_in cweak_operator_topology f X\<close>
     using assms by (rule summable_wot_boundedI)
