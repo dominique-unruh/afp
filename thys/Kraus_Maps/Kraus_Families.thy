@@ -1283,7 +1283,8 @@ lemma kf_eqI_from_filter_eq_weak:
   using assms by (simp add: kf_eq_weak_def kf_eq_def kf_apply_on_def flip_eq_const)
 
 lemma kf_eq_weak_from_separatingI:
-  fixes E F :: \<open>('q::chilbert_space,'r::chilbert_space,'x) kraus_family\<close>
+  fixes E :: \<open>('q::chilbert_space,'r::chilbert_space,'x) kraus_family\<close>
+    and F :: \<open>('q,'r,'y) kraus_family\<close>
   assumes \<open>separating_set (bounded_clinear :: (('q,'q) trace_class \<Rightarrow> ('r,'r) trace_class) \<Rightarrow> bool) S\<close>
   assumes \<open>\<And>\<rho>. \<rho> \<in> S \<Longrightarrow> E *\<^sub>k\<^sub>r \<rho> = F *\<^sub>k\<^sub>r \<rho>\<close>
   shows \<open>E =\<^sub>k\<^sub>r F\<close>
@@ -4263,17 +4264,17 @@ qed
 
 lemma partial_trace_ignores_kraus_family:
   assumes \<open>kf_trace_preserving \<EE>\<close>
-  shows \<open>partial_trace (kf_tensor kf_id \<EE> *\<^sub>k\<^sub>r \<rho>) = partial_trace \<rho>\<close>
+  shows \<open>partial_trace (kf_tensor \<FF> \<EE> *\<^sub>k\<^sub>r \<rho>) = \<FF> *\<^sub>k\<^sub>r partial_trace \<rho>\<close>
 proof (rule eq_from_separatingI2x[where x=\<rho>, OF separating_set_bounded_clinear_tc_tensor])
-  show \<open>bounded_clinear (\<lambda>a. partial_trace (kf_apply (kf_tensor kf_id \<EE>) a))\<close>
+  show \<open>bounded_clinear (\<lambda>a. partial_trace (kf_tensor \<FF> \<EE> *\<^sub>k\<^sub>r a))\<close>
     by (intro bounded_linear_intros)
-  show \<open>bounded_clinear partial_trace\<close>
+  show \<open>bounded_clinear (\<lambda>a. \<FF> *\<^sub>k\<^sub>r partial_trace a)\<close>
     by (intro bounded_linear_intros)
-  fix \<rho> :: \<open>('d ell2, 'd ell2) trace_class\<close> and \<sigma> :: \<open>('a ell2, 'a ell2) trace_class\<close>
+  fix \<rho> :: \<open>('e ell2, 'e ell2) trace_class\<close> and \<sigma> :: \<open>('a ell2, 'a ell2) trace_class\<close>
   from assms
-  show \<open>partial_trace (kf_apply (kf_tensor kf_id \<EE>) (tc_tensor \<rho> \<sigma>)) =
-           partial_trace (tc_tensor \<rho> \<sigma>)\<close>
-    by (auto intro!: simp: kf_apply_tensor partial_trace_tensor kf_trace_preserving_def)
+  show \<open>partial_trace (kf_tensor \<FF> \<EE> *\<^sub>k\<^sub>r tc_tensor \<rho> \<sigma>) =
+           \<FF> *\<^sub>k\<^sub>r partial_trace (tc_tensor \<rho> \<sigma>)\<close>
+    by (simp add: kf_apply_tensor partial_trace_tensor kf_trace_preserving_def kf_apply_scaleC)
 qed
 
 lemma kf_partial_trace_bound[simp]:

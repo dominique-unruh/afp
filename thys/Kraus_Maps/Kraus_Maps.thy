@@ -38,7 +38,7 @@ lemma kraus_mapI:
   shows \<open>kraus_map \<EE>\<close>
   using assms kraus_map_def by blast
 
-lemma kraus_map_bounded_clinear[bounded_clinear]: 
+lemma kraus_map_bounded_clinear: 
   \<open>bounded_clinear \<EE>\<close> if \<open>kraus_map \<EE>\<close>
   by (metis kf_apply_bounded_clinear kraus_map_def that)
 
@@ -689,7 +689,7 @@ lemma km_tensor_exists_bounded_clinear[iff]:
   using assms
   by (simp_all add: km_tensor_exists_def)
 
-lemma km_tensor_exists_apply[simp]:
+lemma km_tensor_apply[simp]:
   assumes \<open>km_tensor_exists \<EE> \<FF>\<close>
   shows \<open>km_tensor \<EE> \<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>)\<close>
   unfolding km_tensor_def
@@ -1035,18 +1035,23 @@ lemma kraus_map_partial_trace[iff]: \<open>kraus_map partial_trace\<close>
 
 lemma partial_trace_ignores_kraus_map:
   assumes \<open>km_trace_preserving \<EE>\<close>
-  shows \<open>partial_trace (km_tensor (id :: ('a ell2, 'a ell2) trace_class \<Rightarrow> _) \<EE> \<rho>) = partial_trace \<rho>\<close>
+  assumes \<open>kraus_map \<FF>\<close>
+  shows \<open>partial_trace (km_tensor \<FF> \<EE> \<rho>) = \<FF> (partial_trace \<rho>)\<close>
 proof -
   from assms
   obtain EE :: \<open>(_,_,unit) kraus_family\<close> where EE_def: \<open>\<EE> = kf_apply EE\<close> and tpEE: \<open>kf_trace_preserving EE\<close>
     using km_trace_preserving_def by blast
-  have \<open>partial_trace (km_tensor (id :: ('a ell2, 'a ell2) trace_class \<Rightarrow> _) \<EE> \<rho>) = partial_trace (kf_tensor kf_id EE *\<^sub>k\<^sub>r \<rho>)\<close>
+  obtain FF :: \<open>(_,_,unit) kraus_family\<close> where FF_def: \<open>\<FF> = kf_apply FF\<close>
+    using assms(2) kraus_map_def_raw by blast
+  have \<open>partial_trace (km_tensor \<FF> \<EE> \<rho>) = partial_trace (kf_tensor FF EE *\<^sub>k\<^sub>r \<rho>)\<close>
     using assms
     by (simp add: km_trace_preserving_def partial_trace_ignores_kraus_family
-        km_tensor_kf_tensor EE_def kf_id_apply[abs_def] id_def 
+        km_tensor_kf_tensor EE_def kf_id_apply[abs_def] id_def FF_def
         flip: km_tensor_kf_tensor)
-  also have \<open>\<dots> = partial_trace \<rho>\<close>
+  also have \<open>\<dots> = FF *\<^sub>k\<^sub>r partial_trace \<rho>\<close>
     by (simp add: partial_trace_ignores_kraus_family tpEE)
+  also have \<open>\<dots> = \<FF> (partial_trace \<rho>)\<close>
+    using FF_def by presburger
   finally show ?thesis
     by -
 qed
