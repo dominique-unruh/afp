@@ -2,11 +2,20 @@ section \<open>Classical instantiation of registers\<close>
 
 (* AXIOM INSTANTIATION (use instantiate_laws.py to generate Laws_Classical.thy)
  
-   domain \<rightarrow> type
-   comp_update \<rightarrow> map_comp
-   id_update \<rightarrow> Some
+    # Type classes
+    domain \<rightarrow> type
+    domain_with_simple_complement \<rightarrow> finite
 
-   Generic laws about registers \<rightarrow> Generic laws about registers, instantiated classically
+    # Types
+    some_domain \<rightarrow> unit
+
+    # Constants
+    comp_update \<rightarrow> map_comp
+    id_update \<rightarrow> Some
+    #tensor_update \<rightarrow> tensor_update
+    cdc \<rightarrow> complement_domain
+
+    Generic laws about registers \<rightarrow> Generic laws about registers, instantiated classically
 *)
 
 theory Axioms_Classical
@@ -215,8 +224,10 @@ proof -
     using F by simp
 qed
 
-lemma register_comp: "register (G \<circ> F)" if \<open>register F\<close> and \<open>register G\<close>
-  for F :: "('a,'b) preregister" and G :: "('b,'c) preregister"
+lemma register_comp: 
+  fixes F :: "('a,'b) preregister" and G :: "('b,'c) preregister"
+  assumes \<open>register F\<close> and \<open>register G\<close>
+  shows \<open>register (G \<circ> F)\<close>
 proof -
   from \<open>register F\<close>
   obtain sF gF where F: \<open>F a m = (case a (gF m) of None \<Rightarrow> None | Some x \<Rightarrow> Some (sF x m))\<close>
@@ -282,18 +293,19 @@ proof -
               register_from_getter_setter_def gFsG)
 qed
 
-lemma register_pair_is_register:
+lemma
   fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G
   assumes [simp]: \<open>register F\<close> and [simp]: \<open>register G\<close>
   assumes compat: \<open>\<And>a b. F a \<circ>\<^sub>m G b = G b \<circ>\<^sub>m F a\<close>
-  shows \<open>register (register_pair F G)\<close>
+  shows register_pair_is_register: \<open>register (register_pair F G)\<close>
+    and register_pair_is_valid: \<open>valid_getter_setter (\<lambda>m. (getter F m, getter G m)) (\<lambda>(a, b) m. setter F a (setter G b m))\<close>
 proof -
   have validF: \<open>valid_getter_setter (getter F) (setter F)\<close> and validG: \<open>valid_getter_setter (getter G) (setter G)\<close>
     by (metis assms getter_of_register_from_getter_setter register_def setter_of_register_from_getter_setter)+
-  then have \<open>valid_getter_setter (\<lambda>m. (getter F m, getter G m)) (\<lambda>(a, b) m. setter F a (setter G b m))\<close>
+  then show \<open>valid_getter_setter (\<lambda>m. (getter F m, getter G m)) (\<lambda>(a, b) m. setter F a (setter G b m))\<close>
     apply (simp add: valid_getter_setter_def)
     by (metis (mono_tags, lifting) assms comp_eq_dest_lhs compat compatible_setter)
-  then show ?thesis
+  then show \<open>register (register_pair F G)\<close>
     by (auto simp: register_pair_def register_def)
 qed
 
