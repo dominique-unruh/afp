@@ -38,7 +38,7 @@ proof (rule complementsI)
     using \<open>compatible G F\<close> iso_register_def pair_is_register by blast
 qed
 
-definition complement :: \<open>('a::domain update \<Rightarrow> 'b::domain_with_simple_complement update) \<Rightarrow> (('a,'b) complement_domain_simple update \<Rightarrow> 'b update)\<close> where
+definition complement :: \<open>('a::domain_with_simple_complement_in update \<Rightarrow> 'b::domain_with_simple_complement update) \<Rightarrow> (('a,'b) complement_domain_simple update \<Rightarrow> 'b update)\<close> where
   \<open>complement F = (SOME G :: ('a, 'b) complement_domain_simple update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G))\<close>
 
 lemma register_complement[simp]: \<open>register (complement F)\<close> if \<open>register F\<close>

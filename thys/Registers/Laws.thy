@@ -298,9 +298,8 @@ lemmas compatible_ac_rules = swap_registers comp_update_assoc[symmetric] swap_re
 
 subsection \<open>Fst and Snd\<close>
 
-(* TODO: specify types *)
-definition Fst where \<open>Fst a = a \<otimes>\<^sub>u id_update\<close>
-definition Snd where \<open>Snd a = id_update \<otimes>\<^sub>u a\<close>
+definition Fst :: \<open>'a::domain update \<Rightarrow> ('a\<times>'b::domain) update\<close> where \<open>Fst a = a \<otimes>\<^sub>u id_update\<close>
+definition Snd :: \<open>'b::domain update \<Rightarrow> ('a::domain\<times>'b) update\<close> where \<open>Snd a = id_update \<otimes>\<^sub>u a\<close>
 
 lemma register_Fst[simp]: \<open>register Fst\<close>
   unfolding Fst_def by (rule register_tensor_left)

@@ -5,6 +5,7 @@ section \<open>Classical instantiation of registers\<close>
     # Type classes
     domain \<rightarrow> type
     domain_with_simple_complement \<rightarrow> finite
+    domain_with_simple_complement_in \<rightarrow> finite
 
     # Types
     some_domain \<rightarrow> unit
@@ -71,7 +72,7 @@ proof -
     using preregister_def by blast
 qed
 
-definition tensor_update :: \<open>'a update \<Rightarrow> 'b update \<Rightarrow> ('a\<times>'b) update\<close> where
+definition tensor_update :: \<open>('a \<Rightarrow> 'c option) \<Rightarrow> ('b \<Rightarrow> 'd option) \<Rightarrow> ('a\<times>'b) \<Rightarrow> ('c\<times>'d) option\<close> where
   \<open>tensor_update a b m = (case a (fst m) of None \<Rightarrow> None | Some x \<Rightarrow> (case b (snd m) of None \<Rightarrow> None | Some y \<Rightarrow> Some (x,y)))\<close>
 
 lemma tensor_update_mult: \<open>tensor_update a c \<circ>\<^sub>m tensor_update b d = tensor_update (a \<circ>\<^sub>m b) (c \<circ>\<^sub>m d)\<close>

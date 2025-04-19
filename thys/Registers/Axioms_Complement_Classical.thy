@@ -4,15 +4,6 @@ theory Axioms_Complement_Classical
   imports Laws_Classical Classical_Extra With_Type.With_Type
 begin
 
-typedef ('a, 'b::finite) complement_domain_simple = \<open>undefined :: ('a\<times>'b) set\<close>
-  sorry
-instance complement_domain_simple :: (type, finite) finite
-  sorry
-
-axiomatization where 
-  complement_exists_simple: \<open>register F \<Longrightarrow> \<exists>G :: ('a, 'b) complement_domain_simple update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
-    for F :: \<open>'a update \<Rightarrow> 'b::finite update\<close>
-
 definition same_outside :: \<open>('a update \<Rightarrow> 'b update) \<Rightarrow> 'b rel\<close> where
   \<open>same_outside X = {(m,n) | m n. \<exists>a. setter X a m = n}\<close>
 
@@ -473,5 +464,143 @@ proof -
     using \<open>H \<circ> L = G\<close> \<open>iso_register L\<close> \<open>register H\<close> equivalent_registersI equivalent_registers_sym by blast
 qed
 
+
+subsection \<open>Finite case\<close>
+
+typedef ('a::finite, 'b::finite) complement_domain_simple = \<open>{..< if CARD('b) div CARD('a) \<noteq> 0 then CARD('b) div CARD('a) else 1}\<close>
+  by auto
+
+instance complement_domain_simple :: (finite, finite) finite
+proof intro_classes
+  have \<open>inj Rep_complement_domain_simple\<close>
+    by (simp add: Rep_complement_domain_simple_inject inj_on_def)
+  moreover have \<open>finite (range Rep_complement_domain_simple)\<close>
+    by (metis finite_lessThan type_definition.Rep_range type_definition_complement_domain_simple)
+  ultimately show \<open>finite (UNIV :: ('a,'b) complement_domain_simple set)\<close>
+    using finite_image_iff by blast
+qed
+
+(* TODO move *)
+lemma card_quotient_regular:
+  assumes \<open>equiv A r\<close>
+  assumes \<open>\<And>x. x\<in>A \<Longrightarrow> card (r `` {x}) = n\<close>
+  shows \<open>n * card (A // r) = card A\<close>
+proof (cases \<open>n = 0\<close>)
+  case False
+  have disjoint: \<open>disjoint (A // r)\<close>
+    using assms(1) partition_onD2 partition_on_quotient by blast 
+  have finite_classes: \<open>X \<in> A // r \<Longrightarrow> finite X\<close> for X
+    by (metis False assms(2) card_eq_0_iff quotientE)
+  have \<open>card A = card (\<Union>(A//r))\<close>
+    by (simp add: Union_quotient assms)
+  also have \<open>\<dots> = (\<Sum>X\<in>A//r. card X)\<close>
+    by (simp add: card_Union_disjoint finite_classes disjoint)
+  also have \<open>\<dots> = (\<Sum>X\<in>A//r. n)\<close>
+    by (metis assms(2) quotientE sum.cong)
+  also have \<open>\<dots> = n * card (A//r)\<close>
+    by fastforce
+  finally show ?thesis
+    by simp
+next
+  case True
+  wlog \<open>A \<noteq> {}\<close> keeping True
+    using negation by force
+  then obtain x where \<open>x \<in> A\<close>
+    by fastforce
+  with True assms have \<open>card (r `` {x}) = 0\<close>
+    by blast
+  then have \<open>infinite (r `` {x})\<close>
+    using \<open>x \<in> A\<close> assms(1) equiv_class_self by force
+  then have \<open>infinite A\<close>
+    by (meson Image_singleton_iff assms(1) equiv_class_eq_iff finite_subset subsetI)
+  then have \<open>card A = 0\<close>
+    by auto
+  with True show ?thesis
+    by simp
+qed
+
+
+
+
+lemma complement_exists_simple:
+  \<comment> \<open>This could be generalized to infinite \<^typ>\<open>'a\<close> since the fact \<open>bij_b\<close> inside the proof
+      also holds in that case, albeit with a different proof.\<close>
+  fixes F :: \<open>'a::finite update \<Rightarrow> 'b::finite update\<close>
+  assumes [iff]: \<open>register F\<close>
+  shows \<open>\<exists>G :: ('a, 'b) complement_domain_simple update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G)\<close>
+    (is ?goal)
+proof -
+  note [[simproc del: Laws_Classical.compatibility_warn]]
+  from complement_exists[OF assms]
+  have \<open>let 'c::type = complement_domain F in ?goal\<close>
+  proof with_type_mp
+    case with_type_mp
+    then obtain G :: \<open>('c,'b) preregister\<close> where compat_FG: \<open>compatible F G\<close> and iso_FG: \<open>iso_register (F;G)\<close>
+      by auto
+    obtain b where bij_b: \<open>bij_betw b (complement_domain F) (UNIV :: ('a, 'b) complement_domain_simple set)\<close>
+    proof atomize_elim
+      define rep_set where \<open>rep_set = {..< if CARD('b) div CARD('a) \<noteq> 0 then CARD('b) div CARD('a) else 1}\<close>
+      have \<open>card (same_outside F `` {m}) = CARD('a)\<close> for m
+      proof -
+        have \<open>same_outside F `` {m} = range (\<lambda>a. setter F a m)\<close>
+          by (auto simp: same_outside_def)
+        moreover have \<open>card (range (\<lambda>a. setter F a m)) = CARD('a)\<close>
+        proof -
+          have \<open>inj_on (getter F) (range (\<lambda>a. setter F a m))\<close>
+            by (simp add: inj_on_def assms)
+          moreover have \<open>a \<in> getter F ` range (\<lambda>a. setter F a m)\<close> for a
+            apply (rule image_eqI[where x=\<open>setter F a m\<close>])
+            by auto
+          ultimately show ?thesis
+            by (auto intro!: bij_betw_same_card[where f=\<open>getter F\<close>] simp: bij_betw_def)
+        qed
+        ultimately show ?thesis
+          by simp
+      qed
+      then have 1: \<open>CARD('a) * card (UNIV // same_outside F) = CARD('b)\<close>
+        by (simp add: card_quotient_regular equivp_same_outside)
+      then have \<open>CARD('b) div CARD('a) \<noteq> 0\<close>
+        by (metis (lifting) bot_nat_0.not_eq_extremum mult_0_right nonzero_mult_div_cancel_left zero_less_card_finite)
+      with 1 have \<open>card (UNIV // same_outside F) = (if CARD('b) div CARD('a) \<noteq> 0 then CARD('b) div CARD('a) else 1)\<close>
+        by (metis div_mult_self1_is_m zero_less_card_finite)
+      also have \<open>\<dots> = card rep_set\<close>
+        by (simp add: rep_set_def)
+      also have \<open>\<dots> = CARD(('a,'b) complement_domain_simple)\<close>
+      proof -
+        have \<open>inj_on (Abs_complement_domain_simple :: _ \<Rightarrow> ('a,'b) complement_domain_simple) rep_set\<close>
+          using Abs_complement_domain_simple_inject[where 'a='a and 'b='b, folded rep_set_def]
+          by (simp add: inj_on_def)
+        moreover have \<open>Abs_complement_domain_simple ` rep_set = (UNIV :: ('a,'b) complement_domain_simple set)\<close>
+          using Abs_complement_domain_simple_cases[where 'a='a and 'b='b, folded rep_set_def]
+          by blast
+        ultimately show ?thesis
+          by (auto intro!: bij_betw_same_card[where f=Abs_complement_domain_simple] simp: bij_betw_def)
+      qed
+      finally show \<open>\<exists>b. bij_betw b (complement_domain F) (UNIV :: ('a,'b) complement_domain_simple set)\<close>
+        by (auto intro!: finite_same_card_bij simp: complement_domain_def)
+    qed
+    define I where \<open>I = permutation_register (b o rep_c)\<close>
+    from bij_b with_type_mp have bij_bc: \<open>bij (b o rep_c)\<close>
+      using bij_betw_trans by blast
+    then have \<open>iso_register I\<close>
+      by (simp add: I_def bij_betw_def getter_permutation_register iso_register_injective_getter)
+    then have [iff]: \<open>register I\<close>
+      using iso_register_is_register by blast
+    define H where \<open>H = G o I\<close>
+    with bij_bc \<open>compatible F G\<close> have 1: \<open>compatible F H\<close>
+      by (simp add: I_def)
+    have \<open>(F;H) = (F;G) o (id \<otimes>\<^sub>r I)\<close>
+      by (simp add: pair_o_tensor compat_FG H_def)
+    moreover have \<open>iso_register ((F;G) o (id \<otimes>\<^sub>r I))\<close>
+      by (intro iso_register_comp iso_FG iso_register_tensor_is_iso_register \<open>iso_register I\<close> iso_register_id)
+    ultimately have 2: \<open>iso_register (F;H)\<close>
+      by argo
+    from 1 2 show ?goal
+      by auto
+  qed
+  from this[cancel_with_type]
+  show ?goal
+    by -
+qed
 
 end

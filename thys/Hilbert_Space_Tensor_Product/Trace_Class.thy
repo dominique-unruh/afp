@@ -3356,6 +3356,7 @@ qed
 lemma separating_density_ops:
   assumes \<open>B > 0\<close>
   shows \<open>separating_set clinear {t :: ('a::chilbert_space, 'a) trace_class. 0 \<le> t \<and> norm t \<le> B}\<close>
+(* TODO: Should be = B *)
 proof -
   define S where \<open>S = {t :: ('a, 'a) trace_class. 0 \<le> t \<and> norm t \<le> B}\<close>
   have \<open>cspan S = UNIV\<close>

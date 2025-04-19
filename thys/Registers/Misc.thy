@@ -139,7 +139,7 @@ lemma dim_col_mat_adjoint[simp]: "dim_col (mat_adjoint m) = dim_row m"
 lemma dim_row_mat_adjoint[simp]: "dim_row (mat_adjoint m) = dim_col m"
   unfolding mat_adjoint_def by simp
 
-lemma invI: 
+lemma invI:  (* TODO remove; use inv_f_eq instead *)
   assumes \<open>inj f\<close>
   assumes \<open>x = f y\<close>
   shows \<open>inv f x = y\<close>

@@ -60,6 +60,84 @@ lemma kraus_map_mono:
 lemma kraus_map_kf_apply[iff]: \<open>kraus_map (kf_apply \<EE>)\<close>
   using kraus_map_def by blast
 
+definition km_some_kraus_family :: \<open>(('a::chilbert_space, 'a) trace_class \<Rightarrow> ('b::chilbert_space, 'b) trace_class) \<Rightarrow> ('a, 'b, unit) kraus_family\<close> where
+  \<open>km_some_kraus_family \<EE> = (if kraus_map \<EE> then SOME \<FF>. \<EE> = kf_apply \<FF> else 0)\<close>
+
+lemma kf_apply_km_some_kraus_family[simp]:
+  assumes \<open>kraus_map \<EE>\<close>
+  shows \<open>kf_apply (km_some_kraus_family \<EE>) = \<EE>\<close>
+  unfolding km_some_kraus_family_def
+  apply (rule someI2_ex)
+  using assms kraus_map_def by auto
+
+lemma km_some_kraus_family_invalid:
+  assumes \<open>\<not> kraus_map \<EE>\<close>
+  shows \<open>km_some_kraus_family \<EE> = 0\<close>
+  by (simp add: assms km_some_kraus_family_def)
+
+definition km_operators_in :: \<open>(('a::chilbert_space,'a) trace_class \<Rightarrow> ('b::chilbert_space,'b) trace_class) \<Rightarrow> ('a \<Rightarrow>\<^sub>C\<^sub>L 'b) set \<Rightarrow> bool\<close> where
+  \<open>km_operators_in \<EE> S \<longleftrightarrow> (\<exists>\<FF> :: ('a,'b,unit) kraus_family. kf_apply \<FF> = \<EE> \<and> kf_operators \<FF> \<subseteq> S)\<close>
+
+lemma km_operators_in_mono: \<open>S \<subseteq> T \<Longrightarrow> km_operators_in \<EE> S \<Longrightarrow> km_operators_in \<EE> T\<close>
+  by (metis basic_trans_rules(23) km_operators_in_def)
+
+lemma km_operators_in_kf_apply:
+  assumes \<open>span (kf_operators \<EE>) \<subseteq> S\<close>
+  shows \<open>km_operators_in (kf_apply \<EE>) S\<close>
+proof (unfold km_operators_in_def, intro conjI exI[where x=\<open>kf_flatten \<EE>\<close>])
+  show \<open>(*\<^sub>k\<^sub>r) (kf_flatten \<EE>) = (*\<^sub>k\<^sub>r) \<EE>\<close>
+    by simp
+  from assms show \<open>kf_operators (kf_flatten \<EE>) \<subseteq> S\<close>
+    using kf_operators_kf_map by fastforce
+qed
+
+lemma km_operators_in_kf_apply_flattened:
+  fixes \<EE> :: \<open>('a::chilbert_space,'b::chilbert_space,'x::CARD_1) kraus_family\<close>
+  assumes \<open>kf_operators \<EE> \<subseteq> S\<close>
+  shows \<open>km_operators_in (kf_apply \<EE>) S\<close>
+proof (unfold km_operators_in_def, intro conjI exI[where x=\<open>kf_map_inj (\<lambda>x.()) \<EE>\<close>])
+  show \<open>(*\<^sub>k\<^sub>r) (kf_map_inj (\<lambda>\<FF>. ()) \<EE>) = (*\<^sub>k\<^sub>r) \<EE>\<close>
+    by (auto intro!: ext kf_apply_map_inj inj_onI)
+  have \<open>kf_operators (kf_map_inj (\<lambda>\<FF>. ()) \<EE>) = kf_operators \<EE>\<close>
+    by simp
+  with assms show \<open>kf_operators (kf_map_inj (\<lambda>\<FF>. ()) \<EE>) \<subseteq> S\<close>
+    by blast
+qed
+
+lemma km_commute:
+  assumes \<open>km_operators_in \<EE> S\<close>
+  assumes \<open>km_operators_in \<FF> T\<close>
+  assumes \<open>S \<subseteq> commutant T\<close>
+  shows \<open>\<FF> o \<EE> = \<EE> o \<FF>\<close>
+proof -
+  from assms obtain \<EE>' :: \<open>(_,_,unit) kraus_family\<close> where \<EE>': \<open>\<EE> = kf_apply \<EE>'\<close> and \<EE>'S: \<open>kf_operators \<EE>' \<subseteq> S\<close>
+    by (metis km_operators_in_def)
+  from assms obtain \<FF>' :: \<open>(_,_,unit) kraus_family\<close> where \<FF>': \<open>\<FF> = kf_apply \<FF>'\<close> and \<FF>'T: \<open>kf_operators \<FF>' \<subseteq> T\<close>
+    by (metis km_operators_in_def)
+
+  have \<open>kf_operators \<EE>' \<subseteq> S\<close>
+    by (rule \<EE>'S)
+  also have \<open>S \<subseteq> commutant T\<close>
+    by (rule assms)
+  also have \<open>commutant T \<subseteq> commutant (kf_operators \<FF>')\<close>
+    apply (rule commutant_antimono)
+    by (rule \<FF>'T)
+  finally show ?thesis
+    unfolding \<EE>' \<FF>'
+    by (rule kf_apply_commute[symmetric])
+qed
+
+lemma km_operators_in_UNIV: 
+  assumes \<open>kraus_map \<EE>\<close>
+  shows \<open>km_operators_in \<EE> UNIV\<close>
+  by (metis assms kf_apply_km_some_kraus_family km_operators_in_def top.extremum)
+
+lemma separating_kraus_map_bounded_clinear:
+  fixes S :: \<open>('a::chilbert_space,'a) trace_class set\<close>
+  assumes \<open>separating_set (bounded_clinear :: (_ \<Rightarrow> ('b::chilbert_space,'b) trace_class) \<Rightarrow> _) S\<close>
+  shows \<open>separating_set (kraus_map :: (_ \<Rightarrow> ('b::chilbert_space,'b) trace_class) \<Rightarrow> _) S\<close>
+  by (metis (mono_tags, lifting) assms kraus_map_bounded_clinear separating_set_def)
+
 subsection \<open>Bound and norm\<close>
 
 definition km_bound :: \<open>(('a::chilbert_space, 'a) trace_class \<Rightarrow> ('b::chilbert_space, 'b) trace_class) \<Rightarrow> ('a, 'a) cblinfun\<close> where
@@ -179,6 +257,10 @@ lemma km_norm_id_leq1[iff]: \<open>km_norm id \<le> 1\<close>
 
 lemma km_norm_id_eq1[simp]: \<open>km_norm (id :: ('a :: {chilbert_space, not_singleton}, 'a) trace_class \<Rightarrow> _) = 1\<close>
   by (simp add: km_norm_def)
+
+lemma km_operators_in_id[iff]: \<open>km_operators_in id {id_cblinfun}\<close>
+  apply (subst asm_rl[of \<open>id = kf_apply kf_id\<close>])
+  by (auto simp: km_operators_in_kf_apply_flattened) 
 
 lemma kraus_map_add[iff]:
   assumes \<open>kraus_map \<EE>\<close> and \<open>kraus_map \<FF>\<close>
@@ -305,6 +387,11 @@ lemma km_bound_sandwich[simp]: \<open>km_bound (sandwich_tc A) = A* o\<^sub>C\<^
 
 lemma km_norm_sandwich[simp]: \<open>km_norm (sandwich_tc A) = (norm A)\<^sup>2\<close>
   by (simp add: km_norm_def)
+
+lemma km_operators_in_sandwich: \<open>km_operators_in (sandwich_tc U) {U}\<close>
+  apply (subst kf_of_op_apply[abs_def, symmetric])
+  apply (rule km_operators_in_kf_apply_flattened)
+  by simp
 
 lemma km_constant_bound[simp]: \<open>km_bound (\<lambda>\<sigma>. trace_tc \<sigma> *\<^sub>C \<rho>) = norm \<rho> *\<^sub>R id_cblinfun\<close> if \<open>\<rho> \<ge> 0\<close>
   apply (rule km_bound_kf_bound[THEN trans])
@@ -831,6 +918,33 @@ lemma kf_norm_tensor_left[simp]:
   shows \<open>km_norm (\<lambda>\<sigma>. tc_tensor \<rho> \<sigma>) = norm \<rho>\<close>
   by (simp add: km_norm_def km_bound_tensor_left assms)
 
+lemma km_operators_in_tensor:
+  assumes \<open>km_operators_in \<EE> S\<close>
+  assumes \<open>km_operators_in \<FF> T\<close>
+  shows \<open>km_operators_in (km_tensor \<EE> \<FF>) (span {s \<otimes>\<^sub>o t | s t. s\<in>S \<and> t\<in>T})\<close>
+proof -
+  have [iff]: \<open>inj_on (\<lambda>((),()). ()) X\<close> for X
+    by (simp add: inj_on_def)
+  from assms obtain \<EE>' :: \<open>(_,_,unit) kraus_family\<close> where \<EE>_def: \<open>\<EE> = kf_apply \<EE>'\<close> and \<EE>'S: \<open>kf_operators \<EE>' \<subseteq> S\<close>
+    by (metis km_operators_in_def)
+  from assms obtain \<FF>' :: \<open>(_,_,unit) kraus_family\<close> where \<FF>_def: \<open>\<FF> = kf_apply \<FF>'\<close> and \<FF>'T: \<open>kf_operators \<FF>' \<subseteq> T\<close>
+    by (metis km_operators_in_def)
+  define \<EE>\<FF> where \<open>\<EE>\<FF> = kf_map_inj (\<lambda>((),()). ()) (kf_tensor \<EE>' \<FF>')\<close>
+  then have \<open>kf_operators \<EE>\<FF> = kf_operators (kf_tensor \<EE>' \<FF>')\<close>
+    by (simp add: \<EE>\<FF>_def)
+  also have \<open>kf_operators (kf_tensor \<EE>' \<FF>') \<subseteq> span {E \<otimes>\<^sub>o F | E F. E \<in> kf_operators \<EE>' \<and> F \<in> kf_operators \<FF>'}\<close>
+    using kf_operators_tensor by force
+  also have \<open>\<dots> \<subseteq> span {E \<otimes>\<^sub>o F | E F. E \<in> S \<and> F \<in> T}\<close>
+    by (smt (verit) Collect_mono_iff \<EE>'S \<FF>'T span_mono subset_iff)
+  finally have \<open>kf_operators \<EE>\<FF> \<subseteq> span {s \<otimes>\<^sub>o t |s t. s \<in> S \<and> t \<in> T}\<close>
+    using \<EE>\<FF>_def by blast
+  moreover have \<open>kf_apply \<EE>\<FF> = km_tensor \<EE> \<FF>\<close>
+    by (simp add: \<EE>\<FF>_def \<EE>_def \<FF>_def kf_apply_bounded_clinear kf_apply_tensor km_tensor_unique)
+  ultimately show ?thesis
+    by (auto intro!: exI[of _ \<EE>\<FF>] simp add: km_operators_in_def)
+qed
+
+
 
 subsection \<open>Trace and partial trace\<close>
 
@@ -1088,12 +1202,27 @@ subsection \<open>Complete measurements\<close>
 
 
 definition \<open>km_complete_measurement B \<rho> = (\<Sum>\<^sub>\<infinity>x\<in>B. sandwich_tc (selfbutter (sgn x)) \<rho>)\<close>
+abbreviation \<open>km_complete_measurement_ket \<equiv> km_complete_measurement (range ket)\<close>
+
+
+lemma km_complete_measurement_kf_complete_measurement: \<open>km_complete_measurement B = kf_apply (kf_complete_measurement B)\<close> if \<open>is_ortho_set B\<close>
+  by (simp add: kf_complete_measurement_apply[OF that, abs_def] km_complete_measurement_def[abs_def])
+
+lemma km_complete_measurement_ket_kf_complete_measurement_ket: \<open>km_complete_measurement_ket = kf_apply kf_complete_measurement_ket\<close>
+  by (metis Complex_L2.is_ortho_set_ket kf_apply_map kf_complete_measurement_ket_kf_map kf_eq_imp_eq_weak kf_eq_weak_def
+      km_complete_measurement_kf_complete_measurement)
+
 
 lemma km_complete_measurement_has_sum:
   assumes \<open>is_ortho_set B\<close>
   shows \<open>((\<lambda>x. sandwich_tc (selfbutter (sgn x)) \<rho>) has_sum km_complete_measurement B \<rho>) B\<close>
   using kf_complete_measurement_has_sum[OF assms] and assms
   by (simp add: kf_complete_measurement_apply km_complete_measurement_def)
+
+lemma km_complete_measurement_ket_has_sum:
+  \<open>((\<lambda>x. sandwich_tc (selfbutter (ket x)) \<rho>) has_sum km_complete_measurement_ket \<rho>) UNIV\<close>
+  by (smt (verit) has_sum_cong has_sum_reindex inj_ket is_onb_ket is_ortho_set_ket kf_complete_measurement_apply
+      kf_complete_measurement_has_sum_onb km_complete_measurement_def o_def)
 
 lemma km_bound_complete_measurement:
   assumes \<open>is_ortho_set B\<close>
@@ -1116,6 +1245,9 @@ lemma km_bound_complete_measurement_onb[simp]:
   using assms
   by (auto intro!: ext simp: kf_complete_measurement_apply is_onb_def km_complete_measurement_def)
 
+lemma km_bound_complete_measurement_ket[simp]: \<open>km_bound km_complete_measurement_ket = id_cblinfun\<close>
+  by fastforce
+
 lemma km_norm_complete_measurement_onb[simp]:
   fixes B :: \<open>'a::{not_singleton, chilbert_space} set\<close>
   assumes \<open>is_onb B\<close>
@@ -1123,18 +1255,32 @@ lemma km_norm_complete_measurement_onb[simp]:
   apply (subst km_norm_kf_norm[of _ \<open>kf_complete_measurement B\<close>])
   using assms
   by (auto intro!: ext simp: kf_complete_measurement_apply is_onb_def km_complete_measurement_def)
-  
+
+lemma km_norm_complete_measurement_ket[simp]:
+  shows \<open>km_norm km_complete_measurement_ket = 1\<close>
+  by fastforce
+
 lemma kraus_map_complete_measurement:
   assumes \<open>is_ortho_set B\<close>
   shows \<open>kraus_map (km_complete_measurement B)\<close>
   apply (rule kraus_mapI[of _ \<open>kf_complete_measurement B\<close>])
   by (auto intro!: ext simp add: assms kf_complete_measurement_apply km_complete_measurement_def)
 
+lemma kraus_map_complete_measurement_ket:
+  assumes \<open>is_ortho_set B\<close>
+  shows \<open>kraus_map km_complete_measurement_ket\<close>
+  by (simp add: kraus_map_complete_measurement)
+
 lemma km_complete_measurement_idem[simp]:
   assumes \<open>is_ortho_set B\<close>
-  shows  \<open>km_complete_measurement B (km_complete_measurement B \<rho>) = km_complete_measurement B \<rho>\<close>
+  shows \<open>km_complete_measurement B (km_complete_measurement B \<rho>) = km_complete_measurement B \<rho>\<close>
   using kf_complete_measurement_idem[of B]
-  by (simp add: kf_complete_measurement_apply assms km_complete_measurement_def)
+    kf_complete_measurement_apply[OF assms] km_complete_measurement_def
+  by (metis (no_types, lifting) ext kf_comp_apply kf_complete_measurement_idem_weak kf_eq_weak_def o_def)
+
+lemma km_complete_measurement_ket_idem[simp]:
+  \<open>km_complete_measurement_ket (km_complete_measurement_ket \<rho>) = km_complete_measurement_ket \<rho>\<close>
+  by fastforce
 
 lemma km_complete_measurement_has_sum_onb:
   assumes \<open>is_onb B\<close>
@@ -1142,15 +1288,36 @@ lemma km_complete_measurement_has_sum_onb:
   using kf_complete_measurement_has_sum_onb[OF assms] and assms
   by (simp add: kf_complete_measurement_apply km_complete_measurement_def is_onb_def)
 
-lemma km_complete_measurement_has_sum_ket:
-  \<open>((\<lambda>x. sandwich_tc (selfbutter (ket x)) t) has_sum km_complete_measurement (range ket) t) UNIV\<close>
-  by (metis (no_types, lifting) ext has_sum_reindex inj_ket is_onb_ket km_complete_measurement_has_sum_onb o_def)
+lemma km_complete_measurement_ket_diagonal_operator[simp]:
+  \<open>km_complete_measurement_ket (diagonal_operator_tc f) = diagonal_operator_tc f\<close>
+  using kf_complete_measurement_ket_diagonal_operator[of f]
+  by (metis (no_types, lifting) is_ortho_set_ket kf_apply_map kf_apply_on_UNIV kf_apply_on_eqI kf_complete_measurement_apply
+      kf_complete_measurement_ket_kf_map km_complete_measurement_def)
 
-lemma km_complete_measurement_diagonal_operator[simp]:
-  \<open>km_complete_measurement (range ket) (diagonal_operator_tc f) = diagonal_operator_tc f\<close>
-  using kf_complete_measurement_diagonal_operator[of f]
-  by (simp add: kf_complete_measurement_apply km_complete_measurement_def del: kf_complete_measurement_diagonal_operator)
+lemma km_operators_complete_measurement:
+  assumes \<open>is_ortho_set B\<close>
+  shows \<open>km_operators_in (km_complete_measurement B) (span (selfbutter ` B))\<close>
+proof -
+  have \<open>span ((selfbutter \<circ> sgn) ` B) \<subseteq> span (selfbutter ` B)\<close>
+  proof (intro real_vector.span_minimal[OF _ real_vector.subspace_span] subsetI)
+    fix a
+    assume \<open>a \<in> (selfbutter \<circ> sgn) ` B\<close>
+    then obtain h where \<open>a = selfbutter (sgn h)\<close> and \<open>h \<in> B\<close>
+      by force
+    then have \<open>a = (inverse (norm h))\<^sup>2 *\<^sub>R selfbutter h\<close>
+      by (simp add: sgn_div_norm scaleR_scaleC power2_eq_square)
+    with \<open>h \<in> B\<close>
+    show \<open>a \<in> span (selfbutter ` B)\<close>
+      by (simp add: span_clauses(1) span_mul)
+  qed
+  then show ?thesis
+    by (simp add: km_complete_measurement_kf_complete_measurement assms km_operators_in_kf_apply
+        kf_operators_complete_measurement)
+qed
 
+lemma km_operators_complete_measurement_ket:
+  shows \<open>km_operators_in km_complete_measurement_ket (span (range (\<lambda>c. (selfbutter (ket c)))))\<close>
+  by (metis (no_types, lifting) image_cong is_ortho_set_ket km_operators_complete_measurement range_composition)
 
 unbundle no kraus_map_syntax
 unbundle no cblinfun_syntax

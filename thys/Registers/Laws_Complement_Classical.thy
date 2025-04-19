@@ -43,7 +43,7 @@ proof (rule complementsI)
     using \<open>compatible G F\<close> iso_register_def pair_is_register by blast
 qed
 
-definition complement :: \<open>('a::type update \<Rightarrow> 'b::finite update) \<Rightarrow> (('a,'b) complement_domain_simple update \<Rightarrow> 'b update)\<close> where
+definition complement :: \<open>('a::finite update \<Rightarrow> 'b::finite update) \<Rightarrow> (('a,'b) complement_domain_simple update \<Rightarrow> 'b update)\<close> where
   \<open>complement F = (SOME G :: ('a, 'b) complement_domain_simple update \<Rightarrow> 'b update. compatible F G \<and> iso_register (F;G))\<close>
 
 lemma register_complement[simp]: \<open>register (complement F)\<close> if \<open>register F\<close>

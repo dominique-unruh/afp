@@ -1,6 +1,7 @@
 theory Misc_Kraus_Maps
   imports
     Hilbert_Space_Tensor_Product.Hilbert_Space_Tensor_Product
+    Hilbert_Space_Tensor_Product.Von_Neumann_Algebras
 begin
 
 unbundle cblinfun_syntax
@@ -80,5 +81,99 @@ qed
 
 lemma flip_eq_const: \<open>(\<lambda>y. y = x) = ((=) x)\<close>
   by auto
+
+(* TODO to Complex_Bounded_Operators *)
+lemma sgn_ket[simp]: \<open>sgn (ket x) = ket x\<close>
+  by (simp add: sgn_div_norm)
+
+(* TODO to Hilbert_Space_Tensor_Product *)
+lemma tensor_op_in_tensor_vn:
+  assumes \<open>a \<in> A\<close> and \<open>b \<in> B\<close>
+  shows \<open>a \<otimes>\<^sub>o b \<in> A \<otimes>\<^sub>v\<^sub>N B\<close>
+proof -
+  have \<open>a \<otimes>\<^sub>o id_cblinfun \<in> A \<otimes>\<^sub>v\<^sub>N B\<close>
+    by (metis (no_types, lifting) Un_iff assms(1) double_commutant_grows' image_iff tensor_vn_def)
+  moreover have \<open>id_cblinfun \<otimes>\<^sub>o b \<in> A \<otimes>\<^sub>v\<^sub>N B\<close>
+    by (simp add: assms(2) double_commutant_grows' tensor_vn_def)
+  ultimately have \<open>(a \<otimes>\<^sub>o id_cblinfun) o\<^sub>C\<^sub>L (id_cblinfun \<otimes>\<^sub>o b) \<in> A \<otimes>\<^sub>v\<^sub>N B\<close>
+    using commutant_mult tensor_vn_def by blast
+  then show ?thesis
+    by (simp add: comp_tensor_op)
+qed
+
+(* TODO to Hilbert_Space_Tensor_Product *)
+lemma commutant_tensor_vn_subset: 
+  assumes \<open>von_neumann_algebra A\<close> and \<open>von_neumann_algebra B\<close>
+  shows \<open>commutant A \<otimes>\<^sub>v\<^sub>N commutant B \<subseteq> commutant (A \<otimes>\<^sub>v\<^sub>N B)\<close>
+proof -
+  have 1: \<open>a \<otimes>\<^sub>o id_cblinfun \<in> commutant (A \<otimes>\<^sub>v\<^sub>N B)\<close> if \<open>a \<in> commutant A\<close> for a
+    apply (simp add: tensor_vn_def)
+    using that by (auto intro!: simp: commutant_def comp_tensor_op)
+  have 2: \<open>id_cblinfun \<otimes>\<^sub>o b \<in> commutant (A \<otimes>\<^sub>v\<^sub>N B)\<close> if \<open>b \<in> commutant B\<close> for b
+    apply (simp add: tensor_vn_def)
+    using that by (auto intro!: simp: commutant_def comp_tensor_op)
+  show ?thesis
+    apply (subst tensor_vn_def)
+    apply (rule double_commutant_in_vn_algI)
+    using 1 2
+    by (auto intro!: von_neumann_algebra_commutant von_neumann_algebra_tensor_vn assms)
+qed
+
+(* TODO to Hilbert_Space_Tensor_Product *)
+lemma commutant_span[simp]: \<open>commutant (span X) = commutant X\<close>
+proof (rule order_antisym)
+  have \<open>commutant X \<subseteq> commutant (cspan X)\<close>
+    by (simp add: commutant_cspan)
+  also have \<open>\<dots> \<subseteq> commutant (span X)\<close>
+    by (simp add: commutant_antimono span_subset_cspan)
+  finally show \<open>commutant X \<subseteq> commutant (span X)\<close>
+    by -
+  show \<open>commutant (span X) \<subseteq> commutant X\<close>
+    by (simp add: commutant_antimono span_superset)
+qed
+
+
+(* TODO to Complex_Bounded_Operators *)
+lemma explicit_cblinfun_exists_0[simp]: \<open>explicit_cblinfun_exists (\<lambda>_ _. 0)\<close>
+  by (auto intro!: explicit_cblinfun_exists_bounded[where B=0] simp: explicit_cblinfun_def)
+
+(* TODO to Complex_Bounded_Operators *)
+lemma explicit_cblinfun_0[simp]: \<open>explicit_cblinfun (\<lambda>_ _. 0) = 0\<close>
+  by (auto intro!: equal_ket Rep_ell2_inject[THEN iffD1] ext simp: Rep_ell2_explicit_cblinfun_ket zero_ell2.rep_eq)
+
+lemma cnj_of_bool[simp]: \<open>cnj (of_bool b) = of_bool b\<close>
+  by simp
+
+lemma has_sum_single: 
+  fixes f :: \<open>_ \<Rightarrow> _::{comm_monoid_add,t2_space}\<close>
+  assumes "\<And>j. j \<noteq> i \<Longrightarrow> j\<in>A \<Longrightarrow> f j = 0"
+  assumes \<open>s = (if i\<in>A then f i else 0)\<close>
+  shows "HAS_SUM f A s"
+  apply (subst has_sum_cong_neutral[where T=\<open>A \<inter> {i}\<close> and g=f])
+  using assms by auto
+
+(* TODO to Complex_Bounded_Operators *)
+lemma classical_operator_None[simp]: \<open>classical_operator (\<lambda>_. None) = 0\<close>
+  by (auto intro!: equal_ket simp: classical_operator_ket inj_map_def classical_operator_exists_inj)
+
+lemma has_sum_in_in_closedsubspace:
+  assumes \<open>has_sum_in T f A l\<close>
+  assumes \<open>\<And>x. x\<in>A \<Longrightarrow> f x \<in> S\<close>
+  assumes \<open>closedin T S\<close>
+  assumes \<open>csubspace S\<close>
+  shows \<open>l \<in> S\<close>
+proof -
+  from assms
+  have \<open>limitin T (sum f) l (finite_subsets_at_top A)\<close>
+    by (simp add: has_sum_in_def)
+  then have \<open>limitin T (\<lambda>F. if F\<subseteq>A then sum f F else 0) l (finite_subsets_at_top A)\<close>
+    apply (rule limitin_transform_eventually[rotated])
+    apply (rule eventually_finite_subsets_at_top_weakI)
+    by simp
+  then show \<open>l \<in> S\<close>
+    apply (rule limitin_closedin)
+    using assms by (auto intro!: complex_vector.subspace_0 simp: complex_vector.subspace_sum subsetD)
+qed
+
 
 end
