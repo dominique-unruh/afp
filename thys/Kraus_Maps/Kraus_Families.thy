@@ -3474,6 +3474,42 @@ proof -
     by -
 qed
 
+lemma kf_comp_id_left: \<open>kf_comp kf_id \<EE> \<equiv>\<^sub>k\<^sub>r kf_map (\<lambda>x. (x,())) \<EE>\<close>
+proof (rule kf_eqI_from_filter_eq_weak)
+  fix xy :: \<open>'c \<times> unit\<close>
+  define x where \<open>x = fst xy\<close>
+  then have xy: \<open>xy = (x,())\<close>
+    by (auto intro!: prod.expand)
+  have \<open>kf_filter ((=) xy) (kf_comp kf_id \<EE>) = kf_comp (kf_filter (\<lambda>_. True) kf_id) (kf_filter ((=)x) \<EE>)\<close>
+    by (auto intro!: arg_cong2[where f=kf_filter] simp add: xy simp flip: kf_filter_comp simp del: kf_filter_true)
+  also have \<open>\<dots> =\<^sub>k\<^sub>r kf_filter ((=)x) \<EE>\<close>
+    by (simp add: kf_comp_apply kf_eq_weakI)
+  also have \<open>\<dots> =\<^sub>k\<^sub>r kf_map (\<lambda>x. (x,())) (kf_filter ((=)x) \<EE>)\<close>
+    by (simp add: kf_eq_weak_def)
+  also have \<open>\<dots> = kf_filter ((=) xy) (kf_map (\<lambda>x. (x,())) \<EE>)\<close>
+    by (simp add: kf_filter_map xy)
+  finally show \<open>kf_filter ((=) xy) (kf_comp kf_id \<EE>) =\<^sub>k\<^sub>r \<dots>\<close>
+    by -
+qed
+
+lemma kf_comp_id_right: \<open>kf_comp \<EE> kf_id \<equiv>\<^sub>k\<^sub>r kf_map (\<lambda>x. ((),x)) \<EE>\<close>
+proof (rule kf_eqI_from_filter_eq_weak)
+  fix xy :: \<open>unit \<times> 'c\<close>
+  define y where \<open>y = snd xy\<close>
+  then have xy: \<open>xy = ((),y)\<close>
+    by (auto intro!: prod.expand simp: y_def)
+  have \<open>kf_filter ((=) xy) (kf_comp \<EE> kf_id) = kf_comp (kf_filter ((=)y) \<EE>) (kf_filter (\<lambda>_. True) kf_id)\<close>
+    by (auto intro!: arg_cong2[where f=kf_filter] simp add: xy simp flip: kf_filter_comp simp del: kf_filter_true)
+  also have \<open>\<dots> =\<^sub>k\<^sub>r kf_filter ((=)y) \<EE>\<close>
+    by (simp add: kf_comp_apply kf_eq_weakI)
+  also have \<open>\<dots> =\<^sub>k\<^sub>r kf_map (Pair ()) (kf_filter ((=)y) \<EE>)\<close>
+    by (simp add: kf_eq_weak_def)
+  also have \<open>\<dots> = kf_filter ((=) xy) (kf_map (\<lambda>x. ((),x)) \<EE>)\<close>
+    by (simp add: kf_filter_map xy)
+  finally show \<open>kf_filter ((=) xy) (kf_comp \<EE> kf_id) =\<^sub>k\<^sub>r \<dots>\<close>
+    by -
+qed
+
 
 
 subsection \<open>Infinite sums\<close>
