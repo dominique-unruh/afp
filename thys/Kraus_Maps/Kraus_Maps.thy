@@ -61,7 +61,7 @@ lemma kraus_map_kf_apply[iff]: \<open>kraus_map (kf_apply \<EE>)\<close>
   using kraus_map_def by blast
 
 definition km_some_kraus_family :: \<open>(('a::chilbert_space, 'a) trace_class \<Rightarrow> ('b::chilbert_space, 'b) trace_class) \<Rightarrow> ('a, 'b, unit) kraus_family\<close> where
-  \<open>km_some_kraus_family \<EE> = (if kraus_map \<EE> then SOME \<FF>. \<EE> = kf_apply \<FF> else 0)\<close>
+  \<open>km_some_kraus_family \<EE> = (if kraus_map \<EE> then kf_remove_0 (SOME \<FF>. \<EE> = kf_apply \<FF>) else 0)\<close>
 
 lemma kf_apply_km_some_kraus_family[simp]:
   assumes \<open>kraus_map \<EE>\<close>
