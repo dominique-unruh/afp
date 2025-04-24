@@ -598,7 +598,14 @@ lemma kf_operators_in_kf_of_op[simp]: \<open>kf_operators (kf_of_op U) = {U}\<cl
   apply (transfer' fixing: U)
   by simp
 
+lemma kf_domain_of_op[simp]: \<open>kf_domain (kf_of_op A) = {()}\<close> if \<open>A \<noteq> 0\<close>
+  apply (transfer' fixing: A)
+  using that by auto
+
 definition \<open>kf_id = kf_of_op id_cblinfun\<close>
+
+lemma kf_domain_id[simp]: \<open>kf_domain (kf_id :: ('a::{chilbert_space,not_singleton},_,_) kraus_family) = {()}\<close>
+  by (simp add: kf_id_def)
 
 lemma kf_of_op_id[simp]: \<open>kf_of_op id_cblinfun = kf_id\<close>
   by (simp add: kf_id_def)
@@ -4973,6 +4980,53 @@ proof -
   finally show ?thesis
     by -
 qed
+
+lemma kf_domain_tensor: \<open>kf_domain (kf_tensor \<EE> \<FF>) = kf_domain \<EE> \<times> kf_domain \<FF>\<close>
+proof (intro Set.set_eqI iffI)
+  fix xy assume xy_dom: \<open>xy \<in> kf_domain (kf_tensor \<EE> \<FF>)\<close>
+  obtain x y where xy: \<open>xy = (x,y)\<close>
+    by (auto simp: prod_eq_iff)
+  from xy_dom obtain E F where \<open>(E,F,x,y) \<in> kf_domain (kf_tensor_raw \<EE> \<FF>)\<close>
+    by (force simp add: kf_tensor_def xy)
+  then obtain EF where EFEFxy: \<open>(EF,E,F,x,y) \<in> Rep_kraus_family (kf_tensor_raw \<EE> \<FF>)\<close> and \<open>EF \<noteq> 0\<close>
+    by (auto simp: kf_domain_def)
+  then have \<open>EF = E \<otimes>\<^sub>o F\<close>
+    by (force simp: kf_tensor_raw.rep_eq case_prod_unfold)
+  with \<open>EF \<noteq> 0\<close> have \<open>E \<noteq> 0\<close> and \<open>F \<noteq> 0\<close>
+    by fastforce+
+  from EFEFxy have \<open>(E,x) \<in> Rep_kraus_family \<EE>\<close>
+    apply (transfer' fixing: E x)
+    by auto
+  with \<open>E \<noteq> 0\<close> have \<open>x \<in> kf_domain \<EE>\<close>
+    apply (transfer' fixing: E x)
+    by force
+  from EFEFxy have \<open>(F,y) \<in> Rep_kraus_family \<FF>\<close>
+    apply (transfer' fixing: F y)
+    by auto
+  with \<open>F \<noteq> 0\<close> have \<open>y \<in> kf_domain \<FF>\<close>
+    apply (transfer' fixing: F y)
+    by force
+  from  \<open>x \<in> kf_domain \<EE>\<close>  \<open>y \<in> kf_domain \<FF>\<close>
+  show \<open>xy \<in> kf_domain \<EE> \<times> kf_domain \<FF>\<close>
+    by (simp add: xy)
+next
+  fix xy assume xy_dom: \<open>xy \<in> kf_domain \<EE> \<times> kf_domain \<FF>\<close>
+  then obtain x y where xy: \<open>xy = (x,y)\<close> and xE: \<open>x \<in> kf_domain \<EE>\<close> and yF: \<open>y \<in> kf_domain \<FF>\<close>
+    by (auto simp: prod_eq_iff)
+  from xE obtain E where Ex: \<open>(E,x) \<in> Rep_kraus_family \<EE>\<close> and \<open>E \<noteq> 0\<close>
+    by (auto simp: kf_domain_def)
+  from yF obtain F where Fy: \<open>(F,y) \<in> Rep_kraus_family \<FF>\<close> and \<open>F \<noteq> 0\<close>
+    by (auto simp: kf_domain_def)
+  from Ex Fy have \<open>(E \<otimes>\<^sub>o F, E, F, x, y) \<in> Rep_kraus_family (kf_tensor_raw \<EE> \<FF>)\<close>
+    by (force simp: kf_tensor_raw.rep_eq case_prod_unfold)
+  moreover have \<open>E \<otimes>\<^sub>o F \<noteq> 0\<close>
+    by (simp add: \<open>E \<noteq> 0\<close> \<open>F \<noteq> 0\<close> tensor_op_nonzero)
+  ultimately have \<open>(E, F, x, y) \<in> kf_domain (kf_tensor_raw \<EE> \<FF>)\<close>
+    by (force simp: kf_domain_def)
+  then show \<open>xy \<in> kf_domain (kf_tensor \<EE> \<FF>)\<close>
+    by (force simp: kf_tensor_def xy case_prod_unfold)
+qed
+
 
 subsection \<open>Partial trace\<close>
 

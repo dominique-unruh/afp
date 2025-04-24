@@ -227,6 +227,10 @@ lemma km_bound_selfadjoint[iff]: \<open>selfadjoint (km_bound \<EE>)\<close>
 lemma km_bound_leq_km_norm_id: \<open>km_bound \<EE> \<le> km_norm \<EE> *\<^sub>R id_cblinfun\<close>
   by (simp add: km_norm_def less_eq_scaled_id_norm)
 
+lemma kf_norm_km_some_kraus_family[simp]: \<open>kf_norm (km_some_kraus_family \<EE>) = km_norm \<EE>\<close>
+  apply (cases \<open>kraus_map \<EE>\<close>)
+  by (auto intro!: km_norm_kf_norm[symmetric] simp: km_some_kraus_family_invalid km_norm_invalid)
+
 subsection \<open>Basic Kraus maps\<close>
 
 text \<open>Zero map and constant maps. Addition and rescaling and composition of maps.\<close>
@@ -243,6 +247,17 @@ lemma km_bound_0[simp]: \<open>km_bound 0 = 0\<close>
 lemma km_norm_0[simp]: \<open>km_norm 0 = 0\<close>
   by (simp add: km_norm_def)
 
+lemma km_some_kraus_family_0[simp]: \<open>km_some_kraus_family 0 = 0\<close>
+proof -
+  have \<open>km_some_kraus_family 0 = kf_remove_0 (km_some_kraus_family 0)\<close>
+    using [[simp_trace]]
+    by (simp add: km_some_kraus_family_def)
+  also have \<open>\<dots> = 0\<close>
+    apply (rule kf_eq_0_iff_kf_remove_0_is_0[THEN iffD1])
+    by (simp add: kf_eq_weak_def)
+  finally show ?thesis
+    by -
+qed
 
 lemma kraus_map_id[iff]: \<open>kraus_map id\<close>
   by (auto intro!: ext kraus_mapI[of _ kf_id])
@@ -944,8 +959,6 @@ proof -
     by (auto intro!: exI[of _ \<EE>\<FF>] simp add: km_operators_in_def)
 qed
 
-
-
 subsection \<open>Trace and partial trace\<close>
 
 
@@ -1318,6 +1331,7 @@ qed
 lemma km_operators_complete_measurement_ket:
   shows \<open>km_operators_in km_complete_measurement_ket (span (range (\<lambda>c. (selfbutter (ket c)))))\<close>
   by (metis (no_types, lifting) image_cong is_ortho_set_ket km_operators_complete_measurement range_composition)
+
 
 unbundle no kraus_map_syntax
 unbundle no cblinfun_syntax
