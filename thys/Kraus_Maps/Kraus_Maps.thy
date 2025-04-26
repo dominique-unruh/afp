@@ -253,7 +253,7 @@ proof -
     using [[simp_trace]]
     by (simp add: km_some_kraus_family_def)
   also have \<open>\<dots> = 0\<close>
-    apply (rule kf_eq_0_iff_kf_remove_0_is_0[THEN iffD1])
+    apply (rule kf_eq_0_iff_eq_0[THEN iffD1])
     by (simp add: kf_eq_weak_def)
   finally show ?thesis
     by -
