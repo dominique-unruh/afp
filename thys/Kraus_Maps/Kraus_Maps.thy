@@ -61,7 +61,7 @@ lemma kraus_map_kf_apply[iff]: \<open>kraus_map (kf_apply \<EE>)\<close>
   using kraus_map_def by blast
 
 definition km_some_kraus_family :: \<open>(('a::chilbert_space, 'a) trace_class \<Rightarrow> ('b::chilbert_space, 'b) trace_class) \<Rightarrow> ('a, 'b, unit) kraus_family\<close> where
-  \<open>km_some_kraus_family \<EE> = (if kraus_map \<EE> then kf_remove_0 (SOME \<FF>. \<EE> = kf_apply \<FF>) else 0)\<close>
+  \<open>km_some_kraus_family \<EE> = (if kraus_map \<EE> then SOME \<FF>. \<EE> = kf_apply \<FF> else 0)\<close>
 
 lemma kf_apply_km_some_kraus_family[simp]:
   assumes \<open>kraus_map \<EE>\<close>
@@ -248,20 +248,11 @@ lemma km_norm_0[simp]: \<open>km_norm 0 = 0\<close>
   by (simp add: km_norm_def)
 
 lemma km_some_kraus_family_0[simp]: \<open>km_some_kraus_family 0 = 0\<close>
-proof -
-  have \<open>km_some_kraus_family 0 = kf_remove_0 (km_some_kraus_family 0)\<close>
-    using [[simp_trace]]
-    by (simp add: km_some_kraus_family_def)
-  also have \<open>\<dots> = 0\<close>
-    apply (rule kf_eq_0_iff_eq_0[THEN iffD1])
-    by (simp add: kf_eq_weak_def)
-  finally show ?thesis
-    by -
-qed
+  apply (rule kf_eq_0_iff_eq_0[THEN iffD1])
+  by (simp add: kf_eq_weak_def)
 
 lemma kraus_map_id[iff]: \<open>kraus_map id\<close>
   by (auto intro!: ext kraus_mapI[of _ kf_id])
-
 
 lemma km_bound_id[simp]: \<open>km_bound id = id_cblinfun\<close>
   using km_bound_kf_bound[of id kf_id]
@@ -618,7 +609,7 @@ subsection \<open>Infinite sums\<close>
 
 lemma
   assumes \<open>\<And>\<rho>. ((\<lambda>a. sandwich_tc (f a) \<rho>) has_sum \<EE> \<rho>) A\<close>
-  defines \<open>EE \<equiv> (\<lambda>a. (f a, a)) ` A\<close>
+  defines \<open>EE \<equiv> Set.filter (\<lambda>(E,_). E\<noteq>0) ((\<lambda>a. (f a, a)) ` A)\<close>
   shows kraus_mapI_sum: \<open>kraus_map \<EE>\<close>
     and kraus_map_sum_kraus_family: \<open>kraus_family EE\<close>
     and kraus_map_sum_kf_apply: \<open>\<EE> = kf_apply (Abs_kraus_family EE)\<close>
@@ -847,7 +838,7 @@ lemma km_tensor_as_infsum:
   assumes \<open>\<And>\<rho>. ((\<lambda>j. sandwich_tc (F j) \<rho>) has_sum \<FF> \<rho>) J\<close>
   shows \<open>km_tensor \<EE> \<FF> \<rho> = (\<Sum>\<^sub>\<infinity>(i,j)\<in>I\<times>J. sandwich_tc (E i \<otimes>\<^sub>o F j) \<rho>)\<close>
 proof -
-  define EE FF where \<open>EE = (\<lambda>a. (E a, a)) ` I\<close> and \<open>FF = (\<lambda>a. (F a, a)) ` J\<close>
+  define EE FF where \<open>EE = Set.filter (\<lambda>(E,_). E\<noteq>0) ((\<lambda>a. (E a, a)) ` I)\<close> and \<open>FF = Set.filter (\<lambda>(E,_). E\<noteq>0) ((\<lambda>a. (F a, a)) ` J)\<close>
   then have [simp]: \<open>kraus_family EE\<close>  \<open>kraus_family FF\<close>
     using assms kraus_map_sum_kraus_family
     by blast+
@@ -859,7 +850,7 @@ proof -
   also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>((E, x), (F, y))\<in>EE \<times> FF. sandwich_tc (E \<otimes>\<^sub>o F) \<rho>)\<close>
     by (simp add: kf_apply_tensor_as_infsum Abs_kraus_family_inverse)
   also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>((E, x), (F, y))\<in>(\<lambda>(i,j). ((E i, i), (F j, j)))`(I\<times>J). sandwich_tc (E \<otimes>\<^sub>o F) \<rho>)\<close>
-    apply (rule arg_cong[where f=\<open>infsum _\<close>])
+    apply (rule infsum_cong_neutral)
     by (auto simp: EE_def FF_def)
   also have \<open>\<dots> = (\<Sum>\<^sub>\<infinity>(i,j)\<in>I\<times>J. sandwich_tc (E i \<otimes>\<^sub>o F j) \<rho>)\<close>
     by (simp add: infsum_reindex inj_on_def o_def case_prod_unfold)
@@ -1248,8 +1239,8 @@ lemma km_norm_complete_measurement:
   assumes \<open>is_ortho_set B\<close>
   shows \<open>km_norm (km_complete_measurement B) \<le> 1\<close>
   apply (subst km_norm_kf_norm[of _ \<open>kf_complete_measurement B\<close>])
-   apply (simp add: assms kf_complete_measurement.abs_eq km_complete_measurement_has_sum kraus_map_sum_kf_apply) 
-  by (simp add: assms kf_norm_complete_measurement)
+   apply (simp add: assms km_complete_measurement_kf_complete_measurement)
+  by (simp_all add: assms kf_norm_complete_measurement)
 
 lemma km_bound_complete_measurement_onb[simp]:
   assumes \<open>is_onb B\<close>
