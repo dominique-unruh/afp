@@ -603,8 +603,6 @@ next
     by (simp add: km_norm_invalid)
 qed
 
-
-
 subsection \<open>Infinite sums\<close>
 
 lemma
@@ -680,6 +678,26 @@ proof -
   finally show ?thesis
     by -
 qed
+
+lemma km_summable_summable:
+  assumes km: \<open>\<And>a. a\<in>A \<Longrightarrow> kraus_map (\<EE> a)\<close>
+  assumes sum: \<open>km_summable \<EE> A\<close>
+  shows \<open>(\<lambda>a. \<EE> a \<rho>) summable_on A\<close>
+proof -
+  from km
+  obtain EE :: \<open>_ \<Rightarrow> (_,_,unit) kraus_family\<close> where EE: \<open>\<EE> a = kf_apply (EE a)\<close> if \<open>a \<in> A\<close> for a
+    apply atomize_elim
+    apply (rule_tac choice)
+    by (simp add: kraus_map_def_raw) 
+  from sum
+  have \<open>kf_summable EE A\<close>
+    by (simp add: EE km_summable_kf_summable)
+  then have \<open>(\<lambda>a. EE a *\<^sub>k\<^sub>r \<rho>) summable_on A\<close>
+    by (rule kf_infsum_apply_summable)
+  then show ?thesis
+    by (metis (mono_tags, lifting) EE summable_on_cong)
+qed
+
 
 lemma kraus_map_infsum:
   assumes km: \<open>\<And>a. a\<in>A \<Longrightarrow> kraus_map (\<EE> a)\<close>
@@ -764,15 +782,23 @@ qed
 
 subsection \<open>Tensor products\<close>
 
+definition km_tensor_exists :: \<open>(('a ell2, 'b ell2) trace_class \<Rightarrow> ('c ell2, 'd ell2) trace_class)
+                             \<Rightarrow> (('e ell2, 'f ell2) trace_class \<Rightarrow> ('g ell2, 'h ell2) trace_class) \<Rightarrow> bool\<close> where
+  \<open>km_tensor_exists \<EE> \<FF> \<longleftrightarrow> (\<exists>\<EE>\<FF>. bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>)))\<close>
+
 
 definition km_tensor :: \<open>(('a ell2, 'c ell2) trace_class \<Rightarrow> ('e ell2, 'g ell2) trace_class)
                       \<Rightarrow> (('b ell2, 'd ell2) trace_class \<Rightarrow> ('f ell2, 'h ell2) trace_class)
                       \<Rightarrow> (('a \<times> 'b) ell2, ('c \<times> 'd) ell2) trace_class \<Rightarrow> (('e \<times> 'f) ell2, ('g \<times> 'h) ell2) trace_class\<close> where
-  \<open>km_tensor \<EE> \<FF> = (SOME \<EE>\<FF>. bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>)))\<close>
+  \<open>km_tensor \<EE> \<FF> = (if km_tensor_exists \<EE> \<FF>
+                    then SOME \<EE>\<FF>. bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>))
+                    else 0)\<close>
 
-definition km_tensor_exists :: \<open>(('a ell2, 'b ell2) trace_class \<Rightarrow> ('c ell2, 'd ell2) trace_class)
-                             \<Rightarrow> (('e ell2, 'f ell2) trace_class \<Rightarrow> ('g ell2, 'h ell2) trace_class) \<Rightarrow> bool\<close> where
-  \<open>km_tensor_exists \<EE> \<FF> \<longleftrightarrow> (\<exists>\<EE>\<FF>. bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>)))\<close>
+lemma km_tensor_invalid:
+  assumes \<open>\<not> km_tensor_exists \<EE> \<FF>\<close>
+  shows \<open>km_tensor \<EE> \<FF> = 0\<close>
+  by (simp add: assms km_tensor_def)
+
 
 lemma km_tensor_exists_bounded_clinear[iff]:
   assumes \<open>km_tensor_exists \<EE> \<FF>\<close>
@@ -798,8 +824,10 @@ proof -
   define P where \<open>P \<EE>\<FF> \<longleftrightarrow> bounded_clinear \<EE>\<FF> \<and> (\<forall>\<rho> \<sigma>. \<EE>\<FF> (tc_tensor \<rho> \<sigma>) = tc_tensor (\<EE> \<rho>) (\<FF> \<sigma>))\<close> for \<EE>\<FF>
   have \<open>P \<EE>\<FF>\<close>
     using P_def assms by presburger
-  then have Ptensor: \<open>P (km_tensor \<EE> \<FF>)\<close>
-    by (smt (verit, del_insts) P_def km_tensor_def someI_ex)
+  then have \<open>km_tensor_exists \<EE> \<FF>\<close>
+    using P_def km_tensor_exists_def by blast
+  with \<open>P \<EE>\<FF>\<close> have Ptensor: \<open>P (km_tensor \<EE> \<FF>)\<close>
+    by (simp add: P_def)
   show ?thesis
     apply (rule eq_from_separatingI2)
        apply (rule separating_set_bounded_clinear_tc_tensor)
@@ -949,6 +977,10 @@ proof -
   ultimately show ?thesis
     by (auto intro!: exI[of _ \<EE>\<FF>] simp add: km_operators_in_def)
 qed
+
+lemma km_tensor_sandwich_tc:
+  \<open>km_tensor (sandwich_tc A) (sandwich_tc B) = sandwich_tc (A \<otimes>\<^sub>o B)\<close>
+  by (metis bounded_clinear_sandwich_tc km_tensor_unique sandwich_tc_tensor)
 
 subsection \<open>Trace and partial trace\<close>
 
@@ -1270,8 +1302,7 @@ lemma kraus_map_complete_measurement:
   apply (rule kraus_mapI[of _ \<open>kf_complete_measurement B\<close>])
   by (auto intro!: ext simp add: assms kf_complete_measurement_apply km_complete_measurement_def)
 
-lemma kraus_map_complete_measurement_ket:
-  assumes \<open>is_ortho_set B\<close>
+lemma kraus_map_complete_measurement_ket[iff]:
   shows \<open>kraus_map km_complete_measurement_ket\<close>
   by (simp add: kraus_map_complete_measurement)
 
@@ -1322,6 +1353,23 @@ qed
 lemma km_operators_complete_measurement_ket:
   shows \<open>km_operators_in km_complete_measurement_ket (span (range (\<lambda>c. (selfbutter (ket c)))))\<close>
   by (metis (no_types, lifting) image_cong is_ortho_set_ket km_operators_complete_measurement range_composition)
+
+
+lemma km_complete_measurement_ket_butterket[simp]:
+  \<open>km_complete_measurement_ket (tc_butterfly (ket c) (ket c)) = tc_butterfly (ket c) (ket c)\<close>
+  by (simp add: km_complete_measurement_ket_kf_complete_measurement_ket kf_complete_measurement_ket_apply_butterfly)
+
+lemma km_complete_measurement_tensor:
+  assumes \<open>is_ortho_set B\<close> and \<open>is_ortho_set C\<close>
+  shows \<open>km_tensor (km_complete_measurement B) (km_complete_measurement C)
+             = km_complete_measurement ((\<lambda>(b,c). b \<otimes>\<^sub>s c) ` (B \<times> C))\<close>
+  by (simp add: km_complete_measurement_kf_complete_measurement assms is_ortho_set_tensor km_tensor_kf_tensor
+      flip: kf_complete_measurement_tensor)
+
+lemma km_complete_measurement_ket_tensor:
+  shows \<open>km_tensor (km_complete_measurement_ket :: ('a ell2, _) trace_class \<Rightarrow> _) (km_complete_measurement_ket :: ('b ell2, _) trace_class \<Rightarrow> _)
+             = km_complete_measurement_ket\<close>
+  by (simp add: km_complete_measurement_ket_kf_complete_measurement_ket km_tensor_kf_tensor kf_complete_measurement_ket_tensor)
 
 
 unbundle no kraus_map_syntax

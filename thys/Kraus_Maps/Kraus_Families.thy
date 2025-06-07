@@ -506,8 +506,7 @@ lemma kf_apply_bounded_clinear[bounded_clinear]:
   using kf_apply_bounded
   by (simp add: mult.commute)
 
-lemma kf_bound_from_map:
-  shows \<open>\<psi> \<bullet>\<^sub>C kf_bound \<EE> \<phi> = trace_tc (\<EE> *\<^sub>k\<^sub>r tc_butterfly \<phi> \<psi>)\<close>
+lemma kf_bound_from_map: \<open>\<psi> \<bullet>\<^sub>C kf_bound \<EE> \<phi> = trace_tc (\<EE> *\<^sub>k\<^sub>r tc_butterfly \<phi> \<psi>)\<close>
 proof -
   have \<open>has_sum_in cweak_operator_topology (\<lambda>(E,x). E* o\<^sub>C\<^sub>L E) (Rep_kraus_family \<EE>) (kf_bound \<EE>)\<close>
     by (simp add: kf_bound_has_sum)
@@ -593,6 +592,10 @@ lemma kf_norm_0[simp]: \<open>kf_norm 0 = 0\<close>
 lift_definition kf_of_op :: \<open>('a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space) \<Rightarrow> ('a, 'b, unit) kraus_family\<close> is
   \<open>\<lambda>E::'a\<Rightarrow>\<^sub>C\<^sub>L'b. if E = 0 then {} else {(E, ())}\<close>
   by (auto intro: kraus_family_if_finite)
+
+lemma kf_of_op0[simp]: \<open>kf_of_op 0 = 0\<close>
+  apply transfer'
+  by simp
 
 lemma kf_of_op_norm[simp]: \<open>kf_norm (kf_of_op E) = (norm E)\<^sup>2\<close>
   by (simp add: kf_of_op.rep_eq kf_norm_finite)
@@ -2184,6 +2187,14 @@ proof -
     apply (rule_tac kf_eqI)
     by (simp add: kf_apply_on_def kf_filter_map)
 qed
+
+lemma kf_map_inj_cong_eq:
+  assumes \<open>\<And>x. x \<in> kf_domain \<EE> \<Longrightarrow> f x = g x\<close>
+  assumes \<open>\<EE> = \<FF>\<close>
+  shows \<open>kf_map_inj f \<EE> = kf_map_inj g \<FF>\<close>
+  using assms
+  apply transfer'
+  by force
 
 (* lemma kf_map_remove_0[simp]:
   \<open>kf_map f (kf_remove_0 \<EE>) = kf_map f \<EE>\<close>
@@ -3981,6 +3992,20 @@ proof -
     by -
 qed
 
+lemma kf_infsum_apply_summable:
+  assumes \<open>kf_summable \<EE> A\<close>
+  shows \<open>(\<lambda>a. \<EE> a *\<^sub>k\<^sub>r \<rho>) summable_on A\<close>
+proof -
+  from kf_apply_summable[of \<rho> \<open>kf_infsum \<EE> A\<close>]
+  have summable: \<open>(\<lambda>(a, E, x). sandwich_tc E \<rho>) summable_on (SIGMA a:A. Rep_kraus_family (\<EE> a))\<close>
+    using assms
+    by (simp add: kf_summable_def kf_infsum.rep_eq case_prod_unfold summable_on_reindex inj_on_def prod.expand o_def)
+  from summable_on_Sigma_banach[OF this]
+  have \<open>(\<lambda>a. \<Sum>\<^sub>\<infinity>(E, x)\<in>Rep_kraus_family (\<EE> a). sandwich_tc E \<rho>) summable_on A\<close>
+    by simp
+  then show ?thesis
+    by (metis (mono_tags, lifting) infsum_cong kf_apply.rep_eq split_def summable_on_cong)
+qed
 
 lemma kf_bound_infsum:
   fixes f :: \<open>'a \<Rightarrow> ('b::chilbert_space,'c::chilbert_space,'x) kraus_family\<close>
@@ -4883,6 +4908,10 @@ lemma kf_filter_tensor:
   apply transfer
   by (force simp add: image_iff case_prod_unfold)
 
+lemma kf_filter_tensor_singleton:
+  \<open>kf_filter ((=) x) (kf_tensor \<EE> \<FF>) = kf_tensor (kf_filter ((=) (fst x)) \<EE>) (kf_filter ((=) (snd x)) \<FF>)\<close>
+  by (simp add: kf_filter_tensor[symmetric] case_prod_unfold prod_eq_iff)
+
 lemma kf_tensor_cong:
   fixes \<EE> \<EE>' :: \<open>('a ell2, 'b ell2, 'x) kraus_family\<close>
     and \<FF> \<FF>' :: \<open>('c ell2, 'd ell2, 'y) kraus_family\<close>
@@ -5119,6 +5148,47 @@ lemma kf_tensor_map_both:
   apply (rule kf_map_twice[THEN kf_eq_trans])
   by (simp add: o_def map_prod_def case_prod_unfold)
 
+lemma kf_tensor_raw_map_inj_both:
+  \<open>kf_tensor_raw (kf_map_inj f \<EE>) (kf_map_inj g \<FF>) = kf_map_inj (\<lambda>(E,F,x,y). (E,F,f x,g y)) (kf_tensor_raw \<EE> \<FF>)\<close>
+  apply (transfer' fixing: f g)
+  by force
+
+lemma kf_domain_tensor_raw_subset:
+  \<open>kf_domain (kf_tensor_raw \<EE> \<FF>) \<subseteq> kf_operators \<EE> \<times> kf_operators \<FF> \<times> kf_domain \<EE> \<times> kf_domain \<FF>\<close>
+  apply transfer'
+  by force
+
+lemma kf_tensor_map_inj_both:
+  assumes \<open>inj_on f (kf_domain \<EE>)\<close>
+  assumes \<open>inj_on g (kf_domain \<FF>)\<close>
+  shows \<open>kf_tensor (kf_map_inj f \<EE>) (kf_map_inj g \<FF>) = kf_map_inj (map_prod f g) (kf_tensor \<EE> \<FF>)\<close>
+proof -
+  from assms
+  have inj1: \<open>inj_on (\<lambda>(E, F, x, y). (E, F, f x, g y)) (kf_domain (kf_tensor_raw \<EE> \<FF>))\<close>
+    using kf_domain_tensor_raw_subset[of \<EE> \<FF>]
+    apply (auto simp: inj_on_def)
+    by blast+
+  from assms
+  have inj2: \<open>inj_on (map_prod f g) ((\<lambda>(E, F, x). x) ` kf_domain (kf_tensor_raw \<EE> \<FF>))\<close>
+    using kf_domain_tensor_raw_subset[of \<EE> \<FF>]
+    apply (auto simp: inj_on_def)
+    by blast+
+  have \<open>kf_tensor (kf_map_inj f \<EE>) (kf_map_inj g \<FF>) = kf_map (\<lambda>(E, F, y). y) (kf_map_inj (\<lambda>(E, F, x, y). (E, F, f x, g y)) (kf_tensor_raw \<EE> \<FF>))\<close>
+    by (simp add: kf_tensor_def kf_tensor_raw_map_inj_both id_def)
+  also have \<open>\<dots> = kf_map (\<lambda>(E, F, x, y). (f x, g y)) (kf_tensor_raw \<EE> \<FF>)\<close>
+    apply (subst kf_map_kf_map_inj_comp)
+     apply (rule inj1)
+    by (simp add: case_prod_unfold o_def)
+  also have \<open>\<dots> = kf_map_inj (map_prod f g) (kf_map (\<lambda>(E, F, x). x) (kf_tensor_raw \<EE> \<FF>))\<close>
+    apply (subst kf_map_inj_kf_map_comp)
+    apply (rule inj2)
+    by (simp add: o_def case_prod_unfold map_prod_def)
+  also have \<open>\<dots> = kf_map_inj (map_prod f g) (kf_tensor \<EE> \<FF>)\<close>
+    by (simp add: kf_tensor_def kf_tensor_raw_map_inj_both id_def)
+  finally show ?thesis
+    by -
+qed
+
 lemma kf_operators_tensor_raw:
   shows \<open>kf_operators (kf_tensor_raw \<EE> \<FF>) = {E \<otimes>\<^sub>o F | E F. E \<in> kf_operators \<EE> \<and> F \<in> kf_operators \<FF>}\<close>
   apply (simp add: kf_operators.rep_eq kf_tensor_raw.rep_eq)
@@ -5186,6 +5256,38 @@ next
     by (force simp: kf_domain_def)
   then show \<open>xy \<in> kf_domain (kf_tensor \<EE> \<FF>)\<close>
     by (force simp: kf_tensor_def xy case_prod_unfold)
+qed
+
+lemma kf_tensor_raw_0_left[simp]: \<open>kf_tensor_raw 0 \<EE> = 0\<close>
+  apply transfer'
+  by simp
+
+lemma kf_tensor_raw_0_right[simp]: \<open>kf_tensor_raw \<EE> 0 = 0\<close>
+  apply transfer'
+  by simp
+
+lemma kf_tensor_0_left[simp]: \<open>kf_tensor 0 \<EE> = 0\<close>
+  by (simp add: kf_tensor_def)
+
+lemma kf_tensor_0_right[simp]: \<open>kf_tensor \<EE> 0 = 0\<close>
+  by (simp add: kf_tensor_def)
+
+lemma kf_tensor_of_op:
+  \<open>kf_tensor (kf_of_op A) (kf_of_op B) = kf_map (\<lambda>(). ((),())) (kf_of_op (A \<otimes>\<^sub>o B))\<close>
+proof -
+  wlog Aneq0: \<open>A \<noteq> 0\<close>
+    using negation
+    by simp
+  wlog Bneq0: \<open>B \<noteq> 0\<close> keeping Aneq0
+    using negation
+    by simp
+  have [simp]: \<open>(\<lambda>(). ((), ())) = Pair ()\<close>
+    by auto
+  have \<open>kf_tensor_raw (kf_of_op A) (kf_of_op B) = kf_map_inj (\<lambda>(). (A, B, (), ())) (kf_of_op (A \<otimes>\<^sub>o B))\<close>
+    apply (transfer' fixing: A B)
+    by (simp add: case_unit_Unity tensor_op_nonzero)
+  then show ?thesis
+    by (simp add: kf_tensor_def kf_map_kf_map_inj_comp inj_on_def o_def case_unit_Unity)
 qed
 
 
@@ -5766,6 +5868,457 @@ qed
 lemma kf_complete_measurement_ket_apply_butterfly:
   \<open>kf_complete_measurement_ket *\<^sub>k\<^sub>r tc_butterfly (ket x) (ket x) = tc_butterfly (ket x) (ket x)\<close>
   by (simp add: kf_complete_measurement_ket_def kf_apply_map_inj inj_on_def kf_complete_measurement_apply_butterfly)
+
+(* TODO move *)
+lemma kf_equal_if_filter_equal:
+  assumes \<open>\<And>x. kf_filter ((=)x) \<EE> = kf_filter ((=)x) \<FF>\<close>
+  shows \<open>\<EE> = \<FF>\<close>
+  using assms
+  apply transfer'
+  by fastforce
+
+lemma filter_insert_if:
+  \<open>Set.filter P (insert x M) = (if P x then insert x (Set.filter P M) else Set.filter P M)\<close>
+  by auto
+
+lemma filter_empty[simp]: \<open>Set.filter P {} = {}\<close>
+  by auto
+
+
+(* lemma kf_unique_if_singleton:
+  assumes \<open>Rep_kraus_family \<EE> \<subseteq> {Ee}\<close>
+  assumes \<open>Rep_kraus_family \<FF> \<subseteq> {Ff}\<close>
+  assumes \<open>\<EE> \<equiv>\<^sub>k\<^sub>r \<FF>\<close>
+  shows \<open>\<EE> = \<FF>\<close>
+(* WRONG! Global phase *)
+proof (cases \<open>\<EE> = 0\<close>)
+  case True
+  with \<open>\<EE> \<equiv>\<^sub>k\<^sub>r \<FF>\<close> have \<open>\<FF> = 0\<close>
+    using kf_eq_0_iff_eq_0 kf_eq_imp_eq_weak kf_eq_sym by blast
+  with True show ?thesis
+    by simp
+next
+  case False
+  obtain E e F f where Ee: \<open>Ee = (E,e)\<close> and Ff: \<open>Ff = (F,f)\<close>
+    apply atomize_elim
+    by (auto split!: prod.split_asm)
+  from False have \<open>\<FF> \<noteq> 0\<close>
+    using \<open>\<EE> \<equiv>\<^sub>k\<^sub>r \<FF>\<close> kf_eq_0_iff_eq_0 kf_eq_imp_eq_weak by blast
+  from False have \<open>Rep_kraus_family \<EE> \<noteq> {}\<close>
+    using Rep_kraus_family_inject zero_kraus_family.rep_eq by auto
+  with assms(1) have Rep\<EE>: \<open>Rep_kraus_family \<EE> = {(E,e)}\<close>
+    using Ee by blast
+  from \<open>\<FF> \<noteq> 0\<close> have \<open>Rep_kraus_family \<FF> \<noteq> {}\<close>
+    using Rep_kraus_family_inject zero_kraus_family.rep_eq by auto
+  with assms(2) have Rep\<FF>: \<open>Rep_kraus_family \<FF> = {(F,f)}\<close>
+    using Ff by blast
+  from Rep\<EE> have \<open>E \<noteq> 0\<close>
+    using Rep_kraus_family by (force simp: kraus_family_def)
+  from Rep\<FF> have \<open>F \<noteq> 0\<close>
+    using Rep_kraus_family by (force simp: kraus_family_def)
+  have \<open>E = F\<close>
+  proof (rule cblinfun_eqI)
+    fix h
+    have \<open>tc_butterfly (E h) (E h) = \<EE> *\<^sub>k\<^sub>r tc_butterfly h h\<close>
+      by (simp add: kf_apply.rep_eq Rep\<EE> sandwich_tc_butterfly)
+    also have \<open>\<dots> = \<FF> *\<^sub>k\<^sub>r tc_butterfly h h\<close>
+      by (simp add: assms(3) kf_apply_eqI kf_eq_imp_eq_weak)
+    also have \<open>\<dots> = tc_butterfly (F h) (F h)\<close>
+      by (simp add: kf_apply.rep_eq Rep\<FF> sandwich_tc_butterfly)
+    finally show \<open>E h = F h\<close>
+      by (rule tc_selfbutter_inject)
+  qed
+  have \<open>e = f\<close>
+  proof (rule ccontr)
+    assume \<open>e \<noteq> f\<close>
+    obtain h where neq0: \<open>E h \<noteq> 0\<close>
+    proof (atomize_elim, rule ccontr)
+      assume \<open>\<nexists>h. E *\<^sub>V h \<noteq> 0\<close>
+      then have \<open>E h = 0\<close> for h
+        by auto
+      then have \<open>E = 0\<close>
+        apply (rule_tac cblinfun_eqI)
+        by simp
+      with \<open>E \<noteq> 0\<close> show False
+        by simp
+    qed
+    have \<open>tc_butterfly (E h) (E h) = \<EE> *\<^sub>k\<^sub>r @{e} tc_butterfly h h\<close>
+      by (simp add: kf_apply_on_def kf_filter.rep_eq kf_apply.rep_eq Rep\<EE> sandwich_tc_butterfly filter_insert_if)
+  also have \<open>\<dots> = \<FF> *\<^sub>k\<^sub>r @{e} tc_butterfly h h\<close>
+  using assms(3) kf_apply_on_eqI by blast
+  also from \<open>e \<noteq> f\<close> have \<open>\<dots> = 0\<close>
+    by (simp add: kf_apply_on_def kf_filter.rep_eq kf_apply.rep_eq Rep\<FF> sandwich_tc_butterfly filter_insert_if)
+  finally have \<open>E h = 0\<close>
+    using tc_selfbutter_inject[where k=0]
+    by auto
+  with neq0 show False
+    by simp
+  qed
+  from \<open>E = F\<close> \<open>e = f\<close> Rep\<EE> Rep\<FF> show \<open>\<EE> = \<FF>\<close>
+    using Rep_kraus_family_inject by blast
+qed *)
+
+(* TODO move *)
+definition \<open>card_le_1 M \<longleftrightarrow> (\<exists>x. M \<subseteq> {x})\<close>
+
+lemma card_le_1_empty[iff]: \<open>card_le_1 {}\<close>
+  by (simp add: card_le_1_def)
+
+lemma card_le_1_signleton[iff]: \<open>card_le_1 {x}\<close>
+  using card_le_1_def by fastforce
+
+
+
+lemma kf_map_eq_kf_map_inj_singleton:
+  assumes \<open>card_le_1 (Rep_kraus_family \<EE>)\<close>
+  shows \<open>kf_map f \<EE> = kf_map_inj f \<EE>\<close>
+proof (cases \<open>\<EE> = 0\<close>)
+  case True
+  then show ?thesis
+    by simp
+next
+  case False
+  then have \<open>Rep_kraus_family \<EE> \<noteq> {}\<close>
+  using Rep_kraus_family_inject zero_kraus_family.rep_eq by auto
+  with assms obtain x where Rep\<EE>: \<open>Rep_kraus_family \<EE> = {x}\<close>
+    by (meson card_le_1_def subset_singleton_iff)
+  obtain E y where Ey: \<open>x = (E,y)\<close>
+    by force
+  have \<open>(E,y) \<in> Rep_kraus_family \<EE>\<close>
+    using Ey Rep\<EE> by force
+  then have [iff]: \<open>E \<noteq> 0\<close>
+    using Rep_kraus_family[of \<EE>]
+    by (force simp: kraus_family_def)
+  have *: \<open>{(F, xa). (F, xa) = x \<and> f xa = f y \<and> (\<exists>r>0. E = r *\<^sub>R F)} = {(E,y)}\<close>
+    apply (auto intro!: simp: Ey)
+    by (metis scaleR_simps(12) verit_comp_simplify(28))
+  have 1: \<open>(norm E)\<^sup>2 = kf_element_weight (kf_filter (\<lambda>x. f x = f y) \<EE>) E\<close>
+    by (auto simp add: kf_element_weight_def kf_similar_elements_def kf_filter.rep_eq * Rep\<EE>)
+  have 2: \<open>z = f y\<close> if \<open>(norm F)\<^sup>2 = kf_element_weight (kf_filter (\<lambda>x. f x = z) \<EE>) F\<close> and \<open>F \<noteq> 0\<close> for F z
+  proof (rule ccontr)
+    assume \<open>z \<noteq> f y\<close>
+    with Rep\<EE> have \<open>kf_filter (\<lambda>x. f x = z) \<EE> = 0\<close>
+      apply (transfer' fixing: f z y x)
+      by (auto simp: Ey)
+    then have \<open>kf_element_weight (kf_filter (\<lambda>x. f x = z) \<EE>) F = 0\<close>
+      by simp
+    with that show False
+      by fastforce
+  qed
+  have 3: \<open>F = E\<close> if \<open>(norm F)\<^sup>2 = kf_element_weight (kf_filter (\<lambda>x. f x = z) \<EE>) F\<close> and \<open>F \<noteq> 0\<close> and \<open>z = f y\<close> for F z
+  proof -
+    from that Rep\<EE> have f\<EE>: \<open>kf_filter (\<lambda>x. f x = z) \<EE> = \<EE>\<close>
+      apply (transfer' fixing: F f z y x)
+      using Ey Rep_kraus_family_inject kf_filter.rep_eq by fastforce
+    have \<open>\<exists>r>0. F = r *\<^sub>R E\<close>
+    proof (rule ccontr)
+      assume \<open>\<not> (\<exists>r>0. F = r *\<^sub>R E)\<close>
+      with Rep\<EE> have \<open>kf_similar_elements \<EE> F = {}\<close>
+        by (simp add: kf_similar_elements_def Ey)
+      with that f\<EE> show False
+        by (simp add: kf_element_weight_def)
+    qed
+    then obtain r where FrE: \<open>F = r *\<^sub>R E\<close> and rpos: \<open>r > 0\<close>
+      by auto
+    with Rep\<EE> have \<open>kf_similar_elements \<EE> F = {(E,y)}\<close>
+      by (force simp: kf_similar_elements_def Ey)
+    then have \<open>kf_element_weight \<EE> F = (norm E)\<^sup>2\<close>
+      by (simp add: kf_element_weight_def)
+    with that have \<open>norm E = norm F\<close>
+      using f\<EE> by force
+    with FrE rpos have \<open>r = 1\<close>
+      by simp
+    with FrE show \<open>F = E\<close>
+      by simp
+  qed
+  show ?thesis
+    apply (rule Rep_kraus_family_inject[THEN iffD1])
+    by (auto intro!: 1 2 3 simp: kf_map.rep_eq kf_map_inj.rep_eq Rep\<EE> Ey)
+qed
+
+lemma kf_map_eq_kf_map_inj_singleton':
+  assumes \<open>\<And>y. card_le_1 (Rep_kraus_family (kf_filter ((=)y) \<EE>))\<close>
+  assumes \<open>inj_on f (kf_domain \<EE>)\<close>
+  shows \<open>kf_map f \<EE> = kf_map_inj f \<EE>\<close>
+proof -
+  have 1: \<open>card_le_1 (Rep_kraus_family (kf_filter (\<lambda>z. x = f z) \<EE>))\<close> for x
+  proof (cases \<open>x \<in> f ` kf_domain \<EE>\<close>)
+    case True
+    then have \<open>kf_filter (\<lambda>z. x = f z) \<EE> = kf_filter ((=) (inv_into (kf_domain \<EE>) f x)) \<EE>\<close>
+      apply (rule_tac kf_filter_cong_eq)
+      using assms(2)
+      by auto
+    with assms(1) show ?thesis
+      by presburger
+  next
+    case False
+    then have \<open>kf_filter (\<lambda>z. x = f z) \<EE> = 0\<close>
+      by (simp add: image_iff)
+    then show ?thesis
+      by (simp add: zero_kraus_family.rep_eq)
+  qed
+  show ?thesis
+    apply (rule kf_equal_if_filter_equal)
+    unfolding kf_filter_map kf_filter_map_inj
+    apply (rule kf_map_eq_kf_map_inj_singleton)
+    by (rule 1)
+qed
+
+lemma kf_filter_singleton_kf_complete_measurement:
+  assumes \<open>x \<in> B\<close> and \<open>is_ortho_set B\<close>
+  shows \<open>kf_filter ((=)x) (kf_complete_measurement B) = kf_map_inj (\<lambda>_. x) (kf_of_op (selfbutter (sgn x)))\<close>
+proof -
+  from assms have [iff]: \<open>selfbutter (sgn x) \<noteq> 0\<close>
+    by (smt (verit, best) inverse_1 is_ortho_set_def norm_butterfly norm_sgn norm_zero right_inverse)
+  show ?thesis
+    apply (transfer' fixing: x B)
+    by (auto intro!: simp: assms)
+qed
+
+lemma kf_filter_singleton_kf_complete_measurement':
+  assumes \<open>x \<in> B\<close> and \<open>is_ortho_set B\<close>
+  shows \<open>kf_filter ((=)x) (kf_complete_measurement B) = kf_map (\<lambda>_. x) (kf_of_op (selfbutter (sgn x)))\<close>
+  using kf_filter_singleton_kf_complete_measurement[OF assms]
+  apply (subst kf_map_eq_kf_map_inj_singleton)
+  by (auto simp: kf_of_op.rep_eq)
+
+(* TODO move *)
+lemma sgn_tensor_ell2: \<open>sgn (h \<otimes>\<^sub>s k) = sgn h \<otimes>\<^sub>s sgn k\<close>
+  by (simp add: sgn_div_norm norm_tensor_ell2 scaleR_scaleC tensor_ell2_scaleC1 tensor_ell2_scaleC2)
+
+(* TODO move *)
+lemma is_ortho_set_tensor:
+  assumes \<open>is_ortho_set B\<close>
+  assumes \<open>is_ortho_set C\<close>
+  shows \<open>is_ortho_set ((\<lambda>(x, y). x \<otimes>\<^sub>s y) ` (B \<times> C))\<close>
+proof (intro is_ortho_set_def[THEN iffD2] conjI notI ballI impI)
+  fix bc bc' :: \<open>('a \<times> 'b) ell2\<close>
+  assume \<open>bc \<in> (\<lambda>(x, y). x \<otimes>\<^sub>s y) ` (B \<times> C)\<close> 
+  then obtain b c where \<open>b \<in> B\<close> \<open>c \<in> C\<close> and bc: \<open>bc = b \<otimes>\<^sub>s c\<close>
+    by fast
+  assume \<open>bc' \<in> (\<lambda>(x, y). x \<otimes>\<^sub>s y) ` (B \<times> C)\<close>
+  then obtain b' c' where \<open>b' \<in> B\<close> \<open>c' \<in> C\<close> and bc': \<open>bc' = b' \<otimes>\<^sub>s c'\<close>
+    by fast
+  assume \<open>bc \<noteq> bc'\<close>
+  then consider (neqb) \<open>b \<noteq> b'\<close> | (neqc) \<open>c \<noteq> c'\<close>
+    using bc bc' by blast
+  then show \<open>is_orthogonal bc bc'\<close>
+  proof cases
+    case neqb
+    with \<open>b \<in> B\<close> \<open>b' \<in> B\<close> \<open>is_ortho_set B\<close>
+    have \<open>b \<bullet>\<^sub>C b' = 0\<close>
+      by (simp add: is_ortho_setD)
+    then show ?thesis
+      by (simp add: bc bc')
+  next
+    case neqc
+    with \<open>c \<in> C\<close> \<open>c' \<in> C\<close> \<open>is_ortho_set C\<close>
+    have \<open>c \<bullet>\<^sub>C c' = 0\<close>
+      by (simp add: is_ortho_setD)
+    then show ?thesis
+      by (simp add: bc bc')
+  qed
+next
+  assume \<open>0 \<in> (\<lambda>(x, y). x \<otimes>\<^sub>s y) ` (B \<times> C)\<close>
+  then obtain b c where \<open>b \<in> B\<close> \<open>c \<in> C\<close> and \<open>b \<otimes>\<^sub>s c = 0\<close>
+    by auto
+  then show False
+    by (metis assms(1,2) is_ortho_set_def tensor_ell2_nonzero)
+qed
+
+lemma kf_filter_disjoint:
+  assumes \<open>\<And>x. x \<in> kf_domain \<EE> \<Longrightarrow> P x = False\<close>
+  shows \<open>kf_filter P \<EE> = 0\<close>
+  using assms
+  apply (transfer' fixing: P)
+  by fastforce
+
+
+
+lemma kf_complete_measurement_tensor:
+  assumes \<open>is_ortho_set B\<close> and \<open>is_ortho_set C\<close>
+  shows \<open>kf_map (\<lambda>(b,c). b \<otimes>\<^sub>s c) (kf_tensor (kf_complete_measurement B) (kf_complete_measurement C))
+    = kf_complete_measurement ((\<lambda>(b,c). b \<otimes>\<^sub>s c) ` (B \<times> C))\<close>
+proof (rule kf_equal_if_filter_equal, rename_tac bc)
+  fix bc :: \<open>('a \<times> 'b) ell2\<close>
+  define BC where \<open>BC = ((\<lambda>(x, y). x \<otimes>\<^sub>s y) ` (B \<times> C))\<close>
+  consider (bc_tensor) b c where \<open>b \<in> B\<close> \<open>c \<in> C\<close> \<open>bc = b \<otimes>\<^sub>s c\<close>
+      | (not_bc_tensor) \<open>\<not> (\<exists>b\<in>B. \<exists>c\<in>C. bc = b \<otimes>\<^sub>s c)\<close>
+    by fastforce
+  then show \<open>kf_filter ((=) bc) (kf_map (\<lambda>(b, c). b \<otimes>\<^sub>s c) (kf_tensor (kf_complete_measurement B) (kf_complete_measurement C)))
+      = kf_filter ((=) bc) (kf_complete_measurement ((\<lambda>(b, c). b \<otimes>\<^sub>s c) ` (B \<times> C)))\<close>
+  proof cases
+    case bc_tensor
+    have uniq: \<open>b = b'\<close>  \<open>c = c'\<close> if \<open>b' \<in> B\<close> and \<open>c' \<in> C\<close> and \<open>b \<otimes>\<^sub>s c = b' \<otimes>\<^sub>s c'\<close> for b' c'
+    proof -
+      from bc_tensor have \<open>b \<noteq> 0\<close>
+        using assms(1) is_ortho_set_def by blast
+      with that(3) obtain \<gamma> where upto: \<open>c = \<gamma> *\<^sub>C c'\<close>
+        apply atomize_elim
+        by (rule tensor_ell2_almost_injective)
+      from bc_tensor have \<open>c \<noteq> 0\<close>
+        using assms(2) is_ortho_set_def by blast
+      with upto have \<open>\<gamma> \<noteq> 0\<close>
+        by auto
+      with \<open>c \<noteq> 0\<close> upto have \<open>c \<bullet>\<^sub>C c' \<noteq> 0\<close>
+        by simp
+      with \<open>c \<in> C\<close> \<open>c' \<in> C\<close> \<open>is_ortho_set C\<close>
+      show \<open>c = c'\<close>
+        using is_ortho_setD by blast
+      with that have \<open>b \<otimes>\<^sub>s c = b' \<otimes>\<^sub>s c\<close>
+        by simp
+      with \<open>c \<noteq> 0\<close> \<open>b \<in> B\<close> \<open>b' \<in> B\<close> \<open>is_ortho_set B\<close> show \<open>b = b'\<close>
+        by (metis cinner_eq_zero_iff is_ortho_setD nonzero_mult_div_cancel_right tensor_ell2_inner_prod)
+    qed
+
+    have [iff]: \<open>selfbutter (sgn b) \<noteq> 0\<close>
+      by (smt (verit, ccfv_SIG) bc_tensor assms inverse_1 is_ortho_set_def norm_butterfly norm_sgn norm_zero right_inverse)
+    have [iff]: \<open>selfbutter (sgn c) \<noteq> 0\<close>
+      by (smt (verit) bc_tensor assms inverse_1 is_ortho_set_def norm_butterfly norm_sgn norm_zero right_inverse)
+    have [iff]: \<open>selfbutter (sgn bc) \<noteq> 0\<close>
+      by (smt (verit, del_insts) \<open>selfbutter (sgn b) \<noteq> 0\<close> \<open>selfbutter (sgn c) \<noteq> 0\<close> bc_tensor(3) butterfly_0_right mult_cancel_right1 norm_butterfly norm_sgn sgn_zero
+          tensor_ell2_nonzero)
+    have \<open>kf_filter ((=) bc) (kf_map (\<lambda>(b, c). b \<otimes>\<^sub>s c) (kf_tensor (kf_complete_measurement B) (kf_complete_measurement C)))
+      = kf_map (\<lambda>(x, y). x \<otimes>\<^sub>s y) (kf_filter (\<lambda>x. bc = (case x of (b, c) \<Rightarrow> b \<otimes>\<^sub>s c))
+                                 (kf_tensor (kf_complete_measurement B) (kf_complete_measurement C)))\<close>
+      by (simp add: kf_filter_map)
+    also have \<open>\<dots> = kf_map (\<lambda>(x, y). x \<otimes>\<^sub>s y) (kf_filter ((=)(b,c))
+                                 (kf_tensor (kf_complete_measurement B) (kf_complete_measurement C)))\<close>
+      apply (rule arg_cong[where f=\<open>kf_map _\<close>])
+      apply (rule kf_filter_cong_eq[OF refl])
+      by (auto intro!: uniq simp add: kf_domain_tensor kf_complete_measurement_domain assms case_prod_beta bc_tensor split!: prod.split)
+    also have \<open>\<dots> = kf_map (\<lambda>(x, y). x \<otimes>\<^sub>s y) (kf_tensor (kf_filter ((=) b) (kf_complete_measurement B))
+                 (kf_filter ((=) c) (kf_complete_measurement C)))\<close>
+      by (simp add: kf_filter_tensor_singleton)
+    also have \<open>\<dots> = kf_map (\<lambda>(x, y). x \<otimes>\<^sub>s y) (kf_map (\<lambda>(E, F, y). y) (kf_tensor_raw (kf_filter ((=) b) (kf_complete_measurement B))
+                 (kf_filter ((=) c) (kf_complete_measurement C))))\<close>
+      by (simp add: kf_tensor_def id_def)
+    also have \<open>\<dots> = kf_map (\<lambda>(x, y). x \<otimes>\<^sub>s y) (kf_map (\<lambda>(E, F, y). y) (kf_tensor_raw (kf_map (\<lambda>_. b) (kf_of_op (selfbutter (sgn b)))) 
+                  (kf_map (\<lambda>_. c) (kf_of_op (selfbutter (sgn c))))))\<close>
+      by (simp add: kf_filter_singleton_kf_complete_measurement' bc_tensor assms)
+    also have \<open>\<dots> = kf_map_inj (\<lambda>(x, y). x \<otimes>\<^sub>s y) (kf_map_inj (\<lambda>(E, F, y). y) (kf_tensor_raw (kf_map_inj (\<lambda>_. b) (kf_of_op (selfbutter (sgn b)))) 
+                  (kf_map_inj (\<lambda>_. c) (kf_of_op (selfbutter (sgn c))))))\<close>
+      apply (subst (4) kf_map_eq_kf_map_inj_singleton)
+       apply (simp add: kf_of_op.rep_eq)
+      apply (subst (3) kf_map_eq_kf_map_inj_singleton)
+       apply (simp add: kf_of_op.rep_eq)
+      apply (subst (2) kf_map_eq_kf_map_inj_singleton)
+       apply (simp add: kf_of_op.rep_eq kf_map_inj.rep_eq kf_tensor_raw.rep_eq)
+      apply (subst (1) kf_map_eq_kf_map_inj_singleton)
+       apply (simp add: kf_of_op.rep_eq kf_map_inj.rep_eq kf_tensor_raw.rep_eq)
+      by blast
+    also have \<open>\<dots> = kf_map_inj (\<lambda>_. b \<otimes>\<^sub>s c) (kf_of_op (selfbutter (sgn bc)))\<close>
+      apply (transfer' fixing: b c bc)
+      by (auto intro!: bc_tensor simp: tensor_butterfly simp flip: sgn_tensor_ell2 bc_tensor)
+    also have \<open>\<dots> = kf_map (\<lambda>_. bc) (kf_of_op (selfbutter (sgn bc)))\<close>
+      apply (subst kf_map_eq_kf_map_inj_singleton)
+      by (auto intro!: bc_tensor simp: kf_of_op.rep_eq kf_map_inj.rep_eq kf_tensor_raw.rep_eq simp flip: bc_tensor)
+    also have \<open>\<dots> = kf_filter ((=) bc) (kf_complete_measurement ((\<lambda>(b, c). b \<otimes>\<^sub>s c) ` (B \<times> C)))\<close>
+      apply (subst kf_filter_singleton_kf_complete_measurement')
+      by (auto simp: is_ortho_set_tensor bc_tensor assms)
+    finally show ?thesis
+      by -
+  next
+    case not_bc_tensor
+    have ortho: \<open>is_ortho_set ((\<lambda>x. case x of (x, xa) \<Rightarrow> x \<otimes>\<^sub>s xa) ` (B \<times> C))\<close>
+      by (metis is_ortho_set_tensor not_bc_tensor assms)
+    show ?thesis
+      apply (subst kf_filter_disjoint)
+      using not_bc_tensor
+       apply (simp add: kf_domain_tensor kf_complete_measurement_domain assms)
+       apply fastforce
+      apply (subst kf_filter_disjoint)
+      using not_bc_tensor
+       apply (simp add: kf_domain_tensor kf_complete_measurement_domain ortho)
+       apply fastforce
+      by simp
+  qed
+qed
+
+lemma card_le_1_kf_filter: \<open>card_le_1 (Rep_kraus_family (kf_filter P \<EE>))\<close> if \<open>card_le_1 (Rep_kraus_family \<EE>)\<close>
+  by (metis (no_types, lifting) card_le_1_def filter_insert_if kf_filter.rep_eq kf_filter_0_right
+      subset_singleton_iff that zero_kraus_family.rep_eq)
+
+lemma card_le_1_kf_map_inj[iff]: \<open>card_le_1 (Rep_kraus_family (kf_map_inj f \<EE>))\<close> if \<open>card_le_1 (Rep_kraus_family \<EE>)\<close>
+  using that
+  apply transfer'
+  by (auto simp: card_le_1_def case_prod_unfold)
+
+
+lemma card_le_1_kf_map[iff]: \<open>card_le_1 (Rep_kraus_family (kf_map f \<EE>))\<close> if \<open>card_le_1 (Rep_kraus_family \<EE>)\<close>
+  using kf_map_eq_kf_map_inj_singleton[OF that] card_le_1_kf_map_inj[OF that]
+  by metis
+  
+
+lemma card_le_1_kf_tensor_raw[iff]: \<open>card_le_1 (Rep_kraus_family (kf_tensor_raw \<EE> \<FF>))\<close> if \<open>card_le_1 (Rep_kraus_family \<EE>)\<close> and \<open>card_le_1 (Rep_kraus_family \<FF>)\<close>
+  using that
+  apply transfer'
+  apply (simp add: card_le_1_def)
+  by fast
+
+lemma card_le_1_kf_tensor[iff]: \<open>card_le_1 (Rep_kraus_family (kf_tensor \<EE> \<FF>))\<close> if \<open>card_le_1 (Rep_kraus_family \<EE>)\<close> and \<open>card_le_1 (Rep_kraus_family \<FF>)\<close>
+  by (auto intro!: card_le_1_kf_map card_le_1_kf_tensor_raw that simp add: kf_tensor_def)
+
+lemma card_le_1_kf_filter_complete_measurement: \<open>card_le_1 (Rep_kraus_family (kf_filter ((=)x) (kf_complete_measurement B)))\<close>
+proof -
+  consider (inB) \<open>is_ortho_set B \<and> x \<in> B\<close> | (not_ortho) \<open>\<not> is_ortho_set B\<close> | (notinB) \<open>x \<notin> B\<close> \<open>is_ortho_set B\<close>
+    by auto
+  then show ?thesis
+  proof cases
+    case inB
+    then have \<open>Rep_kraus_family (kf_filter ((=)x) (kf_complete_measurement B)) = {(selfbutter (sgn x),x)}\<close>
+      by (auto simp: kf_filter.rep_eq kf_complete_measurement.rep_eq)
+    then show ?thesis
+      by (simp add: card_le_1_def)
+  next
+    case not_ortho
+    then show ?thesis
+      by (simp add: kf_complete_measurement_invalid zero_kraus_family.rep_eq)
+  next
+    case notinB
+    then have \<open>kf_filter ((=) x) (kf_complete_measurement B) = 0\<close>
+      by (metis kf_complete_measurement_domain kf_filter_disjoint)
+    then show ?thesis
+      by (simp add: zero_kraus_family.rep_eq)
+  qed
+qed
+
+lemma kf_complete_measurement_ket_tensor:
+  shows \<open>kf_tensor (kf_complete_measurement_ket :: (_,_,'a) kraus_family) (kf_complete_measurement_ket :: (_,_,'b) kraus_family)
+             = kf_complete_measurement_ket\<close>
+proof -
+  have 1: \<open>(\<lambda>(b, c). b \<otimes>\<^sub>s c) ` (range ket \<times> range ket) = range ket\<close>
+    by (auto intro!: image_eqI simp: tensor_ell2_ket case_prod_unfold)
+  have 2: \<open>inj_on (inv ket \<circ> (\<lambda>(x, y). x \<otimes>\<^sub>s y)) (range ket \<times> range ket)\<close>
+    by (auto intro!: inj_onI simp: tensor_ell2_ket)
+  have \<open>(kf_complete_measurement_ket :: (_,_,'a\<times>'b) kraus_family)
+      = kf_map_inj (inv ket) (kf_complete_measurement ((\<lambda>(b,c). b \<otimes>\<^sub>s c) ` (range ket \<times> range ket)))\<close>
+    by (simp add: 1 kf_complete_measurement_ket_def)
+  also have \<open>\<dots> = kf_map_inj (inv ket)
+     (kf_map (\<lambda>(x, y). x \<otimes>\<^sub>s y)
+       (kf_tensor (kf_complete_measurement (range ket)) (kf_complete_measurement (range ket))))\<close>
+    by (simp flip: kf_complete_measurement_tensor)
+  also have \<open>\<dots> = kf_map (inv ket \<circ> (\<lambda>(x, y). x \<otimes>\<^sub>s y))
+     (kf_tensor (kf_complete_measurement (range ket)) (kf_complete_measurement (range ket)))\<close>
+    apply (subst kf_map_inj_kf_map_comp)
+    by (auto intro!: simp: inj_on_def kf_domain_tensor tensor_ell2_ket)
+  also have \<open>\<dots> = kf_map_inj (inv ket \<circ> (\<lambda>(x, y). x \<otimes>\<^sub>s y))
+     (kf_tensor (kf_complete_measurement (range ket)) (kf_complete_measurement (range ket)))\<close>
+    apply (rule kf_map_eq_kf_map_inj_singleton')
+     apply (auto intro!: card_le_1_kf_filter_complete_measurement card_le_1_kf_tensor simp: kf_filter_tensor_singleton)[1]
+    by (simp add: kf_domain_tensor 2)
+  also have \<open>\<dots> = kf_map_inj (map_prod (inv ket) (inv ket))
+      (kf_tensor (kf_complete_measurement (range ket)) (kf_complete_measurement (range ket)))\<close>
+    apply (rule kf_map_inj_cong_eq)
+    by (auto simp: kf_domain_tensor tensor_ell2_ket)
+  also have \<open>\<dots> = kf_tensor (kf_map_inj (inv ket) (kf_complete_measurement (range ket)))
+                            (kf_map_inj (inv ket) (kf_complete_measurement (range ket)))\<close>
+    by (simp add: kf_tensor_map_inj_both inj_on_inv_into)
+  also have \<open>\<dots> = kf_tensor kf_complete_measurement_ket kf_complete_measurement_ket\<close>
+    by (simp add: kf_complete_measurement_ket_def)
+  finally show ?thesis
+    by simp
+qed
 
 subsection \<open>Reconstruction\<close>
 

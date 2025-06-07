@@ -1147,7 +1147,7 @@ qed
 lemma circularity_of_trace:
   \<comment> \<open>\<^cite>\<open>conway00operator\<close>, Theorem 18.11 (e)\<close>
   fixes a :: \<open>'a::chilbert_space \<Rightarrow>\<^sub>C\<^sub>L 'b::chilbert_space\<close> and b :: \<open>'b \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
-    \<comment> \<open>The proof from \<^cite>\<open>conway00operator\<close> only work for square operators, we generalize it\<close>
+    \<comment> \<open>The proof from \<^cite>\<open>conway00operator\<close> only works for square operators, we generalize it\<close>
   assumes \<open>trace_class a\<close>
     \<comment> \<open>Actually, \<^term>\<open>trace_class (a o\<^sub>C\<^sub>L b) \<and> trace_class (b o\<^sub>C\<^sub>L a)\<close> is sufficient here,
         see @{cite "mathoverflow-circ-trace2"} but the proof is more involved.
