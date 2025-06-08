@@ -176,4 +176,63 @@ proof -
 qed
 
 
+lemma has_sum_coordinatewise:
+  \<open>(f has_sum s) A \<longleftrightarrow> (\<forall>i. ((\<lambda>x. f x i) has_sum s i) A)\<close>
+proof -
+  have \<open>(f has_sum s) A \<longleftrightarrow> ((\<lambda>F. (\<Sum>x\<in>F. f x)) \<longlongrightarrow> s) (finite_subsets_at_top A)\<close>
+    by (simp add: has_sum_def)
+  also  have \<open>\<dots> \<longleftrightarrow> (\<forall>i. ((\<lambda>F. (\<Sum>x\<in>F. f x) i) \<longlongrightarrow> s i) (finite_subsets_at_top A))\<close>
+    by (simp add: tendsto_coordinatewise)
+  also have \<open>\<dots> \<longleftrightarrow> (\<forall>i. ((\<lambda>F. \<Sum>x\<in>F. f x i) \<longlongrightarrow> s i) (finite_subsets_at_top A))\<close>
+  proof (rewrite at \<open>\<Sum>x\<in>F. f x i\<close> at \<open>\<lambda>F. \<hole>\<close> in \<open>\<forall>i. \<hole>\<close> to \<open>(\<Sum>x\<in>F. f x) i\<close> DEADID.rel_mono_strong)
+    fix i
+    show \<open>(\<Sum>x\<in>F. f x i) = (\<Sum>x\<in>F. f x) i\<close> for F
+      apply (induction F rule:infinite_finite_induct)
+      by auto
+    show \<open>P = P\<close> for P :: bool
+      by simp
+  qed
+  also have \<open>\<dots> \<longleftrightarrow> (\<forall>i. ((\<lambda>x. f x i) has_sum s i) A)\<close>
+    by (simp add: has_sum_def)
+  finally show ?thesis
+    by - 
+qed
+
+
+lemma one_dim_butterfly:
+  \<open>butterfly g h = (one_dim_iso g * cnj (one_dim_iso h)) *\<^sub>C 1\<close>
+  apply (rule cblinfun_eq_on_canonical_basis)
+  apply simp
+  by (smt (verit, del_insts) Groups.mult_ac(2) cblinfun.scaleC_left of_complex_def of_complex_inner_1
+      of_complex_inner_1' one_cblinfun_apply_one one_dim_apply_is_times_def one_dim_iso_def
+      one_dim_scaleC_1)
+
+
+
+lemma one_dim_tc_butterfly:
+  fixes g :: \<open>'a :: one_dim\<close> and h :: \<open>'b :: one_dim\<close>
+  shows \<open>tc_butterfly g h = (one_dim_iso g * cnj (one_dim_iso h)) *\<^sub>C 1\<close>
+proof -
+  have \<open>tc_butterfly g h = one_dim_iso (butterfly g h)\<close>
+  by (metis (mono_tags, lifting) from_trace_class_one_dim_iso one_dim_iso_inj one_dim_iso_is_of_complex
+      one_dim_iso_of_complex tc_butterfly.rep_eq)
+  also have \<open>\<dots> = (one_dim_iso g * cnj (one_dim_iso h)) *\<^sub>C 1\<close>
+    by (simp add: one_dim_butterfly)
+  finally show ?thesis
+    by -
+qed
+
+lemma one_dim_iso_of_real[simp]: \<open>one_dim_iso (of_real x) = of_real x\<close>
+  apply (simp add: of_real_def)
+  by (simp add: scaleR_scaleC del: of_complex_of_real_eq)
+
+lemma filter_insert_if:
+  \<open>Set.filter P (insert x M) = (if P x then insert x (Set.filter P M) else Set.filter P M)\<close>
+  by auto
+
+lemma filter_empty[simp]: \<open>Set.filter P {} = {}\<close>
+  by auto
+
+
+
 end

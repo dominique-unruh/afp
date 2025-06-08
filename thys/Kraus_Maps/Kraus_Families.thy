@@ -627,6 +627,7 @@ lemma kf_norm_id_eq1[simp]: \<open>kf_norm (kf_id :: ('a :: {chilbert_space, not
 lemma kf_operators_in_kf_id[simp]: \<open>kf_operators kf_id = (if (id_cblinfun::'a::chilbert_space\<Rightarrow>\<^sub>C\<^sub>L_)=0 then {} else {id_cblinfun::'a\<Rightarrow>\<^sub>C\<^sub>L_})\<close>
   by (simp add: kf_id_def del: kf_of_op_id)
 
+
 instantiation kraus_family :: (chilbert_space, chilbert_space, type) scaleR begin
 lift_definition scaleR_kraus_family :: \<open>real \<Rightarrow> ('a::chilbert_space,'b::chilbert_space,'x) kraus_family \<Rightarrow> ('a,'b,'x) kraus_family\<close> is
   \<open>\<lambda>r \<EE>. if r \<le> 0 then {} else (\<lambda>(E,x). (sqrt r *\<^sub>R E, x)) ` \<EE>\<close>
@@ -1404,6 +1405,58 @@ lemma kf_apply_on_mono:
   apply (rule order.trans)
   using assms(3,1) apply (rule kf_apply_on_mono2)
   using assms(4) by (rule kf_apply_on_mono3)
+
+lemma kf_one_dim_is_id[simp]:
+  fixes \<EE> :: \<open>('a::one_dim, 'a::one_dim, 'x) kraus_family\<close>
+  shows \<open>\<EE> =\<^sub>k\<^sub>r kf_norm \<EE> *\<^sub>R kf_id\<close>
+proof (rule kf_eq_weakI)
+  fix t :: \<open>('a, 'a) trace_class\<close>
+  have \<EE>1pos[iff]: \<open>\<EE> *\<^sub>k\<^sub>r 1 \<ge> 0\<close>
+    apply (rule kf_apply_pos)
+    by (metis one_cinner_one one_dim_iso_of_one one_dim_scaleC_1 tc_butterfly_pos trace_tc_butterfly
+          trace_tc_one_dim_iso)
+
+  have \<EE>t: \<open>\<EE> *\<^sub>k\<^sub>r t = trace_tc t *\<^sub>C (\<EE> *\<^sub>k\<^sub>r 1)\<close> if \<open>NO_MATCH 1 t\<close>for t
+    by (metis kf_apply_scaleC one_dim_scaleC_1 trace_tc_one_dim_iso)
+  have \<open>kf_bound \<EE> = norm (\<EE> *\<^sub>k\<^sub>r 1) *\<^sub>R id_cblinfun\<close>
+  proof (rule cblinfun_cinner_eqI)
+    fix h :: 'a
+    assume \<open>norm h = 1\<close>
+    have \<open>h \<bullet>\<^sub>C kf_bound \<EE> h = one_dim_iso h * cnj (one_dim_iso h) * one_dim_iso (\<EE> *\<^sub>k\<^sub>r 1)\<close>
+      apply (subst kf_bound_from_map)
+      by (simp add: \<EE>t cinner_scaleR_right cblinfun.scaleR_left cdot_square_norm one_dim_tc_butterfly)
+    also have 1: \<open>\<dots> = one_dim_iso (\<EE> *\<^sub>k\<^sub>r 1)\<close>
+      by (smt (verit, best) \<open>norm h = 1\<close> cinner_simps(5) cnorm_eq_1 id_apply more_arith_simps(6) mult.commute
+          one_dim_iso_def one_dim_iso_id one_dim_iso_is_of_complex one_dim_scaleC_1)
+    also have \<open>\<dots> = trace_tc (\<EE> *\<^sub>k\<^sub>r 1)\<close>
+      by simp
+    also have \<open>\<dots> = norm (\<EE> *\<^sub>k\<^sub>r 1)\<close>
+      apply (subst norm_tc_pos)
+      by (simp_all add: \<EE>1pos)
+    also have \<open>\<dots> = h \<bullet>\<^sub>C (norm (\<EE> *\<^sub>k\<^sub>r 1) *\<^sub>R id_cblinfun *\<^sub>V h)\<close>
+      by (metis \<open>norm h = 1\<close> cblinfun.scaleR_left cinner_commute cinner_scaleR_left cnorm_eq_1
+          complex_cnj_complex_of_real id_cblinfun.rep_eq mult.commute mult_cancel_right1)
+    finally show \<open>h \<bullet>\<^sub>C (kf_bound \<EE> *\<^sub>V h) = h \<bullet>\<^sub>C (norm (\<EE> *\<^sub>k\<^sub>r 1) *\<^sub>R id_cblinfun *\<^sub>V h)\<close>
+      by -
+  qed
+  then have \<open>kf_norm \<EE> = cmod (one_dim_iso (\<EE> *\<^sub>k\<^sub>r 1))\<close>
+    by (simp add: kf_norm_def)
+  then have norm: \<open>complex_of_real (kf_norm \<EE>) = one_dim_iso (\<EE> *\<^sub>k\<^sub>r 1)\<close>
+  using norm_tc_pos by fastforce
+
+  have \<open>(one_dim_iso (\<EE> *\<^sub>k\<^sub>r t) :: complex) = one_dim_iso t * one_dim_iso (\<EE> *\<^sub>k\<^sub>r 1)\<close>
+  by (metis (mono_tags, lifting) kf_apply_scaleC of_complex_one_dim_iso one_dim_iso_is_of_complex
+      one_dim_iso_scaleC one_dim_scaleC_1 scaleC_one_dim_is_times)
+  also have \<open>\<dots> = one_dim_iso t * complex_of_real (kf_norm \<EE>)\<close>
+    by (simp add: norm)
+  also have \<open>\<dots> = one_dim_iso (kf_norm \<EE> *\<^sub>R t)\<close>
+    by (simp add: scaleR_scaleC)
+  also have \<open>\<dots> = one_dim_iso (kf_norm \<EE> *\<^sub>R kf_id *\<^sub>k\<^sub>r t)\<close>
+    by (simp add: kf_scale_apply)
+  finally show \<open>\<EE> *\<^sub>k\<^sub>r t = kf_norm \<EE> *\<^sub>R kf_id *\<^sub>k\<^sub>r t\<close>
+    using one_dim_iso_inj by blast
+qed
+
 
 subsection \<open>Mapping and flattening\<close>
 
@@ -2279,6 +2332,17 @@ qed
 lemma kf_apply_on_map[simp]:
   \<open>(kf_map f E) *\<^sub>k\<^sub>r @X \<rho> = E *\<^sub>k\<^sub>r @(f -` X) \<rho>\<close>
   by (auto intro!: simp: kf_apply_on_def kf_filter_map)
+
+lemma kf_apply_on_map_inj[simp]:
+  assumes \<open>inj_on f ((f -` X) \<inter> kf_domain E)\<close>
+  shows  \<open>kf_map_inj f E *\<^sub>k\<^sub>r @X \<rho> = E *\<^sub>k\<^sub>r @(f -` X) \<rho>\<close>
+proof -
+  from assms
+  have \<open>inj_on f (Set.filter (\<lambda>x. f x \<in> X) (kf_domain E))\<close>
+    by (smt (verit, del_insts) IntI Set.member_filter inj_onD inj_onI vimage_eq)
+  then show ?thesis
+    by (auto intro!: simp: kf_apply_on_def kf_filter_map_inj)
+qed
 
 lemma kf_map0[simp]: \<open>kf_map f 0 = 0\<close>
   apply transfer'
@@ -5876,13 +5940,6 @@ lemma kf_equal_if_filter_equal:
   using assms
   apply transfer'
   by fastforce
-
-lemma filter_insert_if:
-  \<open>Set.filter P (insert x M) = (if P x then insert x (Set.filter P M) else Set.filter P M)\<close>
-  by auto
-
-lemma filter_empty[simp]: \<open>Set.filter P {} = {}\<close>
-  by auto
 
 
 (* lemma kf_unique_if_singleton:

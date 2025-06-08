@@ -603,6 +603,41 @@ next
     by (simp add: km_norm_invalid)
 qed
 
+
+lemma kraus_map_sum:
+  assumes \<open>\<And>x. x\<in>A \<Longrightarrow> kraus_map (\<EE> x)\<close>
+  shows \<open>kraus_map (\<Sum>x\<in>A. \<EE> x)\<close>
+  apply (insert assms, induction A rule:infinite_finite_induct)
+  by auto
+
+lemma km_bound_sum:
+  assumes \<open>\<And>x. x\<in>A \<Longrightarrow> kraus_map (\<EE> x)\<close>
+  shows \<open>km_bound (\<Sum>x\<in>A. \<EE> x) = (\<Sum>x\<in>A. km_bound (\<EE> x))\<close>
+proof (insert assms, induction A rule:infinite_finite_induct)
+  case (infinite A)
+  then show ?case
+    by (metis km_bound_0 sum.infinite)
+next
+  case empty
+  then show ?case
+    by (metis km_bound_0 sum.empty)
+next
+  case (insert x F)
+  have \<open>km_bound (\<Sum>x\<in>insert x F. \<EE> x) = km_bound (\<EE> x + (\<Sum>x\<in>F. \<EE> x))\<close>
+    by (simp add: insert.hyps)
+  also have \<open>\<dots> = km_bound (\<EE> x) + km_bound (\<Sum>x\<in>F. \<EE> x)\<close>
+    by (simp add: km_bound_plus kraus_map_sum insert.prems)
+  also have \<open>\<dots> = km_bound (\<EE> x) + (\<Sum>x\<in>F. km_bound (\<EE> x))\<close>
+    by (simp add: insert)
+  also have \<open>\<dots> = (\<Sum>x\<in>insert x F. km_bound (\<EE> x))\<close>
+    using insert.hyps by fastforce
+  finally show ?case
+    by -
+qed
+
+
+
+
 subsection \<open>Infinite sums\<close>
 
 lemma
@@ -778,6 +813,56 @@ proof -
   finally show ?thesis
     by -
 qed
+
+lemma kraus_map_has_sum:
+  assumes \<open>\<And>x. x \<in> A \<Longrightarrow> kraus_map (\<EE> x)\<close>
+  assumes \<open>km_summable \<EE> A\<close>
+  assumes \<open>(\<EE> has_sum \<FF>) A\<close>
+  shows \<open>kraus_map \<FF>\<close>
+proof -
+  from \<open>(\<EE> has_sum \<FF>) A\<close>
+  have \<open>((\<lambda>x. \<EE> x t) has_sum \<FF> t) A\<close> for t
+    by (simp add: has_sum_coordinatewise)
+  then have \<open>\<FF> t = (\<Sum>\<^sub>\<infinity>a\<in>A. \<EE> a t)\<close> for t
+    by (metis infsumI)
+  with kraus_map_infsum[OF assms(1,2)]
+  show \<open>kraus_map \<FF>\<close>
+    by presburger
+qed
+
+lemma km_summable_iff_sums_to_kraus_map:
+  assumes \<open>\<And>a. a\<in>A \<Longrightarrow> kraus_map (\<EE> a)\<close>
+  shows \<open>km_summable \<EE> A \<longleftrightarrow> (\<exists>\<FF>. (\<forall>t. ((\<lambda>x. \<EE> x t) has_sum \<FF> t) A) \<and> kraus_map \<FF>)\<close>
+proof (rule iffI)
+  assume asm: \<open>km_summable \<EE> A\<close>
+  define \<FF> where \<open>\<FF> t = (\<Sum>\<^sub>\<infinity>a\<in>A. \<EE> a t)\<close> for t
+  from km_summable_summable[OF assms asm]
+  have \<open>((\<lambda>x. \<EE> x t) has_sum \<FF> t) A\<close> for t
+    using \<FF>_def by fastforce
+  moreover from kraus_map_infsum[OF assms asm]
+  have \<open>kraus_map \<FF>\<close>
+    by (simp add: \<FF>_def[abs_def])
+  ultimately show \<open>(\<exists>\<FF>. (\<forall>t. ((\<lambda>x. \<EE> x t) has_sum \<FF> t) A) \<and> kraus_map \<FF>)\<close>
+    by auto
+next
+  assume \<open>\<exists>\<FF>. (\<forall>t. ((\<lambda>x. \<EE> x t) has_sum \<FF> t) A) \<and> kraus_map \<FF>\<close>
+  then obtain \<FF> where \<open>kraus_map \<FF>\<close> and \<open>((\<lambda>x. \<EE> x t) has_sum \<FF> t) A\<close> for t
+    by auto
+  then have \<open>((\<lambda>x. trace_tc (\<EE> x (tc_butterfly k h))) has_sum trace_tc (\<FF> (tc_butterfly k h))) A\<close> for h k
+    using bounded_clinear.bounded_linear bounded_clinear_trace_tc has_sum_bounded_linear by blast
+  then have \<open>((\<lambda>x. trace_tc (\<EE> x (tc_butterfly k h))) has_sum h \<bullet>\<^sub>C (km_bound \<FF> *\<^sub>V k)) A\<close> for h k
+    by (simp add: km_bound_from_map \<open>kraus_map \<FF>\<close>)
+  then have \<open>((\<lambda>x. h \<bullet>\<^sub>C (km_bound (\<EE> x) *\<^sub>V k)) has_sum h \<bullet>\<^sub>C (km_bound \<FF> *\<^sub>V k)) A\<close> for h k
+    apply (rule has_sum_cong[THEN iffD1, rotated 1])
+    by (simp add: km_bound_from_map assms)
+  then have \<open>has_sum_in cweak_operator_topology (\<lambda>a. km_bound (\<EE> a)) A (km_bound \<FF>)\<close>
+    by (simp add: has_sum_in_cweak_operator_topology_pointwise)
+  then show \<open>km_summable \<EE> A\<close>
+    using  summable_on_in_def km_summable_def by blast
+qed
+
+
+
 
 
 subsection \<open>Tensor products\<close>
@@ -1370,6 +1455,32 @@ lemma km_complete_measurement_ket_tensor:
   shows \<open>km_tensor (km_complete_measurement_ket :: ('a ell2, _) trace_class \<Rightarrow> _) (km_complete_measurement_ket :: ('b ell2, _) trace_class \<Rightarrow> _)
              = km_complete_measurement_ket\<close>
   by (simp add: km_complete_measurement_ket_kf_complete_measurement_ket km_tensor_kf_tensor kf_complete_measurement_ket_tensor)
+
+lemma km_tensor_0_left[simp]: \<open>km_tensor (0 :: ('a ell2, 'b ell2) trace_class \<Rightarrow> ('c ell2, 'd ell2) trace_class) \<EE> = 0\<close>
+proof (cases \<open>km_tensor_exists (0 :: ('a ell2, 'b ell2) trace_class \<Rightarrow> ('c ell2, 'd ell2) trace_class) \<EE>\<close>)
+  case True
+  then show ?thesis
+    apply (rule_tac eq_from_separatingI2[OF separating_set_bounded_clinear_tc_tensor])
+    by (simp_all add: km_tensor_apply)
+next
+  case False
+  then show ?thesis
+    using km_tensor_invalid by blast
+qed
+
+lemma km_tensor_0_right[simp]: \<open>km_tensor \<EE> (0 :: ('a ell2, 'b ell2) trace_class \<Rightarrow> ('c ell2, 'd ell2) trace_class) = 0\<close>
+proof (cases \<open>km_tensor_exists \<EE> (0 :: ('a ell2, 'b ell2) trace_class \<Rightarrow> ('c ell2, 'd ell2) trace_class)\<close>)
+  case True
+  then show ?thesis
+    apply (rule_tac eq_from_separatingI2[OF separating_set_bounded_clinear_tc_tensor])
+    by (simp_all add: km_tensor_apply)
+next
+  case False
+  then show ?thesis
+    using km_tensor_invalid by blast
+qed
+
+
 
 
 unbundle no kraus_map_syntax
