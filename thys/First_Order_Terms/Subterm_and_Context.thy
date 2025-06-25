@@ -321,12 +321,15 @@ lemma SN_supt:
 
 lemma supt_not_refl[elim!]:
   assumes "t \<rhd> t" shows False
-  using assms order.strict_iff_order by blast
+proof -
+  from assms have "t \<noteq> t" by auto
+  then show False by simp
+qed
 
 lemma supteq_not_supt [elim]:
   assumes "s \<unrhd> t" and "\<not> (s \<rhd> t)"
   shows "s = t"
-  using assms suptI by blast
+  using assms by (induct) auto
 
 lemma supteq_not_supt_conv [simp]:
   "{\<unrhd>} - {\<rhd>} = Id" by auto

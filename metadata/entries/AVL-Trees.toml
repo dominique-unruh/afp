@@ -17,7 +17,7 @@ homepage = "nipkow_homepage"
 [contributors]
 
 [notify]
-nipkow = "nipkow_email"
+klein = "klein_email"
 
 [history]
 2011-04-11 = "Ondrej Kuncar added delete function"

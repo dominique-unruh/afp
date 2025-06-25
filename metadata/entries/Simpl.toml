@@ -15,6 +15,7 @@ note = ""
 [contributors]
 
 [notify]
+klein = "klein_email"
 schirmer = "schirmer_email"
 
 [history]

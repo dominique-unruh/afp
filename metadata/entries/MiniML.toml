@@ -21,7 +21,7 @@ pubs = ["<a href=\"https://www.proof.cit.tum.de/~nipkow/pubs/jar10.html\">author
 [contributors]
 
 [notify]
-nipkow = "nipkow_email"
+klein = "klein_email"
 
 [history]
 

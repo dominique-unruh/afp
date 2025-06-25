@@ -31,12 +31,7 @@ sig
 
   type msg_filter = string -> bool
 
-  type logger_config = {
-    log_level : log_level,
-    msg_filter : msg_filter,
-    output : logger_output,
-    show_logger : bool
-  }
+  type logger_config
   val config : logger_output -> log_level -> msg_filter -> bool -> logger_config
   val default_config : logger_config
   val set_config_output : logger_output -> logger_config -> logger_config
