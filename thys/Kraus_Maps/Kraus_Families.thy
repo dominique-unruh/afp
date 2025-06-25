@@ -1,3 +1,5 @@
+section \<open>Kraus families\<close>
+
 theory Kraus_Families
   imports
     Wlog.Wlog

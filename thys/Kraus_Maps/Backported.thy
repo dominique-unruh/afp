@@ -1,12 +1,13 @@
-theory Backported
-  imports Hilbert_Space_Tensor_Product.Trace_Class
-    Hilbert_Space_Tensor_Product.Hilbert_Space_Tensor_Product
-begin
+section \<open>Backported theorems\<close>
 
 text \<open>This theory contains various lemmas that are already contained in a fork of the AFP but have
   not yet been ported to the official AFP. (Sessions \<^session>\<open>Complex_Bounded_Operators\<close> and
   \<^session>\<open>Hilbert_Space_Tensor_Product\<close> from \<^url>\<open>https://github.com/dominique-unruh/afp/tree/unruh-edits\<close>.)\<close>
 
+theory Backported
+  imports Hilbert_Space_Tensor_Product.Trace_Class
+    Hilbert_Space_Tensor_Product.Hilbert_Space_Tensor_Product
+begin
 
 unbundle cblinfun_syntax
 
@@ -121,7 +122,6 @@ lemma ballI2 [intro!]: "(\<And>x y. (x,y) \<in> A \<Longrightarrow> P x y) \<Lon
 lemma flip_eq_const: \<open>(\<lambda>y. y = x) = ((=) x)\<close>
   by auto
 
-(* TODO To BO library *)
 lemma vector_to_cblinfun_inj: \<open>inj_on (vector_to_cblinfun :: 'a::complex_normed_vector \<Rightarrow> 'b::one_dim \<Rightarrow>\<^sub>C\<^sub>L _) X\<close>
 proof (rule inj_onI)
   fix x y :: 'a
@@ -132,14 +132,12 @@ proof (rule inj_onI)
     by simp
 qed
 
-(* TODO move to BO *)
 lemma has_sum_bounded_clinear:
   assumes "bounded_clinear h" and "(f has_sum S) A"
   shows "((\<lambda>x. h (f x)) has_sum h S) A"
   apply (rule has_sum_bounded_linear[where h=h])
   by (auto intro!: bounded_clinear.bounded_linear assms)
 
-(* TODO move to BO, after *) thm infsum_scaleC_right
 lemma has_sum_scaleC_right:
   fixes f :: \<open>'a \<Rightarrow> 'b :: complex_normed_vector\<close>
   assumes \<open>(f has_sum s) A\<close>
@@ -245,14 +243,11 @@ lemma sandwich_tensor_ell2_left': \<open>sandwich (tensor_ell2_left \<psi>) *\<^
   apply (rule cblinfun_cinner_tensor_eqI)
   by (simp add: sandwich_apply tensor_op_ell2 cblinfun.scaleC_right)
 
-(* TODO move *)
 lemma to_conjugate_space_0[simp]: \<open>to_conjugate_space 0 = 0\<close>
   by (simp add: zero_conjugate_space.abs_eq)
-(* TODO move *)
 lemma from_conjugate_space_0[simp]: \<open>from_conjugate_space 0 = 0\<close>
   using zero_conjugate_space.rep_eq by blast
 
-(* TODO move *)
 lemma antilinear_eq_0_on_span:
   assumes \<open>antilinear f\<close>
     and \<open>\<And>x. x \<in> b \<Longrightarrow> f x = 0\<close>
@@ -272,7 +267,6 @@ proof -
     by (simp add: to_conjugate_space_inverse)
 qed
 
-(* TODO move *)
 lemma antilinear_diff:
   assumes \<open>antilinear f\<close> and \<open>antilinear g\<close>
   shows \<open>antilinear (\<lambda>x. f x - g x)\<close>
@@ -280,13 +274,11 @@ lemma antilinear_diff:
    apply (metis add_diff_add additive.add antilinear_def assms(1,2))
   by (simp add: antilinear.scaleC assms(1,2) scaleC_right.diff)
 
-(* TODO move *)
 lemma antilinear_cinner:
   shows \<open>antilinear (\<lambda>x. x \<bullet>\<^sub>C y)\<close>
   by (simp add: antilinearI cinner_add_left)
 
 
-(* TODO move *)
 lemma cinner_extensionality_basis:
   fixes g h :: \<open>'a::complex_inner\<close>
   assumes \<open>ccspan B = \<top>\<close>

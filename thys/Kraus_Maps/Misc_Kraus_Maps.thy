@@ -1,3 +1,5 @@
+section \<open>Miscelleanous missing theorems\<close>
+
 theory Misc_Kraus_Maps
   imports
     Hilbert_Space_Tensor_Product.Hilbert_Space_Tensor_Product
@@ -82,11 +84,9 @@ qed
 lemma flip_eq_const: \<open>(\<lambda>y. y = x) = ((=) x)\<close>
   by auto
 
-(* TODO to Complex_Bounded_Operators *)
 lemma sgn_ket[simp]: \<open>sgn (ket x) = ket x\<close>
   by (simp add: sgn_div_norm)
 
-(* TODO to Hilbert_Space_Tensor_Product *)
 lemma tensor_op_in_tensor_vn:
   assumes \<open>a \<in> A\<close> and \<open>b \<in> B\<close>
   shows \<open>a \<otimes>\<^sub>o b \<in> A \<otimes>\<^sub>v\<^sub>N B\<close>
@@ -119,7 +119,6 @@ proof -
     by (auto intro!: von_neumann_algebra_commutant von_neumann_algebra_tensor_vn assms)
 qed
 
-(* TODO to Hilbert_Space_Tensor_Product *)
 lemma commutant_span[simp]: \<open>commutant (span X) = commutant X\<close>
 proof (rule order_antisym)
   have \<open>commutant X \<subseteq> commutant (cspan X)\<close>
@@ -133,11 +132,9 @@ proof (rule order_antisym)
 qed
 
 
-(* TODO to Complex_Bounded_Operators *)
 lemma explicit_cblinfun_exists_0[simp]: \<open>explicit_cblinfun_exists (\<lambda>_ _. 0)\<close>
   by (auto intro!: explicit_cblinfun_exists_bounded[where B=0] simp: explicit_cblinfun_def)
 
-(* TODO to Complex_Bounded_Operators *)
 lemma explicit_cblinfun_0[simp]: \<open>explicit_cblinfun (\<lambda>_ _. 0) = 0\<close>
   by (auto intro!: equal_ket Rep_ell2_inject[THEN iffD1] ext simp: Rep_ell2_explicit_cblinfun_ket zero_ell2.rep_eq)
 
@@ -152,7 +149,6 @@ lemma has_sum_single:
   apply (subst has_sum_cong_neutral[where T=\<open>A \<inter> {i}\<close> and g=f])
   using assms by auto
 
-(* TODO to Complex_Bounded_Operators *)
 lemma classical_operator_None[simp]: \<open>classical_operator (\<lambda>_. None) = 0\<close>
   by (auto intro!: equal_ket simp: classical_operator_ket inj_map_def classical_operator_exists_inj)
 

@@ -1,3 +1,5 @@
+section \<open>Kraus maps\<close>
+
 theory Kraus_Maps
   imports Kraus_Families
 begin
@@ -1072,7 +1074,7 @@ subsection \<open>Trace and partial trace\<close>
 
 definition \<open>km_trace_preserving \<EE> \<longleftrightarrow> (\<exists>\<FF>::(_,_,unit) kraus_family. \<EE> = kf_apply \<FF> \<and> kf_trace_preserving \<FF>)\<close>
 lemma km_trace_preserving_def': \<open>km_trace_preserving \<EE> \<longleftrightarrow> (\<exists>\<FF>::(_, _, 'c) kraus_family. \<EE> = kf_apply \<FF> \<and> kf_trace_preserving \<FF>)\<close>
-  \<comment> \<open>Has a more general type than @{thm [source] km_trace_preserving_def}}\<close>
+  \<comment> \<open>Has a more general type than @{thm [source] km_trace_preserving_def}\<close>
 proof (rule iffI)
   assume \<open>km_trace_preserving \<EE>\<close>
   then obtain \<FF> :: \<open>(_,_,unit) kraus_family\<close> where \<EE>\<FF>: \<open>\<EE> = kf_apply \<FF>\<close> and tp\<FF>: \<open>kf_trace_preserving \<FF>\<close>
