@@ -3362,7 +3362,6 @@ lemma kf_comp_dependent_raw_0_left[simp]: \<open>kf_comp_dependent_raw 0 \<EE> =
   apply transfer'
   by (auto intro!: simp: zero_kraus_family.rep_eq)
 
-(* TODO change \<lambda>_.0 \<rightarrow> 0 (consistently) *)
 lemma kf_comp_dependent_0_left[simp]: \<open>kf_comp_dependent (\<lambda>_. 0) E = 0\<close>
 proof -
   have \<open>bdd_above ((kf_norm \<circ> 0) ` kf_domain E)\<close>
@@ -3522,7 +3521,6 @@ next
     by (simp add: kf_comp_dependent_invalid)
 qed
 
-(* TODO also left *)
 lemma kf_comp_dependent_raw_map_inj_right:
   \<open>kf_comp_dependent_raw E (kf_map_inj f F)
      = kf_map_inj (\<lambda>(E,F,x,y). (E, F, f x, y)) (kf_comp_dependent_raw (\<lambda>x. E (f x)) F)\<close>
@@ -3535,7 +3533,6 @@ proof -
     by (simp add: image_image case_prod_unfold filter_image)
 qed
 
-(* TODO also left *)
 lemma kf_comp_dependent_map_inj_right:
   assumes \<open>inj_on f (kf_domain F)\<close>
   shows \<open>kf_comp_dependent E (kf_map_inj f F)
