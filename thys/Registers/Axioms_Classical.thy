@@ -2,21 +2,11 @@ section \<open>Classical instantiation of registers\<close>
 
 (* AXIOM INSTANTIATION (use instantiate_laws.py to generate Laws_Classical.thy)
  
-    # Type classes
-    domain \<rightarrow> type
-    domain_with_simple_complement \<rightarrow> finite
-    domain_with_simple_complement_in \<rightarrow> finite
+   domain \<rightarrow> type
+   comp_update \<rightarrow> map_comp
+   id_update \<rightarrow> Some
 
-    # Types
-    some_domain \<rightarrow> unit
-
-    # Constants
-    comp_update \<rightarrow> map_comp
-    id_update \<rightarrow> Some
-    #tensor_update \<rightarrow> tensor_update
-    cdc \<rightarrow> complement_domain
-
-    Generic laws about registers \<rightarrow> Generic laws about registers, instantiated classically
+   Generic laws about registers \<rightarrow> Generic laws about registers, instantiated classically
 *)
 
 theory Axioms_Classical
@@ -72,7 +62,7 @@ proof -
     using preregister_def by blast
 qed
 
-definition tensor_update :: \<open>('a \<Rightarrow> 'c option) \<Rightarrow> ('b \<Rightarrow> 'd option) \<Rightarrow> ('a\<times>'b) \<Rightarrow> ('c\<times>'d) option\<close> where
+definition tensor_update :: \<open>'a update \<Rightarrow> 'b update \<Rightarrow> ('a\<times>'b) update\<close> where
   \<open>tensor_update a b m = (case a (fst m) of None \<Rightarrow> None | Some x \<Rightarrow> (case b (snd m) of None \<Rightarrow> None | Some y \<Rightarrow> Some (x,y)))\<close>
 
 lemma tensor_update_mult: \<open>tensor_update a c \<circ>\<^sub>m tensor_update b d = tensor_update (a \<circ>\<^sub>m b) (c \<circ>\<^sub>m d)\<close>
@@ -225,10 +215,8 @@ proof -
     using F by simp
 qed
 
-lemma register_comp: 
-  fixes F :: "('a,'b) preregister" and G :: "('b,'c) preregister"
-  assumes \<open>register F\<close> and \<open>register G\<close>
-  shows \<open>register (G \<circ> F)\<close>
+lemma register_comp: "register (G \<circ> F)" if \<open>register F\<close> and \<open>register G\<close>
+  for F :: "('a,'b) preregister" and G :: "('b,'c) preregister"
 proof -
   from \<open>register F\<close>
   obtain sF gF where F: \<open>F a m = (case a (gF m) of None \<Rightarrow> None | Some x \<Rightarrow> Some (sF x m))\<close>
@@ -294,19 +282,18 @@ proof -
               register_from_getter_setter_def gFsG)
 qed
 
-lemma
+lemma register_pair_is_register:
   fixes F :: \<open>'a update \<Rightarrow> 'c update\<close> and G
   assumes [simp]: \<open>register F\<close> and [simp]: \<open>register G\<close>
   assumes compat: \<open>\<And>a b. F a \<circ>\<^sub>m G b = G b \<circ>\<^sub>m F a\<close>
-  shows register_pair_is_register: \<open>register (register_pair F G)\<close>
-    and register_pair_is_valid: \<open>valid_getter_setter (\<lambda>m. (getter F m, getter G m)) (\<lambda>(a, b) m. setter F a (setter G b m))\<close>
+  shows \<open>register (register_pair F G)\<close>
 proof -
   have validF: \<open>valid_getter_setter (getter F) (setter F)\<close> and validG: \<open>valid_getter_setter (getter G) (setter G)\<close>
     by (metis assms getter_of_register_from_getter_setter register_def setter_of_register_from_getter_setter)+
-  then show \<open>valid_getter_setter (\<lambda>m. (getter F m, getter G m)) (\<lambda>(a, b) m. setter F a (setter G b m))\<close>
+  then have \<open>valid_getter_setter (\<lambda>m. (getter F m, getter G m)) (\<lambda>(a, b) m. setter F a (setter G b m))\<close>
     apply (simp add: valid_getter_setter_def)
     by (metis (mono_tags, lifting) assms comp_eq_dest_lhs compat compatible_setter)
-  then show \<open>register (register_pair F G)\<close>
+  then show ?thesis
     by (auto simp: register_pair_def register_def)
 qed
 

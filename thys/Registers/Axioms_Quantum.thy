@@ -5,7 +5,6 @@ section \<open>Quantum instantiation of registers\<close>
     # Type classes
     domain \<rightarrow> type
     domain_with_simple_complement \<rightarrow> finite
-    domain_with_simple_complement_in \<rightarrow> type
 
     # Types
     some_domain \<rightarrow> unit

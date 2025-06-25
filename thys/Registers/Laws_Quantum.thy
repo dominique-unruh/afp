@@ -303,8 +303,9 @@ lemmas compatible_ac_rules = swap_registers cblinfun_compose_assoc[symmetric] sw
 
 subsection \<open>Fst and Snd\<close>
 
-definition Fst :: \<open>'a::type update \<Rightarrow> ('a\<times>'b::type) update\<close> where \<open>Fst a = a \<otimes>\<^sub>u id_cblinfun\<close>
-definition Snd :: \<open>'b::type update \<Rightarrow> ('a::type\<times>'b) update\<close> where \<open>Snd a = id_cblinfun \<otimes>\<^sub>u a\<close>
+(* TODO: specify types *)
+definition Fst where \<open>Fst a = a \<otimes>\<^sub>u id_cblinfun\<close>
+definition Snd where \<open>Snd a = id_cblinfun \<otimes>\<^sub>u a\<close>
 
 lemma register_Fst[simp]: \<open>register Fst\<close>
   unfolding Fst_def by (rule register_tensor_left)
