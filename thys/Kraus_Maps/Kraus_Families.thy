@@ -3,6 +3,7 @@ theory Kraus_Families
     Wlog.Wlog
     Hilbert_Space_Tensor_Product.Partial_Trace
   
+    Backported
     Misc_Kraus_Maps
   
   abbrevs
