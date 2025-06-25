@@ -8,10 +8,5 @@ session Kraus_Maps = Hilbert_Space_Tensor_Product +
     Wlog
   theories
     Kraus_Maps
-(*  document_files
+  document_files
     "root.tex"
-    "root.bib"
-*)
-
-session Kraus_Maps_Prerequisites in ".fake-session-dir" = Hilbert_Space_Tensor_Product +
-  theories "HOL-Library.Infinite_Typeclass"
