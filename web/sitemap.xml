@@ -3,10 +3,49 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://isa-afp.org/entries/index.json</loc>
-    <lastmod>2025-04-13T00:00:00+00:00</lastmod>
+    <lastmod>2025-06-02T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://isa-afp.org/</loc>
-    <lastmod>2025-04-13T00:00:00+00:00</lastmod>
+    <lastmod>2025-06-02T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Chomsky_Schuetzenberger.html</loc>
+    <lastmod>2025-06-02T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Dyck_Language.html</loc>
+    <lastmod>2025-06-02T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Galois_Energy_Games.html</loc>
+    <lastmod>2025-05-23T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Munta_Model_Checker.html</loc>
+    <lastmod>2025-05-22T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Context_Free_Grammar.html</loc>
+    <lastmod>2025-05-21T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Shallow_Expressions.html</loc>
+    <lastmod>2025-05-16T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Farey_Sequences.html</loc>
+    <lastmod>2025-05-15T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/HOL-CSP_RS.html</loc>
+    <lastmod>2025-05-07T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Restriction_Spaces-Examples.html</loc>
+    <lastmod>2025-05-07T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Restriction_Spaces.html</loc>
+    <lastmod>2025-05-07T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Restriction_Spaces-Ultrametric.html</loc>
+    <lastmod>2025-05-07T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/FaithfulPMLinHOL.html</loc>
+    <lastmod>2025-05-06T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/MLSSmf_to_MLSS.html</loc>
+    <lastmod>2025-05-05T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://isa-afp.org/entries/First_Order_Rewriting.html</loc>
     <lastmod>2025-04-13T00:00:00+00:00</lastmod>
@@ -16,6 +55,12 @@
   </url><url>
     <loc>https://isa-afp.org/entries/Completeness_Decreasing_Diagrams_for_N1.html</loc>
     <lastmod>2025-04-12T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Elementary_Ultrametric_Spaces.html</loc>
+    <lastmod>2025-04-10T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Sophie_Germain.html</loc>
+    <lastmod>2025-04-09T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://isa-afp.org/entries/Kolmogorov_Chentsov.html</loc>
     <lastmod>2025-04-06T00:00:00+00:00</lastmod>
@@ -2838,11 +2883,11 @@
   </url><url>
     <loc>https://isa-afp.org/authors/stueber/</loc>
   </url><url>
+    <loc>https://isa-afp.org/authors/danilkin/</loc>
+  </url><url>
     <loc>https://isa-afp.org/sessions/anselmgod/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/bordg/</loc>
-  </url><url>
-    <loc>https://isa-afp.org/authors/danilkin/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/aodv/</loc>
   </url><url>
@@ -2871,6 +2916,8 @@
     <loc>https://isa-afp.org/authors/keskin/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/attack_trees/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/authors/stimpfle/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/</loc>
   </url><url>
@@ -3006,6 +3053,8 @@
   </url><url>
     <loc>https://isa-afp.org/authors/langenstein/</loc>
   </url><url>
+    <loc>https://isa-afp.org/authors/philipp/</loc>
+  </url><url>
     <loc>https://isa-afp.org/authors/paleo/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/btree/</loc>
@@ -3043,6 +3092,8 @@
     <loc>https://isa-afp.org/sessions/card_partitions/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/cardinality_continuum/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/authors/lemke/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/lameris/</loc>
   </url><url>
@@ -3093,6 +3144,8 @@
     <loc>https://isa-afp.org/authors/edmonds/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/cheri-c_memory_model/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/chomsky_schuetzenberger/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/chord_segments/</loc>
   </url><url>
@@ -3293,6 +3346,8 @@
     <loc>https://isa-afp.org/sessions/containers/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/containers-benchmarks/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/context_free_grammar/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/continued_fractions/</loc>
   </url><url>
@@ -3514,6 +3569,8 @@
   </url><url>
     <loc>https://isa-afp.org/authors/bryant/</loc>
   </url><url>
+    <loc>https://isa-afp.org/sessions/dyck_language/</loc>
+  </url><url>
     <loc>https://isa-afp.org/sessions/dynamic_tables/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/dynamicarchitectures/</loc>
@@ -3537,6 +3594,8 @@
     <loc>https://isa-afp.org/sessions/efficient_weighted_path_order/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/efficient-mergesort/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/elementary_ultrametric_spaces/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/wenninger/</loc>
   </url><url>
@@ -3596,6 +3655,8 @@
   </url><url>
     <loc>https://isa-afp.org/authors/immler/</loc>
   </url><url>
+    <loc>https://isa-afp.org/authors/lehr/</loc>
+  </url><url>
     <loc>https://isa-afp.org/authors/mitterwallner/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/factor_algebraic_polynomial/</loc>
@@ -3606,7 +3667,11 @@
   </url><url>
     <loc>https://isa-afp.org/authors/ausaf/</loc>
   </url><url>
+    <loc>https://isa-afp.org/sessions/faithfulpmlinhol/</loc>
+  </url><url>
     <loc>https://isa-afp.org/sessions/falling_factorial_sum/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/farey_sequences/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/farkas/</loc>
   </url><url>
@@ -3615,6 +3680,8 @@
     <loc>https://isa-afp.org/sessions/featherweightjava/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/brandt/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/authors/krayer/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/fermat3_4/</loc>
   </url><url>
@@ -3755,6 +3822,8 @@
     <loc>https://isa-afp.org/sessions/gale_shapley/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/galestewart_games/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/galois_energy_games/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/game_based_crypto/</loc>
   </url><url>
@@ -3933,6 +4002,8 @@
     <loc>https://isa-afp.org/sessions/hol-csp/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/hol-csp_opsem/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/hol-csp_rs/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/hol-cspm/</loc>
   </url><url>
@@ -4256,6 +4327,8 @@
   </url><url>
     <loc>https://isa-afp.org/authors/liu/</loc>
   </url><url>
+    <loc>https://isa-afp.org/authors/taskin/</loc>
+  </url><url>
     <loc>https://isa-afp.org/sessions/kad/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/engelhardt/</loc>
@@ -4542,6 +4615,8 @@
   </url><url>
     <loc>https://isa-afp.org/sessions/markov_models/</loc>
   </url><url>
+    <loc>https://isa-afp.org/authors/gschossmann/</loc>
+  </url><url>
     <loc>https://isa-afp.org/authors/olm/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/rabe/</loc>
@@ -4730,6 +4805,8 @@
   </url><url>
     <loc>https://isa-afp.org/sessions/mlss_decision_proc/</loc>
   </url><url>
+    <loc>https://isa-afp.org/sessions/mlssmf_to_mlss/</loc>
+  </url><url>
     <loc>https://isa-afp.org/authors/echenim/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/modal_logics_for_nts/</loc>
@@ -4752,6 +4829,8 @@
   </url><url>
     <loc>https://isa-afp.org/sessions/more_lazylists/</loc>
   </url><url>
+    <loc>https://isa-afp.org/authors/roos/</loc>
+  </url><url>
     <loc>https://isa-afp.org/sessions/morley_theorem/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/schou/</loc>
@@ -4769,6 +4848,10 @@
     <loc>https://isa-afp.org/sessions/multiset_ordering_npc/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/multitape_to_singletape_tm/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/munta_base/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/munta_model_checker/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/myhill-nerode/</loc>
   </url><url>
@@ -5206,6 +5289,14 @@
   </url><url>
     <loc>https://isa-afp.org/sessions/resolution_fol/</loc>
   </url><url>
+    <loc>https://isa-afp.org/sessions/restriction_spaces/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/restriction_spaces-examples/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/restriction_spaces-holcf/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/restriction_spaces-ultrametric/</loc>
+  </url><url>
     <loc>https://isa-afp.org/sessions/rewrite_properties_reduction/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/rewriting_z/</loc>
@@ -5365,6 +5456,8 @@
   </url><url>
     <loc>https://isa-afp.org/sessions/shadow_sc_dom/</loc>
   </url><url>
+    <loc>https://isa-afp.org/sessions/shallow_expressions/</loc>
+  </url><url>
     <loc>https://isa-afp.org/authors/ying/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/pillai/</loc>
@@ -5432,6 +5525,8 @@
     <loc>https://isa-afp.org/sessions/solidity/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/tourret/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/sophie_germain/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/sophomores_dream/</loc>
   </url><url>
@@ -5828,6 +5923,8 @@
     <loc>https://isa-afp.org/authors/minamide/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/he/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/authors/duan/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/tan/</loc>
   </url><url>

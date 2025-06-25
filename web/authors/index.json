@@ -168,12 +168,12 @@
   "name": "Anke Stüber"
  },
  {
-  "link": "/authors/bordg/",
-  "name": "Anthony Bordg"
+  "link": "/authors/danilkin/",
+  "name": "Anna Danilkin"
  },
  {
-  "link": "/authors/danilkin/",
-  "name": "Anton Danilkin"
+  "link": "/authors/bordg/",
+  "name": "Anthony Bordg"
  },
  {
   "link": "/authors/heller/",
@@ -190,6 +190,10 @@
  {
   "link": "/authors/keskin/",
   "name": "Ata Keskin"
+ },
+ {
+  "link": "/authors/stimpfle/",
+  "name": "August Martin Stimpfle"
  },
  {
   "link": "/authors/bergstroem/",
@@ -296,6 +300,10 @@
   "name": "Bruno Langenstein"
  },
  {
+  "link": "/authors/philipp/",
+  "name": "Bruno Philipp"
+ },
+ {
   "link": "/authors/paleo/",
   "name": "Bruno Woltzenlogel Paleo"
  },
@@ -306,6 +314,10 @@
  {
   "link": "/authors/calk/",
   "name": "Cameron Calk"
+ },
+ {
+  "link": "/authors/lemke/",
+  "name": "Caroline Lemke"
  },
  {
   "link": "/authors/lameris/",
@@ -596,6 +608,10 @@
   "name": "Fabian Immler"
  },
  {
+  "link": "/authors/lehr/",
+  "name": "Fabian Lehr"
+ },
+ {
   "link": "/authors/mitterwallner/",
   "name": "Fabian Mitterwallner"
  },
@@ -610,6 +626,10 @@
  {
   "link": "/authors/brandt/",
   "name": "Felix Brandt"
+ },
+ {
+  "link": "/authors/krayer/",
+  "name": "Felix Krayer"
  },
  {
   "link": "/authors/maricf/",
@@ -1076,6 +1096,10 @@
   "name": "Junyi Liu"
  },
  {
+  "link": "/authors/taskin/",
+  "name": "Kaan Taskin"
+ },
+ {
   "link": "/authors/engelhardt/",
   "name": "Kai Engelhardt"
  },
@@ -1264,6 +1288,10 @@
   "name": "Mark Wassell"
  },
  {
+  "link": "/authors/gschossmann/",
+  "name": "Markus Gschoßmann"
+ },
+ {
   "link": "/authors/olm/",
   "name": "Markus Müller-Olm"
  },
@@ -1450,6 +1478,10 @@
  {
   "link": "/authors/abdulaziz/",
   "name": "Mohammad Abdulaziz"
+ },
+ {
+  "link": "/authors/roos/",
+  "name": "Moritz Roos"
  },
  {
   "link": "/authors/schou/",
@@ -2090,6 +2122,10 @@
  {
   "link": "/authors/he/",
   "name": "Yijun He"
+ },
+ {
+  "link": "/authors/duan/",
+  "name": "Yiran Duan"
  },
  {
   "link": "/authors/tan/",
