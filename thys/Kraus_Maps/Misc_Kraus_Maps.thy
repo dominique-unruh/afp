@@ -101,7 +101,6 @@ proof -
     by (simp add: comp_tensor_op)
 qed
 
-(* TODO to Hilbert_Space_Tensor_Product *)
 lemma commutant_tensor_vn_subset: 
   assumes \<open>von_neumann_algebra A\<close> and \<open>von_neumann_algebra B\<close>
   shows \<open>commutant A \<otimes>\<^sub>v\<^sub>N commutant B \<subseteq> commutant (A \<otimes>\<^sub>v\<^sub>N B)\<close>
@@ -228,6 +227,135 @@ lemma filter_insert_if:
 
 lemma filter_empty[simp]: \<open>Set.filter P {} = {}\<close>
   by auto
+
+lemma has_sum_in_cong_neutral:
+  fixes f g :: \<open>'a \<Rightarrow> 'b::comm_monoid_add\<close>
+  assumes \<open>\<And>x. x\<in>T-S \<Longrightarrow> g x = 0\<close>
+  assumes \<open>\<And>x. x\<in>S-T \<Longrightarrow> f x = 0\<close>
+  assumes \<open>\<And>x. x\<in>S\<inter>T \<Longrightarrow> f x = g x\<close>
+  shows "has_sum_in X f S x \<longleftrightarrow> has_sum_in X g T x"
+proof -
+  have \<open>eventually P (filtermap (sum f) (finite_subsets_at_top S))
+      = eventually P (filtermap (sum g) (finite_subsets_at_top T))\<close> for P
+  proof 
+    assume \<open>eventually P (filtermap (sum f) (finite_subsets_at_top S))\<close>
+    then obtain F0 where \<open>finite F0\<close> and \<open>F0 \<subseteq> S\<close> and F0_P: \<open>\<And>F. finite F \<Longrightarrow> F \<subseteq> S \<Longrightarrow> F \<supseteq> F0 \<Longrightarrow> P (sum f F)\<close>
+      by (metis (no_types, lifting) eventually_filtermap eventually_finite_subsets_at_top)
+    define F0' where \<open>F0' = F0 \<inter> T\<close>
+    have [simp]: \<open>finite F0'\<close> \<open>F0' \<subseteq> T\<close>
+      by (simp_all add: F0'_def \<open>finite F0\<close>)
+    have \<open>P (sum g F)\<close> if \<open>finite F\<close> \<open>F \<subseteq> T\<close> \<open>F \<supseteq> F0'\<close> for F
+    proof -
+      have \<open>P (sum f ((F\<inter>S) \<union> (F0\<inter>S)))\<close>
+        by (intro F0_P) (use \<open>F0 \<subseteq> S\<close> \<open>finite F0\<close> that in auto)
+      also have \<open>sum f ((F\<inter>S) \<union> (F0\<inter>S)) = sum g F\<close>
+        by (intro sum.mono_neutral_cong) (use that \<open>finite F0\<close> F0'_def assms in auto)
+      finally show ?thesis .
+    qed
+    with \<open>F0' \<subseteq> T\<close> \<open>finite F0'\<close> show \<open>eventually P (filtermap (sum g) (finite_subsets_at_top T))\<close>
+      by (metis (no_types, lifting) eventually_filtermap eventually_finite_subsets_at_top)
+  next
+    assume \<open>eventually P (filtermap (sum g) (finite_subsets_at_top T))\<close>
+    then obtain F0 where \<open>finite F0\<close> and \<open>F0 \<subseteq> T\<close> and F0_P: \<open>\<And>F. finite F \<Longrightarrow> F \<subseteq> T \<Longrightarrow> F \<supseteq> F0 \<Longrightarrow> P (sum g F)\<close>
+      by (metis (no_types, lifting) eventually_filtermap eventually_finite_subsets_at_top)
+    define F0' where \<open>F0' = F0 \<inter> S\<close>
+    have [simp]: \<open>finite F0'\<close> \<open>F0' \<subseteq> S\<close>
+      by (simp_all add: F0'_def \<open>finite F0\<close>)
+    have \<open>P (sum f F)\<close> if \<open>finite F\<close> \<open>F \<subseteq> S\<close> \<open>F \<supseteq> F0'\<close> for F
+    proof -
+      have \<open>P (sum g ((F\<inter>T) \<union> (F0\<inter>T)))\<close>
+        by (intro F0_P) (use \<open>F0 \<subseteq> T\<close> \<open>finite F0\<close> that in auto)
+      also have \<open>sum g ((F\<inter>T) \<union> (F0\<inter>T)) = sum f F\<close>
+        by (intro sum.mono_neutral_cong) (use that \<open>finite F0\<close> F0'_def assms in auto)
+      finally show ?thesis .
+    qed
+    with \<open>F0' \<subseteq> S\<close> \<open>finite F0'\<close> show \<open>eventually P (filtermap (sum f) (finite_subsets_at_top S))\<close>
+      by (metis (no_types, lifting) eventually_filtermap eventually_finite_subsets_at_top)
+  qed
+
+  then have tendsto_x: "limitin X (sum f) x (finite_subsets_at_top S) \<longleftrightarrow> limitin X (sum g) x (finite_subsets_at_top T)" for x
+    by (simp add: le_filter_def filterlim_def flip: filterlim_nhdsin_iff_limitin)
+  then show ?thesis
+    by (simp add: has_sum_in_def)
+qed
+
+
+lemma infsum_in_cong_neutral: 
+  fixes f g :: \<open>'a \<Rightarrow> 'b::comm_monoid_add\<close>
+  assumes \<open>\<And>x. x\<in>T-S \<Longrightarrow> g x = 0\<close>
+  assumes \<open>\<And>x. x\<in>S-T \<Longrightarrow> f x = 0\<close>
+  assumes \<open>\<And>x. x\<in>S\<inter>T \<Longrightarrow> f x = g x\<close>
+  shows \<open>infsum_in X f S = infsum_in X g T\<close>
+  apply (rule infsum_in_eqI')
+  apply (rule has_sum_in_cong_neutral)
+  using assms by auto
+
+lemma filter_image: \<open>Set.filter P (f ` X) = f ` (Set.filter (\<lambda>x. P (f x)) X)\<close>
+  by auto
+
+lemma Sigma_image_left: \<open>(SIGMA x:f`A. B x) = (\<lambda>(x,y). (f x, y)) ` (SIGMA x:A. B (f x))\<close>
+  by (auto intro!: image_eqI simp: split: prod.split)
+
+lemma finite_subset_filter_image:
+  assumes "finite B"
+  assumes \<open>B \<subseteq> Set.filter P (f ` A)\<close>
+  shows "\<exists>C\<subseteq>A. finite C \<and> B = f ` C"
+proof -
+  from assms have \<open>B \<subseteq> f ` A\<close>
+    by auto
+  then show ?thesis
+    by (simp add: assms(1) finite_subset_image)
+qed
+
+definition \<open>card_le_1 M \<longleftrightarrow> (\<exists>x. M \<subseteq> {x})\<close>
+
+lemma card_le_1_empty[iff]: \<open>card_le_1 {}\<close>
+  by (simp add: card_le_1_def)
+
+lemma card_le_1_signleton[iff]: \<open>card_le_1 {x}\<close>
+  using card_le_1_def by fastforce
+
+lemma sgn_tensor_ell2: \<open>sgn (h \<otimes>\<^sub>s k) = sgn h \<otimes>\<^sub>s sgn k\<close>
+  by (simp add: sgn_div_norm norm_tensor_ell2 scaleR_scaleC tensor_ell2_scaleC1 tensor_ell2_scaleC2)
+
+lemma is_ortho_set_tensor:
+  assumes \<open>is_ortho_set B\<close>
+  assumes \<open>is_ortho_set C\<close>
+  shows \<open>is_ortho_set ((\<lambda>(x, y). x \<otimes>\<^sub>s y) ` (B \<times> C))\<close>
+proof (intro is_ortho_set_def[THEN iffD2] conjI notI ballI impI)
+  fix bc bc' :: \<open>('a \<times> 'b) ell2\<close>
+  assume \<open>bc \<in> (\<lambda>(x, y). x \<otimes>\<^sub>s y) ` (B \<times> C)\<close> 
+  then obtain b c where \<open>b \<in> B\<close> \<open>c \<in> C\<close> and bc: \<open>bc = b \<otimes>\<^sub>s c\<close>
+    by fast
+  assume \<open>bc' \<in> (\<lambda>(x, y). x \<otimes>\<^sub>s y) ` (B \<times> C)\<close>
+  then obtain b' c' where \<open>b' \<in> B\<close> \<open>c' \<in> C\<close> and bc': \<open>bc' = b' \<otimes>\<^sub>s c'\<close>
+    by fast
+  assume \<open>bc \<noteq> bc'\<close>
+  then consider (neqb) \<open>b \<noteq> b'\<close> | (neqc) \<open>c \<noteq> c'\<close>
+    using bc bc' by blast
+  then show \<open>is_orthogonal bc bc'\<close>
+  proof cases
+    case neqb
+    with \<open>b \<in> B\<close> \<open>b' \<in> B\<close> \<open>is_ortho_set B\<close>
+    have \<open>b \<bullet>\<^sub>C b' = 0\<close>
+      by (simp add: is_ortho_setD)
+    then show ?thesis
+      by (simp add: bc bc')
+  next
+    case neqc
+    with \<open>c \<in> C\<close> \<open>c' \<in> C\<close> \<open>is_ortho_set C\<close>
+    have \<open>c \<bullet>\<^sub>C c' = 0\<close>
+      by (simp add: is_ortho_setD)
+    then show ?thesis
+      by (simp add: bc bc')
+  qed
+next
+  assume \<open>0 \<in> (\<lambda>(x, y). x \<otimes>\<^sub>s y) ` (B \<times> C)\<close>
+  then obtain b c where \<open>b \<in> B\<close> \<open>c \<in> C\<close> and \<open>b \<otimes>\<^sub>s c = 0\<close>
+    by auto
+  then show False
+    by (metis assms(1,2) is_ortho_set_def tensor_ell2_nonzero)
+qed
 
 
 

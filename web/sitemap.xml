@@ -3,10 +3,28 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://isa-afp.org/entries/index.json</loc>
-    <lastmod>2025-06-02T00:00:00+00:00</lastmod>
+    <lastmod>2025-07-04T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://isa-afp.org/</loc>
-    <lastmod>2025-06-02T00:00:00+00:00</lastmod>
+    <lastmod>2025-07-04T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Computational_pAdics.html</loc>
+    <lastmod>2025-07-04T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Oneway2Hiding.html</loc>
+    <lastmod>2025-06-27T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Kraus_Maps.html</loc>
+    <lastmod>2025-06-26T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Parikh.html</loc>
+    <lastmod>2025-06-26T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Hidden_Number_Problem.html</loc>
+    <lastmod>2025-06-24T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Splitting_Framework.html</loc>
+    <lastmod>2025-06-18T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://isa-afp.org/entries/Chomsky_Schuetzenberger.html</loc>
     <lastmod>2025-06-02T00:00:00+00:00</lastmod>
@@ -15,6 +33,9 @@
     <lastmod>2025-06-02T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://isa-afp.org/entries/Galois_Energy_Games.html</loc>
+    <lastmod>2025-05-23T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://isa-afp.org/entries/Sigmoid_Universal_Approximation.html</loc>
     <lastmod>2025-05-23T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://isa-afp.org/entries/Munta_Model_Checker.html</loc>
@@ -3247,6 +3268,8 @@
   </url><url>
     <loc>https://isa-afp.org/sessions/componentdependencies/</loc>
   </url><url>
+    <loc>https://isa-afp.org/sessions/computational_padics/</loc>
+  </url><url>
     <loc>https://isa-afp.org/topics/computer-science/</loc>
   </url><url>
     <loc>https://isa-afp.org/topics/computer-science/algorithms/</loc>
@@ -3723,6 +3746,8 @@
   </url><url>
     <loc>https://isa-afp.org/sessions/fixed_length_vector/</loc>
   </url><url>
+    <loc>https://isa-afp.org/authors/krasnopol/</loc>
+  </url><url>
     <loc>https://isa-afp.org/authors/haftmann/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/kammueller/</loc>
@@ -3865,6 +3890,8 @@
   </url><url>
     <loc>https://isa-afp.org/sessions/gewirthpgcproof/</loc>
   </url><url>
+    <loc>https://isa-afp.org/authors/bergeron/</loc>
+  </url><url>
     <loc>https://isa-afp.org/authors/bella/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/gioiosa/</loc>
@@ -3970,6 +3997,8 @@
     <loc>https://isa-afp.org/authors/guiol/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/hidden_markov_models/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/hidden_number_problem/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/kobayashi/</loc>
   </url><url>
@@ -4245,6 +4274,8 @@
   </url><url>
     <loc>https://isa-afp.org/authors/xu/</loc>
   </url><url>
+    <loc>https://isa-afp.org/authors/woodcock/</loc>
+  </url><url>
     <loc>https://isa-afp.org/sessions/jinja/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/jinjadci/</loc>
@@ -4380,6 +4411,8 @@
     <loc>https://isa-afp.org/sessions/koenigsberg_friendship/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/kolmogorov_chentsov/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/kraus_maps/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/kruskal/</loc>
   </url><url>
@@ -4941,6 +4974,8 @@
   </url><url>
     <loc>https://isa-afp.org/authors/kuncar/</loc>
   </url><url>
+    <loc>https://isa-afp.org/sessions/oneway2hiding/</loc>
+  </url><url>
     <loc>https://isa-afp.org/sessions/open_induction/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/opsets/</loc>
@@ -4988,6 +5023,8 @@
     <loc>https://isa-afp.org/sessions/paraconsistency/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/parallel_shear_sort/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/parikh/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/parity_game/</loc>
   </url><url>
@@ -5482,6 +5519,8 @@
   </url><url>
     <loc>https://isa-afp.org/sessions/sigma_commit_crypto/</loc>
   </url><url>
+    <loc>https://isa-afp.org/sessions/sigmoid_universal_approximation/</loc>
+  </url><url>
     <loc>https://isa-afp.org/sessions/signature_groebner/</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/fosters/</loc>
@@ -5545,6 +5584,8 @@
     <loc>https://isa-afp.org/sessions/special_function_bounds/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/splay_tree/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/sessions/splitting_framework/</loc>
   </url><url>
     <loc>https://isa-afp.org/sessions/sqrt_babylonian/</loc>
   </url><url>

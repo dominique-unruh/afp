@@ -4,6 +4,51 @@
     <title>Archive of Formal Proofs</title>
     <link>https://isa-afp.org/</link>
     <description>Formal developments in the AFP</description><item>
+  <title>Computational p-Adics</title>
+  <link>https://isa-afp.org/entries/Computational_pAdics.html</link>
+  <pubDate>Fri, 04 Jul 2025 00:00:00 +0000</pubDate>
+  <description>Computational p-Adics in the AFP</description>
+    <category>Mathematics/Algebra</category>
+</item>
+<item>
+  <title>The Oneway to Hiding Theorem</title>
+  <link>https://isa-afp.org/entries/Oneway2Hiding.html</link>
+  <pubDate>Fri, 27 Jun 2025 00:00:00 +0000</pubDate>
+  <description>The Oneway to Hiding Theorem in the AFP</description>
+    <category>Computer science/Security/Cryptography</category>
+    <category>Mathematics/Physics/Quantum information</category>
+</item>
+<item>
+  <title>Parikh&#39;s Theorem</title>
+  <link>https://isa-afp.org/entries/Parikh.html</link>
+  <pubDate>Thu, 26 Jun 2025 00:00:00 +0000</pubDate>
+  <description>Parikh&#39;s Theorem in the AFP</description>
+    <category>Computer science/Automata and formal languages</category>
+</item>
+<item>
+  <title>Kraus Maps</title>
+  <link>https://isa-afp.org/entries/Kraus_Maps.html</link>
+  <pubDate>Thu, 26 Jun 2025 00:00:00 +0000</pubDate>
+  <description>Kraus Maps in the AFP</description>
+    <category>Mathematics/Physics/Quantum information</category>
+    <category>Mathematics/Analysis</category>
+</item>
+<item>
+  <title>The Hidden Number Problem</title>
+  <link>https://isa-afp.org/entries/Hidden_Number_Problem.html</link>
+  <pubDate>Tue, 24 Jun 2025 00:00:00 +0000</pubDate>
+  <description>The Hidden Number Problem in the AFP</description>
+    <category>Computer science/Security/Cryptography</category>
+    <category>Mathematics/Geometry</category>
+</item>
+<item>
+  <title>A Modular Splitting Framework for Saturation Theorem Proving</title>
+  <link>https://isa-afp.org/entries/Splitting_Framework.html</link>
+  <pubDate>Wed, 18 Jun 2025 00:00:00 +0000</pubDate>
+  <description>A Modular Splitting Framework for Saturation Theorem Proving in the AFP</description>
+    <category>Logic/General logic/Mechanization of proofs</category>
+</item>
+<item>
   <title>Dyck Language</title>
   <link>https://isa-afp.org/entries/Dyck_Language.html</link>
   <pubDate>Mon, 02 Jun 2025 00:00:00 +0000</pubDate>
@@ -16,6 +61,15 @@
   <pubDate>Mon, 02 Jun 2025 00:00:00 +0000</pubDate>
   <description>Chomsky-Schützenberger Representation Theorem in the AFP</description>
     <category>Computer science/Automata and formal languages</category>
+</item>
+<item>
+  <title>The Sigmoid Function and the Universal Approximation Theorem</title>
+  <link>https://isa-afp.org/entries/Sigmoid_Universal_Approximation.html</link>
+  <pubDate>Fri, 23 May 2025 00:00:00 +0000</pubDate>
+  <description>The Sigmoid Function and the Universal Approximation Theorem in the AFP</description>
+    <category>Computer science/Artificial intelligence</category>
+    <category>Computer science/Machine learning</category>
+    <category>Mathematics/Analysis</category>
 </item>
 <item>
   <title>Galois Energy Games</title>
