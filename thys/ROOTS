@@ -62,6 +62,7 @@ Binomial-Heaps
 Binomial-Queues
 BirdKMP
 Birkhoff_Finite_Distributive_Lattices
+Bisimulation_Logic
 Blue_Eyes
 Bondy
 Boolean_Expression_Checkers
@@ -214,6 +215,7 @@ Digit_Expansions
 Dijkstra_Shortest_Path
 Dilworth
 Diophantine_Eqns_Lin_Hom
+Diophantine_Universal_Pairs
 Directed_Sets
 Dirichlet_L
 Dirichlet_Series
@@ -877,6 +879,7 @@ UPF
 UPF_Firewall
 UTP
 Uncertainty_Principle
+Unconstrained_Optimization
 Undirected_Graph_Theory
 Universal_Hash_Families
 Universal_Turing_Machine
