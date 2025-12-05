@@ -3655,6 +3655,7 @@ lemma one_dim_iso_cblinfun_apply[simp]: \<open>one_dim_iso \<psi> *\<^sub>V \<ph
 
 subsection \<open>Loewner order\<close>
 
+(* TODO heterogenous -> heterogeneous (typo), repeatedly *)
 lift_definition heterogenous_cblinfun_id :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
   is \<open>if bounded_clinear (heterogenous_identity :: 'a::complex_normed_vector \<Rightarrow> 'b::complex_normed_vector) then heterogenous_identity else (\<lambda>_. 0)\<close>
   by auto
