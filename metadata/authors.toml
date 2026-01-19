@@ -53,6 +53,24 @@ name = "Klaus Aehlig"
 [aehlig.homepages]
 aehlig_homepage = "http://www.linta.de/~aehlig/"
 
+[ahmed]
+name = "Adnan Mohammed Ahmed"
+
+[ahmed.emails]
+
+[ahmed.emails.ahmed_email]
+user = [
+  "Adnan",
+  "Ahmed",
+]
+host = [
+  "campus",
+  "lmu",
+  "de",
+]
+
+[ahmed.homepages]
+
 [aissat]
 name = "Romain Aissat"
 
@@ -248,12 +266,10 @@ name = "Janis Bailitis"
 
 [bailitis.emails.bailitis_email]
 user = [
-  "Janis",
-  "Bailitis",
+  "jb4021",
 ]
 host = [
-  "maths",
-  "ox",
+  "hw",
   "ac",
   "uk",
 ]
@@ -337,6 +353,13 @@ name = "Damián Barsotti"
 
 [barsotti.homepages]
 barsotti_homepage = "http://www.cs.famaf.unc.edu.ar/~damian/"
+
+[barthel]
+name = "Lisa A. Barthel"
+
+[barthel.emails]
+
+[barthel.homepages]
 
 [bauer]
 name = "Gertrud Bauer"
@@ -1047,17 +1070,6 @@ orcid = "0000-0002-6355-1200"
 
 [brucker.emails]
 
-[brucker.emails.brucker_email]
-user = [
-  "a",
-  "brucker",
-]
-host = [
-  "exeter",
-  "ac",
-  "uk",
-]
-
 [brucker.emails.brucker_email2]
 user = [
   "adbrucker",
@@ -1433,11 +1445,12 @@ name = "Roland Coghetto"
 
 [coghetto.emails.coghetto_email]
 user = [
-  "roland_coghetto",
+  "roland",
+  "coghetto",
 ]
 host = [
-  "hotmail",
-  "com",
+  "cafr-msa2p",
+  "be",
 ]
 
 [coghetto.homepages]
@@ -1474,6 +1487,13 @@ host = [
 ]
 
 [cohen.homepages]
+
+[colvin]
+name = "Robert J. Colvin"
+
+[colvin.emails]
+
+[colvin.homepages]
 
 [connor]
 name = "Liam O'Connor"
@@ -1697,17 +1717,18 @@ host = [
 [derrick.homepages]
 
 [desharnais]
-name = "Martin Desharnais"
+name = "Martin Desharnais-Schäfer"
 
 [desharnais.emails]
 
 [desharnais.emails.desharnais_email]
 user = [
-  "desharnais",
+  "martin",
+  "desharnais-schaefer",
 ]
 host = [
-  "mpi-inf",
-  "mpg",
+  "ifi",
+  "lmu",
   "de",
 ]
 
@@ -2006,6 +2027,23 @@ host = [
 
 [eriksson.homepages]
 
+[escallon]
+name = "Felipe Escallón"
+
+[escallon.emails]
+
+[escallon.emails.escallon_email]
+user = [
+  "felipe",
+  "escallon",
+]
+host = [
+  "tum",
+  "de",
+]
+
+[escallon.homepages]
+
 [esparza]
 name = "Javier Esparza"
 
@@ -2030,6 +2068,22 @@ host = [
 ]
 
 [essmann.homepages]
+
+[faber]
+name = "Arjan Faber"
+
+[faber.emails]
+
+[faber.emails.faber_email]
+user = [
+  "arjan-faber",
+]
+host = [
+  "hotmail",
+  "com",
+]
+
+[faber.homepages]
 
 [fan]
 name = "Zixuan Fan"
@@ -2759,6 +2813,23 @@ host = [
 [guzman.homepages]
 guzman_homepage = "https://sites.google.com/view/lpgamboa/home"
 
+[haberl]
+name = "Alexander Haberl"
+
+[haberl.emails]
+
+[haberl.emails.haberl_email]
+user = [
+  "alexander",
+  "haberl",
+]
+host = [
+  "tum",
+  "de",
+]
+
+[haberl.homepages]
+
 [haftmann]
 name = "Florian Haftmann"
 
@@ -2794,6 +2865,14 @@ host = [
 ]
 
 [hall.homepages]
+
+[hansen]
+name = "René Rydhof Hansen"
+orcid = "0000-0002-5688-6432"
+
+[hansen.emails]
+
+[hansen.homepages]
 
 [haslbeck]
 name = "Max W. Haslbeck"
@@ -2920,6 +2999,13 @@ host = [
 ]
 
 [heimes.homepages]
+
+[heiner]
+name = "Scott Heiner"
+
+[heiner.emails]
+
+[heiner.homepages]
 
 [helke]
 name = "Steffen Helke"
@@ -3078,15 +3164,11 @@ name = "Michikazu Hirata"
 
 [hirata.emails.hirata_email]
 user = [
-  "hirata",
-  "m",
-  "ac",
+  "michi-isa",
 ]
 host = [
-  "m",
-  "titech",
-  "ac",
-  "jp",
+  "mail",
+  "ee",
 ]
 
 [hirata.homepages]
@@ -3212,6 +3294,13 @@ host = [
 ]
 
 [hu.homepages]
+
+[huebner]
+name = "Leonard M. Hübner"
+
+[huebner.emails]
+
+[huebner.homepages]
 
 [huffman]
 name = "Brian Huffman"
@@ -4055,11 +4144,12 @@ name = "Cárolos Laméris"
 
 [lameris.emails.lameris_email]
 user = [
-  "carolos",
+  "c",
+  "l",
   "lameris",
 ]
 host = [
-  "ru",
+  "rug",
   "nl",
 ]
 
@@ -4246,6 +4336,23 @@ host = [
 ]
 
 [lemke.homepages]
+
+[lemket]
+name = "Tassilo Lemke"
+
+[lemket.emails]
+
+[lemket.emails.lemket_email]
+user = [
+  "tassilo",
+  "lemke",
+]
+host = [
+  "tum",
+  "de",
+]
+
+[lemket.homepages]
 
 [leustean]
 name = "Laurentiu Leustean"
@@ -4479,25 +4586,6 @@ name = "Giuliano Losa"
 [losa.emails.losa_email]
 user = [
   "giuliano",
-  "losa",
-]
-host = [
-  "epfl",
-  "ch",
-]
-
-[losa.emails.losa_email1]
-user = [
-  "giuliano",
-]
-host = [
-  "galois",
-  "com",
-]
-
-[losa.emails.losa_email2]
-user = [
-  "giuliano",
 ]
 host = [
   "losa",
@@ -4505,6 +4593,7 @@ host = [
 ]
 
 [losa.homepages]
+losa_homepage = "https://www.losa.fr"
 
 [lutz]
 name = "Bianca Lutz"
@@ -4818,6 +4907,13 @@ name = "Yuri Matiyasevich"
 
 [matiyasevich.homepages]
 
+[mattes]
+name = "Karl P. P. Mattes"
+
+[mattes.emails]
+
+[mattes.homepages]
+
 [maximova]
 name = "Alexandra Maximova"
 
@@ -5113,6 +5209,13 @@ name = "Bernhard Möller"
 [moeller.homepages]
 moeller_homepage = "https://www.informatik.uni-augsburg.de/en/chairs/dbis/pmi/staff/moeller/"
 
+[mollenkopf]
+name = "Lenard Mollenkopf"
+
+[mollenkopf.emails]
+
+[mollenkopf.homepages]
+
 [montanari]
 name = "Luisa Montanari"
 orcid = "0000-0002-5270-0290"
@@ -5396,6 +5499,14 @@ host = [
 ]
 
 [nielsen.homepages]
+
+[nielson]
+name = "Flemming Nielson"
+orcid = "0000-0001-7362-6176"
+
+[nielson.emails]
+
+[nielson.homepages]
 
 [nikiforov]
 name = "Denis Nikiforov"
@@ -6692,15 +6803,16 @@ name = "Anders Schlichtkrull"
 
 [schlichtkrull.emails.schlichtkrull_email]
 user = [
-  "andschl",
+  "andsch",
 ]
 host = [
-  "dtu",
+  "cs",
+  "aau",
   "dk",
 ]
 
 [schlichtkrull.homepages]
-schlichtkrull_homepage = "https://people.compute.dtu.dk/andschl/"
+schlichtkrull_homepage = "https://people.cs.aau.dk/~andsch/"
 
 [schmaltz]
 name = "Julien Schmaltz"
@@ -7490,6 +7602,25 @@ name = "Daniel Stüwe"
 
 [stuewe.homepages]
 
+[su]
+name = "Roger C. Su"
+orcid = "0000-0003-0176-3264"
+
+[su.emails]
+
+[su.emails.su_email]
+user = [
+  "roger",
+  "c",
+  "su",
+]
+host = [
+  "proton",
+  "me",
+]
+
+[su.homepages]
+
 [suarez]
 name = "Fabián Fernando Serran Suárez"
 orcid = "0000-0002-9817-4855"
@@ -8100,15 +8231,6 @@ name = "Dominique Unruh"
 
 [unruh.emails.unruh_email]
 user = [
-  "unruh",
-]
-host = [
-  "ut",
-  "ee",
-]
-
-[unruh.emails.unruh_email1]
-user = [
   "afp",
   "xkjnfh",
 ]
@@ -8119,8 +8241,7 @@ host = [
 ]
 
 [unruh.homepages]
-unruh_homepage = "https://www.ut.ee/~unruh/"
-unruh_homepage1 = "https://qis.rwth-aachen.de/people/unruh/"
+unruh_homepage = "https://qis.rwth-aachen.de/people/unruh/"
 
 [urban]
 name = "Christian Urban"

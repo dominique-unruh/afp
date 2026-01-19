@@ -133,14 +133,14 @@ lemma Restr_rtrancl_gtt_lang_eq_trancl_gtt_lang:
 lemma GTT_trancl_complete:
   "(gtt_lang G)\<^sup>+ \<subseteq> gtt_lang (GTT_trancl G)"
   using GTT_trancl_base subset_trans[OF gtt_comp_lang_complete GTT_trancl_trans]
-  by (metis trancl_id trancl_mono_set trans_O_iff)
+  by (metis trancl_id trancl_mono_subset trans_O_iff)
 
 lemma trancl_gtt_lang_arg_closed:
   assumes "length ss = length ts" "\<forall>i < length ts. (ss ! i, ts ! i) \<in> (gtt_lang \<G>)\<^sup>+"
   shows "(GFun f ss, GFun f ts) \<in> (gtt_lang \<G>)\<^sup>+" (is "?e \<in> _")
 proof -
-  have "all_ctxt_closed UNIV ((gtt_lang \<G>)\<^sup>+)" by (intro all_ctxt_closed_trancl) auto
-  from all_ctxt_closedD[OF this _ assms] show ?thesis
+  have "all_ctxt_closed_gterm UNIV ((gtt_lang \<G>)\<^sup>+)" by (intro all_ctxt_closed_gterm_trancl) auto
+  from all_ctxt_closed_gtermD[OF this _ assms] show ?thesis
     by auto
 qed
 

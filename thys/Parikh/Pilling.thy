@@ -29,8 +29,8 @@ regular language expression with the same Parikh image and of the form depicted 
 expressions" since they decompose into two subexpressions where one of them contains the variable
 \<open>x\<close> and the other one does not:\<close>
 definition bipart_rlexp :: "nat \<Rightarrow> 'a rlexp \<Rightarrow> bool" where
-  "bipart_rlexp x f \<equiv> \<exists>p q. reg_eval p \<and> reg_eval q \<and>
-    f = Union p (Concat q (Var x)) \<and> x \<notin> vars p"
+  "bipart_rlexp x f = (\<exists>p q. reg_eval p \<and> reg_eval q \<and>
+    f = Union p (Concat q (Var x)) \<and> x \<notin> vars p)"
 
 
 text \<open>All bipartite regular language expressions evaluate to regular languages. Additionally,
@@ -573,33 +573,6 @@ proof -
   qed
 qed
 
-(* TODO rm with next release *)
-lemma singleton_set_mset_subset: fixes X Y :: "'a list set"
-  assumes "\<forall>xs \<in> X. set xs \<subseteq> {a}" "mset ` X \<subseteq> mset ` Y"
-  shows "X \<subseteq> Y"
-proof
-  fix xs assume "xs \<in> X"
-  obtain ys where ys: "ys \<in> Y" "mset xs = mset ys"
-    using \<open>xs \<in> X\<close> assms(2) by auto
-  then show "xs \<in> Y" using \<open>xs \<in> X\<close> assms(1) ys
-    by (metis singleton_iff mset_eq_setD replicate_eqI set_empty subset_singletonD size_mset)
-qed
-
-lemma singleton_set_mset_eq: fixes X Y :: "'a list set"
-  assumes "\<forall>xs \<in> X. set xs \<subseteq> {a}" "mset ` X = mset ` Y"
-  shows "X = Y"
-proof -
-  have "\<forall>ys \<in> Y. set ys \<subseteq> {a}"
-    by (metis (mono_tags, lifting) assms image_iff mset_eq_setD)
-  thus ?thesis
-    by (metis antisym assms(1,2) singleton_set_mset_subset subset_refl)
-qed
-
-lemma derives_tms_syms_subset:
-  "P \<turnstile> \<alpha> \<Rightarrow>* \<gamma> \<Longrightarrow> tms_syms \<gamma> \<subseteq> tms_syms \<alpha> \<union> Tms P"
-by(induction rule: derives_induct) (auto simp:tms_syms_def Tms_def)
-(* end rm *)
-
 text \<open>Corollary: Every context-free language over a single letter is regular.\<close>
 
 corollary CFL_1_Tm_regular:
@@ -619,8 +592,8 @@ corollary CFG_1_Tm_regular:
 proof -
   let ?L = "Lang P A"
   have "\<forall>w \<in> ?L. set w \<subseteq> {a}"
-    using derives_tms_syms_subset[of P "[Nt A]" "map Tm _"] assms(2)
-    unfolding Lang_def tms_syms_def by auto
+    using derives_Tms_syms_subset[of P "[Nt A]" "map Tm _"] assms(2)
+    unfolding Lang_def Tms_syms_def by auto
   thus ?thesis
     by (meson CFL_1_Tm_regular CFL_def assms(1))
 qed

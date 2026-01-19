@@ -4,7 +4,7 @@ theory Lift_Root_Step
     Rewriting
     FOR_Certificate
     Context_Extensions
-    Multihole_Context
+    First_Order_Rewriting.Multihole_Context
 begin
 
 text \<open>Closure under all contexts\<close>
@@ -74,11 +74,11 @@ lemma compatible_p [simp]:
   by rule (case_tac C, auto)+
 
 lemma gmctxtcl_funas_sigcl:
-  "all_ctxt_closed \<F> (gmctxtcl_funas \<F> \<R>)"
+  "all_ctxt_closed_gterm \<F> (gmctxtcl_funas \<F> \<R>)"
   by (intro gmctxtex_onp_sig_closed) auto
 
 lemma gctxtex_funas_nroot_sigcl:
-  "all_ctxt_closed \<F> (gmctxtex_funas_nroot \<F> \<R>)"
+  "all_ctxt_closed_gterm \<F> (gmctxtex_funas_nroot \<F> \<R>)"
   by (intro gmctxtex_onp_sig_closed) auto
 
 lemma gmctxtcl_funas_strict_funcl:
@@ -183,7 +183,9 @@ subsection \<open>Equivalence lemmas\<close>
 lemma grrstep_subst_cl_conv:
   "grrstep \<R> = gsubst_cl \<R>"
   unfolding gsubst_cl_def grrstep_def rrstep_def rstep_r_p_s_def
-  by (auto, metis ground_substI ground_term_of_gterm term_of_gterm_inv) blast
+  apply auto
+   apply (metis ground_subst ground_term_of_gterm term_of_gterm_inv)
+  by blast
 
 lemma gnrrstepD_gnrrstep_conv:
   "gnrrstep \<R> = gnrrstepD UNIV (gsubst_cl \<R>)" (is "?Ls = ?Rs")
@@ -232,7 +234,7 @@ proof -
     proof (induct arbitrary: s t)
       case (root_step u v \<sigma>)
       then have "(s, t) \<in> gsubst_cl \<R>" unfolding gsubst_cl_def
-        by auto (metis ground_substI ground_term_of_gterm term_of_gterm_inv)
+        by auto (metis ground_subst ground_term_of_gterm term_of_gterm_inv) 
       then show ?case by auto
     next
       case (par_step_fun ts ss f)
@@ -371,7 +373,7 @@ lemma R_in_gtrancl_rel:
 proof
   fix s t assume ass: "(s, t) \<in> \<R>"
   then have "(s, s) \<in> gmctxtcl_funas \<F> \<R>" "(t, t) \<in> gmctxtcl_funas \<F> \<R>" using assms
-    using all_ctxt_closed_imp_reflx_on_sig[OF gmctxtcl_funas_sigcl, of \<F> \<R>]
+    using all_ctxt_closed_gterm_imp_reflx_on_sig[OF gmctxtcl_funas_sigcl, of \<F> \<R>]
     by auto
   then show "(s, t) \<in> gtrancl_rel \<F> \<R>" using ass
     by (auto simp: gmctxt_cl_gmctxtex_onp_conv relcomp_unfold gtrancl_rel_def)
@@ -391,8 +393,10 @@ lemma gtrancl_rel_cl:
   shows "gmctxtcl_funas \<F> (gtrancl_rel \<F> \<R>) \<subseteq> (gmctxtcl_funas \<F> \<R>)\<^sup>+"
 proof -
  have *:"(s, t) \<in> \<R> \<Longrightarrow> (s, t) \<in> gmctxtcl_funas \<F> \<R>" for s t
-    by (metis bot.extremum funas_gmctxt.simps(2) gmctxtex_closure subsetD)
-  have "gmctxtcl_funas \<F> ((gmctxtcl_funas \<F> \<R>)\<^sup>+) \<subseteq> (gmctxtcl_funas \<F> \<R>)\<^sup>+"
+   by (metis bot.extremum funas_gmctxt.simps(2) gmctxtex_closure subsetD)
+  have "gmctxtcl_funas \<F> \<R> \<subseteq> \<T>\<^sub>G \<F> \<times> \<T>\<^sub>G \<F>"
+    using \<open>\<R> \<subseteq> \<T>\<^sub>G \<F> \<times> \<T>\<^sub>G \<F>\<close> by simp
+  hence "gmctxtcl_funas \<F> ((gmctxtcl_funas \<F> \<R>)\<^sup>+) \<subseteq> (gmctxtcl_funas \<F> \<R>)\<^sup>+"
     unfolding gtrancl_rel_def using relf_on_gmctxtcl_funas[OF assms]
     by (intro gmctxtex_onp_substep_trancl, intro gmctxtex_pred_cmp_subseteq2)
        (auto simp: less_sup_gmctxt_args_funas_gmctxt refl_on_def)
@@ -426,7 +430,7 @@ proof -
     by (intro gmctxtex_onp_substep_tranclE[of _ "\<lambda> C. funas_gmctxt C \<subseteq> \<F>"])
       (auto simp: gtrancl_rel_aux[OF assms(1)] assms(3, 4) intro: funas_gmctxt_poss_gmctxt_subgm_at_funas)
   then show ?thesis using subset_trans[OF fst snd]
-    using trancl_mono_set by fastforce
+    using trancl_mono_subset by fastforce
 qed
 
 lemma gtrancl_rel_subseteq_trancl_gctxtcl_funas:
@@ -635,7 +639,7 @@ lemma relax_pos_lift_root_step:
 
 lemma relax_pos_lift_root_steps:
   "(lift_root_step \<F> W X R)\<^sup>+ \<subseteq> (lift_root_step \<F> PAny X R)\<^sup>+"
-  by (simp add: relax_pos_lift_root_step trancl_mono_set)
+  by (simp add: relax_pos_lift_root_step trancl_mono_subset)
 
 lemma relax_ext_lift_root_step:
   "lift_root_step \<F> W X R \<subseteq> lift_root_step \<F> W EParallel R"
@@ -666,8 +670,8 @@ qed (auto intro: trancl_mono)
 lemma lift_root_step_Parallels_single:
   assumes "R \<subseteq> \<T>\<^sub>G \<F> \<times> \<T>\<^sub>G \<F>"
   shows "(lift_root_step \<F> PAny EParallel R)\<^sup>+ = (lift_root_step \<F> PAny ESingle R)\<^sup>+ \<union> Restr Id (\<T>\<^sub>G \<F>)"
-  using trancl_mono_set[OF lift_root_step_Parallel_seq[OF assms]]
-  using trancl_mono_set[OF lift_root_step_Single_to_Parallel, of \<F> R]
+  using trancl_mono_subset[OF lift_root_step_Parallel_seq[OF assms]]
+  using trancl_mono_subset[OF lift_root_step_Single_to_Parallel, of \<F> R]
   by (auto simp: lift_root_step_Parallel_conv trancl_partial_reflcl)
 
 

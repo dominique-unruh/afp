@@ -32,29 +32,29 @@ text \<open>Now we can define what it means for a valuation \<open>v\<close> to 
 first type, i.e.\ a system without Parikh images. Afterwards we characterize minimal solutions of
 such a system.\<close>
 definition solves_ineq_sys :: "'a eq_sys \<Rightarrow> 'a valuation \<Rightarrow> bool" where
-  "solves_ineq_sys sys v \<equiv> \<forall>i < length sys. eval (sys ! i) v \<subseteq> v i"
+  "solves_ineq_sys sys v = (\<forall>i < length sys. eval (sys ! i) v \<subseteq> v i)"
 
 definition min_sol_ineq_sys :: "'a eq_sys \<Rightarrow> 'a valuation \<Rightarrow> bool" where
-  "min_sol_ineq_sys sys sol \<equiv>
-    solves_ineq_sys sys sol \<and> (\<forall>sol'. solves_ineq_sys sys sol' \<longrightarrow> (\<forall>x. sol x \<subseteq> sol' x))"
+  "min_sol_ineq_sys sys sol =
+    (solves_ineq_sys sys sol \<and> (\<forall>sol'. solves_ineq_sys sys sol' \<longrightarrow> (\<forall>x. sol x \<subseteq> sol' x)))"
 
 
 text \<open>The previous definitions can easily be extended to the second type of systems of equations
 where the Parikh image is applied on both sides of each equation:\<close>
 definition solves_ineq_comm :: "nat \<Rightarrow> 'a rlexp \<Rightarrow> 'a valuation \<Rightarrow> bool" where
-  "solves_ineq_comm x eq v \<equiv> \<Psi> (eval eq v) \<subseteq> \<Psi> (v x)"
+  "solves_ineq_comm x eq v = (\<Psi> (eval eq v) \<subseteq> \<Psi> (v x))"
 
 definition solves_ineq_sys_comm :: "'a eq_sys \<Rightarrow> 'a valuation \<Rightarrow> bool" where
-  "solves_ineq_sys_comm sys v \<equiv> \<forall>i < length sys. solves_ineq_comm i (sys ! i) v"
+  "solves_ineq_sys_comm sys v = (\<forall>i < length sys. solves_ineq_comm i (sys ! i) v)"
 
 definition min_sol_ineq_sys_comm :: "'a eq_sys \<Rightarrow> 'a valuation \<Rightarrow> bool" where
-  "min_sol_ineq_sys_comm sys sol \<equiv>
-    solves_ineq_sys_comm sys sol \<and>
-    (\<forall>sol'. solves_ineq_sys_comm sys sol' \<longrightarrow> (\<forall>x. \<Psi> (sol x) \<subseteq> \<Psi> (sol' x)))"
+  "min_sol_ineq_sys_comm sys sol =
+    (solves_ineq_sys_comm sys sol \<and>
+    (\<forall>sol'. solves_ineq_sys_comm sys sol' \<longrightarrow> (\<forall>x. \<Psi> (sol x) \<subseteq> \<Psi> (sol' x))))"
 
 text \<open>Substitution into each equation of a system:\<close>
 definition subst_sys :: "(nat \<Rightarrow> 'a rlexp) \<Rightarrow> 'a eq_sys \<Rightarrow> 'a eq_sys" where
-  "subst_sys \<equiv> map \<circ> subst"
+  "subst_sys = map \<circ> subst"
 
 lemma subst_sys_subst:
   assumes "i < length sys"
@@ -69,14 +69,14 @@ variables. They are therefore not represented as languages, but as regular langu
 \<open>sol\<close> is a partial solution of the \<open>x\<close>-th equation if and only if it solves the equation
 independently on the values of the other variables:\<close>
 definition partial_sol_ineq :: "nat \<Rightarrow> 'a rlexp \<Rightarrow> 'a rlexp \<Rightarrow> bool" where
-  "partial_sol_ineq x eq sol \<equiv> \<forall>v. v x = eval sol v \<longrightarrow> solves_ineq_comm x eq v"
+  "partial_sol_ineq x eq sol = (\<forall>v. v x = eval sol v \<longrightarrow> solves_ineq_comm x eq v)"
 
 text \<open>We generalize the previous definition to partial solutions of whole systems of equations:
 \<open>sols\<close> maps each variable \<open>i\<close> to a regular language expression representing the partial solution
 of the \<open>i\<close>-th equation. \<open>sols\<close> is then a partial solution of the whole system if it satisfies the
 following predicate:\<close>
 definition solution_ineq_sys :: "'a eq_sys \<Rightarrow> (nat \<Rightarrow> 'a rlexp) \<Rightarrow> bool" where
-  "solution_ineq_sys sys sols \<equiv> \<forall>v. (\<forall>x. v x = eval (sols x) v) \<longrightarrow> solves_ineq_sys_comm sys v"
+  "solution_ineq_sys sys sols = (\<forall>v. (\<forall>x. v x = eval (sols x) v) \<longrightarrow> solves_ineq_sys_comm sys v)"
 
 text \<open>Given the \<open>x\<close>-th equation \<open>eq\<close>, \<open>sol\<close> is a minimal partial solution of this equation if and
 only if
@@ -88,11 +88,11 @@ only if
 \end{enumerate}
 \<close>
 definition partial_min_sol_one_ineq :: "nat \<Rightarrow> 'a rlexp \<Rightarrow> 'a rlexp \<Rightarrow> bool" where
-  "partial_min_sol_one_ineq x eq sol \<equiv>
-    partial_sol_ineq x eq sol \<and>
-    vars sol \<subseteq> vars eq - {x} \<and>
-    (\<forall>sol' v'. solves_ineq_comm x eq v' \<and> v' x = eval sol' v'
-               \<longrightarrow> \<Psi> (eval sol v') \<subseteq> \<Psi> (v' x))"
+  "partial_min_sol_one_ineq x eq sol =
+    (partial_sol_ineq x eq sol \<and>
+     vars sol \<subseteq> vars eq - {x} \<and>
+     (\<forall>sol' v'. solves_ineq_comm x eq v' \<and> v' x = eval sol' v'
+                \<longrightarrow> \<Psi> (eval sol v') \<subseteq> \<Psi> (v' x)))"
 
 text \<open>Given a whole system of equations \<open>sys\<close>, we can generalize the previous definition such that
 \<open>sols\<close> is a minimal solution (possibly dependent on the variables $X_n, X_{n+1}, \dots$) of
@@ -100,13 +100,13 @@ the first \<open>n\<close> equations. Besides the three conditions described abo
 condition: \<open>sols i = Var i\<close> for \<open>i \<ge> n\<close>, i.e.\ \<open>sols\<close> assigns only spurious solutions to the
 equations which are not yet solved:\<close>
 definition partial_min_sol_ineq_sys :: "nat \<Rightarrow> 'a eq_sys \<Rightarrow> (nat \<Rightarrow> 'a rlexp) \<Rightarrow> bool" where
-  "partial_min_sol_ineq_sys n sys sols \<equiv>
-    solution_ineq_sys (take n sys) sols \<and>
-    (\<forall>i \<ge> n. sols i = Var i) \<and>
-    (\<forall>i < n. \<forall>x \<in> vars (sols i). x \<ge> n \<and> x < length sys) \<and>
-    (\<forall>sols' v'. (\<forall>x. v' x = eval (sols' x) v')
+  "partial_min_sol_ineq_sys n sys sols =
+    (solution_ineq_sys (take n sys) sols \<and>
+     (\<forall>i \<ge> n. sols i = Var i) \<and>
+     (\<forall>i < n. \<forall>x \<in> vars (sols i). x \<ge> n \<and> x < length sys) \<and>
+     (\<forall>sols' v'. (\<forall>x. v' x = eval (sols' x) v')
                   \<and> solves_ineq_sys_comm (take n sys) v'
-                  \<longrightarrow> (\<forall>i. \<Psi> (eval (sols i) v') \<subseteq> \<Psi> (v' i)))"
+                  \<longrightarrow> (\<forall>i. \<Psi> (eval (sols i) v') \<subseteq> \<Psi> (v' i))))"
 
 
 text \<open>If the Parikh image of two equations \<open>f\<close> and \<open>g\<close> is identical on all valuations, then their
@@ -138,8 +138,8 @@ First, we describe how to derive the system of equations from a CFG. This requir
 bijection between the variables in the system and the non-terminals occurring in the CFG:\<close>
 
 definition bij_Nt_Var :: "'n set \<Rightarrow> (nat \<Rightarrow> 'n) \<Rightarrow> ('n \<Rightarrow> nat) \<Rightarrow> bool" where
-  "bij_Nt_Var A \<gamma> \<gamma>' \<equiv> bij_betw \<gamma> {..< card A} A \<and> bij_betw \<gamma>' A {..< card A}
-                          \<and> (\<forall>x \<in> {..< card A}. \<gamma>' (\<gamma> x) = x) \<and> (\<forall>y \<in> A. \<gamma> (\<gamma>' y) = y)"
+  "bij_Nt_Var A \<gamma> \<gamma>' = (bij_betw \<gamma> {..< card A} A \<and> bij_betw \<gamma>' A {..< card A}
+                          \<and> (\<forall>x \<in> {..< card A}. \<gamma>' (\<gamma> x) = x) \<and> (\<forall>y \<in> A. \<gamma> (\<gamma>' y) = y))"
 
 lemma exists_bij_Nt_Var:
   assumes "finite A"
@@ -217,7 +217,7 @@ lemma rlexp_concats_vars: "vars (rlexp_concats fs) = \<Union>(vars ` set fs)"
   unfolding rlexp_concats_def by (induction fs) simp_all
 
 (* it even holds equality, but we will not need it *)
-lemma insts'_vars: "vars (rlexp_syms w) \<subseteq> \<gamma>' ` nts_syms w"
+lemma insts'_vars: "vars (rlexp_syms w) \<subseteq> \<gamma>' ` Nts_syms w"
 proof
   fix x
   assume "x \<in> vars (rlexp_syms w)"
@@ -226,9 +226,9 @@ proof
   then obtain f where *: "f \<in> set (map rlexp_sym w) \<and> x \<in> vars f" by blast
   then obtain s where **: "s \<in> set w \<and> rlexp_sym s = f" by auto
   with * rlexp_sym_vars_Tm obtain A where ***: "s = Nt A" by (metis empty_iff sym.exhaust)
-  with ** have ****: "A \<in> nts_syms w" unfolding nts_syms_def by blast
+  with ** have ****: "A \<in> Nts_syms w" unfolding Nts_syms_def by blast
   with rlexp_sym_vars_Nt have "vars (rlexp_sym (Nt A)) = {\<gamma>' A}" by blast
-  with * ** *** **** show "x \<in> \<gamma>' ` nts_syms w" by blast
+  with * ** *** **** show "x \<in> \<gamma>' ` Nts_syms w" by blast
 qed
 
 
@@ -259,7 +259,7 @@ next
 qed
 
 lemma rlexp_syms_insts:
-  assumes "\<forall>A \<in> nts_syms w. v (\<gamma>' A) = L A"
+  assumes "\<forall>A \<in> Nts_syms w. v (\<gamma>' A) = L A"
     shows "eval (rlexp_syms w) v = inst_syms L w"
 proof -
   have "\<forall>i < length w. eval (rlexp_sym (w!i)) v = inst_sym L (w!i)"
@@ -269,7 +269,7 @@ proof -
     then show "eval (rlexp_sym (w ! i)) v = inst_sym L (w ! i)"
       proof (induction "w!i")
       case (Nt A)
-      with assms have "v (\<gamma>' A) = L A" unfolding nts_syms_def by force
+      with assms have "v (\<gamma>' A) = L A" unfolding Nts_syms_def by force
       with rlexp_sym_inst_Nt Nt show ?case by metis
     next
       case (Tm x)
@@ -299,7 +299,7 @@ proof -
     assume "x \<in> vars eq"
     with * obtain f where **: "f \<in> ?Insts \<and> x \<in> vars f" by blast
     then obtain w where ***: "w \<in> Rhss P A \<and> f = rlexp_syms w" by blast
-    with ** insts'_vars have "x \<in> \<gamma>' ` nts_syms w" by auto
+    with ** insts'_vars have "x \<in> \<gamma>' ` Nts_syms w" by auto
     with *** show "x \<in> \<gamma>' ` Nts P" unfolding Nts_def Rhss_def by blast
   qed
   moreover have "\<forall>v L. (\<forall>A \<in> Nts P. v (\<gamma>' A) = L A) \<longrightarrow> eval eq v = subst_lang P L A"
@@ -310,7 +310,7 @@ proof -
     proof
       fix w
       assume "w \<in> Rhss P A"
-      with state_L Nts_nts_syms have "\<forall>A \<in> nts_syms w. v (\<gamma>' A) = L A" by fast
+      with state_L Nts_Nts_syms have "\<forall>A \<in> Nts_syms w. v (\<gamma>' A) = L A" by fast
       from rlexp_syms_insts[OF this] show "eval (rlexp_syms w) v = inst_syms L w" by blast
     qed
     then have "subst_lang P L A = (\<Union>f \<in> ?Insts. eval f v)" unfolding subst_lang_def by auto

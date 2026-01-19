@@ -4,6 +4,52 @@
     <title>Computer science/Automata and formal languages</title>
     <link>https://isa-afp.org/topics/computer-science/automata-and-formal-languages/</link>
     <description>AFP entries in Automata and formal languages</description><item>
+  <title>Dynamic Pushdown Networks</title>
+  <link>https://isa-afp.org/entries/Dynamic_Pushdown_Networks.html</link>
+  <pubDate>Tue, 23 Dec 2025 00:00:00 +0000</pubDate>
+  <description>Dynamic Pushdown Networks in the AFP</description>
+    <category>Computer science</category>
+    <category>Computer science/Concurrency</category>
+    <category>Computer science/Automata and formal languages</category>
+    <category>Computer science/Programming languages/Static analysis</category>
+</item>
+<item>
+  <title>Pre*: The Predecessors of a Regular Language w.r.t. a Context-Free Grammar, with Applications</title>
+  <link>https://isa-afp.org/entries/Pre_Star_CFG.html</link>
+  <pubDate>Tue, 18 Nov 2025 00:00:00 +0000</pubDate>
+  <description>Pre*: The Predecessors of a Regular Language w.r.t. a Context-Free Grammar, with Applications in the AFP</description>
+    <category>Computer science/Automata and formal languages</category>
+</item>
+<item>
+  <title>Pushdown Automata</title>
+  <link>https://isa-afp.org/entries/Pushdown_Automata.html</link>
+  <pubDate>Wed, 15 Oct 2025 00:00:00 +0000</pubDate>
+  <description>Pushdown Automata in the AFP</description>
+    <category>Computer science/Automata and formal languages</category>
+</item>
+<item>
+  <title>Muntac: A Verified Certificate Checker for Timed Automata</title>
+  <link>https://isa-afp.org/entries/Munta_Certificate_Checker.html</link>
+  <pubDate>Sun, 12 Oct 2025 00:00:00 +0000</pubDate>
+  <description>Muntac: A Verified Certificate Checker for Timed Automata in the AFP</description>
+    <category>Computer science/Automata and formal languages</category>
+    <category>Tools</category>
+</item>
+<item>
+  <title>Greibach Normal Form</title>
+  <link>https://isa-afp.org/entries/Greibach_Normal_Form.html</link>
+  <pubDate>Wed, 27 Aug 2025 00:00:00 +0000</pubDate>
+  <description>Greibach Normal Form in the AFP</description>
+    <category>Computer science/Automata and formal languages</category>
+</item>
+<item>
+  <title>Two-Way Deterministic Finite Automata</title>
+  <link>https://isa-afp.org/entries/Two_Way_DFA_HF.html</link>
+  <pubDate>Tue, 29 Jul 2025 00:00:00 +0000</pubDate>
+  <description>Two-Way Deterministic Finite Automata in the AFP</description>
+    <category>Computer science/Automata and formal languages</category>
+</item>
+<item>
   <title>Parikh&#39;s Theorem</title>
   <link>https://isa-afp.org/entries/Parikh.html</link>
   <pubDate>Thu, 26 Jun 2025 00:00:00 +0000</pubDate>

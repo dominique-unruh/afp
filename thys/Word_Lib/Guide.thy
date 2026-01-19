@@ -393,9 +393,11 @@ text \<open>
     \<^item> \<^const>\<open>Generic_set_bit.set_bit\<close> is now a regular derived operation
       without any special treatment.
 
+    \<^item> Removed theory \<^text>\<open>Strict_part_mono\<close>.
+
   \<^descr>[Changes since AFP 2024] ~
 
-    \<^item> Theory \<^text>\<open>Strict_part_mono\<close> is not part of text\<open>Word_Lib_Sumo\<close> any longer.
+    \<^item> Theory \<^text>\<open>Strict_part_mono\<close> is not part of \<^text>\<open>Word_Lib_Sumo\<close> any longer.
 
     \<^item> Session \<^text>\<open>Native_Word\<close>: Fact aliases \<^text>\<open>word_sdiv_def\<close> and \<^text>\<open>word_smod_def\<close>
       are gone, use \<^text>\<open>sdiv_word_def\<close> and \<^text>\<open>smod_word_def\<close> instead.

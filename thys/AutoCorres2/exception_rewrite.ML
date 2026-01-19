@@ -345,7 +345,7 @@ let
   fun wrapper proc =
     fn ctxt => fn x =>
       proc x
-      |> Option.map (fn thm => Raw_Simplifier.mksimps ctxt thm |> hd)
+      |> Option.map (fn thm => Simplifier.mksimps ctxt thm |> hd)
   (* create fresh caches *)
   val always_progress = always_progress ()
   val throws_exception = throws_exception ctxt always_progress callee_thms
@@ -399,7 +399,7 @@ val l1_merge_assignments_simproc =
          | get_upd upd = upd
 
        fun get_loc_var t = case HPInter.dest_local_var_update (get_upd t) of
-               SOME (Const (n,_), _, value, _) => get_loc n value
+               SOME (Const (n,_), _, SOME value, _) => get_loc n value
              | NONE => NONE
 
       val l1 = get_loc_var f
@@ -415,8 +415,8 @@ val l1_merge_assignments_simproc =
             |> Variable.variant_fixes ["stmt"];
           val [thm] = Thm.cterm_of ctxt' (seq $ mod1 $ (seq $ mod2 $ Free (stmt, domain_type sT))) 
                 |> Simplifier.rewrite (put_simpset record_ss ctxt'
-                    addsimps @{thms L1_merge_assignments Fun.comp_def state_simp} 
-                    addsimprocs ([Record.simproc, Record.upd_simproc] @ state_simprocs))
+                    |> Simplifier.add_simps @{thms L1_merge_assignments Fun.comp_def state_simp}
+                    |> fold Simplifier.add_proc ([Record.simproc, Record.upd_simproc] @ state_simprocs))
                 |> single
                 |> Variable.export ctxt' ctxt;
          in SOME thm end
@@ -430,10 +430,10 @@ end
 (* Exception rewrite conversion / simplification. *)
 fun except_rewrite_cache_ctxt ctxt thms =
       put_simpset HOL_basic_ss (Context_Position.set_visible false ctxt)
-          addsimps thms
-          addsimps (Utils.get_rules ctxt @{named_theorems L1except})
-          addsimps (Utils.get_rules ctxt @{named_theorems L1opt})
-          addsimprocs (simprocs ctxt thms@[l1_merge_assignments_simproc, Record.simproc, StateFun.lookup_simproc])
+          |> Simplifier.add_simps thms
+          |> Simplifier.add_simps (Utils.get_rules ctxt @{named_theorems L1except})
+          |> Simplifier.add_simps (Utils.get_rules ctxt @{named_theorems L1opt})
+          |> fold Simplifier.add_proc (simprocs ctxt thms@[l1_merge_assignments_simproc, Record.simproc, StateFun.lookup_simproc])
 
 fun except_rewrite_cache_conv cache_ctxt =
     Simplifier.asm_full_rewrite cache_ctxt then_conv 

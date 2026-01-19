@@ -905,7 +905,7 @@ proof -
         by(rule ennreal_cong, rule lebesgue_integral_eq_integral) (auto simp: integrable_restrict_space integrable_completion intro!: integrable_mult_indicator[where 'b=real,simplified])
       also have "... = ennreal (integral {..<\<mu>} (\<lambda>x. normal_density \<mu> \<sigma> (- x + 2 * \<mu>)))"
       proof -
-        have "integral {\<mu><..} (normal_density \<mu> \<sigma>) = integral {..<\<mu>} (\<lambda>x. \<bar>- 1\<bar> *\<^sub>R normal_density \<mu> \<sigma> (- x + 2 * \<mu>))"
+        have "integral {\<mu><..} (normal_density \<mu> \<sigma>) = integral {..<\<mu>} (\<lambda>x. \<bar>- 1\<bar> * normal_density \<mu> \<sigma> (- x + 2 * \<mu>))"
         proof(rule conjunct2[OF has_absolute_integral_change_of_variables_1'[where g="\<lambda>x. - x + 2 * \<mu>" and S="{..<\<mu>}" and g'="\<lambda>x. - 1" and f="normal_density \<mu> \<sigma>" and b="integral {\<mu><..} (normal_density \<mu> \<sigma>)",THEN iffD2],symmetric])
           fix x :: real
           show "((\<lambda>x. - x + 2 * \<mu>) has_real_derivative - 1) (at x within {..<\<mu>})"
@@ -1343,7 +1343,7 @@ proof -
   have "?P = \<P>(f in a_times_x. f 1 \<ge> 1 \<bar> f 1 \<ge> 0)"
     by(simp add: query_Bayes[OF a_times_x_qbsP] a_times_x'_def)
   also have "... = \<P>(f in a_times_x. f 1 \<ge> 1) / \<P>(f in a_times_x. f 1 \<ge> 0)"
-    by(auto simp add: cond_prob_def) (meson dual_order.trans linordered_nonzero_semiring_class.zero_le_one)
+    unfolding cond_prob_def by (smt (verit, ccfv_SIG) Collect_cong)
   also have "... = 1 / 2"
   proof -
     have [simp]: "{-2<..<2::real} \<inter> Collect ((\<le>) 1) = {1..<2}" "{-2<..<2::real} \<inter> Collect ((\<le>) 0) = {0..<2}"

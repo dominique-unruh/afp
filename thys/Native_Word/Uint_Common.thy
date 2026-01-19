@@ -60,6 +60,10 @@ lemma eq_iff_word_of:
   \<open>p = q \<longleftrightarrow> word_of p = word_of q\<close>
   by (auto intro: word_of_eqI)
 
+lemma inj_word_of:
+  \<open>inj word_of\<close>
+  by rule (rule word_of_eqI)
+
 end
 
 bundle constraintless
@@ -70,7 +74,7 @@ declaration \<open>
     val cs = map (rpair NONE o fst o dest_Const)
       [\<^term>\<open>0\<close>, \<^term>\<open>(+)\<close>, \<^term>\<open>uminus\<close>, \<^term>\<open>(-)\<close>,
        \<^term>\<open>1\<close>, \<^term>\<open>(*)\<close>, \<^term>\<open>(div)\<close>, \<^term>\<open>(mod)\<close>,
-       \<^term>\<open>HOL.equal\<close>, \<^term>\<open>(\<le>)\<close>, \<^term>\<open>(<)\<close>,
+       \<^term>\<open>HOL.equal\<close>, \<^term>\<open>(\<le>)\<close>, \<^term>\<open>(<)\<close>, \<^term>\<open>bot\<close>, \<^term>\<open>top\<close>,
        \<^term>\<open>(dvd)\<close>, \<^term>\<open>of_bool\<close>, \<^term>\<open>numeral\<close>, \<^term>\<open>of_nat\<close>,
        \<^term>\<open>bit\<close>,
        \<^term>\<open>Bit_Operations.not\<close>, \<^term>\<open>Bit_Operations.and\<close>, \<^term>\<open>Bit_Operations.or\<close>, \<^term>\<open>Bit_Operations.xor\<close>, \<^term>\<open>mask\<close>,
@@ -98,10 +102,17 @@ locale word_type_copy_ring = word_type_copy
     and equal_iff_word_of [code]: \<open>HOL.equal p q \<longleftrightarrow> HOL.equal (word_of p) (word_of q)\<close>
     and less_eq_iff_word_of [code]: \<open>p \<le> q \<longleftrightarrow> word_of p \<le> word_of q\<close>
     and less_iff_word_of [code]: \<open>p < q \<longleftrightarrow> word_of p < word_of q\<close>
+    and word_of_bot [code]: \<open>word_of bot = bot\<close>
+    and word_of_top [code]: \<open>word_of top = top\<close>
 begin
 
 lemma of_class_comm_ring_1:
   \<open>OFCLASS('a, comm_ring_1_class)\<close>
+  by standard (simp_all add: eq_iff_word_of word_of_0 word_of_1
+    word_of_add word_of_minus word_of_diff word_of_mult algebra_simps)
+
+lemma of_class_comm_semiring_1_cancel:
+  \<open>OFCLASS('a, comm_semiring_1_cancel_class)\<close>
   by standard (simp_all add: eq_iff_word_of word_of_0 word_of_1
     word_of_add word_of_minus word_of_diff word_of_mult algebra_simps)
 
@@ -119,21 +130,51 @@ lemma of_class_linorder:
   \<open>OFCLASS('a, linorder_class)\<close>
   by standard (auto simp add: eq_iff_word_of less_eq_iff_word_of less_iff_word_of)
 
+lemma of_class_order_bot:
+  \<open>OFCLASS('a, order_bot_class)\<close>
+  by standard (auto simp add: eq_iff_word_of less_eq_iff_word_of less_iff_word_of word_of_bot)
+
+lemma of_class_order_top:
+  \<open>OFCLASS('a, order_top_class)\<close>
+  by standard (auto simp add: eq_iff_word_of less_eq_iff_word_of less_iff_word_of word_of_top)
+
+lemma of_class_interval:
+  \<open>OFCLASS('a, interval_class)\<close>
+proof -
+  have inj: \<open>inj_on word_of A\<close> for A
+    using inj_word_of by (rule inj_on_subset [of _ UNIV]) simp
+  show \<open>OFCLASS('a, interval_class)\<close>
+  using of_class_linorder of_class_comm_semiring_1_cancel
+  apply (rule interval_class.intro)
+  apply standard
+      apply (auto simp add: eq_iff_word_of less_eq_iff_word_of less_iff_word_of word_of_add word_of_diff word_of_1
+    less_eq_dec_self_iff_eq inc_less_eq_self_iff_eq dec_less_imp_less_eq simp flip: finite_image_iff [OF inj])
+  done
+qed
+
+lemma of_class_interval_bot:
+  \<open>OFCLASS('a, interval_bot_class)\<close>
+  using of_class_interval of_class_order_bot by (rule interval_bot_class.intro)
+
+lemma of_class_interval_top:
+  \<open>OFCLASS('a, interval_top_class)\<close>
+  using of_class_interval of_class_order_top by (rule interval_top_class.intro)
+
 end
 
 locale word_type_copy_bits = word_type_copy_ring
   opening constraintless and bit_operations_syntax +
   constrains word_of :: \<open>'a::{comm_ring_1, semiring_modulo, equal, linorder} \<Rightarrow> 'b::len word\<close>
   fixes signed_drop_bit :: \<open>nat \<Rightarrow> 'a \<Rightarrow> 'a\<close>
-  assumes bit_eq_word_of [code]: \<open>bit p = bit (word_of p)\<close>
+  assumes bit_eq_word_of: \<open>bit p = bit (word_of p)\<close>
     and word_of_not [code]: \<open>word_of (NOT p) = NOT (word_of p)\<close>
     and word_of_and [code]: \<open>word_of (p AND q) = word_of p AND word_of q\<close>
     and word_of_or [code]: \<open>word_of (p OR q) = word_of p OR word_of q\<close>
     and word_of_xor [code]: \<open>word_of (p XOR q) = word_of p XOR word_of q\<close>
     and word_of_mask [code]: \<open>word_of (mask n) = mask n\<close>
-    and word_of_push_bit [code]: \<open>word_of (push_bit n p) = push_bit n (word_of p)\<close>
-    and word_of_drop_bit [code]: \<open>word_of (drop_bit n p) = drop_bit n (word_of p)\<close>
-    and word_of_signed_drop_bit [code]: \<open>word_of (signed_drop_bit n p) = Word.signed_drop_bit n (word_of p)\<close>
+    and word_of_push_bit: \<open>word_of (push_bit n p) = push_bit n (word_of p)\<close>
+    and word_of_drop_bit: \<open>word_of (drop_bit n p) = drop_bit n (word_of p)\<close>
+    and word_of_signed_drop_bit: \<open>word_of (signed_drop_bit n p) = Word.signed_drop_bit n (word_of p)\<close>
     and word_of_take_bit [code]: \<open>word_of (take_bit n p) = take_bit n (word_of p)\<close>
     and word_of_set_bit [code]: \<open>word_of (Bit_Operations.set_bit n p) = Bit_Operations.set_bit n (word_of p)\<close>
     and word_of_unset_bit [code]: \<open>word_of (unset_bit n p) = unset_bit n (word_of p)\<close>
@@ -257,8 +298,8 @@ lemma [code]:
   by (simp add: eq_iff_word_of word_of_take_bit word_of_and word_of_mask take_bit_eq_mask)
 
 lemma [code]:
-  \<open>mask (Suc n) = push_bit n (1 :: 'a) OR mask n\<close>
   \<open>mask 0 = (0 :: 'a)\<close>
+  \<open>mask (Suc n) = push_bit n (1 :: 'a) OR mask n\<close>
   by (simp_all add: eq_iff_word_of word_of_mask word_of_or word_of_push_bit word_of_0 word_of_1 mask_Suc_exp)
 
 lemma [code]:
@@ -317,7 +358,7 @@ locale word_type_copy_misc = word_type_copy_more
   constrains word_of :: \<open>'a::{ring_bit_operations, equal, linorder} \<Rightarrow> 'b::len word\<close>
   fixes size :: nat and set_bits_aux :: \<open>(nat \<Rightarrow> bool) \<Rightarrow> nat \<Rightarrow> 'a \<Rightarrow> 'a\<close>
     assumes size_eq_length: \<open>size = LENGTH('b::len)\<close>
-    and msb_iff_word_of [code]: \<open>msb p \<longleftrightarrow> msb (word_of p)\<close>
+    and msb_iff_word_of: \<open>msb p \<longleftrightarrow> msb (word_of p)\<close>
     and size_eq_word_of: \<open>Nat.size (p :: 'a) = Nat.size (word_of p)\<close>
     and word_of_set_bits: \<open>word_of (set_bits P) = set_bits P\<close>
     and word_of_set_bits_aux: \<open>word_of (set_bits_aux P n p) = Bit_Comprehension.set_bits_aux P n (word_of p)\<close>

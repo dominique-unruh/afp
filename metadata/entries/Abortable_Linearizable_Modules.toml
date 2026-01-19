@@ -28,11 +28,12 @@ homepage = "kuncak_homepage"
 
 [authors.losa]
 email = "losa_email"
+homepage = "losa_homepage"
 
 [contributors]
 
 [notify]
-losa = "losa_email2"
+losa = "losa_email"
 nipkow = "nipkow_email"
 
 [history]

@@ -534,7 +534,7 @@ proof-
       unfolding inj_def
       using a3 by auto
     hence "finite S'"
-      using S_S' finite_imageD g3 subset_inj_on by blast
+      using S_S' finite_imageD g3 inj_on_subset by blast
     have "t \<in> (*\<^sub>C) (inverse c) ` S"
       if "t \<in> S'" for t
     proof-
@@ -573,7 +573,7 @@ proof-
     also have "\<dots> = (\<Sum>x\<in>S'. v x *\<^sub>C (c *\<^sub>C x))"
       unfolding v_def
       using t Groups_Big.comm_monoid_add_class.sum.reindex[where h = "((*\<^sub>C) c)" and A = S'
-          and g = "\<lambda>x. u x *\<^sub>C x"] subset_inj_on by auto
+          and g = "\<lambda>x. u x *\<^sub>C x"] inj_on_subset by auto
     also have "\<dots> = c *\<^sub>C (\<Sum>x\<in>S'. v x *\<^sub>C x)"
       by (metis (mono_tags, lifting) complex_vector.scale_left_commute scaleC_right.sum sum.cong)
     finally have "0 = c *\<^sub>C (\<Sum>x\<in>S'. v x *\<^sub>C x)".
@@ -946,7 +946,7 @@ lemma (in bounded_sesquilinear) bounded_antilinear_left: "bounded_antilinear (\<
 lemma (in bounded_sesquilinear) bounded_clinear_right: "bounded_clinear (\<lambda>b. prod a b)"
   apply standard
     apply (auto simp add: scaleC_right add_right)
-  by (metis ab_semigroup_mult_class.mult_ac(1) ordered_field_class.sign_simps(34) real.pos_bounded)
+  by (metis bounded mult.assoc mult.left_commute)
 
 lemma (in bounded_sesquilinear) comp1:
   assumes \<open>bounded_clinear g\<close>

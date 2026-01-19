@@ -29,7 +29,7 @@ val dest_SIMPS_TO_UNIF = \<^Const_fn>\<open>SIMPS_TO_UNIF _ for lhs rhs => \<ope
 val cdest_SIMPS_TO_UNIF = Thm.dest_comb #>> Thm.dest_arg
 
 fun mk_SIMPS_TO_UNIF_cprop (clhs, crhs) = \<^instantiate>\<open>'a = \<open>Thm.ctyp_of_cterm clhs\<close>
-  and clhs and crhs in cprop\<open>PROP (SIMPS_TO_UNIF clhs crhs)\<close> for clhs :: 'a\<close>
+  and clhs and crhs in cprop\<open>clhs \<equiv>\<^sup>?> crhs\<close> for clhs :: 'a\<close>
 
 fun SIMPS_TO_UNIF_tac simp_tac eq_tac maxidx ctxt =
   let open Tactic_Util
@@ -40,7 +40,7 @@ fun SIMPS_TO_UNIF_tac simp_tac eq_tac maxidx ctxt =
         val env = Envir.empty (Thm.maxidx_of state)
       in
         Unify.hounifiers (map fst binders) (Context.Proof ctxt, env, [(rhs, lhs)])
-        |> Seq.filter (fn (env, _) => Envir.above env maxidx) (*only keep the matchers*)
+        |> Seq.filter (fn (env, _) => Envir.above env maxidx) (*only keep matchers (note: incomplete)*)
         |> Seq.map (fn (env, _) => #inst_thm Higher_Order_Unification.norms ctxt env state)
       end
     val simp_inst_tac = simp_tac THEN' Tactic_Util.SUBGOAL_STRIPPED (apsnd snd) (K o inst_tac)

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Zippy - Generic White-Box Proof Search with Zippers - Archive of Formal Proofs</title>
+    <meta name="description" content="Zippy - Generic White-Box Proof Search with Zippers in the Archive of Formal Proofs">
+    <meta property="og:description" content="Zippy - Generic White-Box Proof Search with Zippers in the Archive of Formal Proofs">
+    <meta property="og:title" content="Zippy - Generic White-Box Proof Search with Zippers">
+    <meta property="og:url" content="https://isa-afp.org/entries/Zippy.html">
+    <meta property="og:image" content="https://isa-afp.org/images/afp.png">
+    <meta property="og:type" content="article">
+  <link rel="stylesheet" type="text/css" href="../css/front.min.css">
+  <link rel="icon" href="../images/favicon.ico" type="image/icon">
+    
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [["$", "$"], ["\\(", "\\)"]]
+        },
+        processEscapes: true,
+        svg: {
+          fontCache: "global"
+        }
+      };
+    </script>
+    <script id="MathJax-script" async src="../js/mathjax/es5/tex-mml-chtml.js">
+    </script>
+
+  <script src="../js/util.js"></script>
+  <script src="../js/flexsearch.bundle.js"></script>
+  <script src="../js/search-autocomplete.js"></script>
+    <script src="../js/obfuscate.js"></script>
+    <script src="../js/entries.js"></script>
+</head>
+
+  <body class="mathjax_ignore">
+    <aside><div id="menu-toggle">
+  <input id="toggle" type="checkbox">
+  <label for="toggle">
+    <span>menu</span>
+    <img src="../images/menu.svg" alt="Menu">
+  </label>
+  <a href="../" class="logo-link">
+    <img src="../images/afp.png" alt="Logo of the Archive of Formal Proofs" class="logo">
+  </a>
+  <nav id="menu">
+    <div>
+      <a href="../" class="logo-link">
+        <img src="../images/afp.png" alt="Logo of the Archive of Formal Proofs" class="logo">
+      </a>
+      <ul>
+          <li >
+            <a href="../">Home</a>
+          </li>
+          <li >
+            <a href="../topics/">Topics</a>
+          </li>
+          <li >
+            <a href="../download/">Download</a>
+          </li>
+          <li >
+            <a href="../help/">Help</a>
+          </li>
+          <li >
+            <a href="../submission/">Submission</a>
+          </li>
+          <li >
+            <a href="../statistics/">Statistics</a>
+          </li>
+          <li >
+            <a href="../about/">About</a>
+          </li>
+      </ul>
+    </div>
+  </nav>
+</div>
+    </aside>
+
+    <div class="content entries"><header>
+    <form autocomplete="off" action="../search/">
+      <div class="form-container">
+        <input id="search-input" name="s" type="search" size="31" maxlength="255" value=""
+               aria-label="Search the AFP" list="autocomplete"><button id="search-button" type="submit">
+          <img src="../images/search.svg" alt="Search">
+        </button>
+        <datalist id="autocomplete"></datalist>
+      </div>
+    </form>
+  <h1>
+    <span class='first'>Z</span>ippy - <span class='first'>G</span>eneric <span class='first'>W</span>hite-<span class='first'>B</span>ox <span class='first'>P</span>roof <span class='first'>S</span>earch with <span class='first'>Z</span>ippers
+  </h1>
+  <div>
+      <p><a href="../authors/kappelmann/">Kevin Kappelmann</a> <a class="obfuscated" data="eyJ1c2VyIjpbImtldmluIiwia2FwcGVsbWFubiJdLCJob3N0IjpbInR1bSIsImRlIl19">📧</a>
+      </p>
+      <p class="date">November 11, 2025</p>
+  </div>
+</header>
+      <div>
+  <main>
+
+    <h3>Abstract</h3>
+    <div class="abstract mathjax_process">This entry contains <em>Zippy</em>, a framework for tree-based searches.
+Zippy is largely independent of concrete search tree representations, search algorithms, states and effects.
+It is designed to create analysable and navigable searches that are open to customisation and extensions by users.
+An accompanying arXiv preprint is available <a href="https://arxiv.org/abs/2503.20413">here</a>.
+<br><br>
+
+This entry also provides a concrete instantiation of the framework in the form of a general purpose white-box prover,
+called <em>zip</em>.
+The prover performs a proof tree search with customisable expansion actions and search strategies,
+including A${}^{*}$, breadth-first, depth-first, and best-first search.
+By default, it integrates the classical reasoner, simplifier, the blast and metis prover,
+and supports resolution with higher-order and <a href="https://www.isa-afp.org/entries/ML_Unification.html">proof-producing unification</a>, conditional substitutions, case splitting, and induction,
+among other things.
+Users are free to extend the prover with additional expansion actions and search strategies.
+We demonstrate the capabilities of zip in an examples theory.
+<br><br>
+
+In most cases, zip can be used as a drop-in replacement for Isabelle's classical methods, including
+auto, fastforce, force, fast, etc. We demonstrate this with a benchmark containing 2267 method calls
+from Isabelle's standard library, where zip achieves a success rate of 99.82% (2263/2267).
+<br><br>
+
+The Zippy framework is founded on concepts from functional programming theory, particularly zippers, arrows,
+monads, lenses, and coroutines. This entry contains a library of mentioned concepts for Isabelle/ML.</div>
+
+    <h3>License</h3>
+    <div>
+        <a href="https://isa-afp.org/LICENSE">BSD License</a>
+    </div>
+      <h3>Topics</h3>
+      <ul>
+          <li><a href="../topics/tools/">Tools</a></li>
+      </ul>
+      <h3>Related publications</h3>
+      <ul>
+        <li>Kappelmann, K. (2025). <i>Zippy -- Generic White-Box Proof Search with Zippers</i> (Version 1). arXiv. https://doi.org/10.48550/ARXIV.2503.20413</li>
+      </ul>
+      <h3>Session Zippy</h3>
+      <ul>
+          <li><a href="../thys/AFP/Zippy/ML_Args_Antiquotations.html">ML_Args_Antiquotations</a></li>
+          <li><a href="../thys/AFP/Zippy/Gen_ML_Typeclasses_Base.html">Gen_ML_Typeclasses_Base</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Eval_Antiquotation.html">ML_Eval_Antiquotation</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Typeclasses_Base.html">ML_Typeclasses_Base</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Bi_Typeclasses.html">ML_Bi_Typeclasses</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Categories.html">ML_Categories</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Coroutines.html">ML_Coroutines</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_ITypeclasses_Base.html">ML_ITypeclasses_Base</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_ICategories.html">ML_ICategories</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Lenses.html">ML_Lenses</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_State_Base.html">ML_State_Base</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_State.html">ML_State</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Typeclasses.html">ML_Typeclasses</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_ITypeclasses.html">ML_ITypeclasses</a></li>
+          <li><a href="../thys/AFP/Zippy/Extended_Metis_Data.html">Extended_Metis_Data</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_ML_Tactic_Utils.html">Zippy_ML_Tactic_Utils</a></li>
+          <li><a href="../thys/AFP/Zippy/Cases_Tactics.html">Cases_Tactics</a></li>
+          <li><a href="../thys/AFP/Zippy/Cases_Tactics_HOL.html">Cases_Tactics_HOL</a></li>
+          <li><a href="../thys/AFP/Zippy/Extended_Blast_Data.html">Extended_Blast_Data</a></li>
+          <li><a href="../thys/AFP/Zippy/Generic_Term_Index_Data.html">Generic_Term_Index_Data</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Priority_Queues.html">ML_Priority_Queues</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Actions_Base.html">Zippy_Actions_Base</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Base_Setup.html">Zippy_Base_Setup</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_IMap_Antiquotation.html">ML_IMap_Antiquotation</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Gen_Zippers_Base.html">ML_Gen_Zippers_Base</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Gen_Zippers_Setup.html">ML_Gen_Zippers_Setup</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Morphs.html">ML_Morphs</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Structured_Lenses.html">ML_Structured_Lenses</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Zippers.html">ML_Zippers</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Linked_Zippers.html">ML_Linked_Zippers</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Alternating_Zippers.html">ML_Alternating_Zippers</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Zipper_Utils.html">ML_Zipper_Utils</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Alternating_Zipper_Utils.html">ML_Alternating_Zipper_Utils</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Exceptions.html">Zippy_Exceptions</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Loggers.html">Zippy_Loggers</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Shows.html">Zippy_Shows</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_States.html">Zippy_States</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Base.html">Zippy_Base</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Coroutines.html">Zippy_Coroutines</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Enums.html">Zippy_Enums</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Identifiers.html">Zippy_Identifiers</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Actions.html">Zippy_Actions</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Alternating_Zipper_Nodes.html">ML_Alternating_Zipper_Nodes</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Zipper_Directions.html">ML_Zipper_Directions</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Zipper_Positions.html">ML_Zipper_Positions</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Lists.html">ML_Lists</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Zipper_Instances.html">ML_Zipper_Instances</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Alternating_Zipper_Instances.html">ML_Alternating_Zipper_Instances</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Zipper_Position_Utils.html">ML_Zipper_Position_Utils</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Alternating_Zipper_Paths.html">ML_Alternating_Zipper_Paths</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Nodes.html">Zippy_Nodes</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Positions.html">Zippy_Positions</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Actions_Positions.html">Zippy_Actions_Positions</a></li>
+          <li><a href="../thys/AFP/Zippy/ML_Union_Find.html">ML_Union_Find</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Goals_Base.html">Zippy_Goals_Base</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Goals.html">Zippy_Goals</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Lists_Base.html">Zippy_Lists_Base</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Lists_Goals.html">Zippy_Lists_Goals</a></li>
+          <li><a href="../thys/AFP/Zippy/Generic_Table_Data.html">Generic_Table_Data</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Action_Clusters.html">Zippy_Action_Clusters</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Goal_Pos_Updates_Base.html">Zippy_Goal_Pos_Updates_Base</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Goal_Pos_Updates.html">Zippy_Goal_Pos_Updates</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Lists_Goal_Pos_Updates.html">Zippy_Lists_Goal_Pos_Updates</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Collect.html">Zippy_Collect</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Lists_Collect.html">Zippy_Lists_Collect</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Lists_Positions.html">Zippy_Lists_Positions</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Lists_Positions_Collect.html">Zippy_Lists_Positions_Collect</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Action_Applications_Base.html">Zippy_Action_Applications_Base</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Action_Applications.html">Zippy_Action_Applications</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Tactics_Base.html">Zippy_Tactics_Base</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Tactics.html">Zippy_Tactics</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Instance.html">Zippy_Instance</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Instance_Hom_Changed_Goals_Data.html">Zippy_Instance_Hom_Changed_Goals_Data</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Instance_Cases.html">Zippy_Instance_Cases</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Instance_Classical.html">Zippy_Instance_Classical</a></li>
+          <li><a href="../thys/AFP/Zippy/Induction_Tactics.html">Induction_Tactics</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Instance_Induction.html">Zippy_Instance_Induction</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Instance_Subst.html">Zippy_Instance_Subst</a></li>
+          <li><a href="../thys/AFP/Zippy/Context_Parsers.html">Context_Parsers</a></li>
+          <li><a href="../thys/AFP/Zippy/Extended_Simp_Data.html">Extended_Simp_Data</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Instance_Resolve.html">Zippy_Instance_Resolve</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Instance_Resolves_Simp.html">Zippy_Instance_Resolves_Simp</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Runs_Base.html">Zippy_Runs_Base</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Seqs.html">Zippy_Seqs</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Runs.html">Zippy_Runs</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Instance_Pure.html">Zippy_Instance_Pure</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Instance_Simp.html">Zippy_Instance_Simp</a></li>
+          <li><a href="../thys/AFP/Zippy/Zip_Pure.html">Zip_Pure</a></li>
+          <li><a href="../thys/AFP/Zippy/Zip_HOL.html">Zip_HOL</a></li>
+          <li><a href="../thys/AFP/Zippy/Zip_Metis.html">Zip_Metis</a></li>
+          <li><a href="../thys/AFP/Zippy/Zip_Try0.html">Zip_Try0</a></li>
+          <li><a href="../thys/AFP/Zippy/Zip_Examples.html">Zip_Examples</a></li>
+          <li><a href="../thys/AFP/Zippy/Zippy_Paper.html">Zippy_Paper</a></li>
+      </ul>
+      <h3>Session Zip_Benchmarks</h3>
+      <ul>
+          <li><a href="../thys/AFP/Zip_Benchmarks/Zip_Benchmarks_Setup.html">Zip_Benchmarks_Setup</a></li>
+          <li><a href="../thys/AFP/Zip_Benchmarks/Binomial.html">Binomial</a></li>
+          <li><a href="../thys/AFP/Zip_Benchmarks/Deriv.html">Deriv</a></li>
+          <li><a href="../thys/AFP/Zip_Benchmarks/Filter.html">Filter</a></li>
+          <li><a href="../thys/AFP/Zip_Benchmarks/Finite_Set.html">Finite_Set</a></li>
+          <li><a href="../thys/AFP/Zip_Benchmarks/GCD.html">GCD</a></li>
+          <li><a href="../thys/AFP/Zip_Benchmarks/Limits.html">Limits</a></li>
+          <li><a href="../thys/AFP/Zip_Benchmarks/List.html">List</a></li>
+          <li><a href="../thys/AFP/Zip_Benchmarks/Set.html">Set</a></li>
+          <li><a href="../thys/AFP/Zip_Benchmarks/Tree234_Set.html">Tree234_Set</a></li>
+          <li><a href="../thys/AFP/Zip_Benchmarks/Word.html">Word</a></li>
+      </ul>
+
+    <div class="flex-wrap">
+        <div>
+          <h3>Depends on</h3>
+          <ul class="horizontal-list">
+              <li><a href="../entries/ML_Unification.html">Unification Utilities for Isabelle/ML</a></li>
+              <li><a href="../entries/SpecCheck.html">SpecCheck - Specification-Based Testing for Isabelle/ML</a></li>
+          </ul>
+        </div>
+    </div>
+  </main>
+
+  <nav class="links">
+    <a class="popup-button" href="#cite-popup">Cite</a>
+    <a class="popup-button" href="#download-popup">Download</a>
+    <h4>PDFs</h4>
+    <a href="https://www.isa-afp.org/browser_info/current/AFP/Zippy/outline.pdf">Proof outline</a>
+    <a href="https://www.isa-afp.org/browser_info/current/AFP/Zippy/document.pdf">Proof document</a>
+    <a href="https://www.isa-afp.org/browser_info/current/AFP/Zippy/session_graph.pdf">Dependencies</a>
+  </nav>
+
+  <div id="cite-popup" class="overlay">
+    <a class="cancel" href="#"></a>
+    <div class="popup">
+      <h2>Cite</h2>
+      <a class="close" href="#">&times;</a>
+      <div>
+        <p style="display:none;" id="bibtex-filename">Zippy-AFP</p>
+        <pre id="copy-text">@article{Zippy-AFP,
+  author  = {Kevin Kappelmann},
+  title   = {Zippy - Generic White-Box Proof Search with Zippers},
+  journal = {Archive of Formal Proofs},
+  month   = {November},
+  year    = {2025},
+  note    = {\url{https://isa-afp.org/entries/Zippy.html},
+             Formal proof development},
+  ISSN    = {2150-914x},
+}</pre>
+        <button id="copy-bibtex">Copy</button> <a id="download-bibtex">Download</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="download-popup" class="overlay">
+    <a class="cancel" href="#"></a>
+    <div class="popup">
+      <h2>Download</h2>
+      <a class="close" href="#">&times;</a>
+      <a href="https://www.isa-afp.org/release/afp-Zippy-current.tar.gz" download>
+        Download latest</a>
+        <p>Older releases:</p>
+        <ul>
+            <li>
+              <a href="https://www.isa-afp.org/release/afp-Zippy-2025-12-19.tar.gz">
+                Dec 19, 2025
+              </a>
+              : Isabelle2025-1
+            </li>
+        </ul>
+    </div>
+  </div>
+      </div>
+    </div>
+  </body>
+</html>

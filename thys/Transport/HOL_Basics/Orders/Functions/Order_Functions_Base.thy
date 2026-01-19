@@ -26,12 +26,11 @@ begin
 syntax
   "_bi_related" :: "'a \<Rightarrow> 'b \<Rightarrow> 'a \<Rightarrow> bool" (\<open>(_) \<equiv>\<^bsub>(_)\<^esub> (_)\<close> [51,51,51] 50)
 notation bi_related (\<open>'(\<equiv>(\<^bsub>_\<^esub>)')\<close>)
-end
-
 syntax_consts
   "_bi_related" \<rightleftharpoons> bi_related
 translations
   "x \<equiv>\<^bsub>R\<^esub> y" \<rightleftharpoons> "CONST bi_related R x y"
+end
 
 lemma bi_relatedI [intro]:
   assumes "R x y"
@@ -207,7 +206,7 @@ lemma inflationaryI [intro]:
 lemma inflationaryD:
   assumes "inflationary R f"
   shows "R x (f x)"
-  using assms by (urule (d) inflationary_onD where chained = insert) simp
+  using assms by (urule (d) inflationary_onD chained: insert) simp
 
 lemma inflationary_on_if_inflationary:
   fixes P :: "'a \<Rightarrow> bool" and R :: "'a \<Rightarrow> 'b \<Rightarrow> bool" and f :: "'a \<Rightarrow> 'b"
@@ -321,7 +320,7 @@ lemma deflationaryI [intro]:
 lemma deflationaryD:
   assumes "deflationary R f"
   shows "R (f x) x"
-  using assms by (urule (d) deflationary_onD where chained = insert) simp
+  using assms by (urule (d) deflationary_onD chained: insert) simp
 
 lemma deflationary_on_if_deflationary:
   fixes P :: "'a \<Rightarrow> bool" and R :: "'b \<Rightarrow> 'a \<Rightarrow> bool" and f :: "'a \<Rightarrow> 'b"

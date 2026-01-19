@@ -3,9 +3,9 @@ section\<open>Implementation of First Order Rewriting\<close>
 theory Trs_Impl
   imports
     Trs
-    First_Order_Rewriting.Term_Impl
+    First_Order_Terms.Term_Impl
     First_Order_Terms.Matching
-    First_Order_Rewriting.Abstract_Rewriting_Impl
+    "Abstract-Rewriting.Abstract_Rewriting_Impl"
     Option_Util
     "Transitive-Closure.RBT_Map_Set_Extension"
 begin
@@ -25,7 +25,7 @@ definition rrewrite :: "('f, 'v) term \<Rightarrow> ('f, 'v) term list"
     | Some \<sigma> \<Rightarrow> [r \<cdot> \<sigma>]) R"
 
 lemma rrewrite_sound: "t \<in> set (rrewrite s) \<Longrightarrow> (s,t) \<in> rrstep (set R)" 
-  unfolding rrewrite_def List.maps_def using match_matches[of s]
+  unfolding rrewrite_def using match_matches[of s]
   by force
 
 lemma rrewrite_complete: assumes "(s,t) \<in> rrstep (set R)"
@@ -35,7 +35,7 @@ proof -
     by (rule rrstepE)
   from match_complete'[OF s[symmetric]] obtain \<tau> where match: "match s l = Some \<tau>" 
     by auto
-  with lr match have "r \<cdot> \<tau> \<in> set (rrewrite s)" unfolding rrewrite_def List.maps_def by force
+  with lr match have "r \<cdot> \<tau> \<in> set (rrewrite s)" unfolding rrewrite_def by force
   thus ?thesis ..
 qed
 
@@ -50,7 +50,7 @@ proof (standard; clarify)
     and vars: "\<And> x. x \<in> vars_term l \<Longrightarrow> \<sigma> x = \<tau> x" by auto
   have vars': "\<And> x. x \<in> vars_term r \<Longrightarrow> \<sigma> x = \<tau> x" using assms[OF lr] vars by auto
   have t: "t = r \<cdot> \<tau>" unfolding t using vars' by (intro term_subst_eq, auto)
-  with lr match show "t \<in> set (rrewrite s)" unfolding rrewrite_def List.maps_def by force
+  with lr match show "t \<in> set (rrewrite s)" unfolding rrewrite_def by force
 qed (rule rrewrite_sound)
 
 fun rewrite :: "('f, 'v) term \<Rightarrow> ('f, 'v) term list" where
@@ -132,7 +132,7 @@ end
 
 
 lemma rrewrite_mono: "set R \<subseteq> set S \<Longrightarrow> set (rrewrite R s) \<subseteq> set (rrewrite S s)" 
-  unfolding rrewrite_def List.maps_def by auto 
+  unfolding rrewrite_def by auto 
 
 lemma Union_image_mono: "(\<And> x. x \<in> A \<Longrightarrow> f x \<subseteq> g x) \<Longrightarrow> \<Union> (f ` A) \<subseteq> \<Union> (g ` A)"
   by blast
@@ -367,7 +367,7 @@ function iterative_join_search_main ::
   "('f,'v) rules \<Rightarrow> ('f,'v) term \<Rightarrow> ('f,'v) term \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> bool"
   where
     "iterative_join_search_main R s t i n = (if i \<le> n then
-  (((list_inter (reachable_terms R s i) (reachable_terms R t i)) \<noteq> []) \<or> (iterative_join_search_main R s t (Suc i) n)) else False)"
+  (((inter_list_set (reachable_terms R s i) (reachable_terms R t i)) \<noteq> []) \<or> (iterative_join_search_main R s t (Suc i) n)) else False)"
   by pat_completeness auto
 
 termination by (relation "measure ( \<lambda> (R,s,t,i,n). Suc n - i)") auto
@@ -378,7 +378,7 @@ proof (induction rule: iterative_join_search_main.induct)
   case (1 R s t i n)
   from 1(2) have i_n: "i \<le> n" by (simp split: if_splits)
   note IH = 1(1)[OF i_n]
-  let ?I = "list_inter (reachable_terms R s i) (reachable_terms R t i)"
+  let ?I = "inter_list_set (reachable_terms R s i) (reachable_terms R t i)"
   from 1(2) i_n have "?I \<noteq> [] \<or> iterative_join_search_main R s t (Suc i) n" by auto
   then show ?case
   proof
@@ -789,7 +789,7 @@ lemma non_collapsing_impl[simp]: "non_collapsing_impl R = non_collapsing (set R)
 type_synonym ('f, 'v) term_map = "'f \<times> nat \<Rightarrow> ('f, 'v) term list"
 
 definition term_map :: "('f::compare_order, 'v) term list \<Rightarrow> ('f, 'v) term_map" where
-  "term_map ts = fun_of_map (rm.\<alpha> (elem_list_to_rm (the \<circ> root) ts)) []"
+  "term_map ts = fun_of_map (RBT.lookup (elem_list_to_rm (the \<circ> root) ts)) []"
 
 definition
   is_NF_main :: "bool \<Rightarrow> bool \<Rightarrow> ('f::compare_order, 'v) term_map \<Rightarrow> ('f, 'v) term \<Rightarrow> bool"

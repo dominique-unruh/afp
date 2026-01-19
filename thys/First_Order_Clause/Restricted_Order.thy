@@ -29,7 +29,7 @@ abbreviation less_eq where "less_eq \<equiv> (\<prec>)\<^sup>=\<^sup>="
 notation less_eq (infix "\<preceq>" 50)
 
 sublocale order "(\<preceq>)" "(\<prec>)"
-  by(rule order_reflclp_if_transp_and_asymp[OF transp asymp])
+  by (rule order_reflclp_if_transp_and_asymp[OF transp asymp])
 
 end
 
@@ -66,7 +66,7 @@ locale wellfounded_strict_order_restriction =
   restricted_wellfounded_strict_order where restriction = "range lift" and less = "(\<prec>)"
 begin
 
-sublocale wellfounded_strict_order "(\<prec>\<^sub>r)"
+sublocale restriction: wellfounded_strict_order "(\<prec>\<^sub>r)"
 proof unfold_locales
   show "wfp (\<prec>\<^sub>r)"
     using wfp_on_if_convertible_to_wfp_on[OF wfp]
@@ -106,7 +106,7 @@ locale total_strict_order_restriction =
   restricted_total_strict_order where restriction = "range lift" and less = "(\<prec>)"
 begin
 
-sublocale total_strict_order "(\<prec>\<^sub>r)"
+sublocale restriction: total_strict_order "(\<prec>\<^sub>r)"
 proof unfold_locales
   show "totalp (\<prec>\<^sub>r)"
     using totalp inj_lift

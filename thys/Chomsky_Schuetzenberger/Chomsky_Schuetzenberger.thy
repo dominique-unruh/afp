@@ -4,7 +4,7 @@ theory Chomsky_Schuetzenberger
 imports
   Context_Free_Grammar.Parse_Tree
   Context_Free_Grammar.Chomsky_Normal_Form
-  Finite_Automata_Not_HF
+  Finite_Automata_HF.Finite_Automata_HF
   Dyck_Language_Syms
 begin
 
@@ -338,27 +338,21 @@ It will be true iff each \<open>]\<^sup>1\<^sub>p\<close> is directly followed b
 
 text\<open>But first we define a helper function, that only captures the neighbouring condition for two strings:\<close>
 fun P1' :: \<open>('n,'t) bracket3 \<Rightarrow> ('n,'t) bracket3 \<Rightarrow> bool\<close> where
-  \<open>P1' ]\<^sup>1\<^sub>p [\<^sup>2\<^sub>p' = (p = p')\<close> | 
-  \<open>P1' ]\<^sup>1\<^sub>p y  = False\<close> | 
+  \<open>P1' ]\<^sup>1\<^sub>p b' = (b' = [\<^sup>2\<^sub>p)\<close> | 
   \<open>P1' x y = True\<close>
 
 text\<open>A version of @{term \<open>P1'\<close>} for symbols, i.e. strings that may still contain Nt's:\<close>
 fun P1'_sym :: \<open>('n, ('n,'t) bracket3) sym \<Rightarrow> ('n, ('n,'t) bracket3) sym \<Rightarrow> bool\<close> where
-  \<open>P1'_sym (Tm ]\<^sup>1\<^sub>p) (Tm [\<^sup>2\<^sub>p')  = (p = p')\<close> | 
-  \<open>P1'_sym (Tm ]\<^sup>1\<^sub>p) y  = False\<close> | 
+  \<open>P1'_sym (Tm ]\<^sup>1\<^sub>p) s' = (s' = (Tm [\<^sup>2\<^sub>p))\<close> | 
   \<open>P1'_sym x y = True\<close>
-
-lemma P1'D[simp]:
-  \<open>P1' ]\<^sup>1\<^sub>p r \<longleftrightarrow> r = [\<^sup>2\<^sub>p\<close> 
-by(induction \<open>]\<^sup>1\<^sub>p\<close> \<open>r\<close> rule: P1'.induct) auto
 
 text\<open>Asserts that \<open>P1'\<close> holds for every pair in xs, and that xs doesnt end in \<open>]\<^sup>1\<^sub>p\<close>:\<close>
 fun P1 :: "('n, 't) bracket3 list \<Rightarrow> bool" where
-  \<open>P1 xs = ((successively P1' xs) \<and> (if xs \<noteq> [] then (\<nexists>p. last xs = ]\<^sup>1\<^sub>p) else True))\<close>
+  \<open>P1 u = ((successively P1' u) \<and> (u \<noteq> [] \<longrightarrow> (\<nexists>\<pi>. last u = ]\<^sup>1\<^sub>\<pi>)))\<close>
 
 text\<open>Asserts that \<open>P1'\<close> holds for every pair in xs, and that xs doesnt end in \<open>Tm ]\<^sup>1\<^sub>p\<close>:\<close>
 fun P1_sym where
-  \<open>P1_sym xs = ((successively P1'_sym xs) \<and> (if xs \<noteq> [] then (\<nexists>p. last xs = Tm ]\<^sup>1\<^sub>p) else True))\<close>
+  \<open>P1_sym xs = ((successively P1'_sym xs) \<and> (xs \<noteq> [] \<longrightarrow> (\<nexists>p. last xs = Tm ]\<^sup>1\<^sub>p)))\<close>
 
 lemma P1_for_tm_if_P1_sym[dest!]: \<open>P1_sym (map Tm x) \<Longrightarrow> P1 x\<close>
 proof(induction x rule: induct_list012)
@@ -570,64 +564,64 @@ subsection\<open>\<open>Reg\<close> and \<open>Reg_sym\<close>\<close>
 
 text\<open>This is the regular language, where one takes the Start symbol as a parameter, and then has the searched for \<open>R := R\<^sub>A\<close>:\<close>
 definition Reg :: \<open>'n \<Rightarrow> ('n,'t) bracket3 list set\<close> where
-  \<open>Reg A = {x. (P1 x) \<and> 
-    (successively P2 x) \<and> 
-    (successively P3 x) \<and> 
-    (successively P4 x) \<and> 
-    (P5 A x)}\<close>
+  \<open>Reg A = {u. P1 u \<and> 
+    successively P2 u \<and> 
+    successively P3 u \<and> 
+    successively P4 u \<and> 
+    P5 A u}\<close>
 
 lemma RegI[intro]:
-  assumes \<open>(P1 x)\<close> 
-    and \<open>(successively P2 x)\<close> 
-    and \<open>(successively P3 x)\<close> 
-    and \<open>(successively P4 x)\<close> 
-    and \<open>(P5 A x)\<close>
-  shows \<open>x \<in> Reg A\<close>
+  assumes \<open>P1 u\<close> 
+    and \<open>successively P2 u\<close> 
+    and \<open>successively P3 u\<close> 
+    and \<open>successively P4 u\<close> 
+    and \<open>P5 A u\<close>
+  shows \<open>u \<in> Reg A\<close>
   using assms unfolding Reg_def by blast
 
 lemma RegD[dest]:
-  assumes \<open>x \<in> Reg A\<close>
-  shows \<open>(P1 x)\<close> 
-    and \<open>(successively P2 x)\<close> 
-    and \<open>(successively P3 x)\<close> 
-    and \<open>(successively P4 x)\<close> 
-    and \<open>(P5 A x)\<close>
+  assumes \<open>u \<in> Reg A\<close>
+  shows \<open>P1 u\<close> 
+    and \<open>successively P2 u\<close> 
+    and \<open>successively P3 u\<close> 
+    and \<open>successively P4 u\<close> 
+    and \<open>P5 A u\<close>
   using assms unfolding Reg_def by blast+
 
 text\<open>A version of \<open>Reg\<close> for symbols, i.e. strings that may still contain Nt's. 
 It has 2 more Properties \<open>P7\<close> and \<open>P8\<close> that vanish for pure terminal strings:\<close>
 definition Reg_sym :: \<open>'n \<Rightarrow> ('n, ('n,'t) bracket3) syms set\<close> where
-  \<open>Reg_sym A = {x. (P1_sym x) \<and> 
-     (successively P2_sym x) \<and> 
-     (successively P3_sym x) \<and> 
-     (successively P4_sym x) \<and> 
-     (P5_sym A x) \<and> 
-     (successively P7_sym x) \<and> 
-     (successively P8_sym x)}\<close>
+  \<open>Reg_sym A = {u. P1_sym u \<and> 
+     successively P2_sym u \<and> 
+     successively P3_sym u \<and> 
+     successively P4_sym u \<and> 
+     P5_sym A u \<and> 
+     successively P7_sym u \<and> 
+     successively P8_sym u}\<close>
 
 lemma Reg_symI[intro]:
-  assumes \<open>P1_sym x\<close> 
-    and \<open>successively P2_sym x\<close> 
-    and \<open>successively P3_sym x\<close> 
-    and \<open>successively P4_sym x\<close> 
-    and \<open>P5_sym A x\<close> 
-    and \<open>(successively P7_sym x)\<close> 
-    and \<open>(successively P8_sym x)\<close>
-  shows \<open>x \<in> Reg_sym A\<close>
+  assumes \<open>P1_sym u\<close> 
+    and \<open>successively P2_sym u\<close> 
+    and \<open>successively P3_sym u\<close> 
+    and \<open>successively P4_sym u\<close> 
+    and \<open>P5_sym A u\<close> 
+    and \<open>successively P7_sym u\<close> 
+    and \<open>successively P8_sym u\<close>
+  shows \<open>u \<in> Reg_sym A\<close>
   using assms unfolding Reg_sym_def by blast
 
 lemma Reg_symD[dest]:
-  assumes \<open>x \<in> Reg_sym A\<close>
-  shows \<open>P1_sym x\<close> 
-    and \<open>successively P2_sym x\<close> 
-    and \<open>successively P3_sym x\<close> 
-    and \<open>successively P4_sym x\<close> 
-    and \<open>P5_sym A x\<close> 
-    and \<open>(successively P7_sym x)\<close> 
-    and \<open>(successively P8_sym x)\<close>
+  assumes \<open>u \<in> Reg_sym A\<close>
+  shows \<open>P1_sym u\<close> 
+    and \<open>successively P2_sym u\<close> 
+    and \<open>successively P3_sym u\<close> 
+    and \<open>successively P4_sym u\<close> 
+    and \<open>P5_sym A u\<close> 
+    and \<open>successively P7_sym u\<close> 
+    and \<open>successively P8_sym u\<close>
   using assms unfolding Reg_sym_def by blast+
 
-lemma Reg_for_tm_if_Reg_sym[dest]: \<open>(map Tm x) \<in> Reg_sym A \<Longrightarrow> x \<in> Reg A\<close> 
+lemma Reg_for_tm_if_Reg_sym[dest]: \<open>map Tm u \<in> Reg_sym A \<Longrightarrow> u \<in> Reg A\<close> 
 by(rule RegI) auto
 
 
@@ -641,7 +635,7 @@ abbreviation brackets::\<open>('n,'t) bracket3 list set\<close> where
   \<open>brackets \<equiv> {bs. \<forall>(_,p,_) \<in> set bs. p \<in> P}\<close>
 
 text\<open>This is needed for the construction that shows P2,P3,P4 regular.\<close>
-datatype 'a state = start | garbage |  letter 'a
+datatype 'a state = start | garbage | letter 'a
 
 definition allStates :: \<open>('n,'t) bracket3 state set \<close>where
   \<open>allStates = { letter (br,(p,v)) | br p v. p \<in> P } \<union> {start, garbage}\<close>
@@ -699,12 +693,12 @@ theorem succNext_induct[case_names garbage startp startnp letterQ letternQ]:
   shows "R a0 a1"
 by (metis assms prod_cases3 state.exhaust)
 
-abbreviation aut where \<open>aut \<equiv> \<lparr>dfa'.states = allStates,
+abbreviation aut where \<open>aut \<equiv> \<lparr>dfa.states = allStates,
                      init  = start,
                      final = (allStates - {garbage}),
                      nxt   = succNext \<rparr>\<close>
 
-interpretation aut : dfa' aut
+interpretation aut : dfa aut
 proof(unfold_locales, goal_cases)
   case 1
   then show ?case by simp 
@@ -814,11 +808,8 @@ next
   qed
 qed
 
-lemma aut_language_reg: \<open>regular aut.language\<close>
-by (meson aut.regular)
-
 corollary regular_successively_inter_brackets: \<open>regular {xs. successively Q xs \<and>  xs \<in> brackets}\<close> 
-  using aut_language_reg aut_lang_iff_succ_Q by auto
+  using aut.regular_dfa aut_lang_iff_succ_Q by auto
 
 end (* successivelyConstruction *)
 
@@ -884,12 +875,12 @@ theorem nxt1_induct[case_names garbage startp startnp letterQ letternQ]:
   shows "R a0 a1"
 by (metis (full_types) P1_State.exhaust assms prod_induct3)
 
-abbreviation p1_aut  where \<open>p1_aut \<equiv> \<lparr>dfa'.states = {last_ok, last_bad, garbage},
+abbreviation p1_aut  where \<open>p1_aut \<equiv> \<lparr>dfa.states = {last_ok, last_bad, garbage},
                      init  = last_ok,
                      final = {last_ok},
                      nxt   = nxt1\<rparr>\<close>
 
-interpretation p1_aut : dfa' p1_aut
+interpretation p1_aut : dfa p1_aut
 proof(unfold_locales, goal_cases)
   case 1
   then show ?case by simp 
@@ -972,11 +963,8 @@ proof-
   show ?thesis using regular_successively_inter_brackets by blast
 qed
 
-lemma aut_language_reg: \<open>regular p1_aut.language\<close>
-  using p1_aut.regular by blast 
-
 corollary aux_regular: \<open>regular {xs. xs = [] \<or> (xs \<noteq> [] \<and> good (last xs) \<and> xs \<in> brackets)}\<close> 
-  using lang_descr aut_language_reg p1_aut.language_def by simp
+  using lang_descr p1_aut.regular_dfa p1_aut.language_def by simp
 
 corollary regular_P1: \<open>regular {xs. P1 xs \<and> xs \<in> brackets}\<close> 
   unfolding P1_eq using P1'_regular aux_regular using regular_Int by blast
@@ -1015,12 +1003,12 @@ theorem nxt2_induct[case_names garbage startnp start_p_ok start_p_nok first_ok_n
   shows "R a0 a1"
 by (metis (full_types, opaque_lifting) P5_State.exhaust assms surj_pair)
 
-abbreviation p5_aut  where \<open>p5_aut \<equiv> \<lparr>dfa'.states = {start, first_ok, garbage},
+abbreviation p5_aut  where \<open>p5_aut \<equiv> \<lparr>dfa.states = {start, first_ok, garbage},
                      init  = start,
                      final = {first_ok},
                      nxt   = nxt2\<rparr>\<close>
 
-interpretation p5_aut : dfa' p5_aut
+interpretation p5_aut : dfa p5_aut
 proof(unfold_locales, goal_cases)
   case 1
   then show ?case by simp 
@@ -1100,11 +1088,8 @@ qed simp
 lemma in_P5_iff: \<open>P5 A xs \<and> xs \<in> brackets \<longleftrightarrow> (xs \<noteq> [] \<and> ok (hd xs) \<and> xs \<in> brackets)\<close>
   using P5.elims(3) by fastforce 
 
-lemma aut_language_reg: \<open>regular p5_aut.language\<close>
-  using p5_aut.regular by blast 
-
 corollary aux_regular: \<open>regular {xs. xs \<noteq> [] \<and> ok (hd xs) \<and> xs \<in> brackets}\<close> 
-  using lang_descr aut_language_reg p5_aut.language_def by simp
+  using lang_descr p5_aut.regular_dfa p5_aut.language_def by simp
 
 lemma regular_P5:\<open>regular {xs. P5 A xs \<and> xs \<in> brackets}\<close> 
   using in_P5_iff aux_regular by presburger
@@ -1408,8 +1393,8 @@ proof(induction \<open>length (map Tm x)\<close> arbitrary: A x rule: less_induc
   have bal_x: \<open>bal x\<close> 
     using xDL by blast
   then have \<open>\<exists>y r. bal y \<and> bal r \<and> [\<^sup>1\<^bsub>\<pi>\<^esub>  # tl x = [\<^sup>1\<^bsub>\<pi>\<^esub>  # y @ ]\<^sup>1\<^bsub>\<pi>\<^esub> # r\<close> 
-    using hd_x bal_x bal_Open_split[of \<open>[\<^sup>1\<^bsub>\<pi>\<^esub> \<close>, where ?xs = \<open>tl x\<close>] 
-    by (metis (no_types, lifting) List.list.exhaust_sel List.list.inject Product_Type.prod.inject P5.simps(1) p5x)
+    using hd_x bal_x bal_Open_split[of \<open>[\<^sup>1\<^bsub>\<pi>\<^esub> \<close> \<open>tl x\<close>] p5x
+    by(case_tac x) auto
   then obtain y r1 where \<open>[\<^sup>1\<^bsub>\<pi>\<^esub>  # tl x   =   [\<^sup>1\<^bsub>\<pi>\<^esub>  # y @ ]\<^sup>1\<^bsub>\<pi>\<^esub> # r1\<close> and bal_y: \<open>bal y\<close> and bal_r1: \<open>bal r1\<close> 
     by blast
   then have split1: \<open>x = [\<^sup>1\<^bsub>\<pi>\<^esub>  # y @ ]\<^sup>1\<^bsub>\<pi>\<^esub> # r1\<close> 
@@ -1423,9 +1408,10 @@ proof(induction \<open>length (map Tm x)\<close> arbitrary: A x rule: less_induc
       using p1x using P1D_not_empty split1 by blast
   qed
   from p1x have hd_r1: \<open>hd r1 = [\<^sup>2\<^bsub>\<pi>\<^esub>\<close> 
-    using split1 \<open>r1 \<noteq> []\<close> by (metis (no_types, lifting) List.list.discI List.successively.elims(1) P1'D P1.simps successively_Cons successively_append_iff)
+    using split1 \<open>r1 \<noteq> []\<close> by(simp add: successively_Cons successively_append_iff)
   from bal_r1 have \<open>\<exists>z r2. bal z \<and> bal r2 \<and> [\<^sup>2\<^bsub>\<pi>\<^esub> # tl r1 = [\<^sup>2\<^bsub>\<pi>\<^esub> # z @ ]\<^sup>2\<^bsub>\<pi>\<^esub>  # r2\<close> 
-    using bal_Open_split[of \<open>[\<^sup>2\<^bsub>\<pi>\<^esub>\<close> \<open>tl r1\<close>] by (metis List.list.exhaust_sel List.list.sel(1) Product_Type.prod.inject hd_r1 \<open>r1 \<noteq> []\<close>) 
+    using bal_Open_split[of \<open>[\<^sup>2\<^bsub>\<pi>\<^esub>\<close> \<open>tl r1\<close>] hd_r1 \<open>r1 \<noteq> []\<close>
+    by(clarsimp simp add: neq_Nil_conv)
   then obtain z r2 where split2': \<open>[\<^sup>2\<^bsub>\<pi>\<^esub> # tl r1   =   [\<^sup>2\<^bsub>\<pi>\<^esub> # z @ ]\<^sup>2\<^bsub>\<pi>\<^esub>  # r2\<close> and bal_z: \<open>bal z\<close> and bal_r2: \<open>bal r2\<close> 
     by blast+
   then have split2: \<open>x  =   [\<^sup>1\<^bsub>\<pi>\<^esub>  # y @ ]\<^sup>1\<^bsub>\<pi>\<^esub>  # [\<^sup>2\<^bsub>\<pi>\<^esub> # z @ ]\<^sup>2\<^bsub>\<pi>\<^esub>  # r2\<close>
@@ -1862,26 +1848,23 @@ Therefore we cannot just re-enter \<open>locale_P\<close>. Now we make all the a
 
 text\<open>The theorem for any grammar, but only for languages not containing \<open>\<epsilon>\<close>:\<close>
 lemma Chomsky_Schuetzenberger_not_empty:
-  fixes P :: \<open>('n :: infinite, 't) Prods\<close> and S::"'n"
+  fixes P :: \<open>('n :: fresh0, 't) Prods\<close> and S::"'n"
   defines \<open>L \<equiv> Lang P S - {[]}\<close>
   assumes finiteP: \<open>finite P\<close>
   shows \<open>\<exists>(R::('n,'t) bracket3 list set) h \<Gamma>. regular R \<and> L = h ` (R \<inter> Dyck_lang \<Gamma>) \<and> hom_list h\<close>
 proof -
   define h where \<open>h = (the_hom:: ('n,'t) bracket3 list \<Rightarrow> 't list)\<close>
-  obtain ps where ps_def: \<open>set ps = P\<close> 
-    using \<open>finite P\<close> finite_list by auto
   from cnf_exists obtain ps' where
-    \<open>CNF(set ps')\<close> and lang_ps_eq_lang_ps': \<open>Lang (set ps') S = Lang (set ps) S - {[]}\<close> 
-    by blast
-  then have \<open>finite (set ps')\<close>
-    by auto
-  interpret Chomsky_Schuetzenberger_locale \<open>(set ps')\<close> S
+    \<open>CNF ps'\<close> \<open>finite ps'\<close> and lang_ps_eq_lang_ps': \<open>Lang ps' S = Lang P S - {[]}\<close>
+    using finiteP by blast
+
+  interpret Chomsky_Schuetzenberger_locale \<open>ps'\<close> S
     apply unfold_locales
-    using \<open>finite (set ps')\<close> \<open>CNF (set ps')\<close> by auto
-  have \<open>regular (brackets \<inter> Reg S) \<and> Lang (set ps') S = h ` (brackets \<inter> Reg S \<inter> Dyck_lang \<Gamma>) \<and> hom_list h\<close> 
+    using \<open>finite ps'\<close> \<open>CNF ps'\<close> by auto
+  have \<open>regular (brackets \<inter> Reg S) \<and> Lang ps' S = h ` (brackets \<inter> Reg S \<inter> Dyck_lang \<Gamma>) \<and> hom_list h\<close> 
     using Chomsky_Schuetzenberger_CNF L_def h_def by argo
-  moreover have  \<open>Lang (set ps') S = L - {[]}\<close> 
-    unfolding lang_ps_eq_lang_ps' using L_def ps_def by (simp add: assms(1))
+  moreover have  \<open>Lang ps' S = L - {[]}\<close> 
+    unfolding lang_ps_eq_lang_ps' using L_def by (simp add: assms(1))
   ultimately have \<open>regular (brackets \<inter> Reg S) \<and> L - {[]} = h ` (brackets \<inter> Reg S \<inter> Dyck_lang \<Gamma>) \<and> hom_list h\<close> 
     by presburger
   then show ?thesis 
@@ -1890,7 +1873,7 @@ qed
 
 text\<open>The Chomsky-Schützenberger theorem that we really want to prove:\<close>
 theorem Chomsky_Schuetzenberger:
-  fixes P :: \<open>('n :: infinite, 't) Prods\<close> and S :: "'n"
+  fixes P :: \<open>('n :: fresh0, 't) Prods\<close> and S :: "'n"
   defines \<open>L \<equiv> Lang P S\<close>
   assumes finite: \<open>finite P\<close>
   shows \<open>\<exists>(R::('n,'t) bracket3 list set) h \<Gamma>. regular R \<and> L = h ` (R \<inter> Dyck_lang \<Gamma>) \<and> hom_list h\<close>

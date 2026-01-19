@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Formalizing Neural Networks - Archive of Formal Proofs</title>
+    <meta name="description" content="Formalizing Neural Networks in the Archive of Formal Proofs">
+    <meta property="og:description" content="Formalizing Neural Networks in the Archive of Formal Proofs">
+    <meta property="og:title" content="Formalizing Neural Networks">
+    <meta property="og:url" content="https://isa-afp.org/entries/Neural_Networks.html">
+    <meta property="og:image" content="https://isa-afp.org/images/afp.png">
+    <meta property="og:type" content="article">
+  <link rel="stylesheet" type="text/css" href="../css/front.min.css">
+  <link rel="icon" href="../images/favicon.ico" type="image/icon">
+    
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [["$", "$"], ["\\(", "\\)"]]
+        },
+        processEscapes: true,
+        svg: {
+          fontCache: "global"
+        }
+      };
+    </script>
+    <script id="MathJax-script" async src="../js/mathjax/es5/tex-mml-chtml.js">
+    </script>
+
+  <script src="../js/util.js"></script>
+  <script src="../js/flexsearch.bundle.js"></script>
+  <script src="../js/search-autocomplete.js"></script>
+    <script src="../js/obfuscate.js"></script>
+    <script src="../js/entries.js"></script>
+</head>
+
+  <body class="mathjax_ignore">
+    <aside><div id="menu-toggle">
+  <input id="toggle" type="checkbox">
+  <label for="toggle">
+    <span>menu</span>
+    <img src="../images/menu.svg" alt="Menu">
+  </label>
+  <a href="../" class="logo-link">
+    <img src="../images/afp.png" alt="Logo of the Archive of Formal Proofs" class="logo">
+  </a>
+  <nav id="menu">
+    <div>
+      <a href="../" class="logo-link">
+        <img src="../images/afp.png" alt="Logo of the Archive of Formal Proofs" class="logo">
+      </a>
+      <ul>
+          <li >
+            <a href="../">Home</a>
+          </li>
+          <li >
+            <a href="../topics/">Topics</a>
+          </li>
+          <li >
+            <a href="../download/">Download</a>
+          </li>
+          <li >
+            <a href="../help/">Help</a>
+          </li>
+          <li >
+            <a href="../submission/">Submission</a>
+          </li>
+          <li >
+            <a href="../statistics/">Statistics</a>
+          </li>
+          <li >
+            <a href="../about/">About</a>
+          </li>
+      </ul>
+    </div>
+  </nav>
+</div>
+    </aside>
+
+    <div class="content entries"><header>
+    <form autocomplete="off" action="../search/">
+      <div class="form-container">
+        <input id="search-input" name="s" type="search" size="31" maxlength="255" value=""
+               aria-label="Search the AFP" list="autocomplete"><button id="search-button" type="submit">
+          <img src="../images/search.svg" alt="Search">
+        </button>
+        <datalist id="autocomplete"></datalist>
+      </div>
+    </form>
+  <h1>
+    <span class='first'>F</span>ormalizing <span class='first'>N</span>eural <span class='first'>N</span>etworks
+  </h1>
+  <div>
+      <p><a href="../authors/brucker/">Achim D. Brucker</a> <a href="https://www.brucker.ch/">🌐</a> and <a href="../authors/stell/">Amy Stell</a> <a class="obfuscated" data="eyJ1c2VyIjpbImFzMTM0MyJdLCJob3N0IjpbImV4ZXRlciIsImFjIiwidWsiXX0=">📧</a>
+      </p>
+      <p class="date">November 9, 2025</p>
+  </div>
+</header>
+      <div>
+  <main>
+
+    <h3>Abstract</h3>
+    <div class="abstract mathjax_process">Deep learning, i.e., machine learning using neural networks, is used successfully in many application areas. Still, their use in safety-critical or security-critical applications is limited, due to the lack of testing and verification techniques. 
+
+We address this problem by formalizing  an important class of neural networks, feed-forward neural networks, in Isabelle/HOL. We present two different approaches of formalizing feed-forward networks and show their equivalence as well as demonstrate their use in verifying certain safety and correctness properties of various example. Moreover, we do not only provide a formal model that allows to reason over feed-forward neural networks, we also provide a datatype package for Isabelle/HOL that supports importing models from TensorFlow.js.</div>
+
+    <h3>License</h3>
+    <div>
+        <a href="https://isa-afp.org/LICENSE">BSD License</a>
+    </div>
+      <h3>Topics</h3>
+      <ul>
+          <li><a href="../topics/computer-science/artificial-intelligence/">Computer science/Artificial intelligence</a></li>
+          <li><a href="../topics/tools/">Tools</a></li>
+          <li><a href="../topics/computer-science/data-structures/">Computer science/Data structures</a></li>
+      </ul>
+      <h3>Related publications</h3>
+      <ul>
+        <li>Brucker, A. D., & Stell, A. (2023). Verifying Feedforward Neural Networks for Classification in Isabelle/HOL. Formal Methods, 427–444. <a href="https://doi.org/10.1007/978-3-031-27481-7_24">https://doi.org/10.1007/978-3-031-27481-7_24</a>
+</li>
+        <li>Amy Stell. Trustworthy Machine Learning for High-Assurance Systems. PhD Thesis. University of Exeter, UK. 2025.</li>
+      </ul>
+      <h3>Session Neural_Networks</h3>
+      <ul>
+          <li><a href="../thys/AFP/Neural_Networks/TensorFlow_Import.html">TensorFlow_Import</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/NN_Common.html">NN_Common</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/NN_Digraph.html">NN_Digraph</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/NN_Digraph_Layers.html">NN_Digraph_Layers</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/Activation_Functions.html">Activation_Functions</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/Prediction_Utils.html">Prediction_Utils</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/Properties.html">Properties</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/NN_Digraph_Main.html">NN_Digraph_Main</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/NN_Layers.html">NN_Layers</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/NN_Layers_List_Main.html">NN_Layers_List_Main</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/Matrix_Utils.html">Matrix_Utils</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/NN_Lipschitz_Continuous.html">NN_Lipschitz_Continuous</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/Prediction_Utils_Matrix.html">Prediction_Utils_Matrix</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/Properties_Matrix.html">Properties_Matrix</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/NN_Layers_Matrix_Main.html">NN_Layers_Matrix_Main</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/NN_Layers_Main.html">NN_Layers_Main</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/NN_Main.html">NN_Main</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/NN_Manual.html">NN_Manual</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/Compass_Digraph.html">Compass_Digraph</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/Compass_Layers_Matrix.html">Compass_Layers_Matrix</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/Compass_Layers_List.html">Compass_Layers_List</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/Grid_Layers.html">Grid_Layers</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/Grid_Layers_List.html">Grid_Layers_List</a></li>
+          <li><a href="../thys/AFP/Neural_Networks/Grid_Layers_Matrix.html">Grid_Layers_Matrix</a></li>
+      </ul>
+
+    <div class="flex-wrap">
+        <div>
+          <h3>Depends on</h3>
+          <ul class="horizontal-list">
+              <li><a href="../entries/Graph_Theory.html">Graph Theory</a></li>
+              <li><a href="../entries/Interval_Analysis.html">(Extended) Interval Analysis</a></li>
+              <li><a href="../entries/Jordan_Normal_Form.html">Matrices, Jordan Normal Forms, and Spectral Radius Theory</a></li>
+              <li><a href="../entries/Nano_JSON.html">Nano JSON: Working with JSON formatted data in Isabelle/HOL and Isabelle/ML</a></li>
+          </ul>
+        </div>
+    </div>
+  </main>
+
+  <nav class="links">
+    <a class="popup-button" href="#cite-popup">Cite</a>
+    <a class="popup-button" href="#download-popup">Download</a>
+    <h4>PDFs</h4>
+    <a href="https://www.isa-afp.org/browser_info/current/AFP/Neural_Networks/outline.pdf">Proof outline</a>
+    <a href="https://www.isa-afp.org/browser_info/current/AFP/Neural_Networks/document.pdf">Proof document</a>
+    <a href="https://www.isa-afp.org/browser_info/current/AFP/Neural_Networks/session_graph.pdf">Dependencies</a>
+  </nav>
+
+  <div id="cite-popup" class="overlay">
+    <a class="cancel" href="#"></a>
+    <div class="popup">
+      <h2>Cite</h2>
+      <a class="close" href="#">&times;</a>
+      <div>
+        <p style="display:none;" id="bibtex-filename">Neural_Networks-AFP</p>
+        <pre id="copy-text">@article{Neural_Networks-AFP,
+  author  = {Achim D. Brucker and Amy Stell},
+  title   = {Formalizing Neural Networks},
+  journal = {Archive of Formal Proofs},
+  month   = {November},
+  year    = {2025},
+  note    = {\url{https://isa-afp.org/entries/Neural_Networks.html},
+             Formal proof development},
+  ISSN    = {2150-914x},
+}</pre>
+        <button id="copy-bibtex">Copy</button> <a id="download-bibtex">Download</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="download-popup" class="overlay">
+    <a class="cancel" href="#"></a>
+    <div class="popup">
+      <h2>Download</h2>
+      <a class="close" href="#">&times;</a>
+      <a href="https://www.isa-afp.org/release/afp-Neural_Networks-current.tar.gz" download>
+        Download latest</a>
+        <p>Older releases:</p>
+        <ul>
+            <li>
+              <a href="https://www.isa-afp.org/release/afp-Neural_Networks-2025-11-17.tar.gz">
+                Nov 17, 2025
+              </a>
+              : Isabelle2025
+            </li>
+        </ul>
+    </div>
+  </div>
+      </div>
+    </div>
+  </body>
+</html>

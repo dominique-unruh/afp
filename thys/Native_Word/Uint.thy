@@ -7,10 +7,8 @@ chapter \<open>Unsigned words of default size\<close>
 
 theory Uint
   imports
-    "HOL-Library.Code_Target_Bit_Shifts"
     Uint_Common
     Code_Target_Word
-    Code_Int_Integer_Conversion
 begin
 
 text \<open>
@@ -73,7 +71,7 @@ declare uint.of_word_of [code abstype]
 
 declare Quotient_uint [transfer_rule]
 
-instantiation uint :: \<open>{comm_ring_1, semiring_modulo, equal, linorder}\<close>
+instantiation uint :: \<open>{comm_ring_1, semiring_modulo, equal, linorder, order_bot, order_top}\<close>
 begin
 
 lift_definition zero_uint :: uint is 0 .
@@ -87,12 +85,15 @@ lift_definition modulo_uint :: \<open>uint \<Rightarrow> uint \<Rightarrow> uint
 lift_definition equal_uint :: \<open>uint \<Rightarrow> uint \<Rightarrow> bool\<close> is \<open>HOL.equal\<close> .
 lift_definition less_eq_uint :: \<open>uint \<Rightarrow> uint \<Rightarrow> bool\<close> is \<open>(\<le>)\<close> .
 lift_definition less_uint :: \<open>uint \<Rightarrow> uint \<Rightarrow> bool\<close> is \<open>(<)\<close> .
+lift_definition bot_uint :: uint is bot .
+lift_definition top_uint :: uint is top .
 
 global_interpretation uint: word_type_copy_ring Abs_uint Rep_uint
   by standard (fact zero_uint.rep_eq one_uint.rep_eq
     plus_uint.rep_eq uminus_uint.rep_eq minus_uint.rep_eq
     times_uint.rep_eq divide_uint.rep_eq modulo_uint.rep_eq
-    equal_uint.rep_eq less_eq_uint.rep_eq less_uint.rep_eq)+
+    equal_uint.rep_eq less_eq_uint.rep_eq less_uint.rep_eq
+    bot_uint.rep_eq top_uint.rep_eq)+
 
 instance proof -
   show \<open>OFCLASS(uint, comm_ring_1_class)\<close>
@@ -103,9 +104,16 @@ instance proof -
     by (fact uint.of_class_equal)
   show \<open>OFCLASS(uint, linorder_class)\<close>
     by (fact uint.of_class_linorder)
+  show \<open>OFCLASS(uint, order_bot_class)\<close>
+    by (fact uint.of_class_order_bot)
+  show \<open>OFCLASS(uint, order_top_class)\<close>
+    by (fact uint.of_class_order_top)
 qed
 
 end
+
+instance uint :: \<open>{interval_bot, interval_top}\<close>
+  by (fact uint.of_class_interval_bot uint.of_class_interval_top)+
 
 instantiation uint :: ring_bit_operations
 begin
@@ -376,8 +384,8 @@ lemma Uint_code [code]:
 
 lemma Uint_signed_code [code]:
   "Rep_uint (Uint_signed i) = 
-  (if i < wivs_least_integer \<or> i \<ge> wivs_overflow_integer then Rep_uint (undefined Uint i) else word_of_int (int_of_integer_symbolic i))"
-  unfolding Uint_signed_def Uint_def int_of_integer_symbolic_def by(simp add: Abs_uint_inverse)
+  (if i < wivs_least_integer \<or> i \<ge> wivs_overflow_integer then Rep_uint (undefined Uint i) else word_of_int (int_of_integer i))"
+  unfolding Uint_signed_def Uint_def by (simp add: Abs_uint_inverse)
 end
 
 text \<open>
@@ -708,12 +716,9 @@ interpretation quickcheck_narrowing_samples
   "Typerep.Typerep (STR ''Uint.uint'') []" .
 
 definition "narrowing_uint d = qc_narrowing_drawn_from (narrowing_samples d) d"
-declare [[code drop: "partial_term_of :: uint itself \<Rightarrow> _"]]
 lemmas partial_term_of_uint [code] = partial_term_of_code
 
 instance ..
 end
-
-find_consts name: wivs
 
 end

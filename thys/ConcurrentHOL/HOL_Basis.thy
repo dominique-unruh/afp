@@ -392,8 +392,6 @@ declare transp_le[intro!]
 
 (* List *)
 
-declare List.null_def[simp]
-
 lemma split_list_Ex:
   shows "(\<exists>xxs. P xxs) \<longleftrightarrow> (P [] \<or> (\<exists>x xs. P (x # xs)))"
 by (metis neq_Nil_conv)
@@ -731,8 +729,8 @@ qualified definition pfunpow :: "nat \<Rightarrow> ('a \<Rightarrow> 'a option) 
   pfunpow_code_def[code_abbrev]: "pfunpow = compow"
 
 lemma pfunpow_code[code]:
-  shows "pfunpow (Suc n) f = (\<lambda>x. (Option.bind (f x)) (pfunpow n f))"
-    and "pfunpow 0 f = Some"
+  "pfunpow 0 f = Some"
+  "pfunpow (Suc n) f = (\<lambda>x. (Option.bind (f x)) (pfunpow n f))"
 by (simp_all add: pfunpow_code_def fun_eq_iff)
 
 end

@@ -5,11 +5,9 @@
 chapter \<open>Unsigned words of 64 bits\<close>
 
 theory Uint64
-  imports
-    "HOL-Library.Code_Target_Bit_Shifts"
+imports
     Uint_Common
     Code_Target_Word
-    Code_Int_Integer_Conversion
 begin
 
 text \<open>
@@ -36,7 +34,7 @@ declare uint64.of_word_of [code abstype]
 
 declare Quotient_uint64 [transfer_rule]
 
-instantiation uint64 :: \<open>{comm_ring_1, semiring_modulo, equal, linorder}\<close>
+instantiation uint64 :: \<open>{comm_ring_1, semiring_modulo, equal, linorder, order_bot, order_top}\<close>
 begin
 
 lift_definition zero_uint64 :: uint64 is 0 .
@@ -50,12 +48,15 @@ lift_definition modulo_uint64 :: \<open>uint64 \<Rightarrow> uint64 \<Rightarrow
 lift_definition equal_uint64 :: \<open>uint64 \<Rightarrow> uint64 \<Rightarrow> bool\<close> is \<open>HOL.equal\<close> .
 lift_definition less_eq_uint64 :: \<open>uint64 \<Rightarrow> uint64 \<Rightarrow> bool\<close> is \<open>(\<le>)\<close> .
 lift_definition less_uint64 :: \<open>uint64 \<Rightarrow> uint64 \<Rightarrow> bool\<close> is \<open>(<)\<close> .
+lift_definition bot_uint64 :: uint64 is bot .
+lift_definition top_uint64 :: uint64 is top .
 
 global_interpretation uint64: word_type_copy_ring Abs_uint64 Rep_uint64
   by standard (fact zero_uint64.rep_eq one_uint64.rep_eq
     plus_uint64.rep_eq uminus_uint64.rep_eq minus_uint64.rep_eq
     times_uint64.rep_eq divide_uint64.rep_eq modulo_uint64.rep_eq
-    equal_uint64.rep_eq less_eq_uint64.rep_eq less_uint64.rep_eq)+
+    equal_uint64.rep_eq less_eq_uint64.rep_eq less_uint64.rep_eq
+    bot_uint64.rep_eq top_uint64.rep_eq)+
 
 instance proof -
   show \<open>OFCLASS(uint64, comm_ring_1_class)\<close>
@@ -66,9 +67,16 @@ instance proof -
     by (fact uint64.of_class_equal)
   show \<open>OFCLASS(uint64, linorder_class)\<close>
     by (fact uint64.of_class_linorder)
+  show \<open>OFCLASS(uint64, order_bot_class)\<close>
+    by (fact uint64.of_class_order_bot)
+  show \<open>OFCLASS(uint64, order_top_class)\<close>
+    by (fact uint64.of_class_order_top)
 qed
 
 end
+
+instance uint64 :: \<open>{interval_bot, interval_top}\<close>
+  by (fact uint64.of_class_interval_bot uint64.of_class_interval_top)+
 
 instantiation uint64 :: ring_bit_operations
 begin
@@ -451,14 +459,13 @@ lemma Uint64_code [code]:
   including undefined_transfer and integer.lifting unfolding Uint64_signed_def
   apply transfer
   apply (subst word_of_int_via_signed)
-     apply (auto simp add: push_bit_of_1 mask_eq_exp_minus_1 word_of_int_via_signed cong del: if_cong)
+     apply (auto simp add: mask_eq_exp_minus_1 word_of_int_via_signed cong del: if_cong)
   done
 
 lemma Uint64_signed_code [code]:
   "Rep_uint64 (Uint64_signed i) = 
-  (if i < -(0x8000000000000000) \<or> i \<ge> 0x8000000000000000 then Rep_uint64 (undefined Uint64 i) else word_of_int (int_of_integer_symbolic i))"
-unfolding Uint64_signed_def Uint64_def int_of_integer_symbolic_def
-by(simp add: Abs_uint64_inverse)
+  (if i < -(0x8000000000000000) \<or> i \<ge> 0x8000000000000000 then Rep_uint64 (undefined Uint64 i) else word_of_int (int_of_integer i))"
+  unfolding Uint64_signed_def Uint64_def by (simp add: Abs_uint64_inverse)
 
 end
 
@@ -770,7 +777,6 @@ interpretation quickcheck_narrowing_samples
   "Typerep.Typerep (STR ''Uint64.uint64'') []" .
 
 definition "narrowing_uint64 d = qc_narrowing_drawn_from (narrowing_samples d) d"
-declare [[code drop: "partial_term_of :: uint64 itself \<Rightarrow> _"]]
 lemmas partial_term_of_uint64 [code] = partial_term_of_code
 
 instance ..

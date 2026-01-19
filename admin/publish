@@ -29,7 +29,10 @@ FILES=$LN@$FILES
 EXPORT_PRE=afp
 DATE=`date '+%Y-%m-%d'`
 
-TAR=tar
+# Do not include attribute files on MacOS:
+export COPYFILE_DISABLE=1
+# Do not create extended attributes on any platform
+TAR="tar --no-xattrs"
 
 
 ## functions
@@ -172,7 +175,7 @@ if [ "$RESPONSE" == "y" ]; then
     chmod -R a+r web
     find web -type d | xargs chmod a+x
     chmod 755 web
-    rsync -rplvz --links --rsh=ssh web/ $DEST && echo "Finished."
+    rsync -rplvz --links --rsh=ssh web/ $DEST && echo "Published."
 else
     echo
     echo "Aborted."

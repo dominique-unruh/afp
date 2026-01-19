@@ -1555,10 +1555,16 @@ proof(induct r1 arbitrary: r2 \<pi>)
           by meson
         have h1_nv: "state_regex_of_vars h1 num_vars"
           using Cons.prems unfolding trace_regex_of_vars_def state_regex_of_vars_def
-          by (metis Ex_list_of_length append_self_conv2 arbitrary_regtrace_matches_any_trace bot_nat_0.not_eq_extremum le_0_eq less_nat_zero_code list.pred_inject(2) list_all_length list_ex_length list_ex_simps(1) match_regex_def nth_append_length trace_of_vars_def)
+          by (metis Ex_list_of_length append_self_conv2 arbitrary_regtrace_matches_any_trace
+            bot_nat_0.not_eq_extremum le_0_eq less_nat_zero_code list.pred_inject(2)
+            list_all_length list_ex_length list_ex_Cons_iff match_regex_def nth_append_length
+            trace_of_vars_def)
         have h2_nv: "state_regex_of_vars h2 num_vars"
           using Cons.prems unfolding trace_regex_of_vars_def h2t2 state_regex_of_vars_def
-          by (metis Ex_list_of_length append_self_conv2 arbitrary_regtrace_matches_any_trace bot_nat_0.not_eq_extremum le_0_eq less_nat_zero_code list.pred_inject(2) list_all_length list_ex_length list_ex_simps(1) match_regex_def nth_append_length trace_of_vars_def)
+          by (metis Ex_list_of_length append_self_conv2 arbitrary_regtrace_matches_any_trace
+            bot_nat_0.not_eq_extremum le_0_eq less_nat_zero_code list.pred_inject(2)
+            list_all_length list_ex_length list_ex_Cons_iff match_regex_def nth_append_length
+            trace_of_vars_def)
         have match_h: "match_timestep hxi h"
           using match_ht unfolding match_regex_def by auto
         have match_h1: "match_timestep hxi h1"
@@ -1627,7 +1633,7 @@ lemma WEST_and_helper_subset_of_WEST_and:
 proof (induct L1)
   case Nil
   then show ?case
-    by (simp add: member_rec(2))
+    by simp
 next
   case (Cons h1 T1)
   {assume *: "h1 = elem"
@@ -1636,7 +1642,7 @@ next
   } moreover {assume *: "h1 \<noteq> elem"
     then have "List.member T1 elem"
       using Cons
-      by (simp add: member_rec(1))
+      by simp
     then have ?case using Cons WEST_and_subset by blast
   }
   ultimately show ?case by blast
@@ -1650,7 +1656,7 @@ lemma WEST_and_trace_element_of_WEST_and_helper:
 proof (induct L2)
   case Nil
   then show ?case
-    by (simp add: member_rec(2))
+    by simp
 next
   case (Cons h2 T2)
   {assume *: "elem2 = h2"
@@ -1659,7 +1665,7 @@ next
       using assms(2) by fastforce
   } moreover  {assume *: "elem2 \<noteq> h2"
     then have "List.member T2 elem2" using Cons(2)
-      by (simp add: member_rec(1))
+      by simp
     then have ?case using Cons(1, 3) WEST_and_helper_subset
       by blast
 }
@@ -1669,7 +1675,7 @@ qed
 lemma index_of_L_in_L:
   assumes "i < length L"
   shows "List.member L (L ! i)"
-  using assms in_set_member by force
+  using assms by force
 
 lemma WEST_and_indices:
   fixes L1 L2::"WEST_regex"
@@ -3402,7 +3408,7 @@ lemma count_diff_state_commutative:
   next
     case (Cons h1 t1)
     then show ?case
-      by (smt (verit) count_diff_state.elims list.inject null_rec(1) null_rec(2))
+      by (cases e2) simp_all
   qed
 
 lemma count_diff_commutative:
@@ -4109,7 +4115,8 @@ proof-
     by blast
   then show ?thesis
     using assms WEST_simp_helper_length length_newL
-    by (metis add_le_cancel_right enum_pairs_bound gen_length_def le_neq_implies_less length_code less_nat_zero_code less_one linordered_semidom_class.add_diff_inverse nth_mem)
+    by (metis (no_types, opaque_lifting) diff_diff_cancel enum_pairs_bound gr0I linorder_not_le nth_mem
+        order_less_imp_le zero_less_diff zero_neq_one)
 qed
 
 lemma WEST_simp_helper_same_length:
@@ -4309,7 +4316,7 @@ proof-
       then have Li_eq: "L!i = (take j2 L)!i"
         by simp
       then have "L!i \<in> set (take j2  L)"
-        by (metis \<open>i < length (take j2 L)\<close> in_set_member index_of_L_in_L)
+        using \<open>i < length (take j2 L)\<close> in_set_conv_nth by fastforce 
       have "i-(j1+1) < length (drop (j1 + 1) (take j2 L @ drop (j2 + 1) L))"
         using assms i_len in_middle by auto
       then have "L!i = (drop (j1 + 1) (take j2 L)) ! (i-(j1+1))"

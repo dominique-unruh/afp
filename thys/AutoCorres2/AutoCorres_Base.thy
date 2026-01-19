@@ -25,7 +25,7 @@ lemma THIN_I: "PROP P \<Longrightarrow> PROP THIN (PROP P)"
 
 ML_file \<open>utils.ML\<close>
 
-named_theorems corres_admissible and corres_top
+named_theorems corres_admissible and corres_top and corres_le_trans
 named_theorems funp_intros and fun_of_rel_intros
 
 
@@ -38,8 +38,8 @@ definition funp:: "('a \<Rightarrow> 'b \<Rightarrow> bool) \<Rightarrow> bool" 
 lemma funp_witness: "fun_of_rel r f \<Longrightarrow> funp r"
   by (auto simp add: funp_def)
 
-lemma funp_to_single_valuedp: "funp r \<Longrightarrow> single_valuedp r"
-  by (auto simp add: single_valuedp_def funp_def fun_of_rel_def)
+lemma funp_to_right_unique: "funp r \<Longrightarrow> right_unique r"
+  by (rule right_uniqueI) (auto simp add: funp_def fun_of_rel_def)
 
 lemma fun_of_rel_xval[fun_of_rel_intros]:
   "fun_of_rel L f_l \<Longrightarrow> fun_of_rel R f_r \<Longrightarrow> fun_of_rel (rel_xval L R) (map_xval f_l f_r)"
@@ -147,7 +147,7 @@ lemma ccpo_prod_gfp_gfp:
     (rel_prod (\<ge>) (\<ge>)) (mk_less (rel_prod (\<ge>) (\<ge>)))"
   by (rule ccpo_rel_prodI ccpo_Inf)+
 
-lemma runs_to_partial_top[corres_top]: "\<top> \<bullet> s ?\<lbrace> Q \<rbrace>"
+lemma runs_to_partial_top[corres_top, runs_to_vcg]: "\<top> \<bullet> s ?\<lbrace> Q \<rbrace>"
   by (simp add: runs_to_partial_def_old)
 
 lemma refines_top[corres_top]: "refines C \<top> s t R"

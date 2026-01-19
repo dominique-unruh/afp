@@ -54,15 +54,18 @@ qed
 definition mset_uprod :: "'a uprod \<Rightarrow> 'a multiset" where
   "mset_uprod = case_uprod (Abs_commute (\<lambda>x y. {#x, y#}))"
 
-lemma Abs_commute_inverse_mset[simp]:
+lemma Abs_commute_inverse_mset [simp]:
   "apply_commute (Abs_commute (\<lambda>x y. {#x, y#})) = (\<lambda>x y. {#x, y#})"
   by (simp add: Abs_commute_inverse)
 
-lemma set_mset_mset_uprod[simp]: "set_mset (mset_uprod up) = set_uprod up"
+lemma set_mset_mset_uprod [simp]: "set_mset (mset_uprod up) = set_uprod up"
   by (simp add: mset_uprod_def case_uprod.rep_eq set_uprod.rep_eq case_prod_beta)
 
-lemma mset_uprod_Upair[simp]: "mset_uprod (Upair x y) = {#x, y#}"
+lemma mset_uprod_Upair [simp]: "mset_uprod (Upair x y) = {#x, y#}"
   by (simp add: mset_uprod_def)
+
+lemma mset_uprod_not_empty [simp]: "mset_uprod up \<noteq> {#}"
+  by (cases up) simp
 
 lemma map_uprod_inverse: "(\<And>x. f (g x) = x) \<Longrightarrow> (\<And>y. map_uprod f (map_uprod g y) = y)"
   by (simp add: uprod.map_comp uprod.map_ident_strong)
@@ -93,20 +96,34 @@ qed
 lemma mset_uprod_plus_neq: "mset_uprod a \<noteq> mset_uprod b + mset_uprod b"
   by(cases a; cases b)(auto simp: add_mset_eq_add_mset)
 
-lemma set_uprod_not_empty: "set_uprod a \<noteq> {}"
+lemma set_uprod_not_empty [iff]: "set_uprod a \<noteq> {}"
   by(cases a) simp
 
-lemma exists_uprod [intro]: "\<exists>a. x \<in> set_uprod a"
-  by (metis insertI1 set_uprod_simps)
-
-global_interpretation uprod_functor: finite_natural_functor where map = map_uprod and to_set = set_uprod
+global_interpretation uprod_functor: finite_natural_functor where
+  map = map_uprod and to_set = set_uprod
   by
     unfold_locales
-    (auto simp: uprod.map_comp uprod.map_ident uprod.set_map intro: uprod.map_cong)
+    (auto simp:  uprod.map_comp uprod.map_ident uprod.set_map intro: uprod.map_cong)
 
 global_interpretation uprod_functor: natural_functor_conversion where
   map = map_uprod and to_set = set_uprod and map_to = map_uprod and map_from = map_uprod and
   map' = map_uprod and to_set' = set_uprod
   by unfold_locales (auto simp: uprod.set_map uprod.map_comp)
+
+lemma uprod_mem_image_iff_prod_mem [simp]:
+  assumes "sym I"
+  shows "Upair t t' \<in> upair ` I \<longleftrightarrow> (t, t') \<in> I"
+  using assms[THEN symD]
+  by auto
+
+lemma rep_uprod_UpairI: "P (a, b) \<Longrightarrow> P (b, a) \<Longrightarrow> P (rep_uprod (Upair a b))"
+  using Quotient3_uprod  eq_upair_simps 
+  unfolding Upair.abs_eq Quotient3_def
+  by (smt (verit, ccfv_threshold) split_pairs2)
+
+lemma rep_uprod_UpairE: "P (rep_uprod (Upair a b)) \<Longrightarrow> P (a, b) \<or> P (b, a)"
+  using Quotient3_uprod eq_upair_simps 
+  unfolding Upair.abs_eq Quotient3_def
+  by (smt (verit, ccfv_threshold) split_pairs2)  
 
 end

@@ -4,10 +4,24 @@
     <title>Lawrence C. Paulson</title>
     <link>https://isa-afp.org/authors/paulson/</link>
     <description>AFP entries of Lawrence C. Paulson</description><item>
+  <title>Complex Lattices, Elliptic Functions, and the Modular Group</title>
+  <link>https://isa-afp.org/entries/Elliptic_Functions.html</link>
+  <pubDate>Thu, 22 May 2025 00:00:00 +0000</pubDate>
+  <description>Complex Lattices, Elliptic Functions, and the Modular Group in the AFP</description>
+    <category>Mathematics/Number theory</category>
+</item>
+<item>
   <title>Farey Sequences and Ford Circles</title>
   <link>https://isa-afp.org/entries/Farey_Sequences.html</link>
   <pubDate>Thu, 15 May 2025 00:00:00 +0000</pubDate>
   <description>Farey Sequences and Ford Circles in the AFP</description>
+    <category>Mathematics/Number theory</category>
+</item>
+<item>
+  <title>Dedekind Sums</title>
+  <link>https://isa-afp.org/entries/Dedekind_Sums.html</link>
+  <pubDate>Wed, 23 Apr 2025 00:00:00 +0000</pubDate>
+  <description>Dedekind Sums in the AFP</description>
     <category>Mathematics/Number theory</category>
 </item>
 <item>
@@ -61,7 +75,7 @@
     <category>Mathematics/Topology</category>
 </item>
 <item>
-  <title>Khovanskii&#x27;s Theorem</title>
+  <title>Khovanskii&amp;#x27;s Theorem</title>
   <link>https://isa-afp.org/entries/Khovanskii_Theorem.html</link>
   <pubDate>Fri, 02 Sep 2022 00:00:00 +0000</pubDate>
   <description>Khovanskii&amp;#x27;s Theorem in the AFP</description>

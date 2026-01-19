@@ -9,7 +9,7 @@ begin
 type_synonym 'a lang = "'a list set"
 
 definition conc :: "'a lang \<Rightarrow> 'a lang \<Rightarrow> 'a lang" (infixr \<open>@@\<close> 75) where
-"A @@ B = {xs@ys | xs ys. xs:A & ys:B}"
+"A @@ B = {xs @ ys | xs ys. xs \<in> A \<and> ys \<in> B}"
 
 text \<open>checks the code preprocessor for set comprehensions\<close>
 export_code conc checking SML
@@ -27,8 +27,8 @@ definition lang_pow :: "nat \<Rightarrow> 'a lang \<Rightarrow> 'a lang" where
   lang_pow_code_def [code_abbrev]: "lang_pow = compow"
 
 lemma [code]:
-  "lang_pow (Suc n) A = A @@ (lang_pow n A)"
   "lang_pow 0 A = {[]}"
+  "lang_pow (Suc n) A = A @@ (lang_pow n A)"
   by (simp_all add: lang_pow_code_def)
 
 hide_const (open) lang_pow
@@ -94,6 +94,11 @@ by (fastforce simp: Cons_eq_append_conv append_eq_Cons_conv
 
 
 subsection\<open>@{term "A ^^ n"}\<close>
+
+lemma lang_pow_mono:
+  fixes A :: "'a lang"
+  shows "A \<subseteq> B \<Longrightarrow> A ^^ n \<subseteq> B ^^ n"
+using conc_mono[of A B] by (induction n) auto
 
 lemma lang_pow_add: "A ^^ (n + m) = A ^^ n @@ A ^^ m"
 by (induct n) (auto simp: conc_assoc)
@@ -241,15 +246,14 @@ lemma star_decom:
 using a by (induct rule: star_induct) (blast)+
 
 lemma star_pow:
-  assumes "s \<in> star A"
-  shows "\<exists>n. s \<in> A ^^ n"
-using assms
-apply(induct)
-apply(rule_tac x="0" in exI)
-apply(auto)
-apply(rule_tac x="Suc n" in exI)
-apply(auto)
-done
+  "s \<in> star A \<Longrightarrow>\<exists>n. s \<in> A ^^ n"
+proof(induction rule: star_induct)
+  case Nil
+  show ?case using lang_pow.simps(1) by blast
+next
+  case (append u v)
+  then show ?case using lang_pow.simps(2) by blast
+qed
 
 
 subsection \<open>Left-Quotients of languages\<close>
@@ -317,7 +321,7 @@ lemma Derivs_alt_def [code]: "Derivs w L = fold Deriv w L"
 
 lemma Deriv_code [code]: 
   "Deriv x A = tl ` Set.filter (\<lambda>xs. case xs of x' # _ \<Rightarrow> x = x' | _ \<Rightarrow> False) A"
-  by (auto simp: Deriv_def Set.filter_def image_iff tl_def split: list.splits)
+  by (rule set_eqI) (auto simp add: tl_def Deriv_def split: list.splits)
 
 subsection \<open>Shuffle product\<close>
 

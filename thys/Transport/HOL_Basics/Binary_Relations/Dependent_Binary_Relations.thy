@@ -12,12 +12,11 @@ open_bundle bin_rel_syntax
 begin
 syntax "_dep_bin_rel" :: \<open>idt \<Rightarrow> 'a \<Rightarrow> 'b \<Rightarrow> 'c\<close> (\<open>{\<Sum>}_ : _./ _\<close> [51, 50, 50] 51)
 notation bin_rel (infixr \<open>{\<times>}\<close> 51)
-end
-
 syntax_consts
   "_dep_bin_rel" \<rightleftharpoons> dep_bin_rel
 translations
   "{\<Sum>}x : A. B" \<rightleftharpoons> "CONST dep_bin_rel A (\<lambda>x. B)"
+end
 
 definition "dep_bin_rel_pred (A :: 'a \<Rightarrow> bool) (B :: 'a \<Rightarrow> 'b \<Rightarrow> bool) (R :: 'a \<Rightarrow> 'b \<Rightarrow> bool) \<equiv>
   \<forall>x y. R x y \<longrightarrow> A x \<and> B x y"
@@ -65,7 +64,7 @@ lemma bin_relI [intro]:
   assumes "\<And>x y. R x y \<Longrightarrow> A x"
   and "\<And>x y. R x y \<Longrightarrow> A x \<Longrightarrow> B y"
   shows "(A {\<times>} B) R"
-  using assms by (urule dep_bin_relI where chained = fact)
+  using assms by (urule dep_bin_relI chained: fact)
 
 lemma bin_rel_if_bin_rel_and:
   assumes "\<And>x y. R x y \<Longrightarrow> A x \<and> B y"

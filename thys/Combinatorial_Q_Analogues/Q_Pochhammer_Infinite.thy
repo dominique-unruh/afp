@@ -3,6 +3,7 @@ theory Q_Pochhammer_Infinite
 imports
   More_Infinite_Products
   Q_Analogues
+  Primitive_Roots
 begin
 
 subsection \<open>Definition and basic properties\<close>
@@ -489,7 +490,7 @@ lemma tendsto_qbinomial1:
   shows   "(\<lambda>n. qbinomial q n m) \<longlonglongrightarrow> 1 / qpochhammer m q q"
 proof -
   have not_one: "q ^ k \<noteq> 1" if "k > 0" for k :: nat
-    using q_power_neq_1[of q k] that q by simp
+    using power_eq_1_iff[of q k] that q by force
   have [simp]: "q \<noteq> 1"
     using q by auto
 
@@ -533,7 +534,7 @@ lemma tendsto_qbinomial2:
   shows   "((\<lambda>n. qbinomial q (f n) (g n)) \<longlongrightarrow> 1 / qpochhammer_inf q q) F"
 proof -
   have not_one: "q ^ k \<noteq> 1" if "k > 0" for k :: nat
-    using q_power_neq_1[of q k] that q by simp
+    using power_eq_1_iff[of q k] that q by force
   have [simp]: "q \<noteq> 1"
     using q by auto
 
@@ -681,7 +682,7 @@ text \<open>
   by grouping factors:
   \[(a; q^m)_\infty\, (aq; q^m)_\infty\, \cdots\, (aq^{m-1}; q^m)_\infty = (a; q)_\infty\]
 \<close>
-lemma prod_qpochhammer_group:
+lemma prod_qpochhammer_inf_group:
   assumes "norm q < 1" and "m > 0"
   shows   "(\<Prod>i<m. qpochhammer_inf (a * q^i) (q^m)) = qpochhammer_inf a q"
 proof (rule has_prod_unique2)
@@ -705,6 +706,50 @@ next
 qed
 
 text \<open>
+  In a similar fashion, let $w$ be a primitive $n$-th root of unity.
+  Then: \[(a; q)_\infty\, (aw; q)_\infty\, (aw^2; q)_\infty\, \cdots\, (aw^{m-1}; q)_\infty = 
+          (a^m; q^m)_\infty\]
+\<close>
+lemma prod_qpochhammer_group_primroot:
+  assumes "norm q < 1"
+  assumes "primroot m w"
+  shows   "(\<Prod>k<m. qpochhammer_inf (w ^ k * a) q) = qpochhammer_inf (a^m) (q^m)"
+proof (rule has_prod_unique2)
+  interpret primroot m w
+    by fact
+  show "(\<lambda>i. 1 - a ^ m * (q ^ m) ^ i) has_prod qpochhammer_inf (a^m) (q^m)"
+    by (rule has_prod_qpochhammer_inf)
+       (use assms pos_order in \<open>auto simp: norm_power power_less_one_iff\<close>)
+next
+  interpret primroot m w
+    by fact
+  have "(\<lambda>i. \<Prod>k<m. 1 - (w ^ k * a) * q ^ i) has_prod (\<Prod>k<m. qpochhammer_inf (w ^ k * a) q)"
+    by (intro has_prod_prod has_prod_qpochhammer_inf) (use assms in auto)
+  also have "(\<lambda>i. \<Prod>k<m. 1 - (w ^ k * a) * q ^ i) = (\<lambda>i. 1 - a^m * (q^m)^i)"
+  proof
+    fix i :: nat
+    have "(\<Prod>k<m. 1 - (w ^ k * a) * q ^ i) = poly (\<Prod>k<m. [:1, -(w ^ k):]) (a * q ^ i)"
+      by (simp add: poly_prod mult_ac)
+    also have "(\<Prod>k<m. [:1, -(w ^ k):]) = 1 - Polynomial.monom 1 m"
+      by (rule cyclotomic_poly_conv_prod_unity_root' [symmetric])
+    also have "poly \<dots> (a * q ^ i) = 1 - a^m * (q^m)^i"
+      by (simp add: poly_monom power_mult_distrib mult_ac flip: power_mult)
+    finally show "(\<Prod>k<m. 1 - (w ^ k * a) * q ^ i) = 1 - a^m * (q^m)^i" .
+  qed
+  finally show "(\<lambda>i. 1 - a ^ m * (q ^ m) ^ i) has_prod (\<Prod>k<m. qpochhammer_inf (w ^ k * a) q)" 
+    by simp
+qed
+
+lemma (in primroot_cis) prod_qpochhammer_group_cis:
+  assumes "norm q < 1"
+  defines "w \<equiv> (\<lambda>j. cis (2 * pi * j * k / n))"
+  shows   "(\<Prod>j<n. qpochhammer_inf (w j * a) q) = qpochhammer_inf (a^n) (q^n)"
+  using prod_qpochhammer_group_primroot[OF assms(1) primroot_axioms, of a]
+  by (simp add: w_def mult_ac Complex.DeMoivre)
+  
+
+text \<open>
+  The particular instance of the above for $m = 2$ is the following:
   A product of two $q$-Pochhammer symbols $(\pm a; q)_\infty$ can be combined into
   a single $q$-Pochhammer symbol:
 \<close>
@@ -713,16 +758,9 @@ lemma qpochhammer_inf_square:
   shows   "qpochhammer_inf a q * qpochhammer_inf (-a) q = qpochhammer_inf (a^2) (q^2)"
           (is "?lhs = ?rhs")
 proof -
-  have "(\<lambda>n. (1 - a * q ^ n) * (1 - (-a) * q ^ n)) has_prod
-          (qpochhammer_inf a q * qpochhammer_inf (-a) q)"
-    by (intro has_prod_qpochhammer_inf has_prod_mult) (use q in auto)
-  also have "(\<lambda>n. (1 - a * q ^ n) * (1 - (-a) * q ^ n)) = (\<lambda>n. (1 - a ^ 2 * (q ^ 2) ^ n))"
-    by (auto simp: fun_eq_iff algebra_simps power2_eq_square simp flip: power_add mult_2)
-  finally have "(\<lambda>n. (1 - a ^ 2 * (q ^ 2) ^ n)) has_prod ?lhs" .
-  moreover have "(\<lambda>n. (1 - a ^ 2 * (q ^ 2) ^ n)) has_prod qpochhammer_inf (a^2) (q^2)"
-    by (intro has_prod_qpochhammer_inf) (use assms in \<open>auto simp: norm_power power_less_one_iff\<close>)
-  ultimately show ?thesis
-    using has_prod_unique2 by blast
+  have *: "primroot 2 (-1 :: 'a)" ..
+  show ?thesis
+    using prod_qpochhammer_group_primroot[OF assms *] by (simp add: numeral_2_eq_2)
 qed
 
 
@@ -1122,78 +1160,5 @@ next
                   \<le> norm t ^ n / (\<Prod>k = 1..n. 1 - norm x ^ k)" .
   qed
 qed
-
-
-subsection \<open>Euler's function\<close>
-
-text \<open>
-  Euler's $\phi$ function is closely related to the Dedekind $\eta$ function and the Jacobi
-  $\vartheta$ nullwert functions. The $q$-Pochhammer symbol gives us a simple and convenient
-  way to define it.
-\<close>
-definition euler_phi :: "'a :: {real_normed_field, banach, heine_borel} \<Rightarrow> 'a" where
-  "euler_phi q = qpochhammer_inf q q"
-
-lemma euler_phi_0 [simp]: "euler_phi 0 = 1"
-  by (simp add: euler_phi_def)
-
-lemma abs_convergent_euler_phi:
-  assumes "(q :: 'a :: real_normed_div_algebra) \<in> ball 0 1"
-  shows   "abs_convergent_prod (\<lambda>n. 1 - q ^ Suc n)"
-proof (rule summable_imp_abs_convergent_prod)
-  show "summable (\<lambda>n. norm (1 - q ^ Suc n - 1))"
-    using assms by (subst summable_Suc_iff) (auto simp: norm_power)
-qed
-
-lemma convergent_euler_phi:
-  assumes "(q :: 'a :: {real_normed_field, banach}) \<in> ball 0 1"
-  shows   "convergent_prod (\<lambda>n. 1 - q ^ Suc n)"
-  using abs_convergent_euler_phi[OF assms] abs_convergent_prod_imp_convergent_prod by blast
-
-lemma has_prod_euler_phi:
-  "norm q < 1 \<Longrightarrow> (\<lambda>n. 1 - q ^ Suc n) has_prod euler_phi q"
-  using has_prod_qpochhammer_inf[of q q] by (simp add: euler_phi_def)
-
-lemma euler_phi_nonzero [simp]:
-  assumes x: "x \<in> ball 0 1"
-  shows   "euler_phi x \<noteq> 0"
-  using assms by (simp add: euler_phi_def qpochhammer_inf_nonzero)
-
-lemma holomorphic_euler_phi [holomorphic_intros]:
-  assumes [holomorphic_intros]: "f holomorphic_on A"
-  assumes "\<And>z. z \<in> A \<Longrightarrow> norm (f z) < 1"
-  shows   "(\<lambda>z. euler_phi (f z)) holomorphic_on A"
-proof -
-  have *: "euler_phi holomorphic_on ball 0 1"
-    unfolding euler_phi_def by (intro holomorphic_intros) auto
-  show ?thesis
-    by (rule holomorphic_on_compose_gen[OF assms(1) *, unfolded o_def]) (use assms(2) in auto)
-qed
-
-lemma analytic_euler_phi [analytic_intros]:
-  assumes [analytic_intros]: "f analytic_on A"
-  assumes "\<And>z. z \<in> A \<Longrightarrow> norm (f z) < 1"
-  shows   "(\<lambda>z. euler_phi (f z)) analytic_on A"
-  using assms(2) by (auto intro!: analytic_intros simp: euler_phi_def)
-
-lemma meromorphic_on_euler_phi [meromorphic_intros]:
-  "f analytic_on A \<Longrightarrow> (\<And>z. z \<in> A \<Longrightarrow> norm (f z) < 1) \<Longrightarrow> (\<lambda>z. euler_phi (f z)) meromorphic_on A"
-  unfolding euler_phi_def by (intro meromorphic_intros)
-
-lemma continuous_on_euler_phi [continuous_intros]:
-  assumes "continuous_on A f" "\<And>z. z \<in> A \<Longrightarrow> norm (f z) < 1"
-  shows   "continuous_on A (\<lambda>z. euler_phi (f z))"
-  using assms unfolding euler_phi_def by (intro continuous_intros) auto
-
-lemma continuous_euler_phi [continuous_intros]:
-  fixes a q :: "'b :: t2_space \<Rightarrow> 'a :: {real_normed_field, banach, heine_borel}"
-  assumes "continuous (at x within A) f" "norm (f x) < 1"
-  shows   "continuous (at x within A) (\<lambda>x. euler_phi (f x))"
-  unfolding euler_phi_def by (intro continuous_intros assms)
-
-lemma tendsto_euler_phi [tendsto_intros]:
-  assumes [tendsto_intros]: "(f \<longlongrightarrow> c) F" and "norm c < 1"
-  shows   "((\<lambda>x. euler_phi (f x)) \<longlongrightarrow> euler_phi c) F"
-  unfolding euler_phi_def using assms by (auto intro!: tendsto_intros)
 
 end

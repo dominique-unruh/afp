@@ -23,6 +23,9 @@ lemmas ptr_val_ptr_add_simps =
   ptr_add_word64
   ptr_add_word64_signed
 
+lemma Collect_block_cong: "Set.Collect f = Set.Collect f"
+  by (rule refl)
+
 (*
  * The "full" simpset used internally within AutoCorres during
  * processing.
@@ -30,7 +33,8 @@ lemmas ptr_val_ptr_add_simps =
 ML \<open>
 
 val AUTOCORRES_SIMPSET =
-  @{context} delsimps (
+  @{context}
+  |> Simplifier.del_simps (
     (* interferes with heap_lift *)
     @{thms fun_upd_apply}
     (* affects boolean expressions *)
@@ -45,17 +49,16 @@ val AUTOCORRES_SIMPSET =
     @ @{thms field_lvalue_append} 
     @ @{thms ptr_val_ptr_add_simps}
     @ @{thms distinct_sets.simps} )
-  addsimps (
+  |> Simplifier.add_simps (
     (* Needed for L2corres_spec *)
     @{thms globals_surj}
     )
-  addsimps (
+  |> Simplifier.add_simps (
     (* builds up by monad_equiv tactic, and record updates *)
     @{thms triv_ex_apply} (* fixme Shouldn't this already be handled by HOL.ex_simps and simproc defined_Ex.*)
     )
-  addsimps (@{thms ptr_NULL_conv})
-  delsimprocs
-    [@{simproc case_prod_beta},@{simproc case_prod_eta}]
+  |> Simplifier.add_simps @{thms ptr_NULL_conv}
+  |> fold Simplifier.del_proc [@{simproc case_prod_beta}, @{simproc case_prod_eta}]
   |> simpset_of
 
 \<close>

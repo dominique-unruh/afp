@@ -20,7 +20,22 @@ theory Term_More
     Position
     Subterm_and_Context
     Polynomial_Factorization.Missing_List
+    Unification
+    Fun_More2
 begin
+
+lemma fun_merge_is_partition:
+  assumes "is_partition as"
+    and "i < length as"
+    and "a \<in> as ! i"
+  shows "fun_merge fs as a = (fs ! i) a"
+  by (intro fun_merge_part assms, insert assms(1), auto simp: is_partition_alt is_partition_alt_def)
+
+lemma fun_merge_is_part:
+  assumes "is_partition as"
+  shows "\<exists>\<sigma>. \<forall>i<length as. \<forall>x\<in> as ! i. \<sigma> x = \<tau> i x"
+  by (rule fun_merge, insert assms(1), auto simp: is_partition_alt is_partition_alt_def)
+
 
 text \<open>@{text "showl"}-Instance for Terms\<close>
 
@@ -221,7 +236,7 @@ text \<open>
 
 text \<open>The position of the hole in a context is uniquely determined.\<close>
 fun
-  hole_pos :: "('f, 'v) ctxt \<Rightarrow> pos"
+  hole_pos :: "('f, 'v) actxt \<Rightarrow> pos"
   where
     "hole_pos \<box> = []" |
     "hole_pos (More f ss D ts) = length ss # hole_pos D"
@@ -337,6 +352,14 @@ next
     qed (insert More Cons, auto simp: nth_append)
   qed auto
 qed
+
+lemma subst_at_ctxt_at_eq_termI:
+  assumes "p \<in> poss s" "p \<in> poss t"
+    and "s |_p = t |_ p"
+    and "ctxt_of_pos_term p s = ctxt_of_pos_term p t"
+  shows "s = t" using assms 
+  by (metis ctxt_supt_id)
+
 
 text \<open>Conversions between contexts and proper subterms.\<close>
 
@@ -535,6 +558,10 @@ lemma subt_at_Cons_distr [simp]:
   shows "t |_ (i # p) = (t |_ [i]) |_ p"
   using assms by (induct t) auto
 
+lemma subt_at_Cons_comp:
+  "i # p \<in> poss s \<Longrightarrow> (s |_ [i]) |_ p = s |_ (i # p)"
+  by (metis subt_at_Cons_distr subt_at.simps(1))
+
 lemma subt_at_append [simp]:
   "p \<in> poss t \<Longrightarrow> t |_ (p @ q) = (t |_ p) |_ q"
 proof (induct t arbitrary: p)
@@ -647,7 +674,7 @@ lemma less_pos_imp_supt:
   assumes less: "p' <\<^sub>p p" and p: "p \<in> poss t"
   shows "t |_ p \<lhd> t |_ p'"
 proof -
-  from less obtain p'' where p'': "p = p' @ p''" unfolding less_pos_def less_eq_pos_def by auto
+  from less obtain p'' where p'': "p = p' @ p''" unfolding strict_prefix_def prefix_def by auto
   with less have ne: "p'' \<noteq> []" by auto
   then obtain i q where ne: "p'' = i # q" by (cases p'', auto)
   from p have p': "p' \<in> poss t" unfolding p'' by simp
@@ -660,7 +687,7 @@ lemma less_eq_pos_imp_supt_eq:
   assumes less_eq: "p' \<le>\<^sub>p p" and p: "p \<in> poss t"
   shows "t |_ p \<unlhd> t |_ p'"
 proof -
-  from less_eq obtain p'' where p'': "p = p' @ p''" unfolding less_eq_pos_def by auto
+  from less_eq obtain p'' where p'': "p = p' @ p''" unfolding prefix_def by auto
   from p have p': "p' \<in> poss t" unfolding p'' by simp
   from p have "p'' \<in> poss (t |_ p')" unfolding p'' by simp
   from subt_at_imp_supteq[OF this] have "t |_ p' \<unrhd> t |_ p' |_ p''" by simp
@@ -975,6 +1002,9 @@ next
   then have "\<forall>s\<in>set ts. s \<cdot> (\<sigma> |s V) = s" by auto
   with map_idI [of ts "\<lambda>t. t \<cdot> (\<sigma> |s V)"] show ?case by simp
 qed
+
+lemma vars_ctxt_subst: "vars_ctxt (C \<cdot>\<^sub>c \<sigma>) = (\<Union> ((vars_term o \<sigma>) ` vars_ctxt C))" 
+  by (induct C, auto simp: vars_term_subst)
 
 lemma subst_apply_ctxt_id:
   assumes "vars_ctxt C \<inter> V = {}" 
@@ -1639,6 +1669,11 @@ lemma map_vars_term_ctxt_commute:
   "map_vars_term m (c\<langle>t\<rangle>) = (map_vars_ctxt m c)\<langle>map_vars_term m t\<rangle>"
   by (induct c) auto
 
+lemma hole_pos_map_vars [simp]:
+  "hole_pos (map_vars_ctxt f C) = hole_pos C"
+  by (induct C) auto
+
+
 lemma map_vars_term_inj_compose:
   assumes inj: "\<And> x. n (m x) = x"
   shows "map_vars_term n (map_vars_term m t) = t"
@@ -1693,6 +1728,11 @@ proof (cases p)
       , unfolded id] have False by simp
   then show ?thesis by auto
 qed simp
+
+lemma subt_at_subterm [intro!]:
+  "p \<in> poss t \<Longrightarrow> p \<noteq> [] \<Longrightarrow>  t \<rhd> t |_ p"
+  using subt_at_id_imp_eps subt_at_imp_supteq subterm.order.not_eq_order_implies_strict by blast
+
 
 lemma pos_into_subst:
   assumes t: "t \<cdot> \<sigma> = s" and p: "p \<in> poss s" and nt: "\<not> (p \<in> poss t \<and> is_Fun (t |_ p))"
@@ -1859,7 +1899,7 @@ lemma replace_at_below_poss:
   assumes p: "p' \<in> poss t" and le: "p \<le>\<^sub>p p'"
   shows "p \<in> poss (replace_at t p' s)"
 proof -
-  from le obtain p'' where p'': "p' = p @ p''" unfolding less_eq_pos_def by auto
+  from le obtain p'' where p'': "p' = p @ p''" unfolding prefix_def by auto
   from p show ?thesis  unfolding p''
     by (metis hole_pos_ctxt_of_pos_term hole_pos_poss poss_append_poss)
 qed
@@ -1868,7 +1908,7 @@ lemma ctxt_of_pos_term_replace_at_below:
   assumes p: "p \<in> poss t" and le: "p \<le>\<^sub>p p'"
   shows "ctxt_of_pos_term p (replace_at t p' u) = ctxt_of_pos_term p t"
 proof -
-  from le obtain p'' where p': "p' = p @ p''" unfolding less_eq_pos_def by auto
+  from le obtain p'' where p': "p' = p @ p''" unfolding prefix_def by auto
   from p show ?thesis unfolding p'
   proof (induct p arbitrary: t)
     case (Cons i p)
@@ -1889,12 +1929,12 @@ lemma ctxt_poss_imp_ctxt_subst_poss:
   assumes p:"p' \<in> poss C\<langle>t\<rangle>" shows "p' \<in> poss C\<langle>t \<cdot> \<mu>\<rangle>"
 proof(rule disjE[OF pos_cases[of p' "hole_pos C"]])
   assume "p' \<le>\<^sub>p hole_pos C"
-  then show ?thesis using hole_pos_poss by (metis less_eq_pos_def poss_append_poss)
+  then show ?thesis using hole_pos_poss by (metis prefix_def poss_append_poss)
 next
   assume or:"hole_pos C <\<^sub>p p' \<or> p' \<bottom> hole_pos C"
   show ?thesis proof(rule disjE[OF or])
     assume "hole_pos C <\<^sub>p p'"
-    then obtain q where dec:"p' = hole_pos C @ q" unfolding less_pos_def less_eq_pos_def by auto
+    then obtain q where dec:"p' = hole_pos C @ q" unfolding strict_prefix_def prefix_def by auto
     with p have "q \<in> poss (t \<cdot> \<mu>)" using hole_pos_poss_conv poss_imp_subst_poss by auto
     then show ?thesis using dec hole_pos_poss_conv by auto
   next
@@ -1936,7 +1976,7 @@ lemma possc_not_below_hole_pos:
 proof(rule notI)
   assume "hole_pos C <\<^sub>p p"
   then obtain r where p':"p = hole_pos C @ r" and r:"r \<noteq> []"
-    unfolding less_pos_def less_eq_pos_def by auto
+    unfolding strict_prefix_def prefix_def by auto
   fix x::'b from r have n:"r \<notin> poss (Var x)" using poss.simps(1) by auto
   from assms have "p \<in> (poss C\<langle>Var x\<rangle>)" unfolding possc_def by auto
   with this[unfolded p'] hole_pos_poss_conv[of C r] have "r \<in> poss (Var x)" by auto
@@ -1949,7 +1989,7 @@ proof-
   from n obtain u where a:"p \<notin> poss C\<langle>u\<rangle>" unfolding possc_def by auto
   from possc_not_below_hole_pos[OF y] have b:"\<not> (hole_pos C <\<^sub>p p)"
     unfolding hole_pos_subst by auto
-  from n a have c:"\<not> (p \<le>\<^sub>p hole_pos C)" unfolding less_pos_def using less_eq_hole_pos_in_possc by blast
+  from n a have c:"\<not> (p \<le>\<^sub>p hole_pos C)" using less_eq_hole_pos_in_possc by blast
   with pos_cases b have "p \<bottom> hole_pos C" by blast
   with par_hole_pos_in_possc[OF parallel_pos_sym[OF this]] n show "p \<notin> poss (C\<langle>t\<rangle>)" by fast
 qed
@@ -2614,6 +2654,11 @@ lemma ground_vars_term_ms_empty:
   unfolding set_mset_vars_term_ms [symmetric]
   by (simp del: set_mset_vars_term_ms)
 
+lemma ground_map_term [simp]:
+  "ground (map_term f h t) = ground t"
+  by (induct t) auto
+
+
 lemma vars_term_ms_map_funs_term [simp]:
   "vars_term_ms (map_funs_term fg t) = vars_term_ms t"
 proof (induct t)
@@ -2879,6 +2924,28 @@ lemma ground_ctxt_apply[simp]: "ground (C\<langle>t\<rangle>) = (ground_ctxt C \
 lemma ground_ctxt_compose[simp]: "ground_ctxt (C \<circ>\<^sub>c D) = (ground_ctxt C \<and> ground_ctxt D)"
   by (induct C, auto)
 
+lemma ground_ctxt_comp [intro]:
+  "ground_ctxt C \<Longrightarrow> ground_ctxt D \<Longrightarrow> ground_ctxt (C \<circ>\<^sub>c D)"
+  by simp
+
+lemma ctxt_comp_n_pres_ground [intro]:
+  "ground_ctxt C \<Longrightarrow> ground_ctxt (C^n)"
+  by (induct n arbitrary: C) auto
+
+lemma subterm_eq_pres_ground:
+  assumes "ground s" and "s \<unrhd> t"
+  shows "ground t" using assms(2,1)
+  by fastforce
+
+lemma ground_substD:
+  "ground (l \<cdot> \<sigma>) \<Longrightarrow> x \<in> vars_term l \<Longrightarrow> ground (\<sigma> x)"
+  by simp
+
+lemma ground_substI:
+  "(\<And> x. x \<in> vars_term s \<Longrightarrow> ground (\<sigma> x)) \<Longrightarrow> ground (s \<cdot> \<sigma>)"
+  by simp
+
+
 text \<open>Linearity of a term\<close>
 
 fun linear_term :: "('f, 'v) term \<Rightarrow> bool"
@@ -2894,7 +2961,7 @@ proof -
   let ?\<sigma> = "fun_merge ?\<tau> (map vars_term ts)"
   show ?thesis
     by (rule exI[of _ ?\<sigma>], intro allI impI ballI,
-        insert fun_merge_part[OF part, of _ _ ?\<tau>], auto)
+        insert fun_merge_is_partition[OF part, of _ _ ?\<tau>], auto)
 qed
 
 text \<open>Matching for linear terms\<close>
@@ -3067,7 +3134,7 @@ proof (induct l)
   { fix l
     assume l:"l \<in> set ls"
     then have "vars_term l \<subseteq> vars_term (Fun g ls)" by auto
-    then have "inj_on f (vars_term l)" using Fun(3) subset_inj_on by blast
+    then have "inj_on f (vars_term l)" using Fun(3) inj_on_subset by blast
     with Fun(1,2) l have "linear_term (map_vars_term f l)" by auto
   }
   moreover have "is_partition (map (vars_term \<circ> map_vars_term f) ls)"
@@ -3387,5 +3454,192 @@ next
 qed
 
 declare map_funs_term_enum.simps[simp del]
+
+lemma supt_imp_not_unifiable:
+  assumes "s \<rhd> t"
+  shows "\<not> unifiable {(t, s)}"
+proof
+  assume "unifiable {(t, s)}"
+  then obtain \<sigma> where "\<sigma> \<in> unifiers {(t, s)}"
+    by (auto simp: unifiable_def)
+  then have "t \<cdot> \<sigma> = s \<cdot> \<sigma>" by (auto)
+  moreover have "s \<cdot> \<sigma> \<rhd> t \<cdot> \<sigma>"
+    using assms by (metis instance_no_supt_imp_no_supt)
+  ultimately show False by auto
+qed
+
+lemma imgu_linear_var_disjoint:
+  assumes "is_imgu \<sigma> {(l2 |_ p, l1)}"
+    and "p \<in> poss l2"
+    and "linear_term l2"
+    and "vars_term l1 \<inter> vars_term l2 = {}"
+    and "q \<in> poss l2"
+    and "parallel_pos p q"
+  shows "l2 |_ q = l2 |_ q \<cdot> \<sigma>"
+  using assms
+proof (induct p arbitrary: q l2)
+  case (Cons i p)
+  from this(3) obtain f ls where 
+    l2[simp]: "l2 = Fun f ls" and 
+    i: "i < length ls" and 
+    p: "p \<in> poss (ls ! i)"
+    by (cases l2) (auto)
+  then have l2i: "l2 |_ ((i # p)) = ls ! i |_ p" by auto
+  have "linear_term (ls ! i)" using Cons(4) l2 i by simp
+  moreover have "vars_term l1 \<inter> vars_term (ls ! i) = {}" using Cons(5) l2 i by force
+  ultimately have IH: "\<And>q. q \<in> poss (ls ! i) \<Longrightarrow> p \<bottom> q \<Longrightarrow> ls ! i |_ q = ls ! i |_ q \<cdot> \<sigma>" 
+    using Cons(1)[OF Cons(2)[unfolded l2i] p] by blast
+  from Cons(7) obtain j q' where q: "q = j # q'" by (cases q) auto
+  show ?case
+  proof (cases "j = i") 
+    case True with Cons(6,7) IH q show ?thesis by simp
+  next
+    case False
+    from Cons(6) q have j: "j < length ls" by simp 
+    { fix y
+      assume y: "y \<in> vars_term (l2 |_ q)"
+      let ?\<tau> = "\<lambda>x. if x = y then Var y else \<sigma> x"
+      from y Cons(6) q j have yj:"y \<in> vars_term (ls ! j)" 
+        by simp (meson subt_at_imp_supteq subteq_Var_imp_in_vars_term supteq_Var supteq_trans)
+      { fix i j
+        assume j:"j < length ls" and i:"i < length ls" and neq: "i \<noteq> j"
+        from j Cons(4) have "\<forall>i < j. vars_term (ls ! i) \<inter> vars_term (ls ! j) = {}"
+          by (auto simp : is_partition_def)
+        moreover from i Cons(4) have "\<forall>j < i. vars_term (ls ! i) \<inter> vars_term (ls ! j) = {}"
+          by (auto simp : is_partition_def)
+        ultimately have "vars_term (ls ! i) \<inter> vars_term (ls ! j) = {}" 
+          using neq by (cases "i < j") auto
+      }
+      from this[OF i j False] have "y \<notin> vars_term (ls ! i)" using yj by auto
+      then have "y \<notin> vars_term (l2 |_ ((i # p)))"
+        by (metis l2i p subt_at_imp_supteq subteq_Var_imp_in_vars_term supteq_Var supteq_trans)
+      then have "\<forall>x \<in> vars_term (l2 |_ ((i # p))). ?\<tau> x = \<sigma> x" by auto
+      then have l2\<tau>\<sigma>: "l2 |_ ((i # p)) \<cdot> ?\<tau> = l2 |_ ((i # p)) \<cdot> \<sigma>" using term_subst_eq[of _ \<sigma> ?\<tau>] by simp
+      from Cons(5) have "y \<notin> vars_term l1" using y Cons(6) vars_term_subt_at by fastforce
+      then have "\<forall>x \<in> vars_term l1. ?\<tau> x = \<sigma> x" by auto
+      then have l1\<tau>\<sigma>:"l1 \<cdot> ?\<tau> = l1 \<cdot> \<sigma>" using term_subst_eq[of _ \<sigma> ?\<tau>] by simp
+      have "l1 \<cdot> \<sigma> = l2 |_ (i # p) \<cdot> \<sigma>" using Cons(2) unfolding is_imgu_def by auto
+      then have "l1 \<cdot> ?\<tau> = l2 |_ (i # p) \<cdot> ?\<tau>"  using l1\<tau>\<sigma> l2\<tau>\<sigma> by simp
+      then have "?\<tau> \<in> unifiers {(l2 |_ (i # p), l1)}" unfolding unifiers_def by simp
+      with Cons(2) have \<tau>\<sigma>:"?\<tau> = \<sigma> \<circ>\<^sub>s ?\<tau>" unfolding is_imgu_def by blast
+      have "Var y = Var y \<cdot> \<sigma>"
+      proof (rule ccontr)
+        let ?x = "Var y \<cdot> \<sigma>"
+        assume *:"Var y \<noteq> ?x"
+        have "Var y = Var y \<cdot> ?\<tau>" by auto
+        also have "... = (Var y \<cdot> \<sigma>) \<cdot> ?\<tau>" using \<tau>\<sigma> subst_subst by metis 
+        finally have xy:"?x \<cdot> \<sigma> = Var y" using * by (cases "\<sigma> y") auto 
+        have "\<sigma> \<circ>\<^sub>s \<sigma> = \<sigma>" using Cons(2) unfolding is_imgu_def by auto
+        then have "?x \<cdot> (\<sigma> \<circ>\<^sub>s \<sigma>) = Var y" using xy by auto
+        moreover have "?x \<cdot> \<sigma> \<cdot> \<sigma> = ?x" using xy by auto
+        ultimately show False using * by auto
+      qed
+    }
+    then show ?thesis by (simp add: term_subst_eq)
+  qed
+qed auto
+
+
+fun vars_ctxt_ms :: "('f, 'v) ctxt \<Rightarrow> 'v multiset"
+where
+  "vars_ctxt_ms Hole = {#}" |
+  "vars_ctxt_ms (More f ss C ts) =
+    \<Sum>\<^sub># (mset (map vars_term_ms ss)) +
+    vars_ctxt_ms C + \<Sum>\<^sub># (mset (map vars_term_ms ts))"
+
+lemma vars_term_ms_ctxt_apply:
+  "vars_term_ms (C\<langle>t\<rangle>) = vars_ctxt_ms C + vars_term_ms t"
+by (induct C) (auto simp: multiset_eq_iff)
+
+lemma vars_ctxt_ms_subst: 
+  "vars_ctxt_ms (C \<cdot>\<^sub>c \<sigma>) = sum_mset (image_mset (vars_term_ms o \<sigma>) (vars_ctxt_ms C))" 
+proof (induct C)
+  case (More f b C a)
+  have "(\<Sum>a\<in>#\<Sum>\<^sub># (image_mset vars_term_ms (mset b)). vars_term_ms (\<sigma> a)) 
+    = \<Sum>\<^sub># (image_mset (vars_term_ms \<circ> (\<lambda>t. t \<cdot> \<sigma>)) (mset b))" for b
+    by (induct b, auto)
+  thus ?case 
+    by (simp add: More)
+qed auto
+
+lemma fun_poss_poss: "(p \<in> fun_poss s) = (p \<in> poss s \<and> is_Fun (s |_p))"
+  by (metis fun_poss_fun_conv fun_poss_imp_poss is_FunI poss_is_Fun_fun_poss)
+
+lemma fun_poss_subst_sub: "fun_poss s \<subseteq> fun_poss (s \<cdot> \<gamma>)" 
+  by (induct s, auto simp: set_conv_nth)
+
+lemma possc_alt_def: "possc C = poss (C \<langle>Var undefined\<rangle>)"
+ unfolding possc_def using ctxt_poss_imp_ctxt_subst_poss by fastforce
+
+lemma poss_ctxt_apply: "poss (C \<langle>t\<rangle>) = possc C \<union> (@) (hole_pos C) ` poss t"
+proof
+  show "poss C\<langle>t\<rangle> \<subseteq> possc C \<union> (@) (hole_pos C) ` poss t"
+  proof (rule subsetI)
+    fix p :: pos
+    assume "p \<in> poss C\<langle>t\<rangle>"
+
+    consider
+      (p_le_hole) "p \<le>\<^sub>p hole_pos C" |
+      (hole_lt_p)"hole_pos C <\<^sub>p p" |
+      (p_par_hole) "p \<bottom> hole_pos C"
+      using pos_cases[of p "hole_pos C"] by satx
+
+    then show "p \<in> possc C \<union> (@) (hole_pos C) ` poss t"
+    proof cases
+      case p_le_hole
+      then have "p \<in> possc C"
+        using less_eq_hole_pos_in_possc by blast
+      then show ?thesis ..
+    next
+      case hole_lt_p
+      then have "p \<in> (@) (hole_pos C) ` poss t"
+        by (metis \<open>p \<in> poss C\<langle>t\<rangle>\<close> hole_pos_poss_conv image_iff less_pos_def')
+      then show ?thesis ..
+    next
+      case p_par_hole
+      then have "p \<in> possc C"
+        by (metis \<open>p \<in> poss C\<langle>t\<rangle>\<close> par_hole_pos_in_possc parallel_pos_sym)
+      then show ?thesis ..
+    qed
+  qed
+next
+ show "possc C \<union> (@) (hole_pos C) ` poss t \<subseteq> poss C\<langle>t\<rangle>"
+   using poss_imp_possc by fastforce
+qed
+
+lemma linear_term_unique_var_pos: assumes "x \<in> vars_term t" 
+  and lin: "linear_term t" 
+  shows "\<exists>! p. p \<in> poss t \<and> t |_ p = Var x" 
+proof -
+  from assms obtain p where p: "p \<in> poss t" "t |_ p = Var x" 
+    by (metis vars_term_poss_subt_at)
+  {
+    fix q
+    assume q: "q \<in> poss t" "t |_ q = Var x" 
+    from linear_subterms_disjoint_vars[OF lin p(1) q(1), unfolded p(2) q(2)]
+    have "\<not> (p \<bottom> q)" by auto
+    with p q have "p = q" by (metis var_poss_iff var_poss_parallel)
+  }
+  with p show ?thesis by blast
+qed
+
+lemma ctxt_subst_subt_with_poss_in_ctxt:
+  assumes "hole_pos C \<bottom> p" and "p \<in> poss C\<langle>u\<rangle>" and "C\<langle>u\<rangle> |_ p = t"
+  shows "(C \<cdot>\<^sub>c \<sigma>)\<langle>s\<rangle> |_ p = t \<cdot> \<sigma>"
+proof -
+  have "(C \<cdot>\<^sub>c \<sigma>)\<langle>s\<rangle> |_ p = (ctxt_of_pos_term (hole_pos C) C\<langle>u\<rangle> \<cdot>\<^sub>c \<sigma>)\<langle>s\<rangle> |_ p"
+    unfolding ctxt_of_pos_term_hole_pos ..
+  also have "\<dots> = (ctxt_of_pos_term (hole_pos C) (C\<langle>u\<rangle> \<cdot> \<sigma>))\<langle>s\<rangle> |_ p"
+    by (metis hole_pos_poss ctxt_of_pos_term_subst)
+  also have "\<dots> = C\<langle>u\<rangle> \<cdot> \<sigma> |_ p"
+    using \<open>hole_pos C \<bottom> p\<close> \<open>p \<in> poss C\<langle>u\<rangle>\<close>
+    by (simp add: parallel_replace_at_subt_at)
+  also have "\<dots> = C\<langle>u\<rangle> |_ p \<cdot> \<sigma>"
+    using \<open>p \<in> poss C\<langle>u\<rangle>\<close>
+    by (metis subt_at_subst)
+  also have "\<dots> = t \<cdot> \<sigma>"
+    unfolding \<open>C\<langle>u\<rangle> |_ p = t\<close> ..
+  finally show ?thesis .
+qed
 
 end

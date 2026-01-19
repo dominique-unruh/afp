@@ -6,10 +6,8 @@ chapter \<open>Unsigned words of 16 bits\<close>
 
 theory Uint16
   imports
-    "HOL-Library.Code_Target_Bit_Shifts"
     Uint_Common
     Code_Target_Word
-    Code_Int_Integer_Conversion
 begin
 
 text \<open>
@@ -20,8 +18,7 @@ text \<open>
   rather than \<open>SML\<close>.  This ensures that code generation still
   works as long as \<open>uint16\<close> is not involved.
   For the target \<open>SML\<close> itself, no special code generation 
-  for this type is set up. Nevertheless, it should work by emulation via \<^typ>\<open>16 word\<close>
-  if the theory \<^text>\<open>Code_Target_Int_Bit\<close> is imported.
+  for this type is set up. Nevertheless, it should work by emulation via \<^typ>\<open>16 word\<close>.
 
   Restriction for OCaml code generation:
   OCaml does not provide an int16 type, so no special code generation 
@@ -41,7 +38,7 @@ declare uint16.of_word_of [code abstype]
 
 declare Quotient_uint16 [transfer_rule]
 
-instantiation uint16 :: \<open>{comm_ring_1, semiring_modulo, equal, linorder}\<close>
+instantiation uint16 :: \<open>{comm_ring_1, semiring_modulo, equal, linorder, order_bot, order_top}\<close>
 begin
 
 lift_definition zero_uint16 :: uint16 is 0 .
@@ -55,12 +52,15 @@ lift_definition modulo_uint16 :: \<open>uint16 \<Rightarrow> uint16 \<Rightarrow
 lift_definition equal_uint16 :: \<open>uint16 \<Rightarrow> uint16 \<Rightarrow> bool\<close> is \<open>HOL.equal\<close> .
 lift_definition less_eq_uint16 :: \<open>uint16 \<Rightarrow> uint16 \<Rightarrow> bool\<close> is \<open>(\<le>)\<close> .
 lift_definition less_uint16 :: \<open>uint16 \<Rightarrow> uint16 \<Rightarrow> bool\<close> is \<open>(<)\<close> .
+lift_definition bot_uint16 :: uint16 is bot .
+lift_definition top_uint16 :: uint16 is top .
 
 global_interpretation uint16: word_type_copy_ring Abs_uint16 Rep_uint16
   by standard (fact zero_uint16.rep_eq one_uint16.rep_eq
     plus_uint16.rep_eq uminus_uint16.rep_eq minus_uint16.rep_eq
     times_uint16.rep_eq divide_uint16.rep_eq modulo_uint16.rep_eq
-    equal_uint16.rep_eq less_eq_uint16.rep_eq less_uint16.rep_eq)+
+    equal_uint16.rep_eq less_eq_uint16.rep_eq less_uint16.rep_eq
+    bot_uint16.rep_eq top_uint16.rep_eq)+
 
 instance proof -
   show \<open>OFCLASS(uint16, comm_ring_1_class)\<close>
@@ -71,9 +71,16 @@ instance proof -
     by (fact uint16.of_class_equal)
   show \<open>OFCLASS(uint16, linorder_class)\<close>
     by (fact uint16.of_class_linorder)
+  show \<open>OFCLASS(uint16, order_bot_class)\<close>
+    by (fact uint16.of_class_order_bot)
+  show \<open>OFCLASS(uint16, order_top_class)\<close>
+    by (fact uint16.of_class_order_top)
 qed
 
 end
+
+instance uint16 :: \<open>{interval_bot, interval_top}\<close>
+  by (fact uint16.of_class_interval_bot uint16.of_class_interval_top)+
 
 instantiation uint16 :: ring_bit_operations
 begin
@@ -243,8 +250,8 @@ lemma term_of_uint16_code [code]:
        (term_of_class.term_of (Rep_uint16' x))"
 by(simp add: term_of_anything)
 
-lemma Uint16_code [code]: "Rep_uint16 (Uint16 i) = word_of_int (int_of_integer_symbolic i)"
-unfolding Uint16_def int_of_integer_symbolic_def by(simp add: Abs_uint16_inverse)
+lemma Uint16_code [code]: "Rep_uint16 (Uint16 i) = word_of_int (int_of_integer i)"
+  by (fact Uint16.rep_eq)
 
 code_printing
   type_constructor uint16 \<rightharpoonup>
@@ -424,10 +431,10 @@ interpretation quickcheck_narrowing_samples
   "Typerep.Typerep (STR ''Uint16.uint16'') []" .
 
 definition "narrowing_uint16 d = qc_narrowing_drawn_from (narrowing_samples d) d"
-declare [[code drop: "partial_term_of :: uint16 itself \<Rightarrow> _"]]
 lemmas partial_term_of_uint16 [code] = partial_term_of_code
 
 instance ..
 end
 
 end
+

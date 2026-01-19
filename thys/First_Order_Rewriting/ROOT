@@ -10,13 +10,6 @@ session First_Order_Rewriting = First_Order_Terms +
     FOR_Preliminaries
     Option_Util
     SubList
-  theories (*First Order Terms*)
-    Unification_More
-    Unifiers_More
-    Term_Impl
-  theories (*Abstract Rewriting*)
-    Abstract_Rewriting_Impl
-    Relation_Closure
   theories 
     Critical_Pairs
   theories

@@ -6,17 +6,13 @@ chapter \<open>Unsigned words of 8 bits\<close>
 
 theory Uint8
   imports
-    "HOL-Library.Code_Target_Bit_Shifts"
     Uint_Common
     Code_Target_Word
-    Code_Int_Integer_Conversion
 begin
 
 text \<open>
   Restriction for OCaml code generation:
-  OCaml does not provide an int8 type, so no special code generation 
-  for this type is set up. If the theory \<^text>\<open>Code_Target_Int_Bit\<close>
-  is imported, the type \<open>uint8\<close> is emulated via \<^typ>\<open>8 word\<close>.
+  OCaml does not provide an int8 type, so no special code generation for this type is set up.
 \<close>
 
 section \<open>Type definition and primitive operations\<close>
@@ -32,7 +28,7 @@ declare uint8.of_word_of [code abstype]
 
 declare Quotient_uint8 [transfer_rule]
 
-instantiation uint8 :: \<open>{comm_ring_1, semiring_modulo, equal, linorder}\<close>
+instantiation uint8 :: \<open>{comm_ring_1, semiring_modulo, equal, linorder, order_bot, order_top}\<close>
 begin
 
 lift_definition zero_uint8 :: uint8 is 0 .
@@ -46,12 +42,15 @@ lift_definition modulo_uint8 :: \<open>uint8 \<Rightarrow> uint8 \<Rightarrow> u
 lift_definition equal_uint8 :: \<open>uint8 \<Rightarrow> uint8 \<Rightarrow> bool\<close> is \<open>HOL.equal\<close> .
 lift_definition less_eq_uint8 :: \<open>uint8 \<Rightarrow> uint8 \<Rightarrow> bool\<close> is \<open>(\<le>)\<close> .
 lift_definition less_uint8 :: \<open>uint8 \<Rightarrow> uint8 \<Rightarrow> bool\<close> is \<open>(<)\<close> .
+lift_definition bot_uint8 :: uint8 is bot .
+lift_definition top_uint8 :: uint8 is top .
 
 global_interpretation uint8: word_type_copy_ring Abs_uint8 Rep_uint8
   by standard (fact zero_uint8.rep_eq one_uint8.rep_eq
     plus_uint8.rep_eq uminus_uint8.rep_eq minus_uint8.rep_eq
     times_uint8.rep_eq divide_uint8.rep_eq modulo_uint8.rep_eq
-    equal_uint8.rep_eq less_eq_uint8.rep_eq less_uint8.rep_eq)+
+    equal_uint8.rep_eq less_eq_uint8.rep_eq less_uint8.rep_eq
+    bot_uint8.rep_eq top_uint8.rep_eq)+
 
 instance proof -
   show \<open>OFCLASS(uint8, comm_ring_1_class)\<close>
@@ -62,9 +61,16 @@ instance proof -
     by (fact uint8.of_class_equal)
   show \<open>OFCLASS(uint8, linorder_class)\<close>
     by (fact uint8.of_class_linorder)
+  show \<open>OFCLASS(uint8, order_bot_class)\<close>
+    by (fact uint8.of_class_order_bot)
+  show \<open>OFCLASS(uint8, order_top_class)\<close>
+    by (fact uint8.of_class_order_top)
 qed
 
 end
+
+instance uint8 :: \<open>{interval_bot, interval_top}\<close>
+  by (fact uint8.of_class_interval_bot uint8.of_class_interval_top)+
 
 instantiation uint8 :: ring_bit_operations
 begin
@@ -249,8 +255,8 @@ lemma term_of_uint8_code [code]:
        (term_of_class.term_of (Rep_uint8' x))"
 by(simp add: term_of_anything)
 
-lemma Uin8_code [code]: "Rep_uint8 (Uint8 i) = word_of_int (int_of_integer_symbolic i)"
-unfolding Uint8_def int_of_integer_symbolic_def by(simp add: Abs_uint8_inverse)
+lemma Uint8_code [code]: "Rep_uint8 (Uint8 i) = word_of_int (int_of_integer i)"
+  by (fact Uint8.rep_eq)
 
 code_printing type_constructor uint8 \<rightharpoonup>
   (SML) "Word8.word" and
@@ -496,7 +502,6 @@ interpretation quickcheck_narrowing_samples
   "Typerep.Typerep (STR ''Uint8.uint8'') []" .
 
 definition "narrowing_uint8 d = qc_narrowing_drawn_from (narrowing_samples d) d"
-declare [[code drop: "partial_term_of :: uint8 itself \<Rightarrow> _"]]
 lemmas partial_term_of_uint8 [code] = partial_term_of_code
 
 instance ..

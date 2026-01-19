@@ -260,8 +260,9 @@ fun generate_showsp tyco lthy =
        val name = "showsp_" ^ Long_Name.base_name tyco
       in
         lthy
-        |> Local_Theory.note ((Binding.name (name ^ "_simps"), @{attributes [simp, code]}), thms)
-        |> apfst snd
+        |> Local_Theory.note ((Binding.name (name ^ "_simps"), @{attributes [simp]}), thms)
+        |-> (fn (_, simps) => Code.declare_default_eqns (map (rpair true) simps)
+          #> pair simps)
       end
 
     val (show_simps, lthy) =
@@ -419,9 +420,9 @@ fun show_instance tyco thy =
     val ((shows_prec_thm, shows_list_thm), lthy) =
       Class.instantiation ([tyco], tfrees', showS) thy
       |> Generator_Aux.define_overloaded_generic
-        ((Binding.name ("shows_prec_" ^ name ^ "_def"), @{attributes [code]}), shows_prec_def)
+        ((Binding.name ("shows_prec_" ^ name ^ "_def"), [Code.singleton_default_equation_attrib]), shows_prec_def)
       ||>> Generator_Aux.define_overloaded_generic
-        ((Binding.name ("shows_list_" ^ name ^ "_def"), @{attributes [code]}), shows_list_def)
+        ((Binding.name ("shows_list_" ^ name ^ "_def"), [Code.singleton_default_equation_attrib]), shows_list_def)
   in
     Class.prove_instantiation_exit (fn ctxt =>
       let

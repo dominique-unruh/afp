@@ -17,7 +17,6 @@ The proof below is much shorter.\<close>
 
 text "Some lemmas:"
 
-(* TODO: rm with next release because def of (@@) is now as below: *)
 lemma Lang_concat:
   "L1 @@ L2 = {word. \<exists>w1 \<in> L1. \<exists>w2 \<in> L2. word = w1 @ w2}"
   unfolding conc_def by blast
@@ -206,7 +205,7 @@ lemma CFL_intersection_not_closed:
   assumes "a\<noteq>b" "b\<noteq>c" "c\<noteq>a"
   shows "\<exists>L1 L2 :: 'a list set.
     CFL TYPE(('n1 + 'n1) option) L1 \<and> CFL TYPE(('n2 + 'n2) option) L2
- \<and> (\<nexists>(P::('x::infinite,'a)Prods) S. Lang P S = L1 \<inter> L2 \<and> finite P)"
+ \<and> (\<nexists>(P::('x::fresh0,'a)Prods) S. Lang P S = L1 \<inter> L2 \<and> finite P)"
 proof -
   let ?anbn = "\<Union>n. {[a]^^n @ [b]^^n}"
   let ?cm = "\<Union>n. {[c]^^n}"

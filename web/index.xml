@@ -4,11 +4,161 @@
     <title>Archive of Formal Proofs</title>
     <link>https://isa-afp.org/</link>
     <description>Formal developments in the AFP</description><item>
+  <title>Compressed Oracles</title>
+  <link>https://isa-afp.org/entries/Compressed_Oracles.html</link>
+  <pubDate>Wed, 31 Dec 2025 00:00:00 +0000</pubDate>
+  <description>Compressed Oracles in the AFP</description>
+    <category>Computer science/Security/Cryptography</category>
+    <category>Mathematics/Physics/Quantum information</category>
+</item>
+<item>
+  <title>Dynamic Pushdown Networks</title>
+  <link>https://isa-afp.org/entries/Dynamic_Pushdown_Networks.html</link>
+  <pubDate>Tue, 23 Dec 2025 00:00:00 +0000</pubDate>
+  <description>Dynamic Pushdown Networks in the AFP</description>
+    <category>Computer science</category>
+    <category>Computer science/Concurrency</category>
+    <category>Computer science/Automata and formal languages</category>
+    <category>Computer science/Programming languages/Static analysis</category>
+</item>
+<item>
+  <title>Set Reconciliation</title>
+  <link>https://isa-afp.org/entries/Set_Reconciliation.html</link>
+  <pubDate>Wed, 03 Dec 2025 00:00:00 +0000</pubDate>
+  <description>Set Reconciliation in the AFP</description>
+    <category>Computer science/Algorithms</category>
+</item>
+<item>
+  <title>Rely-Guarantee Extensions and Locks</title>
+  <link>https://isa-afp.org/entries/RG_Locks.html</link>
+  <pubDate>Fri, 21 Nov 2025 00:00:00 +0000</pubDate>
+  <description>Rely-Guarantee Extensions and Locks in the AFP</description>
+    <category>Computer science/Concurrency</category>
+    <category>Computer science/Programming languages/Logics</category>
+    <category>Computer science/Algorithms/Concurrent</category>
+</item>
+<item>
+  <title>Pre*: The Predecessors of a Regular Language w.r.t. a Context-Free Grammar, with Applications</title>
+  <link>https://isa-afp.org/entries/Pre_Star_CFG.html</link>
+  <pubDate>Tue, 18 Nov 2025 00:00:00 +0000</pubDate>
+  <description>Pre*: The Predecessors of a Regular Language w.r.t. a Context-Free Grammar, with Applications in the AFP</description>
+    <category>Computer science/Automata and formal languages</category>
+</item>
+<item>
+  <title>The Weak Spectroscopy Game to Characterize Behavioral Equivalences</title>
+  <link>https://isa-afp.org/entries/Weak_Spectroscopy.html</link>
+  <pubDate>Mon, 17 Nov 2025 00:00:00 +0000</pubDate>
+  <description>The Weak Spectroscopy Game to Characterize Behavioral Equivalences in the AFP</description>
+    <category>Computer science/Concurrency</category>
+    <category>Computer science/Semantics and reasoning</category>
+    <category>Logic/General logic/Modal logic</category>
+    <category>Mathematics/Games and economics</category>
+</item>
+<item>
+  <title>Zippy - Generic White-Box Proof Search with Zippers</title>
+  <link>https://isa-afp.org/entries/Zippy.html</link>
+  <pubDate>Tue, 11 Nov 2025 00:00:00 +0000</pubDate>
+  <description>Zippy - Generic White-Box Proof Search with Zippers in the AFP</description>
+    <category>Tools</category>
+</item>
+<item>
+  <title>Formalizing Neural Networks</title>
+  <link>https://isa-afp.org/entries/Neural_Networks.html</link>
+  <pubDate>Sun, 09 Nov 2025 00:00:00 +0000</pubDate>
+  <description>Formalizing Neural Networks in the AFP</description>
+    <category>Computer science/Artificial intelligence</category>
+    <category>Tools</category>
+    <category>Computer science/Data structures</category>
+</item>
+<item>
+  <title>Discrete Upper Confidence Bound Algorithm in HOL</title>
+  <link>https://isa-afp.org/entries/Discrete-UCB.html</link>
+  <pubDate>Sat, 25 Oct 2025 00:00:00 +0000</pubDate>
+  <description>Discrete Upper Confidence Bound Algorithm in HOL in the AFP</description>
+    <category>Computer science/Machine learning</category>
+</item>
+<item>
+  <title>Path Equivalence and Automation for Integration Contours</title>
+  <link>https://isa-afp.org/entries/Path_Automation.html</link>
+  <pubDate>Wed, 22 Oct 2025 00:00:00 +0000</pubDate>
+  <description>Path Equivalence and Automation for Integration Contours in the AFP</description>
+    <category>Tools</category>
+</item>
+<item>
+  <title>Z Mathematical Toolkit in Isabelle/HOL</title>
+  <link>https://isa-afp.org/entries/Z_Toolkit.html</link>
+  <pubDate>Thu, 16 Oct 2025 00:00:00 +0000</pubDate>
+  <description>Z Mathematical Toolkit in Isabelle/HOL in the AFP</description>
+    <category>Computer science/Semantics and reasoning</category>
+</item>
+<item>
+  <title>Pushdown Automata</title>
+  <link>https://isa-afp.org/entries/Pushdown_Automata.html</link>
+  <pubDate>Wed, 15 Oct 2025 00:00:00 +0000</pubDate>
+  <description>Pushdown Automata in the AFP</description>
+    <category>Computer science/Automata and formal languages</category>
+</item>
+<item>
+  <title>Muntac: A Verified Certificate Checker for Timed Automata</title>
+  <link>https://isa-afp.org/entries/Munta_Certificate_Checker.html</link>
+  <pubDate>Sun, 12 Oct 2025 00:00:00 +0000</pubDate>
+  <description>Muntac: A Verified Certificate Checker for Timed Automata in the AFP</description>
+    <category>Computer science/Automata and formal languages</category>
+    <category>Tools</category>
+</item>
+<item>
+  <title>Relational Divisibility</title>
+  <link>https://isa-afp.org/entries/Relational_Divisibility.html</link>
+  <pubDate>Thu, 09 Oct 2025 00:00:00 +0000</pubDate>
+  <description>Relational Divisibility in the AFP</description>
+    <category>Mathematics/Order</category>
+</item>
+<item>
+  <title>Stratified Datalog and Program Analysis</title>
+  <link>https://isa-afp.org/entries/Stratified_Datalog.html</link>
+  <pubDate>Mon, 01 Sep 2025 00:00:00 +0000</pubDate>
+  <description>Stratified Datalog and Program Analysis in the AFP</description>
+    <category>Computer science</category>
+    <category>Computer science/Artificial intelligence</category>
+    <category>Computer science/Programming languages</category>
+    <category>Computer science/Programming languages/Static analysis</category>
+</item>
+<item>
+  <title>Greibach Normal Form</title>
+  <link>https://isa-afp.org/entries/Greibach_Normal_Form.html</link>
+  <pubDate>Wed, 27 Aug 2025 00:00:00 +0000</pubDate>
+  <description>Greibach Normal Form in the AFP</description>
+    <category>Computer science/Automata and formal languages</category>
+</item>
+<item>
+  <title>No-free-lunch theorem for machine learning</title>
+  <link>https://isa-afp.org/entries/No_Free_Lunch_ML.html</link>
+  <pubDate>Sat, 23 Aug 2025 00:00:00 +0000</pubDate>
+  <description>No-free-lunch theorem for machine learning in the AFP</description>
+    <category>Computer science/Machine learning</category>
+    <category>Mathematics/Probability theory</category>
+</item>
+<item>
+  <title>Two-Way Deterministic Finite Automata</title>
+  <link>https://isa-afp.org/entries/Two_Way_DFA_HF.html</link>
+  <pubDate>Tue, 29 Jul 2025 00:00:00 +0000</pubDate>
+  <description>Two-Way Deterministic Finite Automata in the AFP</description>
+    <category>Computer science/Automata and formal languages</category>
+</item>
+<item>
   <title>Universal Pairs for Diophantine Equations</title>
   <link>https://isa-afp.org/entries/Diophantine_Universal_Pairs.html</link>
   <pubDate>Tue, 29 Jul 2025 00:00:00 +0000</pubDate>
   <description>Universal Pairs for Diophantine Equations in the AFP</description>
     <category>Mathematics/Number theory</category>
+</item>
+<item>
+  <title>Mission-time Linear Temporal Logic Formula Progression</title>
+  <link>https://isa-afp.org/entries/Mission_Time_LTL_Formula_Progression.html</link>
+  <pubDate>Mon, 28 Jul 2025 00:00:00 +0000</pubDate>
+  <description>Mission-time Linear Temporal Logic Formula Progression in the AFP</description>
+    <category>Computer science</category>
+    <category>Logic/General logic/Temporal logic</category>
 </item>
 <item>
   <title>A meta-modal logic for bisimulations</title>
@@ -71,6 +221,13 @@
     <category>Logic/General logic/Mechanization of proofs</category>
 </item>
 <item>
+  <title>Typed Ordered Resolution</title>
+  <link>https://isa-afp.org/entries/Typed_Ordered_Resolution.html</link>
+  <pubDate>Wed, 11 Jun 2025 00:00:00 +0000</pubDate>
+  <description>Typed Ordered Resolution in the AFP</description>
+    <category>Logic/General logic/Mechanization of proofs</category>
+</item>
+<item>
   <title>Dyck Language</title>
   <link>https://isa-afp.org/entries/Dyck_Language.html</link>
   <pubDate>Mon, 02 Jun 2025 00:00:00 +0000</pubDate>
@@ -108,6 +265,13 @@
   <description>Munta: A Verified Model Checker for Timed Automata in the AFP</description>
     <category>Computer science/Automata and formal languages</category>
     <category>Tools</category>
+</item>
+<item>
+  <title>Complex Lattices, Elliptic Functions, and the Modular Group</title>
+  <link>https://isa-afp.org/entries/Elliptic_Functions.html</link>
+  <pubDate>Thu, 22 May 2025 00:00:00 +0000</pubDate>
+  <description>Complex Lattices, Elliptic Functions, and the Modular Group in the AFP</description>
+    <category>Mathematics/Number theory</category>
 </item>
 <item>
   <title>Context-Free Grammars and Languages</title>
@@ -183,6 +347,20 @@
   <description>A Verified Reduction Algorithm from MLSSmf to MLSS in the AFP</description>
     <category>Logic/Set theory</category>
     <category>Logic/General logic/Decidability of theories</category>
+</item>
+<item>
+  <title>The Partition Function and the Pentagonal Number Theorem</title>
+  <link>https://isa-afp.org/entries/Pentagonal_Number_Theorem.html</link>
+  <pubDate>Wed, 23 Apr 2025 00:00:00 +0000</pubDate>
+  <description>The Partition Function and the Pentagonal Number Theorem in the AFP</description>
+    <category>Mathematics/Number theory</category>
+</item>
+<item>
+  <title>Dedekind Sums</title>
+  <link>https://isa-afp.org/entries/Dedekind_Sums.html</link>
+  <pubDate>Wed, 23 Apr 2025 00:00:00 +0000</pubDate>
+  <description>Dedekind Sums in the AFP</description>
+    <category>Mathematics/Number theory</category>
 </item>
 <item>
   <title>Proof Terms for Term Rewriting</title>
@@ -1714,7 +1892,7 @@
     <category>Computer science/Programming languages/Logics</category>
 </item>
 <item>
-  <title>Khovanskii&#x27;s Theorem</title>
+  <title>Khovanskii&amp;#x27;s Theorem</title>
   <link>https://isa-afp.org/entries/Khovanskii_Theorem.html</link>
   <pubDate>Fri, 02 Sep 2022 00:00:00 +0000</pubDate>
   <description>Khovanskii&amp;#x27;s Theorem in the AFP</description>
@@ -2727,21 +2905,21 @@
     <category>Logic/Proof theory</category>
 </item>
 <item>
-  <title>An Abstract Formalization of G&ouml;del&#39;s Incompleteness Theorems</title>
+  <title>An Abstract Formalization of G&amp;ouml;del&#39;s Incompleteness Theorems</title>
   <link>https://isa-afp.org/entries/Goedel_Incompleteness.html</link>
   <pubDate>Wed, 16 Sep 2020 00:00:00 +0000</pubDate>
   <description>An Abstract Formalization of G&amp;ouml;del&#39;s Incompleteness Theorems in the AFP</description>
     <category>Logic/Proof theory</category>
 </item>
 <item>
-  <title>From Abstract to Concrete G&ouml;del&#39;s Incompleteness Theorems&mdash;Part II</title>
+  <title>From Abstract to Concrete G&amp;ouml;del&#39;s Incompleteness Theorems&amp;mdash;Part II</title>
   <link>https://isa-afp.org/entries/Goedel_HFSet_Semanticless.html</link>
   <pubDate>Wed, 16 Sep 2020 00:00:00 +0000</pubDate>
   <description>From Abstract to Concrete G&amp;ouml;del&#39;s Incompleteness Theorems&amp;mdash;Part II in the AFP</description>
     <category>Logic/Proof theory</category>
 </item>
 <item>
-  <title>From Abstract to Concrete G&ouml;del&#39;s Incompleteness Theorems&mdash;Part I</title>
+  <title>From Abstract to Concrete G&amp;ouml;del&#39;s Incompleteness Theorems&amp;mdash;Part I</title>
   <link>https://isa-afp.org/entries/Goedel_HFSet_Semantic.html</link>
   <pubDate>Wed, 16 Sep 2020 00:00:00 +0000</pubDate>
   <description>From Abstract to Concrete G&amp;ouml;del&#39;s Incompleteness Theorems&amp;mdash;Part I in the AFP</description>
@@ -3011,7 +3189,7 @@
     <category>Computer science/Functional programming</category>
 </item>
 <item>
-  <title>Implementing the Goodstein Function in &lambda;-Calculus</title>
+  <title>Implementing the Goodstein Function in &amp;lambda;-Calculus</title>
   <link>https://isa-afp.org/entries/Goodstein_Lambda.html</link>
   <pubDate>Fri, 21 Feb 2020 00:00:00 +0000</pubDate>
   <description>Implementing the Goodstein Function in &amp;lambda;-Calculus in the AFP</description>
@@ -6595,7 +6773,7 @@
 </item>
 <item>
   <title>CoreC&#43;&#43;</title>
-  <link>https://isa-afp.org/entries/CoreC&#43;&#43;.html</link>
+  <link>https://isa-afp.org/entries/CoreC++.html</link>
   <pubDate>Mon, 15 May 2006 00:00:00 +0000</pubDate>
   <description>CoreC++ in the AFP</description>
     <category>Computer science/Programming languages/Language definitions</category>

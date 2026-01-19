@@ -87,7 +87,7 @@ object AFP_Build_CI {
       for {
         session <- results.sessions
         result = results(session)
-        if !result.ok && !results.cancelled(session)
+        if !result.ok && !result.interrupted && !results.cancelled(session)
         entry <- context.session_entry(session)
       } {
         val subject = "Build of AFP entry " + entry + " failed"
@@ -233,12 +233,11 @@ Last 50 lines from stderr (if available):
           progress: Progress
         ): Unit = {
           val context = Context(options)
-          notify_failed(context, url, results, progress)
           sitegen(context, url, results, progress)
         }
       },
       other_settings =
-        List("ISABELLE_TOOL_JAVA_OPTIONS=\"$ISABELLE_TOOL_JAVA_OPTIONS -Xmx8G -Xss64M\""),
+        List("ISABELLE_TOOL_JAVA_OPTIONS=\"$ISABELLE_TOOL_JAVA_OPTIONS -Xmx16G -Xss64M\""),
       trigger = Build_CI.Timed.nightly())
 
 
@@ -248,7 +247,7 @@ Last 50 lines from stderr (if available):
     Build_CI.Job("indexing",
       "weekly build for all of Isabelle/AFP, indexing theories into find_facts",
       Build_CI.Cluster("cluster.schedule"),
-      Time.hms(8, 0, 0),
+      Time.hms(16, 0, 0),
       afp = true,
       selection = Sessions.Selection(all_sessions = true),
       build_prefs = List(Options.Spec.eq("build_engine", Build_Schedule.Build_Engine.name)),
@@ -281,7 +280,7 @@ Last 50 lines from stderr (if available):
         }
       },
       other_settings =
-        List("ISABELLE_TOOL_JAVA_OPTIONS=\"$ISABELLE_TOOL_JAVA_OPTIONS -Xmx8G -Xss64M\""),
+        List("ISABELLE_TOOL_JAVA_OPTIONS=\"$ISABELLE_TOOL_JAVA_OPTIONS -Xmx16G -Xss64M\""),
       trigger = Build_CI.Timed.weekly(start = Time.hms(3, 17, 0)))
 }
 

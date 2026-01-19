@@ -1146,13 +1146,14 @@ by (simp only: offs_add take_add, simp add: add_le)
 
 lemma offs_mono:
  "i \<le> j \<Longrightarrow> j < length ns \<Longrightarrow> offs ns k ! i \<le> offs ns k ! j"
-by (frule offs_mono_aux, simp_all)
+  using add_diff_cancel_left' less_eqE offs_mono_aux
+  by force
 
 lemma offs_update:
  "j < length ns \<Longrightarrow>
     offs (ns[i := Suc (ns ! i)]) k ! j = (if j \<le> i then id else Suc) (offs ns k ! j)"
-by (simp add: offs_add not_le take_update_swap, rule impI, subst nth_take [symmetric],
- assumption, subst add_update, simp_all)
+  apply (simp add: offs_add not_le)
+  by (metis add_update length_take less_le_not_le min.absorb2 nth_take take_update_swap)
 
 lemma offs_equal_suc:
   assumes
@@ -1176,7 +1177,7 @@ lemma offs_equal [rule_format]:
     (\<forall>k \<in> {i..<j}. ns ! k = 0) \<longrightarrow> offs ns m ! i = offs ns m ! j"
 proof (erule strict_inc_induct, rule_tac [!] impI, simp_all, erule offs_equal_suc, simp)
   fix i
-  assume A: "i < j" and "j < length ns"
+  assume A: "Suc i < j" and "j < length ns"
   hence "Suc i < length ns" by simp
   moreover assume "\<forall>k \<in> {i..<j}. ns ! k = 0"
   hence "ns ! i = 0"
@@ -1616,7 +1617,7 @@ next
   moreover have "\<And>v. card ?B = card (?C v \<inter> {i. \<exists>j. i = Suc j})"
     by (rule bij_betw_same_card [of Suc], auto)
   moreover have "card ?B \<le> count (mset xs) x"
-    by (force simp add: count_mset length_filter_conv_card intro: card_mono)
+    by (auto simp: count_mset length_filter_conv_card count_list_eq_length_filter intro: card_mono)
   ultimately show ?case
     by (simp add: nths_Cons Cons)
 qed
@@ -1712,7 +1713,7 @@ next
       have G: "length ?ws = Suc (Suc m)"
         using E and F by simp
       hence H: "card ?A \<le> count (mset ?ws) x"
-        by (auto simp add: count_mset length_filter_conv_card intro: card_mono)
+        by (auto simp: count_mset length_filter_conv_card count_list_eq_length_filter intro: card_mono)
       show "count (mset (map the (fill ?zs (offs ?ms 0) index key m ?mi ?ma))) x
         + (if ?xma = x then 1 else 0) + (if ?xmi = x then 1 else 0) =
         count (mset ?ws) x"

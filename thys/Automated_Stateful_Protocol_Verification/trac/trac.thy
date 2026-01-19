@@ -15,10 +15,10 @@ imports
 keywords
       "trac" :: thy_decl
   and "trac_import" :: thy_decl
-  and "print_transaction_strand" :: thy_decl
-  and "print_transaction_strand_list" :: thy_decl
-  and "print_attack_trace" :: thy_decl
-  and "print_fixpoint" :: thy_decl
+  and "print_transaction_strand" :: diag 
+  and "print_transaction_strand_list" :: diag
+  and "print_attack_trace" :: diag
+  and "print_fixpoint" :: diag
   and "save_fixpoint" :: thy_decl
   and "load_fixpoint" :: thy_decl
   and "protocol_model_setup" :: thy_decl
@@ -26,9 +26,9 @@ keywords
   and "protocol_security_proof_parallel" :: thy_decl
   and "protocol_security_proof_safe_heuristic" :: thy_decl
   and "protocol_composition_proof" :: thy_decl
-  and "manual_protocol_model_setup" :: thy_decl
-  and "manual_protocol_security_proof" :: thy_decl
-  and "manual_protocol_composition_proof" :: thy_decl
+  and "manual_protocol_model_setup" :: thy_goal 
+  and "manual_protocol_security_proof" :: thy_goal
+  and "manual_protocol_composition_proof" :: thy_goal
   and "compute_fixpoint" :: thy_decl
   and "compute_SMP" :: thy_decl
   and "compute_shared_secrets" :: thy_decl
@@ -170,7 +170,7 @@ fun eval_term lthy t =
 fun eval_define_declare (name, t) print lthy = 
   let 
     val t' = eval_term lthy t
-    val arg = ((Binding.name name, NoSyn), ((Binding.name (name ^ "_def"),@{attributes [code]}), t'))
+    val arg = ((Binding.name name, NoSyn), ((Binding.name (name ^ "_def"), [Code.singleton_default_equation_attrib]), t'))
     val lthy' =  snd ( Local_Theory.begin_nested lthy )
     val (_, lthy'') = Local_Theory.define arg lthy'
   in
@@ -180,7 +180,7 @@ fun eval_define_declare (name, t) print lthy =
 fun eval_define_declare_nbe (name, t) print lthy = 
   let 
     val t' = Nbe.dynamic_value lthy t
-    val arg = ((Binding.name name, NoSyn), ((Binding.name (name ^ "_def"),@{attributes [code]}), t'))
+    val arg = ((Binding.name name, NoSyn), ((Binding.name (name ^ "_def"), [Code.singleton_default_equation_attrib]), t'))
     val lthy' =  snd ( Local_Theory.begin_nested lthy )
     val (_, lthy'') = Local_Theory.define arg lthy'
   in
@@ -193,7 +193,7 @@ structure ml_isar_wrapper = struct
   fun define_constant_definition' (constname, trm) print lthy = 
     let
       val lthy' =  snd ( Local_Theory.begin_nested lthy )
-      val arg = ((Binding.name constname, NoSyn), ((Binding.name (constname^"_def"),@{attributes [code]}), trm))
+      val arg = ((Binding.name constname, NoSyn), ((Binding.name (constname^"_def"), [Code.singleton_default_equation_attrib]), trm))
       val ((_, (_ , thm)), lthy'') = Local_Theory.define arg lthy'
     in
       (thm, Local_Theory.end_nested lthy'')
@@ -2650,7 +2650,7 @@ val _ = Outer_Syntax.local_theory' @{command_keyword "print_fixpoint"}
     fun chunk_name n = name ^ chunk_suffix ^ Int.toString n
 
     fun arg name t =
-      ((Binding.name name, NoSyn), ((Binding.name (name ^ "_def"),@{attributes [code]}), t))
+      ((Binding.name name, NoSyn), ((Binding.name (name ^ "_def"), [Code.singleton_default_equation_attrib]), t))
 
     fun def_trm (name,trm) lthy = snd (Local_Theory.define (arg name trm) lthy)
 
