@@ -47,6 +47,8 @@ proof (intro equivI reflI transI symI)
     then show ?thesis
       by (auto intro!: exI[of _ b] simp: same_outside_def)
   qed
+  show \<open>same_outside X \<subseteq> UNIV \<times> UNIV\<close>
+    by simp
 qed
 
 
