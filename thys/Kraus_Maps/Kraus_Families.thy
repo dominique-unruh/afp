@@ -3020,7 +3020,7 @@ lemma kf_comp_dependent_assoc:
     and \<GG> :: \<open>('a::chilbert_space,'b::chilbert_space,'g) kraus_family\<close>
   assumes bdd_E: \<open>bdd_above ((kf_norm o case_prod \<EE>) ` (SIGMA x:kf_domain \<GG>. kf_domain (\<FF> x)))\<close>
   assumes bdd_F: \<open>bdd_above ((kf_norm o \<FF>) ` kf_domain \<GG>)\<close>
-  shows \<open>(kf_comp_dependent (\<lambda>g. kf_comp_dependent (\<EE> g) (\<FF> g)) \<GG>) \<equiv>\<^sub>k\<^sub>r
+  shows \<open>kf_comp_dependent (\<lambda>g. kf_comp_dependent (\<EE> g) (\<FF> g)) \<GG> \<equiv>\<^sub>k\<^sub>r
   kf_map (\<lambda>((g,f),e). (g,f,e)) (kf_comp_dependent (\<lambda>(g,f). \<EE> g f) (kf_comp_dependent \<FF> \<GG>))\<close>
     (is \<open>?lhs \<equiv>\<^sub>k\<^sub>r ?rhs\<close>)
 proof (rule kf_eqI)
