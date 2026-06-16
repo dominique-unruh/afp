@@ -3655,31 +3655,31 @@ lemma one_dim_iso_cblinfun_apply[simp]: \<open>one_dim_iso \<psi> *\<^sub>V \<ph
 
 subsection \<open>Loewner order\<close>
 
-(* TODO heterogenous -> heterogeneous (typo), repeatedly *)
-lift_definition heterogenous_cblinfun_id :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
-  is \<open>if bounded_clinear (heterogenous_identity :: 'a::complex_normed_vector \<Rightarrow> 'b::complex_normed_vector) then heterogenous_identity else (\<lambda>_. 0)\<close>
+(* TODO heterogeneous -> heterogeneous (typo), repeatedly *)
+lift_definition heterogeneous_cblinfun_id :: \<open>'a::complex_normed_vector \<Rightarrow>\<^sub>C\<^sub>L 'b::complex_normed_vector\<close>
+  is \<open>if bounded_clinear (heterogeneous_identity :: 'a::complex_normed_vector \<Rightarrow> 'b::complex_normed_vector) then heterogeneous_identity else (\<lambda>_. 0)\<close>
   by auto
 
-lemma heterogenous_cblinfun_id_def'[simp]: "heterogenous_cblinfun_id = id_cblinfun"
+lemma heterogeneous_cblinfun_id_def'[simp]: "heterogeneous_cblinfun_id = id_cblinfun"
   by transfer auto
 
-definition "heterogenous_same_type_cblinfun (x::'a::chilbert_space itself) (y::'b::chilbert_space itself) \<longleftrightarrow>
-  unitary (heterogenous_cblinfun_id :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'b) \<and> unitary (heterogenous_cblinfun_id :: 'b \<Rightarrow>\<^sub>C\<^sub>L 'a)"
+definition "heterogeneous_same_type_cblinfun (x::'a::chilbert_space itself) (y::'b::chilbert_space itself) \<longleftrightarrow>
+  unitary (heterogeneous_cblinfun_id :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'b) \<and> unitary (heterogeneous_cblinfun_id :: 'b \<Rightarrow>\<^sub>C\<^sub>L 'a)"
 
-lemma heterogenous_same_type_cblinfun[simp]: \<open>heterogenous_same_type_cblinfun (x::'a::chilbert_space itself) (y::'a::chilbert_space itself)\<close>
-  unfolding heterogenous_same_type_cblinfun_def by auto
+lemma heterogeneous_same_type_cblinfun[simp]: \<open>heterogeneous_same_type_cblinfun (x::'a::chilbert_space itself) (y::'a::chilbert_space itself)\<close>
+  unfolding heterogeneous_same_type_cblinfun_def by auto
 
 instantiation cblinfun :: (chilbert_space, chilbert_space) ord begin
-definition less_eq_cblinfun_def_heterogenous: \<open>A \<le> B \<longleftrightarrow>
-  (if heterogenous_same_type_cblinfun TYPE('a) TYPE('b) then
-    \<forall>\<psi>::'b. \<psi> \<bullet>\<^sub>C ((B-A) *\<^sub>V heterogenous_cblinfun_id *\<^sub>V \<psi>) \<ge> 0 else (A=B))\<close>
+definition less_eq_cblinfun_def_heterogeneous: \<open>A \<le> B \<longleftrightarrow>
+  (if heterogeneous_same_type_cblinfun TYPE('a) TYPE('b) then
+    \<forall>\<psi>::'b. \<psi> \<bullet>\<^sub>C ((B-A) *\<^sub>V heterogeneous_cblinfun_id *\<^sub>V \<psi>) \<ge> 0 else (A=B))\<close>
 definition \<open>(A :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'b) < B \<longleftrightarrow> A \<le> B \<and> \<not> B \<le> A\<close>
 instance..
 end
 
 lemma less_eq_cblinfun_def: \<open>A \<le> B \<longleftrightarrow>
     (\<forall>\<psi>. \<psi> \<bullet>\<^sub>C (A *\<^sub>V \<psi>) \<le> \<psi> \<bullet>\<^sub>C (B *\<^sub>V \<psi>))\<close>
-  unfolding less_eq_cblinfun_def_heterogenous
+  unfolding less_eq_cblinfun_def_heterogeneous
   by (auto simp del: less_eq_complex_def simp: cblinfun.diff_left cinner_diff_right)
 
 instantiation cblinfun :: (chilbert_space, chilbert_space) ordered_complex_vector begin
@@ -3689,10 +3689,10 @@ proof intro_classes
   fix a b :: complex
 
   define pos where \<open>pos X \<longleftrightarrow> (\<forall>\<psi>. cinner \<psi> (X *\<^sub>V \<psi>) \<ge> 0)\<close> for X :: \<open>'b \<Rightarrow>\<^sub>C\<^sub>L 'b\<close>
-  consider (unitary) \<open>heterogenous_same_type_cblinfun TYPE('a) TYPE('b)\<close>
-      \<open>\<And>A B :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'b. A \<le> B = pos ((B-A) o\<^sub>C\<^sub>L (heterogenous_cblinfun_id :: 'b\<Rightarrow>\<^sub>C\<^sub>L'a))\<close>
+  consider (unitary) \<open>heterogeneous_same_type_cblinfun TYPE('a) TYPE('b)\<close>
+      \<open>\<And>A B :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'b. A \<le> B = pos ((B-A) o\<^sub>C\<^sub>L (heterogeneous_cblinfun_id :: 'b\<Rightarrow>\<^sub>C\<^sub>L'a))\<close>
     | (trivial) \<open>\<And>A B :: 'a \<Rightarrow>\<^sub>C\<^sub>L 'b. A \<le> B \<longleftrightarrow> A = B\<close>
-    by atomize_elim (auto simp: pos_def less_eq_cblinfun_def_heterogenous)
+    by atomize_elim (auto simp: pos_def less_eq_cblinfun_def_heterogeneous)
   note cases = this
 
   have [simp]: \<open>pos 0\<close>
@@ -3708,7 +3708,7 @@ proof intro_classes
   have pos_scaleC: \<open>pos (a *\<^sub>C X)\<close> if \<open>a\<ge>0\<close> and \<open>pos X\<close> for X a
     using that unfolding pos_def by (auto simp: cblinfun.scaleC_left)
 
-  let ?id = \<open>heterogenous_cblinfun_id :: 'b \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
+  let ?id = \<open>heterogeneous_cblinfun_id :: 'b \<Rightarrow>\<^sub>C\<^sub>L 'a\<close>
 
   show \<open>x \<le> x\<close>
     apply (cases rule:cases) by auto
@@ -3717,13 +3717,13 @@ proof intro_classes
   show \<open>x \<le> z\<close> if \<open>x \<le> y\<close> and \<open>y \<le> z\<close>
   proof (cases rule:cases)
     case unitary
-    define a b :: \<open>'b \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> where \<open>a = (y-x) o\<^sub>C\<^sub>L heterogenous_cblinfun_id\<close>
-      and \<open>b = (z-y) o\<^sub>C\<^sub>L heterogenous_cblinfun_id\<close>
+    define a b :: \<open>'b \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> where \<open>a = (y-x) o\<^sub>C\<^sub>L heterogeneous_cblinfun_id\<close>
+      and \<open>b = (z-y) o\<^sub>C\<^sub>L heterogeneous_cblinfun_id\<close>
     with unitary that have \<open>pos a\<close> and \<open>pos b\<close>
       by auto
     then have \<open>pos (a + b)\<close>
       by (rule pos_add)
-    moreover have \<open>a + b = (z - x) o\<^sub>C\<^sub>L heterogenous_cblinfun_id\<close>
+    moreover have \<open>a + b = (z - x) o\<^sub>C\<^sub>L heterogeneous_cblinfun_id\<close>
       unfolding a_def b_def
       by (metis (no_types, lifting) bounded_cbilinear.add_left bounded_cbilinear_cblinfun_compose diff_add_cancel ordered_field_class.sign_simps(2) ordered_field_class.sign_simps(8))
     ultimately show ?thesis
@@ -3736,7 +3736,7 @@ proof intro_classes
   proof (cases rule:cases)
     case unitary
     then have \<open>unitary ?id\<close>
-      by (auto simp: heterogenous_same_type_cblinfun_def)
+      by (auto simp: heterogeneous_same_type_cblinfun_def)
     define a b :: \<open>'b \<Rightarrow>\<^sub>C\<^sub>L 'b\<close> where \<open>a = (y-x) o\<^sub>C\<^sub>L ?id\<close>
       and \<open>b = (x-y) o\<^sub>C\<^sub>L ?id\<close>
     with unitary that have \<open>pos a\<close> and \<open>pos b\<close>

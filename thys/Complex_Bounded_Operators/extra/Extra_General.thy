@@ -31,9 +31,9 @@ lemma image_set_plus:
   unfolding image_def set_plus_def
   using assms by (force simp: linear_add)
 
-consts heterogenous_identity :: \<open>'a \<Rightarrow> 'b\<close>
-overloading heterogenous_identity_id \<equiv> "heterogenous_identity :: 'a \<Rightarrow> 'a" begin
-definition heterogenous_identity_def[simp]: \<open>heterogenous_identity_id = id\<close>
+consts heterogeneous_identity :: \<open>'a \<Rightarrow> 'b\<close>
+overloading heterogeneous_identity_id \<equiv> "heterogeneous_identity :: 'a \<Rightarrow> 'a" begin
+definition heterogeneous_identity_def[simp]: \<open>heterogeneous_identity_id = id\<close>
 end
 
 lemma L2_set_mono2:
