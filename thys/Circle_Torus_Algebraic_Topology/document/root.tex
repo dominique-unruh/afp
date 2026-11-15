@@ -1,0 +1,66 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{isabelle,isabellesym}
+\usepackage{amssymb}
+\usepackage[english]{babel}
+\usepackage[hidelinks]{hyperref}
+\usepackage[a4paper,margin=25mm]{geometry}
+\isabellestyle{it}
+\hypersetup{
+  pdftitle={Algebraic Invariants of the Circle, Torus, and Punctured Plane},
+  pdfauthor={Arthur Freitas Ramos; David Barros Hulak; Ruy J. G. B. de Queiroz}
+}
+\begin{document}
+\title{Algebraic Invariants of the Circle, Torus, and Punctured Plane}
+\author{Arthur Freitas Ramos \and David Barros Hulak \and Ruy J. G. B. de Queiroz}
+\maketitle
+\begin{abstract}
+  We formalize real path lifts of based loops in the circle and prove that
+  their integer endpoints classify these loops up to path homotopy.  For
+  the torus, the two coordinate lifts give a classification by pairs of
+  integers and an explicit fundamental-group isomorphism with
+  $\mathbb{Z}\times\mathbb{Z}$. Every continuous circle self-map acts on
+  first singular homology by multiplication by its winding number.
+  We construct a radial deformation retraction of the
+  punctured complex plane onto the circle and compute the reduced homology
+  of both spaces: it is isomorphic to the additive group of integers in
+  degree one and trivial in every other degree.  Neither space is
+  contractible.  The development also provides a reusable interface for
+  path lifting in covering spaces.
+\end{abstract}
+\tableofcontents
+\section{Introduction}
+Path lifting assigns an integer to each based loop in the circle.  This
+integer classifies loops up to path homotopy and provides two coordinates
+for the corresponding classification on the torus.  Radial retraction
+connects the circle with the punctured complex plane and transfers the
+homology computation between them.  These constructions follow standard
+treatments of algebraic topology, such as Hatcher~\cite{Hatcher2002}.
+We build on the AFP circle
+entry~\cite{FundamentalGroupCircleAFP} and use the classical
+Seifert--van Kampen entry~\cite{SeifertVanKampenAFP}.
+
+The principal contributions are the real lift-endpoint classification of
+circle loops, an explicit torus fundamental-group isomorphism with
+$\mathbb{Z}\times\mathbb{Z}$, and the transfer of reduced homology to the
+concrete circle and punctured plane. We also prove that the actual map
+induced on first singular homology by every continuous circle self-map
+is multiplication by its winding number, in any integer coordinates.
+The proof represents loops as singular cycles, relates concatenation to
+addition using a singular triangle, and proves that winding number
+annihilates singular boundaries. A homotopy through rotations removes
+the basepoint restriction on the self-map.
+The generic lifting interface packages the analysis library's results.
+The Seifert--van Kampen statements are re-exports of the cited AFP entry;
+the degree laws specialize the homology library to the abstract one-sphere.
+The concrete induced-map theorem is separate from the library constant
+\texttt{Brouwer\_degree2}; no additional identification with that constant,
+general Hurewicz theorem, or torus homology computation is asserted here.
+
+The covering interface is independent of the circle development.  The
+product, radial-retract, and homology theories may be imported separately;
+the final theory combines their interfaces.
+\input{session}
+\bibliographystyle{abbrv}
+\bibliography{root}
+\end{document}

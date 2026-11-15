@@ -1,0 +1,23 @@
+chapter AFP
+
+session "Circle_Torus_Algebraic_Topology" (AFP) = Fundamental_Group_Circle +
+  options [timeout = 600]
+  sessions
+    "Seifert-Van-Kampen"
+    "HOL-Homology"
+  theories
+    Circle_Covering
+    Covering_Spaces
+    Circle_Product
+    Torus_Fundamental_Group
+    Circle_Radial_Retract
+    Circle_SVK
+    Circle_Homology_Degree
+    Circle_Loop_Homology
+    Circle_Loop_Concatenation
+    Circle_Winding_Cocycle
+    Circle_Homology_Action
+    Circle_Torus_Algebraic_Topology
+  document_files
+    "root.tex"
+    "root.bib"
