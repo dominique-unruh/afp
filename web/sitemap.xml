@@ -35,6 +35,9 @@
     <loc>https://isa-afp.org/entries/Teichmuller_Tukey_Lemma.html</loc>
     <lastmod>2026-09-21T00:00:00+00:00</lastmod>
   </url><url>
+    <loc>https://isa-afp.org/entries/Circle_Torus_Algebraic_Topology.html</loc>
+    <lastmod>2026-09-12T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>https://isa-afp.org/entries/Cauchy_Functional_Equation.html</loc>
     <lastmod>2026-09-11T00:00:00+00:00</lastmod>
   </url><url>
@@ -6468,6 +6471,30 @@
     <loc>https://isa-afp.org/thys/Chvatal_Tree_Ramsey/Chvatal_Tree_Ramsey.html</loc>
   </url><url>
     <loc>https://isa-afp.org/authors/giusto/</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/Circle_Torus_Algebraic_Topology/Circle_Covering.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/Circle_Torus_Algebraic_Topology/Circle_Homology_Action.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/Circle_Torus_Algebraic_Topology/Circle_Homology_Degree.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/Circle_Torus_Algebraic_Topology/Circle_Loop_Concatenation.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/Circle_Torus_Algebraic_Topology/Circle_Loop_Homology.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/Circle_Torus_Algebraic_Topology/Circle_Product.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/Circle_Torus_Algebraic_Topology/Circle_Radial_Retract.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/Circle_Torus_Algebraic_Topology/Circle_SVK.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/Circle_Torus_Algebraic_Topology/Circle_Torus_Algebraic_Topology.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/Circle_Torus_Algebraic_Topology/Circle_Winding_Cocycle.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/Circle_Torus_Algebraic_Topology/Covering_Spaces.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/Circle_Torus_Algebraic_Topology/Torus_Fundamental_Group.html</loc>
   </url><url>
     <loc>https://isa-afp.org/thys/Circus/Circus_Actions.html</loc>
   </url><url>
@@ -13434,6 +13461,16 @@
     <loc>https://isa-afp.org/thys/HOL-Hoare/Separation.html</loc>
   </url><url>
     <loc>https://isa-afp.org/thys/HOL-Hoare/SepLogHeap.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/HOL-Homology/Brouwer_Degree.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/HOL-Homology/Homology.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/HOL-Homology/Homology_Groups.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/HOL-Homology/Invariance_of_Domain.html</loc>
+  </url><url>
+    <loc>https://isa-afp.org/thys/HOL-Homology/Simplices.html</loc>
   </url><url>
     <loc>https://isa-afp.org/thys/HOL-IMP/Abs_Int_init.html</loc>
   </url><url>

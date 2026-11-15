@@ -211,6 +211,27 @@
   "year": "2026"
  },
  {
+  "abstract": "We formalize real path lifts of based loops in the circle and prove that their integer endpoints classify these loops up to path homotopy. For the torus, the two coordinate lifts give a classification by pairs of integers and an explicit fundamental-group isomorphism with \\(\\mathbb{Z}\\times\\mathbb{Z}\\). Every continuous circle self-map acts on first singular homology by multiplication by its winding number. We construct a radial deformation retraction of the punctured complex plane onto the circle and compute the reduced homology of both spaces: it is isomorphic to the additive group of integers in degree one and trivial in every other degree. Neither space is contractible. The development also provides a reusable interface for path lifting in covering spaces.",
+  "authors": [
+   "Arthur Freitas Ramos",
+   "David Barros Hulak",
+   "Ruy Jose Guerra Barretto de Queiroz"
+  ],
+  "date": "2026-09-12",
+  "link": "../entries/Circle_Torus_Algebraic_Topology.html",
+  "permalink": "https://isa-afp.org/entries/Circle_Torus_Algebraic_Topology.html",
+  "related": [],
+  "shortname": "Circle_Torus_Algebraic_Topology",
+  "title": "Algebraic Invariants of the Circle, Torus, and Punctured Plane",
+  "topic_links": [
+   "../topics/mathematics/topology/"
+  ],
+  "topics": [
+   "Mathematics/Topology"
+  ],
+  "year": "2026"
+ },
+ {
   "abstract": "Cauchy's functional equation is the equation \\[ h(x + y) = h(x) + h(y). \\] This entry formalizes properties of the solutions \\(h : \\mathbb{R} \\to \\mathbb{R}\\) of Cauchy's functional equation, including: A function \\(h\\) satisfying Cauchy's functional equation has the form \\(h(x) = cx\\) for some \\(c\\) if one of the following conditions holds: \\(h\\) is continuous at some point. \\(h\\) is continuous. \\(h\\) is bounded on some interval. \\(h\\) is (anti)monotone on some interval. \\(h\\) is measurable. There are non-linear solutions to Cauchy's functional equation. The set of non-linear solutions has cardinality \\(|\\mathbb{R}^{\\mathbb{R}}|\\). The graph of a non-linear solution\\(\\{(x, h(x)) \\mid x \\in \\mathbb{R}\\}\\) is dense in \\(\\mathbb{R} \\times \\mathbb{R}\\). ",
   "authors": [
    "Michikazu Hirata"
